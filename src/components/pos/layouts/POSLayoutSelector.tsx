@@ -1,7 +1,7 @@
 'use client';
 
 import { POSLayoutVariant } from '@/types/pos-layout';
-import { Layout, X, Monitor, Zap, ShoppingCart, Sparkles } from 'lucide-react';
+import { Layout, X, Monitor, Zap, ShoppingCart, Sparkles, BrainCircuit } from 'lucide-react';
 import clsx from 'clsx';
 
 const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: any; preview: string; accent: string }[] = [
@@ -15,10 +15,10 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
     },
     {
         id: 'modern',
-        name: 'Intelligence Canvas',
-        description: 'Cart-primary interface. Full visibility on operational throughput. High-fidelity visuals.',
+        name: 'Modern',
+        description: 'Full-featured cart interface with multi-payment, numpad, delivery zones, and premium visuals.',
         icon: ShoppingCart,
-        preview: '📦 Intelligence Flow: Expansive Cart',
+        preview: '📦 Modern: Full Feature Cart',
         accent: 'emerald',
     },
     {
@@ -37,6 +37,14 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
         preview: '✨ Classic Modern: Clean Cart Focus',
         accent: 'violet',
     },
+    {
+        id: 'intelligence',
+        name: 'Intelligence Canvas',
+        description: 'AI-enhanced interface with advanced analytics overlays and operational throughput visualization.',
+        icon: BrainCircuit,
+        preview: '🧠 Intelligence Flow: Expansive Canvas',
+        accent: 'cyan',
+    },
 ];
 
 const accentMap: Record<string, { bg: string; border: string; text: string; ring: string; glow: string; iconBg: string }> = {
@@ -44,6 +52,7 @@ const accentMap: Record<string, { bg: string; border: string; text: string; ring
     emerald: { bg: 'bg-emerald-50/50', border: 'border-emerald-500', text: 'text-emerald-700', ring: 'ring-emerald-100', glow: 'shadow-emerald-100', iconBg: 'bg-emerald-gradient text-white' },
     amber: { bg: 'bg-amber-50/50', border: 'border-amber-500', text: 'text-amber-700', ring: 'ring-amber-100', glow: 'shadow-amber-100', iconBg: 'bg-amber-gradient text-white' },
     violet: { bg: 'bg-violet-50/50', border: 'border-violet-500', text: 'text-violet-700', ring: 'ring-violet-100', glow: 'shadow-violet-100', iconBg: 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white' },
+    cyan: { bg: 'bg-cyan-50/50', border: 'border-cyan-500', text: 'text-cyan-700', ring: 'ring-cyan-100', glow: 'shadow-cyan-100', iconBg: 'bg-gradient-to-br from-cyan-600 to-teal-600 text-white' },
 };
 
 export function POSLayoutSelector({

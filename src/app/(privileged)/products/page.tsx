@@ -45,25 +45,23 @@ export default async function ProductsPage({
     const { data, total, totalPages, stats } = await getProductsData(page, isGrouped, search);
 
     return (
-        <div className="p-8 space-y-10 animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-24">
+        <div className="page-container">
             {/* 1. Header Section */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 bg-white/40 p-8 rounded-[3rem] border border-white/60 shadow-xl shadow-gray-200/20 backdrop-blur-xl">
-                <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-[2rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 text-white transform hover:rotate-6 transition-transform">
-                        <Database size={38} strokeWidth={2.5} />
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="page-header-icon bg-emerald-600 text-white">
+                        <Database size={22} strokeWidth={2.5} />
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-5xl font-black tracking-tighter text-gray-900">
-                                Product <span className="text-emerald-600">Master</span>
+                            <h1 className="page-header-title">
+                                Product <span className="text-emerald-600">Registry</span>
                             </h1>
-                            <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200 shadow-sm">
-                                V2.5 Registry
-                            </div>
+                            <span className="badge-status badge-emerald">V2.5</span>
                         </div>
-                        <p className="text-sm font-bold text-gray-400 mt-2 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <p className="page-header-subtitle mt-1 flex items-center gap-2">
                             <ShieldCheck size={14} className="text-emerald-500" />
-                            Certified Master Data Management System
+                            Master product data management
                         </p>
                     </div>
                 </div>
@@ -71,17 +69,17 @@ export default async function ProductsPage({
                 <div className="flex items-center gap-3">
                     <Link
                         href="/products/new"
-                        className="bg-white border-2 border-emerald-100 text-emerald-700 px-8 h-14 rounded-2xl font-black shadow-xl shadow-emerald-500/5 hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-3 group active:scale-95"
+                        className="bg-white border border-emerald-100 text-emerald-700 px-6 h-12 rounded-2xl font-bold shadow-sm hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-2 active:scale-95 text-sm"
                     >
-                        <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                        <span>SINGLE PRODUCT</span>
+                        <Plus size={18} className="group-hover:rotate-90 transition-transform" />
+                        <span>New Product</span>
                     </Link>
                     <Link
                         href="/products/create-group"
-                        className="bg-emerald-600 text-white px-8 h-14 rounded-2xl font-black shadow-2xl shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all flex items-center gap-3 active:scale-95"
+                        className="bg-emerald-600 text-white px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 text-sm"
                     >
-                        <Layers size={20} />
-                        <span>VARIANT GROUP</span>
+                        <Layers size={18} />
+                        <span>Variant Group</span>
                     </Link>
                 </div>
             </header>

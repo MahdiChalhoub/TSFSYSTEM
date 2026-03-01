@@ -4,27 +4,16 @@ import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
-import { AddressBook } from '@/components/pos/AddressBook';
-import { POSToolbar } from '@/components/pos/POSToolbar';
 import {
-    RefreshCw, ShieldCheck, UserPlus, Coins, AlertCircle, Lock,
-    History as HistoryIcon, Wifi, WifiOff, Smartphone, Landmark,
-    ShoppingCart, X, Plus, Minimize, Maximize, Layout, Search, MapPin,
-    ChevronDown, Calculator, ArrowLeft, EyeOff, Eye, Package, Tag,
-    GripHorizontal, Minus, Trash2, CreditCard, Wallet, Banknote, Star, BookOpen,
-    Phone, User, Building2, DollarSign, Globe, Edit3
+    Search, ShoppingCart, Plus, Minus, Trash2, X, Layout,
+    ChevronDown, Maximize, Minimize, Eye, EyeOff, Package, Tag,
+    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight, Check,
+    History, RefreshCw, Wifi, WifiOff, Smartphone, Landmark
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
-import { MultiPaymentDashboard } from '@/components/pos/MultiPaymentHub';
-import { POSSalesHistoryPanel } from '@/components/pos/POSSalesHistoryPanel';
-import { POSDeliveryModal } from '@/components/pos/POSDeliveryModal';
-import { POSPendingDeliveriesPanel } from '@/components/pos/POSPendingDeliveriesPanel';
-import { CompactClientHeader } from '@/components/pos/CompactClientHeader';
-import { getContactSummary } from '@/app/actions/crm/contacts';
-import { ClientVaultModal } from '@/components/pos/modals/ClientVaultModal';
-
 const formatNumber = (num: number | string) => {
     const val = Number(num) || 0;
     // Manual formatting for hydration stability across SSR/CSR
@@ -32,116 +21,76 @@ const formatNumber = (num: number | string) => {
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     return parts[1] === '00' ? parts[0] : parts.join('.');
 };
-
 const DEFAULT_PAYMENT_METHODS = ['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVERY'];
-
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
-        cart, clients, sessions, activeSessionId, isSuperAdmin, categories, searchQuery,
-        selectedCategory, isCartVisible, isReceiptOpen, showCloseRegister, showReturn,
-        showCreditWarning, isOverrideOpen, pendingOverrideAction, isVaultOpen,
-        isOnline, lastOrder, totalPieces, uniqueItems, clientFidelity, fidelityLoading,
-        subtotal, tax, total, activeCategoryId, currentParentId, sidebarMode, isFullscreen,
-        currency, clientSearchQuery, productIndex, allowNegativeStockRef, loyaltyPointValue,
-        storeChangeInWallet, pointsRedeemed, selectedClientId, selectedClient, totalAmount,
-        discountAmount, discount, discountType, paymentMethod, cashReceived, notes, paymentLegs,
-        isProcessing, registerConfig, deliveryZone, deliveryZones, highlightedItemId,
-
-        // Handlers
+        cart, clients, selectedClient, selectedClientId, categories,
+        sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
+        totalPieces, uniqueItems, searchQuery, activeCategoryId, currentParentId, sidebarMode,
+        isFullscreen, paymentMethod, cashReceived, isProcessing,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
+        isOnline, clientSearchQuery, deliveryZone, deliveryZones,
+        storeChangeInWallet, pointsRedeemed,
         onSetSearchQuery, onSetActiveCategoryId, onSetCurrentParentId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart,
-        onUpdateQuantity, onUpdatePrice, onUpdateLineDiscount, onUpdateLineNote,
+        onUpdateQuantity, onUpdatePrice,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
-        onToggleFullscreen, onCycleSidebarMode, onCharge, onSync, onSetIsOnline,
-        onSetClientSearchQuery, onSearchClients, onSetDeliveryZone, onSetNotes,
-        onSetOverrideOpen, onSetPendingOverrideAction,
-        onSetReceiptOpen, onOpenLayoutSelector, onSetStoreChangeInWallet,
-        onSetPointsRedeemed, onCloseRegister, onOpenReturn, onSetIsVaultOpen,
-        onLockRegister, onOpenRegister, currentLayout
+        onToggleFullscreen, onCycleSidebarMode, onCharge,
+        onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
+        onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector,
+        onSetStoreChangeInWallet, onSetPointsRedeemed, onSetNotes
     } = props;
-
-    const paymentMethods = registerConfig?.paymentMethods || (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
-    const receivedNum = Number(cashReceived?.toString() || '0');
+    const paymentMethods = (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
+    const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
     const deficit = receivedNum > 0 && receivedNum < totalAmount ? totalAmount - receivedNum : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
     const [showNumpad, setShowNumpad] = useState(false);
     const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
+    const [pendingAction, setPendingAction] = useState<{ label: string, execute: () => void } | null>(null);
     // ── Multi-Payment State ──
     const [isMultiPayMode, setIsMultiPayMode] = useState(false);
-    const [isAddressBookOpen, setIsAddressBookOpen] = useState(false);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
-    const [isPendingDeliveriesOpen, setIsPendingDeliveriesOpen] = useState(false);
-    const [showClientPanel, setShowClientPanel] = useState(false);
-    const clientPanelRef = useRef<HTMLDivElement>(null);
-
-    // ── Loyalty Vault State ──
-    const [fidelityData, setFidelityData] = useState<any>(null);
-    const [vaultLoading, setVaultLoading] = useState(false);
-
-    const handleOpenVault = async () => {
-        if (!selectedClient) return;
-        onSetIsVaultOpen(true);
-        setVaultLoading(true);
-        try {
-            const result = await getContactSummary(selectedClient.id);
-            setFidelityData(result);
-        } catch (e) {
-            toast.error("Failed to sync fidelity metrics");
-        } finally {
-            setVaultLoading(false);
-        }
+    const [paymentLegs, setPaymentLegs] = useState<Array<{ method: string, amount: number }>>([]);
+    const [multiPaySelectedMethod, setMultiPaySelectedMethod] = useState<string | null>(null);
+    const [mpBuffer, setMpBuffer] = useState('');
+    const multiPayTotal = paymentLegs.reduce((sum, leg) => sum + leg.amount, 0);
+    const multiPayRemaining = totalAmount - multiPayTotal;
+    const getMethodIcon = (k: string) => {
+        if (k.includes('CARD')) return CreditCard;
+        if (k.includes('WALLET')) return Wallet;
+        if (k.includes('WAVE') || k.includes('OM')) return Smartphone;
+        if (k.includes('DELIVERY')) return MapPin;
+        if (k.includes('BANK')) return Landmark;
+        if (k.includes('REWARD') || k.includes('LOYALTY')) return Star;
+        return Banknote;
     };
-
-    // Close client panel on outside click
-    useEffect(() => {
-        if (!showClientPanel) return;
-        function handleOutside(e: MouseEvent) {
-            if (clientPanelRef.current && !clientPanelRef.current.contains(e.target as Node)) {
-                setShowClientPanel(false);
-            }
-        }
-        document.addEventListener('mousedown', handleOutside);
-        return () => document.removeEventListener('mousedown', handleOutside);
-    }, [showClientPanel]);
-
-    // Auto-switch to products view when a search query is active
-    useEffect(() => {
-        if (searchQuery) setLeftExpanded(true);
-    }, [searchQuery]);
-
     const handleProtectedQuantity = useCallback((productId: number, delta: number) => {
         const item = cart.find(i => i.productId === productId);
-        // ALL decreases require manager override (decrease qty, remove item)
-        if (delta < 0) {
-            const actionLabel = (item?.quantity || 0) + delta <= 0
-                ? `Delete "${item?.name || 'Item'}" from cart`
-                : `Decrease "${item?.name || 'Item'}" qty by ${Math.abs(delta)}`;
-            onSetPendingOverrideAction({
-                label: actionLabel,
+        const currentQty = item?.quantity || 0;
+        // Only require override for full deletion or if clearing multiple items
+        if (delta < 0 && (currentQty + delta <= 0)) {
+            setPendingAction({
+                label: `Remove ${item?.name || 'Item'}`,
                 execute: () => onUpdateQuantity(productId, delta)
             });
             onSetOverrideOpen(true);
         } else {
             onUpdateQuantity(productId, delta);
         }
-    }, [cart, onUpdateQuantity, onSetOverrideOpen, onSetPendingOverrideAction]);
-
+    }, [cart, onUpdateQuantity, onSetOverrideOpen]);
     const handleProtectedDiscount = useCallback((val: number) => {
-        onSetPendingOverrideAction({
+        setPendingAction({
             label: `Apply ${val}% Discount`,
             execute: () => onSetDiscount(val)
         });
         onSetOverrideOpen(true);
-    }, [onSetDiscount, onSetOverrideOpen, onSetPendingOverrideAction]);
-
+    }, [onSetDiscount, onSetOverrideOpen]);
     const handleProtectedPrice = useCallback((productId: number, newPrice: number) => {
         const item = cart.find(i => i.productId === productId);
         const currentPrice = Number(item?.price || 0);
         if (newPrice < currentPrice) {
-            onSetPendingOverrideAction({
+            setPendingAction({
                 label: `Decrease Price to ${currency}${newPrice.toFixed(2)}`,
                 execute: () => onUpdatePrice(productId, newPrice)
             });
@@ -149,8 +98,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         } else {
             onUpdatePrice(productId, newPrice);
         }
-    }, [cart, currency, onUpdatePrice, onSetOverrideOpen, onSetPendingOverrideAction]);
-
+    }, [cart, currency, onUpdatePrice, onSetOverrideOpen]);
     // Draggable Floating Logic
     const [numpadPos, setNumpadPos] = useState({ x: 20, y: 150 });
     const [isDragging, setIsDragging] = useState(false);
@@ -183,767 +131,903 @@ export function POSLayoutModern(props: POSLayoutProps) {
             window.removeEventListener('mouseup', stopDragging);
         };
     }, [isDragging]);
-
-    // Client-side hydration safety
-    const [isClient, setIsClient] = useState(false);
-    useEffect(() => { setIsClient(true); }, []);
-
     const filteredCategories = categories.filter(cat => {
         const parentId = (cat as any).parent || (cat as any).parentId || (cat as any).parent_id || null;
         return parentId === currentParentId;
     });
     const currentParentName = currentParentId ? categories.find(c => c.id === currentParentId)?.name : null;
-
+    const filteredClients = clients.filter(c =>
+        c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+        c.phone.includes(clientSearchQuery)
+    );
     return (
         <div className={clsx(
-            "flex flex-col overflow-hidden select-none h-full font-sans transition-colors duration-700 bg-[#020617] text-slate-200",
-            isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
+            "flex flex-col overflow-hidden select-none h-full",
+            isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen bg-[#f4f6f8]" : "absolute inset-0 bg-[#f4f6f8]"
         )}>
-            {/* ═══════════ SHARED TOOLBAR ═══════════ */}
-            <POSToolbar
-                sessions={sessions}
-                activeSessionId={activeSessionId || ''}
-                onSetActiveSessionId={onSetActiveSessionId}
-                onCreateNewSession={onCreateNewSession}
-                onRemoveSession={onRemoveSession}
-                registerConfig={registerConfig as any}
-                selectedClient={selectedClient}
-                clients={clients}
-                clientSearchQuery={clientSearchQuery}
-                onSetClientSearchQuery={onSetClientSearchQuery}
-                onSelectClient={(id: number) => { onUpdateActiveSession({ clientId: id }); }}
-                currency={currency}
-                deliveryZone={deliveryZone}
-                deliveryZones={deliveryZones}
-                onSetDeliveryZone={onSetDeliveryZone}
-                isOnline={isOnline}
-                isProcessing={isProcessing}
-                isFullscreen={isFullscreen}
-                totalPieces={totalPieces}
-                uniqueItems={uniqueItems}
-                currentLayout={currentLayout}
-                onSetIsOnline={onSetIsOnline}
-                onSync={onSync}
-                onToggleFullscreen={onToggleFullscreen}
-                onOpenLayoutSelector={onOpenLayoutSelector}
-                onLockRegister={onLockRegister || (() => { })}
-                onCloseRegister={onCloseRegister}
-                onOpenReturn={onOpenReturn}
-                onOpenAddressBook={() => setIsAddressBookOpen(true)}
-                onOpenPendingDeliveries={() => setIsPendingDeliveriesOpen(true)}
-            />
-
-            <div className="flex-1 flex overflow-hidden relative">
-                {isMultiPayMode && (
-                    <div className="absolute top-0 right-0 w-[42%] h-full bg-slate-950/40 backdrop-blur-[8px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
-                        <div className="bg-slate-900/90 p-8 rounded-[2rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5 flex flex-col items-center gap-6 animate-in zoom-in-95 duration-500 backdrop-blur-2xl">
-                            <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-2xl shadow-amber-500/10">
-                                <Lock size={40} className="stroke-[2.5]" />
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-xl font-black text-white uppercase tracking-widest">Cart Locked</h3>
-                                <p className="text-[11px] text-slate-500 max-w-[240px] uppercase font-bold tracking-tighter leading-relaxed">Safety Protocol Active. Exit payment orchestration to modify items.</p>
-                            </div>
-                            <button
-                                onClick={() => setIsMultiPayMode(false)}
-                                className="px-10 py-3.5 bg-white text-slate-950 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-emerald-400 transition-all active:scale-95 shadow-xl shadow-white/5"
-                            >
-                                Release Lock
-                            </button>
+            {/* ═══════════ HEADER ═══════════ */}
+            <header className="h-[48px] bg-white border-b border-gray-200/80 flex items-center justify-between px-4 shrink-0 z-50">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+                            <ShoppingCart size={14} className="text-white" />
                         </div>
+                        <span className="text-base font-extrabold tracking-tight text-gray-900">POS</span>
                     </div>
-                )}
-
-                <aside className="w-[58%] flex flex-col bg-[#0F172A] border-r border-white/5 shrink-0 overflow-hidden relative shadow-[40px_0_80px_rgba(0,0,0,0.4)] z-20">
-                    {/* Ambient Glow */}
-                    <div className="absolute top-0 left-0 w-full h-[300px] bg-emerald-500/5 blur-[120px] pointer-events-none" />
-                    {isMultiPayMode ? (
-                        <MultiPaymentDashboard
-                            totalAmount={totalAmount}
-                            client={selectedClient}
-                            currency={currency}
-                            paymentMethods={paymentMethods}
-                            isProcessing={isProcessing}
-                            allowedAccounts={registerConfig?.allowedAccounts || []}
-                            onCancel={() => setIsMultiPayMode(false)}
-                            onConfirm={(legs) => {
-                                const legsNote = legs.map(l => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
-                                if (onSetNotes) onSetNotes(legsNote);
-                                const totalPaid = legs.reduce((sum, l) => sum + l.amount, 0);
-                                onSetCashReceived(String(totalPaid));
-                                if (legs.length > 0) onSetPaymentMethod(legs[0].method);
-                                setIsMultiPayMode(false);
-                                setTimeout(() => onCharge(), 300);
-                            }}
-                        />
-                    ) : (
-                        <>
-                            <CompactClientHeader
-                                client={selectedClient}
-                                currency={currency}
-                                uniqueItems={uniqueItems}
-                                totalPieces={totalPieces}
-                                onOpenVault={handleOpenVault}
-                            />
-
-                            <div className="px-10 py-6 border-b border-white/5 bg-slate-950/40 backdrop-blur-2xl sticky top-0 z-[20] space-y-6 shrink-0">
-                                <div className="flex items-center gap-4">
-                                    <div className="relative flex-1 group">
-                                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-emerald-500 transition-colors" size={18} />
-                                        <input
-                                            id="pos-product-search"
-                                            type="text"
-                                            placeholder="SCAN BARCODE OR QUERY MATRIX..."
-                                            className="w-full pl-14 pr-14 py-4.5 bg-slate-900 border border-white/5 rounded-2xl text-[14px] outline-none focus:bg-[#020617] focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all font-black text-white placeholder:text-slate-700 placeholder:uppercase placeholder:tracking-[0.2em]"
-                                            value={searchQuery}
-                                            onChange={(e) => onSetSearchQuery(e.target.value)}
-                                        />
-                                        {searchQuery && (
-                                            <button
-                                                onClick={() => onSetSearchQuery('')}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center bg-slate-800 text-slate-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={() => setShowNumpad(!showNumpad)}
-                                        title={showNumpad ? "Deactivate Neural Numpad" : "Initialize Speed Calc"}
-                                        className={clsx(
-                                            "w-14 h-14 rounded-2xl border-2 transition-all shrink-0 active:scale-95 flex items-center justify-center shadow-2xl",
-                                            showNumpad
-                                                ? "bg-amber-gradient border-amber-400 text-white shadow-amber-500/20 rotate-6"
-                                                : "bg-slate-900 border-white/5 text-slate-500 hover:border-amber-500/30 hover:text-amber-500"
-                                        )}
-                                    >
-                                        <Calculator size={26} className={showNumpad ? "fill-white/20" : ""} />
-                                    </button>
-                                </div>
-
-                                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 items-center">
-                                    {currentParentId === null ? (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    onSetActiveCategoryId(null);
-                                                    onSetCurrentParentId(null);
-                                                    setLeftExpanded(true);
-                                                }}
-                                                className={clsx(
-                                                    "px-6 py-3 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 h-11 flex items-center",
-                                                    (activeCategoryId === null && currentParentId === null)
-                                                        ? 'bg-white border-white text-slate-950 shadow-2xl shadow-white/10 scale-105'
-                                                        : 'bg-slate-900/50 border-white/5 text-slate-500 hover:border-emerald-500/30 hover:text-emerald-400'
-                                                )}
-                                            >Master Matrix</button>
-                                            <div className="w-px h-6 bg-white/5 shrink-0" />
-                                            {categories.filter((c: any) => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
-                                                <button
-                                                    key={cat.id}
-                                                    onClick={() => {
-                                                        onSetActiveCategoryId(cat.id);
-                                                        onSetCurrentParentId(cat.id);
-                                                        setLeftExpanded(true);
-                                                    }}
-                                                    className={clsx(
-                                                        "px-6 py-3 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 h-11 flex items-center",
-                                                        (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                            ? 'bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/20 scale-105'
-                                                            : 'bg-slate-900/50 border-white/5 text-slate-500 hover:border-emerald-500/30 hover:text-emerald-400'
-                                                    )}
-                                                >{cat.name}</button>
-                                            ))}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    const parent = categories.find(c => c.id === currentParentId);
-                                                    const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
-                                                    onSetCurrentParentId(grandParentId);
-                                                    onSetActiveCategoryId(grandParentId);
-                                                    setLeftExpanded(true);
-                                                }}
-                                                className="h-11 px-6 bg-slate-900 border-2 border-emerald-500/30 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 shadow-2xl"
-                                            >
-                                                <ArrowLeft size={16} className="text-emerald-500 stroke-[3]" />
-                                                {currentParentName}
-                                            </button>
-                                            <div className="w-px h-6 bg-white/10 mx-2 shrink-0" />
-                                            {categories.filter((c: any) => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
-                                                <button
-                                                    key={cat.id}
-                                                    onClick={() => {
-                                                        onSetActiveCategoryId(cat.id);
-                                                        setLeftExpanded(true);
-                                                    }}
-                                                    className={clsx(
-                                                        "px-6 py-3 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 h-11 flex items-center",
-                                                        activeCategoryId === cat.id
-                                                            ? 'bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/20 scale-105'
-                                                            : 'bg-slate-900/50 border-white/5 text-slate-500 hover:border-emerald-500/30 hover:text-emerald-400'
-                                                    )}
-                                                >{cat.name}</button>
-                                            ))}
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="px-8 py-3 bg-[#020617] border-b border-white/5 flex items-center justify-between shrink-0">
-                                <span className="text-[10px] font-black text-slate-600 flex items-center gap-3 uppercase tracking-[0.3em]">
-                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                    Active Stream: <span className="text-slate-400 italic font-black">{leftExpanded ? 'Matrix View' : 'Index View'}</span>
-                                </span>
+                    {/* Session Tabs */}
+                    <div className="flex gap-1 ml-1 overflow-x-auto max-w-md no-scrollbar">
+                        {sessions.map(s => (
+                            <div key={s.id} className="flex shrink-0 group">
                                 <button
-                                    onClick={() => setLeftExpanded(!leftExpanded)}
-                                    className="text-[10px] font-black text-emerald-400 hover:text-white bg-emerald-500/5 hover:bg-emerald-500 border border-emerald-500/20 px-4 py-1.5 rounded-full flex items-center gap-2 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+                                    onClick={() => onSetActiveSessionId(s.id)}
+                                    className={clsx(
+                                        "flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all",
+                                        activeSessionId === s.id
+                                            ? "bg-emerald-500 text-white shadow-sm"
+                                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                    )}
                                 >
-                                    {leftExpanded ? <EyeOff size={12} /> : <Eye size={12} />}
-                                    <span className="uppercase tracking-widest">Toggle Cluster</span>
+                                    <ShoppingCart size={10} />
+                                    {s.name}
+                                </button>
+                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-2px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
+                                    <X size={8} />
                                 </button>
                             </div>
-
-                            <div className="flex-1 relative overflow-hidden bg-[#020617]">
-                                <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-5">
-                                    {leftExpanded ? (
-                                        <ProductGrid
-                                            searchQuery={searchQuery}
-                                            categoryId={activeCategoryId || currentParentId}
-                                            onAddToCart={onAddToCart}
-                                            currency={currency}
-                                            onProductsLoaded={(props as any).onProductsLoaded}
-                                            onAutoAdd={(product) => {
-                                                onAddToCart(product);
-                                                setTimeout(() => onSetSearchQuery(''), 300);
-                                            }}
-                                            onNotFound={(q) => {
-                                                toast.error(`"${q}" not found`, {
-                                                    description: 'Zero matches in current availability matrix.',
-                                                    duration: 3000,
-                                                });
-                                                setTimeout(() => onSetSearchQuery(''), 1500);
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {currentParentId !== null ? (
-                                                <button
-                                                    onClick={() => {
-                                                        const parent = categories.find(c => c.id === currentParentId);
-                                                        const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
-                                                        onSetCurrentParentId(grandParentId);
-                                                        onSetActiveCategoryId(grandParentId);
-                                                    }}
-                                                    className="p-10 rounded-3xl bg-slate-900 border border-white/5 text-slate-500 text-center hover:bg-slate-800 transition-all flex flex-col items-center justify-center font-black uppercase text-[12px] tracking-[0.2em] gap-4 shadow-2xl group"
-                                                >
-                                                    <ArrowLeft size={32} className="group-hover:-translate-x-2 transition-transform" />
-                                                    Navigation: Back
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
-                                                    className="p-8 rounded-3xl bg-emerald-gradient text-white text-center group hover:shadow-[0_0_50px_rgba(16,185,129,0.3)] transition-all border-none relative overflow-hidden"
-                                                >
-                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -rotate-45" />
-                                                    <Package size={32} className="mx-auto mb-3 relative z-10 group-hover:scale-110 transition-transform" />
-                                                    <span className="text-[14px] font-black uppercase tracking-[0.1em] relative z-10">Matrix All</span>
-                                                </button>
-                                            )}
-                                            {filteredCategories.map(cat => {
-                                                const hasChildren = categories.some((c: any) => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === cat.id);
-                                                return (
-                                                    <button
-                                                        key={cat.id}
-                                                        onClick={() => {
-                                                            onSetActiveCategoryId(cat.id);
-                                                            if (hasChildren) {
-                                                                onSetCurrentParentId(cat.id);
-                                                            }
-                                                            setLeftExpanded(true);
-                                                        }}
-                                                        className={clsx(
-                                                            "p-10 rounded-3xl border text-center group hover:shadow-2xl transition-all relative flex flex-col items-center justify-center gap-4 border-white/5",
-                                                            (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                                ? "bg-slate-900 border-emerald-500/50 ring-1 ring-emerald-500/20"
-                                                                : "bg-slate-900/40 hover:bg-slate-900 hover:border-emerald-500/30"
-                                                        )}
-                                                    >
-                                                        <div className={clsx(
-                                                            "w-16 h-16 rounded-[1.8rem] flex items-center justify-center transition-all duration-700 shadow-inner",
-                                                            (activeCategoryId === cat.id || currentParentId === cat.id)
-                                                                ? 'bg-emerald-gradient text-white rotate-6 scale-110 shadow-emerald-500/20'
-                                                                : 'bg-slate-950 text-slate-600 group-hover:bg-slate-800 group-hover:text-emerald-400 group-hover:rotate-3'
-                                                        )}>
-                                                            <Tag size={28} className="stroke-[2.5]" />
-                                                        </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <span className={clsx(
-                                                                "text-[14px] font-black uppercase tracking-tight transition-colors line-clamp-1 italic",
-                                                                (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-400' : 'text-slate-300'
-                                                            )}>{cat.name}</span>
-                                                            {hasChildren && <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1 opacity-60">Sub-Clusters Available</span>}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                                {isClient && showNumpad && (
-                                    <div
-                                        style={{
-                                            position: 'fixed',
-                                            left: 0,
-                                            top: 0,
-                                            transform: `translate3d(${numpadPos?.x || 20}px, ${numpadPos?.y || 150}px, 0)`,
-                                            cursor: isDragging ? 'grabbing' : 'default',
-                                            willChange: 'transform'
-                                        }}
-                                        className={clsx(
-                                            "z-[100] w-[300px] p-3 bg-slate-900/90 backdrop-blur-3xl rounded-3xl border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.6)] animate-in zoom-in-95 ring-1 ring-white/10",
-                                            !isDragging && "transition-transform duration-200 ease-out"
-                                        )}
-                                    >
-                                        <div
-                                            onMouseDown={startDragging}
-                                            className="flex items-center justify-between px-3 mb-3 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-2xl p-2 transition-colors group/handle border border-transparent hover:border-white/5"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                                                <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] italic">
-                                                    {isMultiPayMode ? 'Payment DNA' : selectedCartIdx !== null ? `Node Edit: #${selectedCartIdx + 1}` : 'Neural Calc v1'}
-                                                </span>
-                                            </div>
-                                            <button onClick={() => setShowNumpad(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:bg-rose-500 hover:text-white transition-all shadow-inner border border-white/5">
-                                                <X size={14} />
+                        ))}
+                        <button onClick={onCreateNewSession} className="w-6 h-6 flex items-center justify-center bg-gray-100 text-gray-400 rounded-md hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                            <Plus size={12} />
+                        </button>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button
+                            onClick={() => onSetIsOnline(!isOnline)}
+                            className={clsx(
+                                "h-7 px-3 rounded-md text-[10px] font-bold flex items-center gap-1.5 transition-all outline-none",
+                                isOnline ? "bg-white text-emerald-600 shadow-sm" : "text-rose-500"
+                            )}
+                        >
+                            {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+                            {isOnline ? 'ONLINE' : 'OFFLINE'}
+                        </button>
+                        <button
+                            onClick={onSync}
+                            className="h-7 px-3 rounded-md text-[10px] font-bold text-gray-500 hover:bg-white hover:text-indigo-600 transition-all flex items-center gap-1.5"
+                        >
+                            <RefreshCw size={12} className={isProcessing ? "animate-spin" : ""} />
+                            SYNC
+                        </button>
+                    </div>
+                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(uniqueItems)} items</span>
+                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(totalPieces)} pcs</span>
+                    <button onClick={onToggleFullscreen} className="h-7 px-2 bg-gray-100 text-gray-600 rounded-md text-[11px] font-semibold hover:bg-gray-200 transition-all flex items-center gap-1">
+                        {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
+                    </button>
+                    <button onClick={onOpenLayoutSelector} className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-md text-gray-500 hover:bg-gray-200 transition-all">
+                        <Layout size={13} />
+                    </button>
+                    <Link
+                        href="/sales/history"
+                        className="h-7 px-2.5 bg-indigo-50 text-indigo-600 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                        <History size={11} />
+                        History
+                    </Link>
+                </div>
+            </header>
+            {/* ═══════════ MAIN SPLIT ═══════════ */}
+            <div className="flex-1 flex overflow-hidden">
+                {/* ════ LEFT COLUMN (58%) ════ */}
+                <aside className="w-[58%] flex flex-col bg-white border-r border-gray-200/80 shrink-0 overflow-hidden">
+                    {/* Client Selector & Search */}
+                    <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                        <div className="flex gap-2">
+                            <div className="flex-1 relative group">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={12} />
+                                <input
+                                    type="text"
+                                    placeholder="Find customer..."
+                                    value={clientSearchQuery}
+                                    onChange={(e) => onSetClientSearchQuery(e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-bold outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all"
+                                />
+                                {clientSearchQuery && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl z-[100] max-h-48 overflow-y-auto custom-scrollbar">
+                                        {filteredClients.map(c => (
+                                            <button
+                                                key={c.id}
+                                                onClick={() => {
+                                                    onUpdateActiveSession({ clientId: c.id });
+                                                    onSetClientSearchQuery('');
+                                                }}
+                                                className="w-full text-left px-4 py-2 hover:bg-emerald-50 border-b border-gray-50 flex items-center justify-between group"
+                                            >
+                                                <div>
+                                                    <p className="text-[11px] font-black text-gray-900 group-hover:text-emerald-700">{c.name}</p>
+                                                    <p className="text-[9px] text-gray-400 font-mono">{c.phone}</p>
+                                                </div>
+                                                <span className="text-[9px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100">Select</span>
                                             </button>
-                                        </div>
-                                        <POSNumpad
-                                            mode={numpadMode}
-                                            onModeChange={setNumpadMode}
-                                            onValueConfirm={(val, mode) => {
-                                                const idx = selectedCartIdx ?? 0;
-                                                if (cart.length > idx) {
-                                                    const target = cart[idx];
-                                                    if (mode === 'qty') {
-                                                        const delta = val - target.quantity;
-                                                        handleProtectedQuantity(target.productId, delta);
-                                                    } else if (mode === 'price') {
-                                                        handleProtectedPrice(target.productId, val);
-                                                    } else if (mode === 'disc') {
-                                                        handleProtectedDiscount(val);
-                                                    }
-                                                    setShowNumpad(false);
-                                                } else if (mode === 'disc') {
-                                                    handleProtectedDiscount(val);
-                                                    setShowNumpad(false);
-                                                } else {
-                                                    toast.error("Cart cluster empty.");
-                                                }
-                                            }}
-                                        />
+                                        ))}
                                     </div>
                                 )}
                             </div>
-                        </>
-                    )}
+                            <div className="relative group shrink-0">
+                                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={12} />
+                                <select
+                                    value={deliveryZone}
+                                    onChange={(e) => onSetDeliveryZone(e.target.value)}
+                                    className="pl-8 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-black outline-none appearance-none cursor-pointer focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all uppercase tracking-wider"
+                                >
+                                    {deliveryZones.map(z => (
+                                        <option key={z.id} value={z.name}>{z.name}</option>
+                                    ))}
+                                    {deliveryZones.length === 0 && (
+                                        <option value="A">Zone A</option>
+                                    )}
+                                </select>
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={10} />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-indigo-100 shrink-0">
+                                {selectedClient?.name?.charAt(0) || 'C'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-black text-gray-900 truncate">{selectedClient?.name || 'Walk-in'}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-gray-400 font-bold">{selectedClient?.phone || 'No phone'}</span>
+                                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-px rounded text-[10px] font-black">BAL: {currency}{formatNumber(selectedClient?.balance || 0)}</span>
+                                    <span className="bg-amber-50 text-amber-700 px-1.5 py-px rounded text-[10px] font-black flex items-center gap-0.5"><Star size={8} />{selectedClient?.loyalty || 0} PTS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Search + Calculator Button + Category Pills */}
+                    <div className="px-3 py-2 border-b border-gray-100 space-y-1.5 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                <input
+                                    type="text"
+                                    placeholder="Search products, scan barcode..."
+                                    className="w-full pl-8 pr-10 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all font-medium"
+                                    value={searchQuery}
+                                    onChange={(e) => onSetSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => onSetSearchQuery('')}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-rose-500 transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setShowNumpad(!showNumpad)}
+                                title={showNumpad ? "Hide Calculator" : "Show Calculator"}
+                                className={clsx(
+                                    "p-1.5 rounded-lg border transition-all shrink-0 active:scale-95 shadow-sm",
+                                    showNumpad
+                                        ? "bg-amber-100 border-amber-300 text-amber-700 ring-2 ring-amber-50"
+                                        : "bg-white border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600"
+                                )}
+                            >
+                                <Calculator size={18} />
+                            </button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto custom-scrollbar-h pb-1 pt-1 items-center">
+                            {currentParentId === null ? (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            onSetActiveCategoryId(null);
+                                            onSetCurrentParentId(null);
+                                            setLeftExpanded(true);
+                                        }}
+                                        className={clsx(
+                                            "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                            (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border-gray-100 text-gray-500 hover:border-indigo-300 hover:text-indigo-600'
+                                        )}
+                                    >ALL</button>
+                                    {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                onSetActiveCategoryId(cat.id);
+                                                onSetCurrentParentId(cat.id);
+                                                setLeftExpanded(true);
+                                            }}
+                                            className={clsx(
+                                                "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                (activeCategoryId === cat.id || currentParentId === cat.id)
+                                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+                                            )}
+                                        >{cat.name}</button>
+                                    ))}
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            const parent = categories.find(c => c.id === currentParentId);
+                                            const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
+                                            onSetCurrentParentId(grandParentId);
+                                            onSetActiveCategoryId(grandParentId);
+                                            setLeftExpanded(true);
+                                        }}
+                                        className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                    >
+                                        <ArrowLeft size={14} />
+                                        {currentParentName}
+                                    </button>
+                                    <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
+                                    {categories.filter(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                onSetActiveCategoryId(cat.id);
+                                                setLeftExpanded(true);
+                                            }}
+                                            className={clsx(
+                                                "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                activeCategoryId === cat.id
+                                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+                                            )}
+                                        >{cat.name}</button>
+                                    ))}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    {/* Toggle View Mode */}
+                    <div className="px-3 py-1 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/50">
+                        <span className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-emerald-500 rounded-full" />
+                            {leftExpanded ? 'Products' : 'Categories'}
+                        </span>
+                        <button
+                            onClick={() => setLeftExpanded(!leftExpanded)}
+                            className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+                        >
+                            {leftExpanded ? <EyeOff size={10} /> : <Eye size={10} />}
+                            {leftExpanded ? 'Categories' : 'Products'}
+                        </button>
+                    </div>
+                    {/* Main Area (Products or Categories) */}
+                    <div className="flex-1 relative bg-gray-50/10 overflow-hidden">
+                        <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
+                            {leftExpanded ? (
+                                <ProductGrid searchQuery={searchQuery} categoryId={activeCategoryId || currentParentId} onAddToCart={onAddToCart} currency={currency} />
+                            ) : (
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {/* Back Button / Navigation Context */}
+                                    {currentParentId !== null ? (
+                                        <button
+                                            onClick={() => {
+                                                const parent = categories.find(c => c.id === currentParentId);
+                                                const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
+                                                onSetCurrentParentId(grandParentId);
+                                                onSetActiveCategoryId(grandParentId);
+                                            }}
+                                            className="p-8 rounded-2xl bg-[#f0f4ff] border border-indigo-100 text-indigo-600 text-center hover:bg-indigo-100 transition-all flex flex-col items-center justify-center font-black uppercase text-[12px] tracking-widest gap-2 shadow-sm"
+                                        >
+                                            <ArrowLeft size={24} />
+                                            BACK
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
+                                            className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-center group hover:shadow-xl transition-all border-none"
+                                        >
+                                            <Package size={20} className="mx-auto mb-1.5" />
+                                            <span className="text-[12px] font-black uppercase tracking-wider">All Products</span>
+                                        </button>
+                                    )}
+                                    {filteredCategories.map(cat => {
+                                        const hasChildren = categories.some(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === cat.id);
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => {
+                                                    onSetActiveCategoryId(cat.id);
+                                                    if (hasChildren) {
+                                                        onSetCurrentParentId(cat.id);
+                                                    }
+                                                    setLeftExpanded(true);
+                                                }}
+                                                className={clsx(
+                                                    "p-6 rounded-2xl border text-center group hover:shadow-2xl transition-all bg-white relative flex flex-col items-center justify-center gap-3",
+                                                    (activeCategoryId === cat.id || currentParentId === cat.id)
+                                                        ? "border-emerald-400 ring-4 ring-emerald-50 shadow-xl"
+                                                        : "border-gray-100 hover:border-emerald-200"
+                                                )}
+                                            >
+                                                <div className={clsx(
+                                                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                    (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-white rotate-12' : 'bg-gray-50 text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-500'
+                                                )}>
+                                                    <Tag size={20} />
+                                                </div>
+                                                <div className="flex flex-col items-center">
+                                                    <span className={clsx(
+                                                        "text-[13px] font-black uppercase tracking-wider transition-colors line-clamp-2",
+                                                        (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-700' : 'text-gray-900'
+                                                    )}>{cat.name}</span>
+                                                    {hasChildren && <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Browse Sub-items</span>}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        {/* Speed Calc Floating Overlay */}
+                        {showNumpad && (
+                            <div
+                                style={{
+                                    position: 'fixed',
+                                    left: 0,
+                                    top: 0,
+                                    transform: `translate3d(${numpadPos.x}px, ${numpadPos.y}px, 0)`,
+                                    cursor: isDragging ? 'grabbing' : 'default',
+                                    willChange: 'transform'
+                                }}
+                                className={clsx(
+                                    "z-[50] w-[280px] p-2 bg-white/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
+                                    !isDragging && "transition-transform duration-200 ease-out"
+                                )}
+                            >
+                                <div
+                                    onMouseDown={startDragging}
+                                    className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-amber-50 rounded-lg p-1 transition-colors group/handle"
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <GripHorizontal size={14} className="text-amber-400 group-hover/handle:text-amber-600 transition-colors" />
+                                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                            {isMultiPayMode ? 'Multi Pay' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
+                                        </span>
+                                    </div>
+                                    <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                                <POSNumpad
+                                    mode={numpadMode}
+                                    onModeChange={setNumpadMode}
+                                    onValueConfirm={(val, mode) => {
+                                        const idx = selectedCartIdx ?? 0;
+                                        if (cart.length > idx) {
+                                            const target = cart[idx];
+                                            if (mode === 'qty') {
+                                                const delta = val - target.quantity;
+                                                handleProtectedQuantity(target.productId, delta);
+                                            } else if (mode === 'price') {
+                                                handleProtectedPrice(target.productId, val);
+                                            } else if (mode === 'disc') {
+                                                handleProtectedDiscount(val);
+                                            }
+                                            setShowNumpad(false);
+                                        } else if (mode === 'disc') {
+                                            handleProtectedDiscount(val);
+                                            setShowNumpad(false);
+                                        } else {
+                                            toast.error("Add an item first");
+                                        }
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </aside>
 
-                {/* ═══ VERTICAL NAVIGATION BAR ═══ */}
-                <div className="w-[100px] bg-slate-950 border-r border-white/5 flex flex-col items-center py-8 gap-6 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(255,255,255,0.05)] z-10">
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-[0.5em] mb-4 rotate-90 origin-center whitespace-nowrap opacity-40">System Control</span>
-
-                    {paymentMethods.filter((m: any) => {
-                        const key = typeof m === 'string' ? m : m.key;
-                        return key !== 'DELIVERY';
-                    }).map((m: any) => {
+                {/* ════ VERTICAL PAYMENT COLUMN (72px) ════ */}
+                <div className="w-[72px] bg-white border-r border-gray-200/80 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)]">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-1">Pay</span>
+                    {paymentMethods.map((m: any) => {
                         const key = typeof m === 'string' ? m : m.key;
                         const label = typeof m === 'string' ? m : (m.label || m.key);
 
+                        // Icon mapping
                         let Icon = Banknote;
                         if (key.includes('CARD')) Icon = CreditCard;
                         if (key.includes('WALLET')) Icon = Wallet;
                         if (key.includes('WAVE') || key.includes('OM')) Icon = Smartphone;
                         if (key.includes('MULTI')) Icon = Calculator;
+                        if (key.includes('DELIVERY')) Icon = MapPin;
                         if (key.includes('BANK')) Icon = Landmark;
 
                         const isActive = paymentMethod === key;
-                        const alwaysAllowed = ['MULTI', 'DELIVERY', 'CREDIT'].includes(key);
-                        const isLinked = alwaysAllowed || (typeof m === 'object' && m.accountId);
 
                         return (
                             <button
                                 key={key}
-                                disabled={!isLinked}
-                                title={!isLinked ? `⚠️ ${label}: Disconnected Node` : label}
                                 onClick={() => {
-                                    if (!isLinked) return;
                                     if (key.includes('MULTI')) {
                                         setIsMultiPayMode(true);
-                                        setShowNumpad(false);
+                                        setShowNumpad(false); // Hide floating numpad, we'll use integrated one
+                                        if (paymentLegs.length === 0) setMpBuffer('');
                                     } else {
                                         onSetPaymentMethod(key);
+                                        // If selecting a different method while in multi-pay, we might want to stay in multi-pay or exit.
+                                        // For simplicity, we exit multi-pay if they pick a standard method.
                                         setIsMultiPayMode(false);
                                     }
                                 }}
                                 className={clsx(
-                                    "group flex flex-col items-center justify-center p-3 rounded-2xl transition-all w-20 h-20 border-2 relative shrink-0",
-                                    !isLinked
-                                        ? "bg-slate-900/50 border-transparent text-slate-800 cursor-not-allowed opacity-30 shadow-inner"
-                                        : isActive || (isMultiPayMode && key.includes('MULTI'))
-                                            ? "bg-emerald-gradient border-emerald-400 text-white shadow-[0_0_40px_rgba(16,185,129,0.3)] scale-110 z-10"
-                                            : "bg-slate-900 border-white/5 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400 hover:shadow-2xl hover:bg-slate-800"
+                                    "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
+                                    isActive || (setIsMultiPayMode && key.includes('MULTI'))
+                                        ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
+                                        : "bg-white border-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                 )}
                             >
-                                <Icon size={28} className={clsx("transition-transform stroke-[2.5]", isActive ? "scale-110" : "group-hover:scale-110")} />
-                                <span className="text-[10px] font-black mt-2 uppercase truncate w-full text-center tracking-tighter leading-none italic">{label}</span>
+                                <Icon size={20} className={clsx("transition-transform", isActive ? "scale-110" : "group-hover:scale-110")} />
+                                <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">{label}</span>
                                 {isActive && (
-                                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-3 h-10 bg-emerald-500 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.8)]" />
-                                )}
-                                {!isLinked && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center border-2 border-slate-950">
-                                        <AlertCircle size={10} className="text-white" />
-                                    </div>
+                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-full" />
                                 )}
                             </button>
                         );
                     })}
-
-                    <div className="mt-auto w-full flex flex-col items-center gap-6 pt-8 border-t border-white/5">
-                        {paymentMethods.some((m: any) => (typeof m === 'string' ? m : m.key) === 'DELIVERY') && (
-                            <button
-                                onClick={() => setIsDeliveryModalOpen(true)}
-                                className={clsx(
-                                    "group flex flex-col items-center justify-center p-3 rounded-2xl transition-all w-20 h-20 border-2 relative shrink-0",
-                                    paymentMethod === 'DELIVERY'
-                                        ? "bg-blue-600 border-blue-400 text-white shadow-[0_0_40px_rgba(59,130,246,0.3)] scale-110"
-                                        : "bg-slate-900 border-white/5 text-slate-500 hover:border-blue-500/50 hover:text-blue-400 hover:bg-slate-800"
-                                )}
-                            >
-                                <MapPin size={28} className={clsx("transition-transform stroke-[2.5]", paymentMethod === 'DELIVERY' ? "scale-110" : "group-hover:scale-110")} />
-                                <span className="text-[10px] font-black mt-2 uppercase truncate w-full text-center tracking-tighter leading-none italic">Logistics</span>
-                            </button>
-                        )}
-
-                        <button
-                            onClick={() => setIsHistoryOpen(true)}
-                            className="group flex flex-col items-center justify-center p-3 rounded-2xl transition-all w-20 h-20 border-2 bg-slate-900 border-white/5 text-slate-500 hover:border-indigo-500/50 hover:text-indigo-400 hover:bg-slate-800 hover:shadow-2xl"
-                        >
-                            <HistoryIcon size={28} className="transition-transform group-hover:scale-110 stroke-[2.5]" />
-                            <span className="text-[10px] font-black mt-2 uppercase truncate w-full text-center tracking-tighter leading-none italic">History</span>
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                const el = document.getElementById('pos-product-search') as HTMLInputElement | null;
-                                el?.focus();
-                                el?.select();
-                            }}
-                            className="group flex flex-col items-center justify-center p-3 rounded-2xl transition-all w-20 h-20 border-2 bg-slate-900 border-white/5 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-slate-800"
-                        >
-                            <BookOpen size={28} className="transition-transform group-hover:scale-110 stroke-[2.5]" />
-                            <span className="text-[10px] font-black mt-2 uppercase truncate w-full text-center tracking-tighter leading-none italic">Glossary</span>
-                        </button>
-                    </div>
                 </div>
 
-                {/* ═══ MAIN CART AREA ═══ */}
-                <main className="flex-1 flex flex-col bg-[#020617] overflow-hidden relative shadow-2xl">
-                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 blur-[150px] pointer-events-none" />
-
-                    <div className="flex flex-col h-full overflow-hidden relative z-10">
-                        <div className="px-6 py-4 border-b border-white/5 bg-slate-950/40 backdrop-blur-xl flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                <h2 className="text-sm font-black text-white uppercase tracking-[0.2em]">Active Shipment</h2>
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{uniqueItems} Lines · {totalPieces} Pcs</span>
-                            </div>
-                            {cart.length > 0 && (
-                                <button onClick={() => {
-                                    onSetPendingOverrideAction({ label: 'Purge entire shipment cluster', execute: () => onClearCart() });
-                                    onSetOverrideOpen(true);
-                                }} className="text-[10px] text-rose-500/70 hover:text-rose-500 font-black uppercase tracking-widest transition-colors hover:bg-rose-500/5 px-4 py-1.5 rounded-full border border-rose-500/20">Purge</button>
-                            )}
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar-dark px-2 py-2">
-                            {cart.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-slate-800 gap-6 opacity-40">
-                                    <div className="w-24 h-24 rounded-[2.5rem] bg-slate-900 flex items-center justify-center border-2 border-dashed border-white/10">
-                                        <ShoppingCart size={48} strokeWidth={1} />
+                {/* ════ RIGHT COLUMN: CART (full height) ════ */}
+                <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
+                    {isMultiPayMode ? (
+                        /* Split Payment Panel with Embedded Numpad */
+                        <div className="flex flex-col h-full bg-[#f8fafc]">
+                            {/* ── STICKY HEADER ── */}
+                            <div className="px-4 py-3 bg-slate-900 border-b border-white/5 flex items-center justify-between shrink-0 shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => { setIsMultiPayMode(false); }}
+                                        className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90"
+                                    >
+                                        <ArrowLeft size={16} />
+                                    </button>
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] leading-none mb-1">Payment Hub</h2>
+                                        <p className="text-sm font-black text-white uppercase tracking-wider">Multi-Method</p>
                                     </div>
-                                    <p className="text-[11px] font-black uppercase tracking-[0.4em] text-center">Awaiting data input...</p>
                                 </div>
-                            ) : (
-                                <div className="space-y-1.5">
-                                    {cart.map((item, idx) => (
+                                <div className="text-right">
+                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest block mb-0.5">Total Sale</span>
+                                    <span className="text-lg font-black text-white tabular-nums tracking-tighter">{currency}{formatNumber(totalAmount)}</span>
+                                </div>
+                            </div>
+
+                            {/* ── PROGRESS & LEGS ── */}
+                            <div className="flex-1 flex flex-col min-h-0">
+                                {/* Dashboard: Remaining & Progress */}
+                                <div className="px-4 py-4 bg-white border-b border-slate-100 shadow-sm relative overflow-hidden group">
+                                    <div className="flex items-end justify-between mb-3 relative z-10">
+                                        <div>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Target</span>
+                                            <div className={clsx(
+                                                "px-3 py-1.5 rounded-xl font-black tabular-nums transition-all duration-300 flex items-center gap-2",
+                                                multiPayRemaining <= 0.01
+                                                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                                                    : "bg-slate-100 text-slate-900"
+                                            )}>
+                                                <span className="text-xl tracking-tighter">{currency}{formatNumber(Math.max(0, multiPayRemaining))}</span>
+                                                {multiPayRemaining <= 0.01 && <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"><Check size={12} strokeWidth={4} /></div>}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Paid</span>
+                                            <span className="text-lg font-black text-slate-600 tabular-nums">{currency}{formatNumber(multiPayTotal)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
                                         <div
-                                            key={item.productId}
-                                            onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
                                             className={clsx(
-                                                "px-5 py-4 group transition-all duration-500 flex flex-col gap-3 cursor-pointer rounded-2xl relative overflow-hidden backdrop-blur-sm",
-                                                selectedCartIdx === idx && highlightedItemId === item.productId
-                                                    ? "bg-emerald-500/20 ring-2 ring-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
-                                                    : selectedCartIdx === idx
-                                                        ? "bg-amber-500/10 ring-2 ring-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.1)]"
-                                                        : highlightedItemId === item.productId
-                                                            ? "bg-emerald-500/10 ring-2 ring-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.1)]"
-                                                            : "bg-slate-900/40 border border-white/5 hover:bg-slate-900 hover:border-white/10"
+                                                "h-full rounded-full transition-all duration-700 ease-out relative",
+                                                multiPayRemaining <= 0.01 ? "bg-emerald-500" : "bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"
+                                            )}
+                                            style={{ width: `${Math.min(100, (multiPayTotal / totalAmount) * 100)}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                        </div>
+                                    </div>
+
+                                    {multiPayRemaining < 0 && (
+                                        <p className="mt-2 text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
+                                            <RefreshCw size={10} /> {currency}{Math.abs(multiPayRemaining).toFixed(2)} Change / Carry Over
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Legs List */}
+                                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar bg-slate-50/50">
+                                    {paymentLegs.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">
+                                            <Calculator size={48} strokeWidth={1} className="mb-2" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest italic">Add a payment leg below</p>
+                                        </div>
+                                    ) : (
+                                        paymentLegs.map((leg, idx) => {
+                                            const LIcon = getMethodIcon(leg.method);
+                                            return (
+                                                <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in slide-in-from-right-4 transition-all hover:border-indigo-300 hover:shadow-md group/leg">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 flex items-center justify-center group-hover/leg:bg-indigo-50 group-hover/leg:text-indigo-600 transition-colors">
+                                                        <LIcon size={20} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{leg.method}</span>
+                                                        <span className="text-base font-black text-slate-900 tabular-nums">{currency}{formatNumber(leg.amount)}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setPaymentLegs(prev => prev.filter((_, i) => i !== idx))}
+                                                        className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-all opacity-0 group-hover/leg:opacity-100"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* ── INTEGRATED NUMPAD (Speed Calc Inspired) ── */}
+                            <div className="bg-slate-900 p-4 shrink-0 rounded-t-[32px] shadow-2xl border-t border-white/10 ring-1 ring-white/5">
+                                {/* Display */}
+                                <div className="flex items-center gap-3 bg-black/40 rounded-2xl px-5 py-4 mb-4 border border-white/10 ring-4 ring-black/20">
+                                    <div className="flex-1">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1 block">
+                                            {multiPaySelectedMethod || 'Select Method'}
+                                        </span>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-3xl font-black text-white tabular-nums tracking-tighter">
+                                                {mpBuffer || '0'}
+                                            </span>
+                                            {mpBuffer && <span className="text-sm font-black text-white/30 uppercase tracking-widest">{currency}</span>}
+                                        </div>
+                                    </div>
+                                    {multiPayRemaining > 0 && !mpBuffer && (
+                                        <button
+                                            onClick={() => setMpBuffer(String(Math.max(0, multiPayRemaining).toFixed(2)))}
+                                            className="px-3 py-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500/40 transition-all"
+                                        >
+                                            Full Mix
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Method Grid */}
+                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                    {paymentMethods.filter((m: any) => !((typeof m === 'string' ? m : m.key).includes('MULTI'))).map((m: any) => {
+                                        const k = typeof m === 'string' ? m : m.key;
+                                        const lbl = typeof m === 'string' ? m : (m.label || m.key);
+                                        const MIcon = getMethodIcon(k);
+                                        const isSel = multiPaySelectedMethod === k;
+                                        return (
+                                            <button
+                                                key={k}
+                                                onClick={() => setMultiPaySelectedMethod(k)}
+                                                className={clsx(
+                                                    "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                    isSel
+                                                        ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-105"
+                                                        : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                                                )}
+                                            >
+                                                <MIcon size={14} />
+                                                <span className="truncate">{lbl}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Digit Buttons + Action */}
+                                <div className="flex gap-4">
+                                    <div className="flex-1 grid grid-cols-3 gap-2">
+                                        {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
+                                            <button
+                                                key={d}
+                                                onClick={() => setMpBuffer(prev => (d === '.' && prev.includes('.')) ? prev : prev + d)}
+                                                className="h-12 bg-white/5 border border-white/5 rounded-xl font-black text-lg text-white hover:bg-white/10 active:scale-90 transition-all"
+                                            >
+                                                {d}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setMpBuffer(prev => prev.slice(0, -1))}
+                                            className="h-12 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:bg-rose-500/20 hover:text-rose-500 active:scale-90 transition-all flex items-center justify-center"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+
+                                    {/* Action Stack */}
+                                    <div className="w-[100px] flex flex-col gap-2">
+                                        <button
+                                            onClick={() => {
+                                                if (!multiPaySelectedMethod) { toast.error('Select method'); return; }
+                                                const val = parseFloat(mpBuffer);
+                                                if (isNaN(val) || val <= 0) { toast.error('Enter amount'); return; }
+                                                setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount: val }]);
+                                                setMpBuffer('');
+                                            }}
+                                            disabled={!multiPaySelectedMethod || !mpBuffer}
+                                            className={clsx(
+                                                "flex-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all",
+                                                multiPaySelectedMethod && mpBuffer
+                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 hover:scale-[1.02] active:scale-95"
+                                                    : "bg-white/5 text-slate-600 cursor-not-allowed"
                                             )}
                                         >
-                                            <div className="flex items-center gap-4 w-full relative z-10">
+                                            <Plus size={20} strokeWidth={3} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest">Add Leg</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const legsNote = paymentLegs.map(l => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
+                                                if (onSetNotes) onSetNotes(legsNote);
+                                                onSetCashReceived(String(multiPayTotal));
+                                                if (paymentLegs.length > 0) onSetPaymentMethod(paymentLegs[0].method);
+                                                toast.success(`Processing Multi-Payment...`);
+                                                setIsMultiPayMode(false);
+                                                setTimeout(() => onCharge(), 200);
+                                            }}
+                                            disabled={multiPayRemaining > 0.01 || paymentLegs.length === 0 || isProcessing}
+                                            className={clsx(
+                                                "h-[120px] rounded-2xl flex flex-col items-center justify-center gap-1 transition-all overflow-hidden",
+                                                multiPayRemaining <= 0.01 && paymentLegs.length > 0 && !isProcessing
+                                                    ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/40 hover:scale-[1.02] active:scale-95 animate-pulse"
+                                                    : "bg-white/5 text-slate-600 cursor-not-allowed"
+                                            )}
+                                        >
+                                            <span className="text-[8px] font-black uppercase tracking-[0.2em] mb-1">Finalize</span>
+                                            <Check size={32} strokeWidth={4} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* ════ NORMAL CART VIEW ════ */
+                        <>
+                            <div className="px-3 py-1.5 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <h2 className="text-xs font-bold text-gray-900">Order</h2>
+                                    <span className="text-[10px] text-gray-400 font-medium">{uniqueItems} lines · {totalPieces} pcs</span>
+                                </div>
+                                {cart.length > 0 && (
+                                    <button onClick={onClearCart} className="text-[10px] text-gray-400 hover:text-rose-500 font-medium transition-colors">Clear</button>
+                                )}
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {cart.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
+                                        <ShoppingCart size={36} strokeWidth={1} className="text-gray-200" />
+                                        <p className="text-xs text-gray-400">No items yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {cart.map((item: any, idx: number) => (
+                                            <div
+                                                key={item.productId}
+                                                onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
+                                                className={clsx(
+                                                    "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
+                                                    selectedCartIdx === idx && highlightedItemId === item.productId
+                                                        ? "bg-teal-100 ring-1 ring-teal-300"
+                                                        : selectedCartIdx === idx
+                                                            ? "bg-amber-50 ring-1 ring-amber-200"
+                                                            : highlightedItemId === item.productId
+                                                                ? "bg-emerald-100 ring-1 ring-emerald-200"
+                                                                : "hover:bg-white"
+                                                )}
+                                            >
+                                                <span className="text-[10px] text-gray-300 font-mono w-4 shrink-0 text-center">{idx + 1}</span>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[15px] font-black text-white truncate leading-tight group-hover:text-emerald-400 italic transition-colors">{item.name}</p>
-                                                    <div className="flex items-center gap-3 mt-1.5">
-                                                        <span className="bg-emerald-500/10 text-emerald-500 px-2.5 py-0.5 rounded-lg text-[10px] font-black border border-emerald-500/20 uppercase tracking-tighter italic">Stock: {item.stock || 0}</span>
+                                                    <p className="text-[14px] font-black text-gray-900 truncate leading-tight group-hover:text-emerald-600">{item.name}</p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
+                                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">Stock: {item.stock || 0}</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span
-                                                        onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
-                                                        className="text-[13px] font-black text-slate-500 shrink-0 hover:text-emerald-400 transition-colors uppercase tracking-tight tabular-nums"
-                                                    >
-                                                        {currency}{Number(item.price).toFixed(2)}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1 shrink-0 bg-slate-950/80 p-1 rounded-xl border border-white/5">
+                                                <span
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
+                                                    className="text-[12px] font-black text-gray-400 shrink-0 hover:text-emerald-600 transition-colors"
+                                                >
+                                                    {currency}{Number(item.price).toFixed(2)}
+                                                </span>
+                                                <div className="flex items-center gap-px shrink-0">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -1); }}
-                                                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-rose-600 hover:text-white flex items-center justify-center text-slate-500 transition-all border border-white/5 active:scale-90"
+                                                        className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all border border-transparent"
                                                     >
-                                                        <Minus size={14} className="stroke-[3]" />
+                                                        <Minus size={12} />
                                                     </button>
                                                     <span
                                                         onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
-                                                        className="w-10 text-center text-[15px] font-black tabular-nums text-white hover:text-amber-400 transition-colors"
+                                                        className="w-7 text-center text-[13px] font-black tabular-nums text-gray-900 hover:text-emerald-600 transition-colors"
                                                     >
                                                         {item.quantity}
                                                     </span>
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
-                                                        className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-white text-emerald-500 flex items-center justify-center transition-all border border-white/5 active:scale-90"
+                                                        className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
                                                     >
-                                                        <Plus size={14} className="stroke-[3]" />
+                                                        <Plus size={12} />
                                                     </button>
                                                 </div>
-                                                <p className="text-[16px] font-black text-emerald-400 tabular-nums shrink-0 w-24 text-right italic">
+                                                <p className="text-[13px] font-black text-emerald-700 tabular-nums shrink-0 w-16 text-right">
                                                     {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                                 </p>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -item.quantity); }}
-                                                    className="ml-3 w-10 h-10 rounded-xl bg-slate-900 border border-white/5 text-rose-500 hover:bg-rose-600 hover:text-white transition-all shrink-0 flex items-center justify-center shadow-inner"
+                                                    className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shrink-0 flex items-center justify-center border border-rose-100"
+                                                    title="Delete product from cart"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
-                                            {(selectedCartIdx === idx || item.note) && (
-                                                <div className="pl-1 w-full" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="flex items-center gap-3 bg-black/40 border border-white/5 px-4 py-2 rounded-xl backdrop-blur-md">
-                                                        <Edit3 size={12} className="text-slate-600" />
-                                                        <input
-                                                            type="text"
-                                                            placeholder="ATTACH OPERATIONAL NOTE..."
-                                                            defaultValue={item.note || ''}
-                                                            className="flex-1 text-[11px] bg-transparent outline-none text-slate-300 focus:text-white transition-all font-black uppercase tracking-widest placeholder:text-slate-800"
-                                                            onBlur={(e) => { onUpdateLineNote?.(item.productId, e.target.value); }}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    onUpdateLineNote?.(item.productId, (e.target as HTMLInputElement).value);
-                                                                }
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        {/* ═══ FOOTER: TOTALS & ACTIONS ═══ */}
-                        <div className="border-t border-white/10 bg-slate-950/80 backdrop-blur-2xl px-6 py-6 shrink-0 space-y-5 rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 shadow-inner group">
-                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] block mb-2 group-hover:text-slate-400 transition-colors">Matrix Subtotal</span>
-                                    <span className="text-xl font-black text-white tabular-nums tracking-tighter italic">{currency}{formatNumber(total)}</span>
-                                </div>
-                                <div
-                                    onClick={() => { setNumpadMode('disc'); setShowNumpad(true); }}
-                                    className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 text-center cursor-pointer hover:bg-slate-900 transition-all group relative overflow-hidden"
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">Strategic Discount</span>
-                                        <div className="flex items-center bg-slate-950/80 rounded-lg p-1 border border-white/5">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
-                                                className={clsx("px-2 py-0.5 text-[10px] font-black rounded-md transition-all", discountType === 'fixed' ? "text-slate-950 bg-amber-500 shadow-lg shadow-amber-500/20" : "text-slate-600 hover:text-slate-400")}
-                                            >{currency}</button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); onSetDiscountType('percentage'); }}
-                                                className={clsx("px-2 py-0.5 text-[10px] font-black rounded-md transition-all", discountType === 'percentage' ? "text-slate-950 bg-amber-500 shadow-lg shadow-amber-500/20" : "text-slate-600 hover:text-slate-400")}
-                                            >%</button>
-                                        </div>
-                                    </div>
-                                    <span className={clsx("text-2xl font-black tabular-nums tracking-tighter", discount > 0 ? "text-amber-500 italic" : "text-slate-800")}>
-                                        {discount > 0 ? `-${formatNumber(discountType === 'percentage' ? total * discount / 100 : discount)}` : '0.00'}
-                                    </span>
-                                </div>
-                                <div className="bg-emerald-gradient rounded-3xl p-4 text-center shadow-[0_10px_40px_rgba(16,185,129,0.2)] border border-white/20 relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-2xl rounded-full" />
-                                    <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.3em] block mb-2 relative z-10">Grand Aggregate</span>
-                                    <span className="text-3xl font-black text-white tabular-nums tracking-tighter leading-none relative z-10 italic">{currency}{formatNumber(totalAmount)}</span>
-                                </div>
-                            </div>
-
-                            {selectedClient && selectedClientId > 1 && (
-                                <div className="flex items-center gap-3 flex-wrap bg-slate-900/30 p-2 rounded-2xl border border-white/5">
-                                    {(selectedClient as any).balance > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                onSetPaymentMethod('WALLET');
-                                                const bal = (selectedClient as any).balance;
-                                                onSetCashReceived(String(Math.min(bal, totalAmount)));
-                                            }}
-                                            className="flex items-center gap-3 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg"
-                                        >
-                                            <Wallet size={14} />
-                                            <span>Vault: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
-                                            <span className="bg-blue-500 text-white px-2 py-0.5 rounded text-[9px] font-black">EXTRACT</span>
-                                        </button>
-                                    )}
-                                    {(selectedClient as any).loyalty_points > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                const pts = (selectedClient as any).loyalty_points;
-                                                onSetPointsRedeemed(pts);
-                                            }}
-                                            className={clsx(
-                                                "flex items-center gap-3 px-4 py-2 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all",
-                                                pointsRedeemed > 0 ? "bg-amber-500 border-amber-400 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.3)]" : "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500 hover:text-slate-950"
-                                            )}
-                                        >
-                                            <Star size={14} className={pointsRedeemed > 0 ? "fill-slate-950" : ""} />
-                                            <span>{(selectedClient as any).loyalty_points} Points</span>
-                                            <span className={clsx("px-2 py-0.5 rounded text-[9px] font-black", pointsRedeemed > 0 ? "bg-slate-950/20 text-slate-950" : "bg-amber-500 text-slate-950")}>
-                                                {pointsRedeemed > 0 ? 'SYNCHRONIZED' : 'REDEEM'}
-                                            </span>
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="flex items-stretch gap-4">
-                                <div className="flex-1 relative group">
-                                    <span className="absolute left-4 top-2 text-[8px] font-black text-slate-600 uppercase tracking-[0.4em] group-focus-within:text-emerald-500 transition-colors">Credits Received</span>
-                                    <input
-                                        type="text"
-                                        value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
-                                        onChange={(e) => {
-                                            const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
-                                            if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-                                                onSetCashReceived(raw);
-                                            }
-                                        }}
-                                        placeholder={formatNumber(totalAmount)}
-                                        className="w-full pt-7 pb-3 px-4 text-right bg-slate-900 border-2 border-white/5 rounded-2xl text-2xl font-black outline-none focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all font-mono tabular-nums text-white placeholder:text-slate-800"
-                                    />
-                                    <div className="absolute left-4 bottom-3 flex gap-2">
-                                        {[100, 500, 1000].map(val => (
-                                            <button
-                                                key={val}
-                                                onClick={() => onSetCashReceived(String(Number(cashReceived || 0) + val))}
-                                                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-black text-slate-500 rounded-lg transition-colors border border-white/5"
-                                            >
-                                                +{val}
-                                            </button>
                                         ))}
                                     </div>
-                                </div>
-                                <button
-                                    onClick={onCharge}
-                                    disabled={cart.length === 0 || isProcessing}
-                                    className={clsx(
-                                        "flex-[1.2] rounded-[1.8rem] flex flex-col items-center justify-center transition-all relative overflow-hidden shadow-2xl group",
-                                        cart.length > 0 && !isProcessing
-                                            ? deficit > 0 ? "bg-rose-gradient text-white shadow-rose-500/20" : changeDue > 0 ? "bg-blue-600 text-white shadow-blue-500/20" : "bg-emerald-gradient text-white shadow-emerald-500/30"
-                                            : "bg-slate-900 text-slate-700 border border-white/5"
-                                    )}
-                                >
-                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-[11px] font-black uppercase tracking-[0.5em] relative z-10 mb-1 opacity-70 italic">{deficit > 0 ? "Remaining" : changeDue > 0 ? "Change" : "Execute"}</span>
-                                    <span className="text-3xl font-black leading-none relative z-10 tabular-nums tracking-tighter italic">{currency}{formatNumber(deficit > 0 ? deficit : changeDue > 0 ? changeDue : totalAmount)}</span>
-                                </button>
+                                )}
                             </div>
-                        </div>
-                    </div>
+                            <div className="border-t-2 border-emerald-500/20 bg-gradient-to-b from-white to-gray-50/80 px-3 py-3 shrink-0 space-y-2.5">
+                                {/* ── Summary Row ── */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="bg-gray-50 rounded-xl p-2 text-center">
+                                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Subtotal</span>
+                                        <span className="text-sm font-black text-gray-800 tabular-nums">{currency}{formatNumber(total)}</span>
+                                    </div>
+                                    <div
+                                        onClick={() => { setNumpadMode('disc'); setShowNumpad(true); }}
+                                        className="bg-amber-50/60 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-50 transition-colors group"
+                                    >
+                                        <div className="flex items-center justify-center gap-1">
+                                            <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Discount</span>
+                                            <div className="flex items-center bg-white/80 rounded px-1 py-px">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
+                                                    className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-gray-300")}
+                                                >{currency}</button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onSetDiscountType('percentage'); }}
+                                                    className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-amber-700 bg-amber-100" : "text-gray-300")}
+                                                >%</button>
+                                            </div>
+                                        </div>
+                                        <span className={clsx(
+                                            "text-sm font-black tabular-nums",
+                                            discount > 0 ? "text-amber-600" : "text-gray-300"
+                                        )}>{discount > 0 ? `-${formatNumber(discountType === 'percentage' ? total * discount / 100 : discount)}` : '0'}</span>
+                                    </div>
+                                    <div className="bg-emerald-50 rounded-xl p-2 text-center">
+                                        <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest block">Total</span>
+                                        <span className="text-lg font-black text-gray-900 tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
+                                    </div>
+                                </div>
+                                {/* ── Wallet & Loyalty Quick-Pay ── */}
+                                {selectedClient && selectedClientId > 1 && (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {(selectedClient as any).balance > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    onSetPaymentMethod('WALLET');
+                                                    const bal = (selectedClient as any).balance;
+                                                    onSetCashReceived(String(Math.min(bal, totalAmount)));
+                                                    toast.success(`Wallet: ${currency}${bal.toFixed(2)} applied`);
+                                                }}
+                                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold hover:bg-blue-100 transition-all"
+                                            >
+                                                <Wallet size={12} />
+                                                <span>Balance: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
+                                                <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-black">USE</span>
+                                            </button>
+                                        )}
+                                        {(selectedClient as any).loyalty > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    const pts = (selectedClient as any).loyalty;
+                                                    if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
+                                                    toast.success(`${pts} loyalty points will be redeemed`);
+                                                }}
+                                                className={clsx(
+                                                    "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all",
+                                                    pointsRedeemed > 0
+                                                        ? "bg-amber-100 border-amber-300 text-amber-800"
+                                                        : "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100"
+                                                )}
+                                            >
+                                                <Star size={12} />
+                                                <span>{(selectedClient as any).loyalty} pts</span>
+                                                <span className="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black">
+                                                    {pointsRedeemed > 0 ? '✓' : 'REDEEM'}
+                                                </span>
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                                {/* ── Received + Charge ── */}
+                                <div className="flex items-stretch gap-2">
+                                    <div className="flex-1 relative">
+                                        <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-gray-400 uppercase tracking-widest">Received</span>
+                                        <input
+                                            type="text"
+                                            value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
+                                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                                    onSetCashReceived(raw);
+                                                }
+                                            }}
+                                            placeholder={formatNumber(totalAmount)}
+                                            className="w-full pt-5 pb-2 px-2.5 text-right bg-white border-2 border-gray-100 rounded-xl text-base font-black outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={onCharge}
+                                        disabled={cart.length === 0 || isProcessing}
+                                        className={clsx(
+                                            "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
+                                            cart.length > 0 && !isProcessing
+                                                ? deficit > 0
+                                                    ? "bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                    : changeDue > 0
+                                                        ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                        : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                : "bg-gray-200 text-gray-400"
+                                        )}
+                                    >
+                                        {cart.length > 0 && !isProcessing && (
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+                                        )}
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{deficit > 0 ? "Remaining" : changeDue > 0 ? "Change" : "Charge"}</span>
+                                        <span className="text-xl font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(deficit > 0 ? deficit : changeDue > 0 ? changeDue : totalAmount)}</span>
+                                    </button>
+                                </div>
+                                {/* ── Change Options (wallet / rounding) ── */}
+                                {changeDue > 0 && selectedClientId > 1 && onSetStoreChangeInWallet && (
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
+                                            className={clsx(
+                                                "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border-2 transition-all",
+                                                storeChangeInWallet
+                                                    ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-100"
+                                                    : "bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:bg-blue-50"
+                                            )}
+                                        >
+                                            <Wallet size={14} />
+                                            {storeChangeInWallet ? '✓ Add to Wallet' : 'Add to Wallet'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </main>
             </div>
-
+            {/* ═══════════ MODALS ═══════════ */}
+            <ManagerOverride
+                isOpen={isOverrideOpen}
+                onClose={() => onSetOverrideOpen(false)}
+                onSuccess={() => {
+                    if (pendingAction) {
+                        pendingAction.execute();
+                        setPendingAction(null);
+                    }
+                }}
+                actionLabel={pendingAction?.label || "Protected Action"}
+            />
             <ReceiptModal
                 isOpen={isReceiptOpen}
                 onClose={() => onSetReceiptOpen(false)}
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
-            />
-            <AddressBook
-                isOpen={isAddressBookOpen}
-                onClose={() => setIsAddressBookOpen(false)}
-                sessionId={registerConfig?.sessionId || null}
-                cashierId={registerConfig?.cashierId || null}
-                currency={currency}
-                isManager={!!(registerConfig as any)?.isManager}
-            />
-            <POSSalesHistoryPanel
-                isOpen={isHistoryOpen}
-                onClose={() => setIsHistoryOpen(false)}
-                currency={currency}
-                registerName={registerConfig?.registerName}
-                sessionId={registerConfig?.sessionId}
-            />
-            <POSDeliveryModal
-                isOpen={isDeliveryModalOpen}
-                onClose={() => setIsDeliveryModalOpen(false)}
-                orderTotal={totalAmount}
-                currency={currency}
-                selectedClient={selectedClient}
-                sessionId={registerConfig?.sessionId}
-                hasClientCredit={!!(selectedClient as any)?.credit_limit}
-                preSelectedZoneName={deliveryZone || null}
-                onConfirm={async (deliveryData) => {
-                    onSetPaymentMethod('DELIVERY');
-                    onSetNotes(`DELIVERY|${deliveryData.recipient_name}|${deliveryData.phone}|${deliveryData.address_line1}|${deliveryData.payment_mode}|zone:${deliveryData.zone ?? 'none'}`);
-                    if ((props as any).onSetDeliveryData) (props as any).onSetDeliveryData(deliveryData);
-                    if (deliveryData.payment_mode === 'IMMEDIATE') {
-                        await new Promise(r => setTimeout(r, 200));
-                        onCharge();
-                    }
-                }}
-            />
-            {isPendingDeliveriesOpen && registerConfig?.sessionId && (
-                <POSPendingDeliveriesPanel
-                    sessionId={registerConfig.sessionId}
-                    currency={currency}
-                    onClose={() => setIsPendingDeliveriesOpen(false)}
-                />
-            )}
-            <ClientVaultModal
-                isOpen={isVaultOpen}
-                onClose={() => onSetIsVaultOpen(false)}
-                clientName={selectedClient?.name || 'Walk-in'}
-                currency={currency}
-                fidelity={clientFidelity}
-                loading={fidelityLoading || false}
-            />
-            <ManagerOverride
-                isOpen={isOverrideOpen}
-                onClose={() => onSetOverrideOpen(false)}
-                onSuccess={() => {
-                    if (pendingOverrideAction) {
-                        pendingOverrideAction.execute();
-                    }
-                }}
-                actionLabel={pendingOverrideAction?.label || "Protected Action"}
             />
         </div>
     );

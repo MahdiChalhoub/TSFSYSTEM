@@ -27,9 +27,26 @@ Before ANY deployment:
 
 ## Deployment Command
 ```bash
-# The standard deployment script (handles version bump + restart)
 ./deploy_hotfix.sh
 ```
+
+## Post-Deployment Verification
+```bash
+# Run smoke tests against production
+SMOKE_BASE=https://saas.tsf.ci node scripts/smoke-tests.js
+
+# Run health monitor
+npm run health
+
+# Watch mode (continuous monitoring)
+npm run health:watch
+```
+
+## Production Monitoring
+- **One-time check**: `npm run health`
+- **Continuous watch**: `npm run health:watch` (every 60s)
+- **Custom interval**: `bash scripts/health-monitor.sh --watch 30` (every 30s)
+- **Cron setup**: `*/5 * * * * cd /path/to/TSFSYSTEM && bash scripts/health-monitor.sh >> logs/health.log 2>&1`
 
 ## How to Summon
 "Summoning OpsCommander for [Task Name]"

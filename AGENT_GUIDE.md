@@ -60,17 +60,45 @@ To start any task, the agent MUST:
 1. **Choose your specialist** from `.agents/specialists/` or `.agents/modules/`.
 2. **Read the specialist file** — it contains mandatory pre-work steps.
 3. **Follow the Pre-Flight Protocol** from `master-agent.md`.
-4. **Execute and verify.**
+4. **Execute and verify** using the automated pipeline.
 
 ## The Pre-Flight Checklist (Every Task)
 ```
 □ Read WORKMAP.md for related items
 □ Read WORK_IN_PROGRESS.md for session warnings
+□ Read LESSONS_LEARNED.md for gotchas in the affected area
 □ Read DESIGN_CRITERIA.md for standards
 □ Read the TypeScript interfaces of files being edited
-□ Find ALL consumers of modified functions/hooks
+□ Find ALL consumers of modified functions/hooks (grep)
 □ State the plan before writing code
 □ Run tsc --noEmit after every file change
-□ Run tsc --noEmit at the end (filtered for modified files)
+□ Run the verification pipeline at the end
 □ Update WORK_IN_PROGRESS.md with session summary
+□ Update LESSONS_LEARNED.md if new gotchas discovered
 ```
+
+## Automated Verification Tools
+```bash
+# Quick TypeScript check (after every edit)
+npm run typecheck
+
+# Module-specific check
+npm run typecheck:pos
+npm run typecheck:finance
+
+# Business logic tests (34 tests, 7 suites)
+npm run test
+
+# TypeScript + Build (full verification)
+npm run verify
+
+# FULL pipeline (tests + types + quality + build)
+bash scripts/agent-verify.sh          # all modules
+bash scripts/agent-verify.sh pos      # POS only
+bash scripts/agent-verify.sh finance  # Finance only
+```
+
+## Automated Enforcement
+- **Git Pre-Commit Hook**: Blocks commits with TypeScript errors in `src/`. Warns about `console.log` and `as any`.
+- **Business Logic Tests**: 34 tests covering cart math, tax, payments, double-entry, currency rounding, inventory, and loyalty points.
+- **Verification Pipeline**: Run `bash scripts/agent-verify.sh` for full 4-step validation.

@@ -2,6 +2,7 @@
 
 | Date | Agent | Version | Changes |
 | :--- | :--- | :--- | :--- |
+| 2026-03-01 | Antigravity | 3.3.1-AG-260301.0555 | **Senior Audit — Phase 1+2**: Fixed 6 critical violations (fake metrics, dead buttons, broken invoice filter, duplicate files, POS client search). Unified design system with `page-container`, `page-header-title`, `card-kpi`, `badge-status` CSS classes. Created `KPICard` and `PageSkeleton` reusable components. Unified 4 key pages to consistent emerald accent, slate gray, and standardized headers. Removed all dashboard jargon. |
 | 2026-03-01 | Antigravity | 3.3.0-AG-260301.0451 | **POS Terminal Architecture Redesign**: Extracted all terminal state into `useTerminal` hook + `TerminalContext` (eliminates 80-prop drilling). Created `useBarcodeScanner` hook (fixes stale closures). Split 1,129-line POSLobby into 5 memoized step components. Reduced page.tsx from 939→285 lines. Fixed cloud sync race conditions. |
 | 2026-03-01 | Antigravity | 3.2.2-AG-260301.0438 | **Smart Audit Intelligence System**: Overhauled Migration Review Dashboard with 3-column entity grid, triple-sample audit modal, ledger distribution panels, and high-level migration health stats. |
 | 2026-03-01 | Antigravity | 3.2.1-AG-260301.0421 | **Sync Security & PWA Integrity**: Resolved 500 error on PosTicket bulk sync by injecting user context. Regenerated high-fidelity manifest icons and stabilized COA database migrations. |
