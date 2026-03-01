@@ -221,6 +221,7 @@ class RegisterAddressBookMixin:
             client_invoice_id=request.data.get('client_invoice_id'),
             client_invoice_ref=request.data.get('client_invoice_ref', ''),
             expense_category=request.data.get('expense_category', ''),
+            partner_id=request.data.get('partner_id'),
             partner_name=request.data.get('partner_name', ''),
             linked_order_id=request.data.get('linked_order_id'),
             linked_order_ref=request.data.get('linked_order_ref', ''),
@@ -511,6 +512,8 @@ class RegisterAddressBookMixin:
                 qs = qs.filter(type='SUPPLIER')
             elif contact_type == 'CUSTOMER':
                 qs = qs.filter(type='CUSTOMER')
+            elif contact_type == 'PARTNER':
+                qs = qs.filter(type='PARTNER')
             # ALL = no filter
 
             if q:

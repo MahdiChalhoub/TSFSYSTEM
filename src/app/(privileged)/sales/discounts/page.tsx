@@ -362,7 +362,7 @@ export default function DiscountRulesPage() {
                         <CardHeader className="p-8 border-b border-stone-50 flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle className="text-2xl font-black tracking-tight text-stone-900">
-                                    {editId ? 'Modify Rule Architecture' : 'Deploy New Rule'}
+                                    {editId ? 'Edit Rule' : 'New Rule'}
                                 </CardTitle>
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Promotion Settings</p>
                             </div>
@@ -571,9 +571,9 @@ export default function DiscountRulesPage() {
                 open={deleteTarget !== null}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleDelete}
-                title="Rule Decommission Sequence?"
+                title="Delete Rule?"
                 description="This will permanently delete this discount rule and all associated records."
-                confirmText="Purge Rule"
+                confirmText="Delete"
                 variant="danger"
             />
         </div>

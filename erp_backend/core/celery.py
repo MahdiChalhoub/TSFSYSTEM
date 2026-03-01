@@ -19,10 +19,21 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 # ── Celery Beat Schedule ─────────────────────────────────────────────────────
+from celery.schedules import crontab
+
 app.conf.beat_schedule = {
     'detect-stalled-migrations': {
         'task': 'apps.migration.detect_stalled_jobs',
         'schedule': 300.0,  # Every 5 minutes
+    },
+    # ── Auto-Tasking Engine ──────────────────────────────────────────────────
+    'fire-recurring-auto-tasks': {
+        'task': 'apps.workspace.tasks.fire_recurring_auto_tasks',
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+    },
+    'check-stale-orders': {
+        'task': 'apps.workspace.tasks.check_stale_orders',
+        'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
     },
 }
 

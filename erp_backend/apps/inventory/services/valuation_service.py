@@ -255,6 +255,29 @@ class InventoryValuationService:
                 quantity_at_risk=batch.quantity, value_at_risk=value_at_risk
             )
             alerts_created.append(alert)
+
+            # ── Auto-Task: EXPIRY_APPROACHING / PRODUCT_EXPIRED ──
+            try:
+                from apps.workspace.signals import trigger_inventory_event
+                if severity == 'EXPIRED':
+                    trigger_inventory_event(
+                        organization, 'PRODUCT_EXPIRED',
+                        product_name=str(batch.product),
+                        product_id=batch.product_id,
+                        reference=f'Batch:{batch.batch_number}',
+                        extra={'days': days_until, 'qty': float(batch.quantity), 'value': float(value_at_risk)},
+                    )
+                else:
+                    trigger_inventory_event(
+                        organization, 'EXPIRY_APPROACHING',
+                        product_name=str(batch.product),
+                        product_id=batch.product_id,
+                        reference=f'Batch:{batch.batch_number}',
+                        extra={'days_until': days_until, 'qty': float(batch.quantity), 'severity': severity},
+                    )
+            except Exception:
+                pass
+
         return alerts_created
 
     @staticmethod

@@ -231,7 +231,11 @@ class AddressBookExecutor:
     # ─── PARTNER CONTRIBUTION ────────────────────────────────────────
     @staticmethod
     def _exec_partner_contribution(entry, manager):
-        """Dr. Cash → Cr. Owner's Equity"""
+        """
+        Partner puts money INTO the register.
+        If partner has a linked account → Dr. Cash, Cr. Partner's Account
+        Otherwise → Dr. Cash, Cr. Owner's Equity
+        """
         from apps.finance.services import LedgerService
         from apps.finance.models import ChartOfAccount
 
@@ -240,18 +244,23 @@ class AddressBookExecutor:
         if not cash_acc_id:
             return None
 
-        # Find owner's equity account
-        equity_acc = ChartOfAccount.objects.filter(
-            organization=org, type='EQUITY'
-        ).first()
-        if not equity_acc:
-            logger.warning(f"AddressBook #{entry.id}: No equity account found")
-            return None
+        # Try to get partner's linked account from CRM contact
+        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
+
+        if not partner_acc_id:
+            # Fallback: generic equity account
+            equity_acc = ChartOfAccount.objects.filter(
+                organization=org, type='EQUITY'
+            ).first()
+            if not equity_acc:
+                logger.warning(f"AddressBook #{entry.id}: No equity account found")
+                return None
+            partner_acc_id = equity_acc.id
 
         je = LedgerService.create_journal_entry(
             organization=org,
             transaction_date=entry.created_at.date(),
-            description=f"[AddressBook #{entry.id}] Partner Contribution: {entry.partner_name or entry.description}",
+            description=f"[AccountBook #{entry.id}] Partner Contribution: {entry.partner_name or entry.description}",
             reference=f"AB-PCONT-{entry.id}",
             status='POSTED',
             scope='OFFICIAL',
@@ -259,8 +268,8 @@ class AddressBookExecutor:
             lines=[
                 {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
                  "description": f"Cash from partner: {entry.partner_name}"},
-                {"account_id": equity_acc.id, "debit": Decimal('0'), "credit": entry.amount_in,
-                 "description": f"Owner equity: {entry.partner_name}"},
+                {"account_id": partner_acc_id, "debit": Decimal('0'), "credit": entry.amount_in,
+                 "description": f"Partner account: {entry.partner_name}"},
             ]
         )
         return je
@@ -268,7 +277,11 @@ class AddressBookExecutor:
     # ─── PARTNER WITHDRAWAL ──────────────────────────────────────────
     @staticmethod
     def _exec_partner_withdrawal(entry, manager):
-        """Dr. Owner's Drawing → Cr. Cash"""
+        """
+        Partner takes money OUT of the register (transfer to their account).
+        If partner has a linked account → Dr. Partner's Account, Cr. Cash
+        Otherwise → Dr. Owner's Drawing, Cr. Cash
+        """
         from apps.finance.services import LedgerService
         from apps.finance.models import ChartOfAccount
 
@@ -277,33 +290,70 @@ class AddressBookExecutor:
         if not cash_acc_id:
             return None
 
-        # Find owner's drawing account (or equity as fallback)
-        drawing_acc = ChartOfAccount.objects.filter(
-            organization=org, code__icontains='drawing'
-        ).first()
-        if not drawing_acc:
+        # Try to get partner's linked account from CRM contact
+        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
+
+        if not partner_acc_id:
+            # Fallback: generic drawing/equity account
             drawing_acc = ChartOfAccount.objects.filter(
-                organization=org, type='EQUITY'
+                organization=org, code__icontains='drawing'
             ).first()
-        if not drawing_acc:
-            return None
+            if not drawing_acc:
+                drawing_acc = ChartOfAccount.objects.filter(
+                    organization=org, type='EQUITY'
+                ).first()
+            if not drawing_acc:
+                return None
+            partner_acc_id = drawing_acc.id
 
         je = LedgerService.create_journal_entry(
             organization=org,
             transaction_date=entry.created_at.date(),
-            description=f"[AddressBook #{entry.id}] Partner Withdrawal: {entry.partner_name or entry.description}",
+            description=f"[AccountBook #{entry.id}] Partner Withdrawal: {entry.partner_name or entry.description}",
             reference=f"AB-PWITH-{entry.id}",
             status='POSTED',
             scope='OFFICIAL',
             user=manager,
             lines=[
-                {"account_id": drawing_acc.id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Owner withdrawal: {entry.partner_name}"},
+                {"account_id": partner_acc_id, "debit": entry.amount_out, "credit": Decimal('0'),
+                 "description": f"Transfer to partner: {entry.partner_name}"},
                 {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
                  "description": "Cash outflow to partner"},
             ]
         )
         return je
+
+    @staticmethod
+    def _get_partner_account(entry, org):
+        """
+        Get the partner's linked financial account from their CRM Contact record.
+        Partners may have a linked_account_id pointing to their personal account in the COA.
+        """
+        partner_id = getattr(entry, 'partner_id', None)
+        if not partner_id:
+            return None
+
+        try:
+            from apps.crm.models import Contact
+            contact = Contact.objects.get(id=partner_id, organization=org)
+            # Contact may have a linked_account_id (their personal ledger account)
+            linked_acc_id = getattr(contact, 'linked_account_id', None)
+            if linked_acc_id:
+                return linked_acc_id
+
+            # Also check if there's a sub-account created for this contact
+            from apps.finance.models import ChartOfAccount
+            sub_acc = ChartOfAccount.objects.filter(
+                organization=org,
+                name__icontains=contact.name,
+                type='EQUITY'
+            ).first()
+            if sub_acc:
+                return sub_acc.id
+        except Exception as e:
+            logger.warning(f"AddressBook #{entry.id}: Partner account lookup failed: {e}")
+
+        return None
 
     # ─── SALES RETURN ────────────────────────────────────────────────
     @staticmethod

@@ -497,4 +497,31 @@ class POSService:
                     reference_id=order.ref_code
                 )
 
+            # ── Auto-Task: ORDER_COMPLETED & HIGH_VALUE_SALE ─────────────────
+            try:
+                from apps.workspace.signals import trigger_finance_event
+                trigger_finance_event(
+                    organization, 'ORDER_COMPLETED',
+                    amount=float(order.total_amount),
+                    client_id=contact_id,
+                    cashier_id=user.id if user else None,
+                    site_id=warehouse.id if warehouse else None,
+                    payment_method=payment_method,
+                    user=user,
+                    reference=invoice_num or f'POS-{order.id}',
+                )
+                # High-value sale threshold (configurable, default 500k)
+                hv_threshold = ConfigurationService.get_setting(organization, 'high_value_sale_threshold', 500000)
+                if order.total_amount >= Decimal(str(hv_threshold)):
+                    trigger_finance_event(
+                        organization, 'HIGH_VALUE_SALE',
+                        amount=float(order.total_amount),
+                        client_id=contact_id,
+                        cashier_id=user.id if user else None,
+                        user=user,
+                        reference=invoice_num or f'POS-{order.id}',
+                    )
+            except Exception:
+                pass
+
             return order

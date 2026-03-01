@@ -129,6 +129,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
         clientInvoiceId: null as number | null,
         clientInvoiceRef: '',
         expenseCategory: '',
+        partnerId: null as number | null,
         partnerName: '',
         linkedOrderRef: '',
     });
@@ -253,6 +254,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
                     client_invoice_id: form.clientInvoiceId,
                     client_invoice_ref: form.clientInvoiceRef,
                     expense_category: form.expenseCategory,
+                    partner_id: form.partnerId,
                     partner_name: form.partnerName,
                     linked_order_ref: form.linkedOrderRef,
                 })
@@ -263,7 +265,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
                     entryType: 'OTHER_IN', description: '', reference: '', amount: '',
                     supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '',
                     clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '',
-                    expenseCategory: '', partnerName: '', linkedOrderRef: ''
+                    expenseCategory: '', partnerId: null, partnerName: '', linkedOrderRef: ''
                 });
                 setInvoices([]);
                 setShowAddForm(false);
@@ -918,14 +920,63 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
                                 />
                             )}
 
-                            {/* ── PARTNER NAME ── */}
+                            {/* ── PARTNER SELECTOR (live search from database) ── */}
                             {(selectedType.fields?.includes('partner') || false) && (
-                                <input
-                                    value={form.partnerName}
-                                    onChange={(e) => setForm(f => ({ ...f, partnerName: e.target.value }))}
-                                    placeholder="Partner / Owner name"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                                />
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">
+                                        <Users size={8} className="inline mr-0.5" /> Select Partner / Owner
+                                    </label>
+                                    {form.partnerId ? (
+                                        <div className="flex items-center justify-between bg-violet-50 border border-violet-200 rounded-xl px-3 py-2">
+                                            <span className="text-sm font-bold text-gray-900">{form.partnerName}</span>
+                                            <button
+                                                onClick={() => setForm(f => ({ ...f, partnerId: null, partnerName: '' }))}
+                                                className="text-gray-400 hover:text-rose-500 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <input
+                                                value={contactQuery}
+                                                onChange={(e) => {
+                                                    setContactQuery(e.target.value);
+                                                    setShowContactDropdown(true);
+                                                    searchContacts(e.target.value, 'PARTNER' as any);
+                                                }}
+                                                onFocus={() => { if (contactQuery.length > 0) setShowContactDropdown(true); }}
+                                                placeholder="🔍 Search partner / owner by name..."
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-200"
+                                            />
+                                            {showContactDropdown && contactResults.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-40 overflow-y-auto">
+                                                    {contactResults.map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            onClick={() => {
+                                                                setForm(f => ({ ...f, partnerId: c.id, partnerName: c.name }));
+                                                                setShowContactDropdown(false);
+                                                                setContactQuery('');
+                                                                setContactResults([]);
+                                                            }}
+                                                            className="w-full px-3 py-2 text-left hover:bg-violet-50 transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+                                                        >
+                                                            <div>
+                                                                <span className="font-bold text-gray-900">{c.name}</span>
+                                                                {c.phone && <span className="text-gray-400 ml-2 text-xs">{c.phone}</span>}
+                                                            </div>
+                                                            <span className="text-[9px] font-bold text-violet-400 uppercase">Partner</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {contactSearching && (
+                                                <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             {/* ── ORDER REF ── */}

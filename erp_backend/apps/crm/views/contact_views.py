@@ -84,6 +84,26 @@ class ContactViewSet(TenantModelViewSet):
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
+
+            # ── Auto-Task: NEW_CLIENT / NEW_SUPPLIER ──
+            try:
+                contact_name = data.get('name', '')
+                if contact_type == 'CUSTOMER':
+                    from apps.workspace.signals import trigger_crm_event
+                    trigger_crm_event(
+                        organization, 'NEW_CLIENT',
+                        reference=contact_name,
+                        client_id=serializer.instance.id,
+                    )
+                else:
+                    from apps.workspace.signals import trigger_purchasing_event
+                    trigger_purchasing_event(
+                        organization, 'NEW_SUPPLIER',
+                        reference=contact_name,
+                    )
+            except Exception:
+                pass
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'], url_path='summary')

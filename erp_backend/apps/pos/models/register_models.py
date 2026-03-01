@@ -238,6 +238,8 @@ class CashierAddressBook(TenantModel):
         help_text='Invoice reference for display')
     expense_category = models.CharField(max_length=100, null=True, blank=True,
         help_text='Expense category (for EXPENSE type)')
+    partner_id = models.IntegerField(null=True, blank=True,
+        help_text='Contact ID of partner (for PARTNER_CONTRIBUTION / WITHDRAWAL)')
     partner_name = models.CharField(max_length=255, null=True, blank=True,
         help_text='Partner/owner name (for PARTNER_CONTRIBUTION / WITHDRAWAL)')
     linked_order_id = models.IntegerField(null=True, blank=True,
