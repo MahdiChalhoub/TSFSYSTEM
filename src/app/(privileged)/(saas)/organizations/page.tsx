@@ -176,7 +176,7 @@ export default function OrganizationsPage() {
     }
     return (
         <div className="page-container animate-in fade-in duration-700">
-            {/* Header Section: Platform Intelligence Node */}
+            {/* Header Section: Platform Control Panel */}
             <header className="flex flex-col gap-8 mb-10">
                 <div className="flex justify-between items-end">
                     <div className="flex items-center gap-6">
@@ -196,7 +196,7 @@ export default function OrganizationsPage() {
                                 Tenant <span className="text-emerald-700">Registry</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                Provision and orchestrate multi-tenant business instances across the global platform matrix.
+                                Create and manage business accounts on the platform.
                             </p>
                         </div>
                     </div>
@@ -211,7 +211,7 @@ export default function OrganizationsPage() {
                                 <div className="p-10 bg-emerald-gradient text-white relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
                                     <DialogTitle className="text-3xl font-black tracking-tighter mb-2">Provision Instance</DialogTitle>
-                                    <p className="text-emerald-100 text-xs font-black uppercase tracking-widest opacity-80">Orchestrate New Node Entity</p>
+                                    <p className="text-emerald-100 text-xs font-black uppercase tracking-widest opacity-80">Create Organization</p>
                                 </div>
                                 <div className="p-10 space-y-8">
                                     {/* Required Fields */}
@@ -296,7 +296,7 @@ export default function OrganizationsPage() {
                                                 <Zap size={20} className="fill-emerald-600" />
                                             </div>
                                             <p className="text-[11px] leading-relaxed text-slate-500 font-bold uppercase tracking-tight">
-                                                Provisioning initializes: Sites, Warehouses, Fiscal Matrix, COA, Post Rules, and Financial Intelligence.
+                                                Provisioning initializes: Sites, Warehouses, Fiscal Setup, Chart of Accounts, Posting Rules, and Financial Settings.
                                             </p>
                                         </div>
                                     </div>

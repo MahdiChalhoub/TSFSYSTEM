@@ -48,7 +48,7 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                         </div>
                         <div>
                             <h3 className="text-xl font-black tracking-tight">Post Reception</h3>
-                            <p className="text-xs font-bold text-emerald-100 uppercase tracking-widest mt-0.5">Stock Acquisition Portal</p>
+                            <p className="text-xs font-bold text-emerald-100 uppercase tracking-widest mt-0.5">Receive Stock</p>
                         </div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
                         </div>
 
                         <div className="relative group">
-                            <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1 mb-2 block">Acquisition Quantity</label>
+                            <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1 mb-2 block">Quantity to Receive</label>
                             <div className="relative flex items-center">
                                 <Truck className="absolute left-4 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
                                 <input

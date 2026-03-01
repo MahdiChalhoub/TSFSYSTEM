@@ -71,10 +71,6 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
         getFinancialSettings()
     ]);
 
-    console.log("SERVER FETCH RESULTS:");
-    console.log("Categories format:", Array.isArray(categories) ? `Array[${categories.length}]` : typeof categories);
-    console.log("Brands format:", Array.isArray(brands) ? `Array[${brands.length}]` : typeof brands);
-    console.log("Countries format:", Array.isArray(countries) ? `Array[${countries.length}]` : typeof countries);
 
 
     return (

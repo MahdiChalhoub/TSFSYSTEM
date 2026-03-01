@@ -39,12 +39,7 @@ export default function AdvancedProductForm({
     const initialState = { message: '', errors: {} as Record<string, string[]> };
     const [state, formAction, isPending] = useActionState(createProduct, initialState);
 
-    /* ── Debug Logs ── */
-    useEffect(() => {
-        console.log("Categories Data:", categories);
-        console.log("Brands Data:", brands);
-        console.log("Countries Data:", countries);
-    }, [categories, brands, countries]);
+
 
     /* ── Layout State ── */
     const [activeTab, setActiveTab] = useState('packaging');

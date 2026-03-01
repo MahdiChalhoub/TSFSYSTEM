@@ -802,15 +802,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </button>
 
                         <button
-                            onClick={() => {
-                                const el = document.getElementById('pos-customer-search') as HTMLInputElement | null;
-                                el?.focus();
-                                el?.select();
-                            }}
+                            onClick={() => setIsAddressBookOpen(true)}
                             className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-white border-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                         >
                             <BookOpen size={20} className="transition-transform group-hover:scale-110" />
-                            <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">Clients</span>
+                            <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">Address</span>
                         </button>
                     </div>
                 </div>
@@ -985,63 +981,32 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <span className="text-lg font-black text-gray-900 tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
                                 </div>
                             </div>
-                            {/* ── Wallet & Loyalty Quick-Pay ── */}
-                            {selectedClient && selectedClientId > 1 && (
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    {(selectedClient as any).balance > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                onSetPaymentMethod('WALLET');
-                                                const bal = (selectedClient as any).balance;
-                                                onSetCashReceived(String(Math.min(bal, totalAmount)));
-                                                toast.success(`Wallet: ${currency}${bal.toFixed(2)} applied`);
-                                            }}
-                                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold hover:bg-blue-100 transition-all"
-                                        >
-                                            <Wallet size={12} />
-                                            <span>Balance: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
-                                            <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-black">USE</span>
-                                        </button>
-                                    )}
-                                    {(selectedClient as any).loyalty > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                const pts = (selectedClient as any).loyalty;
-                                                if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
-                                                toast.success(`${pts} loyalty points will be redeemed`);
-                                            }}
-                                            className={clsx(
-                                                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all",
-                                                pointsRedeemed > 0
-                                                    ? "bg-amber-100 border-amber-300 text-amber-800"
-                                                    : "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100"
-                                            )}
-                                        >
-                                            <Star size={12} />
-                                            <span>{(selectedClient as any).loyalty} pts</span>
-                                            <span className="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black">
-                                                {pointsRedeemed > 0 ? '✓' : 'REDEEM'}
-                                            </span>
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+
                             {/* ── Received + Charge ── */}
                             <div className="flex items-stretch gap-2">
                                 <div className="flex-1 relative">
                                     <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-gray-400 uppercase tracking-widest">Received</span>
-                                    <input
-                                        type="text"
-                                        value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
-                                        onChange={(e) => {
-                                            const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
-                                            if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-                                                onSetCashReceived(raw);
-                                            }
-                                        }}
-                                        placeholder={formatNumber(totalAmount)}
-                                        className="w-full pt-5 pb-2 px-2.5 text-right bg-white border-2 border-gray-100 rounded-xl text-base font-black outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
-                                    />
+                                    <div className="flex items-stretch">
+                                        <input
+                                            type="text"
+                                            value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
+                                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                                    onSetCashReceived(raw);
+                                                }
+                                            }}
+                                            placeholder={formatNumber(totalAmount)}
+                                            className="w-full pt-5 pb-2 px-2.5 text-right bg-white border-2 border-gray-100 rounded-l-xl text-base font-black outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
+                                        />
+                                        <button
+                                            onClick={() => onSetCashReceived(String(totalAmount))}
+                                            className="px-2.5 pt-5 pb-2 bg-indigo-50 border-2 border-l-0 border-indigo-200 rounded-r-xl text-[10px] font-black text-indigo-600 hover:bg-indigo-100 transition-all whitespace-nowrap flex items-center gap-0.5 tabular-nums"
+                                            title="Auto-fill with bill total"
+                                        >
+                                            <span className="text-indigo-300">|</span> {currency}{formatNumber(totalAmount)}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={onCharge}
