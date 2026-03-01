@@ -168,10 +168,10 @@ export function CartTotals({
                     className="w-full bg-indigo-600 text-white rounded-xl h-14 flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
                 >
                     {isPending ? (
-                        <div className="flex items-center gap-3"><Loader2 size={16} className="animate-spin" /> Finalize Charge</div>
+                        <div className="flex items-center gap-3"><Loader2 size={16} className="animate-spin" /> Processing...</div>
                     ) : (
                         <>
-                            <div className="flex items-center gap-3"><Save size={16} /> Finalize Charge</div>
+                            <div className="flex items-center gap-3"><Save size={16} /> Complete Sale</div>
                             {changeDue > 0 && (
                                 <span className="text-[9px] text-indigo-200 mt-0.5 opacity-90 tracking-widest">
                                     Change Due: {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })}

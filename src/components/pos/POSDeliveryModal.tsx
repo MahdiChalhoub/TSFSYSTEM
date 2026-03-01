@@ -203,7 +203,7 @@ export function POSDeliveryModal({
                             <Truck size={36} className="text-white relative z-10" />
                         </div>
 
-                        <h2 className="text-white text-2xl font-black text-center mb-2 uppercase tracking-tighter">Identity Protocol Required</h2>
+                        <h2 className="text-white text-2xl font-black text-center mb-2 uppercase tracking-tighter">Client Required</h2>
                         <p className="text-white/40 text-sm text-center mb-8 font-medium max-w-[300px] mx-auto leading-relaxed">
                             Delivery logistics require verified recipient metrics including contact authority and geophysical location.
                         </p>
@@ -312,7 +312,7 @@ export function POSDeliveryModal({
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 text-slate-500">
                             <Loader2 size={32} className="animate-spin text-emerald-500 mb-4 opacity-40" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Synching Logistic Matrix...</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Loading delivery options...</span>
                         </div>
                     ) : step === 0 ? (
                         /* ─── Step 1: Delivery Info ─── */
@@ -375,12 +375,12 @@ export function POSDeliveryModal({
                                 )}
                             </div>
 
-                            <Field label="Operational Notes / Protocols">
+                            <Field label="Delivery Notes">
                                 <textarea
                                     value={form.notes}
                                     onChange={e => set('notes', e.target.value)}
                                     rows={3}
-                                    placeholder="LANDMARKS, ACCESS CODES, SPECIAL PROTOCOLS..."
+                                    placeholder="Landmarks, access codes, delivery instructions..."
                                     className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-[1.8rem] text-[13px] font-medium text-white outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all placeholder:text-white/5 resize-none shadow-inner"
                                 />
                             </Field>
@@ -390,7 +390,7 @@ export function POSDeliveryModal({
                         /* ─── Step 2: Payment ─── */
                         <div className="space-y-4">
                             <label className="flex items-center gap-2 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">
-                                Settlement Protocol Selection
+                                Payment Method
                             </label>
                             {PAYMENT_MODES.map(m => {
                                 const Icon = m.icon;
@@ -484,7 +484,7 @@ export function POSDeliveryModal({
                                     <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                                         <Shield size={16} className="text-emerald-400" />
                                     </div>
-                                    <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">Audit Summary Matrix</span>
+                                    <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">Order Summary</span>
                                 </div>
                                 <div className="space-y-4 relative z-10">
                                     <Row label="Recipient" value={form.recipient_name} />
@@ -555,7 +555,7 @@ export function POSDeliveryModal({
                         <button onClick={handleSubmit} disabled={submitting}
                             className="flex items-center gap-5 px-10 py-5 bg-emerald-gradient text-white rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-emerald-500/40 border border-emerald-400/30">
                             {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={4} />}
-                            Finalize Deployment
+                            Confirm Delivery
                         </button>
                     )}
                 </div>

@@ -257,7 +257,7 @@ export function MultiPaymentDashboard({
 
                             <div className="relative z-10">
                                 <div className="flex items-baseline justify-between mb-2">
-                                    <span className="text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]">Matrix Input Buffer</span>
+                                    <span className="text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]">Enter Amount</span>
                                     <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">{currency} UNIT</span>
                                 </div>
                                 <div className="text-6xl font-black text-white tabular-nums tracking-[ -0.05em] flex items-center gap-3">
@@ -619,7 +619,7 @@ export function MultiPaymentDashboard({
                                 </div>
                                 <div>
                                     <p className="text-xs font-black text-emerald-900 uppercase tracking-wider">Perfectly Balanced</p>
-                                    <p className="text-[10px] text-emerald-600 font-bold uppercase mt-0.5">Ready to finalize the transaction.</p>
+                                    <p className="text-[10px] text-emerald-600 font-bold uppercase mt-0.5">Ready to complete the sale.</p>
                                 </div>
                             </div>
                         )}
@@ -701,7 +701,7 @@ export function MultiPaymentDashboard({
                                 <Check size={36} strokeWidth={4} className={clsx("transition-all duration-700", Math.abs(remaining) <= 0.01 ? "rotate-0 scale-100 text-white" : "rotate-45 scale-50 opacity-20")} />
                             </div>
                             <div className="text-left">
-                                <span className="text-[11px] font-black uppercase tracking-[0.4em] block mb-1 text-inherit opacity-60">Authorization Protocol</span>
+                                <span className="text-[11px] font-black uppercase tracking-[0.4em] block mb-1 text-inherit opacity-60">Complete Sale</span>
                                 <span className="text-2xl font-black uppercase tracking-widest text-inherit">Execute Settlement</span>
                             </div>
 

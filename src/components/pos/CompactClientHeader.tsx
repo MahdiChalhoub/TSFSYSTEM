@@ -19,13 +19,13 @@ export function CompactClientHeader({ client, currency = '$', uniqueItems, total
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-800 animate-pulse border border-white/5" />
                 <div className="flex flex-col">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none mb-1">Operational Context</span>
-                    <span className="text-[13px] font-black text-white/40 uppercase tracking-tighter italic">Anonymous Session Protocol</span>
+                    <span className="text-[13px] font-black text-white/40 uppercase tracking-tighter italic">Walk-in Customer</span>
                 </div>
             </div>
 
             <div className="flex gap-3 relative z-10">
                 <div className="h-10 px-5 bg-white/5 rounded-2xl flex items-center gap-3 border border-white/5 backdrop-blur-md">
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Matrix Throughput</span>
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Order Total</span>
                     <span className="text-[14px] font-black tabular-nums text-emerald-400 leading-tight tracking-tighter">{totalPieces} <span className="text-[10px] text-slate-600 ml-1">UNITS</span></span>
                 </div>
             </div>

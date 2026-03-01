@@ -179,7 +179,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors" size={18} />
                         <input
                             type="text"
-                            placeholder="QUERY MATRIX: ID, NAME, OR BARCODE..."
+                            placeholder="Search by name, ID, or barcode..."
                             className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-white/5 rounded-[1.2rem] text-[13px] outline-none focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all font-black text-white placeholder:text-slate-800 uppercase tracking-widest"
                             value={searchQuery}
                             onChange={(e) => onSetSearchQuery(e.target.value)}
@@ -200,7 +200,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                         )}
                     >
                         <Calculator size={16} className="stroke-[2.5]" />
-                        Neural Calc
+                        Calculator
                     </button>
                 </div>
 
@@ -290,7 +290,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                     <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-slate-950/80 backdrop-blur-2xl sticky top-0 z-[30]">
                         <div className="flex items-center gap-3">
                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                            <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Operational Matrix</h2>
+                            <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-white italic">Order Details</h2>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 italic">{uniqueItems} Lines</span>
@@ -359,7 +359,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                     className="w-full pl-11 pr-10 py-3 bg-slate-950 border border-white/5 rounded-2xl text-[11px] font-black text-slate-300 outline-none appearance-none cursor-pointer focus:border-emerald-500/50 transition-all uppercase tracking-widest italic"
                                 >
                                     {deliveryZones.map(z => (
-                                        <option key={z.id} value={z.id} className="bg-slate-950 text-white font-black">{z.name} Matrix</option>
+                                        <option key={z.id} value={z.id} className="bg-slate-950 text-white font-black">{z.name}</option>
                                     ))}
                                 </select>
                                 <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" />
@@ -375,8 +375,8 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                     <div className="absolute inset-0 bg-emerald-500/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-600">Primary Bay Empty</p>
-                                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Awaiting Material Acquisition</p>
+                                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-600">Cart Empty</p>
+                                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Add items to get started</p>
                                 </div>
                             </div>
                         ) : (
@@ -555,7 +555,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                             .map((m: any) => {
                                                 const key = typeof m === 'string' ? m : m.key;
                                                 const label = typeof m === 'string' ? m : (m.label || key);
-                                                return <option key={key} value={key} className="bg-slate-950 text-white">{label} Protocol</option>;
+                                                return <option key={key} value={key} className="bg-slate-950 text-white">{label}</option>;
                                             })
                                         }
                                     </select>
@@ -563,7 +563,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                     <button
                                         onClick={() => setIsMultiPayMode(true)}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 rounded-xl hover:text-emerald-400 hover:border-emerald-500/50 transition-all"
-                                        title="Split Protocol"
+                                        title="Split Payment"
                                     >
                                         <Calculator size={14} />
                                     </button>
@@ -590,9 +590,9 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                         {isProcessing ? <RefreshCw size={24} className="animate-spin" /> : <ShieldCheck size={28} className="stroke-[2.5]" />}
                                     </div>
                                     <div className="flex flex-col items-start">
-                                        <span className="text-[10px] font-black text-emerald-100/60 uppercase tracking-[0.3em] leading-none mb-1.5 italic">Transaction Matrix</span>
+                                        <span className="text-[10px] font-black text-emerald-100/60 uppercase tracking-[0.3em] leading-none mb-1.5 italic">Complete Order</span>
                                         <span className="text-xl font-black text-white uppercase tracking-[0.1em] leading-none italic">
-                                            {isProcessing ? "Processing..." : changeDue > 0 ? "Commit & Rebate" : "Finalize Protocol"}
+                                            {isProcessing ? "Processing..." : changeDue > 0 ? "Complete & Give Change" : "Complete Sale"}
                                         </span>
                                     </div>
                                 </div>
@@ -647,7 +647,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-1.5 h-6 bg-amber-500 rounded-full group-hover/handle:scale-y-125 transition-transform" />
-                            <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em] italic">Neural Interface</span>
+                            <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em] italic">Quick Calculator</span>
                         </div>
                         <button onClick={() => setShowNumpad(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-950 text-slate-600 hover:bg-rose-500 hover:text-white transition-all border border-white/5">
                             <X size={16} />
