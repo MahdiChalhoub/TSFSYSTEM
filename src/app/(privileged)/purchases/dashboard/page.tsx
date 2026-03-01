@@ -78,7 +78,7 @@ export default function PurchaseDashboardPage() {
         },
         {
             key: 'supplier_name',
-            label: 'Vendor Entity',
+            label: 'Supplier',
             render: (o) => (
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400">
@@ -90,7 +90,7 @@ export default function PurchaseDashboardPage() {
         },
         {
             key: 'status',
-            label: 'Lifecycle Stage',
+            label: 'Status',
             render: (o) => (
                 <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border ${STATUS_CONFIG[o.status ?? '']?.color || 'bg-stone-50 text-stone-500'}`}>
                     {STATUS_CONFIG[o.status ?? '']?.label || o.status}
@@ -99,12 +99,12 @@ export default function PurchaseDashboardPage() {
         },
         {
             key: 'payment_method',
-            label: 'Settlement Channel',
+            label: 'Payment',
             render: (o) => <span className="text-[10px] font-black uppercase tracking-tighter text-stone-400">{o.payment_method || 'PENDING'}</span>
         },
         {
             key: 'total_amount',
-            label: 'Gross Procurement',
+            label: 'Total',
             align: 'right',
             render: (o) => (
                 <span className="font-black text-gray-900 tracking-tighter">{fmt(parseFloat(o.total_amount || 0))}</span>
@@ -122,7 +122,7 @@ export default function PurchaseDashboardPage() {
     }
     return (
         <div className="page-container animate-in fade-in duration-700">
-            {/* Header: Procurement Intelligence Console */}
+            {/* Header: Procurement Dashboard */}
             <header className="flex flex-col gap-8 mb-10">
                 <div className="flex justify-between items-end">
                     <div className="flex items-center gap-6">
@@ -132,26 +132,26 @@ export default function PurchaseDashboardPage() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                                    Procurement Node: Active
+                                    Active
                                 </Badge>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <Activity size={14} className="text-emerald-400" /> Supply Chain Sync: Nominal
+                                    <Activity size={14} className="text-emerald-400" /> Live
                                 </span>
                             </div>
                             <h1 className="page-header-title">
-                                Procurement <span className="text-emerald-700">Intelligence</span>
+                                Procurement <span className="text-emerald-700">Dashboard</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                High-fidelity vendor orchestration and procurement lifecycle analytics.
+                                Supplier tracking and purchase order analytics.
                             </p>
                         </div>
                     </div>
                     <div className="hidden lg:flex items-center gap-4">
                         <Button onClick={loadOrders} variant="outline" className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
-                            <RefreshCw size={18} className={`text-emerald-500 ${loading ? 'animate-spin' : ''}`} /> Refresh Nodes
+                            <RefreshCw size={18} className={`text-emerald-500 ${loading ? 'animate-spin' : ''}`} /> Refresh
                         </Button>
                         <Button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
-                            New Command <Plus size={18} className="text-emerald-400" />
+                            New Order <Plus size={18} className="text-emerald-400" />
                         </Button>
                     </div>
                 </div>
@@ -161,7 +161,7 @@ export default function PurchaseDashboardPage() {
                 <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-white min-h-[160px]">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
                     <div className="relative z-10">
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">GLOBAL EXPOSURE</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">TOTAL SPEND</p>
                         <h2 className="text-4xl font-black text-white tracking-tighter mt-2">{fmt(stats.total)}</h2>
                         <div className="mt-6 flex items-center gap-3">
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-[9px] font-black px-3 py-1 rounded-full">{stats.count} ACTIVE POs</Badge>
@@ -207,12 +207,12 @@ export default function PurchaseDashboardPage() {
                         <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{orders.length > 0 ? fmt(stats.total / orders.length) : fmt(0)}</h4>
                     </div>
                     <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-tight">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Avg Matrix Dispatch
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Avg. per Order
                     </div>
                 </Card>
             </div>
             <TypicalListView
-                title="Procurement Lifecycle Stream"
+                title="Purchase Orders"
                 data={filteredOrders}
                 loading={loading}
                 getRowId={(o) => o.id}

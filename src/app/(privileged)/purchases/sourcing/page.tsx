@@ -43,7 +43,7 @@ export default async function SourcingDashboardPage() {
                         <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                             <BarChart3 size={28} className="text-white" />
                         </div>
-                        Sourcing <span className="text-emerald-500">Intelligence</span>
+                        Sourcing <span className="text-emerald-500">Hub</span>
                     </h1>
                     <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Vendor Performance & Optimization Opportunities</p>
                 </div>
@@ -146,7 +146,7 @@ export default async function SourcingDashboardPage() {
                             <BarChart3 size={40} />
                         </div>
                         <div>
-                            <h4 className="font-black text-gray-900 tracking-tight">No Intelligence Data Yet</h4>
+                            <h4 className="font-black text-gray-900 tracking-tight">No Sourcing Data Yet</h4>
                             <p className="text-sm text-gray-400 font-medium">Complete more purchases to build your sourcing database.</p>
                         </div>
                     </div>

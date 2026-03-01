@@ -22,11 +22,11 @@ export default async function SaasMasterDashboard() {
         { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
         { label: "Pending Registrations", value: stats?.pendingRegistrations || "0", icon: Activity, color: "amber", trend: "Review Required", href: "/organizations/registrations" },
         { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
-        { label: "Module Deployments", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
+        { label: "Active Modules", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
     ];
     return (
         <div className="page-container animate-in fade-in duration-700">
-            {/* Header Section: Platform Intelligence Node */}
+            {/* Header Section: Platform Control Panel */}
             <header className="flex flex-col gap-8 mb-10">
                 <div className="flex justify-between items-end">
                     <div className="flex items-center gap-6">
@@ -46,7 +46,7 @@ export default async function SaasMasterDashboard() {
                                 SaaS <span className="text-emerald-700">Master Hub</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                Orchestrate global tenant infrastructure, module registries, and core platform kernel.
+                                Manage tenants, modules, and platform infrastructure.
                             </p>
                         </div>
                     </div>
@@ -148,10 +148,10 @@ export default async function SaasMasterDashboard() {
                     <CardContent className="p-8 pt-0">
                         <div className="space-y-4">
                             {[
-                                { title: "Global Registry", desc: "Orchestrate module matrix", href: "/modules", icon: Database, color: "text-emerald-600", bg: "bg-emerald-50" },
+                                { title: "Global Registry", desc: "Manage modules", href: "/modules", icon: Database, color: "text-emerald-600", bg: "bg-emerald-50" },
                                 { title: "Platform Health", desc: "Real-time kernel diagnostics", href: "/health", icon: Activity, color: "text-blue-600", bg: "bg-blue-50" },
                                 { title: "Nexus Updates", desc: "Core infrastructure patches", href: "/updates", icon: Zap, color: "text-amber-600", bg: "bg-amber-50" },
-                                { title: "Connector Node", desc: "API gateway orchestration", href: "/connector", icon: Globe, color: "text-purple-600", bg: "bg-purple-50" },
+                                { title: "Connector Node", desc: "API connectors", href: "/connector", icon: Globe, color: "text-purple-600", bg: "bg-purple-50" },
                             ].map((action, i) => (
                                 <Link key={i} href={action.href} className="block group/act">
                                     <div className="flex items-center gap-5 p-5 rounded-[1.8rem] hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-200/20 active:scale-[0.98]">

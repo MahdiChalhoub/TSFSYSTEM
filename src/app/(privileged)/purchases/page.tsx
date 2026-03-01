@@ -113,7 +113,7 @@ export default async function PurchaseRegistryPage({ searchParams }: { searchPar
                         className="bg-white border border-gray-100 text-gray-500 h-12 px-6 rounded-2xl font-bold hover:text-emerald-600 hover:border-emerald-100 transition-all flex items-center gap-2 shadow-sm"
                     >
                         <BarChart3 size={18} />
-                        <span>Sourcing Intelligence</span>
+                        <span>Sourcing Hub</span>
                     </Link>
                     <Link
                         href="/purchases/new-order"
