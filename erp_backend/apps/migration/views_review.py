@@ -39,6 +39,88 @@ MIGRATION_UPLOAD_DIR = os.path.join(
 
 class MigrationReviewMixin:
 
+    @action(detail=True, methods=['get'], url_path='all-records')
+    def all_records(self, request, pk=None):
+        """Returns ALL migrated records (paginated) for a specific entity type.
+        Used by the full-page audit view. Each row has source_raw + target_state."""
+        job = self.get_object()
+        entity_type = request.query_params.get('entity_type', 'TRANSACTION')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 50))
+
+        total_qs = MigrationMapping.objects.filter(job=job, entity_type=entity_type)
+        total_count = total_qs.count()
+        offset = (page - 1) * page_size
+        mappings = total_qs.order_by('id')[offset:offset + page_size]
+
+        records = []
+        for m in mappings:
+            target_data = self._load_target_data(entity_type, m.target_id)
+            records.append({
+                'mapping_id': m.id,
+                'source_id': m.source_id,
+                'target_id': m.target_id,
+                'source_raw': m.extra_data or {},
+                'target_state': target_data,
+            })
+
+        return Response({
+            'entity_type': entity_type,
+            'job_id': job.id,
+            'total': total_count,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total_count + page_size - 1) // page_size,
+            'records': records,
+        })
+
+    def _load_target_data(self, entity_type, target_id):
+        """Load the target record data for a given entity type and ID."""
+        try:
+            if entity_type == 'TRANSACTION':
+                from apps.pos.serializers import OrderSerializer
+                from apps.pos.models import Order
+                obj = Order.objects.get(id=target_id)
+                return OrderSerializer(obj).data
+            elif entity_type == 'PRODUCT':
+                from apps.inventory.serializers import ProductSerializer
+                from apps.inventory.models import Product
+                obj = Product.objects.get(id=target_id)
+                return ProductSerializer(obj).data
+            elif entity_type == 'CONTACT':
+                from apps.crm.serializers import ContactSerializer
+                from apps.crm.models import Contact
+                obj = Contact.objects.get(id=target_id)
+                data = ContactSerializer(obj).data
+                data['has_ledger_link'] = bool(obj.linked_account_id)
+                return data
+            elif entity_type == 'CATEGORY':
+                from apps.inventory.serializers import CategorySerializer
+                from apps.inventory.models import Category
+                obj = Category.objects.get(id=target_id)
+                return CategorySerializer(obj).data
+            elif entity_type == 'UNIT':
+                from apps.inventory.serializers import UnitSerializer
+                from apps.inventory.models import Unit
+                obj = Unit.objects.get(id=target_id)
+                return UnitSerializer(obj).data
+            elif entity_type == 'ACCOUNT':
+                from apps.finance.serializers import FinancialAccountSerializer
+                from apps.finance.models import FinancialAccount
+                obj = FinancialAccount.objects.get(id=target_id)
+                data = FinancialAccountSerializer(obj).data
+                data['is_linked_to_coa'] = bool(obj.ledger_account_id)
+                return data
+            elif entity_type == 'EXPENSE':
+                from apps.finance.serializers import DirectExpenseSerializer
+                from apps.finance.models import DirectExpense
+                obj = DirectExpense.objects.get(id=target_id)
+                return DirectExpenseSerializer(obj).data
+            else:
+                return {'id': target_id}
+        except Exception as e:
+            return {'error': f'Failed to load record {target_id}: {str(e)}'}
+
     @action(detail=True, methods=['get'], url_path='samples')
     def samples(self, request, pk=None):
         """Returns 5-10 detailed samples of migrated data for a specific entity type."""

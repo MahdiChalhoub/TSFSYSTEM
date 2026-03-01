@@ -10,7 +10,7 @@ export async function getCommercialContext() {
         ]);
 
         const org = Array.isArray(orgs) ? orgs[0] : orgs;
-        const currency = org?.currency || org?.settings?.currency || 'USD';
+        const currency = org?.currency_symbol || org?.base_currency?.symbol || org?.currency_code || org?.settings?.currency || 'CFA';
 
         return {
             orgId: org?.id,
@@ -23,7 +23,7 @@ export async function getCommercialContext() {
     } catch (error) {
         console.error('[getCommercialContext] Error:', error);
         return {
-            currency: 'USD',
+            currency: 'CFA',
             tradeSubTypesEnabled: false,
             defaultWarehouseId: 1
         };

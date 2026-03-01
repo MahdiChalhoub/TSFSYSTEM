@@ -223,7 +223,7 @@ export default function TimeAttendanceLedger({
                     search={{ placeholder: 'Search Personnel Identities...', value: search, onChange: setSearch }}
                     filters={[
                         {
-                            key: 'period', label: 'Temporal Scope', type: 'select', options: [
+                            key: 'period', label: 'Time Period', type: 'select', options: [
                                 { value: 'today', label: 'Current Log (Today)' },
                                 { value: 'all', label: 'Historical Archive (All)' }
                             ]

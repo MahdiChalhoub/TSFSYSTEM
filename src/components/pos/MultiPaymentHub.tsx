@@ -702,7 +702,7 @@ export function MultiPaymentDashboard({
                             </div>
                             <div className="text-left">
                                 <span className="text-[11px] font-black uppercase tracking-[0.4em] block mb-1 text-inherit opacity-60">Complete Sale</span>
-                                <span className="text-2xl font-black uppercase tracking-widest text-inherit">Execute Settlement</span>
+                                <span className="text-2xl font-black uppercase tracking-widest text-inherit">Confirm Payment</span>
                             </div>
 
                             {/* Glow Effect */}

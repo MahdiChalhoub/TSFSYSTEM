@@ -13,7 +13,8 @@ import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart,
     Activity, ShieldCheck,
-    Tags, RefreshCw, Zap, TrendingUp,} from "lucide-react"
+    Tags, RefreshCw, Zap, TrendingUp,
+} from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -451,11 +452,11 @@ export default function DiscountRulesPage() {
                                         </div>
                                     </div>
                                 </div>
-                                {/* Section 3: Temporal & Logic */}
+                                {/* Section 3: Dates & Logic */}
                                 <div className="space-y-6">
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-stone-900 font-black text-xs uppercase tracking-widest">
-                                            <Calendar size={14} className="text-emerald-500" /> Temporal Bounds
+                                            <Calendar size={14} className="text-emerald-500" /> Date Range
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
@@ -495,7 +496,7 @@ export default function DiscountRulesPage() {
                 </div>
             )}
             <TypicalListView
-                title="Rule Orchestration Stream"
+                title="Discount Rules"
                 data={rules}
                 loading={loading}
                 getRowId={(r) => r.id}

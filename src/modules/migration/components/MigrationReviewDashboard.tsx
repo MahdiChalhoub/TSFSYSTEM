@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -84,6 +85,7 @@ const ENTITY_ICONS: Record<string, any> = {
 }
 
 export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: MigrationJob; goBack: () => void; onRollback: () => void }) {
+    const router = useRouter()
     const [review, setReview] = useState<ReviewData | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<"overview" | "errors">("overview")
@@ -548,7 +550,7 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                                 <Card
                                                     key={entity.entity_type}
                                                     className={`group relative overflow-hidden transition-all hover:shadow-lg cursor-pointer border-gray-200 hover:border-emerald-200 ${hasDrafts ? 'bg-amber-50/30' : 'bg-white'}`}
-                                                    onClick={() => fetchSamples(entity.entity_type)}
+                                                    onClick={() => router.push(`/migration/audit?jobId=${job.id}&entityType=${entity.entity_type}`)}
                                                 >
                                                     <div className={`absolute top-0 left-0 w-full h-1 ${pct >= 95 ? 'bg-emerald-500' : pct >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} />
 

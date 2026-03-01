@@ -354,7 +354,7 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
                 onOpenChange={setShowSyncConfirm}
                 onConfirm={handleSync}
                 title="Synchronize Inventory Asset Mapping?"
-                description="This will orchestrate a Ledger Reconciliation event to align asset valuations with current node stock states."
+                description="This will run a Ledger Reconciliation to align asset valuations with current stock levels."
                 confirmText="Execute Sync"
                 variant="warning"
             />

@@ -24,9 +24,9 @@ const LEAVE_TYPES = [
 ];
 
 const ALL_COLUMNS: ColumnDef<LeaveRequest>[] = [
-    { key: 'employee', label: 'Resource Entity', sortable: true, alwaysVisible: true },
-    { key: 'type', label: 'Leave Protocol' },
-    { key: 'duration', label: 'Temporal Scope' },
+    { key: 'employee', label: 'Employee', sortable: true, alwaysVisible: true },
+    { key: 'type', label: 'Leave Type' },
+    { key: 'duration', label: 'Duration' },
     { key: 'reason', label: 'Disposition / Reason' },
 ];
 
@@ -58,14 +58,14 @@ export default function LeaveManagementHub({
     const handleApprove = (id: string) => startTransition(async () => {
         try {
             await approveLeave(id);
-            toast.success('Protocol Exception Authorized');
+            toast.success('Leave approved');
         } catch (err: any) { toast.error(err.message) }
     });
 
     const handleReject = (id: string) => startTransition(async () => {
         try {
             await rejectLeave(id);
-            toast.success('Protocol Exception Terminated');
+            toast.success('Leave rejected');
         } catch (err: any) { toast.error(err.message) }
     });
 
@@ -76,7 +76,7 @@ export default function LeaveManagementHub({
                     <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
                         <User size={16} />
                     </div>
-                    <span className="font-bold text-gray-900 uppercase tracking-tight">{r.employee_name || 'Personnel Resource'}</span>
+                    <span className="font-bold text-gray-900 uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
                 </div>
             ),
             type: r => {
@@ -115,7 +115,7 @@ export default function LeaveManagementHub({
                     end_date: fd.get('end_date'),
                     reason: fd.get('reason'),
                 });
-                toast.success('Leave Request Protocol Submitted');
+                toast.success('Leave request submitted');
                 setIsDialogOpen(false);
             } catch (err: any) { toast.error(err.message || 'Submission Failed') }
         });
@@ -124,7 +124,7 @@ export default function LeaveManagementHub({
     return (
         <div className="space-y-6">
             <TypicalListView<LeaveRequest>
-                title="Personnel Leave Ledger"
+                title="Leave Requests"
                 data={filtered}
                 getRowId={r => r.id}
                 columns={columns}
@@ -140,7 +140,7 @@ export default function LeaveManagementHub({
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="h-10 px-6 bg-rose-600 text-white hover:bg-rose-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-100 transition-all">
-                                <Plus size={18} className="mr-2" /> New Request Protocol
+                                <Plus size={18} className="mr-2" /> New Request
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-xl">
@@ -148,31 +148,31 @@ export default function LeaveManagementHub({
                                 <div className="absolute top-0 right-0 p-8 opacity-10">
                                     <CalendarOff size={80} />
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tighter">Submit <span className="opacity-60">Protocol</span></h2>
-                                <p className="text-rose-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Leave Application & Exception Approval</p>
+                                <h2 className="text-3xl font-black tracking-tighter">Leave <span className="opacity-60">Request</span></h2>
+                                <p className="text-rose-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Leave Application</p>
                             </div>
                             <form onSubmit={handleCreate} className="p-8 space-y-6 bg-white">
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="col-span-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Personnel Entity</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Employee</label>
                                         <select name="employee" required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
-                                            <option value="">Select Resource...</option>
+                                            <option value="">Select Employee...</option>
                                             {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Leave Dimension</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Leave Type</label>
                                         <select name="leave_type" required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
                                             {LEAVE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                         </select>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3 col-span-2">
                                         <div>
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Start Segment</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Start Date</label>
                                             <input name="start_date" type="date" required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">End Segment</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">End Date</label>
                                             <input name="end_date" type="date" required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
                                         </div>
                                     </div>
@@ -184,7 +184,7 @@ export default function LeaveManagementHub({
                                 <div className="flex gap-3 pt-2">
                                     <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-gray-100">Cancel</Button>
                                     <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-rose-600 text-white hover:bg-rose-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100">
-                                        {isPending ? 'Processing...' : 'Submit Protocol'}
+                                        {isPending ? 'Processing...' : 'Submit Request'}
                                     </Button>
                                 </div>
                             </form>
@@ -194,9 +194,9 @@ export default function LeaveManagementHub({
                 lifecycle={{
                     getStatus: r => {
                         const sMap: Record<string, any> = {
-                            'PENDING': { label: 'Awaiting Authorization', variant: 'warning' },
-                            'APPROVED': { label: 'Authorized', variant: 'success' },
-                            'REJECTED': { label: 'Terminated', variant: 'destructive' },
+                            'PENDING': { label: 'Pending', variant: 'warning' },
+                            'APPROVED': { label: 'Approved', variant: 'success' },
+                            'REJECTED': { label: 'Rejected', variant: 'destructive' },
                             'CANCELLED': { label: 'Cancelled', variant: 'secondary' },
                         };
                         return sMap[r.status] || sMap['PENDING'];
@@ -222,14 +222,14 @@ export default function LeaveManagementHub({
                 }}
             >
                 <TypicalFilter
-                    search={{ placeholder: 'Search Personnel Identities...', value: search, onChange: setSearch }}
+                    search={{ placeholder: 'Search employees...', value: search, onChange: setSearch }}
                     filters={[
                         {
-                            key: 'status', label: 'Protocol Status', type: 'select', options: [
-                                { value: 'ALL', label: 'All Lifecycle States' },
-                                { value: 'PENDING', label: 'Awaiting Authorization' },
-                                { value: 'APPROVED', label: 'Authorized Archives' },
-                                { value: 'REJECTED', label: 'Terminated Archive' },
+                            key: 'status', label: 'Status', type: 'select', options: [
+                                { value: 'ALL', label: 'All' },
+                                { value: 'PENDING', label: 'Pending' },
+                                { value: 'APPROVED', label: 'Approved' },
+                                { value: 'REJECTED', label: 'Rejected' },
                             ]
                         }
                     ]}

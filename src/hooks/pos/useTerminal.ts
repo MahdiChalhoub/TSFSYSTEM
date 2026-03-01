@@ -117,7 +117,7 @@ export function useTerminal() {
     const [currentParentId, setCurrentParentId] = useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = useState<'hidden' | 'normal' | 'expanded'>('normal');
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [currency, setCurrency] = useState('$');
+    const [currency, setCurrency] = useState('CFA');
     const [highlightedItemId, setHighlightedItemId] = useState<number | null>(null);
     const [lastAddedItemId, setLastAddedItemId] = useState<number | null>(null);
 
@@ -435,7 +435,7 @@ export function useTerminal() {
 
         // Commercial context (currency + payment methods)
         import('@/app/actions/commercial').then(m => m.getCommercialContext()).then(ctx => {
-            setCurrency(ctx.currency === 'USD' ? '$' : ctx.currency);
+            setCurrency(ctx.currency || 'CFA');
             if (Array.isArray(ctx.posPaymentMethods) && ctx.posPaymentMethods.length > 0) {
                 const normalized: PaymentMethodConfig[] = ctx.posPaymentMethods
                     .map((m: any) => typeof m === 'string' ? { key: m, label: m, accountId: null } : { key: m.key, label: m.label || m.key, accountId: m.accountId || null })

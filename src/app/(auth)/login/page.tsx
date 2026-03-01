@@ -53,7 +53,7 @@ function LoginContent() {
     const isRoot = !subdomain && !isSaaS;
     const displayTitle = isSaaS ? "SAAS CONTROL" : (isRoot ? PLATFORM_CONFIG.name.toUpperCase() : (tenant?.name || PLATFORM_CONFIG.name).toUpperCase());
     const displaySubtitle = isSaaS
-        ? "Global infrastructure management & orchestration."
+        ? "Platform administration & management."
         : (isRoot
             ? PLATFORM_CONFIG.tagline
             : "Secure enterprise gateway. Authorized personnel only.");

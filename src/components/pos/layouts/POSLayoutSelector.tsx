@@ -8,7 +8,7 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
     {
         id: 'classic',
         name: 'Standard Node',
-        description: 'Odoo-inspired orchestration. Products left, order panel right. Familiar reliability.',
+        description: 'Classic layout. Products left, order panel right. Familiar flow.',
         icon: Monitor,
         preview: '🛒 Node Alpha: Classic Split',
         accent: 'slate',
