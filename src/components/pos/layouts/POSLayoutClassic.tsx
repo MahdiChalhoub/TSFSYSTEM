@@ -49,13 +49,15 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         onSetOverrideOpen, onSetReceiptOpen, onAddToCart,
         onUpdateQuantity, onUpdatePrice, onUpdateLineDiscount, onUpdateLineNote,
         onClearCart, onCreateNewSession, onRemoveSession,
-        onUpdateActiveSession, onToggleFullscreen, onCycleSidebarMode, onCharge,
+        onUpdateActiveSession, onToggleFullscreen, onCharge,
         onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
         onOpenLayoutSelector, onSetNotes, onSetPointsRedeemed, onSetPaymentLegs,
         onLockRegister, onCloseRegister, onOpenReturn, onSearchClients,
         getClientFidelityData, setIsVaultOpen, isVaultOpen,
         currentLayout
     } = t;
+
+    const filteredClients = (t as any).clients || [];
 
     const paymentMethods = registerConfig?.payment_methods || (t as any).paymentMethods || [
         { key: 'CASH', label: 'CASH' },
@@ -317,7 +319,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
 
                                 {clientSearchQuery && (
                                     <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-[0_30px_60px_rgba(0,0,0,0.8)] z-[100] max-h-64 overflow-y-auto custom-scrollbar-dark backdrop-blur-3xl ring-1 ring-white/5">
-                                        {filteredClients.map(c => (
+                                        {filteredClients.map((c: any) => (
                                             <button
                                                 key={c.id}
                                                 onClick={() => {
@@ -350,7 +352,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             <div className="relative">
                                 <MapPin size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within/zone:text-emerald-400 transition-colors" />
                                 <select
-                                    value={deliveryZone}
+                                    value={deliveryZone || ''}
                                     onChange={(e) => onSetDeliveryZone(e.target.value)}
                                     className="w-full pl-11 pr-10 py-3 bg-slate-950 border border-white/5 rounded-2xl text-[11px] font-black text-slate-300 outline-none appearance-none cursor-pointer focus:border-emerald-500/50 transition-all uppercase tracking-widest italic"
                                 >
@@ -568,7 +570,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                         </div>
 
                         <button
-                            onClick={onCharge}
+                            onClick={() => onCharge()}
                             disabled={cart.length === 0 || isProcessing}
                             className={clsx(
                                 "group relative w-full h-20 rounded-[2rem] overflow-hidden transition-all duration-500 shadow-2xl",
@@ -707,11 +709,10 @@ export function POSLayoutClassic(props: POSLayoutProps) {
             <ManagerOverride
                 isOpen={isOverrideOpen}
                 onClose={() => onSetOverrideOpen(false)}
-                onVerify={(success) => {
-                    if (success) {
-                        toast.success("OVERRIDE_AUTHORIZED");
-                    }
+                onSuccess={() => {
+                    toast.success("OVERRIDE_AUTHORIZED");
                 }}
+                actionLabel="Protected Action"
             />
         </div>
     );

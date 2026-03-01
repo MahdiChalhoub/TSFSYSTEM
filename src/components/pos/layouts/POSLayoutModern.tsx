@@ -206,7 +206,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 onSetActiveSessionId={onSetActiveSessionId}
                 onCreateNewSession={onCreateNewSession}
                 onRemoveSession={onRemoveSession}
-                registerConfig={registerConfig || undefined}
+                registerConfig={registerConfig as any}
                 selectedClient={selectedClient}
                 clients={clients}
                 clientSearchQuery={clientSearchQuery}
@@ -226,7 +226,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 onSync={onSync}
                 onToggleFullscreen={onToggleFullscreen}
                 onOpenLayoutSelector={onOpenLayoutSelector}
-                onLockRegister={onLockRegister}
+                onLockRegister={onLockRegister || (() => { })}
                 onCloseRegister={onCloseRegister}
                 onOpenReturn={onOpenReturn}
                 onOpenAddressBook={() => setIsAddressBookOpen(true)}
@@ -412,7 +412,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             categoryId={activeCategoryId || currentParentId}
                                             onAddToCart={onAddToCart}
                                             currency={currency}
-                                            onProductsLoaded={onProductsLoaded}
+                                            onProductsLoaded={(props as any).onProductsLoaded}
                                             onAutoAdd={(product) => {
                                                 onAddToCart(product);
                                                 setTimeout(() => onSetSearchQuery(''), 300);
@@ -933,12 +933,17 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 clientName={selectedClient?.name || 'Walk-in'}
                 currency={currency}
                 fidelity={clientFidelity}
-                loading={fidelityLoading}
+                loading={fidelityLoading || false}
             />
             <ManagerOverride
                 isOpen={isOverrideOpen}
                 onClose={() => onSetOverrideOpen(false)}
-                action={pendingOverrideAction}
+                onSuccess={() => {
+                    if (pendingOverrideAction) {
+                        pendingOverrideAction.execute();
+                    }
+                }}
+                actionLabel={pendingOverrideAction?.label || "Protected Action"}
             />
         </div>
     );

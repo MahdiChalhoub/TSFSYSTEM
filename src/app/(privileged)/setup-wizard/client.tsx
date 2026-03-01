@@ -108,16 +108,34 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
     })
 
     const getInitialStep = () => {
-        if (!orgProfile?.company_type && !data.fiscal_regime) return 0
-        const hasCurrency = !!orgProfile?.base_currency?.id || !!data.base_currency_id
-        if (!hasCurrency) return 1
-        if (data.want_migration === null) return 2
-        // If they have no address, they need to fill it in Step 3
-        if (!orgProfile?.address || !orgProfile?.city) return 3
-        // If they have no warehouses (registration usually creates WH01, but we check), they need Step 4
-        if (config.warehouses.length === 0 && data.warehouses.length === 0) return 4
-        // If they have no POS-enabled accounts, they MUST do Step 5
-        if (config.posAccounts.length === 0) return 5
+        // Step 0: Fiscal Regime — check if already saved
+        const hasFiscalRegime = !!orgProfile?.company_type || !!data.fiscal_regime
+        if (!hasFiscalRegime) return 0
+
+        // Step 1: Financial Foundation — check if currency is set
+        const hasCurrency = !!orgProfile?.base_currency?.id
+        const hasCOA = config.coaItems.length > 0
+        if (!hasCurrency || !hasCOA) return 1
+
+        // Step 2: Migration — on resume, skip this since they already decided
+        // (if they're back here, they either skipped or went to migration and came back)
+        // Only show if it's a fresh first-time session (want_migration still null and no later data exists)
+        const hasAddress = !!orgProfile?.address && !!orgProfile?.city
+        const hasWarehouses = config.warehouses.length > 0
+        const hasPOSAccounts = config.posAccounts.length > 0
+        const hasLaterProgress = hasAddress || hasWarehouses || hasPOSAccounts
+        if (!hasLaterProgress && data.want_migration === null) return 2
+
+        // Step 3: Business Profile
+        if (!hasAddress) return 3
+
+        // Step 4: Locations (Warehouses)
+        if (!hasWarehouses) return 4
+
+        // Step 5: Payment Accounts
+        if (!hasPOSAccounts) return 5
+
+        // Step 6: Launch — everything is ready
         return 6
     }
 

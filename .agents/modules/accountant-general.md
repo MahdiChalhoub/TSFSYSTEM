@@ -1,14 +1,22 @@
 # MODULE AGENT: AccountantGeneral
 
 ## Domain
-- Core Financial Records, Chart of Accounts, Trial Balance, Profit & Loss, and Balance Sheet.
+- Backend: `erp_backend/apps/finance/` (shared with FinanceCustodian)
+- Frontend Pages: `src/app/(privileged)/finance/ledger/`, `*/reports/`, `*/accounts/`
+- Documentation: `DOCUMENTATION/FINANCIAL_OPERATIONS_GUIDE.md`, `DOCUMENTATION/FINANCIAL_REPORTS_GUIDE.md`
 
-## Responsibility
-1. **Double-Entry Perfection**: Every transaction must have an equal credit and debit. No exceptions.
-2. **Reconciliation**: Provide tools to match bank statements with internal records.
-3. **Closing Cycles**: Manage monthly and yearly financial closing processes.
-4. **Visual Reporting**: Ensure financial dashboards are accurate and meaningful for business owners.
+## Pre-Work Protocol (MANDATORY)
+1. **Understand the SYSCOHADA framework** — TSF uses SYSCOHADA chart of accounts (West African standard).
+2. **Read `DOCUMENTATION/COA_ARCHITECTURE.md`** for the account hierarchy structure.
+3. **Check double-entry integrity** — Every journal entry must balance.
+
+## Core Directives
+1. **SYSCOHADA Compliance**: Account codes follow the SYSCOHADA numbering system.
+2. **Ledger Integrity**: The General Ledger is the single source of truth. All reports derive from it.
+3. **Trial Balance**: Must always show Debits = Credits. Any imbalance is a critical bug.
+4. **Period Controls**: Respect fiscal year boundaries and period closing rules.
+5. **Immutability**: Posted entries are immutable. Changes must be via corrective entries.
 
 ## Interactions
-- **Connects with**: `FinanceCustodian` (to verify tax/currency), `ProcurementLead` (Accounts Payable), `SalesStrategist` (Accounts Receivable).
-- **Consultation Hook**: Exposes "Generate Financial Statement" and "Verify Balance" methods.
+- **Coordinates with**: `FinanceCustodian` (who handles the tax/currency layer).
+- **Provides**: Trial Balance, P&L, Balance Sheet, General Ledger queries.
