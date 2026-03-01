@@ -141,3 +141,4 @@ The Setup Wizard (`/setup-wizard`) is designed to be extended by any module. If 
 | 9 | ⏳ **TypeScript `: any` types** | DEFERRED | 368 occurrences — systematic cleanup ongoing |
 | 10 | ⏳ **Redis + Celery not running** | DEFERRED | Requires Redis installation and Celery worker setup |
 
+\n### Setup Wizard Steps Completed:\n- CRM Setup (Pricing Tiers) \n- HR Setup (Departments)\n- POS Setup (Negative Stock Override)\n- eCommerce Setup (Storefront Branding)\n- Workspace Setup (Daily Checklists)
