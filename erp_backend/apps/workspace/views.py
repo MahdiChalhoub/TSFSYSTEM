@@ -48,9 +48,75 @@ class TaskTemplateViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSe
 
 
 class AutoTaskRuleViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
-    queryset = AutoTaskRule.objects.select_related('template').all()
+    queryset = AutoTaskRule.objects.select_related('template', 'assign_to_user', 'chain_parent').all()
     serializer_class = AutoTaskRuleSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Filter by module
+        module = self.request.query_params.get('module')
+        if module:
+            qs = qs.filter(module=module)
+        # Filter by rule_type (EVENT or RECURRING)
+        rule_type = self.request.query_params.get('rule_type')
+        if rule_type:
+            qs = qs.filter(rule_type=rule_type.upper())
+        # Filter by active status
+        active = self.request.query_params.get('active')
+        if active == 'true':
+            qs = qs.filter(is_active=True)
+        elif active == 'false':
+            qs = qs.filter(is_active=False)
+        return qs.order_by('module', 'code', 'name')
+
+    @action(detail=False, methods=['get'])
+    def grouped(self, request):
+        """Return rules grouped by module with counts."""
+        qs = self.get_queryset()
+        modules = {}
+        for rule in qs:
+            mod = rule.module or 'system'
+            if mod not in modules:
+                modules[mod] = {
+                    'module': mod,
+                    'module_display': rule.get_module_display(),
+                    'total': 0,
+                    'active': 0,
+                    'event_count': 0,
+                    'recurring_count': 0,
+                    'rules': [],
+                }
+            modules[mod]['total'] += 1
+            if rule.is_active:
+                modules[mod]['active'] += 1
+            if rule.rule_type == 'EVENT':
+                modules[mod]['event_count'] += 1
+            else:
+                modules[mod]['recurring_count'] += 1
+            modules[mod]['rules'].append(AutoTaskRuleSerializer(rule).data)
+
+        # Sort modules in display order
+        module_order = ['inventory', 'purchasing', 'finance', 'crm', 'sales', 'hr', 'system']
+        result = []
+        for mod in module_order:
+            if mod in modules:
+                result.append(modules[mod])
+        # Add any modules not in the predefined order
+        for mod in modules:
+            if mod not in module_order:
+                result.append(modules[mod])
+
+        return Response(result)
+
+    @action(detail=False, methods=['get'])
+    def trigger_choices(self, request):
+        """Return all available trigger events grouped by module."""
+        choices = AutoTaskRule.TRIGGER_CHOICES
+        result = []
+        for value, label in choices:
+            result.append({'value': value, 'label': label})
+        return Response(result)
 
 
 class TaskViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):

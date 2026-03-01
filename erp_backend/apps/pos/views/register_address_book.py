@@ -436,3 +436,104 @@ class RegisterAddressBookMixin:
             'balance': float(snapshot.balance),
             'entryCount': len(entries_data),
         })
+
+
+    # ═══════════════════════════════════════════════════════
+    # SEARCH CONTACTS — For supplier/client selection
+    # ═══════════════════════════════════════════════════════
+
+    @action(detail=False, methods=['get'], url_path='address-book/search-contacts')
+    def address_book_search_contacts(self, request):
+        """Search suppliers or clients for Address Book linking.
+        Query params:
+            q (search term)
+            type: 'SUPPLIER' | 'CUSTOMER' | 'ALL' (default: ALL)
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        q = request.query_params.get('q', '').strip()
+        contact_type = request.query_params.get('type', 'ALL').upper()
+
+        try:
+            from apps.crm.models import Contact
+            qs = Contact.objects.filter(organization_id=org_id)
+
+            if contact_type == 'SUPPLIER':
+                qs = qs.filter(type='SUPPLIER')
+            elif contact_type == 'CUSTOMER':
+                qs = qs.filter(type='CUSTOMER')
+            # ALL = no filter
+
+            if q:
+                qs = qs.filter(
+                    Q(name__icontains=q) |
+                    Q(phone__icontains=q) |
+                    Q(email__icontains=q) |
+                    Q(company_name__icontains=q)
+                )
+
+            contacts = qs.order_by('name')[:30]
+            return Response([{
+                'id': c.id,
+                'name': c.name or c.company_name or f'Contact #{c.id}',
+                'phone': c.phone or '',
+                'type': c.type,
+                'balance': float(getattr(c, 'current_balance', 0) or 0),
+            } for c in contacts])
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    # ═══════════════════════════════════════════════════════
+    # UNPAID INVOICES — For invoice linking
+    # ═══════════════════════════════════════════════════════
+
+    @action(detail=False, methods=['get'], url_path='address-book/unpaid-invoices')
+    def address_book_unpaid_invoices(self, request):
+        """Get unpaid invoices for a specific contact.
+        Query params:
+            contact_id (required)
+            type: 'PURCHASE' | 'SALES' (optional, filters invoice type)
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        contact_id = request.query_params.get('contact_id')
+        invoice_type = request.query_params.get('type', '').upper()
+
+        if not contact_id:
+            return Response({"error": "contact_id required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from apps.finance.invoice_models import Invoice
+            qs = Invoice.objects.filter(
+                organization_id=org_id,
+                contact_id=contact_id,
+                status__in=['SENT', 'PARTIAL_PAID', 'OVERDUE'],
+                balance_due__gt=0,
+            )
+
+            if invoice_type in ('PURCHASE', 'SALES'):
+                qs = qs.filter(type=invoice_type)
+
+            invoices = qs.order_by('-issue_date')[:50]
+            return Response([{
+                'id': inv.id,
+                'invoiceNumber': inv.invoice_number or f'INV-{inv.id}',
+                'type': inv.type,
+                'status': inv.status,
+                'totalAmount': float(inv.total_amount),
+                'paidAmount': float(inv.paid_amount),
+                'balanceDue': float(inv.balance_due),
+                'issueDate': str(inv.issue_date) if inv.issue_date else '',
+                'dueDate': str(inv.due_date) if inv.due_date else '',
+                'contactName': inv.contact_name or '',
+            } for inv in invoices])
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

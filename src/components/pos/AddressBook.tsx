@@ -110,15 +110,90 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
         description: '',
         reference: '',
         amount: '',
-        // Linking
+        // Linking (IDs)
+        supplierId: null as number | null,
         supplierName: '',
+        supplierInvoiceId: null as number | null,
         supplierInvoiceRef: '',
+        clientId: null as number | null,
         clientName: '',
+        clientInvoiceId: null as number | null,
         clientInvoiceRef: '',
         expenseCategory: '',
         partnerName: '',
         linkedOrderRef: '',
     });
+
+    // Contact search
+    const [contactQuery, setContactQuery] = useState('');
+    const [contactResults, setContactResults] = useState<Array<{ id: number; name: string; phone: string; type: string; balance: number }>>([]);
+    const [contactSearching, setContactSearching] = useState(false);
+    const [showContactDropdown, setShowContactDropdown] = useState(false);
+
+    // Invoice list
+    const [invoices, setInvoices] = useState<Array<{
+        id: number; invoiceNumber: string; type: string; status: string;
+        totalAmount: number; paidAmount: number; balanceDue: number;
+        issueDate: string; dueDate: string;
+    }>>([]);
+    const [invoicesLoading, setInvoicesLoading] = useState(false);
+
+    // Contact search handler
+    const searchContacts = useCallback(async (query: string, type: 'SUPPLIER' | 'CUSTOMER' | 'ALL') => {
+        if (query.length < 1) { setContactResults([]); return; }
+        setContactSearching(true);
+        try {
+            const res = await erpFetch(`pos-registers/address-book/search-contacts/?q=${encodeURIComponent(query)}&type=${type}`);
+            if (Array.isArray(res)) setContactResults(res);
+        } catch { setContactResults([]); }
+        setContactSearching(false);
+    }, []);
+
+    // Load unpaid invoices for selected contact
+    const loadUnpaidInvoices = useCallback(async (contactId: number, invoiceType?: 'PURCHASE' | 'SALES') => {
+        setInvoicesLoading(true);
+        try {
+            const typeParam = invoiceType ? `&type=${invoiceType}` : '';
+            const res = await erpFetch(`pos-registers/address-book/unpaid-invoices/?contact_id=${contactId}${typeParam}`);
+            if (Array.isArray(res)) setInvoices(res);
+        } catch { setInvoices([]); }
+        setInvoicesLoading(false);
+    }, []);
+
+    // Select a contact (supplier or client)
+    const selectContact = useCallback((contact: { id: number; name: string }, isSupplier: boolean) => {
+        if (isSupplier) {
+            setForm(f => ({ ...f, supplierId: contact.id, supplierName: contact.name }));
+            loadUnpaidInvoices(contact.id, 'PURCHASE');
+        } else {
+            setForm(f => ({ ...f, clientId: contact.id, clientName: contact.name }));
+            loadUnpaidInvoices(contact.id, 'SALES');
+        }
+        setShowContactDropdown(false);
+        setContactQuery('');
+        setContactResults([]);
+    }, [loadUnpaidInvoices]);
+
+    // Select an invoice
+    const selectInvoice = useCallback((inv: { id: number; invoiceNumber: string; balanceDue: number }, isSupplier: boolean) => {
+        if (isSupplier) {
+            setForm(f => ({
+                ...f,
+                supplierInvoiceId: inv.id,
+                supplierInvoiceRef: inv.invoiceNumber,
+                amount: String(inv.balanceDue),
+                description: f.description || `Payment for ${inv.invoiceNumber}`,
+            }));
+        } else {
+            setForm(f => ({
+                ...f,
+                clientInvoiceId: inv.id,
+                clientInvoiceRef: inv.invoiceNumber,
+                amount: String(inv.balanceDue),
+                description: f.description || `Payment for ${inv.invoiceNumber}`,
+            }));
+        }
+    }, []);
 
     const selectedType = TYPE_MAP[form.entryType] || ENTRY_TYPES[ENTRY_TYPES.length - 1];
 
@@ -160,9 +235,13 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                     reference: form.reference,
                     amount_in: isOut ? 0 : amount,
                     amount_out: isOut ? amount : 0,
+                    supplier_id: form.supplierId,
                     supplier_name: form.supplierName,
+                    supplier_invoice_id: form.supplierInvoiceId,
                     supplier_invoice_ref: form.supplierInvoiceRef,
+                    client_id: form.clientId,
                     client_name: form.clientName,
+                    client_invoice_id: form.clientInvoiceId,
                     client_invoice_ref: form.clientInvoiceRef,
                     expense_category: form.expenseCategory,
                     partner_name: form.partnerName,
@@ -173,9 +252,11 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                 toast.success('Entry added — pending manager review');
                 setForm({
                     entryType: 'OTHER_IN', description: '', reference: '', amount: '',
-                    supplierName: '', supplierInvoiceRef: '', clientName: '', clientInvoiceRef: '',
+                    supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '',
+                    clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '',
                     expenseCategory: '', partnerName: '', linkedOrderRef: ''
                 });
+                setInvoices([]);
                 setShowAddForm(false);
                 loadEntries();
             } else {
@@ -605,38 +686,174 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
                             />
 
-                            {/* Dynamic fields based on entry type */}
+                            {/* ── SUPPLIER SELECTOR (live search from database) ── */}
                             {(selectedType.fields?.includes('supplier') || false) && (
                                 <div className="space-y-2">
-                                    <input
-                                        value={form.supplierName}
-                                        onChange={(e) => setForm(f => ({ ...f, supplierName: e.target.value }))}
-                                        placeholder="Supplier name"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                                    />
+                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">
+                                        <Building2 size={8} className="inline mr-0.5" /> Select Supplier
+                                    </label>
+                                    {form.supplierId ? (
+                                        <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                                            <span className="text-sm font-bold text-gray-900">{form.supplierName}</span>
+                                            <button
+                                                onClick={() => { setForm(f => ({ ...f, supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '' })); setInvoices([]); }}
+                                                className="text-gray-400 hover:text-rose-500 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <input
+                                                value={contactQuery}
+                                                onChange={(e) => {
+                                                    setContactQuery(e.target.value);
+                                                    setShowContactDropdown(true);
+                                                    searchContacts(e.target.value, 'SUPPLIER');
+                                                }}
+                                                onFocus={() => { if (contactQuery.length > 0) setShowContactDropdown(true); }}
+                                                placeholder="🔍 Search supplier by name or phone..."
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                                            />
+                                            {showContactDropdown && contactResults.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-40 overflow-y-auto">
+                                                    {contactResults.map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            onClick={() => selectContact(c, true)}
+                                                            className="w-full px-3 py-2 text-left hover:bg-amber-50 transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+                                                        >
+                                                            <div>
+                                                                <span className="font-bold text-gray-900">{c.name}</span>
+                                                                {c.phone && <span className="text-gray-400 ml-2 text-xs">{c.phone}</span>}
+                                                            </div>
+                                                            {c.balance !== 0 && (
+                                                                <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-rose-500' : 'text-emerald-500')}>
+                                                                    {currency}{Math.abs(c.balance).toFixed(0)}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {contactSearching && (
+                                                <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            {(selectedType.fields?.includes('invoice') || false) && (
-                                <input
-                                    value={form.entryType.startsWith('SUPPLIER') ? form.supplierInvoiceRef : form.clientInvoiceRef}
-                                    onChange={(e) => setForm(f => ({
-                                        ...f,
-                                        ...(form.entryType.startsWith('SUPPLIER')
-                                            ? { supplierInvoiceRef: e.target.value }
-                                            : { clientInvoiceRef: e.target.value })
-                                    }))}
-                                    placeholder="Invoice reference (optional — can link later)"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                                />
-                            )}
+
+                            {/* ── CLIENT SELECTOR (live search from database) ── */}
                             {(selectedType.fields?.includes('client') || false) && (
-                                <input
-                                    value={form.clientName}
-                                    onChange={(e) => setForm(f => ({ ...f, clientName: e.target.value }))}
-                                    placeholder="Client name"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                                />
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">
+                                        <Users size={8} className="inline mr-0.5" /> Select Client
+                                    </label>
+                                    {form.clientId ? (
+                                        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                                            <span className="text-sm font-bold text-gray-900">{form.clientName}</span>
+                                            <button
+                                                onClick={() => { setForm(f => ({ ...f, clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '' })); setInvoices([]); }}
+                                                className="text-gray-400 hover:text-rose-500 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative">
+                                            <input
+                                                value={contactQuery}
+                                                onChange={(e) => {
+                                                    setContactQuery(e.target.value);
+                                                    setShowContactDropdown(true);
+                                                    searchContacts(e.target.value, 'CUSTOMER');
+                                                }}
+                                                onFocus={() => { if (contactQuery.length > 0) setShowContactDropdown(true); }}
+                                                placeholder="🔍 Search client by name or phone..."
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+                                            />
+                                            {showContactDropdown && contactResults.length > 0 && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-40 overflow-y-auto">
+                                                    {contactResults.map(c => (
+                                                        <button
+                                                            key={c.id}
+                                                            onClick={() => selectContact(c, false)}
+                                                            className="w-full px-3 py-2 text-left hover:bg-emerald-50 transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+                                                        >
+                                                            <div>
+                                                                <span className="font-bold text-gray-900">{c.name}</span>
+                                                                {c.phone && <span className="text-gray-400 ml-2 text-xs">{c.phone}</span>}
+                                                            </div>
+                                                            {c.balance !== 0 && (
+                                                                <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-emerald-500' : 'text-rose-500')}>
+                                                                    {currency}{Math.abs(c.balance).toFixed(0)}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {contactSearching && (
+                                                <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             )}
+
+                            {/* ── UNPAID INVOICES (auto-loaded for selected contact) ── */}
+                            {(selectedType.fields?.includes('invoice') || false) && (form.supplierId || form.clientId) && (
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">
+                                        <Receipt size={8} className="inline mr-0.5" /> Link to Unpaid Invoice (optional)
+                                    </label>
+                                    {invoicesLoading ? (
+                                        <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                            <Loader2 size={12} className="animate-spin" /> Loading invoices...
+                                        </div>
+                                    ) : invoices.length === 0 ? (
+                                        <p className="text-[10px] text-gray-400 italic py-1">No unpaid invoices found for this contact</p>
+                                    ) : (
+                                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                                            {invoices.map(inv => {
+                                                const isSelected = (form.supplierInvoiceId === inv.id || form.clientInvoiceId === inv.id);
+                                                const isSupplier = !!form.supplierId;
+                                                return (
+                                                    <button
+                                                        key={inv.id}
+                                                        onClick={() => selectInvoice(inv, isSupplier)}
+                                                        className={clsx(
+                                                            "w-full px-3 py-2 rounded-lg border text-left flex items-center justify-between transition-all text-xs",
+                                                            isSelected
+                                                                ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-100'
+                                                                : 'bg-white border-gray-100 hover:border-gray-200'
+                                                        )}
+                                                    >
+                                                        <div>
+                                                            <span className="font-bold text-gray-900">{inv.invoiceNumber}</span>
+                                                            <span className="text-gray-400 ml-1.5">
+                                                                {inv.status === 'PARTIAL_PAID' ? '(partial)' : inv.status === 'OVERDUE' ? '(overdue!)' : ''}
+                                                            </span>
+                                                            {inv.dueDate && <span className="text-gray-300 ml-1 text-[9px]">due {inv.dueDate}</span>}
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="font-black text-rose-600">{currency}{inv.balanceDue.toFixed(0)}</span>
+                                                            {inv.paidAmount > 0 && (
+                                                                <span className="text-[9px] text-gray-400 block">
+                                                                    paid {currency}{inv.paidAmount.toFixed(0)} / {currency}{inv.totalAmount.toFixed(0)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* ── EXPENSE CATEGORY ── */}
                             {(selectedType.fields?.includes('expense_category') || false) && (
                                 <input
                                     value={form.expenseCategory}
@@ -645,6 +862,8 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
                                 />
                             )}
+
+                            {/* ── PARTNER NAME ── */}
                             {(selectedType.fields?.includes('partner') || false) && (
                                 <input
                                     value={form.partnerName}
@@ -653,6 +872,8 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
                                 />
                             )}
+
+                            {/* ── ORDER REF ── */}
                             {(selectedType.fields?.includes('order') || false) && (
                                 <input
                                     value={form.linkedOrderRef}
