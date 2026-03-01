@@ -22,7 +22,7 @@ class FinancialAccountService:
             acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type=parent.type, parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
             account = FinancialAccount.objects.create(
                 organization=organization, name=name, type=type, currency=currency,
-                site_id=site_id, linked_coa=acc
+                site_id=site_id, ledger_account=acc
             )
             
             ForensicAuditService.log_mutation(

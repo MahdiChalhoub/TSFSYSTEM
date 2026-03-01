@@ -12,7 +12,8 @@ class POSRegisterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'branch', 'site_name', 'warehouse', 'warehouse_name',
             'cash_account', 'cash_account_name', 'allowed_accounts', 
-            'authorized_users', 'is_active', 'opening_mode', 'cashier_can_see_software'
+            'authorized_users', 'is_active', 'opening_mode', 'cashier_can_see_software',
+            'payment_methods', 'reserve_account'
         ]
 
 class RegisterSessionSerializer(serializers.ModelSerializer):

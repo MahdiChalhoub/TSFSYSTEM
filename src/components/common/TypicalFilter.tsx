@@ -89,13 +89,13 @@ export function TypicalFilter({
                     <Select key={f.key}
                         value={typeof val === 'string' ? val : ''}
                         onValueChange={v => onChange?.(f.key, v === '__all__' ? '' : v)}>
-                        <SelectTrigger className={`${compact ? 'h-7 text-xs' : 'h-8 text-sm'} ${inPanel ? 'w-full' : 'w-auto min-w-[130px]'} gap-1`}>
+                        <SelectTrigger className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
                             <SelectValue placeholder={f.label} />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="__all__">{f.label}</SelectItem>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-2xl">
+                            <SelectItem value="__all__" className="text-[11px] font-black uppercase tracking-widest text-slate-400">{f.label}</SelectItem>
                             {f.options?.map(o => (
-                                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                <SelectItem key={o.value} value={o.value} className="text-[11px] font-bold uppercase tracking-tight">{o.label}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -106,7 +106,7 @@ export function TypicalFilter({
                     <Input key={f.key} type="date"
                         value={typeof val === 'string' ? val : ''}
                         onChange={e => onChange?.(f.key, e.target.value)}
-                        className={`${compact ? 'h-7 text-xs' : 'h-8 text-sm'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'}`}
+                        className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
                         placeholder={f.placeholder || f.label} />
                 )
 
@@ -115,16 +115,17 @@ export function TypicalFilter({
                     <Input key={f.key}
                         value={typeof val === 'string' ? val : ''}
                         onChange={e => onChange?.(f.key, e.target.value)}
-                        className={`${compact ? 'h-7 text-xs' : 'h-8 text-sm'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'}`}
+                        className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
                         placeholder={f.placeholder || f.label} />
                 )
 
             case 'checkbox':
                 return (
-                    <label key={f.key} className="flex items-center gap-1.5 cursor-pointer">
+                    <label key={f.key} className="flex items-center gap-3 cursor-pointer group/check bg-slate-50/50 hover:bg-white px-3 py-2 rounded-xl border border-transparent hover:border-slate-100 transition-all">
                         <Checkbox checked={typeof val === 'boolean' ? val : false}
+                            className="bg-white border-2 border-slate-200 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 transition-all"
                             onCheckedChange={v => onChange?.(f.key, !!v)} />
-                        <span className={`${compact ? 'text-xs' : 'text-sm'} text-gray-600`}>{f.label}</span>
+                        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-slate-500 font-black uppercase tracking-widest group-hover/check:text-slate-900 transition-colors`}>{f.label}</span>
                     </label>
                 )
 
@@ -135,44 +136,47 @@ export function TypicalFilter({
     return (
         <div className={`space-y-0 ${className}`}>
             {/* ─── Primary Bar ────────────────────── */}
-            <div className={`flex flex-wrap items-center gap-2 ${showBorder ? 'border-b border-gray-100 pb-3' : 'pb-2'}`}>
+            {/* ─── Primary Bar ────────────────────── */}
+            <div className={`flex flex-wrap items-center gap-3 ${showBorder ? 'border-b border-slate-50 pb-4' : 'pb-2'}`}>
                 {/* Search */}
                 {search && (
-                    <div className="relative w-56">
-                        <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-gray-400`} />
+                    <div className="relative w-72 group/search">
+                        <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-slate-300 group-hover/search:text-emerald-500 transition-colors duration-500`} />
                         <Input
-                            placeholder={search.placeholder || 'Search...'}
+                            placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
                             value={search.value}
                             onChange={e => search.onChange(e.target.value)}
-                            className={`pl-8 ${compact ? 'h-7 text-xs' : 'h-8 text-sm'}`} />
+                            className={`pl-11 pr-10 bg-white/50 border-slate-200 focus:bg-white focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
                         {search.value && (
                             <button onClick={() => search.onChange('')}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                <X className="h-3 w-3" />
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                                <X className="h-3.5 w-3.5" />
                             </button>
                         )}
                     </div>
                 )}
 
                 {/* Visible filters */}
-                {visibleFilters.map(f => renderFilterItem(f))}
+                <div className="flex flex-wrap items-center gap-2">
+                    {visibleFilters.map(f => renderFilterItem(f))}
+                </div>
 
                 {/* Advanced Filters toggle */}
                 {hasAdvanced && (
                     <button
                         onClick={() => setShowAdvanced(!showAdvanced)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border transition-colors ${showAdvanced
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            } ${compact ? 'text-xs' : 'text-sm'}`}>
-                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                        className={`flex items-center gap-3 px-4 rounded-xl border transition-all duration-500 group/adv relative overflow-hidden ${showAdvanced
+                            ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-700/20'
+                            : 'border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:border-slate-300 hover:shadow-lg'
+                            } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
+                        <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-white' : 'text-slate-300 group-hover/adv:text-emerald-500'} transition-colors duration-500`} />
                         Advanced
                         {activeCount > 0 && (
-                            <span className="inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[10px] font-bold bg-emerald-500 text-white min-w-[18px]">
+                            <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-white text-emerald-700 shadow-inner' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}>
                                 {activeCount}
                             </span>
                         )}
-                        {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-y-0.5" />}
                     </button>
                 )}
 
@@ -180,19 +184,19 @@ export function TypicalFilter({
                 {onReset && (
                     <button
                         onClick={onReset}
-                        className={`flex items-center gap-1 px-2 py-1 rounded text-gray-400 hover:text-red-500 transition-colors ${compact ? 'text-xs' : 'text-sm'}`}>
-                        <RotateCcw className="h-3 w-3" /> Reset
+                        className={`flex items-center gap-2 px-3 h-10 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
+                        <RotateCcw className="h-3.5 w-3.5 group-hover/reset:rotate-[-180deg] transition-transform duration-500" /> Reset
                     </button>
                 )}
             </div>
 
             {/* ─── Advanced Filters Panel ─────────── */}
             {hasAdvanced && showAdvanced && (
-                <div className="pt-3 pb-3 border-b border-gray-100 animate-in slide-in-from-top-2 duration-200">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="pt-6 pb-6 border-b border-slate-50 animate-in slide-in-from-top-4 duration-500 fade-in">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-slate-50/50 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-100 shadow-inner">
                         {allAdvanced.map(f => (
-                            <div key={f.key}>
-                                <Label className="text-xs text-gray-500 mb-1 block">{f.label}</Label>
+                            <div key={f.key} className="space-y-2">
+                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{f.label}</Label>
                                 {renderFilterItem(f, true)}
                             </div>
                         ))}

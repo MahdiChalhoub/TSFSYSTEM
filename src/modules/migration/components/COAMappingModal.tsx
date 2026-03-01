@@ -27,7 +27,7 @@ export function COAMappingModal({
         if (data?.accounts) {
             const initial: Record<number, number> = {}
             data.accounts.forEach((acc: any) => {
-                if (acc.linked_coa_id) initial[acc.id] = acc.linked_coa_id
+                if (acc.ledger_account_id) initial[acc.id] = acc.ledger_account_id
             })
             setLocalMappings(initial)
         }

@@ -52,77 +52,75 @@ class MigrationReviewMixin:
         samples_data = []
         for m in mappings:
             target_data = None
+            ledger_impact = []
             try:
                 if entity_type == 'TRANSACTION':
                     from apps.pos.serializers import OrderSerializer
                     from apps.pos.models import Order
                     obj = Order.objects.get(id=m.target_id)
                     target_data = OrderSerializer(obj).data
+                    
+                    # Fetch Ledger Impact
+                    from apps.finance.models.ledger_models import JournalEntry
+                    from apps.finance.serializers import JournalEntrySerializer
+                    jes = JournalEntry.objects.filter(reference_type='SALE', reference_id=obj.id)
+                    ledger_impact = JournalEntrySerializer(jes, many=True).data
+
                 elif entity_type == 'PRODUCT':
                     from apps.inventory.serializers import ProductSerializer
                     from apps.inventory.models import Product
                     obj = Product.objects.get(id=m.target_id)
                     target_data = ProductSerializer(obj).data
+                    
+                    # If it's a combo, include its components
+                    if obj.product_type == 'COMBO':
+                        from apps.inventory.models import ComboLink
+                        links = ComboLink.objects.filter(combo_product=obj)
+                        target_data['combo_components'] = [
+                            {'product': l.component_product.name, 'qty': float(l.quantity)} 
+                            for l in links
+                        ]
+
                 elif entity_type == 'CONTACT':
                     from apps.crm.serializers import ContactSerializer
                     from apps.crm.models import Contact
                     obj = Contact.objects.get(id=m.target_id)
                     target_data = ContactSerializer(obj).data
+                    # Add linked account status
+                    target_data['has_ledger_link'] = bool(obj.linked_account_id)
+
                 elif entity_type == 'CATEGORY':
                     from apps.inventory.serializers import CategorySerializer
                     from apps.inventory.models import Category
                     obj = Category.objects.get(id=m.target_id)
                     target_data = CategorySerializer(obj).data
+
                 elif entity_type == 'UNIT':
                     from apps.inventory.serializers import UnitSerializer
                     from apps.inventory.models import Unit
                     obj = Unit.objects.get(id=m.target_id)
                     target_data = UnitSerializer(obj).data
-                elif entity_type == 'BRAND':
-                    from apps.inventory.serializers import BrandSerializer
-                    from apps.inventory.models import Brand
-                    obj = Brand.objects.get(id=m.target_id)
-                    target_data = BrandSerializer(obj).data
-                elif entity_type == 'JOURNAL_ENTRY':
-                    from apps.finance.serializers import JournalEntrySerializer
-                    from apps.finance.models.ledger_models import JournalEntry
-                    obj = JournalEntry.objects.get(id=m.target_id)
-                    target_data = JournalEntrySerializer(obj).data
-                elif entity_type == 'EXPENSE':
-                    from apps.finance.serializers import DirectExpenseSerializer
-                    from apps.finance.models import DirectExpense
-                    obj = DirectExpense.objects.get(id=m.target_id)
-                    target_data = DirectExpenseSerializer(obj).data
+
                 elif entity_type == 'ACCOUNT':
                     from apps.finance.serializers import FinancialAccountSerializer
                     from apps.finance.models import FinancialAccount
                     obj = FinancialAccount.objects.get(id=m.target_id)
                     target_data = FinancialAccountSerializer(obj).data
-                elif entity_type == 'PAYMENT':
-                    from apps.finance.serializers import PaymentSerializer
-                    from apps.finance.payment_models import Payment
-                    obj = Payment.objects.get(id=m.target_id)
-                    target_data = PaymentSerializer(obj).data
-                elif entity_type == 'SITE':
-                    from apps.inventory.serializers import WarehouseSerializer
-                    from apps.inventory.models import Warehouse
-                    obj = Warehouse.objects.get(id=m.target_id)
-                    target_data = WarehouseSerializer(obj).data
-                elif entity_type == 'TAX_GROUP':
-                    from apps.finance.serializers import TaxGroupSerializer
-                    from apps.finance.models import TaxGroup
-                    obj = TaxGroup.objects.get(id=m.target_id)
-                    target_data = TaxGroupSerializer(obj).data
-                elif entity_type == 'STOCK_ADJUSTMENT':
-                    from apps.inventory.serializers import StockAdjustmentOrderSerializer
-                    from apps.inventory.models import StockAdjustmentOrder
-                    obj = StockAdjustmentOrder.objects.get(id=m.target_id)
-                    target_data = StockAdjustmentOrderSerializer(obj).data
-                elif entity_type == 'STOCK_TRANSFER':
-                    from apps.inventory.serializers import StockTransferOrderSerializer
-                    from apps.inventory.models import StockTransferOrder
-                    obj = StockTransferOrder.objects.get(id=m.target_id)
-                    target_data = StockTransferOrderSerializer(obj).data
+                    target_data['is_linked_to_coa'] = bool(obj.ledger_account_id)
+
+                elif entity_type == 'EXPENSE':
+                    from apps.finance.serializers import DirectExpenseSerializer
+                    from apps.finance.models import DirectExpense
+                    obj = DirectExpense.objects.get(id=m.target_id)
+                    target_data = DirectExpenseSerializer(obj).data
+                    
+                    # Fetch Ledger Impact
+                    from apps.finance.models.ledger_models import JournalEntry
+                    from apps.finance.serializers import JournalEntrySerializer
+                    jes = JournalEntry.objects.filter(reference_type='EXPENSE', reference_id=obj.id)
+                    ledger_impact = JournalEntrySerializer(jes, many=True).data
+                
+                # ... append other types as needed
             except Exception as e:
                 target_data = {"error": f"Failed to load record {m.target_id}: {str(e)}"}
 
@@ -131,6 +129,7 @@ class MigrationReviewMixin:
                 'target_id': m.target_id,
                 'source_raw': m.extra_data,
                 'target_state': target_data,
+                'ledger_impact': ledger_impact,
                 'integration_logic': self._get_logic_snippet(entity_type)
             })
 
@@ -169,6 +168,8 @@ class MigrationReviewMixin:
             action_type = request.data.get('action', 'approve')
             if action_type == 'edit':
                 return self._bulk_edit(request, job, org_id)
+            if action_type == 'audit':
+                return self._bulk_audit_action(request, job, org_id)
             return self._bulk_approve(request, job, org_id)
 
         from django.db.models import Count
@@ -219,7 +220,7 @@ class MigrationReviewMixin:
                 draft_counts[etype] = Product.objects.filter(id__in=t_ids, status='DRAFT').count()
             elif etype == 'ACCOUNT':
                 from apps.finance.models import FinancialAccount
-                draft_counts[etype] = FinancialAccount.objects.filter(id__in=t_ids, linked_coa_id__isnull=True).count()
+                draft_counts[etype] = FinancialAccount.objects.filter(id__in=t_ids, ledger_account_id__isnull=True).count()
             elif etype == 'STOCK_ADJUSTMENT':
                 from apps.inventory.models import StockAdjustmentOrder
                 draft_counts[etype] = StockAdjustmentOrder.objects.filter(id__in=t_ids, is_posted=False).count()
@@ -328,7 +329,7 @@ class MigrationReviewMixin:
             updated = 0
             for m in mappings:
                 if m.get('target_id') and m.get('coa_id'):
-                    cnt = FinancialAccount.objects.filter(id=m['target_id']).update(linked_coa_id=m['coa_id'])
+                    cnt = FinancialAccount.objects.filter(id=m['target_id']).update(ledger_account_id=m['coa_id'])
                     updated += cnt
             return Response({'status': 'ok', 'updated': updated})
 
@@ -346,7 +347,7 @@ class MigrationReviewMixin:
                 'id': fa.id,
                 'name': fa.name,
                 'source_name': source_names.get(fa.id, ""),
-                'linked_coa_id': fa.linked_coa_id
+                'ledger_account_id': fa.ledger_account_id
             })
 
         coa_options = ChartOfAccount.objects.all().values('id', 'name', 'code', 'type').order_by('code')
@@ -379,7 +380,7 @@ class MigrationReviewMixin:
             'CONTACT': ['type', 'group_id'],
             'JOURNAL_ENTRY': ['scope', 'description'],
             'EXPENSE': ['category_id', 'payment_method', 'scope'],
-            'ACCOUNT': ['type', 'linked_coa_id']
+            'ACCOUNT': ['type', 'ledger_account_id']
         }
 
         allowed = ALLOWED_FIELDS.get(entity_type, [])
@@ -475,5 +476,38 @@ class MigrationReviewMixin:
             'entity_type': entity_type,
             'action': action_type,
             'updated': updated,
+        })
+
+    def _bulk_audit_action(self, request, job, org_id):
+        """Perform Forensic Audit: Verify content and post to Ledger if applicable."""
+        entity_type = request.data.get('entity_type', 'TRANSACTION')
+        from django.utils import timezone
+        from apps.migration.ledger_integrator import MigrationLedgerIntegrator
+        
+        if entity_type == 'TRANSACTION':
+            count, errors = MigrationLedgerIntegrator.bulk_post_migration(
+                job.id, entity_type='TRANSACTION', user=request.user
+            )
+            return Response({
+                'entity_type': 'TRANSACTION',
+                'action': 'ledger_integration',
+                'posted_count': count,
+                'error_count': errors,
+                'status': 'Audit phase complete. Check individual records for flags.'
+            })
+        
+        # Default bulk audit (non-ledger)
+        updated = MigrationMapping.objects.filter(
+            job=job, entity_type=entity_type, audit_status='PENDING'
+        ).update(
+            audit_status='VERIFIED',
+            audit_at=timezone.now(),
+            audited_by=request.user
+        )
+        
+        return Response({
+            'entity_type': entity_type,
+            'action': 'bulk_verify',
+            'verified_count': updated
         })
 

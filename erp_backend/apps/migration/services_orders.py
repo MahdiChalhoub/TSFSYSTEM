@@ -69,12 +69,13 @@ class MigrationOrdersMixin:
                 order_kwargs = {
                     'organization_id': self.organization_id,
                     'type': mapped['type'],
-                    'status': mapped.get('status', 'COMPLETED'),
+                    'status': 'PENDING',  # Force PENDING for forensic audit
+                    'is_verified': False,
                     'ref_code': mapped.get('ref_code'),
                     'invoice_number': mapped.get('invoice_number'),
                     'total_amount': mapped.get('total_amount', Decimal('0.00')),
                     'tax_amount': mapped.get('tax_amount', Decimal('0.00')),
-                    'discount': mapped.get('discount', Decimal('0.00')),
+                    'discount_amount': mapped.get('discount', Decimal('0.00')),
                     'payment_method': mapped.get('payment_method', 'CASH'),
                     'notes': mapped.get('notes'),
                     'scope': mapped.get('scope', 'INTERNAL'),

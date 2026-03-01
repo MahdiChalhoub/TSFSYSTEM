@@ -208,23 +208,29 @@ export function MultiPaymentDashboard({
     return (
         <div ref={containerRef} className="flex flex-col h-full bg-[#0F172A] overflow-hidden animate-in fade-in duration-500" tabIndex={0}>
             {/* ── COMPACT HEADER ── */}
-            <div className="px-6 py-4 flex items-center justify-between shrink-0 border-b border-white/5 bg-[#0F172A] z-20 shadow-xl">
-                <div className="flex items-center gap-4">
+            <div className="px-8 py-5 flex items-center justify-between shrink-0 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl z-20 shadow-2xl relative overflow-hidden">
+                {/* Aesthetic Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+
+                <div className="flex items-center gap-5">
                     <button
                         onClick={onCancel}
-                        className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all active:scale-95 group"
+                        className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all active:scale-90 group border border-white/10"
                     >
-                        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <div>
-                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] block mb-0.5">Payment Dashboard</span>
-                        <h1 className="text-lg font-black text-white uppercase tracking-tighter">Multi-Method Hub</h1>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-0.5">Payment Infrastructure</span>
+                        <h1 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+                            Multi-Method Settlement
+                            <div className="h-5 px-2 bg-emerald-500/10 border border-emerald-500/20 rounded text-[9px] text-emerald-500 flex items-center">v2.4.0</div>
+                        </h1>
                     </div>
                 </div>
 
                 <div className="text-right">
-                    <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] block mb-0.5">Sale Total</span>
-                    <div className="text-xl font-black text-white tabular-nums tracking-tighter">
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block mb-1">Operational Requirement</span>
+                    <div className="text-3xl font-black text-white tabular-nums tracking-tighter">
                         {currency}{formatNumber(totalAmount)}
                     </div>
                 </div>
@@ -245,22 +251,27 @@ export function MultiPaymentDashboard({
                                 <span className="text-[8px] font-black uppercase tracking-widest">Keyboard Active</span>
                             </div>
                         </div>
-                        <div className="bg-black/40 rounded-3xl p-6 border-2 border-white/5 ring-4 ring-black/10 relative group">
-                            <div className="flex items-baseline justify-between mb-1">
-                                <span className="text-[9px] font-black text-emerald-400/60 uppercase tracking-widest">Amount to Add</span>
-                                <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{currency}</span>
-                            </div>
-                            <div className="text-5xl font-black text-white tabular-nums tracking-tighter flex items-center gap-2">
-                                {amountBuffer || '0.00'}
-                                <div className="w-1 h-10 bg-emerald-500/50 animate-pulse rounded-full" />
+                        <div className="bg-slate-950/80 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 ring-8 ring-white/[0.02] relative group overflow-hidden">
+                            {/* Inner Carbon Texture Overlay */}
+                            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-baseline justify-between mb-2">
+                                    <span className="text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]">Matrix Input Buffer</span>
+                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">{currency} UNIT</span>
+                                </div>
+                                <div className="text-6xl font-black text-white tabular-nums tracking-[ -0.05em] flex items-center gap-3">
+                                    {amountBuffer || '0.00'}
+                                    <div className="w-1.5 h-12 bg-emerald-500 animate-pulse rounded-full shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                                </div>
                             </div>
 
                             {remaining > 0 && !amountBuffer && (
                                 <button
                                     onClick={() => setAmountBuffer(remaining.toFixed(2))}
-                                    className="absolute top-4 right-4 h-8 px-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-indigo-500/20 transition-all opacity-0 group-hover:opacity-100"
+                                    className="absolute bottom-6 right-8 h-10 px-6 rounded-xl bg-emerald- gradient text-white text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shadow-xl shadow-emerald-500/20 border border-emerald-400/30"
                                 >
-                                    Quick Fill
+                                    Fidelity Fill
                                 </button>
                             )}
                         </div>
@@ -278,15 +289,24 @@ export function MultiPaymentDashboard({
                                         key={m.key}
                                         onClick={() => setSelectedMethod(m.key)}
                                         className={clsx(
-                                            "h-14 rounded-2xl border flex items-center px-4 gap-3 transition-all group relative overflow-hidden",
+                                            "h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
                                             isSelected
-                                                ? "bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/20"
-                                                : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:border-white/10"
+                                                ? "bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/30 scale-[1.02]"
+                                                : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-emerald-500/30"
                                         )}
                                     >
-                                        <Icon size={20} className={clsx(isSelected ? "text-white" : "text-white/10 group-hover:text-white/30")} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest truncate">{m.label}</span>
-                                        {isSelected && <div className="absolute top-0 right-0 w-8 h-8 bg-white/10 rounded-bl-2xl flex items-center justify-center"><Check size={12} strokeWidth={4} /></div>}
+                                        <div className={clsx(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                            isSelected ? "bg-white/20 text-white" : "bg-white/5 text-white/20"
+                                        )}>
+                                            <Icon size={20} />
+                                        </div>
+                                        <span className="text-[11px] font-black uppercase tracking-widest truncate">{m.label}</span>
+                                        {isSelected && (
+                                            <div className="absolute top-0 right-0 w-10 h-10 bg-white/20 rounded-bl-3xl flex items-center justify-center backdrop-blur-md">
+                                                <Check size={14} strokeWidth={4} />
+                                            </div>
+                                        )}
                                     </button>
                                 );
                             })}
@@ -297,17 +317,22 @@ export function MultiPaymentDashboard({
                                     <button
                                         onClick={() => setIsAccountSelectOpen(!isAccountSelectOpen)}
                                         className={clsx(
-                                            "w-full h-14 rounded-2xl border flex items-center px-4 gap-3 transition-all group relative overflow-hidden",
+                                            "w-full h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
                                             selectedMethod?.startsWith('ACCT:')
-                                                ? "bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-600/20"
-                                                : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:border-white/10"
+                                                ? "bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/30 scale-[1.02]"
+                                                : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-emerald-500/30"
                                         )}
                                     >
-                                        <Landmark size={20} className={clsx(selectedMethod?.startsWith('ACCT:') ? "text-white" : "text-white/10 group-hover:text-white/30")} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest truncate">
+                                        <div className={clsx(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                            selectedMethod?.startsWith('ACCT:') ? "bg-white/20 text-white" : "bg-white/5 text-white/20"
+                                        )}>
+                                            <Landmark size={20} />
+                                        </div>
+                                        <span className="text-[11px] font-black uppercase tracking-widest truncate">
                                             {selectedMethod?.startsWith('ACCT:')
                                                 ? allowedAccounts.find(a => `ACCT:${a.id}` === selectedMethod)?.name || 'Custom Account'
-                                                : 'Other Account...'}
+                                                : 'Operational Nodes...'}
                                         </span>
                                     </button>
 
@@ -442,10 +467,10 @@ export function MultiPaymentDashboard({
                             ))}
                             <button
                                 onClick={() => handleAddLeg()}
-                                className="col-span-2 h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-emerald-600 hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="col-span-2 h-14 bg-emerald-gradient text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-400/30 shadow-lg"
                             >
                                 <Plus size={18} strokeWidth={4} />
-                                Add Entry
+                                Apply Entry
                             </button>
                         </div>
                     </div>
@@ -476,15 +501,15 @@ export function MultiPaymentDashboard({
                         </div>
 
                         {/* Large Progress Bar */}
-                        <div className="h-4 bg-slate-100 rounded-full overflow-hidden relative p-1">
+                        <div className="h-6 bg-slate-100 rounded-[2rem] overflow-hidden relative p-1.5 shadow-inner">
                             <div
                                 className={clsx(
                                     "h-full rounded-full transition-all duration-1000 ease-out relative",
-                                    remaining <= 0.01 ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" : "bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]"
+                                    remaining <= 0.01 ? "bg-emerald-gradient shadow-[0_0_20px_rgba(16,185,129,0.5)]" : "bg-slate-900 shadow-[0_0_20px_rgba(15,23,42,0.3)]"
                                 )}
                                 style={{ width: `${Math.min(100, (paidTotal / totalAmount) * 100)}%` }}
                             >
-                                <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                <div className="absolute inset-0 bg-white/10 animate-shimmer" />
                             </div>
                         </div>
 
@@ -518,14 +543,14 @@ export function MultiPaymentDashboard({
                                         onClick={handleDeficitToAccount}
                                         disabled={remaining > availableCredit && client?.id !== 1}
                                         className={clsx(
-                                            "h-12 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl shadow-rose-600/20",
+                                            "h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-2xl shadow-rose-600/20",
                                             remaining > availableCredit && client?.id !== 1
                                                 ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
-                                                : "bg-rose-600 text-white hover:bg-rose-700 active:scale-95"
+                                                : "bg-rose-600 text-white hover:bg-rose-700 active:scale-95 border border-rose-400/30"
                                         )}
                                     >
                                         <UserPlus size={16} />
-                                        Post to Credit
+                                        Authorize Credit
                                     </button>
                                 </div>
 
@@ -551,7 +576,7 @@ export function MultiPaymentDashboard({
                                                     <button
                                                         key={r}
                                                         onClick={() => handleRoundOff(r)}
-                                                        className="h-10 px-4 bg-indigo-100 hover:bg-indigo-500 hover:text-white text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 border border-indigo-200 hover:border-indigo-500"
+                                                        className="h-10 px-4 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 border border-emerald-100 hover:border-emerald-500"
                                                     >
                                                         ↓{r} (-{currency}{formatNumber(disc)})
                                                     </button>
@@ -559,10 +584,10 @@ export function MultiPaymentDashboard({
                                             })}
                                             <button
                                                 onClick={() => handleRoundOff()}
-                                                className="h-10 px-4 bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+                                                className="h-10 px-4 bg-emerald-gradient text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center gap-2 border border-emerald-400/30"
                                             >
                                                 <Percent size={14} />
-                                                Full (-{currency}{formatNumber(remaining)})
+                                                Full Adjustment
                                             </button>
                                         </div>
                                     </div>
@@ -660,25 +685,28 @@ export function MultiPaymentDashboard({
                             onClick={() => onConfirm(paymentLegs)}
                             disabled={Math.abs(remaining) > 0.01 || paymentLegs.length === 0 || isProcessing}
                             className={clsx(
-                                "w-full h-24 rounded-3xl flex items-center justify-center gap-6 transition-all relative overflow-hidden group shadow-2xl",
+                                "w-full h-24 rounded-[2.5rem] flex items-center justify-center gap-8 transition-all relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
                                 Math.abs(remaining) <= 0.01 && paymentLegs.length > 0 && !isProcessing
-                                    ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-white shadow-emerald-500/40 hover:scale-[1.01] active:scale-95"
-                                    : "bg-white/5 text-white/10 cursor-not-allowed border border-white/5"
+                                    ? "bg-emerald-gradient text-white shadow-emerald-500/40 hover:scale-[1.02] active:scale-95"
+                                    : "bg-white/5 text-white/10 cursor-not-allowed border border-white/10"
                             )}
                         >
-                            {Math.abs(remaining) <= 0.01 && !isProcessing && (
-                                <div className="absolute inset-0 bg-white/10 animate-pulse" />
-                            )}
+                            {/* Inner Carbon Texture Overlay */}
+                            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
                             <div className={clsx(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-700",
-                                Math.abs(remaining) <= 0.01 ? "bg-white/20 scale-110 shadow-lg shadow-white/10" : "bg-white/5"
+                                "w-16 h-16 rounded-[2rem] flex items-center justify-center transition-all duration-700 backdrop-blur-md",
+                                Math.abs(remaining) <= 0.01 ? "bg-white/20 scale-110 shadow-2xl shadow-emerald-500/20 border border-white/30" : "bg-white/5 border border-white/5"
                             )}>
-                                <Check size={32} strokeWidth={4} className={clsx("transition-transform duration-700", Math.abs(remaining) <= 0.01 ? "rotate-0 scale-100" : "rotate-45 scale-50")} />
+                                <Check size={36} strokeWidth={4} className={clsx("transition-all duration-700", Math.abs(remaining) <= 0.01 ? "rotate-0 scale-100 text-white" : "rotate-45 scale-50 opacity-20")} />
                             </div>
                             <div className="text-left">
-                                <span className="text-[11px] font-black uppercase tracking-[0.3em] block mb-0.5">Confirmation</span>
-                                <span className="text-xl font-black uppercase tracking-widest">Finalize & Close Sale</span>
+                                <span className="text-[11px] font-black uppercase tracking-[0.4em] block mb-1 text-inherit opacity-60">Authorization Protocol</span>
+                                <span className="text-2xl font-black uppercase tracking-widest text-inherit">Execute Settlement</span>
                             </div>
+
+                            {/* Glow Effect */}
+                            <div className="absolute -inset-4 bg-white/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                         </button>
                     </div>
                 </div>

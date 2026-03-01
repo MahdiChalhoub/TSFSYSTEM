@@ -33,27 +33,27 @@ const PAYMENT_MODES = [
         icon: Banknote,
         label: 'Pay at Delivery',
         desc: 'Driver collects full amount on the spot.',
-        gradient: 'from-emerald-500 to-teal-600',
-        ring: 'ring-emerald-200 border-emerald-400',
-        badge: 'bg-emerald-100 text-emerald-700',
+        gradient: 'bg-emerald-gradient',
+        ring: 'ring-emerald-500/30 border-emerald-500/50',
+        badge: 'bg-emerald-500/10 text-emerald-400',
     },
     {
         key: 'HOLD' as const,
         icon: Clock,
         label: 'Hold Session',
         desc: 'Driver returns cash to POS. Session stays live.',
-        gradient: 'from-amber-500 to-orange-500',
-        ring: 'ring-amber-200 border-amber-400',
-        badge: 'bg-amber-100 text-amber-700',
+        gradient: 'bg-gradient-to-br from-amber-500 to-orange-600',
+        ring: 'ring-amber-500/30 border-amber-500/50',
+        badge: 'bg-amber-500/10 text-amber-400',
     },
     {
         key: 'CREDIT' as const,
         icon: CreditCard,
         label: 'Client Credit',
         desc: 'Added to client account. Requires credit authority.',
-        gradient: 'from-indigo-500 to-violet-600',
-        ring: 'ring-indigo-200 border-indigo-400',
-        badge: 'bg-indigo-100 text-indigo-700',
+        gradient: 'bg-gradient-to-br from-indigo-500 to-violet-700',
+        ring: 'ring-indigo-500/30 border-indigo-500/50',
+        badge: 'bg-indigo-500/10 text-indigo-400',
     },
 ];
 
@@ -185,57 +185,56 @@ export function POSDeliveryModal({
     if (showGate) {
         return (
             <div className="fixed inset-0 z-[950] flex items-center justify-center" onClick={onClose}>
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
                 <div
-                    className="relative w-[420px] max-w-[95vw] bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+                    className="relative w-[480px] max-w-[95vw] bg-[#0F172A] rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/10 p-1"
                     onClick={e => e.stopPropagation()}
                 >
-                    {/* Header glow */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="bg-slate-950/40 rounded-[2.8rem] px-8 py-10 relative overflow-hidden">
+                        {/* Header glow */}
+                        <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none" />
 
-                    <div className="relative px-8 py-8">
-                        <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all">
-                            <X size={14} />
+                        <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/5 group">
+                            <X size={18} className="group-hover:rotate-90 transition-transform" />
                         </button>
 
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 mx-auto mb-5">
-                            <Truck size={28} className="text-white" />
+                        <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-2xl shadow-amber-500/20 mx-auto mb-8 relative">
+                            <div className="absolute inset-0 bg-white/10 animate-pulse rounded-[2rem]" />
+                            <Truck size={36} className="text-white relative z-10" />
                         </div>
 
-                        <h2 className="text-white text-xl font-black text-center mb-1">Client Required</h2>
-                        <p className="text-white/50 text-sm text-center mb-7">
-                            A delivery order needs a real client with a name, phone, and address. Please identify the client first.
+                        <h2 className="text-white text-2xl font-black text-center mb-2 uppercase tracking-tighter">Identity Protocol Required</h2>
+                        <p className="text-white/40 text-sm text-center mb-8 font-medium max-w-[300px] mx-auto leading-relaxed">
+                            Delivery logistics require verified recipient metrics including contact authority and geophysical location.
                         </p>
 
-                        <div className="space-y-3">
-                            {/* Option A: proceed anyway with manual fill */}
+                        <div className="space-y-4">
                             <button
                                 onClick={() => setShowGate(false)}
-                                className="w-full flex items-center gap-4 p-4 bg-white/8 hover:bg-white/12 border border-white/10 hover:border-amber-400/40 rounded-2xl text-left transition-all group"
+                                className="w-full flex items-center gap-5 p-5 bg-white/5 hover:bg-white/8 border border-white/10 hover:border-amber-500/40 rounded-[2rem] text-left transition-all group"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 group-hover:bg-amber-500/30 transition-all">
-                                    <Hash size={18} className="text-amber-400" />
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 group-hover:scale-110 transition-transform">
+                                    <Hash size={20} className="text-amber-400" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-white text-sm font-bold">Fill info manually</p>
-                                    <p className="text-white/40 text-xs">Enter recipient details for this delivery</p>
+                                    <p className="text-white text-[15px] font-black uppercase tracking-tight">Manual Override</p>
+                                    <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">Procedural recipient entry</p>
                                 </div>
-                                <ArrowRight size={16} className="text-white/20 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                                <ArrowRight size={20} className="text-white/10 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
                             </button>
 
-                            {/* Option B: go back and select client */}
                             <button
                                 onClick={onClose}
-                                className="w-full flex items-center gap-4 p-4 bg-white/8 hover:bg-white/12 border border-white/10 hover:border-emerald-400/40 rounded-2xl text-left transition-all group"
+                                className="w-full flex items-center gap-5 p-5 bg-white/5 hover:bg-white/8 border border-white/10 hover:border-emerald-500/40 rounded-[2rem] text-left transition-all group"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/30 transition-all">
-                                    <User size={18} className="text-emerald-400" />
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                                    <User size={20} className="text-emerald-400" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-white text-sm font-bold">Select existing client</p>
-                                    <p className="text-white/40 text-xs">Go back and choose a client from your CRM</p>
+                                    <p className="text-white text-[15px] font-black uppercase tracking-tight">Access Directory</p>
+                                    <p className="text-white/20 text-[10px] font-bold uppercase tracking-widest">Choose established counterparty</p>
                                 </div>
-                                <ArrowRight size={16} className="text-white/20 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+                                <ArrowRight size={20} className="text-white/10 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
                             </button>
                         </div>
                     </div>
@@ -249,26 +248,26 @@ export function POSDeliveryModal({
         <div className="fixed inset-0 z-[950] flex items-center justify-center" onClick={onClose}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div
-                className="relative w-[560px] max-w-[95vw] bg-white rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+                className="relative w-[600px] max-w-[95vw] bg-[#0F172A] rounded-[3rem] shadow-[0_0_120px_rgba(0,0,0,0.6)] flex flex-col max-h-[90vh] overflow-hidden border border-white/10"
                 onClick={e => e.stopPropagation()}
             >
                 {/* ── Premium Header ── */}
-                <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 px-6 py-5 shrink-0">
+                <div className="bg-slate-950/80 backdrop-blur-xl px-10 py-8 shrink-0 relative overflow-hidden border-b border-white/10">
                     {/* Glow */}
-                    <div className="absolute top-0 right-0 w-40 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none" />
 
-                    <div className="flex items-center justify-between relative">
-                        <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                                <Truck size={20} className="text-white" />
+                    <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-500/30 border border-emerald-400/20">
+                                <Truck size={24} className="text-white fill-white/20" />
                             </div>
                             <div>
-                                <h2 className="text-white text-base font-black tracking-tight">New Delivery Order</h2>
-                                <p className="text-white/40 text-[11px]">Order: {fmt(orderTotal)}</p>
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">Logistics Orchestration</span>
+                                <h1 className="text-2xl font-black text-white uppercase tracking-tighter">New Delivery Nexus</h1>
                             </div>
                         </div>
-                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all">
-                            <X size={14} />
+                        <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/5">
+                            <X size={18} />
                         </button>
                     </div>
 
@@ -289,114 +288,110 @@ export function POSDeliveryModal({
                         </div>
                     )}
 
-                    {/* Step pills */}
-                    <div className="mt-4 flex items-center gap-1.5">
+                    {/* Step indicators */}
+                    <div className="mt-8 flex items-center gap-2">
                         {STEPS.map((s, i) => (
-                            <div key={i} className="flex items-center gap-1.5 flex-1">
+                            <div key={i} className="flex-1 flex items-center gap-2">
                                 <div className={clsx(
-                                    "flex items-center gap-1.5 flex-1 px-2.5 py-1.5 rounded-xl transition-all",
-                                    i === step ? "bg-amber-500/20 border border-amber-400/30" :
-                                        i < step ? "bg-emerald-500/15 border border-emerald-400/20" :
-                                            "bg-white/5 border border-white/5"
-                                )}>
-                                    <div className={clsx(
-                                        "w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 w-5 h-5",
-                                        i < step ? "bg-emerald-500 text-white" :
-                                            i === step ? "bg-amber-500 text-white" :
-                                                "bg-white/10 text-white/30"
-                                    )}>
-                                        {i < step ? <Check size={8} /> : i + 1}
-                                    </div>
-                                    <span className={clsx("text-[10px] font-bold hidden sm:block truncate",
-                                        i === step ? "text-amber-300" :
-                                            i < step ? "text-emerald-300" : "text-white/25"
-                                    )}>{s}</span>
-                                </div>
-                                {i < STEPS.length - 1 && <ChevronRight size={10} className="text-white/15 shrink-0" />}
+                                    "h-1.5 flex-1 rounded-full transition-all duration-700",
+                                    i === step ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" :
+                                        i < step ? "bg-emerald-500/40" : "bg-white/10"
+                                )} />
+                                {i === step && (
+                                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-500">
+                                        Step {i + 1}: {s}
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* ── Content ── */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto bg-slate-950/20 p-8">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-gray-300">
-                            <Loader2 size={28} className="animate-spin mb-3" />
-                            <span className="text-sm">Loading data...</span>
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                            <Loader2 size={32} className="animate-spin text-emerald-500 mb-4 opacity-40" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em]">Synching Logistic Matrix...</span>
                         </div>
                     ) : step === 0 ? (
                         /* ─── Step 1: Delivery Info ─── */
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <Field label="Recipient Name" icon={<User size={12} />} required>
-                                    <Input value={form.recipient_name} onChange={v => set('recipient_name', v)} placeholder="Full name" />
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                                <Field label="Recipient Authority" icon={<User size={12} />} required>
+                                    <Input value={form.recipient_name} onChange={v => set('recipient_name', v)} placeholder="NAME OF RECIPIENT..." />
                                 </Field>
-                                <Field label="Phone" icon={<Phone size={12} />} required>
-                                    <Input value={form.phone} onChange={v => set('phone', v)} placeholder="+XXX XX XX XX" type="tel" />
+                                <Field label="Communication Line" icon={<Phone size={12} />} required>
+                                    <Input value={form.phone} onChange={v => set('phone', v)} placeholder="+XXX XX XX XX..." type="tel" />
                                 </Field>
                             </div>
-                            <Field label="Address Line 1" icon={<Home size={12} />} required>
-                                <Input value={form.address_line1} onChange={v => set('address_line1', v)} placeholder="Street, building, apartment..." />
+                            <Field label="Primary Geolocation" icon={<Home size={12} />} required>
+                                <Input value={form.address_line1} onChange={v => set('address_line1', v)} placeholder="STREET, BUILDING, APARTMENT..." />
                             </Field>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Field label="Address Line 2" icon={<Building2 size={12} />}>
-                                    <Input value={form.address_line2} onChange={v => set('address_line2', v)} placeholder="Floor, landmark..." />
+                            <div className="grid grid-cols-2 gap-6">
+                                <Field label="Secondary Markers" icon={<Building2 size={12} />}>
+                                    <Input value={form.address_line2} onChange={v => set('address_line2', v)} placeholder="FLOOR, SUITE, LANDMARK..." />
                                 </Field>
-                                <Field label="City">
-                                    <Input value={form.city} onChange={v => set('city', v)} placeholder="City" />
+                                <Field label="Sector / City">
+                                    <Input value={form.city} onChange={v => set('city', v)} placeholder="OPERATIONAL SECTOR..." />
                                 </Field>
                             </div>
 
                             {/* Zone tiles */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                    <MapPin size={11} className="text-amber-500" /> Delivery Zone
+                                <label className="flex items-center gap-2 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">
+                                    <MapPin size={12} className="text-emerald-500" /> Logistic Sector Selection
                                 </label>
                                 {zones.length > 0 ? (
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-2 gap-4">
                                         {zones.map(z => (
                                             <button key={z.id}
                                                 onClick={() => { set('zone', z.id); set('delivery_fee', Number(z.base_fee)); }}
                                                 className={clsx(
-                                                    "flex items-center justify-between px-3.5 py-3 rounded-2xl border-2 text-left transition-all",
+                                                    "flex items-center justify-between px-5 py-4 rounded-[1.8rem] border transition-all relative overflow-hidden group",
                                                     form.zone === z.id
-                                                        ? "border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 shadow-md shadow-amber-100"
-                                                        : "border-gray-100 hover:border-amber-200 bg-gray-50"
+                                                        ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_10px_30px_rgba(16,185,129,0.1)]"
+                                                        : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20"
                                                 )}>
                                                 <div>
-                                                    <p className={clsx("text-sm font-bold", form.zone === z.id ? "text-amber-700" : "text-gray-700")}>{z.name}</p>
-                                                    <p className="text-[10px] text-gray-400">+{fmt(Number(z.base_fee))}</p>
+                                                    <p className={clsx("text-[13px] font-black uppercase tracking-tight italic", form.zone === z.id ? "text-emerald-400" : "text-white/60")}>{z.name}</p>
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Surcharge: {fmt(Number(z.base_fee))}</p>
                                                 </div>
-                                                {form.zone === z.id && <Check size={14} className="text-amber-500" />}
+                                                {form.zone === z.id && (
+                                                    <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white animate-in zoom-in-50 duration-300">
+                                                        <Check size={14} strokeWidth={4} />
+                                                    </div>
+                                                )}
                                             </button>
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
-                                        <MapPin size={14} className="text-amber-400" />
-                                        <p className="text-xs text-amber-600">
-                                            No zones configured. <a href="/sales/delivery-zones" className="font-bold underline">Set them up →</a>
+                                    <div className="flex items-center gap-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
+                                        <AlertTriangle size={18} className="text-amber-500" />
+                                        <p className="text-[11px] text-amber-200/60 font-medium">
+                                            No operational sectors defined. Default logistic rates will apply.
                                         </p>
                                     </div>
                                 )}
                             </div>
 
-                            <Field label="Special Instructions">
+                            <Field label="Operational Notes / Protocols">
                                 <textarea
                                     value={form.notes}
                                     onChange={e => set('notes', e.target.value)}
-                                    rows={2}
-                                    placeholder="Landmarks, floor, access code..."
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-50 font-medium resize-none placeholder:text-gray-300"
+                                    rows={3}
+                                    placeholder="LANDMARKS, ACCESS CODES, SPECIAL PROTOCOLS..."
+                                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-[1.8rem] text-[13px] font-medium text-white outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all placeholder:text-white/5 resize-none shadow-inner"
                                 />
                             </Field>
                         </div>
 
                     ) : step === 1 ? (
                         /* ─── Step 2: Payment ─── */
-                        <div className="p-6 space-y-3">
-                            <p className="text-xs text-gray-400 font-medium mb-1">How will this delivery be paid?</p>
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">
+                                Settlement Protocol Selection
+                            </label>
                             {PAYMENT_MODES.map(m => {
                                 const Icon = m.icon;
                                 const blocked = m.key === 'CREDIT' && !hasClientCredit;
@@ -406,74 +401,70 @@ export function POSDeliveryModal({
                                         disabled={blocked}
                                         onClick={() => set('payment_mode', m.key)}
                                         className={clsx(
-                                            "w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all",
-                                            blocked ? "opacity-40 cursor-not-allowed border-gray-100 bg-gray-50" :
-                                                active ? `border-transparent ${m.ring} ring-2 bg-white shadow-lg` :
-                                                    "border-gray-100 hover:border-gray-200 bg-white"
+                                            "w-full flex items-center gap-5 p-5 rounded-[2.2rem] border transition-all relative overflow-hidden group mb-4",
+                                            blocked ? "opacity-30 cursor-not-allowed border-white/5 bg-white/[0.01]" :
+                                                active ? `border-emerald-500/50 bg-emerald-500/5 shadow-[0_15px_40px_rgba(0,0,0,0.3)] scale-[1.02]` :
+                                                    "border-white/5 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/10"
                                         )}>
                                         <div className={clsx(
-                                            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br shadow-md",
-                                            active ? m.gradient + " shadow-current/20 text-white" : "from-gray-100 to-gray-50 text-gray-400"
+                                            "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border transition-all",
+                                            active ? "bg-emerald-gradient text-white border-white/20 shadow-xl" : "bg-white/5 border-white/5 text-slate-500"
                                         )}>
-                                            <Icon size={20} />
+                                            <Icon size={24} />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-black text-gray-900">{m.label}</p>
-                                            <p className="text-[11px] text-gray-400 mt-0.5">{m.desc}</p>
-                                            {blocked && <p className="text-[10px] text-rose-400 font-bold mt-0.5">No credit authority for this client</p>}
+                                        <div className="flex-1 text-left">
+                                            <p className={clsx("text-base font-black uppercase tracking-tight italic", active ? "text-white" : "text-slate-400")}>{m.label}</p>
+                                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{m.desc}</p>
+                                            {blocked && <p className="text-[9px] text-rose-500 font-black mt-2 uppercase tracking-[0.2em] animate-pulse">Insufficient Credit Authority</p>}
                                         </div>
-                                        <div className={clsx(
-                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                                            active ? `bg-gradient-to-br ${m.gradient} border-transparent` : "border-gray-200"
-                                        )}>
-                                            {active && <Check size={9} className="text-white" />}
-                                        </div>
+                                        {active && (
+                                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white border-2 border-slate-900">
+                                                <Check size={14} strokeWidth={4} />
+                                            </div>
+                                        )}
                                     </button>
                                 );
                             })}
-
-                            {form.payment_mode === 'HOLD' && (
-                                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                                        <AlertTriangle size={14} className="text-amber-500" />
-                                    </div>
-                                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
-                                        The POS session stays <strong>open</strong> until the driver returns with cash and you confirm receipt. The register cannot close while there are pending holds.
-                                    </p>
-                                </div>
-                            )}
                         </div>
 
                     ) : step === 2 ? (
                         /* ─── Step 3: Driver ─── */
-                        <div className="p-6 space-y-2">
-                            <p className="text-xs text-gray-400 font-medium mb-3">Assign a delivery driver (optional)</p>
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-4">
+                                Logic Unit Assignment
+                            </label>
 
                             <button onClick={() => set('driver', null)}
-                                className={clsx("w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all",
-                                    form.driver === null ? "border-slate-800 bg-slate-50 shadow-md" : "border-gray-100 hover:border-gray-200 bg-white")}>
-                                <div className={clsx("w-9 h-9 rounded-xl flex items-center justify-center", form.driver === null ? "bg-slate-800" : "bg-gray-100")}>
-                                    <Truck size={15} className={form.driver === null ? "text-white" : "text-gray-400"} />
+                                className={clsx("w-full flex items-center gap-5 p-5 rounded-[2.2rem] border transition-all",
+                                    form.driver === null ? "border-emerald-500/50 bg-emerald-500/5 shadow-xl" : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]")}>
+                                <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center border", form.driver === null ? "bg-emerald-gradient border-white/20 text-white" : "bg-white/5 border-white/5 text-slate-600")}>
+                                    <Shield size={20} />
                                 </div>
-                                <span className={clsx("text-sm font-bold", form.driver === null ? "text-slate-800" : "text-gray-500")}>Assign later</span>
-                                {form.driver === null && <Check size={14} className="text-emerald-500 ml-auto" />}
+                                <div className="flex-1 text-left">
+                                    <p className={clsx("text-base font-black uppercase tracking-tight italic", form.driver === null ? "text-white" : "text-slate-400")}>Deferred Assignment</p>
+                                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Allocate during dispatch phase</p>
+                                </div>
+                                {form.driver === null && <Check size={18} className="text-emerald-500" strokeWidth={4} />}
                             </button>
 
                             {drivers.length > 0 && (
-                                <div className="mt-3 space-y-2">
+                                <div className="grid grid-cols-1 gap-3">
                                     {drivers.map(d => {
                                         const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.username;
                                         const active = form.driver === d.id;
                                         return (
                                             <button key={d.id} onClick={() => set('driver', d.id)}
-                                                className={clsx("w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all",
-                                                    active ? "border-amber-400 bg-amber-50 shadow-md shadow-amber-100" : "border-gray-100 hover:border-amber-200 bg-white")}>
-                                                <div className={clsx("w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm",
-                                                    active ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-200" : "bg-gray-100 text-gray-500")}>
+                                                className={clsx("w-full flex items-center gap-5 p-5 rounded-[2.2rem] border transition-all",
+                                                    active ? "border-emerald-500/50 bg-emerald-500/5 shadow-xl" : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05]")}>
+                                                <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black border transition-all",
+                                                    active ? "bg-emerald-gradient border-white/20 text-white" : "bg-white/5 border-white/5 text-slate-600")}>
                                                     {name[0]?.toUpperCase()}
                                                 </div>
-                                                <span className={clsx("text-sm font-bold flex-1 text-left", active ? "text-amber-800" : "text-gray-700")}>{name}</span>
-                                                {active && <Check size={14} className="text-amber-500" />}
+                                                <div className="flex-1 text-left">
+                                                    <p className={clsx("text-base font-black uppercase tracking-tight italic", active ? "text-white" : "text-slate-400")}>{name}</p>
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">AVAILABLE AGENT</p>
+                                                </div>
+                                                {active && <Check size={18} className="text-emerald-500" strokeWidth={4} />}
                                             </button>
                                         );
                                     })}
@@ -483,30 +474,35 @@ export function POSDeliveryModal({
 
                     ) : (
                         /* ─── Step 4: Confirm ─── */
-                        <div className="p-6 space-y-4">
+                        <div className="space-y-6">
                             {/* Summary card */}
-                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <Shield size={14} className="text-amber-400" />
-                                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Delivery Summary</span>
+                            <div className="bg-slate-950/80 border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-2xl">
+                                {/* Inner Carbon Texture Overlay */}
+                                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+                                <div className="flex items-center gap-3 mb-6 relative z-10">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                        <Shield size={16} className="text-emerald-400" />
+                                    </div>
+                                    <span className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">Audit Summary Matrix</span>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-4 relative z-10">
                                     <Row label="Recipient" value={form.recipient_name} />
-                                    <Row label="Phone" value={form.phone} />
-                                    <Row label="Address" value={[form.address_line1, form.address_line2, form.city].filter(Boolean).join(', ')} />
-                                    {selectedZone && <Row label="Zone" value={selectedZone.name} />}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-white/40 text-xs">Payment</span>
-                                        <span className={clsx("text-xs font-black px-2.5 py-1 rounded-lg",
-                                            form.payment_mode === 'IMMEDIATE' ? "bg-emerald-500/20 text-emerald-300" :
-                                                form.payment_mode === 'HOLD' ? "bg-amber-500/20 text-amber-300" :
-                                                    "bg-indigo-500/20 text-indigo-300")}>
+                                    <Row label="Communication" value={form.phone} />
+                                    <Row label="Surface Location" value={[form.address_line1, form.address_line2, form.city].filter(Boolean).join(', ')} />
+                                    {selectedZone && <Row label="Logistics Sector" value={selectedZone.name} />}
+                                    <div className="flex items-center justify-between py-2 border-y border-white/5 my-2">
+                                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Settlement</span>
+                                        <span className={clsx("text-[10px] font-black px-4 py-1.5 rounded-full border shadow-xl uppercase tracking-widest",
+                                            form.payment_mode === 'IMMEDIATE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+                                                form.payment_mode === 'HOLD' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                                    "bg-indigo-500/10 text-indigo-400 border-indigo-500/20")}>
                                             {form.payment_mode === 'IMMEDIATE' ? 'Pay at delivery' :
-                                                form.payment_mode === 'HOLD' ? 'Hold session' : 'Credit'}
+                                                form.payment_mode === 'HOLD' ? 'Hold session' : 'Credit Terminal'}
                                         </span>
                                     </div>
                                     {form.driver !== null && (
-                                        <Row label="Driver" value={
+                                        <Row label="Deployed Agent" value={
                                             (() => {
                                                 const d = drivers.find(dr => dr.id === form.driver);
                                                 return d ? [d.first_name, d.last_name].filter(Boolean).join(' ') || d.username : '—';
@@ -517,20 +513,23 @@ export function POSDeliveryModal({
                             </div>
 
                             {/* Totals */}
-                            <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
-                                <div className="flex justify-between text-sm text-gray-500">
-                                    <span>Order subtotal</span>
-                                    <span className="font-bold text-gray-900">{fmt(orderTotal)}</span>
+                            <div className="bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-8 space-y-3 shadow-inner">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Inventory Value</span>
+                                    <span className="text-[13px] font-black text-white tabular-nums">{fmt(orderTotal)}</span>
                                 </div>
                                 {deliveryFee > 0 && (
-                                    <div className="flex justify-between text-sm text-gray-500">
-                                        <span>Delivery fee ({selectedZone?.name})</span>
-                                        <span className="font-bold text-amber-600">+ {fmt(deliveryFee)}</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Logistics Surcharge</span>
+                                        <span className="text-[13px] font-black text-amber-400 tabular-nums">+ {fmt(deliveryFee)}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between pt-2 mt-1 border-t border-gray-200">
-                                    <span className="text-base font-black text-gray-900">Total Due</span>
-                                    <span className="text-base font-black text-emerald-600">{fmt(totalWithDelivery)}</span>
+                                <div className="flex justify-between items-end pt-5 mt-2 border-t border-white/10">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-1">Nexus Requirement</span>
+                                        <span className="text-sm font-black text-slate-500 uppercase tracking-widest">Aggregate Settlement</span>
+                                    </div>
+                                    <span className="text-4xl font-black text-white tracking-tighter tabular-nums">{fmt(totalWithDelivery)}</span>
                                 </div>
                             </div>
                         </div>
@@ -538,25 +537,25 @@ export function POSDeliveryModal({
                 </div>
 
                 {/* ── Footer ── */}
-                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white shrink-0">
+                <div className="flex items-center justify-between px-10 py-8 border-t border-white/5 bg-slate-950/80 backdrop-blur-xl shrink-0">
                     {step > 0 ? (
                         <button onClick={() => setStep(s => s - 1)}
-                            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all">
-                            <ChevronLeft size={14} /> Back
+                            className="flex items-center gap-3 px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-white/10">
+                            <ChevronLeft size={16} /> Operational Regression
                         </button>
                     ) : <div />}
 
                     {step < STEPS.length - 1 ? (
                         <button onClick={() => setStep(s => s + 1)}
                             disabled={!canNext()}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl text-sm font-black hover:from-amber-400 hover:to-orange-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-amber-200">
-                            Next <ChevronRight size={14} />
+                            className="flex items-center gap-4 px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-xl active:scale-95">
+                            Advance Sequence <ChevronRight size={16} />
                         </button>
                     ) : (
                         <button onClick={handleSubmit} disabled={submitting}
-                            className="flex items-center gap-2 px-7 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl text-sm font-black hover:from-emerald-400 hover:to-teal-500 disabled:opacity-40 transition-all shadow-lg shadow-emerald-200">
-                            {submitting ? <Loader2 size={14} className="animate-spin" /> : <Package size={14} />}
-                            Create Delivery
+                            className="flex items-center gap-5 px-10 py-5 bg-emerald-gradient text-white rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-emerald-500/40 border border-emerald-400/30">
+                            {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={4} />}
+                            Finalize Deployment
                         </button>
                     )}
                 </div>
@@ -569,8 +568,8 @@ export function POSDeliveryModal({
 function Field({ label, icon, required, children }: { label: string; icon?: React.ReactNode; required?: boolean; children: React.ReactNode }) {
     return (
         <div>
-            <label className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">
-                {icon} {label} {required && <span className="text-amber-500">*</span>}
+            <label className="flex items-center gap-2 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2 px-1">
+                <span className="text-emerald-500 opacity-50">{icon}</span> {label} {required && <span className="text-emerald-500">*</span>}
             </label>
             {children}
         </div>
@@ -584,7 +583,7 @@ function Input({ value, onChange, placeholder, type = 'text' }: { value: string;
             value={value}
             onChange={e => onChange(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-50 font-medium placeholder:text-gray-300 transition-all"
+            className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-[1.8rem] text-[13px] font-medium text-white outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all placeholder:text-white/5 shadow-inner"
         />
     );
 }
@@ -592,8 +591,8 @@ function Input({ value, onChange, placeholder, type = 'text' }: { value: string;
 function Row({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-start justify-between gap-4">
-            <span className="text-white/40 text-xs shrink-0">{label}</span>
-            <span className="text-white text-xs font-bold text-right">{value || '—'}</span>
+            <span className="text-white/20 text-[10px] font-black uppercase tracking-widest shrink-0">{label}</span>
+            <span className="text-white text-xs font-bold text-right italic uppercase tracking-tight">{value || 'UNSPECIFIED'}</span>
         </div>
     );
 }

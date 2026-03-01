@@ -217,20 +217,20 @@ class ConfigurationService:
         def find(code):
             acc = accounts.filter(code=code).first()
             return acc.id if acc else None
-        config['sales']['receivable'] = find('1110') or find('1300') or config['sales']['receivable']
-        config['sales']['revenue'] = find('4100') or find('701') or config['sales']['revenue']
-        config['sales']['cogs'] = find('5100') or find('601') or config['sales']['cogs']
-        config['sales']['inventory'] = find('1120') or find('31') or config['sales']['inventory']
-        config['purchases']['payable'] = find('2101') or find('401') or config['purchases']['payable']
-        config['purchases']['inventory'] = find('1120') or find('607') or config['purchases']['inventory']
-        config['purchases']['tax'] = find('2111') or find('4456') or config['purchases']['tax']
-        config['inventory']['adjustment'] = find('5104') or find('709') or config['inventory']['adjustment']
-        config['inventory']['transfer'] = find('1120') or config['inventory']['transfer']
+        config['sales']['receivable'] = find('1110') or find('1300') or find('411') or find('41') or config['sales']['receivable']
+        config['sales']['revenue'] = find('4100') or find('701') or find('70') or config['sales']['revenue']
+        config['sales']['cogs'] = find('5100') or find('601') or find('60') or config['sales']['cogs']
+        config['sales']['inventory'] = find('1120') or find('31') or find('37') or config['sales']['inventory']
+        config['purchases']['payable'] = find('2101') or find('401') or find('40') or config['purchases']['payable']
+        config['purchases']['inventory'] = find('1120') or find('31') or find('37') or find('607') or config['purchases']['inventory']
+        config['purchases']['tax'] = find('2111') or find('4456') or find('445') or config['purchases']['tax']
+        config['inventory']['adjustment'] = find('5104') or find('708') or find('709') or config['inventory']['adjustment']
+        config['inventory']['transfer'] = find('1120') or find('31') or config['inventory']['transfer']
         config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
         
-        config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or config['automation']['customerRoot']
-        config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or config['automation']['supplierRoot']
-        config['automation']['payrollRoot'] = find('2200') or find('421') or config['automation']['payrollRoot']
+        config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or find('41') or config['automation']['customerRoot']
+        config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or find('40') or config['automation']['supplierRoot']
+        config['automation']['payrollRoot'] = find('2200') or find('421') or find('42') or config['automation']['payrollRoot']
         
         ConfigurationService.save_posting_rules(organization, config)
         return config
@@ -253,7 +253,14 @@ class ConfigurationService:
         """Save global financial settings into Organization.settings JSON."""
         if not organization.settings:
             organization.settings = {}
-        organization.settings['global_financial_settings'] = config
+        
+        current = organization.settings.get('global_financial_settings', {})
+        if isinstance(current, str):
+            try: current = json.loads(current)
+            except: current = {}
+            
+        current.update(config)
+        organization.settings['global_financial_settings'] = current
         organization.save(update_fields=['settings'])
         return True
 

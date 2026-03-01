@@ -69,6 +69,7 @@ export interface ReviewEntity {
     entity_type: string
     total: number
     draft: number
+    needs_review: number
     good: number
     page_link: string | null
     filter_param: string | null

@@ -280,41 +280,29 @@ class POSService:
                     reference_id=order.ref_code
                 )
 
-            # Loyalty & Wallet CRM update
+            # Loyalty & Wallet CRM update (Sync with centralized LoyaltyService)
             (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+            (LoyaltyService,) = _safe_import('apps.crm.services.loyalty_service', ['LoyaltyService'])
             contact = None
             if contact_id and Contact:
                 contact = Contact.objects.select_for_update().filter(id=contact_id, organization=organization).first()
                 if contact:
-                    # Load loyalty rates from POS settings
-                    from apps.pos.models.register_models import POSSettings
-                    pos_settings = POSSettings.objects.filter(organization=organization).first()
-                    point_value = Decimal(str(pos_settings.loyalty_point_value)) if pos_settings else Decimal('1.0')
-                    earn_rate = Decimal(str(pos_settings.loyalty_earn_rate)) if pos_settings else Decimal('10.0')
+                    # 1. Redeem Points (Burn)
+                    pts_to_redeem = int(points_redeemed)
+                    if pts_to_redeem > 0 and LoyaltyService:
+                        LoyaltyService.burn_points(contact, pts_to_redeem)
 
-                    # 1. Redeem Points — deduct from balance
-                    #    (The frontend already subtracted point_value × pts from totalAmount)
-                    pts_to_redeem = Decimal(str(points_redeemed))
-                    if pts_to_redeem > 0 and contact.loyalty_points >= pts_to_redeem:
-                        contact.loyalty_points -= pts_to_redeem
-
-                    # 2. Earn Points using configurable earn_rate
-                    #    e.g. earn_rate=10000 → spend 10,000 to get 1 point
-                    if earn_rate > 0:
-                        earned_points = int(order.total_amount / earn_rate)
-                        contact.loyalty_points += Decimal(str(earned_points))
-
+                    # 2. Earn Points & Update Tier (Centralized Logic)
+                    if LoyaltyService and order.total_amount > 0:
+                        LoyaltyService.earn_points(contact, order.total_amount)
 
                     # 3. Store Change in Wallet
                     cash_received_dec = Decimal(str(cash_received))
                     change_due = max(Decimal('0'), cash_received_dec - order.total_amount)
 
-                    wallet_added = Decimal('0')
                     if store_change_in_wallet and change_due > 0 and payment_method in ['CASH']:
                         contact.wallet_balance += change_due
-                        wallet_added = change_due
-
-                    contact.save()
+                        contact.save(update_fields=['wallet_balance'])
 
             # 5. Cryptographic Seal
             order.receipt_hash = order.calculate_hash()

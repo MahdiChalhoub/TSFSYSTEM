@@ -33,6 +33,8 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
     handlers = {
         'org:provisioned': _on_org_provisioned,
         'subscription:updated': _on_subscription_updated,
+        'order:completed': _on_order_completed,
+        'purchase_order:completed': _on_purchase_order_completed,
     }
     
     handler = handlers.get(event_name)
@@ -82,16 +84,18 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
             logger.warning("CRM: No SaaS master org found — cannot create billing contact")
             return {'success': False, 'error': 'SaaS master org not found'}
         
-        # Create client contact in SaaS org's CRM
-        client_contact = Contact.objects.create(
-            organization=saas_org,
-            type='CUSTOMER',
-            customer_type='B2B',
-            name=f"{org_name} (Tenant)",
+        # Create/Update client contact in SaaS org's CRM
+        client_contact, created = Contact.objects.update_or_create(
             email=f"billing@{org_slug}.tsf-city.com",
-            is_airsi_subject=False,
-            balance=Decimal('0.00'),
-            credit_limit=Decimal('0.00')
+            organization=saas_org,
+            defaults={
+                'type': 'CUSTOMER',
+                'customer_type': 'B2B',
+                'name': f"{org_name} (Tenant)",
+                'is_airsi_subject': False,
+                'balance': Decimal('0.00'),
+                'credit_limit': Decimal('0.00')
+            }
         )
         
         # The billing contact is now strictly resolved via the SaaSClient relationship
@@ -172,4 +176,104 @@ def _on_subscription_updated(payload: dict, organization_id: int):
         
     except Exception as e:
         logger.error(f"CRM: Failed to process subscription update: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def _on_order_completed(payload: dict, organization_id: int):
+    """
+    React to POS order completion — update customer analytics.
+    """
+    from .models import Contact
+    from django.utils import timezone
+    from erp.models import Organization
+    
+    order_id = payload.get('order_id')
+    order_type = payload.get('type')
+    contact_id = payload.get('contact_id')
+    total_amount = Decimal(str(payload.get('total_amount', '0')))
+    
+    if not contact_id or order_type != 'SALE':
+        return {'success': True, 'skipped': True}
+        
+    try:
+        contact = Contact.objects.get(pk=contact_id, organization_id=organization_id)
+        
+        # Update analytics fields
+        contact.total_orders += 1
+        contact.lifetime_value += total_amount
+
+        now = timezone.now()
+        if not contact.first_purchase_date:
+            contact.first_purchase_date = now
+        contact.last_purchase_date = now
+
+        # Recalculate average
+        contact.recalculate_analytics()
+
+        contact.save(update_fields=[
+            'total_orders', 'lifetime_value',
+            'first_purchase_date', 'last_purchase_date',
+            'average_order_value', 'updated_at'
+        ])
+        
+        logger.info(f"📈 CRM: Analytics updated for contact {contact.id}")
+        return {'success': True}
+        
+    except Contact.DoesNotExist:
+        logger.warning(f"CRM: Contact {contact_id} not found in org {organization_id}")
+        return {'success': False, 'error': "Contact not found"}
+    except Exception as e:
+        logger.error(f"CRM: Failed to update analytics: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def _on_purchase_order_completed(payload: dict, organization_id: int):
+    """
+    React to PO completion — update supplier performance metrics.
+    """
+    from .models import Contact
+    from django.utils import timezone
+    from datetime import datetime
+    
+    supplier_id = payload.get('supplier_id')
+    total_amount = Decimal(str(payload.get('total_amount', '0')))
+    order_date_str = payload.get('order_date')
+    
+    if not supplier_id:
+        return {'success': True, 'skipped': True}
+        
+    try:
+        supplier = Contact.objects.get(pk=supplier_id, organization_id=organization_id)
+        
+        supplier.supplier_total_orders += 1
+        supplier.total_purchase_amount += total_amount
+
+        # Calculate lead time if order date is known
+        if order_date_str:
+            order_date = datetime.fromisoformat(order_date_str).date()
+            days = (timezone.now().date() - order_date).days
+            
+            if supplier.avg_lead_time_days > 0:
+                # Rolling average
+                n = supplier.supplier_total_orders
+                supplier.avg_lead_time_days = (
+                    (supplier.avg_lead_time_days * (n - 1) + days) / n
+                )
+            else:
+                supplier.avg_lead_time_days = days
+
+        supplier.recalculate_supplier_rating()
+        supplier.save(update_fields=[
+            'supplier_total_orders', 'total_purchase_amount',
+            'avg_lead_time_days', 'overall_rating', 'updated_at'
+        ])
+        
+        logger.info(f"🏗️ CRM: Supplier metrics updated for contact {supplier.id}")
+        return {'success': True}
+        
+    except Contact.DoesNotExist:
+        logger.warning(f"CRM: Supplier contact {supplier_id} not found")
+        return {'success': False, 'error': "Supplier not found"}
+    except Exception as e:
+        logger.error(f"CRM: Failed to update supplier metrics: {e}")
         return {'success': False, 'error': str(e)}

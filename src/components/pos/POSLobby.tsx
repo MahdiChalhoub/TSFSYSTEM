@@ -157,8 +157,8 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
         setPinLoading(true);
         setPinError('');
         try {
-            const { verifyPosPin } = await import('./register-actions');
-            const result = await verifyPosPin(selectedRegister.id, pin, selectedCashier?.id);
+            const mod = await import('./register-actions');
+            const result = await mod.verifyPosPin(selectedRegister.id, pin, selectedCashier?.id);
             if (result.success && result.data?.valid) {
                 setVerifiedUser(result.data.user);
                 toast.success(`Welcome, ${result.data.user.name}!`);
@@ -167,6 +167,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 setOpeningMode(regMode);
                 if (regMode === 'advanced') initReconEntries();
                 setManagerUnlocked(selectedRegister.cashierCanSeeSoftware === true);
+
                 // If register already open by this user, go straight to POS
                 if (selectedRegister.isOpen && selectedRegister.currentSession?.cashierId === result.data.user.id) {
                     onEnterPOS({
@@ -177,8 +178,8 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                         cashierName: result.data.user.name,
                         warehouseId: selectedRegister.warehouseId,
                         cashAccountId: selectedRegister.cashAccountId,
-                        allowedAccounts: selectedRegister.allowedAccounts,
-                        siteName: selectedSite!.name,
+                        allowedAccounts: selectedRegister.allowedAccounts || [],
+                        siteName: selectedSite?.name || 'Central Site',
                         paymentMethods: selectedRegister.paymentMethods || [],
                     });
                     return;
@@ -189,17 +190,19 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 setPin('');
             }
         } catch (e) {
-            setPinError('Connection error');
+            setPinError('Security Engine Fault');
         }
         setPinLoading(false);
     };
 
     // Open session
     const handleOpenSession = async () => {
-        if (!selectedRegister || !verifiedUser) return;
+        if (!selectedRegister) { toast.error("No register selected"); return; }
+        if (!verifiedUser) { toast.error("Session identity lost. Please re-enter PIN."); setStep('pin'); return; }
+
         setOpenSessionLoading(true);
         try {
-            const { openRegisterSession } = await import('./register-actions');
+            const mod = await import('./register-actions');
 
             let advancedData: any = undefined;
             if (openingMode === 'advanced' && reconEntries) {
@@ -216,27 +219,28 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 };
             }
 
-            const result = await openRegisterSession(
+            const result = await mod.openRegisterSession(
                 selectedRegister.id,
                 verifiedUser.id,
                 parseFloat(openingBalance) || 0,
                 openingNotes,
                 advancedData
             );
+
             if (result.success && result.data) {
                 setSessionConflict(null);
-                toast.success(result.data.message);
+                toast.success(result.data.message || 'Session initialized');
                 onEnterPOS({
                     registerId: selectedRegister.id,
                     registerName: selectedRegister.name,
                     sessionId: result.data.session_id,
                     cashierId: verifiedUser.id,
                     cashierName: verifiedUser.name,
-                    warehouseId: result.data.warehouse_id,
-                    cashAccountId: result.data.cash_account_id,
-                    allowedAccounts: result.data.allowed_accounts || selectedRegister.allowedAccounts,
-                    siteName: selectedSite!.name,
-                    paymentMethods: selectedRegister.paymentMethods || [],
+                    warehouseId: result.data.warehouse_id || selectedRegister.warehouseId,
+                    cashAccountId: result.data.cash_account_id || selectedRegister.cashAccountId,
+                    allowedAccounts: result.data.allowed_accounts || selectedRegister.allowedAccounts || [],
+                    siteName: selectedSite?.name || 'Central Site',
+                    paymentMethods: result.data.payment_methods || selectedRegister.paymentMethods || [],
                 });
             } else {
                 // Parse structured error codes from backend guards
@@ -247,15 +251,15 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                         sessionId: result.data?.current_session_id,
                     });
                 } else if (errCode === 'NO_FISCAL_YEAR') {
-                    toast.error('No open fiscal year — go to Finance → Fiscal Years to open one', { duration: 6000 });
+                    toast.error('No open fiscal year — check Finance settings', { duration: 6000 });
                 } else if (errCode === 'NO_PAYMENT_ACCOUNTS') {
-                    toast.error('No payment accounts linked — configure in POS Settings → Registers', { duration: 6000 });
+                    toast.error('No payment accounts linked for this register', { duration: 6000 });
                 } else {
-                    toast.error(result.error || 'Failed to open session');
+                    toast.error(result.error || 'Opening Logic Fault');
                 }
             }
-        } catch (e) {
-            toast.error('Connection error');
+        } catch (e: any) {
+            toast.error('Connection fault: ' + (e.message || 'Unknown Error'));
         }
         setOpenSessionLoading(false);
     };
@@ -839,7 +843,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                                                         const { verifyPosPin } = await import('./register-actions');
                                                         // Use the override PIN verification
                                                         try {
-                                                            const mod = await import('@/app/(privileged)/sales/register-actions');
+                                                            const mod = await import('./register-actions');
                                                             const result = await (mod as any).default?.verifyOverride?.(managerPinInput)
                                                                 || await fetch('/api/pos-registers/verify-override/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: managerPinInput }) }).then(r => r.json()).catch(() => null);
                                                         } catch { }

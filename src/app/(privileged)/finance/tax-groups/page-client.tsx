@@ -191,130 +191,150 @@ export default function TaxGroupsPage() {
     ], [settingDefault, deleting])
     if (loading && groups.length === 0) {
         return (
-            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-                <div className="flex justify-between items-center">
-                    <div><Skeleton className="h-10 w-64" /><Skeleton className="h-4 w-48 mt-2" /></div>
-                    <Skeleton className="h-10 w-44" />
+            <div className="page-container animate-in fade-in duration-700">
+                <div className="flex justify-between items-center mb-8">
+                    <div><Skeleton className="h-14 w-80 rounded-2xl" /><Skeleton className="h-6 w-64 mt-3 rounded-lg" /></div>
+                    <Skeleton className="h-14 w-48 rounded-2xl" />
                 </div>
-                <div className="grid grid-cols-3 gap-6">{[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
-                <Skeleton className="h-96 rounded-3xl" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-[2rem]" />)}
+                </div>
+                <Skeleton className="h-[50vh] rounded-[2rem]" />
             </div>
         )
     }
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 min-h-screen pb-24">
+        <div className="page-container animate-in fade-in duration-700 pb-32">
             {/* Standard Header */}
-            <header className="flex justify-between items-center">
+            <header className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
-                            <Percent size={28} className="text-white" />
+                    <div className="flex items-center gap-3 mb-4">
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                            Financial Configuration
+                        </Badge>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <TrendingUp size={14} className="text-emerald-400" /> Regulatory Compliance
+                        </span>
+                    </div>
+                    <h1 className="page-header-title flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Percent size={40} className="text-white fill-white/20" />
                         </div>
-                        Tax <span className="text-amber-600">Groups</span>
+                        Tax <span className="text-emerald-700">Policies</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">VAT & Tax Configuration</p>
+                    <p className="page-header-subtitle">
+                        Create and orchestrate tax groups, set rates, and enforce fiscal standards across your organization.
+                    </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button onClick={load} variant="ghost" className="h-12 w-12 rounded-2xl p-0 text-stone-400 hover:text-gray-900">
+                    <Button onClick={load} variant="outline" className="h-14 w-14 rounded-2xl border-slate-100 bg-white shadow-xl shadow-slate-200/50 p-0 text-slate-400 hover:text-emerald-600 transition-all">
                         <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                     </Button>
-                    <Button onClick={startCreate} className="h-12 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                        <Plus size={18} /> New Tax Group
+                    <Button onClick={startCreate} className="h-14 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-700/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-b-emerald-800">
+                        <Plus size={18} /> Register Policy
                     </Button>
                 </div>
             </header>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-white overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+                    <CardContent className="p-8 flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-emerald-100">
                             <LayoutGrid size={32} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Configured Groups</p>
-                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.total}</p>
-                            <p className="text-[10px] text-amber-600 font-bold uppercase mt-1">Active Rules</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Configured Protocols</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-slate-900">{stats.total}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Active Matrix</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-white overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+                    <CardContent className="p-8 flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-blue-100">
                             <TrendingUp size={32} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Average Rate</p>
-                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.avg.toFixed(1)}%</p>
-                            <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Weighted Mean</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Mean Tax Pressure</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-slate-900">{stats.avg.toFixed(1)}%</p>
+                            <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1 italic">Weighted Average</p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Star size={32} />
+                <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-white overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+                    <CardContent className="p-8 flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-lg shadow-emerald-200">
+                            <Star size={32} className="fill-white" />
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Default Group</p>
-                            <p className="text-xl font-black mt-1 tracking-tight text-emerald-600 truncate">{stats.def}</p>
-                            <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Primary Tax</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Authoritative Node</p>
+                            <p className="text-xl font-black mt-1 tracking-tight text-slate-800 truncate">{stats.def}</p>
+                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-1">Primary Assignment</p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
             {/* Create/Edit Form */}
             {showForm && (
-                <div className="animate-in slide-in-from-top-4 duration-500">
-                    <Card className="rounded-3xl border-0 shadow-xl bg-white border border-stone-100 overflow-hidden">
-                        <div className="p-8 border-b border-stone-50 flex items-center justify-between">
+                <div className="animate-in slide-in-from-top-8 duration-700">
+                    <Card className="card-premium overflow-hidden border-2 border-emerald-100 shadow-2xl shadow-emerald-200/20">
+                        <div className="px-8 py-6 border-b border-gray-100 bg-emerald-50/30 flex items-center justify-between">
                             <div>
-                                <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
-                                    <Edit2 size={20} className="text-amber-600" />
-                                    {editing ? 'Edit Tax Protocol' : 'Register New Tax Group'}
+                                <h3 className="text-xl font-black tracking-tight text-slate-800 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <Edit2 size={20} className="text-emerald-600" />
+                                    </div>
+                                    {editing ? 'Edit Regulatory Policy' : 'Provision Tax Protocol'}
                                 </h3>
-                                <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mt-1">Configuration Parameters</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 ml-13">Configuration Parameters & Thresholds</p>
                             </div>
-                            <Button variant="ghost" onClick={cancelForm} className="h-10 w-10 rounded-xl p-0 text-stone-300 hover:text-gray-900">
+                            <Button variant="ghost" onClick={cancelForm} className="h-12 w-12 rounded-2xl p-0 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
                                 <X size={20} />
                             </Button>
                         </div>
-                        <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6 bg-stone-50/30">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Group Name</label>
-                                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl bg-white border-stone-200" />
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Identifier</label>
+                                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-emerald-500/10" />
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Rate (%)</label>
-                                <Input type="number" step="0.01" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="20.0" className="rounded-xl bg-white border-stone-200" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Percentage Rate</label>
+                                <div className="relative">
+                                    <Input type="number" step="0.01" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="20.0" className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white pr-10" />
+                                    <Percent size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                </div>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Tax Type</label>
-                                <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="w-full h-10 px-3 border border-stone-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Logic Type</label>
+                                <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="w-full h-12 px-4 border border-slate-200 rounded-xl bg-slate-50 text-sm font-bold shadow-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
                                     {TAX_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
                                 </select>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Description</label>
-                                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." className="rounded-xl bg-white border-stone-200" />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Applicability Logic</label>
+                                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white" />
                             </div>
                         </div>
-                        <div className="p-8 border-t border-stone-50 flex justify-end gap-3 bg-white">
-                            <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[10px] uppercase tracking-widest">Cancel</Button>
-                            <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-stone-900 hover:bg-black text-white font-black text-[10px] uppercase tracking-widest h-12 px-8 shadow-lg shadow-stone-200">
-                                {saving ? <RefreshCw size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />}
-                                {editing ? 'Update Policy' : 'Apply Configuration'}
+                        <div className="px-8 py-6 border-t border-gray-100 flex justify-end gap-4 bg-slate-50/30">
+                            <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[11px] uppercase tracking-widest h-12 px-6">Discard</Button>
+                            <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-slate-900/30 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+                                {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+                                {editing ? 'Authorize Update' : 'Apply Protocol'}
                             </Button>
                         </div>
                     </Card>
                 </div>
             )}
             <TypicalListView
-                title="Taxation Authority Matrix"
+                title="Regulatory Authority Matrix"
                 data={groups}
                 loading={loading}
                 getRowId={(tg) => tg.id}
                 columns={columns}
-                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                className="card-premium overflow-hidden border-0 shadow-2xl shadow-slate-200/50"
                 visibleColumns={settings.visibleColumns}
                 onToggleColumn={settings.toggleColumn}
                 pageSize={settings.pageSize}

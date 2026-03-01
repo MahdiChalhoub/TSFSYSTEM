@@ -15,8 +15,8 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
         model = FinancialAccount
         fields = '__all__'
     def get_ledgerAccount(self, obj):
-        if obj.linked_coa:
-            return {'id': obj.linked_coa.id, 'code': obj.linked_coa.code, 'name': obj.linked_coa.name, 'type': obj.linked_coa.type}
+        if obj.ledger_account:
+            return {'id': obj.ledger_account.id, 'code': obj.ledger_account.code, 'name': obj.ledger_account.name, 'type': obj.ledger_account.type}
         return None
     def get_assignedUsers(self, obj):
         from erp.models import User

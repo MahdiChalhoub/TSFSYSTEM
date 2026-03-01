@@ -11,26 +11,35 @@ export default async function FinanceDashboardPage() {
     try { stats = await getFinancialDashboardStats(scope) } catch { /* empty fallback */ }
 
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-            <header className="flex justify-between items-end mb-10">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            System Node: Active
-                        </Badge>
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                            <RefreshCw size={12} className="animate-spin-slow" /> Sync: Real-time
-                        </span>
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200">
-                            <Wallet size={32} className="text-white" />
+        <div className="page-container animate-in fade-in duration-700">
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Wallet size={40} className="text-white fill-white/20" />
                         </div>
-                        Finance <span className="text-indigo-600">Overview</span>
-                    </h1>
-                </div>
-                <div className="bg-stone-50 border border-stone-200 px-4 py-2 rounded-xl text-xs font-bold text-stone-400 uppercase tracking-widest">
-                    Node: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    Financial Node: Active
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <RefreshCw size={14} className="text-emerald-400 animate-spin-slow" /> Ledger Sync: Real-time
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Financial <span className="text-emerald-700">Intelligence</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                Comprehensive monetary oversight and multi-ledger forensic analytics.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <div className="h-14 px-6 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+                            Node: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
                 </div>
             </header>
 

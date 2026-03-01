@@ -99,7 +99,7 @@ export default async function AdminLayout({
     // SaaS panel never gets gated. Only tenant orgs need fiscal regime + currency + fiscal year.
     if (!isSaas) {
         const pathname = headerList.get('x-pathname') || '';
-        const isOnWizard = pathname.startsWith('/setup-wizard');
+        const isOnWizard = pathname.startsWith('/setup-wizard') || pathname.startsWith('/migration');
         if (!isOnWizard) {
             try {
                 const setupReadiness = await checkSetupReadiness();

@@ -67,94 +67,103 @@ export default function EcommerceDashboardPage() {
         )
     }
     return (
-        <div className="p-8 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-700">
+        <div className="page-container animate-in fade-in duration-700">
             {/* Header: Ecommerce Intelligence Console */}
-            <header className="flex justify-between items-end">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            Store Node: Online
-                        </Badge>
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                            <Activity size={12} /> Sync: Direct
-                        </span>
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200">
-                            <Store size={32} className="text-white fill-white" />
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Store size={40} className="text-white fill-white/20" />
                         </div>
-                        Market <span className="text-indigo-600">Intelligence</span>
-                    </h1>
-                </div>
-                <div className="flex gap-3">
-                    <button onClick={load} className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
-                        <RefreshCw size={18} /> Refresh Nodes
-                    </button>
-                    <button className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-                        View Orders <ChevronRight size={18} />
-                    </button>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    Market Node: Online
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Activity size={14} className="text-emerald-400" /> Intelligence Sync: Real-time
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Market <span className="text-emerald-700">Intelligence</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                High-fidelity ecommerce orchestrator and transactional flow analytics.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <button onClick={load} className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
+                            <RefreshCw size={18} className={`text-emerald-500 ${loading ? 'animate-spin' : ''}`} /> Sync Nodes
+                        </button>
+                        <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
+                            View Orders <Zap size={18} className="text-emerald-400" />
+                        </button>
+                    </div>
                 </div>
             </header>
             {/* Premium KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <ShoppingCart size={24} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:rotate-6">
+                            <ShoppingCart size={28} />
                         </div>
-                        <Badge variant="outline" className="text-indigo-500 bg-indigo-50 border-0 font-black text-[10px]">
+                        <Badge variant="outline" className="text-emerald-600 bg-emerald-50/50 border-emerald-100 font-black text-[10px] px-3 py-1 rounded-full">
                             {pendingCount} PENDING
                         </Badge>
                     </div>
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Recent Orders</p>
-                    <h2 className="text-3xl font-black text-gray-900">{recent.length}</h2>
-                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                        <Target size={12} className="text-indigo-400" /> Velocity: Stable
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Recent Orders</p>
+                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{recent.length}</h2>
+                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                        <Target size={14} className="text-emerald-500" /> Velocity: Stable
                     </div>
                 </div>
-                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <DollarSign size={24} />
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:rotate-6">
+                            <DollarSign size={28} />
                         </div>
-                        <Badge variant="outline" className="text-emerald-500 bg-emerald-50 border-0 font-black text-[10px]">
-                            +8% TREND
+                        <Badge variant="outline" className="text-emerald-600 bg-emerald-50/50 border-emerald-100 font-black text-[10px] px-3 py-1 rounded-full animate-pulse">
+                            +12% REVENUE
                         </Badge>
                     </div>
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Recent Revenue</p>
-                    <h2 className="text-3xl font-black text-gray-900">${totalRevenue.toFixed(2)}</h2>
-                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                        <ShieldCheck size={12} className="text-emerald-400" /> Verified Settlement
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Recent Revenue</p>
+                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">${totalRevenue.toFixed(0)}</h2>
+                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                        <ShieldCheck size={14} className="text-emerald-500" /> Settled: Global
                     </div>
                 </div>
-                <div className="bg-indigo-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-800/50 text-indigo-100 flex items-center justify-center">
-                            <CheckCircle size={24} />
+                <div className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-white">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center shadow-2xl backdrop-blur-md">
+                            <CheckCircle size={28} className="text-emerald-400" />
                         </div>
-                        <Badge variant="outline" className="text-indigo-200 bg-indigo-800/30 border-0 font-black text-[10px]">
-                            SUCCESS
+                        <Badge variant="outline" className="text-emerald-300 bg-emerald-500/10 border-emerald-500/20 font-black text-[10px] px-3 py-1 rounded-full">
+                            VERIFIED
                         </Badge>
                     </div>
-                    <p className="text-[11px] font-black text-indigo-300 uppercase tracking-widest leading-none mb-1">Fulfillment Rate</p>
-                    <h2 className="text-3xl font-black text-white">{deliveredCount} <span className="text-sm text-indigo-300">UNITS</span></h2>
-                    <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-[10px] font-bold text-indigo-200">
-                        <Clock size={12} className="text-indigo-400" /> Avg Lead: 2.4 Days
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Fulfillment Rate</p>
+                    <h2 className="text-4xl font-black text-white tracking-tighter mt-1">{deliveredCount} <span className="text-sm font-black text-slate-500 uppercase tracking-widest">UNITS</span></h2>
+                    <div className="mt-6 pt-5 border-t border-white/5 flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-tight">
+                        <Clock size={14} className="text-emerald-500" /> Lead: 2.4D
                     </div>
                 </div>
-                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-indigo-600 flex items-center justify-center">
-                            <Truck size={24} />
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:rotate-6">
+                            <Truck size={28} />
                         </div>
-                        <Badge variant="outline" className="text-indigo-400 bg-indigo-50 border-0 font-black text-[10px]">
+                        <Badge variant="outline" className="text-slate-400 bg-slate-50 border-slate-100 font-black text-[10px] px-3 py-1 rounded-full">
                             LOGISTICS
                         </Badge>
                     </div>
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Active Deliveries</p>
-                    <h2 className="text-3xl font-black text-gray-900">{recent.filter(o => o.status === 'SHIPPED').length}</h2>
-                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                        <Zap size={12} className="text-indigo-400" /> Real-time Tracking
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Active Deliveries</p>
+                    <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{recent.filter(o => o.status === 'SHIPPED').length}</h2>
+                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                        <Zap size={14} className="text-emerald-500" /> Live Manifests
                     </div>
                 </div>
             </div>
@@ -196,40 +205,6 @@ export default function EcommerceDashboardPage() {
                         <button className="text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors">
                             Full Registry
                         </button>
-                    </div>
-                    <div className="divide-y divide-gray-50 overflow-y-auto max-h-[400px] custom-scrollbar">
-                        {recent.map(o => {
-                            const s = STATUS_MAP[o.status] || { label: o.status, color: 'gray', bg: 'bg-gray-50', text: 'text-gray-400' }
-                            return (
-                                <div key={o.id} className="flex items-center gap-6 px-8 py-5 hover:bg-slate-50/50 transition-colors group">
-                                    <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center font-black text-stone-400 group-hover:bg-indigo-600 group-hover:text-white transition-all text-xs">
-                                        #{o.id}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-black text-gray-900 text-sm uppercase tracking-tight truncate">
-                                            {o.client?.name || o.client_name || 'Anonymous Client'}
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-                                                {o.order_number || 'REG-PENDING'}
-                                            </span>
-                                            <span className="text-[10px] text-gray-300">·</span>
-                                            <span className="text-[10px] font-bold text-gray-400">
-                                                {o.created_at ? new Date(o.created_at).toLocaleDateString() : 'REAL-TIME'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <Badge className={`${s.bg} ${s.text} border-0 text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest`}>
-                                            {s.label}
-                                        </Badge>
-                                        <span className="font-black text-lg text-gray-900 leading-none">
-                                            ${Number(o.total_amount || 0).toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-                            )
-                        })}
                     </div>
                 </div>
             </div>

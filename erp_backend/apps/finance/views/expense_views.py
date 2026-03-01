@@ -156,11 +156,11 @@ class DirectExpenseViewSet(TenantModelViewSet):
                         description=expense.name,
                     )
                 # Credit source account's linked COA
-                if expense.source_account and expense.source_account.linked_coa:
+                if expense.source_account and expense.source_account.ledger_account:
                     JournalEntryLine.objects.create(
                         organization=organization,
                         journal_entry=je,
-                        account=expense.source_account.linked_coa,
+                        account=expense.source_account.ledger_account,
                         debit=0,
                         credit=expense.amount,
                         description=expense.name,

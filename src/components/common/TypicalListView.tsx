@@ -196,13 +196,13 @@ export function TypicalListView<T, D = any>({
     }
 
     return (
-        <div className={cn("space-y-4 bg-white rounded-xl shadow-sm border border-gray-100 p-1", className)}>
+        <div className={cn("space-y-4 bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-1.5 overflow-hidden", className)}>
             {/* ─── Header Section ────────────────── */}
-            <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-500 hover:bg-gray-100 font-bold border-none">
-                        {safeData.length}
+            <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase">{title}</h2>
+                    <Badge variant="outline" className="bg-slate-50 text-slate-400 font-black text-[10px] py-1 px-3 rounded-full border-slate-100">
+                        {safeData.length} NODES
                     </Badge>
                     {headerExtras}
                     {headerExtra}
@@ -302,14 +302,14 @@ export function TypicalListView<T, D = any>({
                                 )}
 
                                 {activeColumns.map(c => (
-                                    <TableHead key={c.key} className={`text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4 ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                    <TableHead key={c.key} className={`text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 py-6 ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
                                         {c.sortable ? (
-                                            <button onClick={() => toggleSort(c.key)} className="group inline-flex items-center hover:text-gray-900 transition-colors gap-1">
+                                            <button onClick={() => toggleSort(c.key)} className="group inline-flex items-center hover:text-slate-900 transition-colors gap-2">
                                                 {c.label}
                                                 {sortKey === c.key ? (
-                                                    sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-emerald-500" /> : <ArrowUp className="h-3 w-3 text-emerald-500" />
+                                                    sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-emerald-500 animate-in zoom-in" /> : <ArrowUp className="h-3 w-3 text-emerald-500 animate-in zoom-in" />
                                                 ) : (
-                                                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-gray-300" />
+                                                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-slate-300 transition-all duration-300" />
                                                 )}
                                             </button>
                                         ) : (
@@ -351,7 +351,7 @@ export function TypicalListView<T, D = any>({
 
                                 return (
                                     <React.Fragment key={id}>
-                                        <TableRow className={`group cursor-pointer transition-colors border-b border-gray-50 ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-gray-50/80'}`}>
+                                        <TableRow className={`group cursor-pointer transition-all duration-300 border-b border-slate-50 relative ${isSelected ? 'bg-emerald-50/50 shadow-[inset_4px_0_0_0_#10b981]' : 'hover:bg-slate-50/50 hover:shadow-lg hover:shadow-slate-200/20'}`}>
                                             {(expandable || renderExpanded) && (
                                                 <TableCell className="px-4" onClick={() => toggleExpand(id)}>
                                                     {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
@@ -381,13 +381,13 @@ export function TypicalListView<T, D = any>({
                                                         {lifecycle.getStatus && (() => {
                                                             const s = lifecycle.getStatus(row)
                                                             const colorMap: Record<string, string> = {
-                                                                default: 'bg-gray-100 text-gray-600',
-                                                                success: 'bg-emerald-100 text-emerald-700',
-                                                                warning: 'bg-amber-100 text-amber-700',
-                                                                danger: 'bg-rose-100 text-rose-700',
-                                                                info: 'bg-blue-100 text-blue-700'
+                                                                default: 'bg-slate-100 text-slate-600 border-slate-200',
+                                                                success: 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-[0_0_8px_rgba(16,185,129,0.1)]',
+                                                                warning: 'bg-amber-50 text-amber-700 border-amber-100',
+                                                                danger: 'bg-rose-50 text-rose-700 border-rose-100',
+                                                                info: 'bg-blue-50 text-blue-700 border-blue-100'
                                                             }
-                                                            return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${colorMap[s.variant]}`}>{s.label}</span>
+                                                            return <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight border ${colorMap[s.variant]}`}>{s.label}</span>
                                                         })()}
                                                     </TableCell>
                                                     <TableCell className="px-4 text-center">
@@ -467,7 +467,7 @@ export function TypicalListView<T, D = any>({
 
                                         {/* Expandable Content (Details or Custom) */}
                                         {(expandable || renderExpanded) && isExpanded && (
-                                            <TableRow className="bg-emerald-50/10 border-l-2 border-emerald-400 hover:bg-emerald-50/10">
+                                            <TableRow className="bg-slate-50/50 backdrop-blur-md border-l-4 border-emerald-500 hover:bg-slate-50/80 transition-colors">
                                                 <TableCell colSpan={activeColumns.length + (selection ? 2 : 1) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="p-0">
                                                     {renderExpanded ? (
                                                         renderExpanded(row)

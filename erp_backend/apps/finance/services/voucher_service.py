@@ -58,13 +58,13 @@ class VoucherService:
             if voucher.voucher_type == 'TRANSFER':
                 src = FinancialAccount.objects.get(id=voucher.source_account_id, organization=organization)
                 dst = FinancialAccount.objects.get(id=voucher.destination_account_id, organization=organization)
-                debit_acc = dst.linked_coa_id
-                credit_acc = src.linked_coa_id
+                debit_acc = dst.ledger_account_id
+                credit_acc = src.ledger_account_id
                 desc = f"Transfer: {src.name} \u2192 {dst.name}"
 
             elif voucher.voucher_type == 'RECEIPT':
                 dst = FinancialAccount.objects.get(id=voucher.destination_account_id, organization=organization)
-                debit_acc = dst.linked_coa_id
+                debit_acc = dst.ledger_account_id
                 # Credit the contact's/event's source
                 if voucher.contact_id:
                     from apps.crm.models import Contact
@@ -74,7 +74,7 @@ class VoucherService:
 
             elif voucher.voucher_type == 'PAYMENT':
                 src = FinancialAccount.objects.get(id=voucher.source_account_id, organization=organization)
-                credit_acc = src.linked_coa_id
+                credit_acc = src.ledger_account_id
                 if voucher.contact_id:
                     from apps.crm.models import Contact
                     contact = Contact.objects.get(id=voucher.contact_id, organization=organization)

@@ -75,7 +75,13 @@ class JournalEntryLine(TenantModel):
             models.Index(fields=['organization', 'debit', 'credit']),
         ]
 
+    def clean(self):
+        if not self.account:
+            raise ValidationError("A Journal Entry Line must be linked to a Chart of Account.")
+        super().clean()
+
     def save(self, *args, **kwargs):
+        self.clean()
         bypass = kwargs.pop('force_audit_bypass', False)
         if self.journal_entry_id and not bypass:
             if self.journal_entry.status == 'POSTED':

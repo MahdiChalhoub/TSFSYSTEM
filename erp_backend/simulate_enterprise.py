@@ -223,11 +223,11 @@ def simulate():
     org.save(update_fields=['settings'])
 
     # ── FINANCIAL ACCOUNTS ────────────────────────────────────
-    fa_cash = FinancialAccount.objects.create(organization=org, name='Main Cash Drawer', type='CASH', currency='USD', site=hq_site, linked_coa=coa_cash_root, balance=Decimal('50000.00'))
-    fa_bank = FinancialAccount.objects.create(organization=org, name='Main Bank Account', type='BANK', currency='USD', site=hq_site, linked_coa=coa_bank_root, balance=Decimal('250000.00'))
-    fa_petty = FinancialAccount.objects.create(organization=org, name='Petty Cash', type='PETTY_CASH', currency='USD', site=hq_site, linked_coa=coa_cash_root, balance=Decimal('5000.00'))
-    fa_store1 = FinancialAccount.objects.create(organization=org, name='Store 1 Cash', type='CASH', currency='USD', site=sites[3], linked_coa=coa_cash_root, balance=Decimal('10000.00'))
-    fa_store2 = FinancialAccount.objects.create(organization=org, name='Store 2 Cash', type='CASH', currency='USD', site=sites[4], linked_coa=coa_cash_root, balance=Decimal('10000.00'))
+    fa_cash = FinancialAccount.objects.create(organization=org, name='Main Cash Drawer', type='CASH', currency='USD', site=hq_site, ledger_account=coa_cash_root, balance=Decimal('50000.00'))
+    fa_bank = FinancialAccount.objects.create(organization=org, name='Main Bank Account', type='BANK', currency='USD', site=hq_site, ledger_account=coa_bank_root, balance=Decimal('250000.00'))
+    fa_petty = FinancialAccount.objects.create(organization=org, name='Petty Cash', type='PETTY_CASH', currency='USD', site=hq_site, ledger_account=coa_cash_root, balance=Decimal('5000.00'))
+    fa_store1 = FinancialAccount.objects.create(organization=org, name='Store 1 Cash', type='CASH', currency='USD', site=sites[3], ledger_account=coa_cash_root, balance=Decimal('10000.00'))
+    fa_store2 = FinancialAccount.objects.create(organization=org, name='Store 2 Cash', type='CASH', currency='USD', site=sites[4], ledger_account=coa_cash_root, balance=Decimal('10000.00'))
     financial_accounts = [fa_cash, fa_bank, fa_petty, fa_store1, fa_store2]
     print(f"💳 Financial Accounts: {len(financial_accounts)}")
 

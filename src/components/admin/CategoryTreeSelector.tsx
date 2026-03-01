@@ -30,9 +30,12 @@ export function CategoryTreeSelector({ categories, selectedIds, onChange, maxHei
     };
 
     return (
-        <div className={`${maxHeight} overflow-y-auto p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-1`}>
+        <div className={`${maxHeight} overflow-y-auto px-4 py-3 bg-slate-50/50 backdrop-blur-sm rounded-2xl border border-slate-100 space-y-1.5 scrollbar-premium shadow-inner`}>
             {categories.length === 0 ? (
-                <p className="text-sm text-gray-400 italic text-center py-4">No categories available</p>
+                <div className="flex flex-col items-center justify-center py-10 text-slate-300">
+                    <Folder size={32} className="mb-4 opacity-50" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">No operational nodes detected</p>
+                </div>
             ) : (
                 categories.map(category => (
                     <CategoryTreeNode
@@ -65,17 +68,21 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     const isSelected = selectedIds.includes(category.id);
 
     return (
-        <div>
+        <div className="animate-in fade-in duration-300">
             {/* Category Row */}
             <div
                 className={`
-                    flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all
-                    hover:bg-white
-                    ${level > 0 ? `ml-${level * 4}` : ''}
-                    ${isSelected ? 'bg-purple-50 border border-purple-100' : 'bg-transparent'}
+                    flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-300 group/node relative overflow-hidden
+                    hover:bg-white hover:shadow-lg hover:shadow-slate-200/50
+                    ${isSelected ? 'bg-emerald-50/80 border border-emerald-100/50 shadow-sm' : 'bg-transparent border border-transparent'}
                 `}
                 style={{ marginLeft: `${level * 1.5}rem` }}
+                onClick={() => onToggle(category.id)}
             >
+                {isSelected && (
+                    <div className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-500 rounded-r-lg shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                )}
+
                 {/* Expand Toggle */}
                 {hasChildren ? (
                     <button
@@ -84,60 +91,61 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                             e.stopPropagation();
                             setIsExpanded(!isExpanded);
                         }}
-                        className="p-0.5 hover:bg-gray-200 rounded text-gray-500 transition-colors flex-shrink-0"
+                        className={`w-6 h-6 flex items-center justify-center rounded-lg transition-all duration-300 ${isExpanded ? 'bg-slate-100 text-slate-800 rotate-0' : 'text-slate-400 hover:bg-slate-100 hover:text-emerald-600'}`}
                     >
-                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        {isExpanded ? <ChevronDown size={14} className="group-hover/node:scale-110" /> : <ChevronRight size={14} className="group-hover/node:translate-x-0.5" />}
                     </button>
                 ) : (
-                    <div className="w-4" /> // Spacer for alignment
+                    <div className="w-6" /> // Spacer
                 )}
 
-                {/* Checkbox */}
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onToggle(category.id)}
-                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 flex-shrink-0 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                />
+                {/* Selection State (Custom Checkbox Style) */}
+                <div className={`
+                    w-4 h-4 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300
+                    ${isSelected
+                        ? 'bg-emerald-600 border-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+                        : 'border-slate-200 bg-white group-hover/node:border-emerald-400 group-hover/node:scale-110'}
+                `}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-sm bg-white" />}
+                </div>
 
                 {/* Icon */}
                 <Folder
                     size={16}
-                    className={`flex-shrink-0 ${level === 0 ? 'text-orange-500' : 'text-gray-400'}`}
+                    className={`flex-shrink-0 transition-transform duration-500 group-hover/node:scale-110 group-hover/node:rotate-6 ${isSelected ? 'text-emerald-600' : level === 0 ? 'text-slate-400' : 'text-slate-300'}`}
                 />
 
                 {/* Category Name */}
-                <label
-                    onClick={() => onToggle(category.id)}
-                    className="text-sm text-gray-700 cursor-pointer flex-1 select-none flex items-center gap-2"
-                >
-                    <span>{category.name}</span>
+                <div className="flex-1 min-w-0 flex items-center gap-3">
+                    <span className={`text-[11px] font-black uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-emerald-800' : 'text-slate-600 group-hover/node:text-slate-900'}`}>
+                        {category.name}
+                    </span>
                     {category.code && (
-                        <span className="text-[10px] font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-500">
+                        <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-lg border border-slate-200/50 group-hover/node:bg-white group-hover/node:text-slate-600 transition-all">
                             {category.code}
                         </span>
                     )}
                     {level === 0 && (
-                        <span className="text-[9px] font-bold uppercase bg-orange-50 text-orange-500 px-1.5 py-0.5 rounded-full">
-                            Main
-                        </span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     )}
-                </label>
+                </div>
             </div>
 
-            {/* Children */}
+            {/* Children with forensic alignment indicator */}
             {isExpanded && hasChildren && (
-                <div className="border-l border-gray-200 ml-2 pl-1">
-                    {category.children!.map(child => (
-                        <CategoryTreeNode
-                            key={child.id}
-                            category={child}
-                            level={level + 1}
-                            selectedIds={selectedIds}
-                            onToggle={onToggle}
-                        />
-                    ))}
+                <div className="ml-3.5 mt-1 relative">
+                    <div className="absolute left-3 top-0 bottom-6 w-[1px] bg-slate-100" />
+                    <div className="space-y-1">
+                        {category.children!.map(child => (
+                            <CategoryTreeNode
+                                key={child.id}
+                                category={child}
+                                level={level + 1}
+                                selectedIds={selectedIds}
+                                onToggle={onToggle}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

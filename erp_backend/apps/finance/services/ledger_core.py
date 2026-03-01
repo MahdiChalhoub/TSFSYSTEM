@@ -56,10 +56,24 @@ class LedgerCoreMixin:
                 created_by=user
             )
             for l in lines: 
+                acc_id = l.get('account_id')
+                if not acc_id:
+                    # FALLBACK: Use Suspense Account (Accrued Reception) code 2102
+                    from apps.finance.models import ChartOfAccount
+                    suspense = ChartOfAccount.objects.filter(organization=organization, code='2102').first()
+                    if not suspense:
+                        # SUPER FALLBACK: Use any Liability account or fail
+                        suspense = ChartOfAccount.objects.filter(organization=organization, type='LIABILITY').first()
+                    
+                    if not suspense:
+                        raise ValidationError("Cannot create journal line: No account mapping provided and no suspense account exists.")
+                    acc_id = suspense.id
+                    logger.warning(f"Unmapped ledger line redirected to suspense account {suspense.code} for entry {reference}")
+
                 JournalEntryLine.objects.create(
                     organization=organization, 
                     journal_entry=entry, 
-                    account_id=l['account_id'], 
+                    account_id=acc_id, 
                     debit=Decimal(str(l['debit'])), 
                     credit=Decimal(str(l['credit'])), 
                     description=l.get('description', description),
@@ -184,10 +198,18 @@ class LedgerCoreMixin:
                 
                 entry.lines.all().delete()
                 for l in lines:
+                    acc_id = l.get('account_id')
+                    if not acc_id:
+                        from apps.finance.models import ChartOfAccount
+                        suspense = ChartOfAccount.objects.filter(organization=organization, code='2102').first()
+                        if not suspense: suspense = ChartOfAccount.objects.filter(organization=organization, type='LIABILITY').first()
+                        if not suspense: raise ValidationError("Missing account and no suspense account found.")
+                        acc_id = suspense.id
+
                     JournalEntryLine.objects.create(
                         organization=organization,
                         journal_entry=entry,
-                        account_id=l['account_id'],
+                        account_id=acc_id,
                         debit=Decimal(str(l['debit'])),
                         credit=Decimal(str(l['credit'])),
                         description=l.get('description', entry.description)

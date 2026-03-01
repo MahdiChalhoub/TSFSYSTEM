@@ -22,6 +22,11 @@ class ContactViewSet(TenantModelViewSet):
     serializer_class = ContactSerializer
 
     def get_queryset(self):
+        # 🛡️ AUDITOR CALIBRATION: Direct ID lookups should check ALL scopes
+        # to prevent 404s on historical/internal records when accessed via direct URL.
+        if self.action in ['retrieve', 'detail_summary', 'loyalty_analytics', 'supplier_scorecard']:
+            return Contact.original_objects.filter(organization_id=get_current_tenant_id())
+            
         qs = super().get_queryset()
         # Filter by contact type (e.g. type=CUSTOMER from POS client search)
         contact_type = self.request.query_params.get('type')

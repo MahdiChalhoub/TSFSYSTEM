@@ -181,11 +181,37 @@ class MigrationFinanceMixin:
                             code=code_match.group()
                         ).first()
 
+                # MANDATORY: If still no match, create a child COA under the appropriate parent
+                if not coa_match:
+                    parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, sub_type=account_type).first()
+                    if not parent:
+                        # Fallback to general Assets (1000) or Liabilities (2000) if no sub_type match
+                        if account_type in ['BANK', 'CASH', 'MOBILE', 'PETTY_CASH']:
+                            parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, code='1000').first()
+                        else:
+                            parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, code='2000').first()
+                    
+                    if parent:
+                        # Find next available code
+                        last = ChartOfAccount.objects.filter(organization_id=self.organization_id, parent=parent).order_by('-code').first()
+                        suffix = (int(last.code.split('.')[-1]) + 1) if (last and '.' in last.code) else 1
+                        new_code = f"{parent.code}.{str(suffix).zfill(3)}"
+                        
+                        coa_match = ChartOfAccount.objects.create(
+                            organization_id=self.organization_id,
+                            code=new_code,
+                            name=f"{mapped['name']} (Migrated)",
+                            type=parent.type,
+                            parent=parent,
+                            is_active=True,
+                            description=f"Auto-created during migration for account {source_id}"
+                        )
+
                 account = FinancialAccount.objects.create(
                     organization_id=self.organization_id,
                     name=mapped['name'],
                     type=account_type,
-                    linked_coa_id=coa_match.id if coa_match else None,
+                    ledger_account_id=coa_match.id if coa_match else None,
                     description=f"Imported from UltimatePOS. Category: {at_name or 'N/A'}",
                 )
                 self.id_maps['ACCOUNT'][source_id] = account.id
@@ -319,11 +345,11 @@ class MigrationFinanceMixin:
         )
 
         # Build account → CoA mapping
-        # Each FinancialAccount might have a linked_coa, use it; otherwise use default
+        # Each FinancialAccount might have a ledger_account, use it; otherwise use default
         account_coa_map = {}
         for fa in FinancialAccount.objects.filter(organization_id=self.organization_id):
-            if fa.linked_coa_id:
-                account_coa_map[fa.id] = fa.linked_coa_id
+            if fa.ledger_account_id:
+                account_coa_map[fa.id] = fa.ledger_account_id
             else:
                 account_coa_map[fa.id] = default_coa.id
 

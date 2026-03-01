@@ -36,7 +36,7 @@ class DeferredExpenseService:
             )
 
             # Initial JE: Dr Deferred Expense (Asset) \u2192 Cr Cash/Bank
-            if expense.deferred_coa_id and source_acc.linked_coa_id:
+            if expense.deferred_coa_id and source_acc.ledger_account_id:
                 LedgerService.create_journal_entry(
                     organization=organization,
                     transaction_date=expense.start_date,
@@ -46,7 +46,7 @@ class DeferredExpenseService:
                     user=user,
                     lines=[
                         {"account_id": expense.deferred_coa_id, "debit": amount, "credit": Decimal('0')},
-                        {"account_id": source_acc.linked_coa_id, "debit": Decimal('0'), "credit": amount},
+                        {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": amount},
                     ],
                     internal_bypass=True
                 )
@@ -118,7 +118,7 @@ class AssetService:
 
             # JE: Dr Fixed Asset \u2192 Cr Cash/Bank
             source_acc = FinancialAccount.objects.filter(id=data.get('source_account_id'), organization=organization).first()
-            if asset.asset_coa_id and source_acc and source_acc.linked_coa_id:
+            if asset.asset_coa_id and source_acc and source_acc.ledger_account_id:
                 LedgerService.create_journal_entry(
                     organization=organization,
                     transaction_date=asset.purchase_date,
@@ -128,7 +128,7 @@ class AssetService:
                     user=user,
                     lines=[
                         {"account_id": asset.asset_coa_id, "debit": value, "credit": Decimal('0')},
-                        {"account_id": source_acc.linked_coa_id, "debit": Decimal('0'), "credit": value},
+                        {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": value},
                     ],
                     internal_bypass=True
                 )
