@@ -17,6 +17,7 @@
 import { POSLayoutClassic } from '@/components/pos/layouts/POSLayoutClassic';
 import { POSLayoutModern } from '@/components/pos/layouts/POSLayoutModern';
 import { POSLayoutCompact } from '@/components/pos/layouts/POSLayoutCompact';
+import { POSLayoutOriginalModern } from '@/components/pos/layouts/POSLayoutOriginalModern';
 import { POSLayoutSelector } from '@/components/pos/layouts/POSLayoutSelector';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import POSLobby from '@/components/pos/lobby/POSLobby';
@@ -227,6 +228,7 @@ function POSTerminalInner() {
             {currentLayout === 'classic' && <POSLayoutClassic {...layoutProps as any} />}
             {currentLayout === 'modern' && <POSLayoutModern {...layoutProps as any} />}
             {currentLayout === 'compact' && <POSLayoutCompact {...layoutProps as any} />}
+            {currentLayout === 'original' && <POSLayoutOriginalModern {...layoutProps as any} />}
 
             {/* Layout Selector Modal */}
             <POSLayoutSelector

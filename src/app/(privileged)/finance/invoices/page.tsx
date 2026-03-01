@@ -5,7 +5,7 @@ import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 import {
-    Cloud, FileText, Plus, DollarSign, AlertTriangle,
+    FileText, Plus, DollarSign, AlertTriangle,
     TrendingUp, Receipt, Send, CreditCard, Search,
     Ban, ClipboardList
 } from "lucide-react"
@@ -266,9 +266,6 @@ export default function InvoicesPage() {
                     </h1>
                 </div>
                 <div className="flex gap-3">
-                    <Button onClick={() => toast.info("Batch import coming soon")} variant="outline" className="h-12 px-6 rounded-2xl border-stone-100 font-bold text-gray-600 flex items-center gap-2 hover:bg-stone-50 transition-all">
-                        <Cloud size={18} /> Batch Import
-                    </Button>
                     <Button onClick={() => setCreateOpen(true)} className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
                         <Plus size={18} /> New Invoice
                     </Button>
@@ -460,7 +457,7 @@ export default function InvoicesPage() {
             {/* ─── Tabs + Table (TypicalListView) ──────────────── */}
             <TypicalListView
                 title="Commercial Invoices"
-                data={invoices}
+                data={filtered}
                 loading={loading}
                 getRowId={(i) => i.id}
                 columns={columns}

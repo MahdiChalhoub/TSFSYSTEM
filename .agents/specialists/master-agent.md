@@ -26,6 +26,25 @@ Before touching any file, you MUST:
 2. **Read `WORK_IN_PROGRESS.md`** — Check for warnings from previous sessions.
 3. **Read `DESIGN_CRITERIA.md`** — Ensure you know the visual/architectural standards.
 4. **Identify the affected module** and read its documentation in `DOCUMENTATION/`.
+5. **Review applicable `.agent/rules/`** — These are ALWAYS-ON mandatory rules:
+   - `architecture.md` — Module structure, file organization, Engine vs Kernel
+   - `security.md` — 14 security rules (auth, XSS, CSRF, secrets)
+   - `isolation.md` — Tenant isolation enforcement
+   - `data-integrity.md` — Database and validation standards
+   - `module-mode.md` — What files you CAN and CANNOT touch per module
+   - `responsiveness.md` — Viewport rules, mobile-first, POS fullscreen exception
+   - `cleanup.md` — Code cleanup standards
+   - `plan.md` — Task naming and documentation rules
+6. **Select the right `.agent/workflows/`** for the task type:
+   - `new-feature.md` — Full-stack feature development checklist
+   - `new-api.md` — New API endpoint design protocol
+   - `new-module.md` — Creating a new business module
+   - `kernel-operation.md` — Modifying core infrastructure
+   - `dev-module.md` — Working within an existing module
+   - `engine.md` — Module packaging and versioning
+   - `deploy-smart.md` — Deployment procedures
+   - `cleanup-project.md` — Tech debt and cleanup
+   - `branching-strategy.md` — Git branching rules
 
 ### Phase 1: Codebase Research (10 min)
 For EVERY file you plan to edit:

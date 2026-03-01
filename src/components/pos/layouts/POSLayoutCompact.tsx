@@ -19,7 +19,6 @@ import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
 import { Numpad as POSNumpad } from '@/components/pos/Numpad';
 import { MultiPaymentHub } from '@/components/pos/MultiPaymentHub';
-import { useTerminal } from '@/hooks/pos/TerminalContext';
 import { ClientVaultModal } from '@/components/pos/modals/ClientVaultModal';
 
 
@@ -37,7 +36,6 @@ const formatNumber = (num: number | string) => {
  * Full functionality with all buttons, monospace numbers, keyboard-ready.
  */
 export function POSLayoutCompact(props: POSLayoutProps) {
-    const t = useTerminal();
     const {
         cart, clients, selectedClient, selectedClientId, categories,
         sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
@@ -59,9 +57,9 @@ export function POSLayoutCompact(props: POSLayoutProps) {
         onLockRegister, onCloseRegister, onOpenReturn, onSearchClients,
         getClientFidelityData, setIsVaultOpen, isVaultOpen,
         currentLayout
-    } = t;
+    } = props;
 
-    const paymentMethods = registerConfig?.payment_methods || (t as any).paymentMethods || [
+    const paymentMethods = registerConfig?.payment_methods || (props as any).paymentMethods || [
         { key: 'CASH', label: 'CASH' },
         { key: 'CARD', label: 'CARD' },
         { key: 'WALLET', label: 'WALLET' },

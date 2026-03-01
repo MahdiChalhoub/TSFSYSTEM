@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
-    LayoutDashboard, DollarSign, ShoppingCart, Package,
-    Users, TrendingUp, AlertTriangle, ArrowUpCircle,
-    Clock, Banknote, Building2, BarChart3, Zap, ShieldCheck,
-    Globe, ArrowRight, TrendingDown, Target, Activity, RefreshCw
+    DollarSign, Package,
+    Users, TrendingUp, AlertTriangle,
+    Clock, Building2, Zap, ShieldCheck,
+    ArrowRight, TrendingDown, Target, Activity, RefreshCw
 } from "lucide-react"
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, BarChart, Bar, Cell, Legend
+    AreaChart, Area, XAxis, YAxis, Tooltip,
+    ResponsiveContainer
 } from 'recharts'
 import { Badge } from "@/components/ui/badge"
 import { useCurrency } from "@/lib/utils/currency"
@@ -57,11 +57,12 @@ export default function AdvancedIntelligenceDashboard() {
         chartData,
         terminalPerformance,
         topSellers,
-        recentMovements
+        recentMovements,
+        revenueChangePercent,
+        totalTransactions,
+        stockResolutionRate
     } = useMemo(() => {
-        if (!data) return { revenueLiquidity: 0, economicExposure: 0, chartData: [], terminalPerformance: [], topSellers: [], recentMovements: [] }
-        // 1. Calculate Liquidity vs Exposure (Leaf-Only to avoid double counting root/parents)
-        const allAccountIds = new Set(data.accounts.map((a: any) => a.id))
+        if (!data) return { revenueLiquidity: 0, economicExposure: 0, chartData: [], terminalPerformance: [], topSellers: [], recentMovements: [], revenueChangePercent: 0, totalTransactions: 0, stockResolutionRate: 0 }
         const parentIds = new Set(data.accounts.map((a: any) => a.parentId).filter(Boolean))
         const leafAccounts = data.accounts.filter((a: any) => !parentIds.has(a.id))
 
@@ -72,36 +73,44 @@ export default function AdvancedIntelligenceDashboard() {
             .filter((a: any) => a.type === 'LIABILITY')
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0) +
             data.employees.reduce((s: number, e: any) => s + parseFloat(e.salary || 0), 0)
-        // 2. Real Chart Data (Derived from daily_sales)
-        // Expected format from pos/pos/daily-summary: { daily_sales: [{ date: '2023-10-01', total: 1500, count: 5 }, ...] }
+
+        // Revenue change: compare last 7 days vs previous 7 days
+        let changePercent = 0
+        let txCount = 0
+        if (data.salesSummary?.daily_sales && Array.isArray(data.salesSummary.daily_sales)) {
+            const days = data.salesSummary.daily_sales
+            txCount = days.reduce((s: number, d: any) => s + (d.count || 0), 0)
+            const recent7 = days.slice(-7).reduce((s: number, d: any) => s + parseFloat(d.total || 0), 0)
+            const prev7 = days.slice(-14, -7).reduce((s: number, d: any) => s + parseFloat(d.total || 0), 0)
+            if (prev7 > 0) changePercent = Math.round(((recent7 - prev7) / prev7) * 100)
+        }
+
+        // Stock resolution: products NOT in low-stock / total products
+        const totalProducts = data.contacts.length > 0 ? Math.max(data.lowStock.length, 1) : 1
+        const stockRes = data.lowStock.length > 0 ? Math.round(((totalProducts - data.lowStock.length) / totalProducts) * 100) : 100
+
         let realChart: any[] = []
         if (data.salesSummary?.daily_sales && Array.isArray(data.salesSummary.daily_sales)) {
             realChart = data.salesSummary.daily_sales.map((day: any) => ({
                 name: new Date(day.date).toLocaleDateString([], { month: 'short', day: 'numeric' }),
                 liquidity: parseFloat(day.total || 0),
-                // Without a dedicated COGS daily endpoint we will extrapolate exposure based on a standard 60% margin or actual liabilities
-                // for the visualization of the "Financial Convergence" 
                 exposure: parseFloat(day.total || 0) * 0.6
-            })).slice(-14) // Last 14 days for cleaner UI
+            })).slice(-14)
         } else {
-            // Fallback empty state if no sales exist yet
-            realChart = [
-                { name: 'No Data', liquidity: 0, exposure: 0 }
-            ]
+            realChart = [{ name: 'No Data', liquidity: 0, exposure: 0 }]
         }
-        // 3. Terminal Performance (Real Heatmap Data)
-        const totalMovements = data.movements.length || 1 // prevent div by zero
-        const terminals = Array.from(new Set(data.movements.map((m: any) => m.warehouse_name || 'Global Terminal')))
+
+        const totalMovements = data.movements.length || 1
+        const terminals = Array.from(new Set(data.movements.map((m: any) => m.warehouse_name || 'Main Warehouse')))
             .map(name => {
-                const count = data.movements.filter((m: any) => (m.warehouse_name || 'Global Terminal') === name).length
+                const count = data.movements.filter((m: any) => (m.warehouse_name || 'Main Warehouse') === name).length
                 const value = Math.floor((count / totalMovements) * 100)
                 return { name, count, value }
             })
-        // Fill with empty states if none exist
         if (terminals.length === 0) {
-            terminals.push({ name: 'System Core Node', count: 0, value: 0 })
+            terminals.push({ name: 'Main Warehouse', count: 0, value: 0 })
         }
-        // 4. Top Sellers
+
         const sellers = Object.entries(data.salesSummary?.user_stats || {})
             .map(([name, stats]: [string, any]) => ({ name, revenue: stats.total || 0, count: stats.count || 0 }))
             .sort((a, b) => b.revenue - a.revenue)
@@ -112,7 +121,10 @@ export default function AdvancedIntelligenceDashboard() {
             chartData: realChart,
             terminalPerformance: terminals,
             topSellers: sellers,
-            recentMovements: data.movements.slice(0, 5)
+            recentMovements: data.movements.slice(0, 5),
+            revenueChangePercent: changePercent,
+            totalTransactions: txCount,
+            stockResolutionRate: stockRes
         }
     }, [data])
     if (loading || !data) {
@@ -144,26 +156,23 @@ export default function AdvancedIntelligenceDashboard() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                                    Enterprise Node: Online
+                                    System: Online
                                 </Badge>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                                    <Activity size={14} className="text-emerald-400" /> Intelligence Sync: Real-time
+                                    <Activity size={14} className="text-emerald-400" /> Live Data
                                 </span>
                             </div>
                             <h1 className="page-header-title">
                                 Organization <span className="text-emerald-700">Dashboard</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                High-fidelity financial forensic console and operational intelligence stream.
+                                Financial overview and operational metrics across all locations.
                             </p>
                         </div>
                     </div>
                     <div className="hidden lg:flex items-center gap-4">
-                        <button className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
-                            <Globe size={18} className="text-emerald-500" /> Network View
-                        </button>
-                        <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
-                            Extract Report <ArrowRight size={18} className="text-emerald-400" />
+                        <button onClick={loadAll} className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
+                            <RefreshCw size={18} className="text-emerald-500" /> Refresh Data
                         </button>
                     </div>
                 </div>
@@ -177,14 +186,17 @@ export default function AdvancedIntelligenceDashboard() {
                             <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100">
                                 <DollarSign size={28} />
                             </div>
-                            <Badge variant="outline" className="text-emerald-600 bg-emerald-50/50 border-emerald-100 font-black text-[10px] px-3 py-1 rounded-full animate-pulse">
-                                <TrendingUp size={12} className="mr-1.5" /> +12%
-                            </Badge>
+                            {revenueChangePercent !== 0 && (
+                                <Badge variant="outline" className={`${revenueChangePercent > 0 ? 'text-emerald-600 bg-emerald-50/50 border-emerald-100' : 'text-rose-600 bg-rose-50/50 border-rose-100'} font-black text-[10px] px-3 py-1 rounded-full`}>
+                                    {revenueChangePercent > 0 ? <TrendingUp size={12} className="mr-1.5" /> : <TrendingDown size={12} className="mr-1.5" />}
+                                    {revenueChangePercent > 0 ? '+' : ''}{revenueChangePercent}%
+                                </Badge>
+                            )}
                         </div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">30D GROSS REVENUE</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">30D Gross Revenue</p>
                         <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{fmt(parseFloat(data.salesSummary?.sales?.total || 0))}</h2>
                         <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
-                            <Target size={14} className="text-emerald-500" /> Target Node: 92% Reached
+                            <Target size={14} className="text-emerald-500" /> {totalTransactions.toLocaleString()} transactions this period
                         </div>
                     </CardContent>
                 </Card>
@@ -233,10 +245,10 @@ export default function AdvancedIntelligenceDashboard() {
                                 {data.lowStock.length} NODE ALERTS
                             </Badge>
                         </div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">SUPPLY CHAIN VELOCITY</p>
-                        <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{resolutionRate}%</h2>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Stock Health</p>
+                        <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{stockResolutionRate}%</h2>
                         <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
-                            <RefreshCw size={14} className="text-amber-500 animate-spin-slow" /> Structural Flow: Nominal
+                            <RefreshCw size={14} className={`text-amber-500 ${data.lowStock.length > 0 ? 'animate-spin-slow' : ''}`} /> {data.lowStock.length} items need reorder
                         </div>
                     </CardContent>
                 </Card>
@@ -246,17 +258,17 @@ export default function AdvancedIntelligenceDashboard() {
                 <Card className="lg:col-span-2 card-premium overflow-hidden bg-white">
                     <CardHeader className="px-10 pt-10 flex flex-row items-center justify-between pb-4">
                         <div>
-                            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Financial Convergence</CardTitle>
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Liquidity vs Exposure Matrix</h3>
+                            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Financial Trend</CardTitle>
+                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Revenue vs Cost of Goods</h3>
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-4 h-4 rounded-full bg-emerald-500 shadow-lg shadow-emerald-200" />
-                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Liquidity Node</span>
+                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Revenue</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="w-4 h-4 rounded-full bg-rose-400 shadow-lg shadow-rose-200" />
-                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Exposure Vector</span>
+                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Estimated COGS</span>
                             </div>
                         </div>
                     </CardHeader>
@@ -288,8 +300,8 @@ export default function AdvancedIntelligenceDashboard() {
                 {/* Terminal Performance Heatmap */}
                 <Card className="card-premium overflow-hidden bg-white">
                     <CardHeader className="px-10 pt-10">
-                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Regional Intelligence</CardTitle>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Terminal Heatmap</h3>
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Location Performance</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Warehouse Activity</h3>
                     </CardHeader>
                     <CardContent className="px-10 pb-10 space-y-6">
                         {terminalPerformance.map((t: any, i: number) => (
@@ -308,8 +320,8 @@ export default function AdvancedIntelligenceDashboard() {
                         ))}
                         <div className="pt-8 mt-8 border-t border-slate-50 flex items-center justify-between">
                             <div className="space-y-1">
-                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Global Architecture Health</p>
-                                <p className="text-2xl font-black text-slate-800 tracking-tighter mt-1">NOMINAL</p>
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">System Status</p>
+                                <p className="text-2xl font-black text-slate-800 tracking-tighter mt-1">Healthy</p>
                             </div>
                             <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-gradient flex items-center justify-center text-white shadow-xl shadow-emerald-200">
                                 <ShieldCheck size={32} />
@@ -322,14 +334,14 @@ export default function AdvancedIntelligenceDashboard() {
                 {/* Pareto: Top Sellers */}
                 <Card className="card-premium overflow-hidden bg-white">
                     <CardHeader className="p-10 pb-0">
-                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Market Domination</CardTitle>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Intelligence Agents</h3>
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Sales Performance</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Top Sellers</h3>
                     </CardHeader>
                     <CardContent className="p-10 space-y-8">
                         {topSellers.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-slate-300">
                                 <Users size={48} className="mb-4 opacity-20" />
-                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">Awaiting Transactional Feed</p>
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">No sales data yet</p>
                             </div>
                         ) : topSellers.map((s: any, i: number) => (
                             <div key={i} className="flex items-center gap-6 group">
@@ -348,7 +360,7 @@ export default function AdvancedIntelligenceDashboard() {
                                                 style={{ width: `${(s.revenue / (topSellers[0]?.revenue || 1) * 100)}%` }}
                                             />
                                         </div>
-                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{s.count} OPS</span>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{s.count} sales</span>
                                     </div>
                                 </div>
                             </div>
@@ -358,14 +370,14 @@ export default function AdvancedIntelligenceDashboard() {
                 {/* Intelligence Stream */}
                 <Card className="card-premium overflow-hidden bg-white border-emerald-100/50 shadow-emerald-700/5">
                     <CardHeader className="p-10 pb-0">
-                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-emerald-500 mb-2">Live Economic Feed</CardTitle>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Movement Logs</h3>
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-emerald-500 mb-2">Recent Activity</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Inventory Movements</h3>
                     </CardHeader>
                     <CardContent className="p-10 space-y-8">
                         {recentMovements.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-slate-300">
                                 <Activity size={48} className="mb-4 opacity-20 animate-pulse" />
-                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">Global Chain Synchronizing...</p>
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">No recent movements</p>
                             </div>
                         ) : recentMovements.map((m: any, i: number) => (
                             <div key={i} className="flex items-start gap-5 hover:translate-x-2 transition-all duration-300 p-2 -m-2 rounded-2xl hover:bg-emerald-50/30 group/log">
@@ -376,7 +388,7 @@ export default function AdvancedIntelligenceDashboard() {
                                     </p>
                                     <div className="flex items-center gap-3">
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                            <Building2 size={12} className="text-slate-300" /> {m.warehouse_name || 'Terminal Node'}
+                                            <Building2 size={12} className="text-slate-300" /> {m.warehouse_name || 'Main Warehouse'}
                                         </p>
                                         <div className="w-1 h-1 rounded-full bg-slate-200" />
                                         <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-tighter">
@@ -388,13 +400,13 @@ export default function AdvancedIntelligenceDashboard() {
                                     <p className={`text-[15px] font-black ${m.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'} tracking-tighter`}>
                                         {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity).toFixed(0)}
                                     </p>
-                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">UNIT NODES</p>
+                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Units</p>
                                 </div>
                             </div>
                         ))}
                         {recentMovements.length > 0 && (
                             <button className="w-full h-14 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-[11px] uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all duration-500 shadow-inner hover:shadow-xl hover:shadow-emerald-700/20 active:scale-95 group/audit">
-                                Initialize Deep Audit <ArrowRight size={16} className="inline ml-2 group-hover/audit:translate-x-1 transition-transform" />
+                                View All Movements <ArrowRight size={16} className="inline ml-2 group-hover/audit:translate-x-1 transition-transform" />
                             </button>
                         )}
                     </CardContent>
@@ -403,4 +415,3 @@ export default function AdvancedIntelligenceDashboard() {
         </div>
     )
 }
-const resolutionRate = 84.2; // Derived or hardcoded for pulse

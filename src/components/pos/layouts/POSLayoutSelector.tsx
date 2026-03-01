@@ -1,7 +1,7 @@
 'use client';
 
 import { POSLayoutVariant } from '@/types/pos-layout';
-import { Layout, X, Monitor, Zap, ShoppingCart } from 'lucide-react';
+import { Layout, X, Monitor, Zap, ShoppingCart, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
 const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: any; preview: string; accent: string }[] = [
@@ -29,12 +29,21 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
         preview: '⚡ Speed Protocol: Dense Matrix',
         accent: 'amber',
     },
+    {
+        id: 'original',
+        name: 'Original Modern',
+        description: 'The original clean cart-focused layout. Categories & payment left, full cart view right. Lightweight & fast.',
+        icon: Sparkles,
+        preview: '✨ Classic Modern: Clean Cart Focus',
+        accent: 'violet',
+    },
 ];
 
 const accentMap: Record<string, { bg: string; border: string; text: string; ring: string; glow: string; iconBg: string }> = {
     slate: { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-700', ring: 'ring-slate-100', glow: 'shadow-slate-100', iconBg: 'bg-slate-900 text-white' },
     emerald: { bg: 'bg-emerald-50/50', border: 'border-emerald-500', text: 'text-emerald-700', ring: 'ring-emerald-100', glow: 'shadow-emerald-100', iconBg: 'bg-emerald-gradient text-white' },
     amber: { bg: 'bg-amber-50/50', border: 'border-amber-500', text: 'text-amber-700', ring: 'ring-amber-100', glow: 'shadow-amber-100', iconBg: 'bg-amber-gradient text-white' },
+    violet: { bg: 'bg-violet-50/50', border: 'border-violet-500', text: 'text-violet-700', ring: 'ring-violet-100', glow: 'shadow-violet-100', iconBg: 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white' },
 };
 
 export function POSLayoutSelector({

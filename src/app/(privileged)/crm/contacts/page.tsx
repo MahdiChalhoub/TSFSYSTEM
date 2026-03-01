@@ -34,8 +34,7 @@ async function getContacts() {
             paymentTermsDays: c.payment_terms_days,
             loyaltyPoints: c.loyalty_points,
         }));
-    } catch (e) {
-        console.error("Failed to fetch contacts", e);
+    } catch {
         return [];
     }
 }

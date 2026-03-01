@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Product } from "@/types/erp";
 import { getPosProducts } from '@/app/(privileged)/sales/actions';
 import clsx from 'clsx';
-import { AlertCircle, Loader2, PackageX, WifiOff, Zap, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { AlertCircle, Loader2, PackageX, WifiOff, Zap, TrendingUp, TrendingDown, Activity, Plus } from 'lucide-react';
 import { cacheProducts, getCachedProducts, type OfflineProduct } from '@/lib/offline/db';
 import { useOnlineStatus } from '@/lib/offline/hooks';
 import { Badge } from "@/components/ui/badge";

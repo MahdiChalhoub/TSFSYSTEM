@@ -27,8 +27,7 @@ async function getProductsData(page: number, isGrouped: boolean, search?: string
             totalPages: Math.ceil(total / PAGE_SIZE),
             stats
         };
-    } catch (e) {
-        console.error("Failed to fetch products:", e);
+    } catch {
         return { data: [], total: 0, totalPages: 0, stats: null };
     }
 }
