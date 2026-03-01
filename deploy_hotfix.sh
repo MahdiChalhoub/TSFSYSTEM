@@ -2,7 +2,7 @@
 set -e
 
 # Version Configuration
-AGENT_VERSION="3.1.3-AG-$(date +'%y%m%d.%H%M')"
+AGENT_VERSION="3.2.1-AG-$(date +'%y%m%d.%H%M')"
 echo "🚀 Preparing deployment for version: $AGENT_VERSION"
 
 # Update version in branding
@@ -25,7 +25,11 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude 'src/components/app-sidebar.tsx' \
     --exclude 'src/components/admin/Sidebar.tsx' \
     --exclude 'src/lib/branding.ts' \
-    --update \
+    --exclude 'erp_backend/releases/' \
+    --exclude 'releases/' \
+    --exclude 'tmp/' \
+    --exclude '.antigravity-server/' \
+    --ignore-existing \
     root@91.99.186.183:/root/TSFSYSTEM/ /root/.gemini/antigravity/scratch/TSFSYSTEM/
 
 echo "📤 Step 2: Pushing local changes to remote..."
@@ -41,11 +45,15 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude '.env' \
     --exclude 'db_data' \
     --exclude 'postgres_data' \
+    --exclude 'erp_backend/releases/' \
+    --exclude 'releases/' \
+    --exclude 'tmp/' \
+    --exclude '.antigravity-server/' \
     /root/.gemini/antigravity/scratch/TSFSYSTEM/ root@91.99.186.183:/root/TSFSYSTEM/
 
 echo "📊 Applying Database Migrations..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py makemigrations"
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py migrate"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py makemigrations --noinput"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py migrate --noinput"
 
 echo "🔄 Restarting Backend & Celery Services..."
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsfsystem-backend-1 tsfsystem-celery_worker-1 tsfsystem-celery_beat-1"

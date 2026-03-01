@@ -329,7 +329,7 @@ class PosTicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        serializer.save(organization=organization)
+        serializer.save(organization=organization, user=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='sync-all')
     def sync_all(self, request):
@@ -364,7 +364,7 @@ class PosTicketViewSet(viewsets.ModelViewSet):
                 serializer = PosTicketSerializer(data=data)
 
             if serializer.is_valid():
-                serializer.save(organization=organization)
+                serializer.save(organization=organization, user=request.user)
                 results.append(serializer.data)
             else:
                 results.append({"error": serializer.errors, "data": data})

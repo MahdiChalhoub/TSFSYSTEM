@@ -337,33 +337,57 @@ export default function MigrationPage() {
 
             // Auto-discover businesses
             setLoadingBusinesses(true)
-            try {
-                const bizData = await getBusinesses(job.id)
-                const bizList = bizData?.businesses ?? []
-                setBusinesses(bizList)
-                if (bizList.length > 1) {
-                    setStep("BUSINESSES")
-                } else if (bizList.length === 1) {
-                    // Only one business — auto-select it
-                    setSelectedBusiness(bizList[0])
-                    const previewData = await previewMigration(job.id, bizList[0].id)
-                    setPreview(previewData)
-                    setStep("PREVIEW")
-                } else {
-                    // No business table? Go straight to preview
-                    const previewData = await previewMigration(job.id)
-                    setPreview(previewData)
-                    setStep("PREVIEW")
+
+            // Poll for discovery results
+            let discovered = false;
+            let retryCount = 0;
+            const maxRetries = 20; // 40 seconds max
+
+            while (!discovered && retryCount < maxRetries) {
+                try {
+                    const bizData = await getBusinesses(job.id)
+
+                    if (bizData?.status === 'analyzing') {
+                        // Still analyzing, wait 2s
+                        await new Promise(r => setTimeout(r, 2000));
+                        retryCount++;
+                        continue;
+                    }
+
+                    const bizList = bizData?.businesses ?? []
+                    setBusinesses(bizList)
+                    discovered = true;
+
+                    if (bizList.length > 1) {
+                        setStep("BUSINESSES")
+                    } else if (bizList.length === 1) {
+                        // Only one business — auto-select it
+                        setSelectedBusiness(bizList[0])
+                        const previewData = await previewMigration(job.id, bizList[0].id)
+                        setPreview(previewData)
+                        setStep("PREVIEW")
+                    } else {
+                        // No business table? Go straight to preview
+                        const previewData = await previewMigration(job.id)
+                        setPreview(previewData)
+                        setStep("PREVIEW")
+                    }
+                } catch (err) {
+                    console.error("Business discovery error:", err);
+                    setStep("PREVIEW");
+                    discovered = true;
                 }
-            } catch {
-                setStep("PREVIEW")
-            } finally {
-                setLoadingBusinesses(false)
             }
+
+            if (!discovered) {
+                setStep("PREVIEW");
+            }
+
         } catch (e: unknown) {
             setError((e instanceof Error ? e.message : String(e)) || "Upload failed")
         } finally {
             setUploading(false)
+            setLoadingBusinesses(false)
         }
     }
 
@@ -393,32 +417,53 @@ export default function MigrationPage() {
 
             setActiveJob(job)
             fetchJobs()
-            setStep("BUSINESSES")
 
             setLoadingBusinesses(true)
-            try {
-                const bizData = await getBusinesses(job.id)
-                const bizList = bizData?.businesses ?? []
-                setBusinesses(bizList)
-                if (bizList.length === 1) {
-                    setSelectedBusiness(bizList[0])
-                    const previewData = await previewMigration(job.id, bizList[0].id)
-                    setPreview(previewData)
+
+            // Poll for discovery results
+            let discovered = false;
+            let retryCount = 0;
+            const maxRetries = 20;
+
+            while (!discovered && retryCount < maxRetries) {
+                try {
+                    const bizData = await getBusinesses(job.id)
+
+                    if (bizData?.status === 'analyzing') {
+                        await new Promise(r => setTimeout(r, 2000));
+                        retryCount++;
+                        continue;
+                    }
+
+                    const bizList = bizData?.businesses ?? []
+                    setBusinesses(bizList)
+                    discovered = true;
+
+                    if (bizList.length > 1) {
+                        setStep("BUSINESSES")
+                    } else if (bizList.length === 1) {
+                        setSelectedBusiness(bizList[0])
+                        const previewData = await previewMigration(job.id, bizList[0].id)
+                        setPreview(previewData)
+                        setStep("PREVIEW")
+                    } else {
+                        const previewData = await previewMigration(job.id)
+                        setPreview(previewData)
+                        setStep("PREVIEW")
+                    }
+                } catch (err) {
                     setStep("PREVIEW")
-                } else if (bizList.length === 0) {
-                    const previewData = await previewMigration(job.id)
-                    setPreview(previewData)
-                    setStep("PREVIEW")
+                    discovered = true;
                 }
-            } catch {
-                setStep("PREVIEW")
-            } finally {
-                setLoadingBusinesses(false)
             }
+
+            if (!discovered) setStep("PREVIEW");
+
         } catch (e: unknown) {
             setError((e instanceof Error ? e.message : String(e)) || "Linking file failed")
         } finally {
             setUploading(false)
+            setLoadingBusinesses(false)
         }
     }
 
@@ -443,22 +488,44 @@ export default function MigrationPage() {
         try {
             // Fetch businesses first
             setLoadingBusinesses(true)
-            const bizData = await getBusinesses(job.id)
-            const bizList = bizData?.businesses ?? []
-            setBusinesses(bizList)
-            setLoadingBusinesses(false)
 
-            if (bizList.length > 1) {
-                setStep("BUSINESSES")
-            } else {
-                if (bizList.length === 1) setSelectedBusiness(bizList[0])
-                const bizId = bizList[0]?.id
-                const data = await previewMigration(job.id, bizId)
-                setPreview(data)
-                setStep("PREVIEW")
+            let discovered = false;
+            let retryCount = 0;
+            const maxRetries = 20;
+
+            while (!discovered && retryCount < maxRetries) {
+                try {
+                    const bizData = await getBusinesses(job.id)
+
+                    if (bizData?.status === 'analyzing') {
+                        await new Promise(r => setTimeout(r, 2000));
+                        retryCount++;
+                        continue;
+                    }
+
+                    const bizList = bizData?.businesses ?? []
+                    setBusinesses(bizList)
+                    discovered = true;
+
+                    if (bizList.length > 1) {
+                        setStep("BUSINESSES")
+                    } else {
+                        if (bizList.length === 1) setSelectedBusiness(bizList[0])
+                        const bizId = bizList[0]?.id
+                        const data = await previewMigration(job.id, bizId)
+                        setPreview(data)
+                        setStep("PREVIEW")
+                    }
+                } catch (err) {
+                    setStep("PREVIEW")
+                    discovered = true;
+                }
             }
+
+            if (!discovered) setStep("PREVIEW");
         } catch (e: unknown) {
             setError((e instanceof Error ? e.message : String(e)) || "Preview failed")
+        } finally {
             setLoadingBusinesses(false)
         }
     }
@@ -846,13 +913,17 @@ export default function MigrationPage() {
                                     {uploading ? (
                                         <div className="flex flex-col items-center w-full max-w-sm mx-auto py-4">
                                             <div className="w-20 h-20 mb-6 relative">
-                                                <div className="absolute inset-0 rounded-full border-4 border-gray-100 border-t-emerald-500 animate-spin" />
+                                                <div className={`absolute inset-0 rounded-full border-4 ${loadingBusinesses ? 'border-orange-500/20 border-t-orange-600' : 'border-gray-100 border-t-emerald-500'} animate-spin`} />
                                                 <div className="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-900">
-                                                    {uploadProgress}%
+                                                    {loadingBusinesses ? <Building2 className="w-8 h-8 text-orange-600 animate-pulse" /> : `${uploadProgress}%`}
                                                 </div>
                                             </div>
-                                            <h3 className="text-slate-900 font-bold mb-1">Uploading Database...</h3>
-                                            <p className="text-slate-500 text-xs font-medium">Please do not close this tab</p>
+                                            <h3 className="text-slate-900 font-bold mb-1">
+                                                {loadingBusinesses ? "Discovering Businesses..." : "Uploading Database..."}
+                                            </h3>
+                                            <p className="text-slate-500 text-xs font-medium">
+                                                {loadingBusinesses ? "Scanning source for isolated data logs" : "Please do not close this tab"}
+                                            </p>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center">

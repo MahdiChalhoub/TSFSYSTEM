@@ -56,7 +56,8 @@ def seed_minimal():
             }
         }
     )
-    site = Site.objects.create(organization=org, name="Test Site", code="TEST-HQ")
+    # Use Warehouse for both Site and Store as per latest model
+    site = Warehouse.objects.create(organization=org, name="Test Site", code="TEST-HQ", location_type="BRANCH")
     user = User.objects.create_user(
         username=f"test_admin_{uuid.uuid4().hex[:4]}", 
         email=f"test_{uuid.uuid4().hex[:4]}@tsf.ci", 
@@ -75,7 +76,7 @@ def seed_minimal():
     org.save()
 
     contact = Contact.objects.create(organization=org, name="Test Contact", type="SUPPLIER", linked_account_id=loan_coa.id)
-    warehouse = Warehouse.objects.create(organization=org, name="Test Warehouse", type="STORE", site=site)
+    warehouse = Warehouse.objects.create(organization=org, name="Test Warehouse", location_type="STORE", parent=site)
     unit = Unit.objects.create(organization=org, name="Piece", code="PC")
     product = Product.objects.create(
         organization=org, name="Test Product", unit=unit, 
@@ -99,7 +100,7 @@ def seed_minimal():
     # Financial Account
     fin_acc = FinancialAccount.objects.create(
         organization=org, name="Main Cash", type="CASH", 
-        currency="USD", site=site, linked_coa=cash_coa
+        currency="USD", ledger_account=cash_coa
     )
     
     return org, user, contact, warehouse, product, fin_acc

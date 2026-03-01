@@ -17,10 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 type EnrichedContact = Record<string, any>;
 
 const TIER_STYLE: Record<string, { label: string; color: string; icon: any }> = {
-    Diamond: { label: 'Imperial Diamond', color: 'violet', icon: Gem },
-    Gold: { label: 'Elite Gold', color: 'amber', icon: Trophy },
+    Diamond: { label: 'Imperial Diamond', color: 'emerald', icon: Gem },
+    Gold: { label: 'Elite Gold', color: 'emerald', icon: Trophy },
     Silver: { label: 'Preferred Silver', color: 'slate', icon: Star },
-    Bronze: { label: 'Standard Bronze', color: 'orange', icon: Target },
+    Bronze: { label: 'Standard Bronze', color: 'slate', icon: Target },
 };
 
 const ALL_COLUMNS: ColumnDef<EnrichedContact>[] = [
@@ -111,8 +111,8 @@ export default function StrategicRelationshipIntelligencePage() {
     const columns: ColumnDef<EnrichedContact>[] = ALL_COLUMNS.map(c => {
         const renderers: Record<string, (r: EnrichedContact) => React.ReactNode> = {
             customer: r => (
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xs">
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center font-black text-xs shadow-inner">
                         {(r.name || '?').charAt(0)}
                     </div>
                     <div>
@@ -132,7 +132,7 @@ export default function StrategicRelationshipIntelligencePage() {
                 );
             },
             orders: r => <Badge variant="secondary" className="bg-stone-100 text-stone-600 border-0 font-black text-[10px]">{r.orderCount} REQ</Badge>,
-            revenue: r => <span className="font-black text-amber-600">{fmt(r.totalSpent)}</span>,
+            revenue: r => <span className="font-black text-emerald-700 tracking-tighter text-[15px]">{fmt(r.totalSpent)}</span>,
             recency: r => {
                 const isNever = r.daysSinceLast >= 999;
                 const badgeStyle = isNever ? 'bg-rose-100 text-rose-700' :
@@ -157,97 +157,117 @@ export default function StrategicRelationshipIntelligencePage() {
     });
 
     return (
-        <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
-                            <Lightbulb size={28} className="text-white" />
+        <div className="page-container animate-in fade-in duration-700">
+            {/* Header: Strategic Intelligence Console */}
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Target size={40} className="text-white fill-white/20" />
                         </div>
-                        Strategic <span className="text-amber-600">Intelligence</span>
-                    </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Global Relationship Equity & Analytics</p>
-                </div>
-                <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-2xl border border-amber-100">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-black uppercase text-amber-700 tracking-widest">Cognitive Engine Online</span>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    Cognitive Node: Active
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Activity size={14} className="text-emerald-400" /> Strategic Intelligence: Nominal
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Strategic <span className="text-emerald-700">Intelligence</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                High-fidelity relationship equity and global client lifecycle analytics.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <button onClick={loadData} className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
+                            <RefreshCw size={18} className={`text-emerald-500 ${loading ? 'animate-spin' : ''}`} /> Sync Engine
+                        </button>
+                    </div>
                 </div>
             </header>
 
             {/* Strategic KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center shadow-inner shadow-slate-100 transition-transform group-hover:-rotate-6">
                             <Users size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Total Entities</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{contacts.length}</h2>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Entities</p>
+                            <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{contacts.length}</h2>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:-rotate-6">
                             <Zap size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Active (30D)</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{activeCustomers}</h2>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Active (30D)</p>
+                            <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{activeCustomers}</h2>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <DollarSign size={28} />
+                <div className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-white min-h-[120px]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
+                    <div className="flex items-center gap-6 relative z-10">
+                        <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center shadow-2xl backdrop-blur-md">
+                            <DollarSign size={28} className="text-emerald-400" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Aggregate Revenue</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(totalRevenue)}</h2>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Aggregate Revenue</p>
+                            <h2 className="text-4xl font-black text-white tracking-tighter mt-1">{fmt(totalRevenue).replace('.00', '')}</h2>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
-                    <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex items-center gap-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:-rotate-6">
                             <ArrowUpRight size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Avg Yield</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(avgOrderVal)}</h2>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Avg Yield</p>
+                            <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{fmt(avgOrderVal).replace('.00', '')}</h2>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1 space-y-6">
-                    <Card className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden sticky top-6">
-                        <CardHeader className="bg-stone-50/50 border-b border-stone-100 p-6 flex flex-row items-center justify-between">
-                            <CardTitle className="text-xs font-black uppercase tracking-widest text-stone-400">Equity Tiers</CardTitle>
-                            <Crown size={14} className="text-stone-300" />
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-4">
+                <div className="lg:col-span-1 space-y-8">
+                    <Card className="rounded-[3rem] border border-slate-100 bg-white/70 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.02)] overflow-hidden sticky top-6">
+                        <div className="bg-slate-50/50 border-b border-slate-100 p-8 flex items-center justify-between">
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Equity Tiers</h3>
+                            <Crown size={16} className="text-emerald-500" />
+                        </div>
+                        <CardContent className="p-8 space-y-6">
                             {['Diamond', 'Gold', 'Silver', 'Bronze'].map(tier => {
                                 const s = TIER_STYLE[tier] || TIER_STYLE.Bronze;
                                 const count = enriched.filter(c => c.tier === tier).length;
                                 const pct = enriched.length > 0 ? (count / enriched.length * 100) : 0;
                                 const Icon = s.icon;
+                                const isEmerald = s.color === 'emerald';
                                 return (
-                                    <div key={tier} className="p-4 rounded-[2rem] bg-gray-50 border border-gray-100 group hover:border-amber-200 transition-all">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className={`w-10 h-10 rounded-xl bg-${s.color}-100 text-${s.color}-600 flex items-center justify-center`}>
-                                                <Icon size={20} />
+                                    <div key={tier} className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100/50 group hover:border-emerald-200 hover:bg-white transition-all duration-300">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className={`w-12 h-12 rounded-2xl ${isEmerald ? 'bg-emerald-gradient' : 'bg-slate-200'} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
+                                                <Icon size={24} className={isEmerald ? 'text-white' : 'text-slate-500'} />
                                             </div>
-                                            <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{pct.toFixed(0)}% SHARE</span>
+                                            <Badge variant="outline" className="text-[10px] font-black text-slate-400 border-slate-100 rounded-full py-1 px-3 group-hover:border-emerald-100 group-hover:text-emerald-600">
+                                                {pct.toFixed(0)}% SHARE
+                                            </Badge>
                                         </div>
-                                        <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-1">{s.label}</h4>
-                                        <p className="text-2xl font-black text-stone-700">{count} <span className="text-xs text-stone-300">UNITS</span></p>
+                                        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.label}</h4>
+                                        <p className="text-3xl font-black text-slate-800 tracking-tighter">{count} <span className="text-sm font-black text-slate-300 uppercase tracking-widest ml-1">UNITS</span></p>
                                     </div>
                                 );
                             })}

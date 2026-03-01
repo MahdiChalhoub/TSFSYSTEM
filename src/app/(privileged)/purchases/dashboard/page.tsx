@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import {
     ShoppingCart, Package, DollarSign, TrendingUp, Clock,
     Search, CheckCircle, AlertCircle, Truck, RefreshCw,
-    ArrowUpRight, Target, Activity, Zap, Building
+    ArrowUpRight, Target, Activity, Zap, Building, Plus
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
@@ -60,7 +60,7 @@ export default function PurchaseDashboardPage() {
             label: 'Procurement ID',
             render: (o) => (
                 <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-black tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+                    <span className="font-mono text-[10px] font-black tracking-[0.1em] text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 shadow-sm">
                         {o.ref_code || `PO-${o.id}`}
                     </span>
                 </div>
@@ -121,85 +121,94 @@ export default function PurchaseDashboardPage() {
         )
     }
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <ShoppingCart size={28} className="text-white" />
+        <div className="page-container animate-in fade-in duration-700">
+            {/* Header: Procurement Intelligence Console */}
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <ShoppingCart size={40} className="text-white fill-white/20" />
                         </div>
-                        Procurement <span className="text-indigo-600">Intelligence</span>
-                    </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Supply Chain & Vendor Exposure Metrics</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button onClick={loadOrders} variant="ghost" className="h-12 w-12 p-0 rounded-2xl text-stone-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all">
-                        <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                    </Button>
-                    <Button className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                        <Zap size={18} /> New Procurement Seq
-                    </Button>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    Procurement Node: Active
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Activity size={14} className="text-emerald-400" /> Supply Chain Sync: Nominal
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Procurement <span className="text-emerald-700">Intelligence</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                High-fidelity vendor orchestration and procurement lifecycle analytics.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <Button onClick={loadOrders} variant="outline" className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
+                            <RefreshCw size={18} className={`text-emerald-500 ${loading ? 'animate-spin' : ''}`} /> Refresh Nodes
+                        </Button>
+                        <Button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
+                            New Command <Plus size={18} className="text-emerald-400" />
+                        </Button>
+                    </div>
                 </div>
             </header>
             {/* Premium Analytics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-indigo-600 to-blue-700 text-white overflow-hidden relative group">
-                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 transition-transform">
-                        <Target size={80} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-white min-h-[160px]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
+                    <div className="relative z-10">
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">GLOBAL EXPOSURE</p>
+                        <h2 className="text-4xl font-black text-white tracking-tighter mt-2">{fmt(stats.total)}</h2>
+                        <div className="mt-6 flex items-center gap-3">
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-[9px] font-black px-3 py-1 rounded-full">{stats.count} ACTIVE POs</Badge>
+                        </div>
                     </div>
-                    <CardContent className="p-8 relative z-10">
-                        <p className="text-indigo-100 text-[10px] font-black uppercase tracking-widest">Global Exposure</p>
-                        <p className="text-4xl font-black mt-2 tracking-tighter">{fmt(stats.total)}</p>
-                        <div className="mt-4 flex items-center gap-2">
-                            <Badge className="bg-white/20 text-white border-none text-[9px] font-black px-2">{stats.count} ACTIVE POs</Badge>
-                        </div>
-                    </CardContent>
                 </Card>
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">Completed Fulfillment</p>
-                                <p className="text-3xl font-black mt-2 tracking-tighter text-emerald-600">{fmt(stats.completed)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <CheckCircle size={24} />
-                            </div>
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:rotate-6">
+                            <CheckCircle size={28} />
                         </div>
-                        <div className="mt-4 h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(stats.completed / stats.total) * 100}%` }} />
-                        </div>
-                    </CardContent>
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Completed Fulfillment</p>
+                        <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{fmt(stats.completed)}</h4>
+                    </div>
+                    <div className="mt-6 h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
+                        <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" style={{ width: `${(stats.completed / (stats.total || 1)) * 100}%` }} />
+                    </div>
                 </Card>
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">Outstanding Pipeline</p>
-                                <p className="text-3xl font-black mt-2 tracking-tighter text-amber-600">{fmt(stats.pending)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                                <Clock size={24} />
-                            </div>
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner shadow-amber-100 transition-transform group-hover:rotate-6">
+                            <Clock size={28} />
                         </div>
-                        <div className="mt-4 h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(stats.pending / stats.total) * 100}%` }} />
-                        </div>
-                    </CardContent>
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Outstanding Pipeline</p>
+                        <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{fmt(stats.pending)}</h4>
+                    </div>
+                    <div className="mt-6 h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
+                        <div className="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.3)]" style={{ width: `${(stats.pending / (stats.total || 1)) * 100}%` }} />
+                    </div>
                 </Card>
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group">
-                    <CardContent className="p-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">Procurement Efficiency</p>
-                                <p className="text-3xl font-black mt-2 tracking-tighter text-blue-600">{orders.length > 0 ? fmt(stats.total / orders.length) : fmt(0)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                <Activity size={24} />
-                            </div>
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative border-0 p-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100 transition-transform group-hover:rotate-6">
+                            <Activity size={28} />
                         </div>
-                        <p className="text-[10px] font-bold text-stone-400 mt-4 uppercase tracking-widest">Average Value / Unit</p>
-                    </CardContent>
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Procurement Efficiency</p>
+                        <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{orders.length > 0 ? fmt(stats.total / orders.length) : fmt(0)}</h4>
+                    </div>
+                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Avg Matrix Dispatch
+                    </div>
                 </Card>
             </div>
             <TypicalListView
@@ -217,12 +226,12 @@ export default function PurchaseDashboardPage() {
                 onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
                 headerExtra={
-                    <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">
+                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100/50 shadow-inner">
                         <Button
                             variant={!statusFilter ? 'secondary' : 'ghost'}
                             size="sm"
                             onClick={() => setStatusFilter(null)}
-                            className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!statusFilter ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400 hover:text-stone-600'}`}
+                            className={`h-9 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${!statusFilter ? 'bg-white shadow-md text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
                         >
                             All Logs
                         </Button>
@@ -235,7 +244,7 @@ export default function PurchaseDashboardPage() {
                                     variant={statusFilter === key ? 'secondary' : 'ghost'}
                                     size="sm"
                                     onClick={() => setStatusFilter(key)}
-                                    className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === key ? 'bg-white shadow-sm text-indigo-600' : 'text-stone-400 hover:text-stone-600'}`}
+                                    className={`h-9 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${statusFilter === key ? 'bg-white shadow-md text-emerald-600' : 'text-slate-400 hover:text-emerald-600'}`}
                                 >
                                     {cfg.label}
                                 </Button>

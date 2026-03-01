@@ -14,12 +14,12 @@ import {
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 
-const ACTION_CONFIG: Record<string, { icon: any, color: string, bg: string }> = {
-    CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    UPDATE: { icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-    DELETE: { icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
-    POST: { icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-    REVERSE: { icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' },
+const ACTION_CONFIG: Record<string, { icon: any, color: string, bg: string, glow: string }> = {
+    CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.3)]' },
+    UPDATE: { icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', glow: 'shadow-[0_0_15px_rgba(59,130,246,0.3)]' },
+    DELETE: { icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.3)]' },
+    POST: { icon: Send, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]' },
+    REVERSE: { icon: RotateCcw, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.3)]' },
 }
 
 export default function AuditTrailPage() {
@@ -120,43 +120,56 @@ export default function AuditTrailPage() {
 
     if (loading && data.results.length === 0) {
         return (
-            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <div className="page-container animate-in fade-in duration-700">
                 <div className="flex justify-between items-center">
-                    <div><Skeleton className="h-10 w-64" /><Skeleton className="h-4 w-48 mt-2" /></div>
+                    <div><Skeleton className="h-14 w-80 rounded-2xl" /><Skeleton className="h-6 w-64 mt-3 rounded-lg" /></div>
                 </div>
-                <Skeleton className="h-96 rounded-3xl" />
+                <Skeleton className="h-[60vh] rounded-[2rem]" />
             </div>
         )
     }
 
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+        <div className="page-container animate-in fade-in duration-700">
             {/* Standard Header */}
-            <header className="flex justify-between items-center">
+            <header className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-200">
-                            <Shield size={28} className="text-white" />
+                    <div className="flex items-center gap-3 mb-4">
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                            Security Protocol: Active
+                        </Badge>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Clock size={14} className="text-emerald-400" /> Live Forensic Feed
+                        </span>
+                    </div>
+                    <h1 className="page-header-title flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Shield size={40} className="text-white fill-white/20" />
                         </div>
-                        Financial <span className="text-slate-600">Audit Trail</span>
+                        Financial <span className="text-emerald-700">Audit Trail</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Entry Lifecycle & Security Logging</p>
+                    <p className="page-header-subtitle">
+                        Forensic lifecycle monitoring and immutable activity logging for all financial operations.
+                    </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex bg-stone-100 p-1 rounded-2xl shadow-inner h-12 items-center px-4">
-                        <History size={18} className="text-stone-400 mr-3" />
-                        <span className="text-sm font-bold text-stone-600">{data.count || 0} <span className="text-stone-400 font-medium">Logged Actions</span></span>
+                    <div className="h-16 px-8 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Logs</p>
+                        <div className="flex items-center gap-3">
+                            <History size={18} className="text-emerald-500" />
+                            <span className="text-2xl font-black text-slate-800 tracking-tighter">{data.count || 0}</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <TypicalListView
-                title="System Activity Logs"
+                title="System Activity Matrix"
                 data={data.results || []}
                 loading={loading}
                 getRowId={(log) => log.id}
                 columns={columns}
-                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                className="card-premium overflow-hidden border-0"
                 visibleColumns={settings.visibleColumns}
                 onToggleColumn={settings.toggleColumn}
                 pageSize={settings.pageSize}
@@ -166,50 +179,57 @@ export default function AuditTrailPage() {
                 onSort={settings.setSort}
                 expandable={{
                     render: (log) => (
-                        <div className="p-6 bg-slate-50 border-t border-b border-slate-100">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="p-1.5 bg-slate-200 rounded-lg">
-                                    <FileText size={14} className="text-slate-600" />
+                        <div className="p-8 bg-slate-50/50 backdrop-blur-md border-y border-slate-100 overflow-hidden">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg group">
+                                    <FileText size={18} className="text-emerald-400 group-hover:scale-110 transition-transform" />
                                 </div>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-500">Raw Data Payload</h4>
+                                <div className="flex flex-col">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-800">Forensic Data Payload</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter italic">Immutable Object State Snapshot</p>
+                                </div>
                             </div>
-                            <div className="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
-                                <pre className="text-[11px] text-emerald-400 font-mono whitespace-pre-wrap overflow-x-auto leading-relaxed">
-                                    {JSON.stringify(log.payload, null, 2)}
+                            <div className="bg-slate-950 rounded-3xl p-8 shadow-2xl border border-slate-800/50 max-h-[500px] overflow-y-auto custom-scrollbar relative">
+                                <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500/30 uppercase tracking-[0.3em]">JSON Protocol</div>
+                                <pre className="text-[13px] text-emerald-400/90 font-mono whitespace-pre-wrap leading-relaxed selection:bg-emerald-500/30 selection:text-white">
+                                    {JSON.stringify(log.payload, null, 4)}
                                 </pre>
                             </div>
                         </div>
                     )
                 }}
                 headerExtra={
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-xl border border-stone-200/50">
-                            <Filter size={12} className="text-stone-400" />
-                            <select
-                                value={filterAction}
-                                onChange={e => { setFilterAction(e.target.value); setPage(1) }}
-                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-wider text-stone-600 focus:ring-0 active:ring-0 outline-none"
-                            >
-                                <option value="">All Actions</option>
-                                <option value="CREATE">Create</option>
-                                <option value="UPDATE">Update</option>
-                                <option value="DELETE">Delete</option>
-                                <option value="POST">Post</option>
-                                <option value="REVERSE">Reverse</option>
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-2 bg-stone-100 px-3 py-1.5 rounded-xl border border-stone-200/50">
-                            <Shield size={12} className="text-stone-400" />
-                            <select
-                                value={filterModel}
-                                onChange={e => { setFilterModel(e.target.value); setPage(1) }}
-                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-wider text-stone-600 focus:ring-0 active:ring-0 outline-none"
-                            >
-                                <option value="">All Models</option>
-                                {modelNames.map(m => (
-                                    <option key={m} value={m}>{m}</option>
-                                ))}
-                            </select>
+                    <div className="flex items-center gap-4">
+                        <div className="flex bg-slate-50 p-1 rounded-2xl border border-slate-100 shadow-inner px-2">
+                            <div className="flex items-center gap-2 px-3 py-2">
+                                <Filter size={14} className="text-slate-400" />
+                                <select
+                                    value={filterAction}
+                                    onChange={e => { setFilterAction(e.target.value); setPage(1) }}
+                                    className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
+                                >
+                                    <option value="">Actions: All</option>
+                                    <option value="CREATE">Create</option>
+                                    <option value="UPDATE">Update</option>
+                                    <option value="DELETE">Delete</option>
+                                    <option value="POST">Post</option>
+                                    <option value="REVERSE">Reverse</option>
+                                </select>
+                            </div>
+                            <div className="w-[1px] h-6 bg-slate-200 my-auto" />
+                            <div className="flex items-center gap-2 px-3 py-2">
+                                <Shield size={14} className="text-slate-400" />
+                                <select
+                                    value={filterModel}
+                                    onChange={e => { setFilterModel(e.target.value); setPage(1) }}
+                                    className="bg-transparent border-none text-[11px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
+                                >
+                                    <option value="">Resources: All</option>
+                                    {modelNames.map(m => (
+                                        <option key={m} value={m}>{m}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 }

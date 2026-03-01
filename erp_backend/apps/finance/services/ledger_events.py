@@ -67,7 +67,7 @@ class FinancialEventService:
             if event.status == 'SETTLED': return event
             
             fin_acc = FinancialAccount.objects.get(id=account_id, organization=organization)
-            actual_payment_acc_id = fin_acc.linked_coa_id
+            actual_payment_acc_id = fin_acc.ledger_account_id
             
             rules = ConfigurationService.get_posting_rules(organization)
             

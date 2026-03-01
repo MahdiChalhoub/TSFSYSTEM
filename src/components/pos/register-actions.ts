@@ -6,4 +6,4 @@ export {
     closeRegisterSession,
     setPosPin,
     getRegisterStatus
-} from '@/app/(privileged)/sales/register-actions';
+} from '../../app/(privileged)/sales/register-actions';

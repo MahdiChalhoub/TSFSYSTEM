@@ -45,6 +45,22 @@ export interface POSLayoutProps {
     totalPieces: number;
     uniqueItems: number;
 
+    isSuperAdmin: boolean;
+    selectedCategory: any | null;
+    isCartVisible: boolean;
+    showCloseRegister: boolean;
+    showReturn: boolean;
+    showCreditWarning: boolean;
+    isVaultOpen: boolean;
+    subtotal: number;
+    tax: number;
+    productIndex: any;
+    allowNegativeStockRef: any;
+    loyaltyPointValue: number;
+    discountAmount: number;
+    notes: string;
+    paymentLegs: any[];
+
     // UI State
     highlightedItemId: number | null;
     lastAddedItemId: number | null;
@@ -67,6 +83,9 @@ export interface POSLayoutProps {
     deliveryZone: string;
     deliveryZones: any[];
 
+    fidelityLoading?: boolean;
+    clientFidelity?: any;
+
     // Handlers
     onSetSearchQuery: (q: string) => void;
     onSetActiveCategoryId: (id: number | null) => void;
@@ -81,6 +100,7 @@ export interface POSLayoutProps {
     onSetReceiptOpen: (v: boolean) => void;
     onSetStoreChangeInWallet: (v: boolean) => void;
     onSetPointsRedeemed: (v: number) => void;
+    onSetIsVaultOpen: (v: boolean) => void;
     onAddToCart: (product: Record<string, any>) => void;
     onUpdateQuantity: (productId: number, delta: number) => void;
     onUpdatePrice: (productId: number, price: number) => void;
@@ -100,6 +120,7 @@ export interface POSLayoutProps {
     onSetNotes: (v: string) => void;
     onSetPaymentLegs?: (legs: Array<{ method: string; amount: number }>) => void;
     onUpdateLineNote?: (productId: number, note: string) => void;
+    onSetIsReceiptOpen?: (v: boolean) => void;
 
     // Register context
     registerConfig?: {
@@ -117,6 +138,10 @@ export interface POSLayoutProps {
     onCloseRegister?: () => void;
 
     // Layout switching
+    // Navigation & Global Actions
     currentLayout: POSLayoutVariant;
     onOpenLayoutSelector: () => void;
+    onLockRegister?: () => void;
+    onOpenRegister?: () => void;
+    onOpenReturn?: () => void;
 }

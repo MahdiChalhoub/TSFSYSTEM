@@ -2,7 +2,8 @@ import { erpFetch } from "@/lib/erp-api";
 import { getMaintenanceEntities } from "@/app/actions/maintenance";
 import { MaintenanceSidebar } from "@/components/admin/maintenance/MaintenanceSidebar";
 import { UnifiedReassignmentTable } from "@/components/admin/maintenance/UnifiedReassignmentTable";
-import { ArrowLeft, Layers, Tag, Ruler, Globe, Package } from "lucide-react";
+import { ArrowLeft, Layers, Tag, Ruler, Globe, Package, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -47,7 +48,7 @@ export default async function MaintenancePage(props: {
     }
 
     // Helper to find entity in flat list OR tree
-    function findEntityRecursive(list: Record<string, any>[], id: number): Record<string, any> {
+    function findEntityRecursive(list: Record<string, any>[], id: number): Record<string, any> | null {
         for (const item of list) {
             if (item.id === id) return item;
             if (item.children) {
@@ -63,64 +64,89 @@ export default async function MaintenancePage(props: {
     const safeProducts = JSON.parse(JSON.stringify(products));
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)] bg-gray-50 -m-6">
-            {/* Header with Tabs */}
-            <header className="bg-white border-b border-gray-200 shadow-sm z-20">
-                <div className="px-6 py-4 flex items-center gap-4">
-                    <Link
-                        href="/inventory"
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div>
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                            <Layers size={28} className="text-white" />
+        <div className="page-container animate-in fade-in duration-700">
+            {/* Standard Header */}
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Layers size={40} className="text-white fill-white/20" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    System Intelligence
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <ShieldCheck size={14} className="text-emerald-400" /> Structure Integrity
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Inventory <span className="text-emerald-700">Maintenance</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                Orchestrate and reorganize your products across categories, brands, and logistical nodes.
+                            </p>
                         </div>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Inventory <span className="text-emerald-600">Maintenance</span></h1>
-                        <p className="text-sm text-gray-500">Reorganize your inventory structure.</p>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <div className="h-16 px-8 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col justify-center">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Context</p>
+                            <div className="flex items-center gap-3">
+                                <Package size={18} className="text-emerald-500" />
+                                <span className="text-xl font-black text-slate-800 tracking-tight">{tab.toUpperCase()}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex px-6 space-x-1 overflow-x-auto no-scrollbar">
+                {/* Tabs Hub */}
+                <div className="flex items-center gap-2 bg-slate-50/50 backdrop-blur-md p-1.5 rounded-[1.5rem] border border-slate-100 self-start shadow-inner overflow-x-auto no-scrollbar max-w-full">
                     <TabLink currentTab={tab} targetTab="category" icon={Layers} label="Categories" />
                     <TabLink currentTab={tab} targetTab="brand" icon={Tag} label="Brands" />
                     <TabLink currentTab={tab} targetTab="attribute" icon={Package} label="Attributes" />
                     <TabLink currentTab={tab} targetTab="unit" icon={Ruler} label="Units" />
                     <TabLink currentTab={tab} targetTab="country" icon={Globe} label="Countries" />
-                    <a href="/inventory/maintenance/data-quality" className="flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-orange-600 hover:bg-orange-50/50 font-medium text-sm whitespace-nowrap">
-                        <Ruler size={16} />
-                        <span>Data Quality</span>
-                    </a>
+                    <div className="w-[1px] h-6 bg-slate-200 mx-2 flex-shrink-0" />
+                    <Link
+                        href="/inventory/maintenance/data-quality"
+                        className="flex items-center gap-3 px-6 py-4 rounded-xl text-slate-400 hover:text-orange-600 hover:bg-orange-50/50 transition-all group"
+                    >
+                        <ShieldCheck size={18} className="group-hover:animate-pulse" />
+                        <span className="text-[11px] font-black uppercase tracking-widest">Data Audit</span>
+                    </Link>
                 </div>
             </header>
 
-            {/* Content */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Generic Sidebar */}
-                <MaintenanceSidebar
-                    entities={safeEntities}
-                    type={tab}
-                    activeId={activeId}
-                />
+            {/* Content Area */}
+            <div className="flex flex-1 overflow-hidden min-h-[600px] gap-8">
+                {/* Generic Sidebar with Glassmorphism */}
+                <div className="w-[380px] shrink-0 border border-slate-100 bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col">
+                    <MaintenanceSidebar
+                        entities={safeEntities}
+                        type={tab}
+                        activeId={activeId}
+                    />
+                </div>
 
                 {/* Main Area */}
-                <main className="flex-1 overflow-hidden bg-gray-50 p-4 flex flex-col min-w-0">
+                <main className="flex-1 overflow-hidden flex flex-col min-w-0">
                     {activeId ? (
-                        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
-                            <div className="p-4 border-b border-gray-100 bg-gray-50/30">
-                                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                    {currentEntityName}
-                                    <span className="text-sm font-normal text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
-                                        {products.length} products
-                                    </span>
-                                </h2>
+                        <div className="flex-1 card-premium flex flex-col overflow-hidden animate-in slide-in-from-right-8 duration-700">
+                            <div className="px-8 py-6 border-b border-slate-100 bg-emerald-50/30 flex justify-between items-center shrink-0">
+                                <div>
+                                    <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+                                        <div className="w-2 h-6 bg-emerald-500 rounded-full" />
+                                        {currentEntityName}
+                                    </h2>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-5">Operational Context: Maintenance Mode</p>
+                                </div>
+                                <Badge variant="secondary" className="bg-white border-0 text-emerald-600 font-black text-[10px] px-4 py-1.5 rounded-full shadow-sm">
+                                    {products.length} Node Variants Detected
+                                </Badge>
                             </div>
 
-                            <div className="flex-1 min-h-0">
+                            <div className="flex-1 min-h-0 bg-white/30">
                                 <UnifiedReassignmentTable
                                     products={safeProducts}
                                     targetEntities={safeEntities}
@@ -130,11 +156,12 @@ export default async function MaintenancePage(props: {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                                <Layers size={32} />
+                        <div className="h-full flex flex-col items-center justify-center text-slate-300 card-premium bg-white/50 backdrop-blur-xl animate-in zoom-in duration-700">
+                            <div className="w-24 h-24 bg-slate-100 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner shadow-slate-200">
+                                <Layers size={48} className="text-slate-200" />
                             </div>
-                            <p className="font-medium">Select an item from the sidebar to manage.</p>
+                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Awaiting Entity Selection</h3>
+                            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter italic">Select a structural node from the sidebar to initialize re-mapping.</p>
                         </div>
                     )}
                 </main>
@@ -149,12 +176,17 @@ function TabLink({ currentTab, targetTab, icon: Icon, label }: Record<string, an
         <Link
             href={`/inventory/maintenance?tab=${targetTab}`}
             className={`
-                flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap
-                ${isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+                flex items-center gap-3 px-6 py-4 rounded-xl transition-all whitespace-nowrap relative group
+                ${isActive
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-700/20 active:scale-95'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-white'}
             `}
         >
-            <Icon size={16} />
-            <span className="font-medium text-sm">{label}</span>
+            <Icon size={18} className={isActive ? "text-white fill-white/20" : "text-slate-400 group-hover:text-emerald-500 group-hover:scale-110 transition-all"} />
+            <span className={`text-[11px] font-black uppercase tracking-widest ${isActive ? "text-white" : "text-slate-500"}`}>{label}</span>
+            {isActive && (
+                <div className="absolute -bottom-1 left-4 right-4 h-1 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+            )}
         </Link>
     );
 }

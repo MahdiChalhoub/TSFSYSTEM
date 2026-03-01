@@ -99,7 +99,7 @@ def seed_minimal():
     # Financial Account
     fin_acc = FinancialAccount.objects.create(
         organization=org, name="Main Cash", type="CASH", 
-        currency="USD", site=site, linked_coa=cash_coa
+        currency="USD", site=site, ledger_account=cash_coa
     )
     
     return org, user, contact, warehouse, product, fin_acc

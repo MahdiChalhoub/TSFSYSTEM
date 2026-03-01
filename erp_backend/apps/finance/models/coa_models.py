@@ -45,10 +45,11 @@ class FinancialAccount(TenantModel):
     description = models.TextField(null=True, blank=True)
     is_pos_enabled = models.BooleanField(default=False, help_text='Whether this account is available for POS transactions')
     site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
-    linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
+    ledger_account = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
 
     class Meta:
         db_table = 'financialaccount'
 
     def __str__(self):
         return self.name
+

@@ -84,6 +84,15 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Premium Gradients */
+  .bg-emerald-gradient {
+    @apply bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700;
+  }
+
+  .bg-rose-gradient {
+    @apply bg-gradient-to-br from-rose-500 via-rose-600 to-red-700;
+  }
 }
 
 /* Global Base Styles */
@@ -219,8 +228,13 @@
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
 }
 
 .animate-shimmer {

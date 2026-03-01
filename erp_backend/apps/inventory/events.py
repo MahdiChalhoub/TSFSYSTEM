@@ -20,6 +20,7 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
         'order:completed': _on_order_completed,
         'order:voided': _on_order_voided,
         'org:provisioned': _on_org_provisioned,
+        'purchase_order:received': _on_purchase_order_received,
     }
     
     handler = handlers.get(event_name)
@@ -33,21 +34,21 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
 def _on_order_completed(payload: dict, organization_id: int) -> dict:
     """
     React to POS order completion — deduct stock for sold items.
-    
-    Payload expects:
-        order_id: str
-        lines: list of {product_id, quantity}
     """
     from .models import Inventory, InventoryMovement
     from erp.models import Organization
     
     order_id = payload.get('order_id')
+    order_type = payload.get('type', 'SALE')
     lines = payload.get('lines', [])
-    site_id = payload.get('site_id')
     warehouse_id = payload.get('warehouse_id')
     
+    # We only deduct stock if it's a SALE.
+    # If it's a PURCHASE recorded in POS, we add stock.
+    multiplier = -1 if order_type == 'SALE' else 1
+    move_type = 'SALE' if order_type == 'SALE' else 'PURCHASE'
+
     if not lines:
-        logger.debug(f"Inventory: order:completed with no lines, skipping")
         return {'success': True, 'skipped': True}
     
     try:
@@ -61,47 +62,99 @@ def _on_order_completed(payload: dict, organization_id: int) -> dict:
             if not product_id or quantity <= 0:
                 continue
             
-            inv = Inventory.objects.filter(
+            # Find inventory record in the specified warehouse
+            # If no warehouse_id, we might need a default one or fail
+            if not warehouse_id:
+                from .models import Warehouse
+                default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
+                warehouse_id = default_wh.id if default_wh else None
+
+            if not warehouse_id:
+                logger.warning(f"Inventory: No warehouse found for org {organization_id}, skipping deduction")
+                continue
+
+            inv, created = Inventory.objects.get_or_create(
                 organization=org,
                 product_id=product_id,
-                warehouse_id=warehouse_id
-            ).first()
+                warehouse_id=warehouse_id,
+                defaults={'quantity': 0}
+            )
             
-            if inv:
-                inv.quantity -= quantity
-                inv.save(update_fields=['quantity'])
-                
-                InventoryMovement.objects.create(
-                    organization=org,
-                    product_id=product_id,
-                    warehouse_id=warehouse_id,
-                    type='SALE',
-                    quantity=-quantity,
-                    reference=f"ORDER-{order_id}"
-                )
-                adjusted += 1
+            # Atomic update
+            inv.quantity += (Decimal(str(quantity)) * multiplier)
+            inv.save(update_fields=['quantity'])
+            
+            InventoryMovement.objects.create(
+                organization=org,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                type=move_type,
+                quantity=(Decimal(str(quantity)) * multiplier),
+                reference=f"ORDER-{order_id}"
+            )
+            adjusted += 1
         
-        logger.info(f"📦 Inventory: Adjusted {adjusted} items for order {order_id}")
         return {'success': True, 'adjusted_count': adjusted}
-        
     except Exception as e:
-        logger.error(f"Inventory: Failed to process order:completed: {e}")
+        logger.error(f"Inventory: Failed to process order completion: {e}")
         return {'success': False, 'error': str(e)}
 
 
-def _on_order_voided(payload: dict, organization_id: int) -> dict:
+def _on_purchase_order_received(payload: dict, organization_id: int) -> dict:
     """
-    React to POS order void — restore stock for voided items.
+    React to Purchase Order receipt — add stock.
     """
-    logger.info(f"📦 Inventory: Order voided for org {organization_id}")
-    # Future: Reverse stock deductions from _on_order_completed
-    return {'success': True}
+    from .models import Inventory, InventoryMovement, Warehouse
+    from erp.models import Organization
+    
+    po_id = payload.get('po_id')
+    po_number = payload.get('po_number')
+    lines = payload.get('lines', [])
+    warehouse_id = payload.get('warehouse_id')
+    
+    if not lines:
+        return {'success': True, 'skipped': True}
+    
+    try:
+        org = Organization.objects.get(id=organization_id)
+        
+        if not warehouse_id:
+            default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
+            warehouse_id = default_wh.id if default_wh else None
 
+        if not warehouse_id:
+            logger.error(f"Inventory: No warehouse for PO receipt in org {organization_id}")
+            return {'success': False, 'error': "No destination warehouse found"}
 
-def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
-    """
-    React to new org provisioning — set up default inventory categories.
-    """
-    logger.info(f"📦 Inventory: Org provisioned, default setup for org {organization_id}")
-    # Future: Create default product categories, units of measure, etc.
-    return {'success': True}
+        received_count = 0
+        for line in lines:
+            product_id = line.get('product_id')
+            qty = Decimal(str(line.get('qty_received', 0)))
+            
+            if qty <= 0: continue
+
+            inv, created = Inventory.objects.get_or_create(
+                organization=org,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                defaults={'quantity': 0}
+            )
+            
+            inv.quantity += qty
+            inv.save(update_fields=['quantity'])
+            
+            InventoryMovement.objects.create(
+                organization=org,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                type='IN',
+                quantity=qty,
+                reference=f"PO-{po_number}-L{line.get('line_id')}",
+                description=f"Received from PO {po_number}"
+            )
+            received_count += 1
+            
+        return {'success': True, 'received_count': received_count}
+    except Exception as e:
+        logger.error(f"Inventory: Failed to process PO receipt: {e}")
+        return {'success': False, 'error': str(e)}

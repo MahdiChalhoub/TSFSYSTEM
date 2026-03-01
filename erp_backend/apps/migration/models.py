@@ -79,6 +79,10 @@ class MigrationJob(TenantModel):
     total_accounts = models.IntegerField(default=0)
     total_inventory = models.IntegerField(default=0)
     total_errors = models.IntegerField(default=0)
+    
+    # Audit Counters
+    total_verified = models.IntegerField(default=0, help_text='Total entities verified by auditing')
+    total_flagged = models.IntegerField(default=0, help_text='Total entities flagged for review')
 
     # Discovered metadata for preview/selection
     discovered_data = models.JSONField(
@@ -154,6 +158,21 @@ class MigrationMapping(models.Model):
         null=True, blank=True,
         help_text='Any unmapped fields stored for reference'
     )
+    
+    # Audit Fields
+    AUDIT_STATUS = (
+        ('PENDING', 'Pending Review'),
+        ('VERIFIED', 'Verified / Approved'),
+        ('FLAGGED', 'Flagged / Needs Fix'),
+    )
+    audit_status = models.CharField(max_length=20, choices=AUDIT_STATUS, default='PENDING')
+    audit_notes = models.TextField(null=True, blank=True)
+    audit_at = models.DateTimeField(null=True, blank=True)
+    audited_by = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='audited_mappings'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

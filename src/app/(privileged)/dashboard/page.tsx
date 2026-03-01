@@ -133,177 +133,186 @@ export default function AdvancedIntelligenceDashboard() {
         )
     }
     return (
-        <div className="p-8 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-700">
+        <div className="page-container animate-in fade-in duration-700">
             {/* Header: Intelligence Console Mode */}
-            <header className="flex justify-between items-end">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            System Node: Active
-                        </Badge>
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                            <Activity size={12} /> Sync: Real-time
-                        </span>
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200">
-                            <Zap size={32} className="text-white fill-white" />
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <Zap size={40} className="text-white fill-white/20" />
                         </div>
-                        Intelligence <span className="text-indigo-600">Console</span>
-                    </h1>
-                </div>
-                <div className="flex gap-3">
-                    <button className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
-                        <Globe size={18} /> Global View
-                    </button>
-                    <button className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-                        Generate Report <ArrowRight size={18} />
-                    </button>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                                    Enterprise Node: Online
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <Activity size={14} className="text-emerald-400" /> Intelligence Sync: Real-time
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Organization <span className="text-emerald-700">Dashboard</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                High-fidelity financial forensic console and operational intelligence stream.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <button className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
+                            <Globe size={18} className="text-emerald-500" /> Network View
+                        </button>
+                        <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
+                            Extract Report <ArrowRight size={18} className="text-emerald-400" />
+                        </button>
+                    </div>
                 </div>
             </header>
             {/* High-Fidelity KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center">
-                                <DollarSign size={24} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
+                    <CardContent className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100">
+                                <DollarSign size={28} />
                             </div>
-                            <Badge variant="outline" className="text-emerald-500 bg-emerald-50 border-0 font-black">
-                                <TrendingUp size={12} className="mr-1" /> +12%
+                            <Badge variant="outline" className="text-emerald-600 bg-emerald-50/50 border-emerald-100 font-black text-[10px] px-3 py-1 rounded-full animate-pulse">
+                                <TrendingUp size={12} className="mr-1.5" /> +12%
                             </Badge>
                         </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">30D GROSS REVENUE</p>
-                        <h2 className="text-3xl font-black text-gray-900 mt-1">{fmt(parseFloat(data.salesSummary?.sales?.total || 0))}</h2>
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                            <Target size={12} className="text-indigo-400" /> Goal: 92% Reached
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">30D GROSS REVENUE</p>
+                        <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{fmt(parseFloat(data.salesSummary?.sales?.total || 0))}</h2>
+                        <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                            <Target size={14} className="text-emerald-500" /> Target Node: 92% Reached
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <Activity size={24} />
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative">
+                    <CardContent className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner shadow-emerald-100">
+                                <Activity size={28} />
                             </div>
-                            <Badge variant="outline" className="text-gray-400 bg-gray-50 border-0 font-black">
-                                STABLE
+                            <Badge variant="outline" className="text-slate-400 bg-slate-50/50 border-slate-100 font-black text-[10px] px-3 py-1 rounded-full">
+                                STABLE PULSE
                             </Badge>
                         </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">REVENUE LIQUIDITY</p>
-                        <h2 className="text-3xl font-black text-emerald-600 mt-1">{fmt(revenueLiquidity)}</h2>
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                            <ShieldCheck size={12} className="text-emerald-400" /> Position: Fully Hedged
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">REVENUE LIQUIDITY</p>
+                        <h2 className="text-4xl font-black text-emerald-600 tracking-tighter mt-1">{fmt(revenueLiquidity)}</h2>
+                        <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                            <ShieldCheck size={14} className="text-emerald-500" /> Position: Fully Hedged
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-indigo-900 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-800/50 text-indigo-100 flex items-center justify-center">
-                                <AlertTriangle size={24} />
+                <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
+                    <CardContent className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center shadow-2xl backdrop-blur-md">
+                                <AlertTriangle size={28} className="text-emerald-400" />
                             </div>
-                            <Badge variant="outline" className="text-rose-300 bg-rose-400/10 border-0 font-black">
-                                <TrendingDown size={12} className="mr-1" /> CRITICAL
+                            <Badge variant="outline" className="text-emerald-300 bg-emerald-500/10 border-emerald-500/20 font-black text-[10px] px-3 py-1 rounded-full">
+                                <TrendingUp size={12} className="mr-1.5" /> CRITICAL ZONE
                             </Badge>
                         </div>
-                        <p className="text-[11px] font-black text-indigo-300 uppercase tracking-widest">ECONOMIC EXPOSURE</p>
-                        <h2 className="text-3xl font-black text-white mt-1">{fmt(economicExposure)}</h2>
-                        <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-[10px] font-bold text-indigo-200">
-                            <Clock size={12} className="text-indigo-400" /> Review in 48 Hours
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">ECONOMIC EXPOSURE</p>
+                        <h2 className="text-4xl font-black text-white tracking-tighter mt-1">{fmt(economicExposure)}</h2>
+                        <div className="mt-6 pt-5 border-t border-white/5 flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-tight">
+                            <Clock size={14} className="text-emerald-500" /> Review Priority: Alpha
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                                <Package size={24} />
+                <Card className="card-premium group hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 overflow-hidden relative">
+                    <CardContent className="p-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-inner shadow-amber-100">
+                                <Package size={28} />
                             </div>
-                            <Badge variant="outline" className="text-amber-600 bg-amber-50 border-0 font-black">
-                                {data.lowStock.length} ALERTS
+                            <Badge variant="outline" className="text-amber-600 bg-amber-50/50 border-amber-100 font-black text-[10px] px-3 py-1 rounded-full">
+                                {data.lowStock.length} NODE ALERTS
                             </Badge>
                         </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">SUPPLY CHAIN PULSE</p>
-                        <h2 className="text-3xl font-black text-gray-900 mt-1">{resolutionRate}%</h2>
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
-                            <RefreshCw size={12} className="text-amber-400 animate-spin-slow" /> Stock Velocity: High
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">SUPPLY CHAIN VELOCITY</p>
+                        <h2 className="text-4xl font-black text-slate-800 tracking-tighter mt-1">{resolutionRate}%</h2>
+                        <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                            <RefreshCw size={14} className="text-amber-500 animate-spin-slow" /> Structural Flow: Nominal
                         </div>
                     </CardContent>
                 </Card>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Advanced Area Chart */}
-                <Card className="lg:col-span-2 rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
-                    <CardHeader className="px-8 pt-8 flex flex-row items-center justify-between">
+                <Card className="lg:col-span-2 card-premium overflow-hidden bg-white">
+                    <CardHeader className="px-10 pt-10 flex flex-row items-center justify-between pb-4">
                         <div>
-                            <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400">Financial Convergence</CardTitle>
-                            <h3 className="text-lg font-bold text-gray-900">Liquidity vs Exposure Stream</h3>
+                            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Financial Convergence</CardTitle>
+                            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Liquidity vs Exposure Matrix</h3>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-indigo-600" />
-                                <span className="text-[10px] font-black text-gray-400 uppercase leading-none">Liquidity</span>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 rounded-full bg-emerald-500 shadow-lg shadow-emerald-200" />
+                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Liquidity Node</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-rose-400" />
-                                <span className="text-[10px] font-black text-gray-400 uppercase leading-none">Exposure</span>
+                            <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 rounded-full bg-rose-400 shadow-lg shadow-rose-200" />
+                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Exposure Vector</span>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                        <ResponsiveContainer width="100%" height={320}>
+                    <CardContent className="px-6 pb-6">
+                        <ResponsiveContainer width="100%" height={340}>
                             <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorLiq" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
-                                        <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorExp" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
                                         <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#9ca3af' }} dy={10} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} dy={15} />
                                 <YAxis hide />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '16px' }}
-                                    itemStyle={{ fontSize: '12px', fontWeight: 900 }}
+                                    contentStyle={{ borderRadius: '2rem', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)', padding: '20px', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}
+                                    itemStyle={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
                                 />
-                                <Area type="monotone" dataKey="liquidity" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorLiq)" />
-                                <Area type="monotone" dataKey="exposure" stroke="#f43f5e" strokeWidth={4} fillOpacity={1} fill="url(#colorExp)" />
+                                <Area type="monotone" dataKey="liquidity" stroke="#10b981" strokeWidth={5} fillOpacity={1} fill="url(#colorLiq)" />
+                                <Area type="monotone" dataKey="exposure" stroke="#f43f5e" strokeWidth={5} fillOpacity={1} fill="url(#colorExp)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
                 {/* Terminal Performance Heatmap */}
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
-                    <CardHeader className="px-8 pt-8">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Node Analytics</CardTitle>
-                        <h3 className="text-lg font-bold text-gray-900">Terminal Performance</h3>
+                <Card className="card-premium overflow-hidden bg-white">
+                    <CardHeader className="px-10 pt-10">
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Regional Intelligence</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Terminal Heatmap</h3>
                     </CardHeader>
-                    <CardContent className="px-8 pb-8 space-y-4">
+                    <CardContent className="px-10 pb-10 space-y-6">
                         {terminalPerformance.map((t: any, i: number) => (
                             <div key={i} className="group">
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-xs font-black text-gray-700 uppercase tracking-tighter">{t.name}</span>
-                                    <span className="text-[10px] font-bold text-indigo-400">{t.value}% LOAD</span>
+                                <div className="flex justify-between items-center mb-2.5">
+                                    <span className="text-[11px] font-black text-slate-600 uppercase tracking-tight">{t.name}</span>
+                                    <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">{t.value}% LOAD</span>
                                 </div>
-                                <div className="h-3 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
+                                <div className="h-4 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-1000 ${t.value > 80 ? 'bg-indigo-600' : t.value > 40 ? 'bg-indigo-400' : 'bg-indigo-200'}`}
+                                        className={`h-full rounded-full transition-all duration-[2000ms] ${t.value > 80 ? 'bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : t.value > 40 ? 'bg-emerald-400' : 'bg-emerald-200'}`}
                                         style={{ width: `${t.value}%` }}
                                     />
                                 </div>
                             </div>
                         ))}
-                        <div className="pt-6 mt-6 border-t border-gray-50 flex items-center justify-between">
+                        <div className="pt-8 mt-8 border-t border-slate-50 flex items-center justify-between">
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Global Health</p>
-                                <p className="text-xl font-black text-gray-900 leading-none">Optimal</p>
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Global Architecture Health</p>
+                                <p className="text-2xl font-black text-slate-800 tracking-tighter mt-1">NOMINAL</p>
                             </div>
-                            <div className="w-12 h-12 rounded-[1rem] bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <ShieldCheck size={24} />
+                            <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-gradient flex items-center justify-center text-white shadow-xl shadow-emerald-200">
+                                <ShieldCheck size={32} />
                             </div>
                         </div>
                     </CardContent>
@@ -311,34 +320,35 @@ export default function AdvancedIntelligenceDashboard() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Pareto: Top Sellers */}
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
-                    <CardHeader className="p-8 pb-0">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-gray-400">Market Penetration</CardTitle>
-                        <h3 className="text-lg font-bold text-gray-900">Top Strategic Sellers</h3>
+                <Card className="card-premium overflow-hidden bg-white">
+                    <CardHeader className="p-10 pb-0">
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Market Domination</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Intelligence Agents</h3>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-5">
+                    <CardContent className="p-10 space-y-8">
                         {topSellers.length === 0 ? (
-                            <div className="flex items-center justify-center py-8 text-sm font-bold text-gray-400">
-                                Awaiting Transactional Data
+                            <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                                <Users size={48} className="mb-4 opacity-20" />
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">Awaiting Transactional Feed</p>
                             </div>
                         ) : topSellers.map((s: any, i: number) => (
-                            <div key={i} className="flex items-center gap-4 group">
-                                <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center font-black text-stone-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <div key={i} className="flex items-center gap-6 group">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-300 group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-6 transition-all duration-500 shadow-inner group-hover:shadow-emerald-200">
                                     {i + 1}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="flex justify-between items-start mb-0.5">
-                                        <span className="text-sm font-black text-gray-800 uppercase">{s.name}</span>
-                                        <span className="text-xs font-mono font-bold text-indigo-600">{fmt(s.revenue)}</span>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{s.name}</span>
+                                        <span className="text-xs font-mono font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">{fmt(s.revenue)}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1 h-1 bg-gray-50 rounded-full overflow-hidden">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1 h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
                                             <div
-                                                className="h-full bg-indigo-400 rounded-full transition-all duration-1000"
+                                                className="h-full bg-emerald-500 rounded-full transition-all duration-[1500ms]"
                                                 style={{ width: `${(s.revenue / (topSellers[0]?.revenue || 1) * 100)}%` }}
                                             />
                                         </div>
-                                        <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">{s.count} TRF</span>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{s.count} OPS</span>
                                     </div>
                                 </div>
                             </div>
@@ -346,38 +356,45 @@ export default function AdvancedIntelligenceDashboard() {
                     </CardContent>
                 </Card>
                 {/* Intelligence Stream */}
-                <Card className="rounded-[2.5rem] border-0 shadow-sm border-2 border-indigo-100 bg-white overflow-hidden">
-                    <CardHeader className="p-8 pb-0">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-indigo-400">Intelligence Stream</CardTitle>
-                        <h3 className="text-lg font-bold text-gray-900">Economic Movement Logs</h3>
+                <Card className="card-premium overflow-hidden bg-white border-emerald-100/50 shadow-emerald-700/5">
+                    <CardHeader className="p-10 pb-0">
+                        <CardTitle className="text-[11px] font-black uppercase tracking-widest text-emerald-500 mb-2">Live Economic Feed</CardTitle>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Movement Logs</h3>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-6">
+                    <CardContent className="p-10 space-y-8">
                         {recentMovements.length === 0 ? (
-                            <div className="flex items-center justify-center py-8 text-sm font-bold text-gray-400">
-                                Global Supply Chain Dormant
+                            <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                                <Activity size={48} className="mb-4 opacity-20 animate-pulse" />
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em]">Global Chain Synchronizing...</p>
                             </div>
                         ) : recentMovements.map((m: any, i: number) => (
-                            <div key={i} className="flex items-start gap-4 hover:translate-x-1 transition-all">
-                                <div className={`mt-1.5 w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-emerald-500' : 'bg-rose-500'} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
+                            <div key={i} className="flex items-start gap-5 hover:translate-x-2 transition-all duration-300 p-2 -m-2 rounded-2xl hover:bg-emerald-50/30 group/log">
+                                <div className={`mt-2 w-2.5 h-2.5 rounded-full ${m.type === 'IN' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]' : 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]'} transition-all group-hover/log:scale-125`} />
                                 <div className="flex-1">
-                                    <p className="text-xs font-black text-gray-800 uppercase tracking-tight leading-none mb-1">
+                                    <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight leading-none mb-1.5 group-hover/log:text-emerald-700 transition-colors">
                                         {m.product_name || `Product #${m.product}`}
                                     </p>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                        {m.warehouse_name || 'Terminal'} · {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                            <Building2 size={12} className="text-slate-300" /> {m.warehouse_name || 'Terminal Node'}
+                                        </p>
+                                        <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                        <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-tighter">
+                                            {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className={`text-sm font-black ${m.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    <p className={`text-[15px] font-black ${m.type === 'IN' ? 'text-emerald-600' : 'text-rose-600'} tracking-tighter`}>
                                         {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity).toFixed(0)}
                                     </p>
-                                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-tighter">UNITS</p>
+                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">UNIT NODES</p>
                                 </div>
                             </div>
                         ))}
                         {recentMovements.length > 0 && (
-                            <button className="w-full h-12 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all mt-4">
-                                DIVE INTO AUDIT TRAILS
+                            <button className="w-full h-14 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-[11px] uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all duration-500 shadow-inner hover:shadow-xl hover:shadow-emerald-700/20 active:scale-95 group/audit">
+                                Initialize Deep Audit <ArrowRight size={16} className="inline ml-2 group-hover/audit:translate-x-1 transition-transform" />
                             </button>
                         )}
                     </CardContent>

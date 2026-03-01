@@ -40,6 +40,7 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
         'inventory:adjusted': _on_inventory_adjusted,
         'subscription:renewed': _on_subscription_renewed,
         'subscription:updated': _on_subscription_updated,
+        'purchase_order:received': _on_purchase_order_received,
     }
     
     handler = handlers.get(event_name)
@@ -166,7 +167,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
                         type="CASH",
                         currency="USD",
                         site_id=site_id,
-                        linked_coa=cash_ledger
+                        ledger_account=cash_ledger
                     )
             
             # ── Step 4: Auto-map Posting Rules ────────────────────
@@ -239,16 +240,293 @@ def _on_contact_created(payload: dict, organization_id: int) -> dict:
 
 def _on_order_completed(payload: dict, organization_id: int):
     """React to POS order completion — create journal entries."""
+    from .services import LedgerService
+    from erp.services import ConfigurationService
+    from erp.models import Organization
+    
     logger.info(f"💰 Finance: Processing order completion for org {organization_id}")
-    # Future: Auto-create journal entries from completed orders
-    # order_id = payload.get('order_id')
-    # JournalEntryService.create_from_order(order_id, organization_id)
+    
+    order_id = payload.get('order_id')
+    order_type = payload.get('type')
+    total_amount = Decimal(str(payload.get('total_amount', '0')))
+    tax_amount = Decimal(str(payload.get('tax_amount', '0')))
+    reference = payload.get('reference', f"ORD-{order_id}")
+    date = payload.get('date')
+    contact_id = payload.get('contact_id')
+    lines = payload.get('lines', [])
+
+    if total_amount == 0 and not lines:
+        return {'success': True, 'skipped': True}
+
+    try:
+        org = Organization.objects.get(id=organization_id)
+        rules = ConfigurationService.get_posting_rules(org)
+        
+        entry_lines = []
+        
+        if order_type == 'SALE':
+            # ── 1. Sales Revenue & AR/Cash ──
+            # Debit: Cash/AR
+            # Credit: Revenue
+            # Credit: VAT
+            
+            # Find accounts
+            ar_acc_id = rules.get('sales', {}).get('receivable')
+            rev_acc_id = rules.get('sales', {}).get('revenue')
+            tax_acc_id = rules.get('purchases', {}).get('tax') # Usually same for sales tax payable
+            
+            if not ar_acc_id or not rev_acc_id:
+                logger.warning(f"Finance: Missing sales posting rules in org {organization_id}")
+                return {'success': False, 'error': "Missing sales posting rules"}
+
+            # Revenue Part (Taxes excluded)
+            net_revenue = total_amount - tax_amount
+            
+            # Debit (Money In)
+            entry_lines.append({
+                'account_id': ar_acc_id,
+                'debit': total_amount,
+                'credit': 0,
+                'description': f"Sale {reference}",
+                'contact_id': contact_id
+            })
+            
+            # Credit (Revenue)
+            entry_lines.append({
+                'account_id': rev_acc_id,
+                'debit': 0,
+                'credit': net_revenue,
+                'description': f"Revenue from {reference}"
+            })
+            
+            # Credit (Tax)
+            if tax_amount > 0 and tax_acc_id:
+                entry_lines.append({
+                    'account_id': tax_acc_id,
+                    'debit': 0,
+                    'credit': tax_amount,
+                    'description': f"VAT on {reference}"
+                })
+
+            # ── 2. COGS & Inventory (Asset) ──
+            # Debit: COGS
+            # Credit: Inventory
+            
+            cogs_acc_id = rules.get('sales', {}).get('cogs')
+            inv_acc_id = rules.get('sales', {}).get('inventory')
+            
+            if cogs_acc_id and inv_acc_id:
+                total_cost = sum(Decimal(str(l.get('cost_price', 0))) * Decimal(str(l.get('quantity', 0))) for l in lines)
+                if total_cost > 0:
+                    entry_lines.append({
+                        'account_id': cogs_acc_id,
+                        'debit': total_cost,
+                        'credit': 0,
+                        'description': f"COGS for {reference}"
+                    })
+                    entry_lines.append({
+                        'account_id': inv_acc_id,
+                        'debit': 0,
+                        'credit': total_cost,
+                        'description': f"Inventory Reduction for {reference}"
+                    })
+
+        elif order_type == 'PURCHASE':
+            # ── Purchase recorded via POS ──
+            # Debit: Inventory
+            # Credit: Cash/Payable
+            
+            inv_acc_id = rules.get('purchases', {}).get('inventory')
+            ap_acc_id = rules.get('purchases', {}).get('payable')
+            
+            if inv_acc_id and ap_acc_id:
+                entry_lines.append({
+                    'account_id': inv_acc_id,
+                    'debit': total_amount,
+                    'credit': 0,
+                    'description': f"Purchase {reference}"
+                })
+                entry_lines.append({
+                    'account_id': ap_acc_id,
+                    'debit': 0,
+                    'credit': total_amount,
+                    'description': f"Payment for {reference}",
+                    'contact_id': contact_id
+                })
+
+        if entry_lines:
+            entry = LedgerService.create_journal_entry(
+                organization=org,
+                transaction_date=date or timezone.now(),
+                description=f"POS Order: {reference}",
+                reference=reference,
+                status='POSTED',
+                lines=entry_lines
+            )
+            
+            # ── 3. Update Running Balances ──
+            if contact_id:
+                if order_type == 'SALE':
+                    from .payment_models import CustomerBalance
+                    balance, _ = CustomerBalance.objects.get_or_create(
+                        organization=org,
+                        contact_id=contact_id
+                    )
+                    balance.current_balance += total_amount
+                    if date: balance.last_invoice_date = date
+                    balance.save()
+                elif order_type == 'PURCHASE':
+                    from .payment_models import SupplierBalance
+                    balance, _ = SupplierBalance.objects.get_or_create(
+                        organization=org,
+                        contact_id=contact_id
+                    )
+                    balance.current_balance += total_amount
+                    if date: balance.last_invoice_date = date
+                    balance.save()
+
+            return {'success': True, 'entry_id': str(entry.id)}
+        
+        return {'success': True, 'skipped': True}
+
+    except Exception as e:
+        logger.error(f"Finance: Failed to process order completion: {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def _on_purchase_order_received(payload: dict, organization_id: int):
+    """React to PO receipt — create journal entry (Stock In / Accrual)."""
+    from .services import LedgerService
+    from erp.services import ConfigurationService
+    from erp.models import Organization
+    
+    logger.info(f"🚚 Finance: Processing PO receipt for org {organization_id}")
+    
+    po_number = payload.get('po_number')
+    lines = payload.get('lines', [])
+    
+    if not lines:
+        return {'success': True, 'skipped': True}
+
+    try:
+        org = Organization.objects.get(id=organization_id)
+        rules = ConfigurationService.get_posting_rules(org)
+        
+        # Debit: Inventory
+        # Credit: Accrued Reception (Suspense)
+        
+        inv_acc_id = rules.get('purchases', {}).get('inventory')
+        suspense_acc_id = rules.get('suspense', {}).get('reception')
+        
+        if not inv_acc_id or not suspense_acc_id:
+            logger.warning(f"Finance: Missing accrual posting rules in org {organization_id}")
+            return {'success': False, 'error': "Missing accrual posting rules"}
+
+        total_received_value = sum(Decimal(str(l.get('qty_received', 0))) * Decimal(str(l.get('unit_price', 0))) for l in lines)
+        
+        if total_received_value <= 0:
+            return {'success': True, 'skipped': True}
+
+        entry_lines = [
+            {
+                'account_id': inv_acc_id,
+                'debit': total_received_value,
+                'credit': 0,
+                'description': f"Stock Receipt PO {po_number}"
+            },
+            {
+                'account_id': suspense_acc_id,
+                'debit': 0,
+                'credit': total_received_value,
+                'description': f"Accrual for PO {po_number}"
+            }
+        ]
+
+        entry = LedgerService.create_journal_entry(
+            organization=org,
+            transaction_date=timezone.now(),
+            description=f"PO Receipt: {po_number}",
+            reference=f"RECPT-{po_number}",
+            status='POSTED',
+            lines=entry_lines
+        )
+        
+        # Update Supplier Balance
+        supplier_id = payload.get('supplier_id')
+        if supplier_id:
+            from .payment_models import SupplierBalance
+            balance, _ = SupplierBalance.objects.get_or_create(
+                organization=org,
+                contact_id=supplier_id
+            )
+            balance.current_balance += total_received_value
+            balance.last_invoice_date = timezone.now().date()
+            balance.save()
+
+        return {'success': True, 'entry_id': str(entry.id)}
+
+    except Exception as e:
+        logger.error(f"Finance: Failed to process PO receipt: {e}")
+        return {'success': False, 'error': str(e)}
 
 
 def _on_inventory_adjusted(payload: dict, organization_id: int):
-    """React to inventory adjustments — update asset valuations."""
-    logger.info(f"📦 Finance: Inventory adjustment received for org {organization_id}")
-    # Future: Update inventory asset account values
+    """React to inventory adjustments — update asset valuations in ledger."""
+    from .services import LedgerService
+    from .models import ChartOfAccount
+    from erp.services import ConfigurationService
+    from erp.models import Organization
+    
+    logger.info(f"📦 Finance: Processing inventory adjustment for org {organization_id}")
+    
+    order_id = payload.get('order_id')
+    total_amount = Decimal(str(payload.get('total_amount', '0')))
+    reference = payload.get('reference')
+    date = payload.get('date') or timezone.now().date()
+    
+    if total_amount == 0:
+        return {'success': True, 'skipped': True}
+
+    try:
+        org = Organization.objects.get(id=organization_id)
+        rules = ConfigurationService.get_posting_rules(org)
+        
+        # 1120 (Inventory) and 5104 (Inventory Adjustments)
+        inv_acc_id = rules.get('sales', {}).get('inventory') or rules.get('purchases', {}).get('inventory')
+        adj_acc_id = rules.get('inventory', {}).get('adjustment')
+        
+        if not inv_acc_id or not adj_acc_id:
+            logger.error(f"Finance: Missing inventory or adjustment accounts in org {organization_id}")
+            return {'success': False, 'error': "Missing posting rules for inventory adjustment"}
+
+        # If positive adjustment (found stock): Inventory Dr, Adjustment Expense Cr
+        # If negative adjustment (loss): Adjustment Expense Dr, Inventory Cr
+        if total_amount > 0:
+            lines = [
+                {'account_id': inv_acc_id, 'debit': total_amount, 'credit': 0, 'description': f"Stock Adjustment {reference}"},
+                {'account_id': adj_acc_id, 'debit': 0, 'credit': total_amount, 'description': f"Stock Adjustment {reference}"}
+            ]
+        else:
+            abs_amount = abs(total_amount)
+            lines = [
+                {'account_id': adj_acc_id, 'debit': abs_amount, 'credit': 0, 'description': f"Stock Adjustment {reference}"},
+                {'account_id': inv_acc_id, 'debit': 0, 'credit': abs_amount, 'description': f"Stock Adjustment {reference}"}
+            ]
+
+        entry = LedgerService.create_journal_entry(
+            organization=org,
+            transaction_date=date,
+            description=f"Inventory Adjustment: {reference}",
+            reference=reference,
+            status='POSTED',
+            lines=lines
+        )
+        
+        return {'success': True, 'entry_id': str(entry.id)}
+        
+    except Exception as e:
+        logger.error(f"Finance: Failed to process inventory adjustment: {e}")
+        return {'success': False, 'error': str(e)}
 
 
 def _on_subscription_renewed(payload: dict, organization_id: int):

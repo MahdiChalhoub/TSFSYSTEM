@@ -4,7 +4,8 @@ import { erpFetch } from '@/lib/erp-api';
 import {
     X, Search, RefreshCw, Receipt, User, Calendar,
     ChevronRight, Loader2, Hash, AlertCircle, Printer,
-    CheckCircle2, Clock, XCircle, FileText, Package
+    CheckCircle2, Clock, XCircle, FileText, Package,
+    ArrowLeft
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -22,11 +23,11 @@ type Order = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-    COMPLETED: { label: 'Completed', color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle2 },
-    INVOICED: { label: 'Invoiced', color: 'text-blue-600 bg-blue-50', icon: FileText },
-    PENDING: { label: 'Pending', color: 'text-amber-600 bg-amber-50', icon: Clock },
-    CANCELLED: { label: 'Cancelled', color: 'text-rose-600 bg-rose-50', icon: XCircle },
-    DRAFT: { label: 'Draft', color: 'text-gray-500 bg-gray-100', icon: FileText },
+    COMPLETED: { label: 'COMPLETED', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
+    INVOICED: { label: 'INVOICED', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', icon: FileText },
+    PENDING: { label: 'PENDING', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20', icon: Clock },
+    CANCELLED: { label: 'CANCELLED', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20', icon: XCircle },
+    DRAFT: { label: 'DRAFT', color: 'text-slate-400 bg-white/5 border-white/10', icon: FileText },
 };
 
 interface POSSalesHistoryPanelProps {
@@ -99,87 +100,81 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
             {/* Panel - slides in from right */}
             <div
-                className="ml-auto relative w-[480px] max-w-full h-full bg-white flex flex-col shadow-2xl animate-in slide-in-from-right duration-200"
+                className="ml-auto relative w-[520px] max-w-full h-full bg-[#0F172A] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-500 border-l border-white/5"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
-                            <Receipt size={18} className="text-indigo-500" />
+                <div className="flex items-center justify-between px-8 py-6 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl shrink-0 z-20 relative overflow-hidden">
+                    {/* Glow Effect */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[80px] -z-10" />
+
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-gradient flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                            <Receipt size={22} className="text-white fill-white/20" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black text-gray-900">Sales History</h2>
-                            <p className="text-[10px] text-gray-400 font-medium">
-                                {registerName ? `Register: ${registerName}` : 'All transactions'}
-                            </p>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] block mb-0.5">Operations Ledger</span>
+                            <h2 className="text-xl font-black text-white uppercase tracking-tighter">Transaction Audit</h2>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={load} disabled={loading}
-                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all disabled:opacity-40">
-                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-emerald-400 transition-all disabled:opacity-40 flex items-center justify-center border border-white/10">
+                            <RefreshCw size={16} className={loading ? 'animate-spin text-emerald-500' : ''} />
                         </button>
                         <button onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-rose-500 transition-all">
-                            <X size={16} />
+                            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-rose-500/20 text-white/40 hover:text-rose-500 transition-all flex items-center justify-center border border-white/10">
+                            <X size={18} />
                         </button>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="px-4 pt-3 pb-0 border-b border-gray-50 shrink-0 flex gap-1">
+                <div className="px-8 pt-4 pb-0 border-b border-white/5 shrink-0 flex gap-4 bg-slate-950/20">
                     {sessionId && (
                         <button onClick={() => setTab('session')}
-                            className={clsx('px-3 py-1.5 rounded-t-lg text-[11px] font-black transition-all border-b-2',
+                            className={clsx('pb-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all border-b-2',
                                 tab === 'session'
-                                    ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
-                                    : 'border-transparent text-gray-400 hover:text-gray-600')}>
-                            This Session
+                                    ? 'border-emerald-500 text-emerald-400'
+                                    : 'border-transparent text-white/20 hover:text-white/40')}>
+                            Live Session
                         </button>
                     )}
                     <button onClick={() => setTab('all')}
-                        className={clsx('px-3 py-1.5 rounded-t-lg text-[11px] font-black transition-all border-b-2',
+                        className={clsx('pb-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all border-b-2',
                             tab === 'all'
-                                ? 'border-indigo-500 text-indigo-600 bg-indigo-50'
-                                : 'border-transparent text-gray-400 hover:text-gray-600')}>
-                        All History
+                                ? 'border-emerald-500 text-emerald-400'
+                                : 'border-transparent text-white/20 hover:text-white/40')}>
+                        Global Archival
                     </button>
                 </div>
 
                 {/* Search */}
-                <div className="px-4 py-3 border-b border-gray-50 shrink-0">
-                    <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                <div className="px-8 py-5 border-b border-white/10 shrink-0 bg-slate-950/20">
+                    <div className="relative group">
+                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
                         <input
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            placeholder="Search by ref, client, invoice..."
-                            className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 font-medium placeholder:text-gray-300"
+                            placeholder="SEARCH TRANSACTION ID, CLIENT OR REFERENCE..."
+                            className="w-full pl-12 pr-4 py-3 text-[11px] font-black uppercase tracking-widest bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-white placeholder:text-white/10 transition-all"
                         />
                     </div>
                 </div>
 
                 {/* Stats bar */}
                 {!loading && orders.length > 0 && (
-                    <div className="px-4 py-2 border-b border-gray-50 bg-gray-50/50 flex items-center gap-4 shrink-0">
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Orders</p>
-                            <p className="text-sm font-black text-gray-900">{orders.length}</p>
+                    <div className="px-8 py-4 border-b border-white/10 bg-slate-950/40 flex items-center justify-between shrink-0">
+                        <div className="flex flex-col">
+                            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Audit Volume</p>
+                            <p className="text-xl font-black text-white">{orders.length}</p>
                         </div>
-                        <div className="h-6 w-px bg-gray-200" />
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</p>
-                            <p className="text-sm font-black text-emerald-600">
+                        <div className="w-px h-8 bg-white/10" />
+                        <div className="flex flex-col text-right">
+                            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Aggregate Revenue</p>
+                            <p className="text-xl font-black text-emerald-400 tabular-nums">
                                 {fmt(orders.reduce((s, o) => s + Number(o.total_amount || 0), 0))}
-                            </p>
-                        </div>
-                        <div className="h-6 w-px bg-gray-200" />
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Completed</p>
-                            <p className="text-sm font-black text-gray-900">
-                                {orders.filter(o => o.status === 'COMPLETED' || o.status === 'INVOICED').length}
                             </p>
                         </div>
                     </div>
@@ -194,47 +189,56 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
                         </div>
                     ) : selectedOrder ? (
                         /* ── ORDER DETAIL VIEW ── */
-                        <div className="p-4 space-y-4">
+                        <div className="p-8 space-y-6">
                             <button onClick={() => setSelectedOrder(null)}
-                                className="flex items-center gap-1.5 text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
-                                <ChevronRight size={14} className="rotate-180" /> Back to list
+                                className="h-10 px-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2 group">
+                                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                                Return to Matrix
                             </button>
 
                             {/* Order header */}
-                            <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-                                <div className="flex items-start justify-between">
+                            <div className="bg-slate-950/60 border border-white/5 rounded-3xl p-6 space-y-5 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full" />
+
+                                <div className="flex items-start justify-between relative z-10">
                                     <div>
-                                        <p className="text-lg font-black text-gray-900">#{selectedOrder.ref_code || selectedOrder.id}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Hash size={12} className="text-emerald-500/50" />
+                                            <p className="text-2xl font-black text-white tracking-tighter uppercase">{selectedOrder.ref_code || selectedOrder.id}</p>
+                                        </div>
                                         {selectedOrder.invoice_number && (
-                                            <p className="text-[10px] font-mono text-indigo-500 font-bold">{selectedOrder.invoice_number}</p>
+                                            <div className="flex items-center gap-2">
+                                                <Receipt size={10} className="text-slate-500" />
+                                                <p className="text-[10px] font-mono text-emerald-400 font-black">{selectedOrder.invoice_number}</p>
+                                            </div>
                                         )}
                                     </div>
                                     {(() => {
                                         const cfg = STATUS_CONFIG[selectedOrder.status] || STATUS_CONFIG.DRAFT;
                                         const Icon = cfg.icon;
                                         return (
-                                            <span className={clsx("flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg", cfg.color)}>
-                                                <Icon size={10} /> {cfg.label}
+                                            <span className={clsx("flex items-center gap-2 text-[9px] font-black px-3 py-1.5 rounded-xl border tabular-nums", cfg.color)}>
+                                                <Icon size={12} /> {cfg.label}
                                             </span>
                                         );
                                     })()}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div className="flex items-center gap-1.5 text-gray-500">
-                                        <Calendar size={11} className="text-gray-300" />
-                                        {new Date(selectedOrder.created_at).toLocaleDateString('fr-FR')} {new Date(selectedOrder.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 relative z-10">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Timestamp</span>
+                                        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
+                                            <Clock size={12} className="text-emerald-500/40" />
+                                            {new Date(selectedOrder.created_at).toLocaleDateString('fr-FR')} {new Date(selectedOrder.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                     {selectedOrder.contact_name && (
-                                        <div className="flex items-center gap-1.5 text-gray-500">
-                                            <User size={11} className="text-gray-300" />
-                                            {selectedOrder.contact_name}
-                                        </div>
-                                    )}
-                                    {selectedOrder.payment_method && (
-                                        <div className="flex items-center gap-1.5 text-gray-500">
-                                            <Hash size={11} className="text-gray-300" />
-                                            {selectedOrder.payment_method}
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Counterparty</span>
+                                            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
+                                                <User size={12} className="text-emerald-500/40" />
+                                                {selectedOrder.contact_name}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -242,39 +246,42 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
                             {/* Items */}
                             {selectedOrder.items && selectedOrder.items.length > 0 && (
-                                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-                                    <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-                                        <Package size={12} className="text-gray-400" />
-                                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Items</span>
+                                <div className="bg-slate-950/40 border border-white/5 rounded-3xl overflow-hidden p-1">
+                                    <div className="px-5 py-3 flex items-center gap-3">
+                                        <Package size={14} className="text-emerald-500/50" />
+                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Operational manifest</span>
                                     </div>
-                                    {selectedOrder.items.map((item, i) => (
-                                        <div key={i} className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50 last:border-0">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-gray-900 truncate">{item.name}</p>
-                                                <p className="text-[10px] text-gray-400">{item.quantity} × {fmt(item.unit_price)}</p>
+                                    <div className="space-y-1">
+                                        {selectedOrder.items.map((item, i) => (
+                                            <div key={i} className="flex items-center justify-between px-5 py-3 bg-white/[0.02] border border-white/5 rounded-2xl mx-1 mb-1 group hover:bg-white/[0.05] transition-colors">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[11px] font-black text-white uppercase italic tracking-tight truncate">{item.name}</p>
+                                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{item.quantity} UNIT × {fmt(item.unit_price)}</p>
+                                                </div>
+                                                <p className="text-xs font-black text-emerald-400 ml-4 tabular-nums">{fmt(item.quantity * item.unit_price)}</p>
                                             </div>
-                                            <p className="text-xs font-black text-gray-900 ml-4">{fmt(item.quantity * item.unit_price)}</p>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
                             {/* Total + Print */}
-                            <div className="bg-emerald-50 rounded-2xl p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total</p>
-                                    <p className="text-2xl font-black text-emerald-700">{fmt(selectedOrder.total_amount)}</p>
+                            <div className="bg-slate-950/80 border border-emerald-500/20 rounded-[2.5rem] p-8 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                                <div className="relative z-10">
+                                    <p className="text-[10px] font-black text-emerald-400/60 uppercase tracking-[0.4em] mb-1">Total Settlement</p>
+                                    <p className="text-4xl font-black text-white tracking-tighter tabular-nums">{fmt(selectedOrder.total_amount)}</p>
                                 </div>
                                 <button
                                     onClick={() => handlePrint(selectedOrder)}
                                     disabled={printingId === selectedOrder.id}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-600 disabled:opacity-50 transition-all shadow-lg shadow-emerald-100"
+                                    className="relative z-10 flex flex-col items-center justify-center w-20 h-20 rounded-[2rem] bg-emerald-gradient text-white shadow-xl shadow-emerald-500/30 hover:scale-110 active:scale-95 transition-all border border-emerald-400/30 group/btn"
                                 >
                                     {printingId === selectedOrder.id
-                                        ? <Loader2 size={14} className="animate-spin" />
-                                        : <Printer size={14} />
+                                        ? <Loader2 size={24} className="animate-spin" />
+                                        : <Printer size={24} />
                                     }
-                                    Print / PDF
+                                    <span className="text-[8px] font-black mt-1 uppercase tracking-widest">RE-PRINT</span>
                                 </button>
                             </div>
                         </div>
@@ -288,7 +295,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
                         </div>
                     ) : (
                         /* ── LIST VIEW ── */
-                        <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-white/[0.03]">
                             {filtered.map(order => {
                                 const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.DRAFT;
                                 const StatusIcon = cfg.icon;
@@ -296,30 +303,32 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
                                     <button
                                         key={order.id}
                                         onClick={() => setSelectedOrder(order)}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/80 transition-colors text-left group"
+                                        className="w-full flex items-center gap-5 px-8 py-5 hover:bg-white/[0.02] transition-all text-left group relative overflow-hidden"
                                     >
-                                        {/* Status dot */}
-                                        <div className={clsx("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", cfg.color)}>
-                                            <StatusIcon size={16} />
+                                        <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                        {/* Status Icon */}
+                                        <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all group-hover:scale-110", cfg.color)}>
+                                            <StatusIcon size={20} />
                                         </div>
 
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-xs font-black text-gray-900">#{order.ref_code || order.id}</p>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <p className="text-[13px] font-black text-white tracking-tight uppercase italic">{order.ref_code || order.id}</p>
                                                 {order.invoice_number && (
-                                                    <span className="text-[9px] font-mono text-indigo-400 bg-indigo-50 px-1 rounded">
+                                                    <span className="text-[9px] font-mono font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
                                                         {order.invoice_number}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2 mt-0.5">
+                                            <div className="flex items-center gap-3">
                                                 {order.contact_name && (
-                                                    <span className="text-[10px] text-gray-400 font-medium truncate">
+                                                    <span className="text-[10px] text-slate-500 font-bold truncate uppercase tracking-wider">
                                                         {order.contact_name}
                                                     </span>
                                                 )}
-                                                <span className="text-[9px] text-gray-300">
+                                                <span className="text-[9px] text-slate-600 font-bold tabular-nums">
                                                     {new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
@@ -327,11 +336,9 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
 
                                         {/* Amount */}
                                         <div className="text-right shrink-0">
-                                            <p className="text-sm font-black text-gray-900">{fmt(order.total_amount)}</p>
-                                            <p className={clsx("text-[9px] font-black uppercase", cfg.color.split(' ')[0])}>{cfg.label}</p>
+                                            <p className="text-lg font-black text-white tracking-tighter tabular-nums">{fmt(order.total_amount).split(' ')[1]}</p>
+                                            <p className={clsx("text-[9px] font-black uppercase tracking-[0.2em]", cfg.color.split(' ')[0])}>{cfg.label}</p>
                                         </div>
-
-                                        <ChevronRight size={14} className="text-gray-200 group-hover:text-gray-400 transition-colors shrink-0" />
                                     </button>
                                 );
                             })}

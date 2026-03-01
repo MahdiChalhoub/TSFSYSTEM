@@ -16,7 +16,7 @@ class MigrationJobSerializer(serializers.ModelSerializer):
             'source_business_id', 'source_business_name', 'migration_mode',
             'total_units', 'total_categories', 'total_brands', 'total_products',
             'total_contacts', 'total_transactions', 'total_accounts', 'total_inventory',
-            'total_errors',
+            'total_errors', 'total_verified', 'total_flagged',
             'error_log', 'discovered_data', 'created_by_name', 'started_at', 'completed_at',
             'created_at', 'updated_at',
         ]
@@ -70,7 +70,8 @@ class MigrationMappingSerializer(serializers.ModelSerializer):
         model = MigrationMapping
         fields = [
             'id', 'entity_type', 'source_id', 'target_id',
-            'source_table', 'extra_data', 'created_at'
+            'source_table', 'extra_data', 'audit_status', 
+            'audit_notes', 'audit_at', 'audited_by', 'created_at'
         ]
         read_only_fields = fields
 

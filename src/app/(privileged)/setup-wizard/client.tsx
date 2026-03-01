@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -13,19 +13,20 @@ import {
     CheckCircle2, Rocket, ArrowRight,
     Upload, FileSpreadsheet, ArrowUpRight,
     Scale, Shield, User, Building,
-    Camera, Fingerprint, FileText, Map as MapIcon
+    Camera, Fingerprint, FileText, Map as MapIcon,
+    Wallet, CreditCard, Coins
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
     saveBusinessProfile, saveFinancialSetup, saveFiscalRegime,
-    bulkCreateWarehouses, completeOnboarding
+    bulkCreateWarehouses, completeOnboarding, createFinancialAccount
 } from '@/app/actions/setup-wizard'
 
 // ─── Types ──────────────────────────────────────────────────────
 
-interface WizardConfig { currencies: any[]; businessTypes: any[]; coaTemplates: any[]; warehouses: any[]; modules: any[]; tenant: any }
-interface StepProps { config: WizardConfig; data: WizardData; setData: (u: Partial<WizardData>) => void; orgProfile: any }
+interface WizardConfig { currencies: any[]; businessTypes: any[]; coaTemplates: any[]; warehouses: any[]; modules: any[]; coaItems: any[]; posAccounts: any[]; tenant: any }
+interface StepProps { config: WizardConfig; data: WizardData; setData: (u: Partial<WizardData>) => void; orgProfile: any; createdAccounts?: any[]; onAccountCreated?: (acc: any) => void }
 interface WizardData {
     fiscal_regime: string
     business_name: string; business_email: string; phone: string; website: string
@@ -45,6 +46,7 @@ const STEPS = [
     { id: 'migration', title: 'Data Import', subtitle: 'Migrate from another system?', icon: Upload, color: 'orange' },
     { id: 'profile', title: 'Business Profile', subtitle: 'Contact & address details', icon: Building2, color: 'indigo' },
     { id: 'locations', title: 'Locations', subtitle: 'Warehouses & branches', icon: MapPin, color: 'violet' },
+    { id: 'payments', title: 'Payments', subtitle: 'Cash drawers & POS accounts', icon: Coins, color: 'amber' },
     { id: 'launch', title: 'Launch', subtitle: 'You\'re ready!', icon: Rocket, color: 'rose' },
 ]
 
@@ -75,28 +77,24 @@ const COA_DISPLAY: Record<string, { name: string; flag: string; desc: string }> 
 
 const INPUT_CLS = "w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
 
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN WIZARD
 // ═══════════════════════════════════════════════════════════════
 
 export default function SetupWizardClient({ config, orgProfile }: { config: WizardConfig; orgProfile: any }) {
     const router = useRouter()
-    const [step, setStep] = useState(0)
-    const [saving, setSaving] = useState(false)
-    const [completed, setCompleted] = useState(false)
-
-    // Default fiscal year: Jan 1 to Dec 31 of current year
     const year = new Date().getFullYear()
 
     const [data, setDataRaw] = useState<WizardData>({
-        fiscal_regime: '',
+        fiscal_regime: orgProfile?.company_type || '',
         business_name: orgProfile?.name || '',
         business_email: orgProfile?.business_email || '',
         phone: orgProfile?.phone || '', website: orgProfile?.website || '',
         address: orgProfile?.address || '', city: orgProfile?.city || '',
         state: orgProfile?.state || '', zip_code: orgProfile?.zip_code || '',
         country: orgProfile?.country || '', timezone: orgProfile?.timezone || 'UTC',
-        business_type_id: orgProfile?.business_type?.id?.toString() || '',
+        business_type_id: orgProfile?.business_type_id || '',
         base_currency_id: orgProfile?.base_currency?.id?.toString() || '',
         coa_template: 'IFRS_COA', works_in_ttc: true,
         fiscal_year_name: `FY ${year}`,
@@ -108,6 +106,34 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
         want_migration: null,
         warehouses: [],
     })
+
+    const getInitialStep = () => {
+        if (!orgProfile?.company_type && !data.fiscal_regime) return 0
+        const hasCurrency = !!orgProfile?.base_currency?.id || !!data.base_currency_id
+        if (!hasCurrency) return 1
+        if (data.want_migration === null) return 2
+        // If they have no address, they need to fill it in Step 3
+        if (!orgProfile?.address || !orgProfile?.city) return 3
+        // If they have no warehouses (registration usually creates WH01, but we check), they need Step 4
+        if (config.warehouses.length === 0 && data.warehouses.length === 0) return 4
+        // If they have no POS-enabled accounts, they MUST do Step 5
+        if (config.posAccounts.length === 0) return 5
+        return 6
+    }
+
+    const [step, setStep] = useState(0)
+    const [initialized, setInitialized] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [completed, setCompleted] = useState(false)
+    const [createdAccounts, setCreatedAccounts] = useState<any[]>([])
+    const onAccountCreated = useCallback((acc: any) => setCreatedAccounts(prev => [...prev, acc]), [])
+
+    useEffect(() => {
+        if (!initialized) {
+            setStep(getInitialStep())
+            setInitialized(true)
+        }
+    }, [initialized])
 
     const setData = useCallback((u: Partial<WizardData>) => setDataRaw(p => ({ ...p, ...u })), [])
 
@@ -171,8 +197,13 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                     address: wh.address,
                     city: wh.city
                 }))
-                if (whToCreate.length > 0) {
-                    result = await bulkCreateWarehouses(whToCreate)
+                if (whToCreate.length > 0) result = await bulkCreateWarehouses(whToCreate)
+            } else if (step === 5) {
+                // Moving from Payments to Launch — check if we have at least one POS account
+                const totalAccounts = config.posAccounts.length + createdAccounts.length
+                if (totalAccounts === 0) {
+                    toast.error("You must create at least one payment account for POS and Accounting.")
+                    setSaving(false); return
                 }
             }
 
@@ -184,14 +215,14 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
 
     if (completed) return <LaunchAnimation />
 
-    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepLaunch]
+    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepPaymentAccounts, StepLaunch]
     const CurrentStep = StepComponents[step]
 
-    // Steps 0 and 1 are MANDATORY — no skip button
-    const canSkip = step > 2 && step < STEPS.length - 1
+    // Steps 0, 1, and 5 are MANDATORY — no skip button
+    const canSkip = step > 2 && step !== 5 && step < STEPS.length - 1
 
     return (
-        <div className="flex flex-col items-center animate-in fade-in duration-500 overflow-hidden h-full">
+        <div className="flex flex-col items-center animate-in fade-in duration-500 w-full">
             <div className="w-full max-w-4xl mx-auto px-4 pt-2">
                 <div className="text-center mb-4">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 mb-2">
@@ -224,7 +255,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                 </div>
             </div>
             <div className="w-full max-w-4xl mx-auto px-4 flex-1">
-                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm">
                     <div className="px-8 pt-8 pb-4 border-b border-gray-50">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center">
@@ -241,7 +272,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                         </div>
                     </div>
                     <div className="p-8 animate-in fade-in slide-in-from-right-4 duration-300" key={step}>
-                        <CurrentStep config={config} data={data} setData={setData} orgProfile={orgProfile} />
+                        <CurrentStep config={config} data={data} setData={setData} orgProfile={orgProfile} createdAccounts={createdAccounts} onAccountCreated={onAccountCreated} />
                     </div>
                     <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
                         <button onClick={() => step > 0 && setStep(s => s - 1)} disabled={step === 0}
@@ -273,7 +304,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
 // STEP 0: Fiscal Regime (MANDATORY)
 // ═══════════════════════════════════════════════════════════════
 
-function StepLegalForm({ data, setData }: StepProps) {
+function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
     return (
         <div className="space-y-4">
             <div className="p-4 rounded-xl bg-rose-50 border border-rose-100 mb-2">
@@ -423,7 +454,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 // STEP 2: Data Migration
 // ═══════════════════════════════════════════════════════════════
 
-function StepDataMigration({ data, setData }: StepProps) {
+function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
     return (
         <div className="space-y-6">
             <p className="text-sm text-gray-500 font-medium">
@@ -652,13 +683,131 @@ function StepLocations({ config, data, setData }: StepProps) {
     )
 }
 
+// ═══════════════════════════════════════════════════════════════
+// STEP 5: Payment Accounts (MANDATORY for operation)
+// ═══════════════════════════════════════════════════════════════
 
+function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccounts = [], onAccountCreated }: StepProps) {
+    const [adding, setAdding] = useState(false)
+    const [name, setName] = useState('')
+    const [type, setType] = useState('CASH')
+    const [coa, setCoa] = useState('')
+    const [saving, setSaving] = useState(false)
 
+    // Combine server-loaded accounts with locally created ones
+    const allAccounts = [...config.posAccounts, ...createdAccounts]
+
+    // Filter COA items to only show ASSET-type accounts (Cash, Bank, etc.)
+    const assetCoaItems = config.coaItems.filter((c: any) =>
+        c.type === 'ASSET' || c.code?.startsWith('1')  // ASSET accounts or class 1 (Assets in SYSCOHADA/PCG)
+    )
+
+    const handleAdd = async () => {
+        setSaving(true)
+        try {
+            const cur = config.currencies.find((c: any) => c.id.toString() === data.base_currency_id)
+            const res = await createFinancialAccount({
+                name, type,
+                currency: cur?.code || 'USD',
+                is_pos_enabled: true,
+                linked_coa: coa || undefined
+            })
+            if (res.success) {
+                toast.success("Payment account created!")
+                // Update local state immediately so Continue works
+                if (onAccountCreated && res.data) {
+                    onAccountCreated(res.data)
+                }
+                setName(''); setAdding(false); setCoa('')
+            } else toast.error(res.error)
+        } finally { setSaving(false) }
+    }
+
+    // Find the selected COA label for hint
+    const selectedCoa = assetCoaItems.find((c: any) => c.id.toString() === coa)
+
+    return (
+        <div className="space-y-6">
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex gap-3">
+                <Coins className="text-amber-600 shrink-0" size={20} />
+                <div>
+                    <p className="text-xs font-bold text-amber-900">Mandatory Payment Account</p>
+                    <p className="text-[11px] text-amber-700 leading-relaxed mt-0.5">
+                        To process sales and record payments, you must have at least one <strong>POS-enabled account</strong>.
+                        This acts as your digital cash drawer or bank ledger.
+                    </p>
+                </div>
+            </div>
+
+            {allAccounts.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {allAccounts.map((acc: any, idx: number) => (
+                        <div key={acc.id || `new-${idx}`} className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/30 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white border border-emerald-100 flex items-center justify-center text-emerald-600">
+                                    {acc.type === 'BANK' ? <Landmark size={20} /> : <Wallet size={20} />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">{acc.name}</p>
+                                    <p className="text-[10px] text-emerald-600 font-bold uppercase">{acc.type}</p>
+                                </div>
+                            </div>
+                            <CheckCircle2 size={20} className="text-emerald-500" />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {!adding ? (
+                <button onClick={() => setAdding(true)} className="w-full p-4 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-2 font-bold text-sm">
+                    <Plus size={18} /> Add Payment Account
+                </button>
+            ) : (
+                <div className="p-6 rounded-2xl border-2 border-indigo-100 bg-white space-y-4 animate-in slide-in-from-top-4 duration-300">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Account Name</label>
+                            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Main Cash Register" className={INPUT_CLS} />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Type</label>
+                            <select value={type} onChange={e => setType(e.target.value)} className={INPUT_CLS}>
+                                <option value="CASH">Cash Drawer</option>
+                                <option value="BANK">Bank Account</option>
+                                <option value="MOBILE">Mobile Wallet</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Ledger Parent (COA)</label>
+                            <select value={coa} onChange={e => setCoa(e.target.value)} className={INPUT_CLS}>
+                                <option value="">Auto-assign...</option>
+                                {assetCoaItems.map((c: any) => (
+                                    <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    {selectedCoa && (
+                        <div className="p-3 rounded-lg bg-sky-50 border border-sky-100 text-[11px] text-sky-700">
+                            <span className="font-bold">📂 COA Mapping:</span> A child account will be created under <strong>{selectedCoa.code} - {selectedCoa.name}</strong> (e.g., <code>{selectedCoa.code}.001 - {name || 'Account Name'}</code>)
+                        </div>
+                    )}
+                    <div className="flex gap-2">
+                        <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex-1">Cancel</button>
+                        <button onClick={handleAdd} disabled={!name || saving} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold flex-1 disabled:opacity-50">
+                            {saving ? 'Creating...' : 'Create Account'}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
 // ═══════════════════════════════════════════════════════════════
 // STEP 6: Launch
 // ═══════════════════════════════════════════════════════════════
 
-function StepLaunch({ data, config }: StepProps) {
+function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
     const cur = config.currencies.find((c: any) => c.id.toString() === data.base_currency_id)
     const coa = COA_DISPLAY[data.coa_template]
     const fr = FISCAL_REGIMES.find(r => r.code === data.fiscal_regime)
@@ -691,6 +840,11 @@ function StepLaunch({ data, config }: StepProps) {
                     <p className="text-lg font-black text-gray-900">{config.warehouses.length + data.warehouses.filter(w => w.name).length}</p>
                     <p className="text-xs text-gray-400">{config.warehouses.length} existing + {data.warehouses.filter(w => w.name).length} new</p>
                 </CardContent></Card>
+                <Card className="rounded-2xl border-gray-100 shadow-sm"><CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-3"><Coins size={16} className="text-amber-500" /><span className="text-xs font-black text-gray-400 uppercase tracking-widest">Payments</span></div>
+                    <p className="text-lg font-black text-gray-900">{config.posAccounts.length}</p>
+                    <p className="text-xs text-gray-400">POS-enabled accounts ready</p>
+                </CardContent></Card>
             </div>
             <Card className="rounded-[2rem] border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 overflow-hidden">
                 <CardContent className="p-8">
@@ -699,6 +853,7 @@ function StepLaunch({ data, config }: StepProps) {
                     </h4>
                     <div className="space-y-4">
                         {[
+                            { title: 'POS Initialization', desc: 'A default "Main Register" has been created and linked to your first cash drawer.' },
                             { title: 'Modules Activation', desc: 'Your subscription plan (Standard/Premium) will automatically enable relevant modules.' },
                             { title: 'Master Data Setup', desc: 'You should start by adding your Products, Customers, and Suppliers in the sidebar.' },
                             { title: 'Opening Balances', desc: 'Use the Finance module to record your initial cash/bank balances.' },
