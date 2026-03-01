@@ -25,9 +25,10 @@ Before touching any file, you MUST:
 1. **Read `WORKMAP.md`** — Check for related open/done items.
 2. **Read `WORK_IN_PROGRESS.md`** — Check for warnings from previous sessions.
 3. **Read `LESSONS_LEARNED.md`** — Check for gotchas related to the module/area you're working on.
-4. **Read `DESIGN_CRITERIA.md`** — Ensure you know the visual/architectural standards.
-5. **Identify the affected module** and read its documentation in `DOCUMENTATION/`.
-5. **Review applicable `.agent/rules/`** — These are ALWAYS-ON mandatory rules:
+4. **Read `CODEBASE_MAP.md`** — Find WHERE files live, WHAT components exist, HOW data flows.
+5. **Read `DESIGN_CRITERIA.md`** — Ensure you know the visual/architectural standards.
+6. **Identify the affected module** and read its documentation in `DOCUMENTATION/`.
+7. **Review applicable `.agent/rules/`** — These are ALWAYS-ON mandatory rules:
    - `architecture.md` — Module structure, file organization, Engine vs Kernel
    - `security.md` — 14 security rules (auth, XSS, CSRF, secrets)
    - `isolation.md` — Tenant isolation enforcement

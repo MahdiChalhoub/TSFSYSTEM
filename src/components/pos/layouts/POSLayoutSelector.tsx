@@ -26,7 +26,7 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
         name: 'High-Velocity Terminal',
         description: 'Low-latency dark console. Monospace precision, optimized for max transactional throughput.',
         icon: Zap,
-        preview: '⚡ Speed Protocol: Dense Matrix',
+        preview: '⚡ Speed Mode: Compact View',
         accent: 'amber',
     },
     {

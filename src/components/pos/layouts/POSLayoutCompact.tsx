@@ -174,10 +174,10 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[12px] font-black text-white uppercase tracking-wider italic flex items-center gap-2">
-                                {selectedClient?.name || 'Anonymous Node'}
+                                {selectedClient?.name || 'Walk-in Customer'}
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                             </span>
-                            <span className="text-[9px] font-black text-slate-500 tracking-[0.2em] font-mono leading-none mt-1">ID_SIG: {selectedClient?.phone || 'NO_AUTH_ID'}</span>
+                            <span className="text-[9px] font-black text-slate-500 tracking-[0.2em] font-mono leading-none mt-1">{selectedClient?.phone || 'No phone'}</span>
                         </div>
                     </div>
 
@@ -185,7 +185,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         onClick={handleOpenVault}
                         className="pl-6 flex flex-col items-start hover:bg-emerald-500/5 px-4 py-1.5 rounded-xl transition-all group border border-transparent hover:border-emerald-500/20"
                     >
-                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] leading-none mb-1.5 group-hover:text-emerald-400 transition-colors">Balance Matrix</span>
+                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] leading-none mb-1.5 group-hover:text-emerald-400 transition-colors">Balance Due</span>
                         <span className={clsx("text-[13px] font-black tabular-nums italic transition-colors", (selectedClient?.balance || 0) > 0 ? "text-rose-500" : "text-emerald-500")}>
                             {currency}{formatNumber(selectedClient?.balance || 0)}
                         </span>
@@ -205,7 +205,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         <Search className="text-slate-600 group-focus-within:text-emerald-400 transition-colors" size={14} />
                         <input
                             type="text"
-                            placeholder="IDENTIFY PARTNER..."
+                            placeholder="Search client..."
                             value={clientSearchQuery}
                             onChange={(e) => {
                                 const v = e.target.value;
@@ -223,10 +223,10 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             className="pl-8 pr-10 py-2 bg-slate-900/60 border border-white/5 rounded-2xl text-[10px] font-black text-slate-400 outline-none appearance-none cursor-pointer uppercase tracking-widest hover:border-white/10 transition-all italic focus:border-emerald-500/50"
                         >
                             {deliveryZones.map(z => (
-                                <option key={z.id} value={z.name} className="bg-slate-950 text-white">{z.name} Sector</option>
+                                <option key={z.id} value={z.name} className="bg-slate-950 text-white">{z.name}</option>
                             ))}
                             {deliveryZones.length === 0 && (
-                                <option value="A" className="bg-slate-950 text-white">Zone Alpha</option>
+                                <option value="A" className="bg-slate-950 text-white">Default Zone</option>
                             )}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" size={12} />
@@ -240,7 +240,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-emerald-400 transition-colors" size={16} />
                     <input
                         type="text"
-                        placeholder="INPUT:// SCAN BARCODE | SKU | TERMINAL_ID..."
+                        placeholder="Search by barcode, SKU, or name..."
                         className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-white/5 rounded-[1.2rem] text-[11px] font-black text-white outline-none focus:border-emerald-500/50 transition-all placeholder:text-slate-800 uppercase tracking-[0.2em] italic shadow-inner"
                         value={searchQuery}
                         onChange={(e) => onSetSearchQuery(e.target.value)}
@@ -261,7 +261,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                         : 'bg-slate-900 text-slate-400 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'
                                 )}
                             >
-                                SYSTEM_ROOT
+                                ALL
                             </button>
                             {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
                                 <button
@@ -341,7 +341,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0 bg-slate-950/60 transition-all">
                         <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 italic">Sequential Order Matrix</h2>
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 italic">Order Queue</h2>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="px-2 py-0.5 bg-slate-900 rounded-lg text-[9px] font-black text-slate-400 italic uppercase">
@@ -351,7 +351,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 <button
                                     onClick={() => onClearCart(false)}
                                     className="p-1 text-slate-600 hover:text-rose-500 transition-colors"
-                                    title="PURGE_CART"
+                                    title="Clear Cart"
                                 >
                                     <Trash2 size={14} />
                                 </button>
@@ -365,8 +365,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             <div className="flex flex-col items-center justify-center h-full text-slate-800 gap-4 animate-in fade-in zoom-in duration-500">
                                 <ShoppingCart size={48} strokeWidth={1} className="opacity-20" />
                                 <div className="text-center">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">Bay_Empty</p>
-                                    <p className="text-[8px] font-bold text-slate-900 uppercase mt-1">Ready for Capture</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">Cart Empty</p>
+                                    <p className="text-[8px] font-bold text-slate-900 uppercase mt-1">Add items to get started</p>
                                 </div>
                             </div>
                         ) : (
@@ -434,7 +434,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
                         <div className="flex items-center justify-between mb-6 relative z-10">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1 italic">Settlement Matrix</span>
+                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1 italic">Payment</span>
                                 <div className="flex items-center gap-3">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Sub: {currency}{formatNumber(total)}</span>
                                     {discount > 0 && (
@@ -486,7 +486,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         {/* Cash & Change Logic */}
                         <div className="flex items-center gap-3 mb-6">
                             <div className="relative flex-1 group">
-                                <span className="absolute left-4 -top-2 px-2 bg-slate-950 text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] z-10 transition-colors group-focus-within:text-emerald-400">Received_Funds</span>
+                                <span className="absolute left-4 -top-2 px-2 bg-slate-950 text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] z-10 transition-colors group-focus-within:text-emerald-400">Amount Received</span>
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -503,7 +503,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             </div>
                         </div>
 
-                        {/* Main Charge Protocol */}
+                        {/* Main Payment Button */}
                         <button
                             onClick={() => onCharge()}
                             disabled={isProcessing || cart.length === 0}
@@ -522,9 +522,9 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                         {isProcessing ? <RefreshCw size={24} className="animate-spin" /> : <ShieldCheck size={28} className="stroke-[2.5]" />}
                                     </div>
                                     <div className="flex flex-col items-start">
-                                        <span className="text-[9px] font-black text-emerald-100/60 uppercase tracking-[0.3em] leading-none mb-1 italic">Auth Protocol</span>
+                                        <span className="text-[9px] font-black text-emerald-100/60 uppercase tracking-[0.3em] leading-none mb-1 italic">Pay Now</span>
                                         <span className="text-[18px] font-black text-white uppercase tracking-wider leading-none italic">
-                                            {isProcessing ? "PROCESSING..." : changeDue > 0 ? "COMMIT_REBATE" : "FINALIZE_HUB"}
+                                            {isProcessing ? "PROCESSING..." : changeDue > 0 ? "GIVE CHANGE" : "COMPLETE SALE"}
                                         </span>
                                     </div>
                                 </div>

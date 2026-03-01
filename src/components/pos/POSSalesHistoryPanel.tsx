@@ -193,7 +193,7 @@ export function POSSalesHistoryPanel({ isOpen, onClose, currency, registerName, 
                             <button onClick={() => setSelectedOrder(null)}
                                 className="h-10 px-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2 group">
                                 <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                                Return to Matrix
+                                Back to POS
                             </button>
 
                             {/* Order header */}

@@ -221,7 +221,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                         <Activity className="w-6 h-6 text-emerald-500 animate-pulse" />
                     </div>
                 </div>
-                <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-2">Syncing Catalog Matrix</h2>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-2">Loading Products</h2>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Establishing secure data handshake...</p>
             </div>
         );
@@ -256,7 +256,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                 <p className="text-sm text-slate-400 max-w-sm font-medium leading-relaxed">
                     {searchQuery
                         ? `A query for "${searchQuery}" yielded no operational matches in the current registry.`
-                        : 'The product matrix is currently devoid of entries. Please verify warehouse connectivity.'
+                        : 'No products found. Check your warehouse or category selection.'
                     }
                 </p>
             </div>

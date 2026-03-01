@@ -242,7 +242,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-xl font-black text-white uppercase tracking-widest">Cart Locked</h3>
-                                <p className="text-[11px] text-slate-500 max-w-[240px] uppercase font-bold tracking-tighter leading-relaxed">Safety Protocol Active. Exit payment orchestration to modify items.</p>
+                                <p className="text-[11px] text-slate-500 max-w-[240px] uppercase font-bold tracking-tighter leading-relaxed">Payment in progress. Return to cart to modify items.</p>
                             </div>
                             <button
                                 onClick={() => setIsMultiPayMode(false)}
@@ -293,7 +293,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                         <input
                                             id="pos-product-search"
                                             type="text"
-                                            placeholder="SCAN BARCODE OR QUERY MATRIX..."
+                                            placeholder="Search by barcode or name..."
                                             className="w-full pl-14 pr-14 py-4.5 bg-slate-900 border border-white/5 rounded-2xl text-[14px] outline-none focus:bg-[#020617] focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all font-black text-white placeholder:text-slate-700 placeholder:uppercase placeholder:tracking-[0.2em]"
                                             value={searchQuery}
                                             onChange={(e) => onSetSearchQuery(e.target.value)}
@@ -309,7 +309,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                     </div>
                                     <button
                                         onClick={() => setShowNumpad(!showNumpad)}
-                                        title={showNumpad ? "Deactivate Neural Numpad" : "Initialize Speed Calc"}
+                                        title={showNumpad ? "Hide Calculator" : "Show Calculator"}
                                         className={clsx(
                                             "w-14 h-14 rounded-2xl border-2 transition-all shrink-0 active:scale-95 flex items-center justify-center shadow-2xl",
                                             showNumpad
@@ -336,7 +336,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                                         ? 'bg-white border-white text-slate-950 shadow-2xl shadow-white/10 scale-105'
                                                         : 'bg-slate-900/50 border-white/5 text-slate-500 hover:border-emerald-500/30 hover:text-emerald-400'
                                                 )}
-                                            >Master Matrix</button>
+                                            >All Products</button>
                                             <div className="w-px h-6 bg-white/5 shrink-0" />
                                             {categories.filter((c: any) => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
                                                 <button
@@ -393,7 +393,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                             <div className="px-8 py-3 bg-[#020617] border-b border-white/5 flex items-center justify-between shrink-0">
                                 <span className="text-[10px] font-black text-slate-600 flex items-center gap-3 uppercase tracking-[0.3em]">
                                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                    Active Stream: <span className="text-slate-400 italic font-black">{leftExpanded ? 'Matrix View' : 'Index View'}</span>
+                                    Active Stream: <span className="text-slate-400 italic font-black">{leftExpanded ? 'Grid View' : 'List View'}</span>
                                 </span>
                                 <button
                                     onClick={() => setLeftExpanded(!leftExpanded)}
@@ -419,7 +419,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                             }}
                                             onNotFound={(q) => {
                                                 toast.error(`"${q}" not found`, {
-                                                    description: 'Zero matches in current availability matrix.',
+                                                    description: 'No products match your current search or category.',
                                                     duration: 3000,
                                                 });
                                                 setTimeout(() => onSetSearchQuery(''), 1500);
@@ -447,7 +447,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                                 >
                                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -rotate-45" />
                                                     <Package size={32} className="mx-auto mb-3 relative z-10 group-hover:scale-110 transition-transform" />
-                                                    <span className="text-[14px] font-black uppercase tracking-[0.1em] relative z-10">Matrix All</span>
+                                                    <span className="text-[14px] font-black uppercase tracking-[0.1em] relative z-10">Show All</span>
                                                 </button>
                                             )}
                                             {filteredCategories.map(cat => {
@@ -512,7 +512,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                                                 <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] italic">
-                                                    {isMultiPayMode ? 'Payment DNA' : selectedCartIdx !== null ? `Node Edit: #${selectedCartIdx + 1}` : 'Neural Calc v1'}
+                                                    {isMultiPayMode ? 'Split Payment' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Calculator'}
                                                 </span>
                                             </div>
                                             <button onClick={() => setShowNumpad(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:bg-rose-500 hover:text-white transition-all shadow-inner border border-white/5">
@@ -765,7 +765,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                         <div className="border-t border-white/10 bg-slate-950/80 backdrop-blur-2xl px-6 py-6 shrink-0 space-y-5 rounded-t-[3rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 shadow-inner group">
-                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] block mb-2 group-hover:text-slate-400 transition-colors">Matrix Subtotal</span>
+                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] block mb-2 group-hover:text-slate-400 transition-colors">Subtotal</span>
                                     <span className="text-xl font-black text-white tabular-nums tracking-tighter italic">{currency}{formatNumber(total)}</span>
                                 </div>
                                 <div
