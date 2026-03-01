@@ -354,6 +354,69 @@ class MigrationReviewMixin:
             'errors': errors[:20],
         })
 
+    @action(detail=True, methods=['post'], url_path='repost-journals')
+    def repost_journals(self, request, pk=None):
+        """Re-posts journal entries for migrated transactions using the correct posting rules.
+        Removes suspense accounts (5700/6000) and creates proper Double-Entry ledgers.
+        """
+        job = self.get_object()
+        org_id = job.organization_id
+        
+        from erp.models import Organization
+        from apps.finance.models.ledger_models import JournalEntry, JournalEntryLine
+        from apps.pos.models import Order
+        from apps.finance.services import LedgerService
+        
+        organization = Organization.objects.get(id=org_id)
+        
+        # Get all migrated transactions
+        mapping_ids = list(MigrationMapping.objects.filter(
+            job=job, entity_type='TRANSACTION'
+        ).values_list('target_id', flat=True))
+        
+        # Find all SALE journal entries linked to these transactions that use suspense accounts
+        suspense_jes = JournalEntry.objects.filter(
+            organization=organization,
+            reference_type='SALE',
+            reference_id__in=mapping_ids,
+            lines__account__code__in=['5700', '6000']
+        ).distinct()
+        
+        count = suspense_jes.count()
+        if count == 0:
+            return Response({'message': 'No suspense journal entries found to re-post.', 'count': 0})
+            
+        success_count = 0
+        errors = []
+        
+        # We process asynchronously if there are many, but for now we do a chunk
+        # If there are thousands, this might time out, but we limit to a safe chunk or do it all.
+        jes_to_process = list(suspense_jes[:500])
+        
+        with transaction.atomic():
+            for je in jes_to_process:
+                try:
+                    order = Order.objects.filter(id=je.reference_id).first()
+                    if not order:
+                        continue
+                        
+                    # Delete old JE (which cascades to lines)
+                    je.delete()
+                    
+                    # Re-post using proper business logic
+                    LedgerService.record_sale(order)
+                    success_count += 1
+                except Exception as e:
+                    errors.append(f"JE {je.id} (Order {je.reference_id}): {str(e)}")
+        
+        return Response({
+            'reposted': success_count,
+            'total_found': count,
+            'remaining': count - success_count,
+            'errors': errors[:20]
+        })
+
+
     def _load_target_enriched(self, entity_type, target_id):
         """Load enriched target data for audit view."""
         try:
@@ -394,17 +457,18 @@ class MigrationReviewMixin:
                     'has_ledger_link': bool(obj.linked_account_id),
                 }
                 if obj.linked_account_id:
-                    from apps.finance.models import FinancialAccount
+                    # linked_account_id points to ChartOfAccount (created by LedgerService.create_linked_account)
+                    from apps.finance.models.coa_models import ChartOfAccount
                     try:
-                        fa = FinancialAccount.objects.get(id=obj.linked_account_id)
-                        data['ledger_account_name'] = fa.name
-                        data['ledger_coa_id'] = fa.ledger_account_id
-                        if fa.ledger_account_id:
-                            from apps.finance.models.coa_models import ChartOfAccount
+                        coa = ChartOfAccount.objects.get(id=obj.linked_account_id)
+                        data['coa_child_code'] = coa.code
+                        data['coa_child_name'] = coa.name
+                        data['coa_child_type'] = coa.type
+                        if coa.parent_id:
                             try:
-                                coa = ChartOfAccount.objects.get(id=fa.ledger_account_id)
-                                data['coa_parent_name'] = coa.name
-                                data['coa_parent_code'] = coa.code
+                                parent = ChartOfAccount.objects.get(id=coa.parent_id)
+                                data['coa_parent_code'] = parent.code
+                                data['coa_parent_name'] = parent.name
                             except:
                                 pass
                     except:
@@ -432,6 +496,62 @@ class MigrationReviewMixin:
                     except:
                         pass
                 return data
+
+            elif entity_type == 'UNIT':
+                from apps.inventory.models import Unit
+                obj = Unit.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'name': getattr(obj, 'name', ''),
+                    'code': getattr(obj, 'code', ''),
+                    'base_unit': getattr(obj, 'base_unit', ''),
+                    'allow_decimal': getattr(obj, 'allow_decimal', False),
+                }
+
+            elif entity_type == 'CATEGORY':
+                from apps.inventory.models import Category
+                obj = Category.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'name': obj.name,
+                    'description': getattr(obj, 'description', ''),
+                    'parent_id': getattr(obj, 'parent_id', None),
+                    'parent_name': obj.parent.name if getattr(obj, 'parent', None) else None,
+                }
+
+            elif entity_type == 'BRAND':
+                from apps.inventory.models import Brand
+                obj = Brand.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'name': obj.name,
+                    'description': getattr(obj, 'description', ''),
+                }
+
+            elif entity_type == 'USER':
+                from erp.models import User
+                obj = User.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'username': obj.username,
+                    'first_name': obj.first_name,
+                    'last_name': obj.last_name,
+                    'email': obj.email,
+                    'is_active': obj.is_active,
+                    'registration_status': getattr(obj, 'registration_status', ''),
+                }
+
+            elif entity_type == 'PAYMENT':
+                from apps.finance.payment_models import Payment
+                obj = Payment.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'amount': float(getattr(obj, 'amount', 0) or 0),
+                    'payment_date': str(getattr(obj, 'payment_date', '')),
+                    'status': getattr(obj, 'status', ''),
+                    'payment_method': getattr(obj, 'payment_method', ''),
+                    'contact_id': getattr(obj, 'contact_id', None),
+                }
 
             elif entity_type == 'PRODUCT':
                 from apps.inventory.models import Product
@@ -463,8 +583,10 @@ class MigrationReviewMixin:
                 data['journal_entries'] = list(jes.values('id', 'description', 'total_debit', 'total_credit', 'status'))
                 data['has_journal'] = jes.exists()
                 return data
+
             else:
-                return {'id': target_id}
+                # Generic fallback — try to get useful data
+                return {'id': target_id, 'entity_type': entity_type}
         except Exception as e:
             return {'error': f'Failed to load record {target_id}: {str(e)}'}
 

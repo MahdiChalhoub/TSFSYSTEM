@@ -14,13 +14,15 @@ import {
     Upload, FileSpreadsheet, ArrowUpRight,
     Scale, Shield, User, Building,
     Camera, Fingerprint, FileText, Map as MapIcon,
-    Wallet, CreditCard, Coins
+    Wallet, CreditCard, Coins, AlertCircle
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
     saveBusinessProfile, saveFinancialSetup, saveFiscalRegime,
-    bulkCreateWarehouses, completeOnboarding, createFinancialAccount
+    bulkCreateWarehouses, completeOnboarding, createFinancialAccount,
+    bulkCreatePriceGroups, bulkCreateDepartments,
+    savePOSSettings, saveStorefrontConfig, bulkCreateChecklistTemplates
 } from '@/app/actions/setup-wizard'
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -36,6 +38,11 @@ interface WizardData {
     vat_number: string; legal_entity: string; logo: string
     want_migration: boolean | null
     warehouses: { name: string; code: string; type: string; address: string; city: string; is_company_address?: boolean }[]
+    crm_price_groups: { name: string; description: string }[]
+    hr_departments: { name: string; code: string }[]
+    pos_settings: { allow_negative_stock: boolean }
+    ecommerce_config: { theme: string; primary_color: string; custom_domain: string }
+    workspace_checklists: { name: string; trigger: string; points: number }[]
 }
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -46,7 +53,12 @@ const STEPS = [
     { id: 'migration', title: 'Data Import', subtitle: 'Migrate from another system?', icon: Upload, color: 'orange' },
     { id: 'profile', title: 'Business Profile', subtitle: 'Contact & address details', icon: Building2, color: 'indigo' },
     { id: 'locations', title: 'Locations', subtitle: 'Warehouses & branches', icon: MapPin, color: 'violet' },
-    { id: 'payments', title: 'Payments', subtitle: 'Cash drawers & POS accounts', icon: Coins, color: 'amber' },
+    { id: 'crm', title: 'CRM Setup', subtitle: 'Customer tiers & categories', icon: User, color: 'blue' },
+    { id: 'hr', title: 'HR Setup', subtitle: 'Departments & teams', icon: Building, color: 'teal' },
+    { id: 'pos', title: 'POS Config', subtitle: 'Sales & Inventory rules', icon: Wallet, color: 'emerald' },
+    { id: 'ecommerce', title: 'Storefront', subtitle: 'Branding & Theme', icon: CreditCard, color: 'indigo' },
+    { id: 'workspace', title: 'Workspace', subtitle: 'Daily Checklists', icon: CheckCircle2, color: 'blue' },
+    { id: 'payments', title: 'Payments', subtitle: 'Cash drawers', icon: Coins, color: 'amber' },
     { id: 'launch', title: 'Launch', subtitle: 'You\'re ready!', icon: Rocket, color: 'rose' },
 ]
 
@@ -105,6 +117,22 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
         logo: orgProfile?.logo || '',
         want_migration: null,
         warehouses: [],
+        crm_price_groups: [
+            { name: 'Standard', description: 'Default retail pricing' },
+            { name: 'VIP', description: 'Loyal customer discounts' },
+            { name: 'Wholesale', description: 'Bulk B2B pricing' }
+        ],
+        hr_departments: [
+            { name: 'Management', code: 'MGT' },
+            { name: 'Sales & Marketing', code: 'SALES' },
+            { name: 'Operations', code: 'OPS' }
+        ],
+        pos_settings: { allow_negative_stock: false },
+        ecommerce_config: { theme: 'DEFAULT', primary_color: '#4f46e5', custom_domain: '' },
+        workspace_checklists: [
+            { name: 'Start of Shift Requirements', trigger: 'SHIFT_START', points: 5 },
+            { name: 'End of Shift Closing', trigger: 'SHIFT_END', points: 10 }
+        ]
     })
 
     const getInitialStep = () => {
@@ -132,11 +160,11 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
         // Step 4: Locations (Warehouses)
         if (!hasWarehouses) return 4
 
-        // Step 5: Payment Accounts
-        if (!hasPOSAccounts) return 5
+        // Step 10: Payment Accounts (index 10)
+        if (!hasPOSAccounts) return 10
 
-        // Step 6: Launch — everything is ready
-        return 6
+        // Step 11: Launch — everything is ready
+        return 11
     }
 
     const [step, setStep] = useState(0)
@@ -216,7 +244,26 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                     city: wh.city
                 }))
                 if (whToCreate.length > 0) result = await bulkCreateWarehouses(whToCreate)
-            } else if (step === 5) {
+            } else if (step === 5) { // CRM
+                const groupsToCreate = data.crm_price_groups.filter(g => g.name).map(g => ({
+                    name: g.name, description: g.description
+                }))
+                if (groupsToCreate.length > 0) result = await bulkCreatePriceGroups(groupsToCreate)
+            } else if (step === 6) { // HR
+                const deptsToCreate = data.hr_departments.filter(d => d.name).map(d => ({
+                    name: d.name, code: d.code
+                }))
+                if (deptsToCreate.length > 0) result = await bulkCreateDepartments(deptsToCreate)
+            } else if (step === 7) { // POS
+                result = await savePOSSettings(data.pos_settings)
+            } else if (step === 8) { // E-Commerce
+                result = await saveStorefrontConfig(data.ecommerce_config)
+            } else if (step === 9) { // Workspace
+                const checklistsToCreate = data.workspace_checklists.filter(cl => cl.name).map(cl => ({
+                    name: cl.name, trigger: cl.trigger, points: cl.points
+                }))
+                if (checklistsToCreate.length > 0) result = await bulkCreateChecklistTemplates(checklistsToCreate)
+            } else if (step === 10) {
                 // Moving from Payments to Launch — check if we have at least one POS account
                 const totalAccounts = config.posAccounts.length + createdAccounts.length
                 if (totalAccounts === 0) {
@@ -233,11 +280,11 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
 
     if (completed) return <LaunchAnimation />
 
-    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepPaymentAccounts, StepLaunch]
+    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepCRMSetup, StepHRSetup, StepPOSSetup, StepECommerceSetup, StepWorkspaceSetup, StepPaymentAccounts, StepLaunch]
     const CurrentStep = StepComponents[step]
 
-    // Steps 0, 1, and 5 are MANDATORY — no skip button
-    const canSkip = step > 2 && step !== 5 && step < STEPS.length - 1
+    // Steps 0, 1, and 10 are MANDATORY — no skip button
+    const canSkip = step > 2 && step !== 10 && step < STEPS.length - 1
 
     return (
         <div className="flex flex-col items-center animate-in fade-in duration-500 w-full">
@@ -702,7 +749,212 @@ function StepLocations({ config, data, setData }: StepProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 5: Payment Accounts (MANDATORY for operation)
+// STEP 5: CRM Setup (optional)
+// ═══════════════════════════════════════════════════════════════
+
+function StepCRMSetup({ config, data, setData }: StepProps) {
+    const add = () => setData({ crm_price_groups: [...data.crm_price_groups, { name: '', description: '' }] })
+    const upd = (i: number, f: string, v: any) => {
+        const u = [...data.crm_price_groups]
+        u[i] = { ...u[i], [f]: v }
+        setData({ crm_price_groups: u })
+    }
+    const rm = (i: number) => setData({ crm_price_groups: data.crm_price_groups.filter((_, j) => j !== i) })
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-3">
+                <div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-1">Pricing Tiers</h3>
+                    <p className="text-xs text-gray-500">Configure default customer categories for CRM and POS.</p>
+                </div>
+                <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all"><Plus size={14} /> Add Tier</button>
+            </div>
+            {data.crm_price_groups.length === 0 && (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                    <User size={32} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-sm font-bold text-gray-400">No pricing tiers defined</p>
+                </div>
+            )}
+            <div className="space-y-4 mt-4">
+                {data.crm_price_groups.map((g, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-white group relative">
+                        <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
+                            <div><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Tier Name</label><input type="text" value={g.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="VIP" className={INPUT_CLS} /></div>
+                            <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Description</label><input type="text" value={g.description} onChange={e => upd(i, 'description', e.target.value)} placeholder="Customers with 10%+ lifetime discount" className={INPUT_CLS} /></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 6: HR Setup (optional)
+// ═══════════════════════════════════════════════════════════════
+
+function StepHRSetup({ config, data, setData }: StepProps) {
+    const add = () => setData({ hr_departments: [...data.hr_departments, { name: '', code: '' }] })
+    const upd = (i: number, f: string, v: any) => {
+        const u = [...data.hr_departments]
+        u[i] = { ...u[i], [f]: v }
+        setData({ hr_departments: u })
+    }
+    const rm = (i: number) => setData({ hr_departments: data.hr_departments.filter((_, j) => j !== i) })
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-3">
+                <div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-1">Departments</h3>
+                    <p className="text-xs text-gray-500">Set up the organizational structure of your company.</p>
+                </div>
+                <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-50 text-teal-600 font-bold text-xs hover:bg-teal-100 transition-all"><Plus size={14} /> Add Dept</button>
+            </div>
+            {data.hr_departments.length === 0 && (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                    <Building size={32} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-sm font-bold text-gray-400">No departments defined</p>
+                </div>
+            )}
+            <div className="space-y-4 mt-4">
+                {data.hr_departments.map((d, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-white group relative">
+                        <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
+                            <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Department Name</label><input type="text" value={d.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Sales & Marketing" className={INPUT_CLS} /></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Code</label><input type="text" value={d.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SALES" maxLength={10} className={INPUT_CLS + ' uppercase'} /></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 7: POS Setup (optional)
+// ═══════════════════════════════════════════════════════════════
+
+function StepPOSSetup({ config, data, setData }: StepProps) {
+    const upd = (v: boolean) => setData({ pos_settings: { ...data.pos_settings, allow_negative_stock: v } })
+    return (
+        <div className="space-y-6">
+            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-3">POS Configuration</h3>
+            <div className="p-4 rounded-2xl border border-gray-100 bg-white">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-900 mb-1">Allow Negative Stock Override</label>
+                        <p className="text-xs text-gray-500 max-w-sm">When enabled, cashiers can sell items even if the system shows zero inventory. This is useful for high-volume retail where physical counts drift from digital counts.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                        <input type="checkbox" className="sr-only peer" checked={data.pos_settings.allow_negative_stock} onChange={e => upd(e.target.checked)} />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 8: E-Commerce Setup (optional)
+// ═══════════════════════════════════════════════════════════════
+
+function StepECommerceSetup({ config, data, setData }: StepProps) {
+    const upd = (k: string, v: string) => setData({ ecommerce_config: { ...data.ecommerce_config, [k]: v } })
+    return (
+        <div className="space-y-6">
+            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-3">Online Storefront</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl border border-gray-100 bg-white">
+                    <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase">Theme Primary Color</label>
+                    <div className="flex items-center gap-3">
+                        <input type="color" value={data.ecommerce_config.primary_color} onChange={e => upd('primary_color', e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+                        <span className="font-mono text-xs font-medium text-gray-600 uppercase">{data.ecommerce_config.primary_color}</span>
+                    </div>
+                </div>
+                <div className="p-4 rounded-2xl border border-gray-100 bg-white flex flex-col justify-center">
+                    <label className="block text-[10px] font-bold text-gray-400 mb-2 uppercase">Theme Style</label>
+                    <select value={data.ecommerce_config.theme} onChange={e => upd('theme', e.target.value)} className={INPUT_CLS}>
+                        <option value="DEFAULT">Default (Clean & Modern)</option>
+                        <option value="DARK">Dark Mode (Premium)</option>
+                        <option value="MINIMAL">Minimalist (White & Mono)</option>
+                    </select>
+                </div>
+                <div className="p-4 rounded-2xl border border-gray-100 bg-white md:col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Custom Domain (Optional)</label>
+                    <input type="text" value={data.ecommerce_config.custom_domain} onChange={e => upd('custom_domain', e.target.value)} placeholder="shop.yourcompany.com" className={INPUT_CLS} />
+                    <p className="text-[10px] text-gray-400 mt-2">You will need to configure DNS settings later if you provide a custom domain.</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 9: Workspace Setup (optional)
+// ═══════════════════════════════════════════════════════════════
+
+function StepWorkspaceSetup({ config, data, setData }: StepProps) {
+    const add = () => setData({ workspace_checklists: [...data.workspace_checklists, { name: '', trigger: 'CUSTOM', points: 5 }] })
+    const upd = (i: number, f: string, v: any) => {
+        const u = [...data.workspace_checklists]
+        u[i] = { ...u[i], [f]: v }
+        setData({ workspace_checklists: u })
+    }
+    const rm = (i: number) => setData({ workspace_checklists: data.workspace_checklists.filter((_, j) => j !== i) })
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-3">
+                <div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-1">Daily Checklists</h3>
+                    <p className="text-xs text-gray-500">Define operational checklists for your team (e.g., Opening, Closing).</p>
+                </div>
+                <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all"><Plus size={14} /> Add Checklist</button>
+            </div>
+            {data.workspace_checklists.length === 0 && (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-gray-200 text-center">
+                    <CheckCircle2 size={32} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-sm font-bold text-gray-400">No checklists defined</p>
+                </div>
+            )}
+            <div className="space-y-4 mt-4">
+                {data.workspace_checklists.map((c, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-white group relative">
+                        <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mr-8">
+                            <div className="md:col-span-2"><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Name</label><input type="text" value={c.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Opening" className={INPUT_CLS} /></div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Trigger</label>
+                                <select value={c.trigger} onChange={e => upd(i, 'trigger', e.target.value)} className={INPUT_CLS}>
+                                    <option value="SHIFT_START">Start of Shift</option>
+                                    <option value="SHIFT_MID">Mid Shift</option>
+                                    <option value="SHIFT_END">End of Shift</option>
+                                    <option value="DAILY">Daily</option>
+                                    <option value="CUSTOM">Custom</option>
+                                </select>
+                            </div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Reward Points</label><input type="number" value={c.points} onChange={e => upd(i, 'points', parseInt(e.target.value) || 0)} className={INPUT_CLS} min={0} /></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="bg-amber-50 rounded-xl p-4 flex items-start gap-3 mt-4">
+                <AlertCircle className="text-amber-500 mt-1 shrink-0" size={16} />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                    <strong>Note:</strong> You can add specific items (checkboxes) to these checklists later from the Workspace module. Right now, we are just creating the top-level templates.
+                </p>
+            </div>
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 10: Payment Accounts (MANDATORY for operation)
 // ═══════════════════════════════════════════════════════════════
 
 function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccounts = [], onAccountCreated }: StepProps) {

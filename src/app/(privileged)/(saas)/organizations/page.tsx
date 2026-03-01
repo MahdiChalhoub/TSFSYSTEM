@@ -309,9 +309,9 @@ export default function OrganizationsPage() {
                                     >
                                         {isCreating ? (
                                             <span className="flex items-center gap-3">
-                                                <Activity size={18} className="animate-spin" /> Synchronizing Node...
+                                                <Activity size={18} className="animate-spin" /> Deploying...
                                             </span>
-                                        ) : "Provision Engine Now"}
+                                        ) : "Deploy Tenant"}
                                     </Button>
                                 </div>
                             </DialogContent>

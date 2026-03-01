@@ -14,7 +14,7 @@ export default async function ChartOfAccountsPage() {
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            Node: Accounts Explorer
+                            Accounts Explorer
                         </Badge>
                         <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
                             <ShieldCheck size={12} /> Double-Entry Enforced

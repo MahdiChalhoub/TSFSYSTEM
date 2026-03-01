@@ -232,6 +232,8 @@ class AutoTaskRule(TenantModel):
         ('MONTH_END',               'Month-End Close'),
 
         # ── CRM ──
+        ('PROMOTION_TRIGGERED',     'Targeted Client Promotion'),
+        ('EXTERNAL_DOCUMENT_SEND',  'Send Document to Client/Supplier'),
         ('CLIENT_FOLLOWUP_DUE',     'Client Follow-Up Strategy Due'),
         ('SUPPLIER_FOLLOWUP_DUE',   'Supplier Follow-Up Due'),
         ('NEW_CLIENT',              'New Client Registered'),

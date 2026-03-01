@@ -176,8 +176,10 @@ class CashierAddressBook(TenantModel):
     ENTRY_TYPE_CHOICES = (
         ('SUPPLIER_PAYMENT', 'Supplier Payment'),
         ('EXPENSE', 'Expense'),
-        ('PARTNER_CONTRIBUTION', 'Partner Contribution'),
-        ('PARTNER_WITHDRAWAL', 'Partner Withdrawal'),
+        ('PARTNER_CAPITAL_IN', 'Partner Capital Injection'),
+        ('PARTNER_CASH_IN', 'Partner Cash Transfer (In)'),
+        ('PARTNER_CAPITAL_OUT', 'Partner Capital Withdrawal'),
+        ('PARTNER_CASH_OUT', 'Partner Cash Transfer (Out)'),
         ('CLIENT_PAYMENT', 'Client Payment'),
         ('CLIENT_PREPAYMENT', 'Client Prepayment'),
         ('SALE_DEPOSIT', 'Sale Deposit'),
@@ -239,9 +241,9 @@ class CashierAddressBook(TenantModel):
     expense_category = models.CharField(max_length=100, null=True, blank=True,
         help_text='Expense category (for EXPENSE type)')
     partner_id = models.IntegerField(null=True, blank=True,
-        help_text='Contact ID of partner (for PARTNER_CONTRIBUTION / WITHDRAWAL)')
+        help_text='Contact ID of partner')
     partner_name = models.CharField(max_length=255, null=True, blank=True,
-        help_text='Partner/owner name (for PARTNER_CONTRIBUTION / WITHDRAWAL)')
+        help_text='Partner/owner name')
     linked_order_id = models.IntegerField(null=True, blank=True,
         help_text='POS Order ID (for SALES_RETURN)')
     linked_order_ref = models.CharField(max_length=100, null=True, blank=True,
@@ -288,8 +290,8 @@ class CashierAddressBook(TenantModel):
 
     def save(self, *args, **kwargs):
         # Auto-derive direction from entry_type
-        OUT_TYPES = {'SUPPLIER_PAYMENT', 'EXPENSE', 'PARTNER_WITHDRAWAL', 'SALES_RETURN', 'CASH_SHORTAGE', 'OTHER_OUT'}
-        IN_TYPES = {'PARTNER_CONTRIBUTION', 'CLIENT_PAYMENT', 'CLIENT_PREPAYMENT', 'SALE_DEPOSIT', 'CASH_OVERAGE', 'OTHER_IN'}
+        OUT_TYPES = {'SUPPLIER_PAYMENT', 'EXPENSE', 'PARTNER_CAPITAL_OUT', 'PARTNER_CASH_OUT', 'SALES_RETURN', 'CASH_SHORTAGE', 'OTHER_OUT'}
+        IN_TYPES = {'PARTNER_CAPITAL_IN', 'PARTNER_CASH_IN', 'CLIENT_PAYMENT', 'CLIENT_PREPAYMENT', 'SALE_DEPOSIT', 'CASH_OVERAGE', 'OTHER_IN'}
         if self.entry_type in OUT_TYPES:
             self.direction = 'OUT'
         elif self.entry_type in IN_TYPES:

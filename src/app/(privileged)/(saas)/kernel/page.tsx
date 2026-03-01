@@ -107,7 +107,7 @@ export default function KernelPage() {
                         Kernel Management
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        View current engine version and apply system updates
+                        View current version and apply updates
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -136,7 +136,7 @@ export default function KernelPage() {
                         <div className="p-2 rounded-lg bg-blue-500/20">
                             <Cpu className="w-6 h-6 text-blue-400" />
                         </div>
-                        Current Engine Version
+                        Current Version
                     </CardTitle>
                     <CardDescription>
                         The currently running kernel version on this instance
@@ -175,8 +175,8 @@ export default function KernelPage() {
                                 <div
                                     key={update.id}
                                     className={`p-4 rounded-lg border ${update.is_applied
-                                            ? 'bg-green-500/5 border-green-500/30'
-                                            : 'bg-yellow-500/5 border-yellow-500/30'
+                                        ? 'bg-green-500/5 border-green-500/30'
+                                        : 'bg-yellow-500/5 border-yellow-500/30'
                                         }`}
                                 >
                                     <div className="flex items-start justify-between">

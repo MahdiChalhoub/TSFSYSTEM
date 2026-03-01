@@ -24,6 +24,7 @@ import {
     Sparkles,
     Cloud,
     MessageSquare,
+    MessageCircle,
     Wrench,
     BookOpen,
     TrendingUp,
@@ -133,7 +134,9 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
                     { title: 'POS Configuration', path: '/sales/pos-settings' },
+                    { title: 'Register Sessions', path: '/sales/sessions' },
                     { title: 'Register Status', path: '/finance/cash-register' },
+                    { title: 'Account Book (Audit)', path: '/finance/account-book' },
                     { title: 'Sales Audit', path: '/sales/audit' },
                     { title: 'Order History', path: '/sales/history' },
                     { title: 'Daily Summary', path: '/sales/summary' },
@@ -146,6 +149,8 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
+                    { title: 'Delivery Zones', path: '/sales/delivery-zones' },
+                    { title: 'Drivers', path: '/sales/drivers' },
                     { title: 'Sales Returns', path: '/sales/returns' },
                     { title: 'Credit Notes', path: '/sales/credit-notes' },
                     { title: 'Discount Rules', path: '/sales/discounts' },
@@ -187,8 +192,11 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Product Master', path: '/products' },
                     { title: 'Categories', path: '/inventory/categories' },
-                    { title: 'Brands & Units', path: '/inventory/units' },
+                    { title: 'Brands', path: '/inventory/brands' },
+                    { title: 'Units', path: '/inventory/units' },
+                    { title: 'Attributes', path: '/inventory/attributes' },
                     { title: 'Combo & Bundles', path: '/inventory/combo' },
+                    { title: 'Barcode Generation', path: '/inventory/barcode' },
                     { title: 'Label Printing', path: '/inventory/labels' },
                 ]
             },
@@ -200,6 +208,7 @@ export const MENU_ITEMS = [
                     { title: 'Stock Movements', path: '/inventory/movements' },
                     { title: 'Stock Count', path: '/inventory/stock-count' },
                     { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
                     { title: 'Operational Requests', path: '/inventory/requests' },
                     { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
                     { title: 'Inventory Alerts', path: '/inventory/low-stock' },
@@ -248,7 +257,9 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Invoices', path: '/finance/invoices' },
                     { title: 'Payments & Receipts', path: '/finance/payments' },
-                    { title: 'Expenses', path: '/finance/expenses' },
+                    { title: 'Expenses & Procurement', path: '/finance/expenses' },
+                    { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
+                    { title: 'Revenue Accrual', path: '/finance/revenue' },
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
                 ]
             },
@@ -260,6 +271,7 @@ export const MENU_ITEMS = [
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
                     { title: 'Aging Report', path: '/finance/reports/aging' },
+                    { title: 'Profit Centers', path: '/finance/profit-centers' },
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Tax (VAT) Reports', path: '/finance/tax-reports' },
                 ]
@@ -356,6 +368,8 @@ export const MENU_ITEMS = [
         module: 'core',
         children: [
             { title: 'System Settings', path: '/settings', icon: Settings },
+            { title: 'WhatsApp Push Alerts', path: '/settings/whatsapp', icon: MessageCircle },
+            { title: 'Auto-Task Engine', path: '/workspace/auto-task-rules', icon: Zap },
             {
                 title: 'Storage & Media',
                 icon: Cloud,

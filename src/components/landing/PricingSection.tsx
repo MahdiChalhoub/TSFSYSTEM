@@ -36,7 +36,7 @@ export default function PricingSection() {
                     Power Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Empire</span>
                 </h2>
                 <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-                    Choose the architecture that scales with your ambition.
+                    Choose the plan that scales with your ambition.
                 </p>
             </div>
 

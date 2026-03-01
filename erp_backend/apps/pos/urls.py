@@ -16,6 +16,7 @@ from apps.pos.views import (
     POSRegisterViewSet,
     POSAuditEventViewSet, POSAuditRuleViewSet,
     POSSettingsViewSet,
+    ManagerAddressBookViewSet,
 )
 
 router = DefaultRouter()
@@ -39,6 +40,7 @@ router.register(r'po-lines', PurchaseOrderLineViewSet, basename='po-lines')
 router.register(r'pos-audit-events', POSAuditEventViewSet, basename='pos-audit-events')
 router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rules')
 router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
+router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
 
 urlpatterns = [
     path('', include(router.urls)),

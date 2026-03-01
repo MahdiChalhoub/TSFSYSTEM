@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { erpFetch } from '@/lib/erp-api';
 import clsx from 'clsx';
+import { getChartOfAccounts } from '@/app/actions/finance/accounts';
 
 // ── Types ──────────────────────────────────────────────────
 interface AccountBookEntry {
@@ -81,8 +82,12 @@ const ENTRY_TYPES = [
     { key: 'CLIENT_PAYMENT', label: 'Client Payment', icon: DollarSign, dir: 'IN', color: 'emerald', fields: ['client', 'invoice'] },
     { key: 'CLIENT_PREPAYMENT', label: 'Client Prepayment', icon: Wallet, dir: 'IN', color: 'emerald', fields: ['client'] },
     { key: 'SALES_RETURN', label: 'Sales Return', icon: Undo2, dir: 'OUT', color: 'amber', fields: ['client', 'invoice', 'order'] },
-    { key: 'PARTNER_CONTRIBUTION', label: 'Partner Contribution', icon: Users, dir: 'IN', color: 'emerald', fields: ['partner'] },
-    { key: 'PARTNER_WITHDRAWAL', label: 'Partner Withdrawal', icon: Users, dir: 'OUT', color: 'rose', fields: ['partner'] },
+    // ── Partner: Capital vs Cash Transfer ──
+    { key: 'PARTNER_CAPITAL_IN', label: 'Capital Injection', icon: Users, dir: 'IN', color: 'emerald', fields: ['partner'] },
+    { key: 'PARTNER_CASH_IN', label: 'Partner Cash In', icon: ArrowLeftRight, dir: 'IN', color: 'emerald', fields: ['partner'] },
+    { key: 'PARTNER_CASH_OUT', label: 'Partner Cash Out', icon: ArrowLeftRight, dir: 'OUT', color: 'rose', fields: ['partner'] },
+    { key: 'PARTNER_CAPITAL_OUT', label: 'Capital Withdrawal', icon: Users, dir: 'OUT', color: 'rose', fields: ['partner'] },
+    // ──
     { key: 'SALE_DEPOSIT', label: 'Sale Deposit', icon: ShoppingBag, dir: 'IN', color: 'emerald', fields: [] },
     { key: 'MONEY_TRANSFER', label: 'Money Transfer', icon: ArrowLeftRight, dir: 'OUT', color: 'blue', fields: [] },
     { key: 'CASH_SHORTAGE', label: 'Cash Shortage', icon: Scale, dir: 'OUT', color: 'rose', fields: [] },
@@ -104,6 +109,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; i
 export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, isManager = false }: AccountBookProps) {
     const [entries, setEntries] = useState<AccountBookEntry[]>([]);
     const [summary, setSummary] = useState<AccountBookSummary | null>(null);
+    const [expenseCategories, setExpenseCategories] = useState<{ id: number; name: string }[]>([]);
     const [loading, setLoading] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -225,7 +231,13 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
 
     useEffect(() => {
         if (isOpen && sessionId) loadEntries();
-    }, [isOpen, sessionId, loadEntries]);
+        if (isOpen) {
+            getChartOfAccounts(false, isManager ? 'OFFICIAL' : 'INTERNAL').then(data => {
+                const exps = data.filter((a: any) => a.type === 'EXPENSE');
+                setExpenseCategories(exps.map((e: any) => ({ name: e.name, id: e.id })));
+            }).catch(e => console.error("Failed to fetch expense categories", e));
+        }
+    }, [isOpen, sessionId, loadEntries, isManager]);
 
     const handleAdd = async () => {
         if (!form.description.trim()) { toast.error('Description is required'); return; }
@@ -680,7 +692,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
                             <div>
                                 <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">Transaction Type</label>
                                 <div className="grid grid-cols-3 gap-1.5">
-                                    {ENTRY_TYPES.map(t => {
+                                    {ENTRY_TYPES.filter(t => isManager || !['PARTNER_CAPITAL_IN', 'PARTNER_CASH_IN', 'PARTNER_CASH_OUT', 'PARTNER_CAPITAL_OUT', 'CASH_SHORTAGE', 'MONEY_TRANSFER'].includes(t.key)).map(t => {
                                         const Icon = t.icon;
                                         const isSelected = form.entryType === t.key;
                                         return (
@@ -912,12 +924,23 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
 
                             {/* ── EXPENSE CATEGORY ── */}
                             {(selectedType.fields?.includes('expense_category') || false) && (
-                                <input
-                                    value={form.expenseCategory}
-                                    onChange={(e) => setForm(f => ({ ...f, expenseCategory: e.target.value }))}
-                                    placeholder="Expense category (e.g. Transport, Utilities, Supplies)"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
-                                />
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-1.5">
+                                        Expense Category
+                                    </label>
+                                    <input
+                                        value={form.expenseCategory}
+                                        onChange={(e) => setForm(f => ({ ...f, expenseCategory: e.target.value }))}
+                                        list="expense-categories"
+                                        placeholder="Select or type an expense category..."
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                                    />
+                                    <datalist id="expense-categories">
+                                        {expenseCategories.map(cat => (
+                                            <option key={cat.id} value={cat.name} />
+                                        ))}
+                                    </datalist>
+                                </div>
                             )}
 
                             {/* ── PARTNER SELECTOR (live search from database) ── */}

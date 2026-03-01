@@ -293,7 +293,7 @@ export default function DiscountRulesPage() {
                         </div>
                         Discount <span className="text-amber-600">Rules</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Promotions & Loyalty Logic</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Promotions & Discounts</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button onClick={loadData} variant="ghost" className="h-12 w-12 p-0 rounded-2xl text-stone-400 hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all">

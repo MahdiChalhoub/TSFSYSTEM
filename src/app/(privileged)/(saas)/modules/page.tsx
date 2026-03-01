@@ -166,7 +166,7 @@ export default function SaaSModulesPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Global Registry</h2>
-                    <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
+                    <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Manage modules across all tenants</p>
                     {lastSynced && <p className="text-emerald-600/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
@@ -190,31 +190,31 @@ export default function SaaSModulesPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Scanning core modules...</div>
+                    <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Loading modules...</div>
                 ) : modules.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
+                    <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules found.</div>
                 ) : modules.map((m) => {
                     const isCore = m.code === 'core' || m.code === 'coreplatform' || m.code === 'packages';
                     const coreDetails = m.code === 'core' ? {
-                        description: 'The "Spine" of the system. Handles platform integrity, security protocols, and essential multi-tenant infrastructure.',
+                        description: 'The foundation of the system. Handles platform integrity, security, and essential multi-tenant infrastructure.',
                         workflows: [
-                            'PostgreSQL Integrity Philosophy',
-                            'Global System Bootloader',
+                            'PostgreSQL Integrity',
+                            'System Initialization',
                             'Security & Authentication Baseline'
                         ]
                     } : m.code === 'coreplatform' ? {
-                        description: 'The core application engine. Manages module management and request routing between modules.',
+                        description: 'The core application logic. Manages module management and request routing between modules.',
                         workflows: [
                             'Request Routing',
-                            'Connector Engine (Brokerage)',
-                            'Fallback & Graceful Degradation'
+                            'API Connectors',
+                            'Fallback & Error Handling'
                         ]
                     } : m.code === 'packages' ? {
-                        description: 'The binary distribution hub. Manages atomic delivery of kernel updates and modular artifacts across the infrastructure.',
+                        description: 'The update delivery system. Manages distribution of platform updates and module packages.',
                         workflows: [
-                            'Atomic Distribution Staging',
-                            'Cryptographic Integrity Verification',
-                            'Automated Lifecycle Management'
+                            'Distribution Staging',
+                            'Integrity Verification',
+                            'Automated Update Management'
                         ]
                     } : null;
                     return (
@@ -372,7 +372,7 @@ export default function SaaSModulesPage() {
                     <Info size={32} />
                 </div>
                 <div>
-                    <h4 className="text-xl font-black text-emerald-400 uppercase tracking-tight">Infrastructure Policy</h4>
+                    <h4 className="text-xl font-black text-emerald-400 uppercase tracking-tight">Important Notes</h4>
                     <p className="text-sm text-emerald-300/60 font-medium leading-relaxed mt-1">
                         Deployment actions are non-reversible for data states and will trigger migrations on all linked organization databases.
                         <strong> Push</strong> enables the module for all tenants. <strong> Revoke</strong> disables it globally. <strong> Delete</strong> will fail if data usage is detected.

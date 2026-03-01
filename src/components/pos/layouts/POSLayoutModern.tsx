@@ -230,18 +230,18 @@ export function POSLayoutModern(props: POSLayoutProps) {
             <div className="flex-1 flex overflow-hidden relative">
                 {/* ── Security Overlay for Cart when in Payment Mode ── */}
                 {isMultiPayMode && (
-                    <div className="absolute top-0 right-0 w-[42%] h-full bg-slate-900/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
+                    <div className="absolute top-0 right-0 w-[42%] h-full bg-white/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
                         <div className="bg-white/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
                             <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
                                 <Lock size={32} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-slate-900">Cart Locked</h3>
-                                <p className="text-xs text-slate-500 max-w-[200px] mt-1">Exit Payment Mode to modify items or quantities.</p>
+                                <h3 className="text-lg font-black text-gray-900">Cart Locked</h3>
+                                <p className="text-xs text-gray-400 max-w-[200px] mt-1">Exit Payment Mode to modify items or quantities.</p>
                             </div>
                             <button
                                 onClick={() => setIsMultiPayMode(false)}
-                                className="px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all"
+                                className="px-6 py-2 bg-white text-gray-900 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all"
                             >
                                 Unlock Cart
                             </button>
@@ -766,7 +766,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                                 {!isLinked && (
                                     <div className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-amber-400 flex items-center justify-center">
-                                        <span className="text-[6px] text-white font-black">!</span>
+                                        <span className="text-[6px] text-gray-900 font-black">!</span>
                                     </div>
                                 )}
                             </button>

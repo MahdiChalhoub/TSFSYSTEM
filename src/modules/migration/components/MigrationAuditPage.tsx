@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getAllMigrationRecords, getAuditSummary, bulkLinkLedger, approveMigrationEntity } from '../actions';
+import { getAllMigrationRecords, getAuditSummary, bulkLinkLedger, approveMigrationEntity, repostMigrationJournals } from '../actions';
 import {
-    ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle,
+    ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, RefreshCw,
     ChevronLeft, ChevronRight, Database, Link2, Unlink,
     ArrowRight, Search, Layers, Package,
     Users, Banknote, ShoppingCart, Tag, Ruler,
@@ -95,6 +95,16 @@ export function MigrationAuditPage() {
             toast.success(`${res?.linked || 0} ${contactType}s linked → ${res?.coa_parent_code || ''} ${res?.coa_parent || 'account'}`);
             fetchSummary(); fetchRecords(page);
         } catch { toast.error('Link failed'); }
+        setProcessing(false);
+    };
+
+    const handleRepostJournals = async () => {
+        setProcessing(true);
+        try {
+            const res = await repostMigrationJournals(jobId);
+            toast.success(`${res?.reposted || 0} journal entries re-posted using correct rules`);
+            fetchSummary(); fetchRecords(page);
+        } catch { toast.error('Failed to re-post journals'); }
         setProcessing(false);
     };
 
@@ -282,12 +292,18 @@ export function MigrationAuditPage() {
                                 )}
 
                                 {diag.uses_suspense_accounts && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-bold text-amber-700">Migration JEs use suspense accounts (5700/6000)</p>
-                                            <p className="text-xs text-amber-500 mt-1">These journal entries were created during migration with generic accounts, not the posting rules above. They should be re-posted using the correct accounts for accurate Trial Balance.</p>
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col gap-3">
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-bold text-amber-700">Migration JEs use suspense accounts (5700/6000)</p>
+                                                <p className="text-xs text-amber-500 mt-1">These journal entries were created during migration with generic accounts, not the posting rules above. They should be re-posted using the correct accounts for accurate Trial Balance.</p>
+                                            </div>
                                         </div>
+                                        <button onClick={handleRepostJournals} disabled={processing} className="w-fit flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-amber-600/20 transition-all disabled:opacity-50">
+                                            {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                            Re-post {diag.migration_journal_entries?.toLocaleString()} Journal Entries
+                                        </button>
                                     </div>
                                 )}
 
@@ -373,7 +389,7 @@ export function MigrationAuditPage() {
                             <div />
                             <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                TSF System — How It Was Saved
+                                TSF Platform — How It Was Saved
                             </div>
                         </div>
 

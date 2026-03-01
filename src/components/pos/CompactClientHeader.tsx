@@ -51,7 +51,7 @@ export function CompactClientHeader({ client, currency = '$', uniqueItems, total
                         <span className="text-[10px] font-black text-emerald-500/50 uppercase tracking-[0.4em] leading-none mb-2">Authenticated Partner</span>
                         <h2 className="font-black text-white text-2xl uppercase tracking-tighter truncate max-w-[280px] italic leading-none">{client.name}</h2>
                         <div className="flex items-center gap-3 mt-2">
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest border-r border-slate-800 pr-3">Registry Node</span>
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest border-r border-slate-800 pr-3">Client Database</span>
                             <span className="font-black text-slate-400 text-[11px] tabular-nums tracking-widest">{client.phone || 'COMMS_DISABLED'}</span>
                         </div>
                     </div>

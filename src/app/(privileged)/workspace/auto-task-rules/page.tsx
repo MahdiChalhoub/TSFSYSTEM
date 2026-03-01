@@ -46,6 +46,8 @@ const TRIGGER_EVENTS = [
     { value: 'DAILY_SUMMARY', label: '📊 End-of-Day Summary', group: 'Finance' },
     { value: 'MONTH_END', label: '📅 Month-End Close', group: 'Finance' },
     // CRM
+    { value: 'PROMOTION_TRIGGERED', label: '🎯 Targeted Client Promotion', group: 'CRM' },
+    { value: 'EXTERNAL_DOCUMENT_SEND', label: '✉️ Send External Document', group: 'CRM' },
     { value: 'CLIENT_FOLLOWUP_DUE', label: '📞 Client Follow-Up Due', group: 'CRM' },
     { value: 'SUPPLIER_FOLLOWUP_DUE', label: '📞 Supplier Follow-Up Due', group: 'CRM' },
     { value: 'NEW_CLIENT', label: '🤝 New Client Registered', group: 'CRM' },

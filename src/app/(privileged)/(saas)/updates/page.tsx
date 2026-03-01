@@ -104,7 +104,7 @@ export default function SystemUpdatesPage() {
         try {
             const res = await applyKernelUpdate(id)
             if (res.error) throw new Error(res.error)
-            setLogs(prev => [...prev, "OK: Atomic swap completed", "INIT: Restarting platform services...", "DONE: System online"])
+            setLogs(prev => [...prev, "OK: Update applied", "INIT: Restarting platform services...", "DONE: System online"])
             toast.success(res.message)
             await loadData()
         } catch (e: unknown) {
@@ -207,7 +207,7 @@ export default function SystemUpdatesPage() {
                                     <HistoryIcon className="text-indigo-600 shrink-0" size={20} />
                                     Update History
                                 </CardTitle>
-                                <CardDescription className="text-gray-500 font-medium">History of platform transformations</CardDescription>
+                                <CardDescription className="text-gray-500 font-medium">Update history</CardDescription>
                             </div>
                             <Badge variant="outline" className="text-[9px] font-black text-indigo-600 border-indigo-100 px-3">
                                 {history.length} STAGES
@@ -292,10 +292,10 @@ export default function SystemUpdatesPage() {
                     <ShieldAlert size={36} className="animate-pulse" />
                 </div>
                 <div className="relative z-10 text-center md:text-left">
-                    <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">Privileged Action Safety</h4>
+                    <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">Update Safety</h4>
                     <p className="text-sm md:text-base text-red-50/80 font-bold leading-relaxed mt-2 max-w-2xl">
                         Updates will restart services briefly.
-                        Always ensure a full backup of the <strong>Tenant Registry</strong> and <strong>Master Database</strong> is active before initiating a swap.
+                        Always ensure a full backup of your <strong>database</strong> is active before initiating an update.
                     </p>
                 </div>
             </div>

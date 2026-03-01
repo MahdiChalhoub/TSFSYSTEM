@@ -50,7 +50,7 @@ class POSErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
                         <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center mx-auto mb-4">
                             <AlertCircle size={32} className="text-rose-400" />
                         </div>
-                        <h2 className="text-xl font-black text-gray-900 mb-2">POS Terminal Error</h2>
+                        <h2 className="text-xl font-black text-gray-900 mb-2">POS Error</h2>
                         <p className="text-gray-500 text-sm mb-4">{this.state.error || 'An unexpected error occurred. This is usually caused by a stale browser cache after a deployment.'}</p>
                         <button
                             onClick={() => { window.location.reload(); }}

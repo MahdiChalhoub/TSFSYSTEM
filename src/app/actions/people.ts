@@ -22,6 +22,7 @@ export async function createContact(prevState: Record<string, any>, formData: Fo
             type,
             email: formData.get('email') || '',
             phone: formData.get('phone') || '',
+            whatsapp_group_id: formData.get('whatsappGroupId') || '',
             company_name: formData.get('companyName') || '',
             home_site_id: formData.get('homeSiteId') || null,
             payment_terms_days: parseInt(formData.get('paymentTermsDays') as string) || 0,

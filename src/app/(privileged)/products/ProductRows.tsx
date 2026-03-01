@@ -68,7 +68,7 @@ export function ProductRow({ product }: { product: Record<string, any> }) {
                     <Link
                         href={`/products/new?cloneId=${product.id}`}
                         className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all border border-transparent hover:border-emerald-100 shadow-sm hover:shadow-md"
-                        title="Clone Product Artifact"
+                        title="Clone Product"
                     >
                         <Copy size={18} />
                     </Link>

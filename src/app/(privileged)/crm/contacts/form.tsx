@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { createContact } from '@/app/actions/people';
-import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, FileText, Clock, Tag } from 'lucide-react';
+import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, FileText, Clock, Tag, MessageCircle } from 'lucide-react';
 
 export default function ContactModal({
     sites,
@@ -169,6 +169,19 @@ export default function ContactModal({
                                     name="phone"
                                     className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
                                     placeholder="+225 XX XXX XXX"
+                                />
+                            </div>
+                        </div>
+
+                        {/* WhatsApp Group ID */}
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">WhatsApp Group ID</label>
+                            <div className="relative">
+                                <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400" size={18} />
+                                <input
+                                    name="whatsappGroupId"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-emerald-50/30 border-none focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-emerald-800 placeholder-emerald-800/20"
+                                    placeholder="Optional (For Group Alerts)"
                                 />
                             </div>
                         </div>

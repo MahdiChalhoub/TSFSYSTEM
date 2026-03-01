@@ -149,7 +149,7 @@ export default function AuditTrailPage() {
                         Financial <span className="text-emerald-700">Audit Trail</span>
                     </h1>
                     <p className="page-header-subtitle">
-                        Forensic lifecycle monitoring and immutable activity logging for all financial operations.
+                        Activity monitoring and logging for all financial operations.
                     </p>
                 </div>
                 <div className="flex items-center gap-4">

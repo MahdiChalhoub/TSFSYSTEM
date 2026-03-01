@@ -21,7 +21,7 @@ export default async function SaasMasterDashboard() {
     const quickStats = [
         { label: "Active Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
         { label: "Pending Registrations", value: stats?.pendingRegistrations || "0", icon: Activity, color: "amber", trend: "Review Required", href: "/organizations/registrations" },
-        { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
+        { label: "Modules", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
         { label: "Active Modules", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
     ];
     return (
@@ -36,7 +36,7 @@ export default async function SaasMasterDashboard() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                                    Global Platform Node: active
+                                    Global Platform: Active
                                 </Badge>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <Activity size={14} className="text-emerald-400" /> Infrastructure Status: Nominal

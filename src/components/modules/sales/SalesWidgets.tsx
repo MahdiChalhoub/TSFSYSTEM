@@ -102,7 +102,7 @@ export const POSQuickAction = () => {
                             <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
                                 <ShoppingCart size={24} className="text-white" />
                             </div>
-                            <h3 className="text-2xl font-bold">Open POS Terminal</h3>
+                            <h3 className="text-2xl font-bold">Open POS</h3>
                         </div>
                         <p className="text-emerald-50 max-w-xl text-lg opacity-90 font-medium">
                             Start a new sales session, manage checkout, and process transactions efficiently.
