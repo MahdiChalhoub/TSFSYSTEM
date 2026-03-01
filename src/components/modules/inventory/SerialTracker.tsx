@@ -162,7 +162,7 @@ export function SerialTracker() {
                                                 <span className="text-[8px] opacity-50">{log.warehouse_name || ''}</span>
                                             </p>
                                             <div className="flex items-center gap-1.5 text-[9px] text-gray-400 font-bold uppercase tracking-wider pl-1">
-                                                <User size={10} /> {log.user_name || 'System Auto'}
+                                                <User size={10} /> {log.user_name || 'Auto'}
                                             </div>
                                         </div>
                                     </div>
@@ -179,7 +179,7 @@ export function SerialTracker() {
                     ) : (
                         <div className="bg-gray-50/50 p-12 rounded-[2.5rem] border border-dashed border-gray-200 flex flex-col items-center text-center">
                             <ArrowRight size={24} className="text-gray-300 mb-4 animate-bounce-x" />
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Select a serial to view lifecycle</p>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Select a serial to view history</p>
                         </div>
                     )}
                 </div>

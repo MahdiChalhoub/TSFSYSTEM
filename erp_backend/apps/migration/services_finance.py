@@ -207,10 +207,16 @@ class MigrationFinanceMixin:
                             description=f"Auto-created during migration for account {source_id}"
                         )
 
+                # Resolve org currency for the account
+                from erp.models import Organization
+                org = Organization.objects.get(id=self.organization_id)
+                org_currency = org.base_currency.code if org.base_currency_id else 'XOF'
+
                 account = FinancialAccount.objects.create(
                     organization_id=self.organization_id,
                     name=mapped['name'],
                     type=account_type,
+                    currency=org_currency,
                     ledger_account_id=coa_match.id if coa_match else None,
                     description=f"Imported from UltimatePOS. Category: {at_name or 'N/A'}",
                 )

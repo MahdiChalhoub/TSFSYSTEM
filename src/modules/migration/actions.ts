@@ -152,3 +152,17 @@ export async function saveAccountMapping(jobId: number, mappings: { target_id: n
     });
     return res;
 }
+
+export async function deleteMigrationJob(jobId: number, force = false) {
+    const res = await erpFetch(`migration/jobs/${jobId}/delete-job/${force ? '?force=true' : ''}`, {
+        method: 'DELETE',
+    });
+    return res;
+}
+
+export async function repostMigrationJournals(jobId: number) {
+    const res = await erpFetch(`migration/jobs/${jobId}/repost-journals/`, {
+        method: 'POST',
+    });
+    return res;
+}

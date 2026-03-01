@@ -31,7 +31,7 @@ export default async function NewFormalOrderPage() {
                     </div>
                     Request for <span className="text-indigo-500">Quotation</span>
                 </h1>
-                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Procurement Lifecycle & Supplier Negotiation</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Purchasing & Supplier Management</p>
             </header>
 
             <FormalOrderForm

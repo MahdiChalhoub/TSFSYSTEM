@@ -50,6 +50,20 @@ class MigrationExecutionMixin:
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # LOCK: Only one migration can run per organization at a time
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request.user, 'organization_id', None)
+        active_job = MigrationJob.objects.filter(
+            organization_id=org_id,
+            status__in=['RUNNING', 'PARSING']
+        ).exclude(id=job.id).first()
+        if active_job:
+            return Response(
+                {'error': f'Another migration (#{active_job.id} "{active_job.name}") is already {active_job.status}. '
+                          f'Wait for it to finish, or cancel/rollback it first.'},
+                status=status.HTTP_409_CONFLICT
+            )
+
         # Accept business selection and sync mode
         source_business_id = request.data.get('source_business_id')
         source_business_name = request.data.get('source_business_name')
@@ -210,3 +224,45 @@ class MigrationExecutionMixin:
             'deleted_count': deleted,
         })
 
+
+    @action(detail=True, methods=['delete'], url_path='delete-job')
+    def delete_job(self, request, pk=None):
+        """Delete or hide a failed/rolled-back migration job.
+        
+        Only allows deletion of jobs in terminal states (FAILED, STALLED, ROLLED_BACK, PENDING).
+        - force=true: Hard delete (removes job + all mappings permanently)
+        - force=false (default): Soft delete (marks status as hidden)
+        """
+        job = self.get_object()
+        
+        if job.status in ('RUNNING', 'PARSING'):
+            return Response(
+                {'error': f'Cannot delete a migration that is currently {job.status}. Cancel or wait for it to finish first.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        force = request.query_params.get('force', 'false').lower() == 'true'
+        job_name = job.name
+        job_id = job.id
+        mapping_count = MigrationMapping.objects.filter(job=job).count()
+        
+        if force:
+            # Hard delete — remove everything
+            MigrationMapping.objects.filter(job=job).delete()
+            job.delete()
+            return Response({
+                'status': 'deleted',
+                'job_id': job_id,
+                'job_name': job_name,
+                'mappings_deleted': mapping_count,
+            })
+        else:
+            # Soft delete — mark as hidden so it disappears from the UI
+            job.status = 'HIDDEN'
+            job.save(update_fields=['status'])
+            return Response({
+                'status': 'hidden',
+                'job_id': job_id,
+                'job_name': job_name,
+                'message': f'Job hidden from UI. Use force=true to permanently delete.',
+            })

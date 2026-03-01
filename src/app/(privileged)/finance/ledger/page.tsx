@@ -173,7 +173,7 @@ export default function GeneralLedgerPage() {
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <Badge className="bg-stone-50 text-stone-600 border-stone-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            System Node: Integrity Active
+                            System Status: Online
                         </Badge>
                         <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
                             <ShieldCheck size={12} /> Trial Balance Guard

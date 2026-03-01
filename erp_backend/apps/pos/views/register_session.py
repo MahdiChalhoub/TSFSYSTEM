@@ -258,10 +258,85 @@ class RegisterSessionMixin:
             if method == 'CASH':
                 total_cash_in = subtotal
 
+        # ── Address Book Balance ──
+        address_book_entries = CashierAddressBook.objects.filter(
+            organization=organization,
+            session=session,
+            is_deleted=False
+        )
+        ab_in = address_book_entries.filter(direction='IN').aggregate(Sum('amount_in'))['amount_in__sum'] or Decimal('0')
+        ab_out = address_book_entries.filter(direction='OUT').aggregate(Sum('amount_out'))['amount_out__sum'] or Decimal('0')
+        address_book_net = ab_in - ab_out
+
         total_sales = totals['total_sales'] or Decimal('0')
         total_transactions = totals['total_count'] or 0
-        expected = session.opening_balance + total_cash_in
+        expected = session.opening_balance + total_cash_in + address_book_net
         difference = closing_balance - expected
+
+        # ── Auto-create Variance Entries (Phase 4) ──
+        if difference != 0:
+            variance_type = 'CASH_OVERAGE' if difference > 0 else 'CASH_SHORTAGE'
+            variance_amount = abs(difference)
+            
+            variance_entry = CashierAddressBook.objects.create(
+                organization=organization,
+                session=session,
+                cashier=session.cashier,
+                entry_type=variance_type,
+                description=f"Auto-generated {'overage' if difference > 0 else 'shortage'} from register close (Expected: {expected}, Actual: {closing_balance})",
+                amount_in=variance_amount if variance_type == 'CASH_OVERAGE' else Decimal('0'),
+                amount_out=variance_amount if variance_type == 'CASH_SHORTAGE' else Decimal('0'),
+                status='APPROVED' if variance_type == 'CASH_OVERAGE' else 'PENDING',
+            )
+            # If overage, immediately execute to post to GL
+            if variance_type == 'CASH_OVERAGE':
+                try:
+                    from apps.pos.services.address_book_executor import AddressBookExecutor
+                    maker = request.user if not request.user.is_anonymous else session.cashier
+                    AddressBookExecutor.execute(variance_entry, manager=maker)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Failed to auto-execute cash overage entry: {e}", exc_info=True)
+
+        # ── Trigger Daily Snapshot (Phase 5) ──
+        try:
+            from apps.pos.models.register_models import DailyAddressBookSnapshot
+            from apps.pos.views.register_address_book import serialize_entry
+            
+            # Fetch fresh entries (including the new variance)
+            snapshot_entries = CashierAddressBook.objects.filter(
+                organization=organization, session=session, is_deleted=False
+            ).select_related('cashier', 'approved_by').order_by('created_at')
+            
+            running = Decimal('0.00')
+            entries_data = []
+            for e in snapshot_entries:
+                running += e.amount_in - e.amount_out
+                entries_data.append(serialize_entry(e, running))
+                
+            today = timezone.now().date()
+            sn_in = sum(e['amountIn'] for e in entries_data)
+            sn_out = sum(e['amountOut'] for e in entries_data)
+            
+            snapshot, _ = DailyAddressBookSnapshot.objects.update_or_create(
+                organization=organization,
+                session=session,
+                date=today,
+                defaults={
+                    'register': session.register,
+                    'cashier': session.cashier,
+                    'total_in': Decimal(str(sn_in)),
+                    'total_out': Decimal(str(sn_out)),
+                    'balance': Decimal(str(sn_in - sn_out)),
+                    'pending_count': sum(1 for e in entries_data if e['status'] == 'PENDING'),
+                    'approved_count': sum(1 for e in entries_data if e['status'] == 'APPROVED'),
+                    'rejected_count': sum(1 for e in entries_data if e['status'] == 'REJECTED'),
+                    'entries_json': entries_data,
+                }
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to create daily snapshot on register close: {e}", exc_info=True)
 
         # Update session
         session.status = 'CLOSED'

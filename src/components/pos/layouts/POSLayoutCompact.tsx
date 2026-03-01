@@ -125,7 +125,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
     return (
         <div className={clsx(
-            "flex flex-col bg-[#020617] overflow-hidden select-none h-full text-slate-100 font-sans transition-colors duration-700 relative",
+            "flex flex-col bg-gray-50 overflow-hidden select-none h-full text-slate-100 font-sans transition-colors duration-700 relative",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
             {/* Ambient Background Glows */}
@@ -165,19 +165,19 @@ export function POSLayoutCompact(props: POSLayoutProps) {
             />
 
             {/* ═══════ CLIENT INFO (Premium Dark) ═══════ */}
-            <div className="h-14 bg-slate-950/40 backdrop-blur-xl border-b border-white/5 px-6 flex items-center justify-between shrink-0 relative z-10 transition-all">
+            <div className="h-14 bg-white/80 backdrop-blur-xl border-b border-gray-200 px-6 flex items-center justify-between shrink-0 relative z-10 transition-all">
                 <div className="flex items-center gap-6 divide-x divide-white/5">
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-900 shadow-inner border border-white/5 flex items-center justify-center text-emerald-500 relative group">
+                        <div className="w-10 h-10 rounded-xl bg-white shadow-inner border border-gray-200 flex items-center justify-center text-emerald-500 relative group">
                             <div className="absolute inset-0 bg-emerald-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
                             <span className="text-[11px] font-black uppercase italic relative z-10">{selectedClient?.name?.substring(0, 2) || '??'}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[12px] font-black text-white uppercase tracking-wider italic flex items-center gap-2">
+                            <span className="text-[12px] font-black text-gray-900 uppercase tracking-wider italic flex items-center gap-2">
                                 {selectedClient?.name || 'Walk-in Customer'}
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                             </span>
-                            <span className="text-[9px] font-black text-slate-500 tracking-[0.2em] font-mono leading-none mt-1">{selectedClient?.phone || 'No phone'}</span>
+                            <span className="text-[9px] font-black text-gray-400 tracking-[0.2em] font-mono leading-none mt-1">{selectedClient?.phone || 'No phone'}</span>
                         </div>
                     </div>
 
@@ -185,24 +185,24 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         onClick={handleOpenVault}
                         className="pl-6 flex flex-col items-start hover:bg-emerald-500/5 px-4 py-1.5 rounded-xl transition-all group border border-transparent hover:border-emerald-500/20"
                     >
-                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] leading-none mb-1.5 group-hover:text-emerald-400 transition-colors">Balance Due</span>
+                        <span className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] leading-none mb-1.5 group-hover:text-emerald-400 transition-colors">Balance Due</span>
                         <span className={clsx("text-[13px] font-black tabular-nums italic transition-colors", (selectedClient?.balance || 0) > 0 ? "text-rose-500" : "text-emerald-500")}>
                             {currency}{formatNumber(selectedClient?.balance || 0)}
                         </span>
                     </button>
 
                     <div className="pl-6 flex flex-col items-start px-4">
-                        <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] leading-none mb-1.5 italic">Order Density</span>
+                        <span className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] leading-none mb-1.5 italic">Order Density</span>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-[13px] font-black text-white tabular-nums italic">{formatNumber(totalPieces)}</span>
-                            <span className="text-[8px] text-slate-500 font-black uppercase tracking-widest italic opacity-60">Items</span>
+                            <span className="text-[13px] font-black text-gray-900 tabular-nums italic">{formatNumber(totalPieces)}</span>
+                            <span className="text-[8px] text-gray-400 font-black uppercase tracking-widest italic opacity-60">Items</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 px-4 py-2 bg-slate-900/60 border border-white/5 rounded-2xl group focus-within:border-emerald-500/50 transition-all shadow-inner">
-                        <Search className="text-slate-600 group-focus-within:text-emerald-400 transition-colors" size={14} />
+                    <div className="flex items-center gap-3 px-4 py-2 bg-white/60 border border-gray-200 rounded-2xl group focus-within:border-emerald-500/50 transition-all shadow-inner">
+                        <Search className="text-gray-600 group-focus-within:text-emerald-400 transition-colors" size={14} />
                         <input
                             type="text"
                             placeholder="Search client..."
@@ -212,36 +212,36 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 onSetClientSearchQuery(v);
                                 if (onSearchClients) onSearchClients(v);
                             }}
-                            className="bg-transparent border-none outline-none text-[11px] font-black text-white placeholder:text-slate-700 w-36 focus:w-56 transition-all uppercase tracking-widest italic"
+                            className="bg-transparent border-none outline-none text-[11px] font-black text-gray-900 placeholder:text-gray-400 w-36 focus:w-56 transition-all uppercase tracking-widest italic"
                         />
                     </div>
                     <div className="relative group shrink-0">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-emerald-400 transition-colors" size={12} />
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-emerald-400 transition-colors" size={12} />
                         <select
                             value={deliveryZone || ''}
                             onChange={(e) => onSetDeliveryZone(e.target.value)}
-                            className="pl-8 pr-10 py-2 bg-slate-900/60 border border-white/5 rounded-2xl text-[10px] font-black text-slate-400 outline-none appearance-none cursor-pointer uppercase tracking-widest hover:border-white/10 transition-all italic focus:border-emerald-500/50"
+                            className="pl-8 pr-10 py-2 bg-white/60 border border-gray-200 rounded-2xl text-[10px] font-black text-gray-400 outline-none appearance-none cursor-pointer uppercase tracking-widest hover:border-gray-200 transition-all italic focus:border-emerald-500/50"
                         >
                             {deliveryZones.map(z => (
-                                <option key={z.id} value={z.name} className="bg-slate-950 text-white">{z.name}</option>
+                                <option key={z.id} value={z.name} className="bg-white text-gray-900">{z.name}</option>
                             ))}
                             {deliveryZones.length === 0 && (
-                                <option value="A" className="bg-slate-950 text-white">Default Zone</option>
+                                <option value="A" className="bg-white text-gray-900">Default Zone</option>
                             )}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" size={12} />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" size={12} />
                     </div>
                 </div>
             </div>
 
             {/* ═══════ SEARCH + CATEGORY BAR (Tactical) ═══════ */}
-            <div className="bg-slate-950/20 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center gap-6 shrink-0 relative z-10 transition-all">
+            <div className="bg-white/20 backdrop-blur-md border-b border-gray-200 px-6 py-4 flex items-center gap-6 shrink-0 relative z-10 transition-all">
                 <div className="relative flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-emerald-400 transition-colors" size={16} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-emerald-400 transition-colors" size={16} />
                     <input
                         type="text"
                         placeholder="Search by barcode, SKU, or name..."
-                        className="w-full pl-12 pr-4 py-3 bg-slate-950 border border-white/5 rounded-[1.2rem] text-[11px] font-black text-white outline-none focus:border-emerald-500/50 transition-all placeholder:text-slate-800 uppercase tracking-[0.2em] italic shadow-inner"
+                        className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-[1.2rem] text-[11px] font-black text-gray-900 outline-none focus:border-emerald-500/50 transition-all placeholder:text-gray-400 uppercase tracking-[0.2em] italic shadow-inner"
                         value={searchQuery}
                         onChange={(e) => onSetSearchQuery(e.target.value)}
                     />
@@ -258,7 +258,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                     "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all italic border shadow-lg",
                                     activeCategoryId === null
                                         ? 'bg-emerald-gradient text-white border-emerald-400 scale-105 z-10'
-                                        : 'bg-slate-900 text-slate-400 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'
+                                        : 'bg-white text-gray-400 border-gray-200 hover:text-emerald-400 hover:border-emerald-500/30'
                                 )}
                             >
                                 ALL
@@ -274,7 +274,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                         "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all italic border",
                                         (activeCategoryId === cat.id || currentParentId === cat.id)
                                             ? 'bg-emerald-gradient text-white border-emerald-400 scale-105 z-10 shadow-emerald-900/40'
-                                            : 'bg-slate-900 text-slate-400 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'
+                                            : 'bg-white text-gray-400 border-gray-200 hover:text-emerald-400 hover:border-emerald-500/30'
                                     )}
                                 >
                                     {cat.name}
@@ -308,7 +308,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                         "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all italic border",
                                         activeCategoryId === cat.id
                                             ? 'bg-emerald-gradient text-white border-emerald-400 scale-105'
-                                            : 'bg-slate-900 text-slate-400 border-white/5 hover:text-emerald-400'
+                                            : 'bg-white text-gray-400 border-gray-200 hover:text-emerald-400'
                                     )}
                                 >
                                     {cat.name}
@@ -322,8 +322,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
             {/* ═══════ MAIN CONTENT ═══════ */}
             <div className="flex-1 flex overflow-hidden relative z-10">
                 {/* ─── LEFT: Products ─── */}
-                <div className="w-1/2 flex flex-col overflow-hidden border-r border-white/5">
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-dark relative">
+                <div className="w-1/2 flex flex-col overflow-hidden border-r border-gray-200">
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
                         <div className="absolute inset-0 bg-emerald-500/[0.02] pointer-events-none" />
                         <ProductGrid
                             searchQuery={searchQuery}
@@ -336,21 +336,21 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 </div>
 
                 {/* ─── RIGHT: Cart + Payment ─── */}
-                <div className="w-1/2 flex flex-col overflow-hidden bg-slate-950/40 backdrop-blur-md">
+                <div className="w-1/2 flex flex-col overflow-hidden bg-white/80 backdrop-blur-md">
                     {/* Cart Header */}
-                    <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between shrink-0 bg-slate-950/60 transition-all">
+                    <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between shrink-0 bg-white/60 transition-all">
                         <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 italic">Order Queue</h2>
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 italic">Order Queue</h2>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="px-2 py-0.5 bg-slate-900 rounded-lg text-[9px] font-black text-slate-400 italic uppercase">
+                            <span className="px-2 py-0.5 bg-white rounded-lg text-[9px] font-black text-gray-400 italic uppercase">
                                 {uniqueItems}L // {totalPieces}P
                             </span>
                             {cart.length > 0 && (
                                 <button
                                     onClick={() => onClearCart(false)}
-                                    className="p-1 text-slate-600 hover:text-rose-500 transition-colors"
+                                    className="p-1 text-gray-600 hover:text-rose-500 transition-colors"
                                     title="Clear Cart"
                                 >
                                     <Trash2 size={14} />
@@ -360,13 +360,13 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     </div>
 
                     {/* Dense Cart Area */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar-dark p-4 space-y-2">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
                         {cart.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-800 gap-4 animate-in fade-in zoom-in duration-500">
+                            <div className="flex flex-col items-center justify-center h-full text-gray-800 gap-4 animate-in fade-in zoom-in duration-500">
                                 <ShoppingCart size={48} strokeWidth={1} className="opacity-20" />
                                 <div className="text-center">
                                     <p className="text-[10px] font-black uppercase tracking-[0.4em]">Cart Empty</p>
-                                    <p className="text-[8px] font-bold text-slate-900 uppercase mt-1">Add items to get started</p>
+                                    <p className="text-[8px] font-bold text-gray-900 uppercase mt-1">Add items to get started</p>
                                 </div>
                             </div>
                         ) : (
@@ -379,18 +379,18 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                             highlightedItemId === item.productId
                                                 ? "bg-emerald-500/20 border-emerald-500/40 shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
                                                 : lastAddedItemId === item.productId
-                                                    ? "bg-slate-900 border-white/10"
-                                                    : "bg-slate-950/50 border-white/5 hover:border-white/10 hover:bg-slate-900/40"
+                                                    ? "bg-white border-gray-200"
+                                                    : "bg-white/50 border-gray-200 hover:border-gray-200 hover:bg-gray-50/80"
                                         )}
                                     >
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[13px] font-black text-white italic uppercase truncate tracking-wide">{item.name}</span>
-                                                <span className="text-[9px] font-black text-slate-600 font-mono">#{item.barcode || 'N/A'}</span>
+                                                <span className="text-[13px] font-black text-gray-900 italic uppercase truncate tracking-wide">{item.name}</span>
+                                                <span className="text-[9px] font-black text-gray-600 font-mono">#{item.barcode || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] font-black text-emerald-500/80 italic">{currency}{Number(item.price).toFixed(2)}</span>
-                                                <span className="text-[9px] font-black text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-white/5">STOCK: {item.stock || 0}</span>
+                                                <span className="text-[9px] font-black text-gray-400 bg-white px-1.5 py-0.5 rounded border border-gray-200">STOCK: {item.stock || 0}</span>
                                             </div>
                                             {/* Line note mini-view */}
                                             {item.note && (
@@ -400,12 +400,12 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-white/5">
-                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 rounded-lg bg-slate-900 hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center text-slate-600 transition-all border border-white/5">
+                                        <div className="flex items-center gap-1.5 bg-white/90 p-1 rounded-xl border border-gray-200">
+                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 rounded-lg bg-white hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center text-gray-600 transition-all border border-gray-200">
                                                 <Minus size={10} strokeWidth={3} />
                                             </button>
-                                            <span className="w-6 text-center text-[12px] font-black text-white tabular-nums">{item.quantity}</span>
-                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 rounded-lg bg-slate-900 hover:bg-emerald-500/20 hover:text-emerald-400 flex items-center justify-center text-slate-600 transition-all border border-white/5">
+                                            <span className="w-6 text-center text-[12px] font-black text-gray-900 tabular-nums">{item.quantity}</span>
+                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 rounded-lg bg-white hover:bg-emerald-500/20 hover:text-emerald-400 flex items-center justify-center text-gray-600 transition-all border border-gray-200">
                                                 <Plus size={10} strokeWidth={3} />
                                             </button>
                                         </div>
@@ -418,7 +418,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
                                         <button
                                             onClick={() => onUpdateQuantity(item.productId, -100)}
-                                            className="opacity-0 group-hover/item:opacity-100 text-slate-700 hover:text-rose-500 transition-all ml-1"
+                                            className="opacity-0 group-hover/item:opacity-100 text-gray-700 hover:text-rose-500 transition-all ml-1"
                                         >
                                             <X size={14} strokeWidth={3} />
                                         </button>
@@ -429,14 +429,14 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     </div>
 
                     {/* Payment & Totals (Tactical Dashboard) */}
-                    <div className="border-t border-white/10 bg-slate-950 p-6 shrink-0 relative transition-all">
+                    <div className="border-t border-gray-200 bg-white p-6 shrink-0 relative transition-all">
                         <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
                         <div className="flex items-center justify-between mb-6 relative z-10">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em] mb-1 italic">Payment</span>
+                                <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-1 italic">Payment</span>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Sub: {currency}{formatNumber(total)}</span>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">Sub: {currency}{formatNumber(total)}</span>
                                     {discount > 0 && (
                                         <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded text-[9px] font-black text-amber-500 italic">
                                             -{props.discountType === 'fixed' ? currency : ''}{formatNumber(discount)}{props.discountType === 'percentage' ? '%' : ''} DISC
@@ -445,7 +445,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-black text-white tabular-nums tracking-tighter italic">
+                                <span className="text-4xl font-black text-gray-900 tabular-nums tracking-tighter italic">
                                     <span className="text-emerald-500 mr-2 opacity-50 underline decoration-2">{currency}</span>
                                     {formatNumber(totalAmount)}
                                 </span>
@@ -471,10 +471,10 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                         className={clsx(
                                             "py-3 rounded-[1rem] text-[9px] font-black uppercase tracking-widest transition-all italic border",
                                             !isLinked
-                                                ? "bg-slate-900/50 border-white/5 text-slate-700 opacity-40 cursor-not-allowed"
+                                                ? "bg-gray-50 border-gray-200 text-gray-700 opacity-40 cursor-not-allowed"
                                                 : isActive
                                                     ? "bg-emerald-500 text-black border-emerald-400 shadow-[0_5px_15px_rgba(16,185,129,0.3)] scale-105"
-                                                    : "bg-slate-900 border-white/5 text-slate-400 hover:text-white hover:border-emerald-500/30"
+                                                    : "bg-white border-gray-200 text-gray-400 hover:text-gray-900 hover:border-emerald-500/30"
                                         )}
                                     >
                                         {label}
@@ -486,7 +486,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         {/* Cash & Change Logic */}
                         <div className="flex items-center gap-3 mb-6">
                             <div className="relative flex-1 group">
-                                <span className="absolute left-4 -top-2 px-2 bg-slate-950 text-[8px] font-black text-slate-600 uppercase tracking-[0.3em] z-10 transition-colors group-focus-within:text-emerald-400">Amount Received</span>
+                                <span className="absolute left-4 -top-2 px-2 bg-white text-[8px] font-black text-gray-600 uppercase tracking-[0.3em] z-10 transition-colors group-focus-within:text-emerald-400">Amount Received</span>
                                 <input
                                     type="text"
                                     inputMode="numeric"
@@ -498,7 +498,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                             onSetCashReceived(raw);
                                         }
                                     }}
-                                    className="w-full px-5 py-4 bg-slate-900 border border-white/5 rounded-2xl text-[18px] font-black text-white outline-none focus:border-emerald-500/50 transition-all font-mono italic text-right placeholder:text-slate-800 shadow-inner"
+                                    className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl text-[18px] font-black text-gray-900 outline-none focus:border-emerald-500/50 transition-all font-mono italic text-right placeholder:text-gray-400 shadow-inner"
                                 />
                             </div>
                         </div>
@@ -511,25 +511,25 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 "group relative w-full h-[72px] rounded-[2rem] overflow-hidden transition-all duration-500",
                                 cart.length > 0 && !isProcessing
                                     ? "bg-emerald-gradient hover:scale-[1.02] active:scale-[0.98] shadow-emerald-500/20 ring-1 ring-emerald-400/50"
-                                    : "bg-slate-900 grayscale opacity-50 cursor-not-allowed border border-white/5"
+                                    : "bg-white grayscale opacity-50 cursor-not-allowed border border-gray-200"
                             )}
                         >
                             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
                             <div className="relative z-10 flex items-center justify-between px-10">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white border border-white/20 group-hover:rotate-[15deg] transition-all duration-500">
+                                    <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-gray-900 border border-gray-300 group-hover:rotate-[15deg] transition-all duration-500">
                                         {isProcessing ? <RefreshCw size={24} className="animate-spin" /> : <ShieldCheck size={28} className="stroke-[2.5]" />}
                                     </div>
                                     <div className="flex flex-col items-start">
                                         <span className="text-[9px] font-black text-emerald-100/60 uppercase tracking-[0.3em] leading-none mb-1 italic">Pay Now</span>
-                                        <span className="text-[18px] font-black text-white uppercase tracking-wider leading-none italic">
+                                        <span className="text-[18px] font-black text-gray-900 uppercase tracking-wider leading-none italic">
                                             {isProcessing ? "PROCESSING..." : changeDue > 0 ? "GIVE CHANGE" : "COMPLETE SALE"}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[26px] font-black text-white tabular-nums tracking-tighter leading-none italic">
+                                    <span className="text-[26px] font-black text-gray-900 tabular-nums tracking-tighter leading-none italic">
                                         {currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}
                                     </span>
                                 </div>
@@ -568,7 +568,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 >
                     <div
                         onMouseDown={startDragging}
-                        className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg p-1 transition-colors group/handle"
+                        className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-gray-50 rounded-lg p-1 transition-colors group/handle"
                     >
                         <div className="flex items-center gap-1.5">
                             <GripHorizontal size={14} className="text-amber-500/60 group-hover/handle:text-amber-500 transition-colors" />

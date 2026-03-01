@@ -41,6 +41,12 @@ class Contact(TenantModel):
     linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
     home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
 
+    # ── External Provider Integration ──
+    whatsapp_group_id = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='WhatsApp Group ID (if you want notifications sent to a shared group instead of direct message)'
+    )
+
     # Supplier-specific fields
     supplier_category = models.CharField(
         max_length=20, choices=SUPPLIER_CATEGORIES, default='REGULAR',

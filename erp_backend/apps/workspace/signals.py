@@ -201,3 +201,27 @@ def trigger_system_event(organization, event, **kwargs):
         'user': kwargs.get('user'),
         'extra': kwargs.get('extra', {}),
     })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTIFICATIONS: Dispatch auto-notifications when Tasks are assigned
+# ─────────────────────────────────────────────────────────────────────────────
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Task
+from .tasks import send_task_notification_async
+
+@receiver(post_save, sender=Task)
+def handle_task_created_notification(sender, instance, created, **kwargs):
+    """
+    Trigger async email and WhatsApp notifications when a new task is created
+    and assigned to a user.
+    """
+    if created and getattr(instance, 'assigned_to_id', None):
+        try:
+            # Dispatch to Celery to avoid blocking the HTTP response
+            logger.info(f"Dispatching notifications for new task #{instance.id}")
+            send_task_notification_async.delay(instance.id)
+        except Exception as e:
+            logger.error(f"Failed to enqueue task notification: {e}")

@@ -20,6 +20,7 @@ class MigrationJob(TenantModel):
         ('FAILED', 'Failed'),
         ('STALLED', 'Stalled / Crashed'),
         ('ROLLED_BACK', 'Rolled Back'),
+        ('HIDDEN', 'Hidden / Deleted'),
     )
 
     name = models.CharField(max_length=255, default='UltimatePOS Migration')

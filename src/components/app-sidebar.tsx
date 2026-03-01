@@ -144,7 +144,9 @@ const defaultNav = [
         url: "#",
         icon: Settings2,
         items: [
+            { title: "Storage & Media", url: "/storage" },
             { title: "Security & Roles", url: "/settings/roles" },
+            { title: "Auto-Task Engine", url: "/workspace/auto-task-rules" },
             { title: "Custom Domains", url: "/settings/domains" },
             { title: "Audit Events", url: "/finance/events" },
             { title: "Subscription", url: "/subscription" },

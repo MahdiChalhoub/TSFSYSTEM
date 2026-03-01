@@ -386,6 +386,23 @@ export function MigrationReviewDashboard({ job, goBack, onRollback }: { job: Mig
                                 : job.status === 'FAILED' ? 'bg-red-100 text-red-700 border-red-200'
                                     : 'bg-amber-100 text-amber-700 border-amber-200'
                                 }`}>{job.status}</span>
+                            {['FAILED', 'STALLED', 'ROLLED_BACK'].includes(job.status) && (
+                                <button
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                            const { deleteMigrationJob } = await import('@/modules/migration/actions');
+                                            await deleteMigrationJob(job.id);
+                                            toast.success(`Migration "${job.name}" hidden`);
+                                            goBack();
+                                        } catch { toast.error('Failed to hide job'); }
+                                    }}
+                                    className="w-6 h-6 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all"
+                                    title="Hide this failed migration"
+                                >
+                                    <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                </button>
+                            )}
                         </div>
                     </div>
                     {/* Health Ring */}

@@ -408,3 +408,107 @@ export async function completeOnboarding() {
         return { success: false, error: error?.message || 'Failed to mark onboarding complete' }
     }
 }
+
+export async function bulkCreatePriceGroups(groups: any[]) {
+    try {
+        const results = []
+        for (const g of groups) {
+            if (!g.name) continue
+            const r = await erpFetch('crm/price-groups/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(g),
+            })
+            results.push(r)
+        }
+        return { success: true, data: results }
+    } catch (error: any) {
+        return { success: false, error: error?.message || 'Failed to bulk create price groups' }
+    }
+}
+
+export async function bulkCreateDepartments(departments: any[]) {
+    try {
+        const results = []
+        for (const d of departments) {
+            if (!d.name) continue
+            const r = await erpFetch('hr/departments/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(d),
+            })
+            results.push(r)
+        }
+        return { success: true, data: results }
+    } catch (error: any) {
+        return { success: false, error: error?.message || 'Failed to bulk create departments' }
+    }
+}
+
+export async function savePOSSettings(settings: { allow_negative_stock: boolean }) {
+    try {
+        const currentRes = await erpFetch('pos/pos-settings/')
+        const currentList = Array.isArray(currentRes) ? currentRes : currentRes?.results || []
+
+        if (currentList.length > 0) {
+            const settingId = currentList[0].id
+            await erpFetch(`pos/pos-settings/${settingId}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
+            })
+        } else {
+            await erpFetch('pos/pos-settings/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
+            })
+        }
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error?.message || 'Failed to save POS settings' }
+    }
+}
+
+export async function saveStorefrontConfig(settings: { theme: string; primary_color: string; custom_domain: string }) {
+    try {
+        const currentRes = await erpFetch('ecommerce/storefront-config/')
+        const currentList = Array.isArray(currentRes) ? currentRes : currentRes?.results || []
+
+        if (currentList.length > 0) {
+            const id = currentList[0].id
+            await erpFetch(`ecommerce/storefront-config/${id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
+            })
+        } else {
+            await erpFetch('ecommerce/storefront-config/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
+            })
+        }
+        return { success: true }
+    } catch (error: any) {
+        return { success: false, error: error?.message || 'Failed to save Storefront settings' }
+    }
+}
+
+export async function bulkCreateChecklistTemplates(checklists: any[]) {
+    try {
+        const results = []
+        for (const cl of checklists) {
+            if (!cl.name) continue
+            const r = await erpFetch('workspace/checklist-templates/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cl),
+            })
+            results.push(r)
+        }
+        return { success: true, data: results }
+    } catch (error: any) {
+        return { success: false, error: error?.message || 'Failed to bulk create checklist templates' }
+    }
+}

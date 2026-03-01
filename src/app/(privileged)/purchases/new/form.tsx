@@ -450,7 +450,7 @@ export default function PurchaseForm({
                     </div>
                 </div>
 
-                {/* 1.C Commercial Parameters (The Engine) */}
+                {/* 1.C Commercial Parameters */}
                 <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
                         <button type="button" onClick={() => setInvoicePriceType('HT')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${invoicePriceType === 'HT' ? 'bg-white text-blue-600 shadow-md ring-1 ring-blue-50' : 'text-slate-400 hover:text-slate-600'}`}>HT PRICING</button>
@@ -485,7 +485,7 @@ export default function PurchaseForm({
 
                     <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-slate-400 bg-slate-50 px-4 py-2.5 rounded-2xl border border-dashed border-slate-200">
                         <CheckCircle2 size={14} className="text-emerald-500" />
-                        <span className="uppercase tracking-[0.05em]">Blanc-Engine Commercial Integrity Active</span>
+                        <span className="uppercase tracking-[0.05em]">Commercial Integrity Active</span>
                     </div>
                 </div>
 
@@ -777,7 +777,7 @@ export default function PurchaseForm({
                                 <span className="text-5xl font-mono font-black tracking-tighter text-white drop-shadow-lg">${getInvoiceTotals().total.toFixed(2)}</span>
                             </div>
 
-                            {/* Immediate Settlement Engine */}
+                            {/* Immediate Settlement */}
                             <div className="bg-white/5 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 space-y-4 shadow-inner">
                                 <div className="flex items-center justify-between">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Immediate Payment</label>
@@ -867,7 +867,7 @@ export default function PurchaseForm({
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-slate-400 font-black text-xs uppercase tracking-widest">Waiting for Focus</p>
-                                        <p className="text-slate-600 text-[10px] font-medium leading-relaxed">Hover over a product in the matrix to generate real-time commercial intelligence.</p>
+                                        <p className="text-slate-600 text-[10px] font-medium leading-relaxed">Hover over a product in the table to generate real-time commercial intelligence.</p>
                                     </div>
                                 </div>
                             ) : isIntelligenceLoading ? (

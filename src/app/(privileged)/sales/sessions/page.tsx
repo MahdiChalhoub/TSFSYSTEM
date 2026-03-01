@@ -206,7 +206,7 @@ export default function SessionHistoryPage() {
                 <div>
                     <div className="flex items-center gap-3 mb-1">
                         <Link href="/sales" className="flex items-center gap-1.5 text-white/30 hover:text-white text-xs font-bold transition-all">
-                            <ArrowLeft size={12} /> POS Terminal
+                            <ArrowLeft size={12} /> POS
                         </Link>
                     </div>
                     <h1 className="text-2xl font-black tracking-tight">Register Sessions</h1>

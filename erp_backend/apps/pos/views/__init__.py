@@ -10,6 +10,7 @@ from .order_views import OrderViewSet
 from .sourcing_views import ProductSupplierViewSet, SupplierPriceHistoryViewSet
 from .audit_views import POSAuditRuleViewSet, POSAuditEventViewSet
 from .settings_views import POSSettingsViewSet
+from .manager_address_book import ManagerAddressBookViewSet
 
 __all__ = [
     'POSViewSet', 'PosTicketViewSet', 'POSRegisterViewSet',
@@ -23,4 +24,5 @@ __all__ = [
     'ProductSupplierViewSet', 'SupplierPriceHistoryViewSet',
     'POSAuditRuleViewSet', 'POSAuditEventViewSet',
     'POSSettingsViewSet',
+    'ManagerAddressBookViewSet',
 ]

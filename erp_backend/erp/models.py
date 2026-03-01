@@ -394,6 +394,7 @@ class User(AbstractUser):
     # cash_register FK — uses IntegerField to avoid hard dependency on finance module
     cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
     is_active_account = models.BooleanField(default=True)
+    whatsapp_number = models.CharField(max_length=50, null=True, blank=True, help_text="Used for system alerts and task assignments")
     
     registration_status = models.CharField(max_length=50, default='PENDING')
     correction_notes = models.TextField(null=True, blank=True)

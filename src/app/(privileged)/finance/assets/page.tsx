@@ -207,7 +207,7 @@ export default function AssetsPage() {
                                 settings.assetTrackingMode === 'PROFESSIONAL' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                                     'bg-stone-50 text-stone-500 border-stone-200'
                                 }`}>
-                                <ShieldCheck size={12} className="mr-1.5" /> {settings.assetTrackingMode} Engine
+                                <ShieldCheck size={12} className="mr-1.5" /> {settings.assetTrackingMode} Tracking
                             </Badge>
                         )}
                     </div>
@@ -414,7 +414,7 @@ export default function AssetsPage() {
                                             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-xl border border-stone-50">
                                                 <Activity size={24} className="text-indigo-200 animate-pulse" />
                                             </div>
-                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">Initialize Engine</p>
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">Initialize Tracking</p>
                                             <p className="text-[9px] text-stone-400 mt-2 uppercase font-bold tracking-tight leading-relaxed max-w-[15ch]">
                                                 Enter acquisition cost to generate value projection
                                             </p>

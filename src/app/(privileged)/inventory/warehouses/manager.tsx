@@ -27,7 +27,7 @@ export default function TerminalNodeControl({ initialWarehouses }: { initialWare
         const res = await deleteWarehouse(deleteTarget);
         if (!res.success) toast.error(res.message);
         else {
-            toast.success('Terminal Decommissioned');
+            toast.success('Warehouse deleted');
             setWarehouses(prev => prev.filter(w => w.id !== deleteTarget));
         }
         setDeleteTarget(null);

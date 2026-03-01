@@ -52,7 +52,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                     "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm",
                     viewScope === 'OFFICIAL' ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-slate-50 border-slate-100 text-slate-500"
                 )}>
-                    {viewScope === 'OFFICIAL' ? 'Official Node (Tax)' : 'Aggregate Node (Management)'}
+                    {viewScope === 'OFFICIAL' ? 'Official Tax Records' : 'Management View'}
                 </div>
                 {isLoading && <RefreshCw size={14} className="animate-spin text-emerald-400" />}
             </div>
@@ -95,7 +95,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 <div className="lg:col-span-2 card-premium p-10 bg-white">
                     <div className="flex justify-between items-center mb-10">
                         <div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">PROFIT ARCHITECTURE</p>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">PROFITABILITY</p>
                             <h3 className="text-2xl font-black text-slate-800 tracking-tight">Financial Velocity (6M)</h3>
                         </div>
                         <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest">
@@ -174,8 +174,8 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                     <table className="w-full">
                         <thead className="bg-slate-50/50 text-slate-400 uppercase text-[10px] tracking-[0.2em] font-black">
                             <tr>
-                                <th className="px-10 py-6 text-left">Date Node</th>
-                                <th className="px-10 py-6 text-left">Entity Dispatch</th>
+                                <th className="px-10 py-6 text-left">Date</th>
+                                <th className="px-10 py-6 text-left">Entity</th>
                                 <th className="px-10 py-6 text-left">Account</th>
                                 <th className="px-10 py-6 text-right">Verification</th>
                             </tr>

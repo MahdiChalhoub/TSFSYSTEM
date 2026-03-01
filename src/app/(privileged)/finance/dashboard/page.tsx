@@ -21,7 +21,7 @@ export default async function FinanceDashboardPage() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                                    Financial Node: Active
+                                    Finances: Active
                                 </Badge>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <RefreshCw size={14} className="text-emerald-400 animate-spin-slow" /> Ledger Sync: Real-time
@@ -37,7 +37,7 @@ export default async function FinanceDashboardPage() {
                     </div>
                     <div className="hidden lg:flex items-center gap-4">
                         <div className="h-14 px-6 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
-                            Node: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            Time: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                     </div>
                 </div>

@@ -8,8 +8,10 @@ would do it in the full software, but automated.
 SUPPLIER_PAYMENT → PaymentService.record_supplier_payment()
 CLIENT_PAYMENT   → PaymentService.record_customer_receipt()
 EXPENSE          → LedgerService.create_journal_entry() (Dr Expense, Cr Cash)
-PARTNER_CONTRIB  → LedgerService.create_journal_entry() (Dr Cash, Cr Owner Equity)
-PARTNER_WITHDRAW → LedgerService.create_journal_entry() (Dr Owner Drawing, Cr Cash)
+PARTNER_CAPITAL_IN  → LedgerService.create_journal_entry() (Dr Cash, Cr Owner Equity)
+PARTNER_CASH_IN     → LedgerService.create_journal_entry() (Dr Cash, Cr Partner Account)
+PARTNER_CAPITAL_OUT → LedgerService.create_journal_entry() (Dr Owner Drawing, Cr Cash)
+PARTNER_CASH_OUT    → LedgerService.create_journal_entry() (Dr Partner Account, Cr Cash)
 SALES_RETURN     → Creates credit note + GL entry
 CASH_SHORTAGE    → LedgerService.create_journal_entry() (Dr Cash Over/Short, Cr Cash)
 CASH_OVERAGE     → LedgerService.create_journal_entry() (Dr Cash, Cr Cash Over/Short)
@@ -43,8 +45,10 @@ class AddressBookExecutor:
             'CLIENT_PAYMENT': AddressBookExecutor._exec_client_payment,
             'CLIENT_PREPAYMENT': AddressBookExecutor._exec_client_payment,
             'EXPENSE': AddressBookExecutor._exec_expense,
-            'PARTNER_CONTRIBUTION': AddressBookExecutor._exec_partner_contribution,
-            'PARTNER_WITHDRAWAL': AddressBookExecutor._exec_partner_withdrawal,
+            'PARTNER_CAPITAL_IN': AddressBookExecutor._exec_partner_capital_in,
+            'PARTNER_CASH_IN': AddressBookExecutor._exec_partner_cash_in,
+            'PARTNER_CAPITAL_OUT': AddressBookExecutor._exec_partner_capital_out,
+            'PARTNER_CASH_OUT': AddressBookExecutor._exec_partner_cash_out,
             'SALES_RETURN': AddressBookExecutor._exec_sales_return,
             'CASH_SHORTAGE': AddressBookExecutor._exec_cash_variance,
             'CASH_OVERAGE': AddressBookExecutor._exec_cash_variance,
@@ -228,13 +232,12 @@ class AddressBookExecutor:
         )
         return je
 
-    # ─── PARTNER CONTRIBUTION ────────────────────────────────────────
+    # ─── PARTNER CAPITAL IN ────────────────────────────────────────
     @staticmethod
-    def _exec_partner_contribution(entry, manager):
+    def _exec_partner_capital_in(entry, manager):
         """
-        Partner puts money INTO the register.
-        If partner has a linked account → Dr. Cash, Cr. Partner's Account
-        Otherwise → Dr. Cash, Cr. Owner's Equity
+        Partner injects capital into the business (Equity).
+        Dr. Cash, Cr. Owner's Equity (Capital)
         """
         from apps.finance.services import LedgerService
         from apps.finance.models import ChartOfAccount
@@ -244,43 +247,73 @@ class AddressBookExecutor:
         if not cash_acc_id:
             return None
 
-        # Try to get partner's linked account from CRM contact
-        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
-
-        if not partner_acc_id:
-            # Fallback: generic equity account
-            equity_acc = ChartOfAccount.objects.filter(
-                organization=org, type='EQUITY'
-            ).first()
-            if not equity_acc:
-                logger.warning(f"AddressBook #{entry.id}: No equity account found")
-                return None
-            partner_acc_id = equity_acc.id
+        # Look for Equity Account directly
+        equity_acc = ChartOfAccount.objects.filter(
+            organization=org, type='EQUITY'
+        ).first()
+        if not equity_acc:
+            logger.warning(f"AddressBook #{entry.id}: No equity account found")
+            return None
 
         je = LedgerService.create_journal_entry(
             organization=org,
             transaction_date=entry.created_at.date(),
-            description=f"[AccountBook #{entry.id}] Partner Contribution: {entry.partner_name or entry.description}",
-            reference=f"AB-PCONT-{entry.id}",
+            description=f"[AccountBook #{entry.id}] Partner Capital Injection: {entry.partner_name or entry.description}",
+            reference=f"AB-PCAPIN-{entry.id}",
             status='POSTED',
             scope='OFFICIAL',
             user=manager,
             lines=[
                 {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
                  "description": f"Cash from partner: {entry.partner_name}"},
+                {"account_id": equity_acc.id, "debit": Decimal('0'), "credit": entry.amount_in,
+                 "description": f"Capital Injection: {entry.partner_name}"},
+            ]
+        )
+        return je
+
+    # ─── PARTNER CASH IN ───────────────────────────────────────────
+    @staticmethod
+    def _exec_partner_cash_in(entry, manager):
+        """
+        Partner transfers cash from their personal/linked account to the register.
+        Dr. Cash, Cr. Partner's Account
+        """
+        from apps.finance.services import LedgerService
+
+        org = AddressBookExecutor._get_organization(entry)
+        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
+        if not cash_acc_id:
+            return None
+
+        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
+        if not partner_acc_id:
+            logger.warning(f"AddressBook #{entry.id}: No partner account found for cash in")
+            return None
+
+        je = LedgerService.create_journal_entry(
+            organization=org,
+            transaction_date=entry.created_at.date(),
+            description=f"[AccountBook #{entry.id}] Partner Cash Transfer (In): {entry.partner_name or entry.description}",
+            reference=f"AB-PCASHIN-{entry.id}",
+            status='POSTED',
+            scope='OFFICIAL',
+            user=manager,
+            lines=[
+                {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
+                 "description": f"Cash transfer from partner: {entry.partner_name}"},
                 {"account_id": partner_acc_id, "debit": Decimal('0'), "credit": entry.amount_in,
                  "description": f"Partner account: {entry.partner_name}"},
             ]
         )
         return je
 
-    # ─── PARTNER WITHDRAWAL ──────────────────────────────────────────
+    # ─── PARTNER CAPITAL OUT ───────────────────────────────────────
     @staticmethod
-    def _exec_partner_withdrawal(entry, manager):
+    def _exec_partner_capital_out(entry, manager):
         """
-        Partner takes money OUT of the register (transfer to their account).
-        If partner has a linked account → Dr. Partner's Account, Cr. Cash
-        Otherwise → Dr. Owner's Drawing, Cr. Cash
+        Partner withdraws capital from the business (Drawing/Equity).
+        Dr. Owner's Drawing, Cr. Cash
         """
         from apps.finance.services import LedgerService
         from apps.finance.models import ChartOfAccount
@@ -290,33 +323,64 @@ class AddressBookExecutor:
         if not cash_acc_id:
             return None
 
-        # Try to get partner's linked account from CRM contact
-        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
-
-        if not partner_acc_id:
-            # Fallback: generic drawing/equity account
+        drawing_acc = ChartOfAccount.objects.filter(
+            organization=org, code__icontains='drawing'
+        ).first()
+        if not drawing_acc:
             drawing_acc = ChartOfAccount.objects.filter(
-                organization=org, code__icontains='drawing'
+                organization=org, type='EQUITY'
             ).first()
-            if not drawing_acc:
-                drawing_acc = ChartOfAccount.objects.filter(
-                    organization=org, type='EQUITY'
-                ).first()
-            if not drawing_acc:
-                return None
-            partner_acc_id = drawing_acc.id
+        if not drawing_acc:
+            logger.warning(f"AddressBook #{entry.id}: No drawing/equity account found")
+            return None
 
         je = LedgerService.create_journal_entry(
             organization=org,
             transaction_date=entry.created_at.date(),
-            description=f"[AccountBook #{entry.id}] Partner Withdrawal: {entry.partner_name or entry.description}",
-            reference=f"AB-PWITH-{entry.id}",
+            description=f"[AccountBook #{entry.id}] Partner Capital Withdrawal: {entry.partner_name or entry.description}",
+            reference=f"AB-PCAPOUT-{entry.id}",
+            status='POSTED',
+            scope='OFFICIAL',
+            user=manager,
+            lines=[
+                {"account_id": drawing_acc.id, "debit": entry.amount_out, "credit": Decimal('0'),
+                 "description": f"Capital Withdrawal: {entry.partner_name}"},
+                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
+                 "description": "Cash outflow to partner"},
+            ]
+        )
+        return je
+
+    # ─── PARTNER CASH OUT ──────────────────────────────────────────
+    @staticmethod
+    def _exec_partner_cash_out(entry, manager):
+        """
+        Partner transfers cash from register to their personal account.
+        Dr. Partner's Account, Cr. Cash
+        """
+        from apps.finance.services import LedgerService
+
+        org = AddressBookExecutor._get_organization(entry)
+        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
+        if not cash_acc_id:
+            return None
+
+        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
+        if not partner_acc_id:
+            logger.warning(f"AddressBook #{entry.id}: No partner account found for cash out")
+            return None
+
+        je = LedgerService.create_journal_entry(
+            organization=org,
+            transaction_date=entry.created_at.date(),
+            description=f"[AccountBook #{entry.id}] Partner Cash Transfer (Out): {entry.partner_name or entry.description}",
+            reference=f"AB-PCASHOUT-{entry.id}",
             status='POSTED',
             scope='OFFICIAL',
             user=manager,
             lines=[
                 {"account_id": partner_acc_id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Transfer to partner: {entry.partner_name}"},
+                 "description": f"Cash transfer to partner: {entry.partner_name}"},
                 {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
                  "description": "Cash outflow to partner"},
             ]
