@@ -71,7 +71,7 @@ const ENTRY_TYPES = [
     { key: 'EXPENSE', label: 'Expense', icon: Receipt, dir: 'OUT', color: 'rose', fields: ['expense_category'] },
     { key: 'CLIENT_PAYMENT', label: 'Client Payment', icon: DollarSign, dir: 'IN', color: 'emerald', fields: ['client', 'invoice'] },
     { key: 'CLIENT_PREPAYMENT', label: 'Client Prepayment', icon: Wallet, dir: 'IN', color: 'emerald', fields: ['client'] },
-    { key: 'SALES_RETURN', label: 'Sales Return', icon: Undo2, dir: 'OUT', color: 'amber', fields: ['client', 'order'] },
+    { key: 'SALES_RETURN', label: 'Sales Return', icon: Undo2, dir: 'OUT', color: 'amber', fields: ['client', 'invoice', 'order'] },
     { key: 'PARTNER_CONTRIBUTION', label: 'Partner Contribution', icon: Users, dir: 'IN', color: 'emerald', fields: ['partner'] },
     { key: 'PARTNER_WITHDRAWAL', label: 'Partner Withdrawal', icon: Users, dir: 'OUT', color: 'rose', fields: ['partner'] },
     { key: 'SALE_DEPOSIT', label: 'Sale Deposit', icon: ShoppingBag, dir: 'IN', color: 'emerald', fields: [] },
