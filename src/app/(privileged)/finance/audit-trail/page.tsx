@@ -136,7 +136,7 @@ export default function AuditTrailPage() {
                 <div>
                     <div className="flex items-center gap-3 mb-4">
                         <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                            Security Protocol: Active
+                            Secured
                         </Badge>
                         <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                             <Clock size={14} className="text-emerald-400" /> Live Forensic Feed
@@ -190,7 +190,7 @@ export default function AuditTrailPage() {
                                 </div>
                             </div>
                             <div className="bg-slate-950 rounded-3xl p-8 shadow-2xl border border-slate-800/50 max-h-[500px] overflow-y-auto custom-scrollbar relative">
-                                <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500/30 uppercase tracking-[0.3em]">JSON Protocol</div>
+                                <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500/30 uppercase tracking-[0.3em]">JSON Data</div>
                                 <pre className="text-[13px] text-emerald-400/90 font-mono whitespace-pre-wrap leading-relaxed selection:bg-emerald-500/30 selection:text-white">
                                     {JSON.stringify(log.payload, null, 4)}
                                 </pre>

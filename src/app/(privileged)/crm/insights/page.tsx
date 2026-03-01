@@ -149,7 +149,7 @@ export default function StrategicRelationshipIntelligencePage() {
                     <span className="text-xs font-mono font-bold text-gray-500">
                         {r.lastOrderDate ? new Date(r.lastOrderDate).toLocaleDateString() : '—'}
                     </span>
-                    <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Global Protocol</span>
+                    <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Overview</span>
                 </div>
             )
         };

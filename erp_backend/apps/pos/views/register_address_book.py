@@ -260,7 +260,30 @@ class RegisterAddressBookMixin:
             entry.approved_at = timezone.now()
             entry.hidden_from_cashier = True  # Approved entries become hidden
             entry.save()
-            return Response({'message': f'Entry "{entry.description}" approved', 'status': 'APPROVED'})
+
+            # ── Auto-execute the real ERP action ──
+            execution_result = None
+            execution_error = None
+            try:
+                from apps.pos.services.address_book_executor import AddressBookExecutor
+                execution_result = AddressBookExecutor.execute(entry, manager=reviewer)
+            except Exception as e:
+                execution_error = str(e)
+                import logging
+                logging.getLogger(__name__).error(f"AddressBook #{entry.id} auto-execution failed: {e}", exc_info=True)
+
+            msg = f'Entry "{entry.description}" approved'
+            if execution_result:
+                msg += f' — transaction posted to ledger'
+            elif execution_error:
+                msg += f' — ⚠ ledger posting failed: {execution_error}'
+
+            return Response({
+                'message': msg,
+                'status': 'APPROVED',
+                'executed': execution_result is not None,
+                'executionError': execution_error,
+            })
 
         elif review_action == 'reject':
             entry.status = 'REJECTED'

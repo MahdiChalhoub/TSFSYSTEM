@@ -66,7 +66,7 @@ export default function OperationalRequestsPage() {
             setWarehouses(Array.isArray(whRes) ? whRes : whRes?.results || [])
             setProducts(Array.isArray(prodRes) ? prodRes : prodRes?.results || [])
         } catch {
-            toast.error("Telemetry sync failed")
+            toast.error("Failed to update")
         } finally {
             setLoading(false)
         }
@@ -353,7 +353,7 @@ export default function OperationalRequestsPage() {
                 <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Promote to Strategy</DialogTitle>
-                        <DialogDescription className="text-xs font-medium text-gray-400">Convert the approved protocol into a team-level strategy manifest.</DialogDescription>
+                        <DialogDescription className="text-xs font-medium text-gray-400">Convert this approved request into an internal transfer.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={async (e) => {
                         e.preventDefault()

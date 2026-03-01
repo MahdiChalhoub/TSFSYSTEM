@@ -24,20 +24,20 @@ type Order = {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-    PLACED: { label: 'Awaiting Protocol', color: 'orange', icon: Clock },
+    PLACED: { label: 'Pending', color: 'orange', icon: Clock },
     CONFIRMED: { label: 'Confirmed', color: 'blue', icon: CheckCircle },
-    PROCESSING: { label: 'Fulfillment Active', color: 'violet', icon: Zap },
+    PROCESSING: { label: 'Processing', color: 'violet', icon: Zap },
     SHIPPED: { label: 'In Transit', color: 'indigo', icon: Truck },
-    DELIVERED: { label: 'Consigned', color: 'emerald', icon: CheckCircle },
-    CANCELLED: { label: 'Aborted', color: 'rose', icon: XCircle },
+    DELIVERED: { label: 'Delivered', color: 'emerald', icon: CheckCircle },
+    CANCELLED: { label: 'Cancelled', color: 'rose', icon: XCircle },
 }
 
 const ALL_COLUMNS: ColumnDef<Order>[] = [
-    { key: 'date', label: 'Protocol Date', sortable: true, alwaysVisible: true },
-    { key: 'reference', label: 'Stream ID', sortable: true, alwaysVisible: true },
-    { key: 'client', label: 'Consignee Entity' },
-    { key: 'items', label: 'Asset Count', align: 'center' },
-    { key: 'amount', label: 'Economic Exposure', align: 'right', sortable: true },
+    { key: 'date', label: 'Date', sortable: true, alwaysVisible: true },
+    { key: 'reference', label: 'Order #', sortable: true, alwaysVisible: true },
+    { key: 'client', label: 'Customer' },
+    { key: 'items', label: 'Items', align: 'center' as const },
+    { key: 'amount', label: 'Amount', align: 'right' as const, sortable: true },
 ]
 
 export default function DigitalCommerceStreamPage() {
@@ -154,8 +154,8 @@ export default function DigitalCommerceStreamPage() {
                             <Globe size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Stream Throughput</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{throughput} <span className="text-sm text-gray-300">REQ</span></h2>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Orders</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{throughput} <span className="text-sm text-gray-300">orders</span></h2>
                         </div>
                     </CardContent>
                 </Card>
@@ -220,15 +220,15 @@ export default function DigitalCommerceStreamPage() {
                     }
                 }}
                 actions={{
-                    onEdit: (r) => toast.info(`Initializing secure protocol for order ${r.order_number}`),
+                    onEdit: (r) => toast.info(`Opening order ${r.order_number}`),
                 }}
             >
                 <TypicalFilter
                     search={{ placeholder: 'Search Stream ID or Consignee...', value: search, onChange: setSearch }}
                     filters={[
                         {
-                            key: 'status', label: 'Protocol Status', type: 'select', options: [
-                                { value: 'ALL', label: 'All Streams' },
+                            key: 'status', label: 'Status', type: 'select', options: [
+                                { value: 'ALL', label: 'All' },
                                 ...Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))
                             ]
                         }

@@ -88,7 +88,7 @@ export default function PurchaseReturnsPage() {
                     <div className="w-8 h-8 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400">
                         <Building size={14} />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 tracking-tight">{ret.supplier_name || 'Legacy Vendor'}</span>
+                    <span className="text-sm font-semibold text-gray-700 tracking-tight">{ret.supplier_name || 'Unknown Supplier'}</span>
                 </div>
             )
         },

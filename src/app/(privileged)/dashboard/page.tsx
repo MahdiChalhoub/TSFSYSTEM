@@ -297,7 +297,7 @@ export default function AdvancedIntelligenceDashboard() {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-                {/* Terminal Performance Heatmap */}
+                {/* Performance Overview */}
                 <Card className="card-premium overflow-hidden bg-white">
                     <CardHeader className="px-10 pt-10">
                         <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Location Performance</CardTitle>

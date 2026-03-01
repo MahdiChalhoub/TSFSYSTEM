@@ -203,9 +203,9 @@ export default function SaaSModulesPage() {
                             'Security & Authentication Baseline'
                         ]
                     } : m.code === 'coreplatform' ? {
-                        description: 'The central orchestration engine. Manages modular injection and safe request routing between modules.',
+                        description: 'The core application engine. Manages module management and request routing between modules.',
                         workflows: [
-                            'Modular Request Orchestration',
+                            'Request Routing',
                             'Connector Engine (Brokerage)',
                             'Fallback & Graceful Degradation'
                         ]
@@ -214,7 +214,7 @@ export default function SaaSModulesPage() {
                         workflows: [
                             'Atomic Distribution Staging',
                             'Cryptographic Integrity Verification',
-                            'Automated Lifecycle Orchestration'
+                            'Automated Lifecycle Management'
                         ]
                     } : null;
                     return (

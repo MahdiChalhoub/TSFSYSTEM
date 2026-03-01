@@ -11,21 +11,75 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TRIGGER_EVENTS = [
-    { value: 'CREDIT_SALE', label: '💳 Credit Sale — No Cash Collected', group: 'Finance' },
-    { value: 'HIGH_VALUE_SALE', label: '💰 High-Value Sale Threshold', group: 'Finance' },
+    // Inventory
+    { value: 'PRICE_CHANGE', label: '🏷 Product Price Changed', group: 'Inventory' },
+    { value: 'LOW_STOCK', label: '⚠️ Low Stock Alert', group: 'Inventory' },
+    { value: 'EXPIRY_APPROACHING', label: '📅 Product Expiry Approaching', group: 'Inventory' },
+    { value: 'PRODUCT_EXPIRED', label: '🚫 Product Has Expired', group: 'Inventory' },
+    { value: 'PRODUCT_CREATED', label: '📦 New Product Created', group: 'Inventory' },
+    { value: 'BARCODE_MISSING_PURCHASE', label: '🔖 Purchased Without Barcode', group: 'Inventory' },
+    { value: 'BARCODE_MISSING_TRANSFER', label: '🔖 Transferred Without Barcode', group: 'Inventory' },
+    { value: 'BARCODE_DAILY_CHECK', label: '📋 Daily: Products Without Barcodes', group: 'Inventory' },
+    { value: 'STOCK_ADJUSTMENT', label: '📝 Stock Adjustment Made', group: 'Inventory' },
+    { value: 'INVENTORY_COUNT', label: '📊 Inventory Count Needed', group: 'Inventory' },
+    { value: 'NEGATIVE_STOCK', label: '🔴 Negative Stock Sale', group: 'Inventory' },
+    // Purchasing
+    { value: 'PURCHASE_ENTERED', label: '📋 Purchase Order Entered', group: 'Purchasing' },
+    { value: 'PURCHASE_NO_ATTACHMENT', label: '📎 Purchase Without Attachment', group: 'Purchasing' },
+    { value: 'PO_APPROVED', label: '✅ Purchase Order Approved', group: 'Purchasing' },
+    { value: 'RECEIPT_VOUCHER', label: '📄 Receipt Voucher Arrived', group: 'Purchasing' },
+    { value: 'PROFORMA_RECEIVED', label: '📑 Proforma Received', group: 'Purchasing' },
+    { value: 'TRANSFER_CREATED', label: '🚚 Transfer Order Created', group: 'Purchasing' },
+    { value: 'DELIVERY_COMPLETED', label: '✅ Delivery Completed', group: 'Purchasing' },
+    { value: 'NEW_SUPPLIER', label: '👤 New Supplier Onboarded', group: 'Purchasing' },
+    // Finance
+    { value: 'CREDIT_SALE', label: '💳 Credit Sale — No Cash', group: 'Finance' },
+    { value: 'HIGH_VALUE_SALE', label: '💰 High-Value Sale', group: 'Finance' },
     { value: 'ORDER_COMPLETED', label: '✅ Order Completed', group: 'Finance' },
     { value: 'POS_RETURN', label: '↩️ POS Return / Refund', group: 'Finance' },
-    { value: 'CASHIER_DISCOUNT', label: '🏷 Cashier Applied Discount', group: 'Finance' },
-    { value: 'NEGATIVE_STOCK', label: '📦 Negative Stock Sale', group: 'Finance' },
+    { value: 'CASHIER_DISCOUNT', label: '🏷 Cashier Discount', group: 'Finance' },
     { value: 'OVERDUE_INVOICE', label: '⏰ Invoice Overdue', group: 'Finance' },
-    { value: 'LATE_PAYMENT', label: '🔴 Late Payment Detected', group: 'Finance' },
-    { value: 'DAILY_SUMMARY', label: '📊 End-of-Day Financial Summary', group: 'Finance' },
-    { value: 'NEW_INVOICE', label: '🧾 New Invoice Received', group: 'General' },
-    { value: 'PRICE_CHANGE', label: '💱 Product Price Changed', group: 'General' },
-    { value: 'LOW_STOCK', label: '⚠️ Low Stock Alert', group: 'General' },
-    { value: 'PO_APPROVED', label: '📋 Purchase Order Approved', group: 'General' },
-    { value: 'DELIVERY_COMPLETED', 'label': '🚚 Delivery Completed', group: 'General' },
-    { value: 'CUSTOM', label: '⚙️ Custom Event', group: 'General' },
+    { value: 'LATE_PAYMENT', label: '🔴 Late Payment', group: 'Finance' },
+    { value: 'PAYMENT_DUE_SUPPLIER', label: '💵 Supplier Payment Due', group: 'Finance' },
+    { value: 'NEW_INVOICE', label: '🧾 New Invoice', group: 'Finance' },
+    { value: 'BANK_STATEMENT', label: '🏦 Bank Statement', group: 'Finance' },
+    { value: 'DAILY_SUMMARY', label: '📊 End-of-Day Summary', group: 'Finance' },
+    { value: 'MONTH_END', label: '📅 Month-End Close', group: 'Finance' },
+    // CRM
+    { value: 'CLIENT_FOLLOWUP_DUE', label: '📞 Client Follow-Up Due', group: 'CRM' },
+    { value: 'SUPPLIER_FOLLOWUP_DUE', label: '📞 Supplier Follow-Up Due', group: 'CRM' },
+    { value: 'NEW_CLIENT', label: '🤝 New Client Registered', group: 'CRM' },
+    { value: 'CLIENT_INACTIVE', label: '📢 Client Inactive', group: 'CRM' },
+    { value: 'CLIENT_COMPLAINT', label: '🔴 Client Complaint', group: 'CRM' },
+    { value: 'ADDRESS_BOOK_VERIFY', label: '📒 Address Book Verify', group: 'CRM' },
+    // HR
+    { value: 'EMPLOYEE_ONBOARD', label: '🆕 Employee Onboarded', group: 'HR' },
+    { value: 'LEAVE_REQUEST', label: '📅 Leave Request', group: 'HR' },
+    { value: 'ATTENDANCE_ANOMALY', label: '🔍 Attendance Anomaly', group: 'HR' },
+    // System
+    { value: 'USER_REGISTRATION', label: '👤 New User Registration', group: 'System' },
+    { value: 'REPORT_NEEDS_REVIEW', label: '📝 Report Needs Review', group: 'System' },
+    { value: 'ORDER_STALE', label: '⏰ Order Not Treated', group: 'System' },
+    { value: 'APPROVAL_PENDING', label: '⏰ Approval Pending', group: 'System' },
+    { value: 'CUSTOM', label: '⚙️ Custom Event', group: 'System' },
+];
+
+const MODULES = [
+    { value: 'inventory', label: '📦 Inventory' },
+    { value: 'purchasing', label: '🛒 Purchasing' },
+    { value: 'finance', label: '💰 Finance' },
+    { value: 'crm', label: '👥 CRM' },
+    { value: 'sales', label: '📋 Sales / POS' },
+    { value: 'hr', label: '👤 HR' },
+    { value: 'system', label: '⚙️ System' },
+];
+
+const RECURRENCE_INTERVALS = [
+    { value: '', label: 'None (Event-based)' },
+    { value: 'DAILY', label: '⏰ Daily' },
+    { value: 'WEEKLY', label: '📅 Weekly' },
+    { value: 'MONTHLY', label: '🗓 Monthly' },
+    { value: 'QUARTERLY', label: '📊 Quarterly' },
 ];
 
 const PRIORITIES = [
@@ -39,6 +93,11 @@ interface AutoTaskRule {
     id?: number;
     name: string;
     trigger_event: string;
+    rule_type: string;
+    module: string;
+    code?: string;
+    recurrence_interval?: string | null;
+    chain_parent?: number | null;
     conditions: {
         min_amount?: number;
         max_amount?: number;
@@ -55,16 +114,21 @@ interface AutoTaskRule {
     };
     assign_to_user_id?: number | null;
     assign_to_role_id?: number | null;
+    stale_threshold_days?: number;
     is_active: boolean;
 }
 
 const emptyRule = (): AutoTaskRule => ({
     name: '',
-    trigger_event: 'HIGH_VALUE_SALE',
+    trigger_event: 'PRICE_CHANGE',
+    rule_type: 'EVENT',
+    module: 'inventory',
+    recurrence_interval: null,
     conditions: {},
     template_data: { title: '', priority: 'HIGH', estimated_minutes: 30, default_points: 1 },
     assign_to_user_id: null,
     assign_to_role_id: null,
+    stale_threshold_days: 3,
     is_active: true,
 });
 
@@ -109,6 +173,11 @@ export default function AutoTaskRulesPage() {
             const payload: any = {
                 name: editingRule.name,
                 trigger_event: editingRule.trigger_event,
+                rule_type: editingRule.rule_type || 'EVENT',
+                module: editingRule.module || 'system',
+                code: editingRule.code || null,
+                recurrence_interval: editingRule.recurrence_interval || null,
+                stale_threshold_days: editingRule.stale_threshold_days || 3,
                 conditions: editingRule.conditions,
                 is_active: editingRule.is_active,
                 assign_to_user: editingRule.assign_to_user_id || null,
@@ -270,17 +339,59 @@ export default function AutoTaskRulesPage() {
                             <button onClick={() => setEditingRule(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"><X size={16} /></button>
                         </div>
                         <div className="p-6 space-y-5">
-                            {/* Rule Name */}
-                            <div>
-                                <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Rule Name *</label>
-                                <input value={editingRule.name} onChange={e => setEditingRule({ ...editingRule, name: e.target.value })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Alert on credit sales > 100,000 XOF" />
+                            {/* Rule Name + Code */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="col-span-2">
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Rule Name *</label>
+                                    <input value={editingRule.name} onChange={e => setEditingRule({ ...editingRule, name: e.target.value })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Print price tag on price change" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Code</label>
+                                    <input value={editingRule.code || ''} onChange={e => setEditingRule({ ...editingRule, code: e.target.value })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium font-mono outline-none focus:ring-2 focus:ring-indigo-500" placeholder="INV-01" />
+                                </div>
                             </div>
+
+                            {/* Module + Rule Type */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Module *</label>
+                                    <select value={editingRule.module} onChange={e => setEditingRule({ ...editingRule, module: e.target.value })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                        {MODULES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Rule Type *</label>
+                                    <select value={editingRule.rule_type} onChange={e => setEditingRule({ ...editingRule, rule_type: e.target.value, recurrence_interval: e.target.value === 'EVENT' ? null : editingRule.recurrence_interval })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                        <option value="EVENT">⚡ Event-Based</option>
+                                        <option value="RECURRING">🔄 Recurring (Scheduled)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Recurrence (only if RECURRING) */}
+                            {editingRule.rule_type === 'RECURRING' && (
+                                <div className="bg-amber-50 rounded-xl p-4 space-y-3 border border-amber-200">
+                                    <h3 className="text-xs font-black text-amber-700 uppercase tracking-wide">🔄 Recurrence Schedule</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-600 uppercase">Interval</label>
+                                            <select value={editingRule.recurrence_interval || ''} onChange={e => setEditingRule({ ...editingRule, recurrence_interval: e.target.value || null })} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white">
+                                                {RECURRENCE_INTERVALS.filter(r => r.value).map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-600 uppercase">Stale Threshold (days)</label>
+                                            <input type="number" value={editingRule.stale_threshold_days || 3} onChange={e => setEditingRule({ ...editingRule, stale_threshold_days: Number(e.target.value) })} className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-amber-400" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Trigger Event */}
                             <div>
                                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Trigger Event *</label>
                                 <select value={editingRule.trigger_event} onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })} className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
-                                    {['Finance', 'General'].map(group => (
+                                    {['Inventory', 'Purchasing', 'Finance', 'CRM', 'HR', 'System'].map(group => (
                                         <optgroup key={group} label={group}>
                                             {TRIGGER_EVENTS.filter(t => t.group === group).map(t => (
                                                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -288,11 +399,6 @@ export default function AutoTaskRulesPage() {
                                         </optgroup>
                                     ))}
                                 </select>
-                                <p className="text-[10px] text-gray-400 mt-1">
-                                    {editingRule.trigger_event === 'HIGH_VALUE_SALE' && '⚡ Will fire on every sale — use min_amount condition to filter.'}
-                                    {editingRule.trigger_event === 'ORDER_COMPLETED' && '⚡ Fires after every completed sale. Use amount/site/client conditions to filter.'}
-                                    {editingRule.trigger_event === 'CREDIT_SALE' && '⚡ Fires whenever a sale is processed with CREDIT payment method.'}
-                                </p>
                             </div>
 
                             {/* Conditions */}
