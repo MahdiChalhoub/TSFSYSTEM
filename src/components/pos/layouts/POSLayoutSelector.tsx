@@ -7,10 +7,10 @@ import clsx from 'clsx';
 const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: any; preview: string; accent: string }[] = [
     {
         id: 'classic',
-        name: 'Standard Node',
+        name: 'Standard',
         description: 'Classic layout. Products left, order panel right. Familiar flow.',
         icon: Monitor,
-        preview: '🛒 Node Alpha: Classic Split',
+        preview: '🛒 Classic Split Layout',
         accent: 'slate',
     },
     {
@@ -23,8 +23,8 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
     },
     {
         id: 'compact',
-        name: 'High-Velocity Terminal',
-        description: 'Low-latency dark console. Monospace precision, optimized for max transactional throughput.',
+        name: 'Quick Mode',
+        description: 'Compact dark mode. Fast and focused.',
         icon: Zap,
         preview: '⚡ Speed Mode: Compact View',
         accent: 'amber',
@@ -39,10 +39,10 @@ const LAYOUTS: { id: POSLayoutVariant; name: string; description: string; icon: 
     },
     {
         id: 'intelligence',
-        name: 'Intelligence Canvas',
-        description: 'AI-enhanced interface with advanced analytics overlays and operational throughput visualization.',
+        name: 'Analytics View',
+        description: 'Enhanced layout with analytics and performance insights.',
         icon: BrainCircuit,
-        preview: '🧠 Intelligence Flow: Expansive Canvas',
+        preview: '🧠 Analytics: Expanded View',
         accent: 'cyan',
     },
 ];
@@ -84,7 +84,7 @@ export function POSLayoutSelector({
                         </div>
                         <div>
                             <h2 className="text-xl font-black text-slate-800 tracking-tighter">Interface Configuration</h2>
-                            <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Select the operational visualization node</p>
+                            <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Choose a layout</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-800 transition-all border border-slate-100">
@@ -132,7 +132,7 @@ export function POSLayoutSelector({
                                             </h3>
                                             {isActive && (
                                                 <span className="bg-emerald-gradient text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
-                                                    Active Hub
+                                                    Active
                                                 </span>
                                             )}
                                         </div>
@@ -151,7 +151,7 @@ export function POSLayoutSelector({
                 {/* Footer */}
                 <div className="px-10 py-6 border-t border-slate-50 bg-slate-50/30">
                     <p className="text-[10px] font-black text-slate-400 text-center uppercase tracking-widest">
-                        System configuration synced with local persistence engine.
+                        Layout preference saved locally.
                     </p>
                 </div>
             </div>

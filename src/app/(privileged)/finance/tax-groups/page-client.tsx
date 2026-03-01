@@ -287,7 +287,7 @@ export default function TaxGroupsPage() {
                                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
                                         <Edit2 size={20} className="text-emerald-600" />
                                     </div>
-                                    {editing ? 'Edit Regulatory Policy' : 'Provision Tax Protocol'}
+                                    {editing ? 'Edit Tax Group' : 'Create Tax Group'}
                                 </h3>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 ml-13">Configuration Parameters & Thresholds</p>
                             </div>
@@ -297,7 +297,7 @@ export default function TaxGroupsPage() {
                         </div>
                         <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Protocol Identifier</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
                                 <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-emerald-500/10" />
                             </div>
                             <div className="space-y-2">
@@ -322,7 +322,7 @@ export default function TaxGroupsPage() {
                             <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[11px] uppercase tracking-widest h-12 px-6">Discard</Button>
                             <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-slate-900/30 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
                                 {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-                                {editing ? 'Authorize Update' : 'Apply Protocol'}
+                                {editing ? 'Save Changes' : 'Create'}
                             </Button>
                         </div>
                     </Card>

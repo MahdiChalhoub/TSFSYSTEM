@@ -569,7 +569,7 @@ export default function OrganizationsPage() {
                     </div>
                     <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
                         <button className="h-12 px-8 rounded-2xl bg-white border border-slate-200 font-black text-[11px] uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95" onClick={() => setModulesOpen(false)}>
-                            Close Nexus
+                            Close
                         </button>
                     </div>
                 </DialogContent>

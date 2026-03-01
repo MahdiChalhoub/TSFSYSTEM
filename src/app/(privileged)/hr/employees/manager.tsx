@@ -157,7 +157,7 @@ export default function HumanCapitalRegistry({
                         : { label: r.status || 'Active', variant: 'success' }
                 }}
                 actions={{
-                    onEdit: (r) => toast.info(`Initializing secure stream for ${r.firstName}`),
+                    onEdit: (r) => toast.info(`Opening profile for ${r.firstName}`),
                     extra: (r: Personnel) => (
                         <div className="flex gap-1">
                             {scopeAccess !== 'official' && (

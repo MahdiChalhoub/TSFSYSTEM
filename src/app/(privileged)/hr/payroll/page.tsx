@@ -199,11 +199,11 @@ export default function CompensationEnginePage() {
                             search={{ placeholder: 'Search employees...', value: search, onChange: setSearch }}
                             filters={[
                                 {
-                                    key: 'type', label: 'Entity Category', type: 'select', options: [
-                                        { value: 'ALL', label: 'Global (All)' },
-                                        { value: 'EMPLOYEE', label: 'Internal Staff' },
-                                        { value: 'PARTNER', label: 'External Partners' },
-                                        { value: 'BOTH', label: 'Hybrid Entities' },
+                                    key: 'type', label: 'Type', type: 'select', options: [
+                                        { value: 'ALL', label: 'All' },
+                                        { value: 'EMPLOYEE', label: 'Employees' },
+                                        { value: 'PARTNER', label: 'Partners' },
+                                        { value: 'BOTH', label: 'Both' },
                                     ]
                                 }
                             ]}

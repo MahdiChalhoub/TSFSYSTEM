@@ -119,7 +119,7 @@ export default function DeliveryZonesPage() {
                         </div>
                         Delivery <span className="text-emerald-600">Zones</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Coverage Areas & Fulfillment Topology</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Coverage Areas & Delivery Zones</p>
                 </div>
                 <button onClick={startCreate}
                     className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-200 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">

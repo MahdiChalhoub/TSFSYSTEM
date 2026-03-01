@@ -165,7 +165,7 @@ export default function SystemUpdatesPage() {
                             <Zap className="text-amber-500 fill-amber-500 shrink-0" size={20} />
                             Platform Core
                         </CardTitle>
-                        <CardDescription className="text-gray-500 font-medium tracking-tight">Real-time kernel monitoring</CardDescription>
+                        <CardDescription className="text-gray-500 font-medium tracking-tight">Platform status monitoring</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 pt-0 space-y-6">
                         <div className="space-y-4">

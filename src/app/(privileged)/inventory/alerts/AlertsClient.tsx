@@ -41,7 +41,7 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
             const res = await fetch('/api/proxy?path=stock-alerts/').then(r => r.json())
             setData(res || [])
         } catch {
-            toast.error("Telemetry sync failed")
+            toast.error("Failed to update")
         } finally {
             setLoading(false)
         }

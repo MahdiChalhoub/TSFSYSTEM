@@ -149,9 +149,9 @@ export default async function SaasMasterDashboard() {
                         <div className="space-y-4">
                             {[
                                 { title: "Global Registry", desc: "Manage modules", href: "/modules", icon: Database, color: "text-emerald-600", bg: "bg-emerald-50" },
-                                { title: "Platform Health", desc: "Real-time kernel diagnostics", href: "/health", icon: Activity, color: "text-blue-600", bg: "bg-blue-50" },
-                                { title: "Nexus Updates", desc: "Core infrastructure patches", href: "/updates", icon: Zap, color: "text-amber-600", bg: "bg-amber-50" },
-                                { title: "Connector Node", desc: "API connectors", href: "/connector", icon: Globe, color: "text-purple-600", bg: "bg-purple-50" },
+                                { title: "Platform Health", desc: "System health monitoring", href: "/health", icon: Activity, color: "text-blue-600", bg: "bg-blue-50" },
+                                { title: "Platform Updates", desc: "Release notes & updates", href: "/updates", icon: Zap, color: "text-amber-600", bg: "bg-amber-50" },
+                                { title: "API Connectors", desc: "API connectors", href: "/connector", icon: Globe, color: "text-purple-600", bg: "bg-purple-50" },
                             ].map((action, i) => (
                                 <Link key={i} href={action.href} className="block group/act">
                                     <div className="flex items-center gap-5 p-5 rounded-[1.8rem] hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-200/20 active:scale-[0.98]">

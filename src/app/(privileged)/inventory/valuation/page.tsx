@@ -73,7 +73,7 @@ export default function AssetValuationEnginePage() {
         { key: 'avg_cost', label: 'Asset Basis', align: 'right', sortable: true, render: r => <span className="text-gray-500 font-medium">{fmt(r.avg_cost)}</span> },
         { key: 'total_value', label: 'Market Exposure', align: 'right', sortable: true, render: r => <span className="font-black text-emerald-600">{fmt(r.total_value)}</span> },
         {
-            key: 'method', label: 'Valuation Protocol', render: r => (
+            key: 'method', label: 'Valuation Method', render: r => (
                 <Badge variant="outline" className={`${METHOD_BADGES[r.method] || 'bg-gray-100'} text-[9px] font-black uppercase tracking-tighter py-0.5`}>
                     {r.method?.replace('_', ' ')}
                 </Badge>

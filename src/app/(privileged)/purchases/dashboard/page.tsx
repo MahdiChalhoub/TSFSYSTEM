@@ -39,7 +39,7 @@ export default function PurchaseDashboardPage() {
             const data = await erpFetch('pos/purchase/')
             setOrders(Array.isArray(data) ? data : data.results || [])
         } catch {
-            toast.error("Failed to load procurement stream")
+            toast.error("Failed to load orders")
         } finally {
             setLoading(false)
         }
@@ -57,7 +57,7 @@ export default function PurchaseDashboardPage() {
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'ref_code',
-            label: 'Procurement ID',
+            label: 'Order #',
             render: (o) => (
                 <div className="flex items-center gap-2">
                     <span className="font-mono text-[10px] font-black tracking-[0.1em] text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 shadow-sm">
@@ -84,7 +84,7 @@ export default function PurchaseDashboardPage() {
                     <div className="w-8 h-8 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400">
                         <Building size={14} />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 tracking-tight">{o.supplier_name || o.contact_name || 'Legacy Vendor'}</span>
+                    <span className="text-sm font-semibold text-gray-700 tracking-tight">{o.supplier_name || o.contact_name || 'Unknown'}</span>
                 </div>
             )
         },
@@ -175,7 +175,7 @@ export default function PurchaseDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Completed Fulfillment</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Completed</p>
                         <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{fmt(stats.completed)}</h4>
                     </div>
                     <div className="mt-6 h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
@@ -189,7 +189,7 @@ export default function PurchaseDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Outstanding Pipeline</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Pending</p>
                         <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{fmt(stats.pending)}</h4>
                     </div>
                     <div className="mt-6 h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
@@ -203,7 +203,7 @@ export default function PurchaseDashboardPage() {
                         </div>
                     </div>
                     <div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Procurement Efficiency</p>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Average Order</p>
                         <h4 className="text-3xl font-black text-slate-800 tracking-tighter mt-1">{orders.length > 0 ? fmt(stats.total / orders.length) : fmt(0)}</h4>
                     </div>
                     <div className="mt-6 pt-5 border-t border-slate-50 flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-tight">
