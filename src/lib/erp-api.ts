@@ -116,7 +116,13 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
     // Client-side: route through Next.js API proxy (which injects auth from httpOnly cookie)
     // Server-side: call Django directly
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    let cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    // VERY IMPORTANT: Enforce trailing slash to prevent Django APPEND_SLASH 301 redirects
+    // which cause browsers/fetch to drop the body and switch PATCH/POST to GET.
+    if (!cleanPath.endsWith('/')) {
+        cleanPath += '/';
+    }
+
     let url = isClient
         ? `/api/proxy/${cleanPath}`
         : `${DJANGO_URL}/api/${cleanPath}`;

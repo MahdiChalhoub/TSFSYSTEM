@@ -1,369 +1,316 @@
 'use client'
 
-import { useCurrency } from '@/lib/utils/currency'
+/**
+ * Sales Analytics — V2 themed rebuild
+ * Full --app-* theming via CSS vars. No hardcoded colors.
+ */
 
-import { useState, useEffect } from "react"
+import { useCurrency } from '@/lib/utils/currency'
+import { useState, useEffect } from 'react'
 import type { SalesAnalyticsData } from '@/types/erp'
-import { getSalesAnalytics } from "@/app/actions/pos/sales-analytics"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
+import { getSalesAnalytics } from '@/app/actions/pos/sales-analytics'
+import { toast } from 'sonner'
 import {
-    BarChart3, DollarSign, TrendingUp, ShoppingCart, Users,
-    Package, CreditCard, Building2
-} from "lucide-react"
+ BarChart3, DollarSign, TrendingUp, ShoppingCart, Users,
+ Package, CreditCard, Building2, Loader2
+} from 'lucide-react'
+
+// ── Themed KPI Card ──────────────────────────────────────────────
+function KpiCard({ icon: Icon, label, value, accent }: {
+ icon: React.ElementType
+ label: string
+ value: string
+ accent?: string
+}) {
+ return (
+ <div
+ className="app-glass rounded-2xl p-5 flex items-center gap-4"
+ style={{ border: '1px solid var(--app-border)' }}
+ >
+ <div
+ className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+ style={{ background: accent ? `${accent}22` : 'var(--app-primary-light)' }}
+ >
+ <Icon size={20} style={{ color: accent ?? 'var(--app-primary)' }} />
+ </div>
+ <div>
+ <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+ {label}
+ </p>
+ <p className="text-lg font-black tracking-tight leading-tight" style={{ color: 'var(--app-text)' }}>
+ {value}
+ </p>
+ </div>
+ </div>
+ )
+}
+
+// ── Progress bar row ─────────────────────────────────────────────
+function ProgressRow({ label, sub, value, pct }: { label: string; sub?: string; value: string; pct: number }) {
+ return (
+ <div className="space-y-1">
+ <div className="flex items-center justify-between">
+ <div>
+ <span className="text-sm font-semibold" style={{ color: 'var(--app-text)' }}>{label}</span>
+ {sub && <span className="text-[10px] ml-2" style={{ color: 'var(--app-text-muted)' }}>{sub}</span>}
+ </div>
+ <span className="text-sm font-black" style={{ color: 'var(--app-primary)' }}>{value}</span>
+ </div>
+ <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--app-border)' }}>
+ <div
+ className="h-full rounded-full transition-all duration-500"
+ style={{ width: `${Math.min(pct, 100)}%`, background: 'var(--app-primary)' }}
+ />
+ </div>
+ </div>
+ )
+}
 
 const PAYMENT_ICONS: Record<string, string> = {
-    CASH: '💵', CARD: '💳', MOBILE: '📱', TRANSFER: '🏦', CHECK: '📝', CREDIT: '🧾'
+ CASH: '💵', CARD: '💳', MOBILE: '📱', TRANSFER: '🏦', CHECK: '📝', CREDIT: '🧾'
 }
 
 export default function SalesAnalyticsPage() {
-    const { fmt } = useCurrency()
-    const [data, setData] = useState<SalesAnalyticsData | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [period, setPeriod] = useState(30)
+ const { fmt } = useCurrency()
+ const [data, setData] = useState<SalesAnalyticsData | null>(null)
+ const [loading, setLoading] = useState(true)
+ const [period, setPeriod] = useState(30)
 
-    useEffect(() => { loadData() }, [period])
+ useEffect(() => { loadData() }, [period])
 
-    async function loadData() {
-        setLoading(true)
-        try {
-            const result = await getSalesAnalytics(period)
-            setData(result)
-        } catch {
-            toast.error("Failed to load sales analytics")
-        } finally {
-            setLoading(false)
-        }
-    }
+ async function loadData() {
+ setLoading(true)
+ try {
+ const result = await getSalesAnalytics(period)
+ setData(result)
+ } catch {
+ toast.error('Failed to load sales analytics')
+ } finally {
+ setLoading(false)
+ }
+ }
 
-    if (loading || !data) {
-        return (
-            <div className="page-container">
-                <Skeleton className="h-10 w-64" />
-                <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}</div>
-                <Skeleton className="h-96" />
-            </div>
-        )
-    }
+ if (loading) {
+ return (
+ <div className="page-container flex flex-col items-center justify-center min-h-[60vh]">
+ <Loader2 size={32} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+ <p className="text-sm mt-3 font-medium" style={{ color: 'var(--app-text-muted)' }}>Loading analytics…</p>
+ </div>
+ )
+ }
 
-    const { overall, top_products, top_customers, daily_trend, payment_methods, site_performance } = data
+ if (!data) return null
 
-    return (
-        <div className="page-container">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <BarChart3 size={28} className="text-white" />
-                        </div>
-                        Sales <span className="text-indigo-600">Analytics</span>
-                    </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Performance Insights · {data.period?.start} → {data.period?.end}</p>
-                </div>
-                <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-                    {[7, 30, 90].map(d => (
-                        <button
-                            key={d}
-                            onClick={() => setPeriod(d)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${period === d ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                        >
-                            {d}d
-                        </button>
-                    ))}
-                </div>
-            </header>
+ const { overall, top_products, top_customers, daily_trend, payment_methods, site_performance } = data
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-4 gap-4">
-                {/* Row 1: Revenue KPIs */}
-                <Card className="border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={22} className="text-violet-500" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Revenue TTC</p>
-                                <p className="text-lg font-bold text-violet-700">{fmt(overall.revenue)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <ShoppingCart size={22} className="text-blue-500" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Orders</p>
-                                <p className="text-lg font-bold text-blue-700">{overall.orders}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={22} className="text-emerald-500" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Avg Order</p>
-                                <p className="text-lg font-bold text-emerald-700">{fmt(overall.avg_order)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-rose-500 bg-gradient-to-r from-rose-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={22} className="text-rose-500" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Tax Collected</p>
-                                <p className="text-lg font-bold text-rose-700">{fmt(overall.tax)}</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+ return (
+ <div className="page-container">
+ {/* Header */}
+ <header className="flex items-center justify-between mb-8">
+ <div className="flex items-center gap-4">
+ <div
+ className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg"
+ style={{ background: 'var(--app-primary)', boxShadow: 'var(--app-glow)' }}
+ >
+ <BarChart3 size={26} className="text-white" />
+ </div>
+ <div>
+ <h1 className="page-header-title">
+ Sales <span style={{ color: 'var(--app-primary)' }}>Analytics</span>
+ </h1>
+ <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+ {data.period?.start} → {data.period?.end}
+ </p>
+ </div>
+ </div>
 
-                {/* Row 2: Margin KPIs (Gap 9) */}
-                {(overall as any).cogs !== undefined && (
-                    <>
-                        <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
-                            <CardContent className="py-4">
-                                <div className="flex items-center gap-3">
-                                    <Package size={22} className="text-amber-500" />
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase">COGS</p>
-                                        <p className="text-lg font-bold text-amber-700">{fmt((overall as any).cogs)}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-l-4 border-l-green-600 bg-gradient-to-r from-green-50 to-white col-span-2">
-                            <CardContent className="py-4">
-                                <div className="flex items-center gap-4">
-                                    <TrendingUp size={22} className="text-green-600" />
-                                    <div className="flex-1">
-                                        <p className="text-[10px] text-gray-500 uppercase">Gross Margin</p>
-                                        <p className="text-lg font-bold text-green-700">{fmt((overall as any).gross_margin)}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-gray-500 uppercase">Margin %</p>
-                                        <p className={`text-xl font-black ${(overall as any).gross_margin_pct >= 20 ? 'text-green-600' : 'text-orange-500'}`}>
-                                            {((overall as any).gross_margin_pct ?? 0).toFixed(1)}%
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
-                            <CardContent className="py-4">
-                                <div className="flex items-center gap-3">
-                                    <DollarSign size={22} className="text-orange-500" />
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
-                                        <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </>
-                )}
-                {(overall as any).cogs === undefined && (
-                    <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
-                        <CardContent className="py-4">
-                            <div className="flex items-center gap-3">
-                                <DollarSign size={22} className="text-orange-500" />
-                                <div>
-                                    <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
-                                    <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
+ {/* Period selector */}
+ <div
+ className="flex gap-0.5 p-1 rounded-xl"
+ style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}
+ >
+ {[7, 30, 90].map(d => (
+ <button
+ key={d}
+ onClick={() => setPeriod(d)}
+ className="px-4 py-1.5 rounded-lg text-xs font-black transition-all"
+ style={
+ period === d
+ ? { background: 'var(--app-primary)', color: '#fff', boxShadow: 'var(--app-glow)' }
+ : { color: 'var(--app-text-muted)' }
+ }
+ >
+ {d}d
+ </button>
+ ))}
+ </div>
+ </header>
 
-            {/* Daily Trend (simplified bar chart) */}
-            {(daily_trend?.length ?? 0) > 0 && (
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <TrendingUp size={18} className="text-gray-400" /> Daily Revenue Trend
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-end gap-1 h-32">
-                            {daily_trend?.map((d: Record<string, any>, i: number) => {
-                                const max = Math.max(...(daily_trend?.map((t: Record<string, any>) => t.revenue) ?? [0]))
-                                const pct = max ? (d.revenue / max * 100) : 0
-                                return (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                                        <div className="invisible group-hover:visible text-[10px] text-gray-500 whitespace-nowrap">
-                                            {fmt(d.revenue)}
-                                        </div>
-                                        <div
-                                            className="w-full bg-violet-400 rounded-t hover:bg-violet-600 transition-all"
-                                            style={{ height: `${Math.max(pct, 2)}%` }}
-                                        />
-                                        <div className="text-[9px] text-gray-400 transform -rotate-45 origin-top-left whitespace-nowrap">
-                                            {new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+ {/* KPI Row 1 */}
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+ <KpiCard icon={DollarSign} label="Revenue TTC" value={fmt(overall.revenue)} />
+ <KpiCard icon={ShoppingCart} label="Orders" value={String(overall.orders)} />
+ <KpiCard icon={TrendingUp} label="Avg Order" value={fmt(overall.avg_order)} />
+ <KpiCard icon={DollarSign} label="Tax Collected" value={fmt(overall.tax)} />
+ </div>
 
-            <div className="grid grid-cols-2 gap-6">
-                {/* Top Products */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <Package size={18} className="text-gray-400" /> Top Products
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50/50">
-                                    <TableHead>#</TableHead>
-                                    <TableHead>Product</TableHead>
-                                    <TableHead className="text-right">Qty</TableHead>
-                                    <TableHead className="text-right">Revenue</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {top_products?.map((p: Record<string, any>, i: number) => (
-                                    <TableRow key={i}>
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
-                                        <TableCell className="font-medium">{p.name || 'Unknown'}</TableCell>
-                                        <TableCell className="text-right text-sm">{Math.round(p.qty)}</TableCell>
-                                        <TableCell className="text-right font-bold text-violet-600">{fmt(p.revenue)}</TableCell>
-                                    </TableRow>
-                                ))}
-                                {(!top_products?.length) && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-8 text-gray-400">No product data</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+ {/* KPI Row 2 — Margin (only if COGS available) */}
+ {(overall as any).cogs !== undefined && (
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+ <KpiCard icon={Package} label="COGS" value={fmt((overall as any).cogs)} />
+ <div
+ className="app-glass rounded-2xl p-5 col-span-2 flex items-center justify-between"
+ style={{ border: '1px solid var(--app-border)' }}
+ >
+ <div className="flex items-center gap-4">
+ <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'var(--app-primary-light)' }}>
+ <TrendingUp size={20} style={{ color: 'var(--app-primary)' }} />
+ </div>
+ <div>
+ <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Gross Margin</p>
+ <p className="text-lg font-black" style={{ color: 'var(--app-text)' }}>{fmt((overall as any).gross_margin)}</p>
+ </div>
+ </div>
+ <div className="text-right">
+ <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Margin %</p>
+ <p className="text-2xl font-black" style={{ color: (overall as any).gross_margin_pct >= 20 ? 'var(--app-primary)' : 'var(--app-text-muted)' }}>
+ {((overall as any).gross_margin_pct ?? 0).toFixed(1)}%
+ </p>
+ </div>
+ </div>
+ <KpiCard icon={DollarSign} label="Discounts" value={fmt(overall.discount)} />
+ </div>
+ )}
+ {(overall as any).cogs === undefined && (
+ <div className="mb-4">
+ <KpiCard icon={DollarSign} label="Discounts" value={fmt(overall.discount)} />
+ </div>
+ )}
 
-                {/* Top Customers */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <Users size={18} className="text-gray-400" /> Top Customers
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50/50">
-                                    <TableHead>#</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead className="text-right">Orders</TableHead>
-                                    <TableHead className="text-right">Spent</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {top_customers?.map((c: Record<string, any>, i: number) => (
-                                    <TableRow key={i}>
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
-                                        <TableCell className="font-medium">{c.name || 'Walk-in'}</TableCell>
-                                        <TableCell className="text-right text-sm">{c.orders}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(c.spent)}</TableCell>
-                                    </TableRow>
-                                ))}
-                                {(!top_customers?.length) && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-8 text-gray-400">No customer data</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
+ {/* Daily Revenue Trend */}
+ {(daily_trend?.length ?? 0) > 0 && (
+ <div className="app-glass rounded-2xl p-6 mb-4" style={{ border: '1px solid var(--app-border)' }}>
+ <p className="text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+ <TrendingUp size={14} /> Daily Revenue Trend
+ </p>
+ <div className="flex items-end gap-1 h-28">
+ {daily_trend?.map((d: Record<string, any>, i: number) => {
+ const max = Math.max(...(daily_trend?.map((t: Record<string, any>) => t.revenue) ?? [0]))
+ const pct = max ? (d.revenue / max * 100) : 0
+ return (
+ <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+ <div className="invisible group-hover:visible text-[9px] whitespace-nowrap font-bold" style={{ color: 'var(--app-primary)' }}>
+ {fmt(d.revenue)}
+ </div>
+ <div
+ className="w-full rounded-t transition-all duration-300"
+ style={{
+ height: `${Math.max(pct, 2)}%`,
+ background: 'var(--app-primary)',
+ opacity: 0.7,
+ }}
+ />
+ <div className="text-[8px] transform -rotate-45 origin-top-left whitespace-nowrap" style={{ color: 'var(--app-text-muted)' }}>
+ {new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+ </div>
+ </div>
+ )
+ })}
+ </div>
+ </div>
+ )}
 
-            <div className="grid grid-cols-2 gap-6">
-                {/* Payment Methods */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <CreditCard size={18} className="text-gray-400" /> Payment Methods
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {payment_methods?.map((p: Record<string, any>, i: number) => {
-                                const totalRev = overall.revenue || 1
-                                const pct = (p.total / totalRev * 100)
-                                return (
-                                    <div key={i} className="flex items-center gap-3">
-                                        <span className="text-lg">{PAYMENT_ICONS[p.method] || '💳'}</span>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between text-sm mb-1">
-                                                <span className="font-medium">{p.method}</span>
-                                                <span className="text-gray-500">{p.count} orders</span>
-                                            </div>
-                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                <div className="h-full bg-violet-400 rounded-full" style={{ width: `${pct}%` }} />
-                                            </div>
-                                        </div>
-                                        <span className="font-bold text-sm w-28 text-right">{fmt(p.total)}</span>
-                                    </div>
-                                )
-                            })}
-                            {(!payment_methods?.length) && (
-                                <p className="text-center py-4 text-gray-400">No payment data</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+ {/* Top Products */}
+ <div className="app-glass rounded-2xl p-5" style={{ border: '1px solid var(--app-border)' }}>
+ <p className="text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+ <Package size={14} /> Top Products
+ </p>
+ <div className="space-y-3">
+ {top_products?.map((p: Record<string, any>, i: number) => (
+ <div key={i} className="flex items-center gap-3">
+ <span className="text-xs font-black w-5 text-center" style={{ color: 'var(--app-text-faint)' }}>
+ {i + 1}
+ </span>
+ <div className="flex-1 min-w-0">
+ <p className="text-sm font-semibold truncate" style={{ color: 'var(--app-text)' }}>{p.name || 'Unknown'}</p>
+ <p className="text-[10px]" style={{ color: 'var(--app-text-muted)' }}>{Math.round(p.qty)} units sold</p>
+ </div>
+ <span className="text-sm font-black" style={{ color: 'var(--app-primary)' }}>{fmt(p.revenue)}</span>
+ </div>
+ ))}
+ {(!top_products?.length) && (
+ <p className="text-center py-6 text-sm" style={{ color: 'var(--app-text-faint)' }}>No product data yet</p>
+ )}
+ </div>
+ </div>
 
-                {/* Site Performance */}
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <Building2 size={18} className="text-gray-400" /> Site Performance
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {site_performance?.map((s: Record<string, any>, i: number) => {
-                                const totalRev = overall.revenue || 1
-                                const pct = (s.total / totalRev * 100)
-                                return (
-                                    <div key={i} className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <Building2 size={14} className="text-blue-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between text-sm mb-1">
-                                                <span className="font-medium">{s.site || 'Unknown'}</span>
-                                                <span className="text-gray-500">{s.count} orders</span>
-                                            </div>
-                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                <div className="h-full bg-blue-400 rounded-full" style={{ width: `${pct}%` }} />
-                                            </div>
-                                        </div>
-                                        <span className="font-bold text-sm w-28 text-right">{fmt(s.total)}</span>
-                                    </div>
-                                )
-                            })}
-                            {(!site_performance?.length) && (
-                                <p className="text-center py-4 text-gray-400">No site data</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    )
+ {/* Top Customers */}
+ <div className="app-glass rounded-2xl p-5" style={{ border: '1px solid var(--app-border)' }}>
+ <p className="text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+ <Users size={14} /> Top Customers
+ </p>
+ <div className="space-y-3">
+ {top_customers?.map((c: Record<string, any>, i: number) => (
+ <div key={i} className="flex items-center gap-3">
+ <span className="text-xs font-black w-5 text-center" style={{ color: 'var(--app-text-faint)' }}>{i + 1}</span>
+ <div className="flex-1 min-w-0">
+ <p className="text-sm font-semibold truncate" style={{ color: 'var(--app-text)' }}>{c.name || 'Walk-in'}</p>
+ <p className="text-[10px]" style={{ color: 'var(--app-text-muted)' }}>{c.orders} orders</p>
+ </div>
+ <span className="text-sm font-black" style={{ color: 'var(--app-primary)' }}>{fmt(c.spent)}</span>
+ </div>
+ ))}
+ {(!top_customers?.length) && (
+ <p className="text-center py-6 text-sm" style={{ color: 'var(--app-text-faint)' }}>No customer data yet</p>
+ )}
+ </div>
+ </div>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ {/* Payment Methods */}
+ <div className="app-glass rounded-2xl p-5" style={{ border: '1px solid var(--app-border)' }}>
+ <p className="text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+ <CreditCard size={14} /> Payment Methods
+ </p>
+ <div className="space-y-3">
+ {payment_methods?.map((p: Record<string, any>) => (
+ <ProgressRow
+ key={p.method}
+ label={`${PAYMENT_ICONS[p.method] ?? '💳'} ${p.method}`}
+ sub={`${p.count} orders`}
+ value={fmt(p.total)}
+ pct={overall.revenue ? p.total / overall.revenue * 100 : 0}
+ />
+ ))}
+ {(!payment_methods?.length) && (
+ <p className="text-center py-6 text-sm" style={{ color: 'var(--app-text-faint)' }}>No payment data</p>
+ )}
+ </div>
+ </div>
+
+ {/* Site Performance */}
+ <div className="app-glass rounded-2xl p-5" style={{ border: '1px solid var(--app-border)' }}>
+ <p className="text-sm font-black uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
+ <Building2 size={14} /> Site Performance
+ </p>
+ <div className="space-y-3">
+ {site_performance?.map((s: Record<string, any>) => (
+ <ProgressRow
+ key={s.site}
+ label={s.site || 'Unknown'}
+ sub={`${s.count} orders`}
+ value={fmt(s.total)}
+ pct={overall.revenue ? s.total / overall.revenue * 100 : 0}
+ />
+ ))}
+ {(!site_performance?.length) && (
+ <p className="text-center py-6 text-sm" style={{ color: 'var(--app-text-faint)' }}>No site data</p>
+ )}
+ </div>
+ </div>
+ </div>
+ </div>
+ )
 }

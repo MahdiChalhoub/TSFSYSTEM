@@ -8,24 +8,24 @@ import { erpFetch } from "@/lib/erp-api"
 // =============================================================================
 
 export async function getConsignmentSettlements(params?: string) {
-    const query = params ? `?${params}` : ''
-    return await erpFetch(`pos/consignment-settlements/${query}`)
+ const query = params ? `?${params}` : ''
+ return await erpFetch(`pos/consignment-settlements/${query}`)
 }
 
 export async function getConsignmentSettlement(id: string) {
-    return await erpFetch(`pos/consignment-settlements/${id}/`)
+ return await erpFetch(`pos/consignment-settlements/${id}/`)
 }
 
 export async function createConsignmentSettlement(data: Record<string, unknown>) {
-    return await erpFetch('pos/consignment-settlements/', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    })
+ return await erpFetch('pos/consignment-settlements/', {
+ method: 'POST',
+ body: JSON.stringify(data),
+ })
 }
 
 export async function updateConsignmentSettlement(id: string, data: Record<string, unknown>) {
-    return await erpFetch(`pos/consignment-settlements/${id}/`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-    })
+ return await erpFetch(`pos/consignment-settlements/${id}/`, {
+ method: 'PATCH',
+ body: JSON.stringify(data),
+ })
 }

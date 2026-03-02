@@ -5,20 +5,20 @@ import TrialBalanceViewer from '@/app/(privileged)/finance/reports/trial-balance
 import { cookies } from 'next/headers'
 
 export default async function TrialBalancePage() {
-    const cookieStore = await cookies()
-    const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
-    let accounts: any = [], fiscalYears: any = []
-    try { accounts = await getChartOfAccounts(false, scope) } catch { }
-    try { fiscalYears = await getFiscalYears() } catch { }
+ const cookieStore = await cookies()
+ const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
+ let accounts: any = [], fiscalYears: any = []
+ try { accounts = await getChartOfAccounts(false, scope) } catch { }
+ try { fiscalYears = await getFiscalYears() } catch { }
 
-    return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="text-center mb-10">
-                <h1 className="page-header-title  text-stone-900 font-serif mb-2">Trial Balance</h1>
-                <p className="text-stone-500 text-sm uppercase tracking-widest font-bold">General Ledger Integrity Report</p>
-            </div>
+ return (
+ <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="text-center mb-10">
+ <h1 className="page-header-title text-app-text font-serif mb-2">Trial Balance</h1>
+ <p className="text-app-text-muted text-sm uppercase tracking-widest font-bold">General Ledger Integrity Report</p>
+ </div>
 
-            <TrialBalanceViewer initialAccounts={accounts} fiscalYears={fiscalYears} />
-        </div>
-    )
+ <TrialBalanceViewer initialAccounts={accounts} fiscalYears={fiscalYears} />
+ </div>
+ )
 }

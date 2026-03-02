@@ -18,6 +18,7 @@ from .location_models import (
     WarehouseZone, WarehouseAisle, WarehouseRack, WarehouseShelf, WarehouseBin, ProductLocation
 )
 from .stock_ledger_model import StockLedger
+from .stock_move_model import StockMove, StockMoveLine
 
 __all__ = [
     'Unit', 'Category', 'Brand', 'Parfum', 'ProductGroup', 'Product',
@@ -32,4 +33,5 @@ __all__ = [
     'StockAlert', 'StockAlertService',
     'WarehouseZone', 'WarehouseAisle', 'WarehouseRack', 'WarehouseShelf', 'WarehouseBin', 'ProductLocation',
     'StockLedger',
+    'StockMove', 'StockMoveLine',
 ]

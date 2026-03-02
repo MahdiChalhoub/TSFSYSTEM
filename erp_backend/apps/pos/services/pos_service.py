@@ -554,7 +554,7 @@ class POSService:
                 else:
                     lines.append({"account_id": actual_payment_acc_id, "debit": order.total_amount, "credit": Decimal('0')})
 
-            LedgerService.create_journal_entry(
+            je = LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=timezone.now(),
                 description=f"POS Sale {invoice_num} | ReceiptHash: {order.receipt_hash[:12]}...",
@@ -565,6 +565,19 @@ class POSService:
                 user=user,
                 lines=lines
             )
+
+            # ── Gap 5: Persist per-leg payment records for reconciliation ─────
+            try:
+                from apps.pos.services.reconciliation_service import PaymentReconciliationService
+                legs_to_persist = parsed_legs if parsed_legs else [(payment_method, order.total_amount)]
+                PaymentReconciliationService.persist_legs(
+                    order=order,
+                    parsed_legs=legs_to_persist,
+                    journal_entry=je,
+                    user=user,
+                )
+            except Exception:
+                pass  # Never block checkout for reconciliation persistence failure
 
             # CREDIT_SALE: flag any sale paid via CREDIT method
             is_credit_checkout = (

@@ -4,28 +4,28 @@ import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 export async function getSystemStatus() {
-    return await erpFetch('saas/updates/status/')
+ return await erpFetch('saas/updates/status/')
 }
 
 export async function getUpdateHistory() {
-    return await erpFetch('saas/updates/history/')
+ return await erpFetch('saas/updates/history/')
 }
 
 export async function uploadKernelUpdate(formData: FormData) {
-    const res = await erpFetch('saas/updates/upload/', {
-        method: 'POST',
-        body: formData
-    })
-    revalidatePath('/updates')
-    return res
+ const res = await erpFetch('saas/updates/upload/', {
+ method: 'POST',
+ body: formData
+ })
+ revalidatePath('/updates')
+ return res
 }
 
 export async function applyKernelUpdate(id: number) {
-    const res = await erpFetch('saas/updates/apply/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-    })
-    revalidatePath('/updates')
-    return res
+ const res = await erpFetch('saas/updates/apply/', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ id })
+ })
+ revalidatePath('/updates')
+ return res
 }

@@ -13,30 +13,30 @@ import { erpFetch } from '@/lib/erp-api'
 // =============================================================================
 
 export async function getConnectorDashboard() {
-    try {
-        const res = await erpFetch('connector/dashboard/')
-        return res
-    } catch (e) {
-        console.error('Failed to fetch connector dashboard:', e)
-        return {
-            summary: { total_modules: 0, active_policies: 0, contracts_registered: 0 },
-            buffer_stats: { pending: 0, replayed: 0, failed: 0, expired: 0 },
-            decision_distribution: {},
-            recent_logs: []
-        }
-    }
+ try {
+ const res = await erpFetch('connector/dashboard/')
+ return res
+ } catch (e) {
+ console.error('Failed to fetch connector dashboard:', e)
+ return {
+ summary: { total_modules: 0, active_policies: 0, contracts_registered: 0 },
+ buffer_stats: { pending: 0, replayed: 0, failed: 0, expired: 0 },
+ decision_distribution: {},
+ recent_logs: []
+ }
+ }
 }
 
 export async function getModuleStates(organizationId?: number) {
-    try {
-        const url = organizationId
-            ? `connector/states/?organization_id=${organizationId}`
-            : 'connector/states/'
-        return await erpFetch(url) || []
-    } catch (e) {
-        console.error('Failed to fetch module states:', e)
-        return []
-    }
+ try {
+ const url = organizationId
+ ? `connector/states/?organization_id=${organizationId}`
+ : 'connector/states/'
+ return await erpFetch(url) || []
+ } catch (e) {
+ console.error('Failed to fetch module states:', e)
+ return []
+ }
 }
 
 // =============================================================================
@@ -44,59 +44,59 @@ export async function getModuleStates(organizationId?: number) {
 // =============================================================================
 
 export async function getConnectorPolicies() {
-    try {
-        return await erpFetch('connector/policies/') || []
-    } catch (e) {
-        console.error('Failed to fetch policies:', e)
-        return []
-    }
+ try {
+ return await erpFetch('connector/policies/') || []
+ } catch (e) {
+ console.error('Failed to fetch policies:', e)
+ return []
+ }
 }
 
 export async function createConnectorPolicy(data: {
-    target_module: string
-    target_endpoint: string
-    source_module?: string
-    when_missing_read: string
-    when_missing_write: string
-    when_disabled_read: string
-    when_disabled_write: string
-    when_unauthorized_read: string
-    when_unauthorized_write: string
-    cache_ttl_seconds?: number
-    buffer_ttl_seconds?: number
-    max_buffer_size?: number
-    priority?: number
+ target_module: string
+ target_endpoint: string
+ source_module?: string
+ when_missing_read: string
+ when_missing_write: string
+ when_disabled_read: string
+ when_disabled_write: string
+ when_unauthorized_read: string
+ when_unauthorized_write: string
+ cache_ttl_seconds?: number
+ buffer_ttl_seconds?: number
+ max_buffer_size?: number
+ priority?: number
 }) {
-    try {
-        const res = await erpFetch('connector/policies/', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-        return { success: true, data: res }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create policy' }
-    }
+ try {
+ const res = await erpFetch('connector/policies/', {
+ method: 'POST',
+ body: JSON.stringify(data)
+ })
+ return { success: true, data: res }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create policy' }
+ }
 }
 
 export async function updateConnectorPolicy(id: number, data: Record<string, unknown>) {
-    try {
-        const res = await erpFetch(`connector/policies/${id}/`, {
-            method: 'PATCH',
-            body: JSON.stringify(data)
-        })
-        return { success: true, data: res }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update policy' }
-    }
+ try {
+ const res = await erpFetch(`connector/policies/${id}/`, {
+ method: 'PATCH',
+ body: JSON.stringify(data)
+ })
+ return { success: true, data: res }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update policy' }
+ }
 }
 
 export async function deleteConnectorPolicy(id: number) {
-    try {
-        await erpFetch(`connector/policies/${id}/`, { method: 'DELETE' })
-        return { success: true }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete policy' }
-    }
+ try {
+ await erpFetch(`connector/policies/${id}/`, { method: 'DELETE' })
+ return { success: true }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete policy' }
+ }
 }
 
 // =============================================================================
@@ -104,56 +104,56 @@ export async function deleteConnectorPolicy(id: number) {
 // =============================================================================
 
 export async function getBufferedRequests(filters?: {
-    module?: string
-    status?: string
-    organization?: number
+ module?: string
+ status?: string
+ organization?: number
 }) {
-    try {
-        const params = new URLSearchParams()
-        if (filters?.module) params.append('module', filters.module)
-        if (filters?.status) params.append('status', filters.status)
-        if (filters?.organization) params.append('organization', String(filters.organization))
+ try {
+ const params = new URLSearchParams()
+ if (filters?.module) params.append('module', filters.module)
+ if (filters?.status) params.append('status', filters.status)
+ if (filters?.organization) params.append('organization', String(filters.organization))
 
-        const url = `connector/buffer/?${params.toString()}`
-        return await erpFetch(url) || []
-    } catch (e) {
-        console.error('Failed to fetch buffered requests:', e)
-        return []
-    }
+ const url = `connector/buffer/?${params.toString()}`
+ return await erpFetch(url) || []
+ } catch (e) {
+ console.error('Failed to fetch buffered requests:', e)
+ return []
+ }
 }
 
 export async function retryBufferedRequest(id: number) {
-    try {
-        const res = await erpFetch(`connector/buffer/${id}/retry/`, {
-            method: 'POST'
-        })
-        return { success: true, data: res }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to retry request' }
-    }
+ try {
+ const res = await erpFetch(`connector/buffer/${id}/retry/`, {
+ method: 'POST'
+ })
+ return { success: true, data: res }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to retry request' }
+ }
 }
 
 export async function replayAllBuffered(module: string, organizationId: number) {
-    try {
-        const res = await erpFetch('connector/buffer/replay_all/', {
-            method: 'POST',
-            body: JSON.stringify({ module, organization_id: organizationId })
-        })
-        return { success: true, data: res }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to replay buffers' }
-    }
+ try {
+ const res = await erpFetch('connector/buffer/replay_all/', {
+ method: 'POST',
+ body: JSON.stringify({ module, organization_id: organizationId })
+ })
+ return { success: true, data: res }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to replay buffers' }
+ }
 }
 
 export async function cleanupExpiredBuffers() {
-    try {
-        const res = await erpFetch('connector/buffer/cleanup_expired/', {
-            method: 'POST'
-        })
-        return { success: true, data: res }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to cleanup' }
-    }
+ try {
+ const res = await erpFetch('connector/buffer/cleanup_expired/', {
+ method: 'POST'
+ })
+ return { success: true, data: res }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to cleanup' }
+ }
 }
 
 // =============================================================================
@@ -161,26 +161,26 @@ export async function cleanupExpiredBuffers() {
 // =============================================================================
 
 export async function getConnectorLogs(filters?: {
-    module?: string
-    decision?: string
-    organization?: number
-    from?: string
-    to?: string
+ module?: string
+ decision?: string
+ organization?: number
+ from?: string
+ to?: string
 }) {
-    try {
-        const params = new URLSearchParams()
-        if (filters?.module) params.append('module', filters.module)
-        if (filters?.decision) params.append('decision', filters.decision)
-        if (filters?.organization) params.append('organization', String(filters.organization))
-        if (filters?.from) params.append('from', filters.from)
-        if (filters?.to) params.append('to', filters.to)
+ try {
+ const params = new URLSearchParams()
+ if (filters?.module) params.append('module', filters.module)
+ if (filters?.decision) params.append('decision', filters.decision)
+ if (filters?.organization) params.append('organization', String(filters.organization))
+ if (filters?.from) params.append('from', filters.from)
+ if (filters?.to) params.append('to', filters.to)
 
-        const url = `connector/logs/?${params.toString()}`
-        return await erpFetch(url) || []
-    } catch (e) {
-        console.error('Failed to fetch logs:', e)
-        return []
-    }
+ const url = `connector/logs/?${params.toString()}`
+ return await erpFetch(url) || []
+ } catch (e) {
+ console.error('Failed to fetch logs:', e)
+ return []
+ }
 }
 
 // =============================================================================
@@ -188,12 +188,12 @@ export async function getConnectorLogs(filters?: {
 // =============================================================================
 
 export async function getModuleContracts() {
-    try {
-        return await erpFetch('connector/contracts/') || []
-    } catch (e) {
-        console.error('Failed to fetch contracts:', e)
-        return []
-    }
+ try {
+ return await erpFetch('connector/contracts/') || []
+ } catch (e) {
+ console.error('Failed to fetch contracts:', e)
+ return []
+ }
 }
 
 // =============================================================================
@@ -201,73 +201,73 @@ export async function getModuleContracts() {
 // =============================================================================
 
 export async function getAvailableModules() {
-    try {
-        // Get all system modules from the modules endpoint
-        const modules = await erpFetch('modules/') || []
-        return modules.map((m: Record<string, any>) => ({
-            code: m.code,
-            name: m.name,
-            is_core: m.is_core || false
-        }))
-    } catch (e) {
-        console.error('Failed to fetch available modules:', e)
-        // Return default core modules as fallback
-        return [
-            { code: '*', name: 'All Modules (Global)', is_core: true },
-            { code: 'inventory', name: 'Inventory', is_core: false },
-            { code: 'finance', name: 'Finance', is_core: false },
-            { code: 'pos', name: 'POS', is_core: false },
-            { code: 'crm', name: 'CRM', is_core: false },
-            { code: 'hr', name: 'HR', is_core: false },
-        ]
-    }
+ try {
+ // Get all system modules from the modules endpoint
+ const modules = await erpFetch('modules/') || []
+ return modules.map((m: Record<string, any>) => ({
+ code: m.code,
+ name: m.name,
+ is_core: m.is_core || false
+ }))
+ } catch (e) {
+ console.error('Failed to fetch available modules:', e)
+ // Return default core modules as fallback
+ return [
+ { code: '*', name: 'All Modules (Global)', is_core: true },
+ { code: 'inventory', name: 'Inventory', is_core: false },
+ { code: 'finance', name: 'Finance', is_core: false },
+ { code: 'pos', name: 'POS', is_core: false },
+ { code: 'crm', name: 'CRM', is_core: false },
+ { code: 'hr', name: 'HR', is_core: false },
+ ]
+ }
 }
 
 export async function autoGeneratePolicies() {
-    try {
-        const modules = await getAvailableModules()
-        const existingPolicies = await getConnectorPolicies()
-        const existingModules = new Set(existingPolicies.map((p: Record<string, any>) => p.target_module))
+ try {
+ const modules = await getAvailableModules()
+ const existingPolicies = await getConnectorPolicies()
+ const existingModules = new Set(existingPolicies.map((p: Record<string, any>) => p.target_module))
 
-        const created: string[] = []
-        const skipped: string[] = []
+ const created: string[] = []
+ const skipped: string[] = []
 
-        for (const mod of modules) {
-            if (mod.code === '*') continue // Skip global
-            if (existingModules.has(mod.code)) {
-                skipped.push(mod.code)
-                continue
-            }
+ for (const mod of modules) {
+ if (mod.code === '*') continue // Skip global
+ if (existingModules.has(mod.code)) {
+ skipped.push(mod.code)
+ continue
+ }
 
-            // Create default policy for this module
-            const res = await createConnectorPolicy({
-                target_module: mod.code,
-                target_endpoint: '*',
-                source_module: '*',
-                when_missing_read: 'empty',
-                when_missing_write: 'buffer',
-                when_disabled_read: 'empty',
-                when_disabled_write: 'drop',
-                when_unauthorized_read: 'empty',
-                when_unauthorized_write: 'drop',
-                cache_ttl_seconds: 300,
-                buffer_ttl_seconds: 86400,
-                max_buffer_size: 100,
-                priority: 0
-            })
+ // Create default policy for this module
+ const res = await createConnectorPolicy({
+ target_module: mod.code,
+ target_endpoint: '*',
+ source_module: '*',
+ when_missing_read: 'empty',
+ when_missing_write: 'buffer',
+ when_disabled_read: 'empty',
+ when_disabled_write: 'drop',
+ when_unauthorized_read: 'empty',
+ when_unauthorized_write: 'drop',
+ cache_ttl_seconds: 300,
+ buffer_ttl_seconds: 86400,
+ max_buffer_size: 100,
+ priority: 0
+ })
 
-            if (res.success) {
-                created.push(mod.code)
-            }
-        }
+ if (res.success) {
+ created.push(mod.code)
+ }
+ }
 
-        return {
-            success: true,
-            created,
-            skipped,
-            message: `Created ${created.length} policies, skipped ${skipped.length} (already exist)`
-        }
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to auto-generate policies' }
-    }
+ return {
+ success: true,
+ created,
+ skipped,
+ message: `Created ${created.length} policies, skipped ${skipped.length} (already exist)`
+ }
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to auto-generate policies' }
+ }
 }

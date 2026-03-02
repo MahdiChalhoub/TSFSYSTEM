@@ -8,24 +8,24 @@ import { erpFetch } from "@/lib/erp-api"
 // =============================================================================
 
 export async function getCreditNotes(params?: string) {
-    const query = params ? `?${params}` : ''
-    return await erpFetch(`pos/credit-notes/${query}`)
+ const query = params ? `?${params}` : ''
+ return await erpFetch(`pos/credit-notes/${query}`)
 }
 
 export async function getCreditNote(id: string) {
-    return await erpFetch(`pos/credit-notes/${id}/`)
+ return await erpFetch(`pos/credit-notes/${id}/`)
 }
 
 export async function createCreditNote(data: Record<string, unknown>) {
-    return await erpFetch('pos/credit-notes/', {
-        method: 'POST',
-        body: JSON.stringify(data),
-    })
+ return await erpFetch('pos/credit-notes/', {
+ method: 'POST',
+ body: JSON.stringify(data),
+ })
 }
 
 export async function updateCreditNote(id: string, data: Record<string, unknown>) {
-    return await erpFetch(`pos/credit-notes/${id}/`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-    })
+ return await erpFetch(`pos/credit-notes/${id}/`, {
+ method: 'PATCH',
+ body: JSON.stringify(data),
+ })
 }

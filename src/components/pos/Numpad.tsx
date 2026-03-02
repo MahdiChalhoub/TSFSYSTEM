@@ -7,130 +7,130 @@ import clsx from 'clsx';
 export type NumpadMode = 'qty' | 'disc' | 'price';
 
 export function Numpad({
-    onValueConfirm,
-    mode: activeMode = 'qty',
-    onModeChange
+ onValueConfirm,
+ mode: activeMode = 'qty',
+ onModeChange
 }: {
-    onValueConfirm: (value: number, mode: NumpadMode) => void;
-    mode?: NumpadMode;
-    onModeChange?: (mode: NumpadMode) => void;
+ onValueConfirm: (value: number, mode: NumpadMode) => void;
+ mode?: NumpadMode;
+ onModeChange?: (mode: NumpadMode) => void;
 }) {
-    const [buffer, setBuffer] = useState('');
-    const [localMode, setLocalMode] = useState<NumpadMode>(activeMode);
+ const [buffer, setBuffer] = useState('');
+ const [localMode, setLocalMode] = useState<NumpadMode>(activeMode);
 
-    const mode = onModeChange ? activeMode : localMode;
-    const setMode = onModeChange || setLocalMode;
+ const mode = onModeChange ? activeMode : localMode;
+ const setMode = onModeChange || setLocalMode;
 
-    const handleDigit = useCallback((d: string) => {
-        setBuffer(prev => {
-            if (d === '.' && prev.includes('.')) return prev;
-            return prev + d;
-        });
-    }, []);
+ const handleDigit = useCallback((d: string) => {
+ setBuffer(prev => {
+ if (d === '.' && prev.includes('.')) return prev;
+ return prev + d;
+ });
+ }, []);
 
-    const handleBackspace = useCallback(() => setBuffer(prev => prev.slice(0, -1)), []);
+ const handleBackspace = useCallback(() => setBuffer(prev => prev.slice(0, -1)), []);
 
-    const handleConfirm = useCallback(() => {
-        const val = parseFloat(buffer);
-        if (!isNaN(val) && val >= 0) {
-            onValueConfirm(val, mode);
-            setBuffer('');
-        }
-    }, [buffer, mode, onValueConfirm]);
+ const handleConfirm = useCallback(() => {
+ const val = parseFloat(buffer);
+ if (!isNaN(val) && val >= 0) {
+ onValueConfirm(val, mode);
+ setBuffer('');
+ }
+ }, [buffer, mode, onValueConfirm]);
 
-    // Keyboard Support
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if typing in an input or textarea
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-                return;
-            }
+ // Keyboard Support
+ useEffect(() => {
+ const handleKeyDown = (e: KeyboardEvent) => {
+ // Ignore if typing in an input or textarea
+ if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+ return;
+ }
 
-            if (e.key >= '0' && e.key <= '9') {
-                handleDigit(e.key);
-            } else if (e.key === '.' || e.key === ',') {
-                handleDigit('.');
-            } else if (e.key === 'Backspace') {
-                handleBackspace();
-            } else if (e.key === 'Enter') {
-                handleConfirm();
-            }
-        };
+ if (e.key >= '0' && e.key <= '9') {
+ handleDigit(e.key);
+ } else if (e.key === '.' || e.key === ',') {
+ handleDigit('.');
+ } else if (e.key === 'Backspace') {
+ handleBackspace();
+ } else if (e.key === 'Enter') {
+ handleConfirm();
+ }
+ };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleDigit, handleBackspace, handleConfirm]);
+ window.addEventListener('keydown', handleKeyDown);
+ return () => window.removeEventListener('keydown', handleKeyDown);
+ }, [handleDigit, handleBackspace, handleConfirm]);
 
-    const modeLabels: Record<NumpadMode, string> = {
-        qty: 'Qty',
-        disc: 'Disc %',
-        price: 'Price',
-    };
+ const modeLabels: Record<NumpadMode, string> = {
+ qty: 'Qty',
+ disc: 'Disc %',
+ price: 'Price',
+ };
 
-    const modeColors: Record<NumpadMode, string> = {
-        qty: 'bg-indigo-600 text-white',
-        disc: 'bg-amber-500 text-white',
-        price: 'bg-emerald-600 text-white',
-    };
+ const modeColors: Record<NumpadMode, string> = {
+ qty: 'bg-indigo-600 text-white',
+ disc: 'bg-amber-500 text-white',
+ price: 'bg-emerald-600 text-white',
+ };
 
-    return (
-        <div className="flex flex-col gap-2">
-            {/* Display */}
-            <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{modeLabels[mode]}</span>
-                <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-gray-900">
-                    {buffer || '0'}
-                </span>
-            </div>
+ return (
+ <div className="flex flex-col gap-2">
+ {/* Display */}
+ <div className="flex items-center gap-2 bg-app-bg rounded-xl px-4 py-3 border border-app-border">
+ <span className="text-[9px] font-black uppercase tracking-widest text-app-text-faint">{modeLabels[mode]}</span>
+ <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-app-text">
+ {buffer || '0'}
+ </span>
+ </div>
 
-            {/* Mode Selectors */}
-            <div className="grid grid-cols-3 gap-1.5">
-                {(['qty', 'disc', 'price'] as NumpadMode[]).map(m => (
-                    <button
-                        key={m}
-                        onClick={() => setMode(m)}
-                        className={clsx(
-                            "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
-                            mode === m ? modeColors[m] : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                        )}
-                    >
-                        {modeLabels[m]}
-                    </button>
-                ))}
-            </div>
+ {/* Mode Selectors */}
+ <div className="grid grid-cols-3 gap-1.5">
+ {(['qty', 'disc', 'price'] as NumpadMode[]).map(m => (
+ <button
+ key={m}
+ onClick={() => setMode(m)}
+ className={clsx(
+ "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+ mode === m ? modeColors[m] : "bg-app-surface-2 text-app-text-muted hover:bg-gray-200"
+ )}
+ >
+ {modeLabels[m]}
+ </button>
+ ))}
+ </div>
 
-            {/* Number Pad */}
-            <div className="grid grid-cols-3 gap-1.5">
-                {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
-                    <button
-                        key={d}
-                        onClick={() => handleDigit(d)}
-                        className="h-12 bg-white border border-gray-100 rounded-xl font-black text-lg text-gray-700 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
-                    >
-                        {d}
-                    </button>
-                ))}
-                <button
-                    onClick={handleBackspace}
-                    className="h-12 bg-white border border-gray-100 rounded-xl font-black text-gray-400 hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
-                >
-                    <Delete size={18} />
-                </button>
-            </div>
+ {/* Number Pad */}
+ <div className="grid grid-cols-3 gap-1.5">
+ {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
+ <button
+ key={d}
+ onClick={() => handleDigit(d)}
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-gray-700 hover:bg-app-bg active:scale-95 transition-all shadow-sm"
+ >
+ {d}
+ </button>
+ ))}
+ <button
+ onClick={handleBackspace}
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-text-faint hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+ >
+ <Delete size={18} />
+ </button>
+ </div>
 
-            {/* Confirm */}
-            <button
-                onClick={handleConfirm}
-                disabled={!buffer}
-                className={clsx(
-                    "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                    buffer
-                        ? `${modeColors[mode]} shadow-lg hover:opacity-90 active:scale-[0.98]`
-                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                )}
-            >
-                Confirm {modeLabels[mode]}
-            </button>
-        </div>
-    );
+ {/* Confirm */}
+ <button
+ onClick={handleConfirm}
+ disabled={!buffer}
+ className={clsx(
+ "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+ buffer
+ ? `${modeColors[mode]} shadow-lg hover:opacity-90 active:scale-[0.98]`
+ : "bg-app-surface-2 text-gray-300 cursor-not-allowed"
+ )}
+ >
+ Confirm {modeLabels[mode]}
+ </button>
+ </div>
+ );
 }

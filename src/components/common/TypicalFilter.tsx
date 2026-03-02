@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+ Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -10,199 +10,199 @@ import { Label } from '@/components/ui/label'
 import { Search, Filter, ChevronDown, ChevronUp, RotateCcw, X, SlidersHorizontal } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════
-   TypicalFilter — Reusable filter bar
-   
-   Features:
-   ✓ Primary filters shown in top bar
-   ✓ Search input with clear button
-   ✓ Auto-overflow: when maxVisible set, extra filters collapse
-   ✓ Expandable "Advanced Filters" panel
-   ✓ Reset all filters
-   ✓ Compact mode
-   ✓ Filter types: select, date, text, checkbox
-   ═══════════════════════════════════════════════════════ */
+ TypicalFilter — Reusable filter bar
+ 
+ Features:
+ ✓ Primary filters shown in top bar
+ ✓ Search input with clear button
+ ✓ Auto-overflow: when maxVisible set, extra filters collapse
+ ✓ Expandable "Advanced Filters" panel
+ ✓ Reset all filters
+ ✓ Compact mode
+ ✓ Filter types: select, date, text, checkbox
+ ═══════════════════════════════════════════════════════ */
 
 export type FilterItemType = 'select' | 'date' | 'text' | 'checkbox'
 
 export type FilterItem = {
-    key: string
-    label: string
-    type: FilterItemType
-    options?: { value: string; label: string }[]
-    placeholder?: string
+ key: string
+ label: string
+ type: FilterItemType
+ options?: { value: string; label: string }[]
+ placeholder?: string
 }
 
 export type SearchConfig = {
-    placeholder?: string
-    value: string
-    onChange: (value: string) => void
+ placeholder?: string
+ value: string
+ onChange: (value: string) => void
 }
 
 export type TypicalFilterProps = {
-    filters?: FilterItem[]
-    values?: Record<string, string | boolean>
-    onChange?: (key: string, value: string | boolean) => void
-    search?: SearchConfig
-    /** Additional filters in expandable panel */
-    moreFilters?: FilterItem[]
-    onReset?: () => void
+ filters?: FilterItem[]
+ values?: Record<string, string | boolean>
+ onChange?: (key: string, value: string | boolean) => void
+ search?: SearchConfig
+ /** Additional filters in expandable panel */
+ moreFilters?: FilterItem[]
+ onReset?: () => void
 
-    /** Max number of primary filters to show before auto-overflowing to advanced panel */
-    maxVisible?: number
+ /** Max number of primary filters to show before auto-overflowing to advanced panel */
+ maxVisible?: number
 
-    className?: string
-    compact?: boolean
-    showBorder?: boolean
+ className?: string
+ compact?: boolean
+ showBorder?: boolean
 }
 
 export function TypicalFilter({
-    filters = [],
-    values = {},
-    onChange,
-    search,
-    moreFilters = [],
-    onReset,
-    maxVisible,
-    className = '',
-    compact = false,
-    showBorder = true,
+ filters = [],
+ values = {},
+ onChange,
+ search,
+ moreFilters = [],
+ onReset,
+ maxVisible,
+ className = '',
+ compact = false,
+ showBorder = true,
 }: TypicalFilterProps) {
 
-    const [showAdvanced, setShowAdvanced] = useState(false)
+ const [showAdvanced, setShowAdvanced] = useState(false)
 
-    /* Auto-overflow: split filters into visible + overflow */
-    const limit = maxVisible ?? filters.length
-    const visibleFilters = filters.slice(0, limit)
-    const overflowFilters = filters.slice(limit)
-    const allAdvanced = [...overflowFilters, ...moreFilters]
-    const hasAdvanced = allAdvanced.length > 0
+ /* Auto-overflow: split filters into visible + overflow */
+ const limit = maxVisible ?? filters.length
+ const visibleFilters = filters.slice(0, limit)
+ const overflowFilters = filters.slice(limit)
+ const allAdvanced = [...overflowFilters, ...moreFilters]
+ const hasAdvanced = allAdvanced.length > 0
 
-    /* Count active filters */
-    const activeCount = Object.entries(values).filter(([_, v]) => v !== '' && v !== false).length
+ /* Count active filters */
+ const activeCount = Object.entries(values).filter(([_, v]) => v !== '' && v !== false).length
 
-    const renderFilterItem = (f: FilterItem, inPanel = false) => {
-        const val = values[f.key]
+ const renderFilterItem = (f: FilterItem, inPanel = false) => {
+ const val = values[f.key]
 
-        switch (f.type) {
-            case 'select':
-                return (
-                    <Select key={f.key}
-                        value={typeof val === 'string' ? val : ''}
-                        onValueChange={v => onChange?.(f.key, v === '__all__' ? '' : v)}>
-                        <SelectTrigger className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
-                            <SelectValue placeholder={f.label} />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-slate-100 shadow-2xl">
-                            <SelectItem value="__all__" className="text-[11px] font-black uppercase tracking-widest text-slate-400">{f.label}</SelectItem>
-                            {f.options?.map(o => (
-                                <SelectItem key={o.value} value={o.value} className="text-[11px] font-bold uppercase tracking-tight">{o.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                )
+ switch (f.type) {
+ case 'select':
+ return (
+ <Select key={f.key}
+ value={typeof val === 'string' ? val : ''}
+ onValueChange={v => onChange?.(f.key, v === '__all__' ? '' : v)}>
+ <SelectTrigger className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
+ <SelectValue placeholder={f.label} />
+ </SelectTrigger>
+ <SelectContent className="rounded-xl border-app-border shadow-2xl">
+ <SelectItem value="__all__" className="text-[11px] font-black uppercase tracking-widest text-app-text-faint">{f.label}</SelectItem>
+ {f.options?.map(o => (
+ <SelectItem key={o.value} value={o.value} className="text-[11px] font-bold uppercase tracking-tight">{o.label}</SelectItem>
+ ))}
+ </SelectContent>
+ </Select>
+ )
 
-            case 'date':
-                return (
-                    <Input key={f.key} type="date"
-                        value={typeof val === 'string' ? val : ''}
-                        onChange={e => onChange?.(f.key, e.target.value)}
-                        className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
-                        placeholder={f.placeholder || f.label} />
-                )
+ case 'date':
+ return (
+ <Input key={f.key} type="date"
+ value={typeof val === 'string' ? val : ''}
+ onChange={e => onChange?.(f.key, e.target.value)}
+ className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ placeholder={f.placeholder || f.label} />
+ )
 
-            case 'text':
-                return (
-                    <Input key={f.key}
-                        value={typeof val === 'string' ? val : ''}
-                        onChange={e => onChange?.(f.key, e.target.value)}
-                        className={`bg-white/50 border-slate-200 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
-                        placeholder={f.placeholder || f.label} />
-                )
+ case 'text':
+ return (
+ <Input key={f.key}
+ value={typeof val === 'string' ? val : ''}
+ onChange={e => onChange?.(f.key, e.target.value)}
+ className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ placeholder={f.placeholder || f.label} />
+ )
 
-            case 'checkbox':
-                return (
-                    <label key={f.key} className="flex items-center gap-3 cursor-pointer group/check bg-slate-50/50 hover:bg-white px-3 py-2 rounded-xl border border-transparent hover:border-slate-100 transition-all">
-                        <Checkbox checked={typeof val === 'boolean' ? val : false}
-                            className="bg-white border-2 border-slate-200 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 transition-all"
-                            onCheckedChange={v => onChange?.(f.key, !!v)} />
-                        <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-slate-500 font-black uppercase tracking-widest group-hover/check:text-slate-900 transition-colors`}>{f.label}</span>
-                    </label>
-                )
+ case 'checkbox':
+ return (
+ <label key={f.key} className="flex items-center gap-3 cursor-pointer group/check bg-slate-50/50 hover:bg-app-surface px-3 py-2 rounded-xl border border-transparent hover:border-app-border transition-all">
+ <Checkbox checked={typeof val === 'boolean' ? val : false}
+ className="bg-app-surface border-2 border-app-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 transition-all"
+ onCheckedChange={v => onChange?.(f.key, !!v)} />
+ <span className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-app-text-muted font-black uppercase tracking-widest group-hover/check:text-app-text transition-colors`}>{f.label}</span>
+ </label>
+ )
 
-            default: return null
-        }
-    }
+ default: return null
+ }
+ }
 
-    return (
-        <div className={`space-y-0 ${className}`}>
-            {/* ─── Primary Bar ────────────────────── */}
-            {/* ─── Primary Bar ────────────────────── */}
-            <div className={`flex flex-wrap items-center gap-3 ${showBorder ? 'border-b border-slate-50 pb-4' : 'pb-2'}`}>
-                {/* Search */}
-                {search && (
-                    <div className="relative w-72 group/search">
-                        <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-slate-300 group-hover/search:text-emerald-500 transition-colors duration-500`} />
-                        <Input
-                            placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
-                            value={search.value}
-                            onChange={e => search.onChange(e.target.value)}
-                            className={`pl-11 pr-10 bg-white/50 border-slate-200 focus:bg-white focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
-                        {search.value && (
-                            <button onClick={() => search.onChange('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
-                                <X className="h-3.5 w-3.5" />
-                            </button>
-                        )}
-                    </div>
-                )}
+ return (
+ <div className={`space-y-0 ${className}`}>
+ {/* ─── Primary Bar ────────────────────── */}
+ {/* ─── Primary Bar ────────────────────── */}
+ <div className={`flex flex-wrap items-center gap-3 ${showBorder ? 'border-b border-slate-50 pb-4' : 'pb-2'}`}>
+ {/* Search */}
+ {search && (
+ <div className="relative w-72 group/search">
+ <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-slate-300 group-hover/search:text-emerald-500 transition-colors duration-500`} />
+ <Input
+ placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
+ value={search.value}
+ onChange={e => search.onChange(e.target.value)}
+ className={`pl-11 pr-10 bg-white/50 border-app-border focus:bg-app-surface focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
+ {search.value && (
+ <button onClick={() => search.onChange('')}
+ className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
+ <X className="h-3.5 w-3.5" />
+ </button>
+ )}
+ </div>
+ )}
 
-                {/* Visible filters */}
-                <div className="flex flex-wrap items-center gap-2">
-                    {visibleFilters.map(f => renderFilterItem(f))}
-                </div>
+ {/* Visible filters */}
+ <div className="flex flex-wrap items-center gap-2">
+ {visibleFilters.map(f => renderFilterItem(f))}
+ </div>
 
-                {/* Advanced Filters toggle */}
-                {hasAdvanced && (
-                    <button
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className={`flex items-center gap-3 px-4 rounded-xl border transition-all duration-500 group/adv relative overflow-hidden ${showAdvanced
-                            ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-700/20'
-                            : 'border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:border-slate-300 hover:shadow-lg'
-                            } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
-                        <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-white' : 'text-slate-300 group-hover/adv:text-emerald-500'} transition-colors duration-500`} />
-                        Advanced
-                        {activeCount > 0 && (
-                            <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-white text-emerald-700 shadow-inner' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}>
-                                {activeCount}
-                            </span>
-                        )}
-                        {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-y-0.5" />}
-                    </button>
-                )}
+ {/* Advanced Filters toggle */}
+ {hasAdvanced && (
+ <button
+ onClick={() => setShowAdvanced(!showAdvanced)}
+ className={`flex items-center gap-3 px-4 rounded-xl border transition-all duration-500 group/adv relative overflow-hidden ${showAdvanced
+ ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-700/20'
+ : 'border-app-border bg-app-surface text-app-text-muted hover:text-app-text hover:border-app-border hover:shadow-lg'
+ } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
+ <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-white' : 'text-slate-300 group-hover/adv:text-emerald-500'} transition-colors duration-500`} />
+ Advanced
+ {activeCount > 0 && (
+ <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-emerald-700 shadow-inner' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}>
+ {activeCount}
+ </span>
+ )}
+ {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover/adv:translate-y-0.5" />}
+ </button>
+ )}
 
-                {/* Reset */}
-                {onReset && (
-                    <button
-                        onClick={onReset}
-                        className={`flex items-center gap-2 px-3 h-10 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
-                        <RotateCcw className="h-3.5 w-3.5 group-hover/reset:rotate-[-180deg] transition-transform duration-500" /> Reset
-                    </button>
-                )}
-            </div>
+ {/* Reset */}
+ {onReset && (
+ <button
+ onClick={onReset}
+ className={`flex items-center gap-2 px-3 h-10 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
+ <RotateCcw className="h-3.5 w-3.5 group-hover/reset:rotate-[-180deg] transition-transform duration-500" /> Reset
+ </button>
+ )}
+ </div>
 
-            {/* ─── Advanced Filters Panel ─────────── */}
-            {hasAdvanced && showAdvanced && (
-                <div className="pt-6 pb-6 border-b border-slate-50 animate-in slide-in-from-top-4 duration-500 fade-in">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-slate-50/50 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-100 shadow-inner">
-                        {allAdvanced.map(f => (
-                            <div key={f.key} className="space-y-2">
-                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{f.label}</Label>
-                                {renderFilterItem(f, true)}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    )
+ {/* ─── Advanced Filters Panel ─────────── */}
+ {hasAdvanced && showAdvanced && (
+ <div className="pt-6 pb-6 border-b border-slate-50 animate-in slide-in-from-top-4 duration-500 fade-in">
+ <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-slate-50/50 backdrop-blur-sm p-6 rounded-[2rem] border border-app-border shadow-inner">
+ {allAdvanced.map(f => (
+ <div key={f.key} className="space-y-2">
+ <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest px-1">{f.label}</Label>
+ {renderFilterItem(f, true)}
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
+ )
 }

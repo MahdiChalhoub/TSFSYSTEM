@@ -76,16 +76,19 @@ class SalesWorkflowService:
     """
 
     @classmethod
-    def confirm_order(cls, order, user=None) -> None:
+    def confirm_order(cls, order, user=None, warehouse_id=None) -> None:
         """
         DRAFT / PENDING → CONFIRMED
-        Sets confirmed_at. Also reserves stock per line (Gap 3).
+        Sets confirmed_at, optionally updates fulfillment warehouse.
+        Also reserves stock per line (Gap 3).
         """
         _assert_transition('order_status', ORDER_TRANSITIONS, order.order_status, 'CONFIRMED')
         with transaction.atomic():
+            if warehouse_id:
+                order.site_id = warehouse_id
             order.order_status = 'CONFIRMED'
             order.confirmed_at = timezone.now()
-            order.save(update_fields=['order_status', 'confirmed_at'])
+            order.save(update_fields=['order_status', 'confirmed_at', 'site'])
             # ── Gap 3: reserve stock for all lines ──
             cls._reserve_stock(order, user)
         # ── Gap 2: post confirmation journal entry (Dr A/R, Cr Revenue, Cr VAT Payable) ──

@@ -25,6 +25,7 @@ interface WorkflowPayload {
     action: WorkflowAction;
     reason?: string;
     amount?: number;
+    warehouse_id?: number | string;
 }
 
 interface WorkflowResult {
@@ -55,7 +56,9 @@ export async function triggerOrderWorkflow(
 }
 
 /** Convenience wrappers for common transitions */
-export async function confirmOrder(id: number) { return triggerOrderWorkflow(id, { action: 'confirm' }); }
+export async function confirmOrder(id: number, warehouse_id?: number | string) {
+    return triggerOrderWorkflow(id, { action: 'confirm', warehouse_id });
+}
 export async function markDelivered(id: number) { return triggerOrderWorkflow(id, { action: 'deliver' }); }
 export async function markPartial(id: number) { return triggerOrderWorkflow(id, { action: 'deliver_partial' }); }
 export async function markPaid(id: number, amount?: number) { return triggerOrderWorkflow(id, { action: 'pay', amount }); }

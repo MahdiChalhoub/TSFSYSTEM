@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { erpFetch } from '@/lib/erp-api';
 import {
-    Plus, Trash2, Save, ArrowLeft, Shield, Monitor, Users, Key,
-    CreditCard, Banknote, Smartphone, Truck, Wallet, Building2,
-    Lock, Unlock, Edit, Check, X, AlertTriangle, Eye, EyeOff,
-    ChevronDown, ChevronRight, Loader2, RefreshCw, Hash, Settings2
+ Plus, Trash2, Save, ArrowLeft, Shield, Monitor, Users, Key,
+ CreditCard, Banknote, Smartphone, Truck, Wallet, Building2,
+ Lock, Unlock, Edit, Check, X, AlertTriangle, Eye, EyeOff,
+ ChevronDown, ChevronRight, Loader2, RefreshCw, Hash, Settings2
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -18,8 +18,8 @@ type FinancialAccount = { id: number; name: string; type: string; currency: stri
 type SiteData = { id: number; name: string; code: string };
 type UserData = { id: number; username: string; first_name: string; last_name: string; email: string; pos_pin?: boolean; role?: string };
 type RegisterData = {
-    id: number; name: string; siteId: number; siteName: string;
-    warehouseId?: number; cashAccountId?: number; isActive: boolean; isOpen: boolean;
+ id: number; name: string; siteId: number; siteName: string;
+ warehouseId?: number; cashAccountId?: number; isActive: boolean; isOpen: boolean;
 };
 type WarehouseData = { id: number; name: string; parent: number | null };
 
@@ -29,142 +29,142 @@ const PRESET_METHODS = ['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVE
 type TabId = 'registers' | 'users' | 'payments' | 'security';
 
 export default function POSSettingsPage() {
-    const [activeTab, setActiveTab] = useState<TabId>('registers');
-    const [loading, setLoading] = useState(true);
+ const [activeTab, setActiveTab] = useState<TabId>('registers');
+ const [loading, setLoading] = useState(true);
 
-    // Data stores
-    const [sites, setSites] = useState<SiteData[]>([]);
-    const [users, setUsers] = useState<UserData[]>([]);
-    const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
-    const [warehouses, setWarehouses] = useState<WarehouseData[]>([]);
-    const [methods, setMethods] = useState<PaymentMethodConfig[]>([]);
-    const [lobbyData, setLobbyData] = useState<any[]>([]);
+ // Data stores
+ const [sites, setSites] = useState<SiteData[]>([]);
+ const [users, setUsers] = useState<UserData[]>([]);
+ const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
+ const [warehouses, setWarehouses] = useState<WarehouseData[]>([]);
+ const [methods, setMethods] = useState<PaymentMethodConfig[]>([]);
+ const [lobbyData, setLobbyData] = useState<any[]>([]);
 
-    // Load all data
-    const loadData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [sitesRes, usersRes, acctsRes, whRes, methodsRes, lobbyRes] = await Promise.all([
-                erpFetch('sites/').catch(() => []),
-                erpFetch('users/').catch(() => []),
-                erpFetch('accounts/').catch(() => []),
-                erpFetch('warehouses/').catch(() => []),
-                erpFetch('settings/item/pos_payment_methods/').catch(() => null),
-                erpFetch('pos-registers/lobby/').catch(() => []),
-            ]);
-            const sitesArray = Array.isArray(sitesRes) ? sitesRes : sitesRes?.results || [];
-            const lobbyArray = Array.isArray(lobbyRes) ? lobbyRes : [];
-            // Fallback: if /sites/ returned empty but lobby has branches, use lobby data as sites
-            const effectiveSites = sitesArray.length > 0 ? sitesArray : lobbyArray.map((s: any) => ({ id: s.id, name: s.name, code: s.code || '' }));
-            setSites(effectiveSites);
-            setUsers(Array.isArray(usersRes) ? usersRes : usersRes?.results || []);
-            setAccounts(Array.isArray(acctsRes) ? acctsRes : acctsRes?.results || []);
-            setWarehouses(Array.isArray(whRes) ? whRes : whRes?.results || []);
-            setLobbyData(lobbyArray);
-            // Payment methods
-            if (methodsRes && Array.isArray(methodsRes) && methodsRes.length > 0) {
-                setMethods(methodsRes.map((m: any) => typeof m === 'string' ? { key: m, label: m, accountId: null } : { key: m.key, label: m.label || m.key, accountId: m.accountId || null }));
-            } else {
-                setMethods([
-                    { key: 'CASH', label: 'Cash', accountId: null },
-                    { key: 'CARD', label: 'Card', accountId: null },
-                    { key: 'WALLET', label: 'Wallet', accountId: null },
-                    { key: 'WAVE', label: 'Wave', accountId: null },
-                    { key: 'OM', label: 'OM', accountId: null },
-                    { key: 'MULTI', label: 'Multi', accountId: null },
-                    { key: 'DELIVERY', label: 'Delivery', accountId: null },
-                ]);
-            }
-        } catch (e) {
-            toast.error('Failed to load settings data');
-        }
-        setLoading(false);
-    }, []);
+ // Load all data
+ const loadData = useCallback(async () => {
+ setLoading(true);
+ try {
+ const [sitesRes, usersRes, acctsRes, whRes, methodsRes, lobbyRes] = await Promise.all([
+ erpFetch('sites/').catch(() => []),
+ erpFetch('users/').catch(() => []),
+ erpFetch('accounts/').catch(() => []),
+ erpFetch('warehouses/').catch(() => []),
+ erpFetch('settings/item/pos_payment_methods/').catch(() => null),
+ erpFetch('pos-registers/lobby/').catch(() => []),
+ ]);
+ const sitesArray = Array.isArray(sitesRes) ? sitesRes : sitesRes?.results || [];
+ const lobbyArray = Array.isArray(lobbyRes) ? lobbyRes : [];
+ // Fallback: if /sites/ returned empty but lobby has branches, use lobby data as sites
+ const effectiveSites = sitesArray.length > 0 ? sitesArray : lobbyArray.map((s: any) => ({ id: s.id, name: s.name, code: s.code || '' }));
+ setSites(effectiveSites);
+ setUsers(Array.isArray(usersRes) ? usersRes : usersRes?.results || []);
+ setAccounts(Array.isArray(acctsRes) ? acctsRes : acctsRes?.results || []);
+ setWarehouses(Array.isArray(whRes) ? whRes : whRes?.results || []);
+ setLobbyData(lobbyArray);
+ // Payment methods
+ if (methodsRes && Array.isArray(methodsRes) && methodsRes.length > 0) {
+ setMethods(methodsRes.map((m: any) => typeof m === 'string' ? { key: m, label: m, accountId: null } : { key: m.key, label: m.label || m.key, accountId: m.accountId || null }));
+ } else {
+ setMethods([
+ { key: 'CASH', label: 'Cash', accountId: null },
+ { key: 'CARD', label: 'Card', accountId: null },
+ { key: 'WALLET', label: 'Wallet', accountId: null },
+ { key: 'WAVE', label: 'Wave', accountId: null },
+ { key: 'OM', label: 'OM', accountId: null },
+ { key: 'MULTI', label: 'Multi', accountId: null },
+ { key: 'DELIVERY', label: 'Delivery', accountId: null },
+ ]);
+ }
+ } catch (e) {
+ toast.error('Failed to load settings data');
+ }
+ setLoading(false);
+ }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+ useEffect(() => { loadData(); }, [loadData]);
 
-    const tabs = [
-        { id: 'registers' as TabId, label: 'Registers', icon: Monitor, desc: 'POS terminals & sessions' },
-        { id: 'users' as TabId, label: 'Users & PINs', icon: Key, desc: 'Cashier access & PINs' },
-        { id: 'payments' as TabId, label: 'Payment Methods', icon: CreditCard, desc: 'Configure payment options' },
-        { id: 'security' as TabId, label: 'Security', icon: Shield, desc: 'Rules & access control' },
-    ];
+ const tabs = [
+ { id: 'registers' as TabId, label: 'Registers', icon: Monitor, desc: 'POS terminals & sessions' },
+ { id: 'users' as TabId, label: 'Users & PINs', icon: Key, desc: 'Cashier access & PINs' },
+ { id: 'payments' as TabId, label: 'Payment Methods', icon: CreditCard, desc: 'Configure payment options' },
+ { id: 'security' as TabId, label: 'Security', icon: Shield, desc: 'Rules & access control' },
+ ];
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-50">
-                <div className="text-center">
-                    <Loader2 size={32} className="text-indigo-500 animate-spin mx-auto mb-3" />
-                    <p className="text-sm text-gray-400 font-bold">Loading POS Settings...</p>
-                </div>
-            </div>
-        );
-    }
+ if (loading) {
+ return (
+ <div className="flex items-center justify-center h-screen bg-app-bg">
+ <div className="text-center">
+ <Loader2 size={32} className="text-indigo-500 animate-spin mx-auto mb-3" />
+ <p className="text-sm text-app-text-faint font-bold">Loading POS Settings...</p>
+ </div>
+ </div>
+ );
+ }
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/inventory" className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                            <ArrowLeft size={20} className="text-gray-500" />
-                        </Link>
-                        <div>
-                            <h1 className="text-xl font-black text-gray-900">POS Configuration</h1>
-                            <p className="text-xs text-gray-400 mt-0.5">Registers, cashiers, payment methods & security</p>
-                        </div>
-                    </div>
-                    <button onClick={loadData} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all">
-                        <RefreshCw size={16} />
-                    </button>
-                </div>
-            </div>
+ return (
+ <div className="min-h-screen bg-app-bg">
+ {/* Header */}
+ <div className="bg-app-surface border-b border-app-border px-6 py-4">
+ <div className="max-w-6xl mx-auto flex items-center justify-between">
+ <div className="flex items-center gap-4">
+ <Link href="/inventory" className="p-2 rounded-lg hover:bg-app-surface-2 transition-colors">
+ <ArrowLeft size={20} className="text-app-text-muted" />
+ </Link>
+ <div>
+ <h1 className="text-xl font-black text-app-text">POS Configuration</h1>
+ <p className="text-xs text-app-text-faint mt-0.5">Registers, cashiers, payment methods & security</p>
+ </div>
+ </div>
+ <button onClick={loadData} className="p-2 rounded-lg hover:bg-app-surface-2 text-app-text-faint hover:text-app-text-muted transition-all">
+ <RefreshCw size={16} />
+ </button>
+ </div>
+ </div>
 
-            <div className="max-w-6xl mx-auto py-6 px-6 flex gap-6">
-                {/* Sidebar Tabs */}
-                <div className="w-56 shrink-0 space-y-1">
-                    {tabs.map(tab => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={clsx(
-                                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
-                                    activeTab === tab.id
-                                        ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
-                                        : "bg-white hover:bg-gray-50 text-gray-600 border border-transparent"
-                                )}
-                            >
-                                <Icon size={18} className={activeTab === tab.id ? "text-indigo-500" : "text-gray-400"} />
-                                <div>
-                                    <p className="text-sm font-bold">{tab.label}</p>
-                                    <p className="text-[10px] text-gray-400">{tab.desc}</p>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
+ <div className="max-w-6xl mx-auto py-6 px-6 flex gap-6">
+ {/* Sidebar Tabs */}
+ <div className="w-56 shrink-0 space-y-1">
+ {tabs.map(tab => {
+ const Icon = tab.icon;
+ return (
+ <button
+ key={tab.id}
+ onClick={() => setActiveTab(tab.id)}
+ className={clsx(
+ "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
+ activeTab === tab.id
+ ? "bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100"
+ : "bg-app-surface hover:bg-app-bg text-app-text-muted border border-transparent"
+ )}
+ >
+ <Icon size={18} className={activeTab === tab.id ? "text-indigo-500" : "text-app-text-faint"} />
+ <div>
+ <p className="text-sm font-bold">{tab.label}</p>
+ <p className="text-[10px] text-app-text-faint">{tab.desc}</p>
+ </div>
+ </button>
+ );
+ })}
+ </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                    {activeTab === 'registers' && (
-                        <RegistersTab sites={sites} accounts={accounts} warehouses={warehouses} users={users} lobbyData={lobbyData} onRefresh={loadData} />
-                    )}
-                    {activeTab === 'users' && (
-                        <UsersTab users={users} lobbyData={lobbyData} onRefresh={loadData} />
-                    )}
-                    {activeTab === 'payments' && (
-                        <PaymentsTab methods={methods} setMethods={setMethods} accounts={accounts} />
-                    )}
-                    {activeTab === 'security' && (
-                        <SecurityTab />
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+ {/* Content */}
+ <div className="flex-1 min-w-0">
+ {activeTab === 'registers' && (
+ <RegistersTab sites={sites} accounts={accounts} warehouses={warehouses} users={users} lobbyData={lobbyData} onRefresh={loadData} />
+ )}
+ {activeTab === 'users' && (
+ <UsersTab users={users} lobbyData={lobbyData} onRefresh={loadData} />
+ )}
+ {activeTab === 'payments' && (
+ <PaymentsTab methods={methods} setMethods={setMethods} accounts={accounts} />
+ )}
+ {activeTab === 'security' && (
+ <SecurityTab />
+ )}
+ </div>
+ </div>
+ </div>
+ );
 }
 
 
@@ -172,280 +172,280 @@ export default function POSSettingsPage() {
 // TAB 1: REGISTERS
 // ═══════════════════════════════════════════════════════════════════
 function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh }: {
-    sites: SiteData[]; accounts: FinancialAccount[]; warehouses: WarehouseData[];
-    users: UserData[]; lobbyData: any[]; onRefresh: () => void;
+ sites: SiteData[]; accounts: FinancialAccount[]; warehouses: WarehouseData[];
+ users: UserData[]; lobbyData: any[]; onRefresh: () => void;
 }) {
-    const [showCreate, setShowCreate] = useState(false);
-    const [editId, setEditId] = useState<number | null>(null);
-    const [saving, setSaving] = useState(false);
+ const [showCreate, setShowCreate] = useState(false);
+ const [editId, setEditId] = useState<number | null>(null);
+ const [saving, setSaving] = useState(false);
 
-    // Create form
-    const [form, setForm] = useState({
-        name: '', siteId: '', warehouseId: '', cashAccountId: '',
-        allowedAccountIds: [] as number[], authorizedUserIds: [] as number[],
-    });
+ // Create form
+ const [form, setForm] = useState({
+ name: '', siteId: '', warehouseId: '', cashAccountId: '',
+ allowedAccountIds: [] as number[], authorizedUserIds: [] as number[],
+ });
 
-    const handleCreate = async () => {
-        if (!form.name || !form.siteId) {
-            toast.error('Name and Site are required');
-            return;
-        }
-        setSaving(true);
-        try {
-            await erpFetch('pos-registers/create-register/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: form.name,
-                    site_id: Number(form.siteId),
-                    warehouse_id: form.warehouseId ? Number(form.warehouseId) : null,
-                    cash_account_id: form.cashAccountId ? Number(form.cashAccountId) : null,
-                    allowed_account_ids: form.allowedAccountIds,
-                    authorized_user_ids: form.authorizedUserIds,
-                })
-            });
-            toast.success(`Register "${form.name}" created!`);
-            setShowCreate(false);
-            setForm({ name: '', siteId: '', warehouseId: '', cashAccountId: '', allowedAccountIds: [], authorizedUserIds: [] });
-            onRefresh();
-        } catch (e) {
-            toast.error('Failed to create register');
-        }
-        setSaving(false);
-    };
+ const handleCreate = async () => {
+ if (!form.name || !form.siteId) {
+ toast.error('Name and Site are required');
+ return;
+ }
+ setSaving(true);
+ try {
+ await erpFetch('pos-registers/create-register/', {
+ method: 'POST',
+ body: JSON.stringify({
+ name: form.name,
+ site_id: Number(form.siteId),
+ warehouse_id: form.warehouseId ? Number(form.warehouseId) : null,
+ cash_account_id: form.cashAccountId ? Number(form.cashAccountId) : null,
+ allowed_account_ids: form.allowedAccountIds,
+ authorized_user_ids: form.authorizedUserIds,
+ })
+ });
+ toast.success(`Register "${form.name}" created!`);
+ setShowCreate(false);
+ setForm({ name: '', siteId: '', warehouseId: '', cashAccountId: '', allowedAccountIds: [], authorizedUserIds: [] });
+ onRefresh();
+ } catch (e) {
+ toast.error('Failed to create register');
+ }
+ setSaving(false);
+ };
 
-    const handleUpdate = async () => {
-        if (!editId) return;
-        setSaving(true);
-        try {
-            await erpFetch('pos-registers/update-register/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    id: editId,
-                    name: form.name,
-                    warehouse_id: form.warehouseId ? Number(form.warehouseId) : null,
-                    cash_account_id: form.cashAccountId ? Number(form.cashAccountId) : null,
-                    allowed_account_ids: form.allowedAccountIds,
-                    authorized_user_ids: form.authorizedUserIds,
-                })
-            });
-            toast.success('Register updated!');
-            setEditId(null);
-            onRefresh();
-        } catch (e) {
-            toast.error('Failed to update register');
-        }
-        setSaving(false);
-    };
+ const handleUpdate = async () => {
+ if (!editId) return;
+ setSaving(true);
+ try {
+ await erpFetch('pos-registers/update-register/', {
+ method: 'POST',
+ body: JSON.stringify({
+ id: editId,
+ name: form.name,
+ warehouse_id: form.warehouseId ? Number(form.warehouseId) : null,
+ cash_account_id: form.cashAccountId ? Number(form.cashAccountId) : null,
+ allowed_account_ids: form.allowedAccountIds,
+ authorized_user_ids: form.authorizedUserIds,
+ })
+ });
+ toast.success('Register updated!');
+ setEditId(null);
+ onRefresh();
+ } catch (e) {
+ toast.error('Failed to update register');
+ }
+ setSaving(false);
+ };
 
-    // Flatten lobby data for display
-    const allRegisters: any[] = [];
-    lobbyData.forEach((site: any) => {
-        (site.registers || []).forEach((reg: any) => {
-            allRegisters.push({ ...reg, siteName: site.name, siteId: site.id });
-        });
-    });
+ // Flatten lobby data for display
+ const allRegisters: any[] = [];
+ lobbyData.forEach((site: any) => {
+ (site.registers || []).forEach((reg: any) => {
+ allRegisters.push({ ...reg, siteName: site.name, siteId: site.id });
+ });
+ });
 
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-lg font-black text-gray-900">POS Registers</h2>
-                    <p className="text-xs text-gray-400">Physical terminals at each site with their own cash accounts</p>
-                </div>
-                <button
-                    onClick={() => { setShowCreate(!showCreate); setEditId(null); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100"
-                >
-                    <Plus size={16} />
-                    New Register
-                </button>
-            </div>
+ return (
+ <div className="space-y-4">
+ <div className="flex items-center justify-between">
+ <div>
+ <h2 className="text-lg font-black text-app-text">POS Registers</h2>
+ <p className="text-xs text-app-text-faint">Physical terminals at each site with their own cash accounts</p>
+ </div>
+ <button
+ onClick={() => { setShowCreate(!showCreate); setEditId(null); }}
+ className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100"
+ >
+ <Plus size={16} />
+ New Register
+ </button>
+ </div>
 
-            {/* Create / Edit Form */}
-            {(showCreate || editId) && (
-                <div className="bg-white rounded-2xl border border-indigo-100 p-5 space-y-4 shadow-sm animate-in slide-in-from-top-2">
-                    <h3 className="font-black text-sm text-indigo-700">{editId ? 'Edit Register' : 'Create New Register'}</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Register Name *</label>
-                            <input type="text" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-                                placeholder="e.g. Caisse 1" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400" />
-                        </div>
-                        {!editId && (
-                            <div>
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Branch / Location *</label>
-                                <select value={form.siteId} onChange={(e) => setForm(f => ({ ...f, siteId: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
-                                    <option value="">Select branch...</option>
-                                    {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
-                            </div>
-                        )}
-                        <div>
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Warehouse</label>
-                            <select value={form.warehouseId} onChange={(e) => setForm(f => ({ ...f, warehouseId: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
-                                <option value="">Default warehouse</option>
-                                {warehouses.filter(w => !form.siteId || w.parent === Number(form.siteId)).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Cash Account</label>
-                            <select value={form.cashAccountId} onChange={(e) => setForm(f => ({ ...f, cashAccountId: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
-                                <option value="">No dedicated cash account</option>
-                                {accounts.filter(a => a.type === 'CASH' || a.type === 'PETTY_CASH').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                            </select>
-                        </div>
-                    </div>
+ {/* Create / Edit Form */}
+ {(showCreate || editId) && (
+ <div className="bg-app-surface rounded-2xl border border-indigo-100 p-5 space-y-4 shadow-sm animate-in slide-in-from-top-2">
+ <h3 className="font-black text-sm text-indigo-700">{editId ? 'Edit Register' : 'Create New Register'}</h3>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-1">Register Name *</label>
+ <input type="text" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+ placeholder="e.g. Caisse 1" className="w-full px-3 py-2 border border-app-border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400" />
+ </div>
+ {!editId && (
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-1">Branch / Location *</label>
+ <select value={form.siteId} onChange={(e) => setForm(f => ({ ...f, siteId: e.target.value }))}
+ className="w-full px-3 py-2 border border-app-border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
+ <option value="">Select branch...</option>
+ {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+ </select>
+ </div>
+ )}
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-1">Warehouse</label>
+ <select value={form.warehouseId} onChange={(e) => setForm(f => ({ ...f, warehouseId: e.target.value }))}
+ className="w-full px-3 py-2 border border-app-border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
+ <option value="">Default warehouse</option>
+ {warehouses.filter(w => !form.siteId || w.parent === Number(form.siteId)).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+ </select>
+ </div>
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-1">Cash Account</label>
+ <select value={form.cashAccountId} onChange={(e) => setForm(f => ({ ...f, cashAccountId: e.target.value }))}
+ className="w-full px-3 py-2 border border-app-border rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-200">
+ <option value="">No dedicated cash account</option>
+ {accounts.filter(a => a.type === 'CASH' || a.type === 'PETTY_CASH').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+ </select>
+ </div>
+ </div>
 
-                    {/* Allowed Payment Accounts */}
-                    <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Allowed Payment Accounts</label>
-                        <div className="flex flex-wrap gap-2">
-                            {accounts.filter(a => a.type !== 'SAVINGS' && a.type !== 'INVESTMENT').map(acc => (
-                                <button key={acc.id}
-                                    onClick={() => setForm(f => ({
-                                        ...f,
-                                        allowedAccountIds: f.allowedAccountIds.includes(acc.id)
-                                            ? f.allowedAccountIds.filter(id => id !== acc.id)
-                                            : [...f.allowedAccountIds, acc.id]
-                                    }))}
-                                    className={clsx(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                                        form.allowedAccountIds.includes(acc.id)
-                                            ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                                            : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
-                                    )}>
-                                    {form.allowedAccountIds.includes(acc.id) ? <Check size={10} className="inline mr-1" /> : null}
-                                    {acc.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+ {/* Allowed Payment Accounts */}
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-2">Allowed Payment Accounts</label>
+ <div className="flex flex-wrap gap-2">
+ {accounts.filter(a => a.type !== 'SAVINGS' && a.type !== 'INVESTMENT').map(acc => (
+ <button key={acc.id}
+ onClick={() => setForm(f => ({
+ ...f,
+ allowedAccountIds: f.allowedAccountIds.includes(acc.id)
+ ? f.allowedAccountIds.filter(id => id !== acc.id)
+ : [...f.allowedAccountIds, acc.id]
+ }))}
+ className={clsx(
+ "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+ form.allowedAccountIds.includes(acc.id)
+ ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+ : "bg-app-bg border-app-border text-app-text-muted hover:border-app-border"
+ )}>
+ {form.allowedAccountIds.includes(acc.id) ? <Check size={10} className="inline mr-1" /> : null}
+ {acc.name}
+ </button>
+ ))}
+ </div>
+ </div>
 
-                    {/* Authorized Users */}
-                    <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Authorized Cashiers</label>
-                        <div className="flex flex-wrap gap-2">
-                            {users.map(u => (
-                                <button key={u.id}
-                                    onClick={() => setForm(f => ({
-                                        ...f,
-                                        authorizedUserIds: f.authorizedUserIds.includes(u.id)
-                                            ? f.authorizedUserIds.filter(id => id !== u.id)
-                                            : [...f.authorizedUserIds, u.id]
-                                    }))}
-                                    className={clsx(
-                                        "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5",
-                                        form.authorizedUserIds.includes(u.id)
-                                            ? "bg-indigo-50 border-indigo-300 text-indigo-700"
-                                            : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
-                                    )}>
-                                    <Users size={10} />
-                                    {u.first_name ? `${u.first_name} ${u.last_name}`.trim() : u.username}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+ {/* Authorized Users */}
+ <div>
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block mb-2">Authorized Cashiers</label>
+ <div className="flex flex-wrap gap-2">
+ {users.map(u => (
+ <button key={u.id}
+ onClick={() => setForm(f => ({
+ ...f,
+ authorizedUserIds: f.authorizedUserIds.includes(u.id)
+ ? f.authorizedUserIds.filter(id => id !== u.id)
+ : [...f.authorizedUserIds, u.id]
+ }))}
+ className={clsx(
+ "px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5",
+ form.authorizedUserIds.includes(u.id)
+ ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+ : "bg-app-bg border-app-border text-app-text-muted hover:border-app-border"
+ )}>
+ <Users size={10} />
+ {u.first_name ? `${u.first_name} ${u.last_name}`.trim() : u.username}
+ </button>
+ ))}
+ </div>
+ </div>
 
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button onClick={() => { setShowCreate(false); setEditId(null); }}
-                            className="px-4 py-2 text-gray-500 text-sm font-bold hover:bg-gray-100 rounded-lg transition-all">Cancel</button>
-                        <button onClick={editId ? handleUpdate : handleCreate} disabled={saving}
-                            className="flex items-center gap-2 px-5 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-50 transition-all shadow">
-                            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                            {editId ? 'Update' : 'Create'}
-                        </button>
-                    </div>
-                </div>
-            )}
+ <div className="flex justify-end gap-2 pt-2">
+ <button onClick={() => { setShowCreate(false); setEditId(null); }}
+ className="px-4 py-2 text-app-text-muted text-sm font-bold hover:bg-app-surface-2 rounded-lg transition-all">Cancel</button>
+ <button onClick={editId ? handleUpdate : handleCreate} disabled={saving}
+ className="flex items-center gap-2 px-5 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-50 transition-all shadow">
+ {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+ {editId ? 'Update' : 'Create'}
+ </button>
+ </div>
+ </div>
+ )}
 
-            {/* Register List */}
-            {sites.map(site => {
-                const siteRegisters = allRegisters.filter(r => r.siteId === site.id);
-                return (
-                    <div key={site.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-                            <Building2 size={14} className="text-gray-400" />
-                            <span className="text-sm font-black text-gray-700">{site.name}</span>
-                            <span className="text-[10px] text-gray-400 font-mono">{site.code || ''}</span>
-                            <span className="ml-auto text-[10px] font-bold text-gray-400">{siteRegisters.length} register(s)</span>
-                        </div>
-                        {siteRegisters.length === 0 ? (
-                            <div className="px-4 py-8 text-center text-gray-300 text-sm">No registers at this site</div>
-                        ) : (
-                            <div className="divide-y divide-gray-50">
-                                {siteRegisters.map((reg: any) => (
-                                    <div key={reg.id} className="px-4 py-3 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
-                                        <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                                            reg.isOpen ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400")}>
-                                            <Monitor size={20} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-black text-gray-900">{reg.name}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                {reg.isOpen ? (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                                        <Unlock size={8} /> Open — {reg.currentSession?.cashierName}
-                                                    </span>
-                                                ) : (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
-                                                        <Lock size={8} /> Closed
-                                                    </span>
-                                                )}
-                                                {reg.cashAccountName && (
-                                                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-                                                        💰 {reg.cashAccountName}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            {reg.authorizedUsers?.slice(0, 3).map((u: any) => (
-                                                <span key={u.id} className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[9px] font-black" title={u.name}>
-                                                    {u.name?.substring(0, 2).toUpperCase()}
-                                                </span>
-                                            ))}
-                                            {(reg.authorizedUsers?.length || 0) > 3 && (
-                                                <span className="text-[9px] text-gray-400">+{reg.authorizedUsers.length - 3}</span>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setEditId(reg.id);
-                                                setShowCreate(false);
-                                                setForm({
-                                                    name: reg.name,
-                                                    siteId: String(reg.siteId),
-                                                    warehouseId: reg.warehouseId ? String(reg.warehouseId) : '',
-                                                    cashAccountId: reg.cashAccountId ? String(reg.cashAccountId) : '',
-                                                    allowedAccountIds: reg.allowedAccounts?.map((a: any) => a.id) || [],
-                                                    authorizedUserIds: reg.authorizedUsers?.map((u: any) => u.id) || [],
-                                                });
-                                            }}
-                                            className="p-2 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-all">
-                                            <Edit size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+ {/* Register List */}
+ {sites.map(site => {
+ const siteRegisters = allRegisters.filter(r => r.siteId === site.id);
+ return (
+ <div key={site.id} className="bg-app-surface rounded-2xl border border-app-border overflow-hidden shadow-sm">
+ <div className="px-4 py-3 bg-app-bg border-b border-app-border flex items-center gap-2">
+ <Building2 size={14} className="text-app-text-faint" />
+ <span className="text-sm font-black text-gray-700">{site.name}</span>
+ <span className="text-[10px] text-app-text-faint font-mono">{site.code || ''}</span>
+ <span className="ml-auto text-[10px] font-bold text-app-text-faint">{siteRegisters.length} register(s)</span>
+ </div>
+ {siteRegisters.length === 0 ? (
+ <div className="px-4 py-8 text-center text-gray-300 text-sm">No registers at this site</div>
+ ) : (
+ <div className="divide-y divide-gray-50">
+ {siteRegisters.map((reg: any) => (
+ <div key={reg.id} className="px-4 py-3 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+ <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+ reg.isOpen ? "bg-emerald-100 text-emerald-600" : "bg-app-surface-2 text-app-text-faint")}>
+ <Monitor size={20} />
+ </div>
+ <div className="flex-1 min-w-0">
+ <p className="text-sm font-black text-app-text">{reg.name}</p>
+ <div className="flex items-center gap-2 mt-0.5">
+ {reg.isOpen ? (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+ <Unlock size={8} /> Open — {reg.currentSession?.cashierName}
+ </span>
+ ) : (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-text-faint bg-app-bg px-1.5 py-0.5 rounded">
+ <Lock size={8} /> Closed
+ </span>
+ )}
+ {reg.cashAccountName && (
+ <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+ 💰 {reg.cashAccountName}
+ </span>
+ )}
+ </div>
+ </div>
+ <div className="flex items-center gap-1.5">
+ {reg.authorizedUsers?.slice(0, 3).map((u: any) => (
+ <span key={u.id} className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[9px] font-black" title={u.name}>
+ {u.name?.substring(0, 2).toUpperCase()}
+ </span>
+ ))}
+ {(reg.authorizedUsers?.length || 0) > 3 && (
+ <span className="text-[9px] text-app-text-faint">+{reg.authorizedUsers.length - 3}</span>
+ )}
+ </div>
+ <button
+ onClick={() => {
+ setEditId(reg.id);
+ setShowCreate(false);
+ setForm({
+ name: reg.name,
+ siteId: String(reg.siteId),
+ warehouseId: reg.warehouseId ? String(reg.warehouseId) : '',
+ cashAccountId: reg.cashAccountId ? String(reg.cashAccountId) : '',
+ allowedAccountIds: reg.allowedAccounts?.map((a: any) => a.id) || [],
+ authorizedUserIds: reg.authorizedUsers?.map((u: any) => u.id) || [],
+ });
+ }}
+ className="p-2 rounded-lg hover:bg-indigo-50 text-app-text-faint hover:text-indigo-600 transition-all">
+ <Edit size={14} />
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
+ );
+ })}
 
-            {sites.length === 0 && (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-6 text-center">
-                    <AlertTriangle size={24} className="text-amber-500 mx-auto mb-2" />
-                    <p className="text-sm font-bold text-amber-800">No sites configured</p>
-                    <p className="text-xs text-amber-600 mt-1">
-                        Create locations first in <Link href="/inventory/warehouses" className="underline">Inventory → Locations</Link>
-                    </p>
-                </div>
-            )}
-        </div>
-    );
+ {sites.length === 0 && (
+ <div className="bg-amber-50 border border-amber-100 rounded-xl p-6 text-center">
+ <AlertTriangle size={24} className="text-amber-500 mx-auto mb-2" />
+ <p className="text-sm font-bold text-amber-800">No sites configured</p>
+ <p className="text-xs text-amber-600 mt-1">
+ Create locations first in <Link href="/inventory/warehouses" className="underline">Inventory → Locations</Link>
+ </p>
+ </div>
+ )}
+ </div>
+ );
 }
 
 
@@ -453,209 +453,209 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
 // TAB 2: USERS & PINs
 // ═══════════════════════════════════════════════════════════════════
 function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyData: any[]; onRefresh: () => void }) {
-    const [pinInputs, setPinInputs] = useState<Record<number, string>>({});
-    const [overridePinInputs, setOverridePinInputs] = useState<Record<number, string>>({});
-    const [savingPinFor, setSavingPinFor] = useState<number | null>(null);
-    const [savingOverrideFor, setSavingOverrideFor] = useState<number | null>(null);
-    const [showPinFor, setShowPinFor] = useState<number | null>(null);
-    const [showOverrideFor, setShowOverrideFor] = useState<number | null>(null);
+ const [pinInputs, setPinInputs] = useState<Record<number, string>>({});
+ const [overridePinInputs, setOverridePinInputs] = useState<Record<number, string>>({});
+ const [savingPinFor, setSavingPinFor] = useState<number | null>(null);
+ const [savingOverrideFor, setSavingOverrideFor] = useState<number | null>(null);
+ const [showPinFor, setShowPinFor] = useState<number | null>(null);
+ const [showOverrideFor, setShowOverrideFor] = useState<number | null>(null);
 
-    // Build a map of which registers each user is assigned to
-    const userRegisterMap: Record<number, string[]> = {};
-    lobbyData.forEach((site: any) => {
-        (site.registers || []).forEach((reg: any) => {
-            (reg.authorizedUsers || []).forEach((u: any) => {
-                if (!userRegisterMap[u.id]) userRegisterMap[u.id] = [];
-                userRegisterMap[u.id].push(`${reg.name} (${site.name})`);
-            });
-        });
-    });
+ // Build a map of which registers each user is assigned to
+ const userRegisterMap: Record<number, string[]> = {};
+ lobbyData.forEach((site: any) => {
+ (site.registers || []).forEach((reg: any) => {
+ (reg.authorizedUsers || []).forEach((u: any) => {
+ if (!userRegisterMap[u.id]) userRegisterMap[u.id] = [];
+ userRegisterMap[u.id].push(`${reg.name} (${site.name})`);
+ });
+ });
+ });
 
-    const handleSetPin = async (userId: number) => {
-        const pin = pinInputs[userId];
-        if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-            toast.error('PIN must be 4-6 digits'); return;
-        }
-        setSavingPinFor(userId);
-        try {
-            const res = await erpFetch('pos-registers/set-pin/', { method: 'POST', body: JSON.stringify({ user_id: userId, pin }) });
-            if (res?.error) toast.error(res.error);
-            else { toast.success(res.message || 'PIN set!'); setPinInputs(p => ({ ...p, [userId]: '' })); onRefresh(); }
-        } catch (e) { toast.error('Failed to set PIN'); }
-        setSavingPinFor(null);
-    };
+ const handleSetPin = async (userId: number) => {
+ const pin = pinInputs[userId];
+ if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
+ toast.error('PIN must be 4-6 digits'); return;
+ }
+ setSavingPinFor(userId);
+ try {
+ const res = await erpFetch('pos-registers/set-pin/', { method: 'POST', body: JSON.stringify({ user_id: userId, pin }) });
+ if (res?.error) toast.error(res.error);
+ else { toast.success(res.message || 'PIN set!'); setPinInputs(p => ({ ...p, [userId]: '' })); onRefresh(); }
+ } catch (e) { toast.error('Failed to set PIN'); }
+ setSavingPinFor(null);
+ };
 
-    const handleSetOverridePin = async (userId: number) => {
-        const pin = overridePinInputs[userId];
-        if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-            toast.error('PIN must be 4-6 digits'); return;
-        }
-        setSavingOverrideFor(userId);
-        try {
-            const res = await erpFetch('pos-registers/set-override-pin/', { method: 'POST', body: JSON.stringify({ user_id: userId, pin }) });
-            if (res?.error) toast.error(res.error);
-            else { toast.success(res.message || 'Override PIN set!'); setOverridePinInputs(p => ({ ...p, [userId]: '' })); onRefresh(); }
-        } catch (e) { toast.error('Failed to set override PIN'); }
-        setSavingOverrideFor(null);
-    };
+ const handleSetOverridePin = async (userId: number) => {
+ const pin = overridePinInputs[userId];
+ if (!pin || pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
+ toast.error('PIN must be 4-6 digits'); return;
+ }
+ setSavingOverrideFor(userId);
+ try {
+ const res = await erpFetch('pos-registers/set-override-pin/', { method: 'POST', body: JSON.stringify({ user_id: userId, pin }) });
+ if (res?.error) toast.error(res.error);
+ else { toast.success(res.message || 'Override PIN set!'); setOverridePinInputs(p => ({ ...p, [userId]: '' })); onRefresh(); }
+ } catch (e) { toast.error('Failed to set override PIN'); }
+ setSavingOverrideFor(null);
+ };
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-lg font-black text-gray-900">Users & PIN Codes</h2>
-                <p className="text-xs text-gray-400">Manage cashier PINs (POS login) and manager override PINs (security authorizations)</p>
-            </div>
+ return (
+ <div className="space-y-6">
+ <div>
+ <h2 className="text-lg font-black text-app-text">Users & PIN Codes</h2>
+ <p className="text-xs text-app-text-faint">Manage cashier PINs (POS login) and manager override PINs (security authorizations)</p>
+ </div>
 
-            {/* ── Section 1: Cashier PINs ── */}
-            <div>
-                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <Key size={12} /> Cashier PINs — POS Login
-                </h3>
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                    <div className="grid grid-cols-[1fr_100px_1fr_160px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Registers</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Set / Change</span>
-                    </div>
-                    {users.map(user => {
-                        const hasPin = (user as any).pos_pin || false;
-                        const assignedRegisters = userRegisterMap[user.id] || [];
-                        return (
-                            <div key={user.id} className="grid grid-cols-[1fr_100px_1fr_160px] gap-3 px-4 py-2.5 border-b border-gray-50 items-center hover:bg-gray-50/50">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] shrink-0">
-                                        {(user.first_name || user.username || '?').substring(0, 2).toUpperCase()}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-bold text-gray-900 truncate">
-                                            {user.first_name ? `${user.first_name} ${user.last_name}`.trim() : user.username}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div>
-                                    {hasPin ? (
-                                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                            <Check size={8} /> Set
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-                                            <AlertTriangle size={8} /> None
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                    {assignedRegisters.length === 0 ? (
-                                        <span className="text-[10px] text-gray-300">—</span>
-                                    ) : assignedRegisters.map((r, i) => (
-                                        <span key={i} className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">{r}</span>
-                                    ))}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="relative flex-1">
-                                        <input
-                                            type={showPinFor === user.id ? "text" : "password"}
-                                            value={pinInputs[user.id] || ''}
-                                            onChange={(e) => setPinInputs(p => ({ ...p, [user.id]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                                            placeholder="PIN" maxLength={6}
-                                            className="w-full px-2 py-1 border border-gray-200 rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-indigo-200 text-center"
-                                        />
-                                        <button onClick={() => setShowPinFor(showPinFor === user.id ? null : user.id)}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
-                                            {showPinFor === user.id ? <EyeOff size={10} /> : <Eye size={10} />}
-                                        </button>
-                                    </div>
-                                    <button onClick={() => handleSetPin(user.id)}
-                                        disabled={savingPinFor === user.id || !(pinInputs[user.id]?.length >= 4)}
-                                        className="p-1 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-30 transition-all shrink-0">
-                                        {savingPinFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+ {/* ── Section 1: Cashier PINs ── */}
+ <div>
+ <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+ <Key size={12} /> Cashier PINs — POS Login
+ </h3>
+ <div className="bg-app-surface rounded-2xl border border-app-border overflow-hidden shadow-sm">
+ <div className="grid grid-cols-[1fr_100px_1fr_160px] gap-3 px-4 py-3 bg-app-bg border-b border-app-border">
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">User</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Status</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Registers</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Set / Change</span>
+ </div>
+ {users.map(user => {
+ const hasPin = (user as any).pos_pin || false;
+ const assignedRegisters = userRegisterMap[user.id] || [];
+ return (
+ <div key={user.id} className="grid grid-cols-[1fr_100px_1fr_160px] gap-3 px-4 py-2.5 border-b border-gray-50 items-center hover:bg-gray-50/50">
+ <div className="flex items-center gap-2.5">
+ <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-[10px] shrink-0">
+ {(user.first_name || user.username || '?').substring(0, 2).toUpperCase()}
+ </div>
+ <div className="min-w-0">
+ <p className="text-xs font-bold text-app-text truncate">
+ {user.first_name ? `${user.first_name} ${user.last_name}`.trim() : user.username}
+ </p>
+ </div>
+ </div>
+ <div>
+ {hasPin ? (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+ <Check size={8} /> Set
+ </span>
+ ) : (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+ <AlertTriangle size={8} /> None
+ </span>
+ )}
+ </div>
+ <div className="flex flex-wrap gap-1">
+ {assignedRegisters.length === 0 ? (
+ <span className="text-[10px] text-gray-300">—</span>
+ ) : assignedRegisters.map((r, i) => (
+ <span key={i} className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">{r}</span>
+ ))}
+ </div>
+ <div className="flex items-center gap-1">
+ <div className="relative flex-1">
+ <input
+ type={showPinFor === user.id ? "text" : "password"}
+ value={pinInputs[user.id] || ''}
+ onChange={(e) => setPinInputs(p => ({ ...p, [user.id]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+ placeholder="PIN" maxLength={6}
+ className="w-full px-2 py-1 border border-app-border rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-indigo-200 text-center"
+ />
+ <button onClick={() => setShowPinFor(showPinFor === user.id ? null : user.id)}
+ className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-300 hover:text-app-text-muted">
+ {showPinFor === user.id ? <EyeOff size={10} /> : <Eye size={10} />}
+ </button>
+ </div>
+ <button onClick={() => handleSetPin(user.id)}
+ disabled={savingPinFor === user.id || !(pinInputs[user.id]?.length >= 4)}
+ className="p-1 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-30 transition-all shrink-0">
+ {savingPinFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
+ </button>
+ </div>
+ </div>
+ );
+ })}
+ </div>
+ </div>
 
-            {/* ── Section 2: Manager Override PINs ── */}
-            <div>
-                <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <Shield size={12} /> Manager Override PINs — Security Authorization
-                </h3>
-                <p className="text-[10px] text-gray-400 mb-2">
-                    Managers use this PIN to authorize: <b>void, refund, clear cart, delete item, decrease qty, discount, price override</b>
-                </p>
-                <div className="bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-sm">
-                    <div className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-3 bg-rose-50/50 border-b border-rose-100">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Override PIN Status</span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Set / Change Override PIN</span>
-                    </div>
-                    {users.map(user => {
-                        const hasOverride = (user as any).has_override_pin || false;
-                        return (
-                            <div key={user.id} className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-2.5 border-b border-gray-50 items-center hover:bg-gray-50/50">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black text-[10px] shrink-0">
-                                        <Shield size={14} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-bold text-gray-900 truncate">
-                                            {user.first_name ? `${user.first_name} ${user.last_name}`.trim() : user.username}
-                                        </p>
-                                        <p className="text-[9px] text-gray-400">{user.role || 'User'}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    {hasOverride ? (
-                                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                            <Check size={8} /> Can Authorize
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
-                                            <Lock size={8} /> Not a Manager
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="relative flex-1">
-                                        <input
-                                            type={showOverrideFor === user.id ? "text" : "password"}
-                                            value={overridePinInputs[user.id] || ''}
-                                            onChange={(e) => setOverridePinInputs(p => ({ ...p, [user.id]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                                            placeholder="Override PIN" maxLength={6}
-                                            className="w-full px-2 py-1 border border-rose-200 rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-rose-200 text-center"
-                                        />
-                                        <button onClick={() => setShowOverrideFor(showOverrideFor === user.id ? null : user.id)}
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
-                                            {showOverrideFor === user.id ? <EyeOff size={10} /> : <Eye size={10} />}
-                                        </button>
-                                    </div>
-                                    <button onClick={() => handleSetOverridePin(user.id)}
-                                        disabled={savingOverrideFor === user.id || !(overridePinInputs[user.id]?.length >= 4)}
-                                        className="p-1 rounded-lg bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-30 transition-all shrink-0">
-                                        {savingOverrideFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+ {/* ── Section 2: Manager Override PINs ── */}
+ <div>
+ <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+ <Shield size={12} /> Manager Override PINs — Security Authorization
+ </h3>
+ <p className="text-[10px] text-app-text-faint mb-2">
+ Managers use this PIN to authorize: <b>void, refund, clear cart, delete item, decrease qty, discount, price override</b>
+ </p>
+ <div className="bg-app-surface rounded-2xl border border-rose-100 overflow-hidden shadow-sm">
+ <div className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-3 bg-rose-50/50 border-b border-rose-100">
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">User</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Override PIN Status</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Set / Change Override PIN</span>
+ </div>
+ {users.map(user => {
+ const hasOverride = (user as any).has_override_pin || false;
+ return (
+ <div key={user.id} className="grid grid-cols-[1fr_120px_200px] gap-3 px-4 py-2.5 border-b border-gray-50 items-center hover:bg-gray-50/50">
+ <div className="flex items-center gap-2.5">
+ <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black text-[10px] shrink-0">
+ <Shield size={14} />
+ </div>
+ <div className="min-w-0">
+ <p className="text-xs font-bold text-app-text truncate">
+ {user.first_name ? `${user.first_name} ${user.last_name}`.trim() : user.username}
+ </p>
+ <p className="text-[9px] text-app-text-faint">{user.role || 'User'}</p>
+ </div>
+ </div>
+ <div>
+ {hasOverride ? (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+ <Check size={8} /> Can Authorize
+ </span>
+ ) : (
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-text-faint bg-app-bg px-1.5 py-0.5 rounded">
+ <Lock size={8} /> Not a Manager
+ </span>
+ )}
+ </div>
+ <div className="flex items-center gap-1">
+ <div className="relative flex-1">
+ <input
+ type={showOverrideFor === user.id ? "text" : "password"}
+ value={overridePinInputs[user.id] || ''}
+ onChange={(e) => setOverridePinInputs(p => ({ ...p, [user.id]: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+ placeholder="Override PIN" maxLength={6}
+ className="w-full px-2 py-1 border border-rose-200 rounded-lg text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-rose-200 text-center"
+ />
+ <button onClick={() => setShowOverrideFor(showOverrideFor === user.id ? null : user.id)}
+ className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-300 hover:text-app-text-muted">
+ {showOverrideFor === user.id ? <EyeOff size={10} /> : <Eye size={10} />}
+ </button>
+ </div>
+ <button onClick={() => handleSetOverridePin(user.id)}
+ disabled={savingOverrideFor === user.id || !(overridePinInputs[user.id]?.length >= 4)}
+ className="p-1 rounded-lg bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-30 transition-all shrink-0">
+ {savingOverrideFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
+ </button>
+ </div>
+ </div>
+ );
+ })}
+ </div>
+ </div>
 
-            {/* Info */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                <h3 className="text-xs font-black text-blue-800 uppercase tracking-wider mb-2">How PINs Work</h3>
-                <ul className="text-xs text-blue-700 space-y-1 font-medium">
-                    <li>• <b>Cashier PIN</b> — Used to log into a POS register at the lobby screen</li>
-                    <li>• <b>Manager Override PIN</b> — Used to authorize sensitive actions (void, discount, delete, qty decrease, clear cart, refund, price override)</li>
-                    <li>• Both PINs are <b>4-6 digits</b>, hashed securely (admins cannot see existing PINs)</li>
-                    <li>• A user can have <b>both</b> PINs — one for login, one for overrides</li>
-                    <li>• Only users with an override PIN can authorize protected actions on any register</li>
-                </ul>
-            </div>
-        </div>
-    );
+ {/* Info */}
+ <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+ <h3 className="text-xs font-black text-blue-800 uppercase tracking-wider mb-2">How PINs Work</h3>
+ <ul className="text-xs text-blue-700 space-y-1 font-medium">
+ <li>• <b>Cashier PIN</b> — Used to log into a POS register at the lobby screen</li>
+ <li>• <b>Manager Override PIN</b> — Used to authorize sensitive actions (void, discount, delete, qty decrease, clear cart, refund, price override)</li>
+ <li>• Both PINs are <b>4-6 digits</b>, hashed securely (admins cannot see existing PINs)</li>
+ <li>• A user can have <b>both</b> PINs — one for login, one for overrides</li>
+ <li>• Only users with an override PIN can authorize protected actions on any register</li>
+ </ul>
+ </div>
+ </div>
+ );
 }
 
 
@@ -663,102 +663,102 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
 // TAB 3: PAYMENT METHODS
 // ═══════════════════════════════════════════════════════════════════
 function PaymentsTab({ methods, setMethods, accounts }: {
-    methods: PaymentMethodConfig[]; setMethods: (m: PaymentMethodConfig[]) => void; accounts: FinancialAccount[];
+ methods: PaymentMethodConfig[]; setMethods: (m: PaymentMethodConfig[]) => void; accounts: FinancialAccount[];
 }) {
-    const [saving, setSaving] = useState(false);
-    const [newMethodKey, setNewMethodKey] = useState('');
+ const [saving, setSaving] = useState(false);
+ const [newMethodKey, setNewMethodKey] = useState('');
 
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            await erpFetch('settings/item/pos_payment_methods/', {
-                method: 'POST',
-                body: JSON.stringify(methods)
-            });
-            toast.success('Payment methods saved!');
-        } catch (e) { toast.error('Failed to save'); }
-        setSaving(false);
-    };
+ const handleSave = async () => {
+ setSaving(true);
+ try {
+ await erpFetch('settings/item/pos_payment_methods/', {
+ method: 'POST',
+ body: JSON.stringify(methods)
+ });
+ toast.success('Payment methods saved!');
+ } catch (e) { toast.error('Failed to save'); }
+ setSaving(false);
+ };
 
-    const addMethod = () => {
-        const key = newMethodKey.trim().toUpperCase();
-        if (!key || methods.find(m => m.key === key)) { toast.error(`"${key}" already exists`); return; }
-        setMethods([...methods, { key, label: key, accountId: null }]);
-        setNewMethodKey('');
-    };
+ const addMethod = () => {
+ const key = newMethodKey.trim().toUpperCase();
+ if (!key || methods.find(m => m.key === key)) { toast.error(`"${key}" already exists`); return; }
+ setMethods([...methods, { key, label: key, accountId: null }]);
+ setNewMethodKey('');
+ };
 
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-lg font-black text-gray-900">Payment Methods</h2>
-                    <p className="text-xs text-gray-400">Configure POS payment buttons and link them to financial accounts</p>
-                </div>
-                <button onClick={handleSave} disabled={saving}
-                    className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
-                    {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    Save
-                </button>
-            </div>
+ return (
+ <div className="space-y-4">
+ <div className="flex items-center justify-between">
+ <div>
+ <h2 className="text-lg font-black text-app-text">Payment Methods</h2>
+ <p className="text-xs text-app-text-faint">Configure POS payment buttons and link them to financial accounts</p>
+ </div>
+ <button onClick={handleSave} disabled={saving}
+ className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
+ {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+ Save
+ </button>
+ </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                <div className="grid grid-cols-[40px_1fr_120px_200px_40px] gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                    <span className="text-[10px] font-black text-gray-400 uppercase">#</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase">Label</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase">Key</span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase">Account</span>
-                    <span />
-                </div>
-                {methods.map((method, idx) => {
-                    const Icon = ICONS[method.key] || CreditCard;
-                    return (
-                        <div key={method.key} className="grid grid-cols-[40px_1fr_120px_200px_40px] gap-3 px-4 py-3 border-b border-gray-50 items-center hover:bg-gray-50/50">
-                            <div className="flex flex-col items-center gap-0.5">
-                                <button onClick={() => { const arr = [...methods]; if (idx > 0) [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]]; setMethods(arr); }}
-                                    disabled={idx === 0} className="text-gray-300 hover:text-gray-500 disabled:opacity-20 text-[10px]">▲</button>
-                                <button onClick={() => { const arr = [...methods]; if (idx < arr.length - 1) [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]]; setMethods(arr); }}
-                                    disabled={idx === methods.length - 1} className="text-gray-300 hover:text-gray-500 disabled:opacity-20 text-[10px]">▼</button>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                                    <Icon size={16} />
-                                </div>
-                                <input type="text" value={method.label}
-                                    onChange={(e) => { const arr = [...methods]; arr[idx] = { ...arr[idx], label: e.target.value }; setMethods(arr); }}
-                                    className="text-sm font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-emerald-500 outline-none py-1 w-full" />
-                            </div>
-                            <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-1 rounded text-center">{method.key}</span>
-                            <select value={method.accountId || ''}
-                                onChange={(e) => { const arr = [...methods]; arr[idx] = { ...arr[idx], accountId: e.target.value ? Number(e.target.value) : null }; setMethods(arr); }}
-                                className={clsx("text-xs font-bold rounded-lg px-2 py-2 border outline-none w-full",
-                                    method.accountId ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-700")}>
-                                <option value="">⚠ No account linked</option>
-                                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.type || 'N/A'})</option>)}
-                            </select>
-                            <button onClick={() => setMethods(methods.filter(m => m.key !== method.key))}
-                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all">
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    );
-                })}
+ <div className="bg-app-surface rounded-2xl border border-app-border overflow-hidden shadow-sm">
+ <div className="grid grid-cols-[40px_1fr_120px_200px_40px] gap-3 px-4 py-3 bg-app-bg border-b border-app-border">
+ <span className="text-[10px] font-black text-app-text-faint uppercase">#</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase">Label</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase">Key</span>
+ <span className="text-[10px] font-black text-app-text-faint uppercase">Account</span>
+ <span />
+ </div>
+ {methods.map((method, idx) => {
+ const Icon = ICONS[method.key] || CreditCard;
+ return (
+ <div key={method.key} className="grid grid-cols-[40px_1fr_120px_200px_40px] gap-3 px-4 py-3 border-b border-gray-50 items-center hover:bg-gray-50/50">
+ <div className="flex flex-col items-center gap-0.5">
+ <button onClick={() => { const arr = [...methods]; if (idx > 0) [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]]; setMethods(arr); }}
+ disabled={idx === 0} className="text-gray-300 hover:text-app-text-muted disabled:opacity-20 text-[10px]">▲</button>
+ <button onClick={() => { const arr = [...methods]; if (idx < arr.length - 1) [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]]; setMethods(arr); }}
+ disabled={idx === methods.length - 1} className="text-gray-300 hover:text-app-text-muted disabled:opacity-20 text-[10px]">▼</button>
+ </div>
+ <div className="flex items-center gap-3">
+ <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+ <Icon size={16} />
+ </div>
+ <input type="text" value={method.label}
+ onChange={(e) => { const arr = [...methods]; arr[idx] = { ...arr[idx], label: e.target.value }; setMethods(arr); }}
+ className="text-sm font-bold text-app-text bg-transparent border-b border-transparent hover:border-app-border focus:border-emerald-500 outline-none py-1 w-full" />
+ </div>
+ <span className="text-xs font-mono text-app-text-faint bg-app-surface-2 px-2 py-1 rounded text-center">{method.key}</span>
+ <select value={method.accountId || ''}
+ onChange={(e) => { const arr = [...methods]; arr[idx] = { ...arr[idx], accountId: e.target.value ? Number(e.target.value) : null }; setMethods(arr); }}
+ className={clsx("text-xs font-bold rounded-lg px-2 py-2 border outline-none w-full",
+ method.accountId ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-700")}>
+ <option value="">⚠ No account linked</option>
+ {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.type || 'N/A'})</option>)}
+ </select>
+ <button onClick={() => setMethods(methods.filter(m => m.key !== method.key))}
+ className="w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all">
+ <Trash2 size={14} />
+ </button>
+ </div>
+ );
+ })}
 
-                <div className="px-4 py-3 bg-gray-50/50 flex items-center gap-3">
-                    <select value={newMethodKey} onChange={(e) => setNewMethodKey(e.target.value)}
-                        className="text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none flex-1">
-                        <option value="">Select method...</option>
-                        {PRESET_METHODS.filter(p => !methods.find(m => m.key === p)).map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                    <input type="text" value={newMethodKey} onChange={(e) => setNewMethodKey(e.target.value.toUpperCase())}
-                        placeholder="Or custom..." className="text-sm font-bold bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none w-32" />
-                    <button onClick={addMethod} disabled={!newMethodKey.trim()}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm hover:bg-emerald-600 disabled:opacity-40">
-                        <Plus size={16} /> Add
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+ <div className="px-4 py-3 bg-gray-50/50 flex items-center gap-3">
+ <select value={newMethodKey} onChange={(e) => setNewMethodKey(e.target.value)}
+ className="text-sm font-bold text-gray-700 bg-app-surface border border-app-border rounded-lg px-3 py-2 outline-none flex-1">
+ <option value="">Select method...</option>
+ {PRESET_METHODS.filter(p => !methods.find(m => m.key === p)).map(p => <option key={p} value={p}>{p}</option>)}
+ </select>
+ <input type="text" value={newMethodKey} onChange={(e) => setNewMethodKey(e.target.value.toUpperCase())}
+ placeholder="Or custom..." className="text-sm font-bold bg-app-surface border border-app-border rounded-lg px-3 py-2 outline-none w-32" />
+ <button onClick={addMethod} disabled={!newMethodKey.trim()}
+ className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm hover:bg-emerald-600 disabled:opacity-40">
+ <Plus size={16} /> Add
+ </button>
+ </div>
+ </div>
+ </div>
+ );
 }
 
 
@@ -766,153 +766,153 @@ function PaymentsTab({ methods, setMethods, accounts }: {
 // TAB 4: SECURITY RULES
 // ═══════════════════════════════════════════════════════════════════
 function SecurityTab() {
-    const [rules, setRules] = useState({
-        requirePinForLogin: true,
-        allowCashierSwitch: true,
-        autoLockIdleMinutes: 15,
-        requireManagerForVoid: true,
-        requireManagerForDiscount: true,
-        requireManagerForPriceOverride: true,
-        requireManagerForRefund: true,
-        requireManagerForClearCart: true,
-        requireManagerForDeleteItem: true,
-        requireManagerForDecreaseQty: true,
-        maxDiscountPercent: 20,
-        lockRegisterOnClose: true,
-        printReceiptOnClose: true,
-        requireCountOnClose: true,
-        allowNegativeStock: false,
-        // Reconciliation strategy
-        enableReconciliation: true,
-        controlledAccountsAreTruth: true,
-        autoCalibrateToClose: true,
-        enableAccountBook: true,
-        autoTransferExcessToReserve: true,
-        autoDeductShortageFromCashier: true,
-        requireStatementOnClose: true,
-    });
-    const [saving, setSaving] = useState(false);
+ const [rules, setRules] = useState({
+ requirePinForLogin: true,
+ allowCashierSwitch: true,
+ autoLockIdleMinutes: 15,
+ requireManagerForVoid: true,
+ requireManagerForDiscount: true,
+ requireManagerForPriceOverride: true,
+ requireManagerForRefund: true,
+ requireManagerForClearCart: true,
+ requireManagerForDeleteItem: true,
+ requireManagerForDecreaseQty: true,
+ maxDiscountPercent: 20,
+ lockRegisterOnClose: true,
+ printReceiptOnClose: true,
+ requireCountOnClose: true,
+ allowNegativeStock: false,
+ // Reconciliation strategy
+ enableReconciliation: true,
+ controlledAccountsAreTruth: true,
+ autoCalibrateToClose: true,
+ enableAccountBook: true,
+ autoTransferExcessToReserve: true,
+ autoDeductShortageFromCashier: true,
+ requireStatementOnClose: true,
+ });
+ const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        erpFetch('settings/item/pos_security_rules/').then(data => {
-            if (data && typeof data === 'object' && !Array.isArray(data)) {
-                setRules(prev => ({ ...prev, ...data }));
-            }
-        }).catch(() => { });
-    }, []);
+ useEffect(() => {
+ erpFetch('settings/item/pos_security_rules/').then(data => {
+ if (data && typeof data === 'object' && !Array.isArray(data)) {
+ setRules(prev => ({ ...prev, ...data }));
+ }
+ }).catch(() => { });
+ }, []);
 
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            await erpFetch('settings/item/pos_security_rules/', { method: 'POST', body: JSON.stringify(rules) });
-            toast.success('Security rules saved!');
-        } catch (e) { toast.error('Failed to save'); }
-        setSaving(false);
-    };
+ const handleSave = async () => {
+ setSaving(true);
+ try {
+ await erpFetch('settings/item/pos_security_rules/', { method: 'POST', body: JSON.stringify(rules) });
+ toast.success('Security rules saved!');
+ } catch (e) { toast.error('Failed to save'); }
+ setSaving(false);
+ };
 
-    const ToggleRow = ({ label, desc, field }: { label: string; desc: string; field: keyof typeof rules }) => (
-        <div className="flex items-center justify-between py-3 border-b border-gray-50">
-            <div className="flex-1">
-                <p className="text-sm font-bold text-gray-900">{label}</p>
-                <p className="text-[10px] text-gray-400">{desc}</p>
-            </div>
-            <button
-                onClick={() => setRules(r => ({ ...r, [field]: !r[field] }))}
-                className={clsx("w-11 h-6 rounded-full transition-all relative shrink-0",
-                    rules[field] ? "bg-emerald-500" : "bg-gray-200")}
-            >
-                <div className={clsx("w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-all",
-                    rules[field] ? "left-6" : "left-1")} />
-            </button>
-        </div>
-    );
+ const ToggleRow = ({ label, desc, field }: { label: string; desc: string; field: keyof typeof rules }) => (
+ <div className="flex items-center justify-between py-3 border-b border-gray-50">
+ <div className="flex-1">
+ <p className="text-sm font-bold text-app-text">{label}</p>
+ <p className="text-[10px] text-app-text-faint">{desc}</p>
+ </div>
+ <button
+ onClick={() => setRules(r => ({ ...r, [field]: !r[field] }))}
+ className={clsx("w-11 h-6 rounded-full transition-all relative shrink-0",
+ rules[field] ? "bg-emerald-500" : "bg-gray-200")}
+ >
+ <div className={clsx("w-4 h-4 rounded-full bg-app-surface shadow absolute top-1 transition-all",
+ rules[field] ? "left-6" : "left-1")} />
+ </button>
+ </div>
+ );
 
-    const NumberRow = ({ label, desc, field, suffix }: { label: string; desc: string; field: keyof typeof rules; suffix: string }) => (
-        <div className="flex items-center justify-between py-3 border-b border-gray-50">
-            <div className="flex-1">
-                <p className="text-sm font-bold text-gray-900">{label}</p>
-                <p className="text-[10px] text-gray-400">{desc}</p>
-            </div>
-            <div className="flex items-center gap-2">
-                <input type="number" value={rules[field] as number}
-                    onChange={(e) => setRules(r => ({ ...r, [field]: Number(e.target.value) }))}
-                    className="w-16 px-2 py-1 text-center text-sm font-bold border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-200" />
-                <span className="text-xs text-gray-400 font-bold">{suffix}</span>
-            </div>
-        </div>
-    );
+ const NumberRow = ({ label, desc, field, suffix }: { label: string; desc: string; field: keyof typeof rules; suffix: string }) => (
+ <div className="flex items-center justify-between py-3 border-b border-gray-50">
+ <div className="flex-1">
+ <p className="text-sm font-bold text-app-text">{label}</p>
+ <p className="text-[10px] text-app-text-faint">{desc}</p>
+ </div>
+ <div className="flex items-center gap-2">
+ <input type="number" value={rules[field] as number}
+ onChange={(e) => setRules(r => ({ ...r, [field]: Number(e.target.value) }))}
+ className="w-16 px-2 py-1 text-center text-sm font-bold border border-app-border rounded-lg outline-none focus:ring-2 focus:ring-indigo-200" />
+ <span className="text-xs text-app-text-faint font-bold">{suffix}</span>
+ </div>
+ </div>
+ );
 
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-lg font-black text-gray-900">Security Rules</h2>
-                    <p className="text-xs text-gray-400">Control POS access, overrides, reconciliation, and restrictions</p>
-                </div>
-                <button onClick={handleSave} disabled={saving}
-                    className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
-                    {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    Save
-                </button>
-            </div>
+ return (
+ <div className="space-y-4">
+ <div className="flex items-center justify-between">
+ <div>
+ <h2 className="text-lg font-black text-app-text">Security Rules</h2>
+ <p className="text-xs text-app-text-faint">Control POS access, overrides, reconciliation, and restrictions</p>
+ </div>
+ <button onClick={handleSave} disabled={saving}
+ className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
+ {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+ Save
+ </button>
+ </div>
 
-            {/* Authentication */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Key size={12} /> Authentication
-                </h3>
-                <ToggleRow label="Require PIN for POS Login" desc="Users must enter their PIN to access any register" field="requirePinForLogin" />
-                <ToggleRow label="Allow Cashier Switching" desc="Allow switching between cashiers without closing the register" field="allowCashierSwitch" />
-                <NumberRow label="Auto-Lock After Idle" desc="Lock the register after this many minutes of inactivity" field="autoLockIdleMinutes" suffix="min" />
-            </div>
+ {/* Authentication */}
+ <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
+ <h3 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+ <Key size={12} /> Authentication
+ </h3>
+ <ToggleRow label="Require PIN for POS Login" desc="Users must enter their PIN to access any register" field="requirePinForLogin" />
+ <ToggleRow label="Allow Cashier Switching" desc="Allow switching between cashiers without closing the register" field="allowCashierSwitch" />
+ <NumberRow label="Auto-Lock After Idle" desc="Lock the register after this many minutes of inactivity" field="autoLockIdleMinutes" suffix="min" />
+ </div>
 
-            {/* Manager Overrides */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Shield size={12} /> Manager Overrides Required
-                </h3>
-                <ToggleRow label="Void / Cancel Order" desc="Require manager PIN to void a completed order" field="requireManagerForVoid" />
-                <ToggleRow label="Apply Discount" desc="Require manager PIN to apply any manual discount" field="requireManagerForDiscount" />
-                <ToggleRow label="Price Override" desc="Require manager PIN to change a product's price downward" field="requireManagerForPriceOverride" />
-                <ToggleRow label="Process Refund" desc="Require manager PIN to process a refund" field="requireManagerForRefund" />
-                <ToggleRow label="Clear Cart" desc="Require manager PIN to clear the entire cart" field="requireManagerForClearCart" />
-                <ToggleRow label="Delete Item" desc="Require manager PIN to remove an item from the cart" field="requireManagerForDeleteItem" />
-                <ToggleRow label="Decrease Quantity" desc="Require manager PIN to decrease any product's quantity" field="requireManagerForDecreaseQty" />
-                <NumberRow label="Max Discount Without Approval" desc="Cashiers can apply up to this discount % without manager PIN" field="maxDiscountPercent" suffix="%" />
-            </div>
+ {/* Manager Overrides */}
+ <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
+ <h3 className="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+ <Shield size={12} /> Manager Overrides Required
+ </h3>
+ <ToggleRow label="Void / Cancel Order" desc="Require manager PIN to void a completed order" field="requireManagerForVoid" />
+ <ToggleRow label="Apply Discount" desc="Require manager PIN to apply any manual discount" field="requireManagerForDiscount" />
+ <ToggleRow label="Price Override" desc="Require manager PIN to change a product's price downward" field="requireManagerForPriceOverride" />
+ <ToggleRow label="Process Refund" desc="Require manager PIN to process a refund" field="requireManagerForRefund" />
+ <ToggleRow label="Clear Cart" desc="Require manager PIN to clear the entire cart" field="requireManagerForClearCart" />
+ <ToggleRow label="Delete Item" desc="Require manager PIN to remove an item from the cart" field="requireManagerForDeleteItem" />
+ <ToggleRow label="Decrease Quantity" desc="Require manager PIN to decrease any product's quantity" field="requireManagerForDecreaseQty" />
+ <NumberRow label="Max Discount Without Approval" desc="Cashiers can apply up to this discount % without manager PIN" field="maxDiscountPercent" suffix="%" />
+ </div>
 
-            {/* Register Close Rules */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <h3 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Monitor size={12} /> Register Open / Close Rules
-                </h3>
-                <ToggleRow label="Lock Register on Close" desc="Prevent access after closing until reopened" field="lockRegisterOnClose" />
-                <ToggleRow label="Print Receipt on Register Close" desc="Auto-print a Z-report summary when closing the register" field="printReceiptOnClose" />
-                <ToggleRow label="Require Cash Count on Close" desc="Cashier must count and enter physical cash when closing" field="requireCountOnClose" />
-                <ToggleRow label="Allow Negative Stock Sales" desc="Allow selling products even if stock is 0 or negative" field="allowNegativeStock" />
-            </div>
+ {/* Register Close Rules */}
+ <div className="bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm">
+ <h3 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+ <Monitor size={12} /> Register Open / Close Rules
+ </h3>
+ <ToggleRow label="Lock Register on Close" desc="Prevent access after closing until reopened" field="lockRegisterOnClose" />
+ <ToggleRow label="Print Receipt on Register Close" desc="Auto-print a Z-report summary when closing the register" field="printReceiptOnClose" />
+ <ToggleRow label="Require Cash Count on Close" desc="Cashier must count and enter physical cash when closing" field="requireCountOnClose" />
+ <ToggleRow label="Allow Negative Stock Sales" desc="Allow selling products even if stock is 0 or negative" field="allowNegativeStock" />
+ </div>
 
-            {/* Reconciliation Strategy */}
-            <div className="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm">
-                <h3 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Settings2 size={12} /> Reconciliation Strategy
-                </h3>
-                <div className="bg-violet-50 rounded-xl p-3 mb-3 text-xs text-violet-700 font-medium space-y-1">
-                    <p className="font-black text-violet-800">How closing reconciliation works:</p>
-                    <p>1. <b>Controlled accounts</b> (Wave, Orange, Bank) → provider statement is truth</p>
-                    <p>2. Any difference between software & statement → <b>calibrated to cash</b> (cashier used wrong payment method)</p>
-                    <p>3. After calibration, cash in hand + address book balance = expected cash software</p>
-                    <p>4. <b>Excess cash</b> → auto-transferred to reserve account + notified</p>
-                    <p>5. <b>Missing cash</b> → auto-deducted from cashier account</p>
-                </div>
-                <ToggleRow label="Enable Reconciliation on Close" desc="Run the full reconciliation workflow when closing a register" field="enableReconciliation" />
-                <ToggleRow label="Controlled Accounts = Truth" desc="Wave, Orange Money, Bank statements are always correct. Any difference is calibrated." field="controlledAccountsAreTruth" />
-                <ToggleRow label="Auto-Calibrate Differences to Cash" desc="When controlled account has a mismatch, auto-adjust the cash account" field="autoCalibrateToClose" />
-                <ToggleRow label="Require Statement Entry on Close" desc="Cashier must enter real amounts from provider statements for each controlled account" field="requireStatementOnClose" />
-                <ToggleRow label="Enable Address Book" desc="Allow cashiers to log offline transactions (payments they can't enter in POS)" field="enableAccountBook" />
-                <ToggleRow label="Auto-Transfer Excess to Reserve" desc="If more cash in hand than expected, transfer surplus to the reserve account" field="autoTransferExcessToReserve" />
-                <ToggleRow label="Auto-Deduct Shortage from Cashier" desc="If less cash in hand, deduct the difference from the cashier's personal account" field="autoDeductShortageFromCashier" />
-            </div>
-        </div>
-    );
+ {/* Reconciliation Strategy */}
+ <div className="bg-app-surface rounded-2xl border border-violet-100 p-5 shadow-sm">
+ <h3 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+ <Settings2 size={12} /> Reconciliation Strategy
+ </h3>
+ <div className="bg-violet-50 rounded-xl p-3 mb-3 text-xs text-violet-700 font-medium space-y-1">
+ <p className="font-black text-violet-800">How closing reconciliation works:</p>
+ <p>1. <b>Controlled accounts</b> (Wave, Orange, Bank) → provider statement is truth</p>
+ <p>2. Any difference between software & statement → <b>calibrated to cash</b> (cashier used wrong payment method)</p>
+ <p>3. After calibration, cash in hand + address book balance = expected cash software</p>
+ <p>4. <b>Excess cash</b> → auto-transferred to reserve account + notified</p>
+ <p>5. <b>Missing cash</b> → auto-deducted from cashier account</p>
+ </div>
+ <ToggleRow label="Enable Reconciliation on Close" desc="Run the full reconciliation workflow when closing a register" field="enableReconciliation" />
+ <ToggleRow label="Controlled Accounts = Truth" desc="Wave, Orange Money, Bank statements are always correct. Any difference is calibrated." field="controlledAccountsAreTruth" />
+ <ToggleRow label="Auto-Calibrate Differences to Cash" desc="When controlled account has a mismatch, auto-adjust the cash account" field="autoCalibrateToClose" />
+ <ToggleRow label="Require Statement Entry on Close" desc="Cashier must enter real amounts from provider statements for each controlled account" field="requireStatementOnClose" />
+ <ToggleRow label="Enable Address Book" desc="Allow cashiers to log offline transactions (payments they can't enter in POS)" field="enableAccountBook" />
+ <ToggleRow label="Auto-Transfer Excess to Reserve" desc="If more cash in hand than expected, transfer surplus to the reserve account" field="autoTransferExcessToReserve" />
+ <ToggleRow label="Auto-Deduct Shortage from Cashier" desc="If less cash in hand, deduct the difference from the cashier's personal account" field="autoDeductShortageFromCashier" />
+ </div>
+ </div>
+ );
 }

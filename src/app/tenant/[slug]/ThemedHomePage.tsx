@@ -13,43 +13,43 @@ const PortfolioHomePage = dynamic(() => import('@/storefront/components/Portfoli
 
 /**
  * ThemedHomePage — resolves the homepage based on:
- *  1. storefront_type → picks the layout (product grid, catalogue, subscription, etc.)
- *  2. storefront_theme → picks the visual style (midnight, boutique, etc.)
+ * 1. storefront_type → picks the layout (product grid, catalogue, subscription, etc.)
+ * 2. storefront_theme → picks the visual style (midnight, boutique, etc.)
  *
  * For PRODUCT_STORE, the theme's HomePage component is used.
  * For other types, a specialized component is rendered.
  */
 export function ThemedHomePage({
-    products,
-    categories,
-    brands,
+ products,
+ categories,
+ brands,
 }: {
-    products: Product[]
-    categories: Category[]
-    brands: Brand[]
+ products: Product[]
+ categories: Category[]
+ brands: Brand[]
 }) {
-    const { components, loading } = useTheme()
-    const { config } = useConfig()
+ const { components, loading } = useTheme()
+ const { config } = useConfig()
 
-    // Single source of truth for loading is now in ThemeLayout/ThemeShell
-    if (loading || !components) return null
+ // Single source of truth for loading is now in ThemeLayout/ThemeShell
+ if (loading || !components) return null
 
-    const storeType = config?.storefront_type || 'PRODUCT_STORE'
+ const storeType = config?.storefront_type || 'PRODUCT_STORE'
 
-    switch (storeType) {
-        case 'LANDING_PAGE':
-            return <LandingHomePage />
-        case 'CATALOGUE':
-            return <CatalogueHomePage products={products} categories={categories} />
-        case 'SUBSCRIPTION':
-            return <SubscriptionHomePage />
-        case 'PORTFOLIO':
-            return <PortfolioHomePage />
-        case 'PRODUCT_STORE':
-        default: {
-            // Use the theme's HomePage component (product grid e-commerce)
-            const HomePage = components.HomePage
-            return <HomePage products={products} categories={categories} brands={brands} />
-        }
-    }
+ switch (storeType) {
+ case 'LANDING_PAGE':
+ return <LandingHomePage />
+ case 'CATALOGUE':
+ return <CatalogueHomePage products={products} categories={categories} />
+ case 'SUBSCRIPTION':
+ return <SubscriptionHomePage />
+ case 'PORTFOLIO':
+ return <PortfolioHomePage />
+ case 'PRODUCT_STORE':
+ default: {
+ // Use the theme's HomePage component (product grid e-commerce)
+ const HomePage = components.HomePage
+ return <HomePage products={products} categories={categories} brands={brands} />
+ }
+ }
 }

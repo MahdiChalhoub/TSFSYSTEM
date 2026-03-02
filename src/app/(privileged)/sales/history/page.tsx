@@ -34,6 +34,7 @@ import {
     type OrderStatus, type DeliveryStatus, type PaymentStatus, type InvoiceStatus
 } from '@/types/sales'
 import { SalesKpiCard } from '@/components/modules/sales/SalesKpiCard'
+import { ConfirmOrderDialog } from '@/components/modules/sales/ConfirmOrderDialog'
 import { useAdmin } from '@/context/AdminContext'
 export default function OrderHistoryPage() {
     const { viewScope } = useAdmin()
@@ -53,6 +54,35 @@ export default function OrderHistoryPage() {
 
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+    const [confirmOrderTargetId, setConfirmOrderTargetId] = useState<number | null>(null)
+
+    const handleOpenConfirmOrder = (orderId: number) => {
+        setConfirmOrderTargetId(orderId)
+    }
+
+    const executeConfirmWorkflow = async (warehouseId: string | null) => {
+        if (!confirmOrderTargetId) return
+        toast.loading('Confirming order...')
+        try {
+            const mod = await import('../workflow-actions')
+            const result = await mod.triggerOrderWorkflow(confirmOrderTargetId, {
+                action: 'confirm',
+                warehouse_id: warehouseId ? warehouseId : undefined
+            })
+            toast.dismiss()
+            if (result.success) {
+                toast.success('✓ Order confirmed')
+                loadOrders()
+            } else {
+                toast.error(result.error || 'Confirmation failed')
+            }
+        } catch (e: any) {
+            toast.dismiss()
+            toast.error(e?.message || 'Confirmation failed')
+        } finally {
+            setConfirmOrderTargetId(null)
+        }
+    }
 
     const handleDelete = async (id: number) => {
         toast.promise(deleteOrder(id), {
@@ -150,12 +180,12 @@ export default function OrderHistoryPage() {
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg hover:bg-stone-100">
+                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg hover:bg-app-surface-2">
                                 <MoreHorizontal size={16} />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 rounded-xl border-stone-100 shadow-xl">
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 py-2">
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl border-app-border shadow-xl">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-2">
                                 Management de Vente
                             </DropdownMenuLabel>
                             <DropdownMenuItem asChild className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5">
@@ -163,7 +193,7 @@ export default function OrderHistoryPage() {
                                     <Eye size={14} /> Voir
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Edit3 size={14} className="mr-2" /> Modifier
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setConfirmDeleteId(order.id)} className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5">
@@ -173,13 +203,13 @@ export default function OrderHistoryPage() {
                             <DropdownMenuSeparator />
 
                             {/* ── Workflow Transitions ────────────────── */}
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 py-1">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 py-1">
                                 Workflow
                             </DropdownMenuLabel>
 
                             {(!order.order_status || order.order_status === 'DRAFT') && (
                                 <DropdownMenuItem
-                                    onClick={() => handleWorkflow(order.id, 'confirm', 'Confirming order')}
+                                    onClick={() => handleOpenConfirmOrder(order.id)}
                                     className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5"
                                 >
                                     <Package size={14} className="mr-2" /> Confirm Order
@@ -224,38 +254,38 @@ export default function OrderHistoryPage() {
 
                             <DropdownMenuSeparator />
 
-                            <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-stone-50 cursor-pointer py-2.5 text-indigo-600 font-semibold">
+                            <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-app-bg cursor-pointer py-2.5 text-indigo-600 font-semibold">
                                 <Printer size={14} className="mr-2" /> La facture d'impression
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Clipboard size={14} className="mr-2" /> Bordereau
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Package size={14} className="mr-2" /> Bon de livraison
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <CreditCard size={14} className="mr-2" /> Voir les paiements
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Undo2 size={14} className="mr-2" /> Vente Retour
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
 
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Link2 size={14} className="mr-2" /> Afficher l'URL de la facture
                             </DropdownMenuItem>
 
-                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 pt-4 pb-2">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-app-text-faint px-3 pt-4 pb-2">
                                 Notifications
                             </DropdownMenuLabel>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <MessageSquare size={14} className="mr-2 text-emerald-500" /> WhatsApp Notification
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                            <DropdownMenuItem className="focus:bg-app-bg cursor-pointer py-2.5">
                                 <Mail size={14} className="mr-2 text-indigo-400" /> Email Notification
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -272,7 +302,7 @@ export default function OrderHistoryPage() {
                     <span className="text-xs font-bold text-gray-700">
                         {order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}
                     </span>
-                    <span className="text-[10px] text-stone-400 font-medium tracking-tight">
+                    <span className="text-[10px] text-app-text-faint font-medium tracking-tight">
                         {order.created_at ? new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
                 </div>
@@ -283,7 +313,7 @@ export default function OrderHistoryPage() {
             label: 'Facture n°.',
             sortable: true,
             render: (order) => (
-                <span className="font-black text-gray-900 leading-tight">#{order.invoice_number || order.ref_code || order.id}</span>
+                <span className="font-black text-app-text leading-tight">#{order.invoice_number || order.ref_code || order.id}</span>
             )
         },
         {
@@ -293,7 +323,7 @@ export default function OrderHistoryPage() {
             render: (order) => (
                 <div className="flex flex-col">
                     <span className="text-sm font-semibold text-gray-700 tracking-tight">{order.contact_name || 'Walking Customer'}</span>
-                    <span className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
+                    <span className="text-[10px] text-app-text-faint font-bold uppercase tracking-tighter">
                         {order.contact_phone || ''}
                     </span>
                 </div>
@@ -303,14 +333,14 @@ export default function OrderHistoryPage() {
             key: 'contact_phone',
             label: 'Numéro de contact',
             render: (order) => (
-                <span className="text-xs text-stone-500">{order.contact_phone || '—'}</span>
+                <span className="text-xs text-app-text-muted">{order.contact_phone || '—'}</span>
             )
         },
         {
             key: 'site_name',
             label: 'Emplacement',
             render: (order) => (
-                <span className="text-xs font-medium text-stone-600">{order.site_name || 'Global'}</span>
+                <span className="text-xs font-medium text-app-text-muted">{order.site_name || 'Global'}</span>
             )
         },
         {
@@ -318,7 +348,7 @@ export default function OrderHistoryPage() {
             label: 'Order Status',
             render: (order) => {
                 const cfg = ORDER_STATUS_CONFIG[order.order_status as OrderStatus]
-                    ?? { label: order.order_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                    ?? { label: order.order_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
                 return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
             }
         },
@@ -327,7 +357,7 @@ export default function OrderHistoryPage() {
             label: 'Delivery',
             render: (order) => {
                 const cfg = DELIVERY_STATUS_CONFIG[order.delivery_status as DeliveryStatus]
-                    ?? { label: order.delivery_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                    ?? { label: order.delivery_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
                 return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
             }
         },
@@ -338,7 +368,7 @@ export default function OrderHistoryPage() {
                 // Prefer new payment_status axis; fall back to derived value
                 if (order.payment_status) {
                     const cfg = PAYMENT_STATUS_CONFIG[order.payment_status as PaymentStatus]
-                        ?? { label: order.payment_status, color: 'bg-stone-100 text-stone-500' };
+                        ?? { label: order.payment_status, color: 'bg-app-surface-2 text-app-text-muted' };
                     return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
                 }
                 // Legacy fallback: derive from total_paid
@@ -354,7 +384,7 @@ export default function OrderHistoryPage() {
             label: 'Invoice',
             render: (order) => {
                 const cfg = INVOICE_STATUS_CONFIG[order.invoice_status as InvoiceStatus]
-                    ?? { label: order.invoice_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                    ?? { label: order.invoice_status ?? '—', color: 'bg-app-surface-2 text-app-text-muted' };
                 return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
             }
         },
@@ -362,7 +392,7 @@ export default function OrderHistoryPage() {
             key: 'payment_method',
             label: 'Mode de paiement',
             render: (order) => (
-                <Badge variant="secondary" className="bg-stone-100 text-stone-600 border-0 text-[8px] font-black uppercase tracking-tighter">
+                <Badge variant="secondary" className="bg-app-surface-2 text-app-text-muted border-0 text-[8px] font-black uppercase tracking-tighter">
                     {order.payment_method || 'CASH'}
                 </Badge>
             )
@@ -373,7 +403,7 @@ export default function OrderHistoryPage() {
             align: 'right',
             sortable: true,
             render: (order) => (
-                <span className="font-black text-gray-900 tracking-tighter">{fmt(parseFloat(String(order.total_amount ?? 0)))}</span>
+                <span className="font-black text-app-text tracking-tighter">{fmt(parseFloat(String(order.total_amount ?? 0)))}</span>
             )
         },
         {
@@ -398,14 +428,14 @@ export default function OrderHistoryPage() {
             label: 'Vente retour dû',
             align: 'right',
             render: (order) => (
-                <span className="text-xs font-bold text-stone-400">{fmt(parseFloat(String(order.return_due || 0)))}</span>
+                <span className="text-xs font-bold text-app-text-faint">{fmt(parseFloat(String(order.return_due || 0)))}</span>
             )
         },
         {
             key: 'shipping_status',
             label: "Statut d'envoi",
             render: (order) => (
-                <Badge className="bg-stone-50 text-stone-600 border border-stone-100 text-[9px] font-bold uppercase">
+                <Badge className="bg-app-bg text-app-text-muted border border-app-border text-[9px] font-bold uppercase">
                     {order.shipping_status || '—'}
                 </Badge>
             )
@@ -415,7 +445,7 @@ export default function OrderHistoryPage() {
             label: 'Articles au total',
             align: 'center',
             render: (order) => (
-                <span className="text-xs font-bold text-gray-900">{order.total_items || 0}</span>
+                <span className="text-xs font-bold text-app-text">{order.total_items || 0}</span>
             )
         },
         {
@@ -431,7 +461,7 @@ export default function OrderHistoryPage() {
             render: (order) => (
                 <div className="flex items-center gap-1.5">
                     <User size={12} className="text-stone-300" />
-                    <span className="text-xs text-stone-500 font-medium">{order.user_name || 'System'}</span>
+                    <span className="text-xs text-app-text-muted font-medium">{order.user_name || 'System'}</span>
                 </div>
             )
         },
@@ -439,7 +469,7 @@ export default function OrderHistoryPage() {
             key: 'notes',
             label: 'Note de vente',
             render: (order) => (
-                <p className="text-[10px] text-stone-400 italic truncate max-w-[120px]" title={order.notes}>
+                <p className="text-[10px] text-app-text-faint italic truncate max-w-[120px]" title={order.notes}>
                     {order.notes || '—'}
                 </p>
             )
@@ -505,7 +535,7 @@ export default function OrderHistoryPage() {
                             <Activity size={12} /> Transaction Stream
                         </span>
                     </div>
-                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
                         <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
                             <History size={32} className="text-white" />
                         </div>
@@ -513,7 +543,7 @@ export default function OrderHistoryPage() {
                     </h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-stone-100 text-stone-400 hover:text-indigo-600 hover:bg-stone-50 transition-all">
+                    <Button onClick={loadOrders} variant="outline" className="h-12 w-12 p-0 rounded-2xl border-app-border text-app-text-faint hover:text-indigo-600 hover:bg-app-bg transition-all">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </Button>
                     <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
@@ -563,11 +593,11 @@ export default function OrderHistoryPage() {
                 sortDir={settings.sortDir}
                 onSort={settings.setSort}
                 renderExpanded={(order) => (
-                    <div className="p-6 bg-stone-50/50 rounded-2xl mx-10 mb-4 border border-stone-100 animate-in slide-in-from-top-2 duration-300">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-4 px-2">Détails des Articles</h4>
-                        <div className="bg-white rounded-xl border border-stone-100 overflow-hidden shadow-sm">
+                    <div className="p-6 bg-stone-50/50 rounded-2xl mx-10 mb-4 border border-app-border animate-in slide-in-from-top-2 duration-300">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-app-text-faint mb-4 px-2">Détails des Articles</h4>
+                        <div className="bg-app-surface rounded-xl border border-app-border overflow-hidden shadow-sm">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-stone-50 text-stone-400 font-bold">
+                                <thead className="bg-app-bg text-app-text-faint font-bold">
                                     <tr>
                                         <th className="px-4 py-3">Produit</th>
                                         <th className="px-4 py-3 text-center">Quantité</th>
@@ -579,9 +609,9 @@ export default function OrderHistoryPage() {
                                     {order.lines?.map((line: any, i: number) => (
                                         <tr key={i} className="hover:bg-stone-50/50 transition-colors">
                                             <td className="px-4 py-3 font-semibold text-stone-700">{line.product_name || `Produit #${line.product}`}</td>
-                                            <td className="px-4 py-3 text-center font-bold text-stone-500">{line.quantity}</td>
-                                            <td className="px-4 py-3 text-right text-stone-500">{fmt(parseFloat(line.unit_price))}</td>
-                                            <td className="px-4 py-3 text-right font-black text-stone-900">{fmt(parseFloat(line.subtotal))}</td>
+                                            <td className="px-4 py-3 text-center font-bold text-app-text-muted">{line.quantity}</td>
+                                            <td className="px-4 py-3 text-right text-app-text-muted">{fmt(parseFloat(line.unit_price))}</td>
+                                            <td className="px-4 py-3 text-right font-black text-app-text">{fmt(parseFloat(line.subtotal))}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -589,19 +619,19 @@ export default function OrderHistoryPage() {
                         </div>
                     </div>
                 )}
-                className="rounded-[2.5rem] border-0 shadow-2xl shadow-stone-200/50 overflow-hidden bg-white"
+                className="rounded-[2.5rem] border-0 shadow-2xl shadow-stone-200/50 overflow-hidden bg-app-surface"
                 headerExtra={
                     <div className="flex items-center gap-3">
                         <div className="relative w-80">
-                            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+                            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
                             <Input
                                 placeholder="Rechercher par n° facture, client..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-stone-100 focus-visible:ring-indigo-500/30 transition-all focus:bg-white focus:shadow-sm"
+                                className="pl-10 h-12 rounded-[1rem] text-sm border-0 bg-app-surface-2 focus-visible:ring-indigo-500/30 transition-all focus:bg-app-surface focus:shadow-sm"
                             />
                         </div>
-                        <Button variant="outline" className="h-12 rounded-[1rem] border-stone-100 text-stone-500 gap-2 font-bold px-5 hover:bg-white hover:shadow-sm">
+                        <Button variant="outline" className="h-12 rounded-[1rem] border-app-border text-app-text-muted gap-2 font-bold px-5 hover:bg-app-surface hover:shadow-sm">
                             <Filter size={14} /> Filtres Avancés
                         </Button>
                     </div>
@@ -617,6 +647,13 @@ export default function OrderHistoryPage() {
                 confirmText="Supprimer Définitivement"
                 cancelText="Annuler"
                 variant="danger"
+            />
+
+            <ConfirmOrderDialog
+                open={confirmOrderTargetId !== null}
+                onOpenChange={(open) => !open && setConfirmOrderTargetId(null)}
+                onConfirm={executeConfirmWorkflow}
+                defaultWarehouseId={(orders.find(o => o.id === confirmOrderTargetId)?.site as any)?.id || orders.find(o => o.id === confirmOrderTargetId)?.site_id}
             />
         </div>
     )

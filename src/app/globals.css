@@ -41,6 +41,18 @@
 
   /* Shadows */
   --shadow-glow: 0 0 20px -5px rgba(16, 185, 129, 0.3);
+
+  /* V2 App Theme Engine Bindings */
+  --color-app-bg: var(--app-bg);
+  --color-app-surface: var(--app-surface);
+  --color-app-surface-2: var(--app-surface-2);
+  --color-app-border: var(--app-border);
+  --color-app-text: var(--app-text);
+  --color-app-text-muted: var(--app-text-muted);
+  --color-app-text-faint: var(--app-text-faint);
+  --color-app-primary: var(--app-primary);
+  --color-app-primary-hover: var(--app-primary-hover);
+  --color-app-primary-light: var(--app-primary-light);
 }
 
 /* Custom Utilities layer */
@@ -163,9 +175,11 @@
   .custom-scrollbar-dark::-webkit-scrollbar {
     width: 4px;
   }
+
   .custom-scrollbar-dark::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar-dark::-webkit-scrollbar-thumb {
     @apply bg-white/10 rounded-full;
   }
