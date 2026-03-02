@@ -84,6 +84,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+                <DialogTitle className="sr-only">Receipt Options</DialogTitle>
                 {/* Hidden Thermal Receipt for Printing */}
                 <div id="thermal-receipt-content" className="hidden">
                     <div className="center bold">TSF ERP - RETAIL</div>
