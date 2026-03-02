@@ -129,3 +129,10 @@
 - **AI Module Visibility**: Fixed `Sidebar.tsx` to prevent AI module flickering and ensured `mcp` is in `ALL_KNOWN_MODULES`.
 - **System Service**: Registered AI (MCP) manifest to backend system modules registry for correct tenant-level recognition.
 - **Deployment**: Updated `deploy_hotfix.sh` to handle backend restarts more effectively.
+
+##  - Universal Tax Engine & CRM Integration
+- **Universal Tax Engine**: Added multi-tax support per line, VAT settlements, and periodic accruals.
+- **Tax Profiles**: Introduced `OrgTaxPolicy` and `CounterpartyTaxProfile` to replace legacy fixed VAT settings.
+- **Frontend Features**: Added VAT Settlement portal, VAT Reports, and Tax Policy views under Finance.
+- **CRM Integration**: Contact form now supports assigning `CounterpartyTaxProfile`.
+- **Bugfixes**: Resolved `pos` index migration conflict and recovered database from ENOSPC constraints.
