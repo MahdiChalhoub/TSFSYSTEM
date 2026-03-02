@@ -8,6 +8,7 @@ The ConnectorEngine discovers this module via:
 """
 
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,71 @@ def _on_order_completed(payload: dict, organization_id: int) -> dict:
         return {'success': False, 'error': str(e)}
 
 
+def _on_order_voided(payload: dict, organization_id: int) -> dict:
+    """
+    React to POS order void — reverse any stock movements made for the order.
+    """
+    from .models import Inventory, InventoryMovement
+    from erp.models import Organization
+
+    order_id = payload.get('order_id')
+    order_type = payload.get('type', 'SALE')
+    lines = payload.get('lines', [])
+    warehouse_id = payload.get('warehouse_id')
+
+    if not lines:
+        return {'success': True, 'skipped': True}
+
+    # Reverse the multiplier: void a SALE means adding stock back
+    multiplier = 1 if order_type == 'SALE' else -1
+    move_type = 'VOID_REVERSAL'
+
+    try:
+        org = Organization.objects.get(id=organization_id)
+        reversed_count = 0
+
+        for line in lines:
+            product_id = line.get('product_id')
+            quantity = line.get('quantity', 0)
+
+            if not product_id or quantity <= 0:
+                continue
+
+            if not warehouse_id:
+                from .models import Warehouse
+                default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
+                wh_id = default_wh.id if default_wh else None
+            else:
+                wh_id = warehouse_id
+
+            if not wh_id:
+                logger.warning(f"Inventory: No warehouse found for org {organization_id}, skipping void reversal")
+                continue
+
+            try:
+                inv = Inventory.objects.get(organization=org, product_id=product_id, warehouse_id=wh_id)
+                inv.quantity += (Decimal(str(quantity)) * multiplier)
+                inv.save(update_fields=['quantity'])
+            except Inventory.DoesNotExist:
+                logger.warning(f"Inventory: No inventory record found for product {product_id} in warehouse {wh_id}")
+                continue
+
+            InventoryMovement.objects.create(
+                organization=org,
+                product_id=product_id,
+                warehouse_id=wh_id,
+                type=move_type,
+                quantity=(Decimal(str(quantity)) * multiplier),
+                reference=f"VOID-ORDER-{order_id}"
+            )
+            reversed_count += 1
+
+        return {'success': True, 'reversed_count': reversed_count}
+    except Exception as e:
+        logger.error(f"Inventory: Failed to process order void: {e}")
+        return {'success': False, 'error': str(e)}
+
+
 def _on_purchase_order_received(payload: dict, organization_id: int) -> dict:
     """
     React to Purchase Order receipt — add stock.
@@ -158,3 +224,12 @@ def _on_purchase_order_received(payload: dict, organization_id: int) -> dict:
     except Exception as e:
         logger.error(f"Inventory: Failed to process PO receipt: {e}")
         return {'success': False, 'error': str(e)}
+
+
+def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
+    """
+    React to org provisioning — inventory module hook.
+    Currently a no-op: warehouses are provisioned by the erp.services layer directly.
+    """
+    logger.info(f"Inventory: org:provisioned event received for org {organization_id} — no inventory-level action needed.")
+    return {'success': True}

@@ -99,11 +99,13 @@ class TaxEngineContext:
             company_type = settings.get('companyType', 'REGULAR')
 
             vat_output = company_type in ('REAL', 'MIXED', 'REGULAR')
+            # REAL = full VAT registrant (can recover all input VAT)
+            # MIXED = pays VAT but cannot recover it → capitalizes into inventory cost
+            # REGULAR / others = TTC purchases, no VAT recovery
             vat_recoverability = Decimal('1.000') if company_type == 'REAL' else Decimal('0.000')
-            if company_type == 'MIXED' and scope == 'OFFICIAL':
-                vat_recoverability = Decimal('1.000')
             if company_type == 'REGULAR':
                 vat_recoverability = Decimal('0.000')
+            # MIXED: vat_recoverability stays 0 — VAT is a cost, not recoverable
 
             airsi_map = {'REAL': 'RECOVER', 'MICRO': 'EXPENSE'}
             airsi_treatment = airsi_map.get(company_type, 'CAPITALIZE')
