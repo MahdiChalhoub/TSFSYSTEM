@@ -2,18 +2,20 @@
 
 import { useActionState, useState } from 'react';
 import { createContact } from '@/app/actions/people';
-import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, FileText, Clock, Tag, MessageCircle } from 'lucide-react';
+import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, FileText, Clock, Tag, MessageCircle, Shield } from 'lucide-react';
 
 export default function ContactModal({
     sites,
     type = 'CUSTOMER',
     onClose,
-    deliveryZones = []
+    deliveryZones = [],
+    taxProfiles = [],
 }: {
     sites: Record<string, any>[],
     type?: string,
     onClose: () => void,
-    deliveryZones?: Record<string, any>[]
+    deliveryZones?: Record<string, any>[],
+    taxProfiles?: Record<string, any>[],
 }) {
     const [state, action, isPending] = useActionState(
         createContact as (prevState: Record<string, any>, formData: FormData) => Promise<{ success: boolean; message: string }>,
@@ -215,6 +217,28 @@ export default function ContactModal({
                                 />
                             </div>
                         </div>
+
+                        {/* Tax Profile */}
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                                Tax Profile (Counterparty)
+                            </label>
+                            <div className="relative">
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-300" size={18} />
+                                <select
+                                    name="taxProfileId"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-indigo-50/40 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                >
+                                    <option value="">Auto-detect (default)</option>
+                                    {taxProfiles.map((p: Record<string, any>) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}{p.is_system_preset ? ' ★' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div className="p-6 bg-indigo-50/50 rounded-[32px] border-2 border-dashed border-indigo-100/50">

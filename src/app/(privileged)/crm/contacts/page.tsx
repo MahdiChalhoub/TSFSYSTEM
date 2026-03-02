@@ -33,11 +33,19 @@ async function getSites() {
     try { return await erpFetch('sites/'); } catch { return []; }
 }
 
+async function getTaxProfiles() {
+    try {
+        const data = await erpFetch('finance/counterparty-tax-profiles/');
+        return Array.isArray(data) ? data : (data?.results || []);
+    } catch { return []; }
+}
+
 export default async function ContactsPage() {
-    const [contacts, sites, deliveryZones] = await Promise.all([
+    const [contacts, sites, deliveryZones, taxProfiles] = await Promise.all([
         getContacts(),
         getSites(),
         getDeliveryZones(),
+        getTaxProfiles(),
     ]);
 
     const customers = contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length;
@@ -163,6 +171,7 @@ export default async function ContactsPage() {
                 contacts={contacts}
                 sites={sites}
                 deliveryZones={deliveryZones}
+                taxProfiles={taxProfiles}
             />
         </div>
     );
