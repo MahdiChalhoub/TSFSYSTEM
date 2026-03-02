@@ -201,8 +201,15 @@ log ""
 log "🏗️  [3.5/6] Syncing artifacts to release directory..."
 mkdir -p "$NEW_RELEASE"
 # Sync everything except source control and active envs/nodes (which we will symlink)
-rsync -a --exclude '.git' --exclude 'node_modules' --exclude 'venv' \
-    --exclude 'erp_backend/__pycache__' \
+rsync -a \
+    --exclude '.git' \
+    --exclude 'node_modules' \
+    --exclude 'venv' \
+    --exclude '**/__pycache__' \
+    --exclude '**/*.pyc' \
+    --exclude 'erp_backend/media' \
+    --exclude 'releases' \
+    --exclude '.next/cache' \
     "$APP_ROOT/" "$NEW_RELEASE/"
 
 # Atomic Symlinks within the release for dependencies
