@@ -227,9 +227,10 @@ export async function saveFinancialSetup(data: {
                     }),
                 })
             } catch (error: any) {
-                // Ignore overlap errors - it means it's already created
-                if (!error?.message?.toLowerCase().includes('overlap')) {
-                    throw error
+                // Ignore overlap errors - fiscal year already exists
+                const msg = String(error?.message || '')
+                if (!msg.toLowerCase().includes('overlap') && !msg.toLowerCase().includes('already')) {
+                    return { success: false, error: msg || 'Failed to create fiscal year' }
                 }
             }
         }
@@ -252,7 +253,13 @@ export async function saveFinancialSetup(data: {
 
         return { success: true }
     } catch (error: any) {
-        return { success: false, error: error?.message || 'Failed to save financial setup' }
+        const msg = (() => {
+            try {
+                const parsed = JSON.parse(error?.message || '')
+                return parsed?.error || error?.message || 'Failed to save financial setup'
+            } catch { return error?.message || 'Failed to save financial setup' }
+        })()
+        return { success: false, error: msg }
     }
 }
 
