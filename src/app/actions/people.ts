@@ -28,6 +28,9 @@ export async function createContact(prevState: Record<string, any>, formData: Fo
             payment_terms_days: parseInt(formData.get('paymentTermsDays') as string) || 0,
             notes: formData.get('notes') || '',
         };
+        // Tax profile assignment
+        const taxProfileId = formData.get('taxProfileId');
+        if (taxProfileId) data.tax_profile_id = parseInt(taxProfileId as string);
         // Supplier-specific
         if (type === 'SUPPLIER') {
             data.supplier_category = formData.get('supplierCategory') || 'REGULAR';

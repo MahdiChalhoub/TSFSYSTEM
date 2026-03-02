@@ -21,11 +21,13 @@ const ALL_COLUMNS: ColumnDef<Contact>[] = [
 export default function RelationshipMasterList({
     contacts,
     sites,
-    deliveryZones = []
+    deliveryZones = [],
+    taxProfiles = [],
 }: {
     contacts: Contact[],
     sites: Record<string, any>[],
-    deliveryZones?: Record<string, any>[]
+    deliveryZones?: Record<string, any>[],
+    taxProfiles?: Record<string, any>[],
 }) {
     const { fmt } = useCurrency();
     const router = useRouter();
@@ -183,9 +185,10 @@ export default function RelationshipMasterList({
                     type={modalType}
                     onClose={() => {
                         setIsModalOpen(false);
-                        router.refresh(); // reload contact list after creation
+                        router.refresh();
                     }}
                     deliveryZones={deliveryZones}
+                    taxProfiles={taxProfiles}
                 />
             )}
         </div>
