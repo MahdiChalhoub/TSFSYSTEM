@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import type { ChartOfAccount } from '@/types/erp'
-import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser, togglePosAccess } from "./actions"
+import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser, togglePosAccess, getChartOfAccounts, updateFinancialAccount } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle, BookOpen, BarChart3, Monitor, Briefcase, PiggyBank, Globe2, Lock, TrendingUp } from "lucide-react"
+import { Plus, Trash2, Edit3, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle, BookOpen, BarChart3, Monitor, Briefcase, PiggyBank, Globe2, Lock, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -19,6 +19,8 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { UserPicker } from "@/components/admin/user-picker" // Assuming this exists or I'll create one
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function FinancialAccountsPage() {
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
@@ -142,9 +144,12 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                             <CardDescription>{account.type} · {account.currency}</CardDescription>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <EditAccountDialog account={account} onUpdate={onRefresh} />
+                        <Button variant="ghost" size="icon" className="text-red-500" onClick={onDelete}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -291,6 +296,83 @@ function AssignUserDialog({ accountId, onAssign }: { accountId: number, onAssign
                 <div className="space-y-4 py-4">
                     <UserPicker value={userId} onChange={setUserId} />
                     <Button onClick={handleAssign} disabled={!userId} className="w-full">Confirm Assignment</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>; onUpdate: () => void }) {
+    const [open, setOpen] = useState(false)
+    const [name, setName] = useState(account.name)
+    const [ledgerId, setLedgerId] = useState(account.ledgerAccount?.id?.toString() || "")
+    const [coaList, setCoaList] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    const [loadingCoa, setLoadingCoa] = useState(false)
+
+    useEffect(() => {
+        if (open && coaList.length === 0) {
+            setLoadingCoa(true)
+            getChartOfAccounts()
+                .then((data) => setCoaList(data || []))
+                .catch(() => toast.error("Failed to load chart of accounts"))
+                .finally(() => setLoadingCoa(false))
+        }
+    }, [open])
+
+    const handleSave = async () => {
+        setLoading(true)
+        try {
+            const dataToUpdate: any = { name }
+            if (ledgerId) dataToUpdate.ledger_account = parseInt(ledgerId)
+
+            await updateFinancialAccount(account.id, dataToUpdate)
+            toast.success("Account updated successfully")
+            setOpen(false)
+            onUpdate()
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : String(e))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-slate-500">
+                    <Edit3 className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Account</DialogTitle>
+                    <DialogDescription>Update account details or link it to a ledger sub-account.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Account Name</label>
+                        <Input value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Ledger Sub-account Link</label>
+                        <Select onValueChange={setLedgerId} value={ledgerId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={loadingCoa ? "Loading..." : "Select Ledger Sub-account..."} />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                                {coaList.map(coa => (
+                                    <SelectItem key={coa.id} value={coa.id.toString()}>
+                                        {coa.code} - {coa.name} <span className="text-gray-400 text-xs ml-2">({coa.type})</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Select an existing ledger sub-account to link the transactions to.</p>
+                    </div>
+                    <Button onClick={handleSave} disabled={loading || !name} className="w-full">
+                        {loading ? "Saving..." : "Save Changes"}
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

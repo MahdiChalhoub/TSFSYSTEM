@@ -14,7 +14,7 @@ import {
     ArrowUpRight, ArrowDownRight, RefreshCw,
     Download, TrendingUp, DollarSign, Activity, AlertCircle,
     MoreHorizontal, Eye, Edit3, Trash2, Truck, Clipboard,
-    Package, CreditCard, Undo2, Link2, MessageSquare, Mail
+    Package, CreditCard, Undo2, Link2, MessageSquare, Mail, BookOpen
 } from "lucide-react"
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -128,72 +128,79 @@ export default function OrderHistoryPage() {
             label: 'Action',
             align: 'center',
             render: (order) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg hover:bg-stone-100">
-                            <MoreHorizontal size={16} />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-xl border-stone-100 shadow-xl">
-                        <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 py-2">
-                            Management de Vente
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem asChild className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5">
-                            <Link href={`/sales/${order.id}`} className="flex items-center gap-2 w-full">
-                                <Eye size={14} /> Voir
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Edit3 size={14} className="mr-2" /> Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setConfirmDeleteId(order.id)} className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5">
-                            <Trash2 size={14} className="mr-2" /> Effacer
-                        </DropdownMenuItem>
+                <div className="flex items-center justify-center gap-2">
+                    <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg text-indigo-600 hover:bg-indigo-50" asChild title="View in Ledger (DR/CR)">
+                        <Link href={`/finance/ledger?q=${order.invoice_number || order.ref_code || order.id}`}>
+                            <BookOpen size={16} />
+                        </Link>
+                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg hover:bg-stone-100">
+                                <MoreHorizontal size={16} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl border-stone-100 shadow-xl">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 py-2">
+                                Management de Vente
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem asChild className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5">
+                                <Link href={`/sales/${order.id}`} className="flex items-center gap-2 w-full">
+                                    <Eye size={14} /> Voir
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Edit3 size={14} className="mr-2" /> Modifier
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setConfirmDeleteId(order.id)} className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5">
+                                <Trash2 size={14} className="mr-2" /> Effacer
+                            </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Truck size={14} className="mr-2" /> Modifier l'expédition
-                        </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Truck size={14} className="mr-2" /> Modifier l'expédition
+                            </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
 
-                        <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-stone-50 cursor-pointer py-2.5 text-indigo-600 font-semibold">
-                            <Printer size={14} className="mr-2" /> La facture d'impression
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Clipboard size={14} className="mr-2" /> Bordereau
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Package size={14} className="mr-2" /> Bon de livraison
-                        </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => downloadInvoice(order.id, order.ref_code || order.id)} className="focus:bg-stone-50 cursor-pointer py-2.5 text-indigo-600 font-semibold">
+                                <Printer size={14} className="mr-2" /> La facture d'impression
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Clipboard size={14} className="mr-2" /> Bordereau
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Package size={14} className="mr-2" /> Bon de livraison
+                            </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <CreditCard size={14} className="mr-2" /> Voir les paiements
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Undo2 size={14} className="mr-2" /> Vente Retour
-                        </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <CreditCard size={14} className="mr-2" /> Voir les paiements
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Undo2 size={14} className="mr-2" /> Vente Retour
+                            </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
+                            <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Link2 size={14} className="mr-2" /> Afficher l'URL de la facture
-                        </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Link2 size={14} className="mr-2" /> Afficher l'URL de la facture
+                            </DropdownMenuItem>
 
-                        <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 pt-4 pb-2">
-                            Notifications
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <MessageSquare size={14} className="mr-2 text-emerald-500" /> WhatsApp Notification
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                            <Mail size={14} className="mr-2 text-indigo-400" /> Email Notification
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 pt-4 pb-2">
+                                Notifications
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <MessageSquare size={14} className="mr-2 text-emerald-500" /> WhatsApp Notification
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
+                                <Mail size={14} className="mr-2 text-indigo-400" /> Email Notification
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             )
         },
         {
