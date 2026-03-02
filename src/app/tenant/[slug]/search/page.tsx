@@ -15,7 +15,7 @@ export default function SearchPageRoute() {
 
  const SearchPage = components.SearchPage
  if (!SearchPage) {
- return <div className="min-h-screen bg-slate-950 text-white p-8">Search not available for this theme</div>
+ return <div className="min-h-screen bg-slate-950 text-app-text p-8">Search not available for this theme</div>
  }
  return <SearchPage />
 }

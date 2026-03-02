@@ -198,7 +198,7 @@ export default function BankReconciliationPage() {
  <Button
  onClick={handleAutoMatch}
  disabled={autoReconciling}
- className="bg-stone-900 border border-stone-800 hover:bg-stone-800 text-white rounded-xl px-5 h-10 text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-black/10"
+ className="bg-stone-900 border border-stone-800 hover:bg-stone-800 text-app-text rounded-xl px-5 h-10 text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-black/10"
  >
  {autoReconciling ? <RefreshCw size={14} className="animate-spin text-indigo-400" /> : <Sparkles size={14} className="text-indigo-400" />}
  Run Magic Linker
@@ -285,7 +285,7 @@ export default function BankReconciliationPage() {
  size="sm"
  disabled={selectedLedgerEntries.length === 0 || matching}
  onClick={handleConfirmMatch}
- className="h-7 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[9px] uppercase tracking-widest rounded-lg gap-1.5"
+ className="h-7 bg-indigo-600 hover:bg-indigo-700 text-app-text font-black text-[9px] uppercase tracking-widest rounded-lg gap-1.5"
  >
  {matching ? 'Matching...' : <><Link size={10} /> Confirm Match</>}
  </Button>
@@ -336,11 +336,11 @@ export default function BankReconciliationPage() {
 
  <div className="flex items-center justify-between p-6 bg-stone-900 rounded-[2.5rem] mt-4 shadow-2xl relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform">
- <ShieldCheck size={120} className="text-white" />
+ <ShieldCheck size={120} className="text-app-text" />
  </div>
  <div>
  <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Settlement Guard</p>
- <h4 className="text-white text-xl font-black tracking-tight">Active Monetary Balance</h4>
+ <h4 className="text-app-text text-xl font-black tracking-tight">Active Monetary Balance</h4>
  <p className="text-app-text-muted text-xs font-medium mt-1">Status: Monitoring discrepencies...</p>
  </div>
  <div className="flex items-center gap-6">
@@ -365,7 +365,7 @@ export default function BankReconciliationPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <Building size={28} className="text-white" />
+ <Building size={28} className="text-app-text" />
  </div>
  Liquidity <span className="text-blue-600">Settlement</span>
  </h1>
@@ -378,7 +378,7 @@ export default function BankReconciliationPage() {
  </header>
 
  {/* Aggregate Exposure */}
- <Card className="rounded-[2.5rem] border-0 shadow-xl bg-gradient-to-br from-blue-900 to-indigo-900 text-white overflow-hidden relative group">
+ <Card className="rounded-[2.5rem] border-0 shadow-xl bg-gradient-to-br from-blue-900 to-indigo-900 text-app-text overflow-hidden relative group">
  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform">
  <Landmark size={120} />
  </div>

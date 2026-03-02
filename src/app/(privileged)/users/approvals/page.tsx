@@ -120,7 +120,7 @@ export default function ApprovalsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <Fingerprint size={28} className="text-white" />
+ <Fingerprint size={28} className="text-app-text" />
  </div>
  Management <span className="text-amber-600">Terminal</span>
  </h1>
@@ -221,11 +221,11 @@ export default function ApprovalsPage() {
  <div className="inline-flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border border-muted-foreground/10 shadow-inner">
  <Button
  size="sm"
- className="h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border-none"
+ className="h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-app-text rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border-none"
  onClick={() => handleApprove(u.id)}
  disabled={processing === u.id}
  >
- {processing === u.id ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Check className="h-5 w-5 text-white" />}
+ {processing === u.id ? <Loader2 className="h-4 w-4 animate-spin text-app-text" /> : <Check className="h-5 w-5 text-app-text" />}
  </Button>
  <Button
  size="sm"
@@ -239,7 +239,7 @@ export default function ApprovalsPage() {
  <Button
  size="sm"
  variant="ghost"
- className="h-10 px-4 bg-muted text-muted-foreground hover:bg-red-500 hover:text-white rounded-xl transition-all border-none"
+ className="h-10 px-4 bg-muted text-muted-foreground hover:bg-red-500 hover:text-app-text rounded-xl transition-all border-none"
  onClick={() => handleReject(u.id)}
  disabled={processing === u.id}
  >
@@ -290,7 +290,7 @@ export default function ApprovalsPage() {
  Cancel
  </Button>
  <Button
- className="rounded-xl px-8 bg-primary text-white shadow-lg shadow-primary/20 font-bold hover:bg-primary/90"
+ className="rounded-xl px-8 bg-primary text-app-text shadow-lg shadow-primary/20 font-bold hover:bg-primary/90"
  onClick={submitCorrection}
  disabled={!correctionNotes.trim() || processing === correctionUser?.id}
  >

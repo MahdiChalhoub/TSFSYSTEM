@@ -45,7 +45,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
  : "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer"
  )}
  >
- <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
+ <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-app-text shadow-lg shadow-emerald-900/20">
  <Building size={14} />
  </div>
  <div className="text-left hidden lg:block">
@@ -87,7 +87,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
  disabled={isPending}
  className={clsx(
  "w-full flex items-center justify-between p-4 rounded-2xl transition-all group mb-1",
- org.slug === currentSlug ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20" : "hover:bg-app-bg text-app-text-muted hover:text-app-text"
+ org.slug === currentSlug ? "bg-emerald-600 text-app-text shadow-lg shadow-emerald-900/20" : "hover:bg-app-bg text-app-text-muted hover:text-app-text"
  )}
  >
  <div className="flex items-center gap-3 text-left">

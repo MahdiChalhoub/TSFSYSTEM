@@ -448,7 +448,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
  type="button"
  onClick={() => handleAction('POSTED')}
  disabled={isPending || !isBalanced}
- className="flex items-center gap-2 bg-black text-white px-8 py-2.5 rounded-lg font-bold text-sm hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
+ className="flex items-center gap-2 bg-black text-app-text px-8 py-2.5 rounded-lg font-bold text-sm hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
  >
  {isPending ? (
  <>Processing...</>

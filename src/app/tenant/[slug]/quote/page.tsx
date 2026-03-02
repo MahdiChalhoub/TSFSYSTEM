@@ -14,7 +14,7 @@ export default function QuotePageRoute() {
  }
 
  const QuotePage = (components as any).QuotePage
- if (!QuotePage) return <div className="p-20 text-white text-center">Quote component not implemented in this theme.</div>
+ if (!QuotePage) return <div className="p-20 text-app-text text-center">Quote component not implemented in this theme.</div>
 
  return <QuotePage />
 }

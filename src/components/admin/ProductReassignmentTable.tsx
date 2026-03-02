@@ -111,7 +111,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  <button
  disabled={selectedProductIds.length === 0}
  onClick={() => setIsMoveModalOpen(true)}
- className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+ className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
  >
  <ArrowRightLeft size={16} />
  Move Selected
@@ -190,7 +190,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  <button
  onClick={handleMove}
  disabled={pending || targetCategoryId.length === 0}
- className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
+ className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
  >
  {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
  Confirm Move

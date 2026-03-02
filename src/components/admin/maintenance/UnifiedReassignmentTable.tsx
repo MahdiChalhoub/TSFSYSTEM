@@ -103,7 +103,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
  return (
  <div className="flex flex-col h-full bg-slate-50/30">
  {/* Toolbar */}
- <div className="px-6 py-4 border-b border-app-border flex items-center justify-between gap-6 bg-white/70 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
+ <div className="px-6 py-4 border-b border-app-border flex items-center justify-between gap-6 bg-app-text/70 backdrop-blur-xl sticky top-0 z-10 shadow-sm">
  <div className="flex items-center gap-4 flex-1">
  <div className="relative flex-1 max-w-lg group">
  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint group-focus-within:text-emerald-500 transition-colors" />
@@ -135,7 +135,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
  <button
  onClick={() => setIsMoveModalOpen(true)}
  disabled={selectedProductIds.length === 0}
- className="h-12 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-700/20 flex items-center gap-2 disabled:opacity-30 disabled:grayscale transition-all hover:scale-105 active:scale-95 border-b-4 border-b-emerald-800"
+ className="h-12 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-700/20 flex items-center gap-2 disabled:opacity-30 disabled:grayscale transition-all hover:scale-105 active:scale-95 border-b-4 border-b-emerald-800"
  >
  <ArrowRightLeft size={16} />
  Execute Re-Map
@@ -194,12 +194,12 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
  {!targetId && <p className="text-[10px] font-black text-amber-600 mt-4 uppercase tracking-widest flex items-center gap-2 animate-pulse"><AlertCircle size={14} /> Critical: Select target destination</p>}
  </div>
 
- <div className="px-8 py-6 border-t border-app-border flex gap-4 bg-white/70 backdrop-blur-md">
+ <div className="px-8 py-6 border-t border-app-border flex gap-4 bg-app-text/70 backdrop-blur-md">
  <button onClick={() => setIsMoveModalOpen(false)} className="flex-1 h-14 rounded-2xl border border-app-border text-app-text-muted font-black text-[11px] uppercase tracking-widest hover:bg-app-bg transition-all">Discard Operation</button>
  <button
  onClick={handleMove}
  disabled={!targetId || isPending}
- className="flex-[1.5] h-14 rounded-2xl bg-emerald-600 text-white font-black text-[11px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-700/20 flex justify-center items-center gap-3 disabled:opacity-30 transition-all hover:scale-105 active:scale-95 border-b-4 border-b-emerald-800"
+ className="flex-[1.5] h-14 rounded-2xl bg-emerald-600 text-app-text font-black text-[11px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-700/20 flex justify-center items-center gap-3 disabled:opacity-30 transition-all hover:scale-105 active:scale-95 border-b-4 border-b-emerald-800"
  >
  {isPending ? <RefreshCw size={18} className="animate-spin" /> : <CheckSquare size={18} />}
  {isPending ? 'Processing...' : 'Authorize Re-map'}
@@ -278,7 +278,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, a
  <button
  onClick={handleCreate}
  disabled={!groupName || isPending}
- className="flex-[1.5] h-14 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest hover:bg-black shadow-xl shadow-slate-900/20 flex justify-center items-center gap-3 disabled:opacity-30 transition-all hover:scale-105 active:scale-95 border-b-4 border-b-slate-950"
+ className="flex-[1.5] h-14 rounded-2xl bg-slate-900 text-app-text font-black text-[11px] uppercase tracking-widest hover:bg-black shadow-xl shadow-slate-900/20 flex justify-center items-center gap-3 disabled:opacity-30 transition-all hover:scale-105 active:scale-95 border-b-4 border-b-slate-950"
  >
  {isPending ? <RefreshCw size={18} className="animate-spin" /> : <CheckSquare size={18} />}
  {isPending ? 'Registering...' : 'Provision Group'}
@@ -315,11 +315,11 @@ function ProductList({ products, selectedProductIds, toggleProduct }: Record<str
  <div className="space-y-6">
  {/* Render Groups */}
  {Object.values(grouped.groups).map((group: Record<string, any>) => (
- <div key={group.name} className="card-premium overflow-hidden bg-white/50 backdrop-blur-md border border-app-border shadow-sm transition-all group/container">
+ <div key={group.name} className="card-premium overflow-hidden bg-app-text/50 backdrop-blur-md border border-app-border shadow-sm transition-all group/container">
  <div className="bg-slate-50/80 px-5 py-3 border-b border-app-border flex justify-between items-center">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200 ring-4 ring-white">
- <Layers size={14} className="text-white fill-white/20" />
+ <Layers size={14} className="text-app-text fill-white/20" />
  </div>
  <span className="text-xs font-black text-app-text uppercase tracking-widest">{group.name}</span>
  <Badge variant="outline" className="bg-app-surface text-[9px] font-black py-0 px-2 rounded-lg border-app-border text-app-text-faint">
@@ -350,7 +350,7 @@ function ProductList({ products, selectedProductIds, toggleProduct }: Record<str
  <div className="flex-1 h-[1px] bg-app-surface-2" />
  </div>
  )}
- <div className="bg-white/30 backdrop-blur-sm rounded-3xl border border-slate-100/50 p-2 divide-y divide-slate-50">
+ <div className="bg-app-text/30 backdrop-blur-sm rounded-3xl border border-slate-100/50 p-2 divide-y divide-slate-50">
  {grouped.loose.map((product: Record<string, any>) => (
  <ProductRow
  key={product.id}
@@ -390,7 +390,7 @@ function ProductRow({ product, isSelected, toggle }: Record<string, any>) {
  : 'border-app-border bg-app-surface group-hover/row:border-emerald-300 group-hover/row:scale-110'}
  `}>
  {isSelected ? (
- <CheckSquare size={14} className="text-white" />
+ <CheckSquare size={14} className="text-app-text" />
  ) : (
  <div className="w-1.5 h-1.5 rounded-[2px] bg-app-surface-2 group-hover/row:bg-emerald-200 transition-colors" />
  )}
@@ -406,7 +406,7 @@ function ProductRow({ product, isSelected, toggle }: Record<string, any>) {
  {product.sku}
  </span>
  {product.country && (
- <Badge variant="outline" className="text-[8px] font-black py-0 px-1 border-app-border text-app-text-faint bg-white/50 group-hover/row:bg-app-surface flex items-center gap-1">
+ <Badge variant="outline" className="text-[8px] font-black py-0 px-1 border-app-border text-app-text-faint bg-app-text/50 group-hover/row:bg-app-surface flex items-center gap-1">
  <Package size={8} /> {product.country.name}
  </Badge>
  )}

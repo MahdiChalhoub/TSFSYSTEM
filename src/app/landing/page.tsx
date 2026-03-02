@@ -153,7 +153,7 @@ export default function LandingPage() {
  <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-text-muted">Business Title</Label>
  <Input
  placeholder="Acme Industries"
- className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl text-white font-bold"
+ className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl text-app-text font-bold"
  value={formData.name}
  onChange={e => setFormData({ ...formData, name: e.target.value })}
  />
@@ -186,7 +186,7 @@ export default function LandingPage() {
  key={s}
  type="button"
  onClick={() => applySuggestion(s)}
- className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[10px] font-mono text-amber-400 transition-colors"
+ className="px-3 py-1 bg-app-text/5 hover:bg-app-text/10 border border-app-text/10 rounded-full text-[10px] font-mono text-amber-400 transition-colors"
  >
  {s}
  </button>
@@ -198,9 +198,9 @@ export default function LandingPage() {
  )}
 
  <Button
- className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20' :
- isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' :
- 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20'
+ className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-app-text shadow-emerald-900/20' :
+ isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-app-text shadow-cyan-900/20' :
+ 'bg-amber-600 hover:bg-amber-500 text-app-text shadow-amber-900/20'
  }`}
  disabled={loading}
  >
@@ -233,7 +233,7 @@ export default function LandingPage() {
  <Sparkles size={14} className="animate-pulse" />
  Enterprise Business Platform
  </div>
- <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
+ <h1 className="text-6xl md:text-9xl font-black text-app-text tracking-tighter leading-none italic select-none">
  {PLATFORM_CONFIG.name.split(' ')[0]} <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">{PLATFORM_CONFIG.name.split(' ').slice(1).join(' ')}</span>
  </h1>
  <p className="text-app-text-muted max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">
@@ -242,11 +242,11 @@ export default function LandingPage() {
  </div>
 
  {/* Main Unified Portal */}
- <Card className="w-full max-w-2xl bg-[#0f172a]/40 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-t border-t-white/10 relative z-10 transition-all duration-500">
+ <Card className="w-full max-w-2xl bg-[#0f172a]/40 border-app-text/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-t border-t-white/10 relative z-10 transition-all duration-500">
  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
 
  {/* Mode Switcher */}
- <div className="grid grid-cols-3 border-b border-white/5 bg-black/20">
+ <div className="grid grid-cols-3 border-b border-app-text/5 bg-black/20">
  <button
  onClick={() => setMode('login')}
  className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'login' ? 'text-emerald-400' : 'text-app-text-muted hover:text-slate-300'}`}
@@ -280,18 +280,18 @@ export default function LandingPage() {
  </CardContent>
 
  {/* Tactical Ledger Footer */}
- <div className="p-10 border-t border-white/5 bg-black/40">
+ <div className="p-10 border-t border-app-text/5 bg-black/40">
  <div className="grid grid-cols-3 gap-4 text-center">
  <div className="space-y-1">
- <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Zap size={16} className="text-emerald-400" /> 2.4s</div>
+ <div className="text-app-text font-black text-xl flex items-center justify-center gap-2"><Zap size={16} className="text-emerald-400" /> 2.4s</div>
  <div className="text-[9px] text-app-text-muted uppercase tracking-widest font-bold">Response Time</div>
  </div>
  <div className="space-y-1">
- <div className="text-white font-black text-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} className="text-cyan-400" /> AES</div>
+ <div className="text-app-text font-black text-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} className="text-cyan-400" /> AES</div>
  <div className="text-[9px] text-app-text-muted uppercase tracking-widest font-bold">Encryption</div>
  </div>
  <div className="space-y-1">
- <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-amber-400" /> INF</div>
+ <div className="text-app-text font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-amber-400" /> INF</div>
  <div className="text-[9px] text-app-text-muted uppercase tracking-widest font-bold">Provisioning</div>
  </div>
  </div>

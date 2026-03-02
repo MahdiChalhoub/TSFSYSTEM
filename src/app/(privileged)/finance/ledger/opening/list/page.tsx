@@ -18,7 +18,7 @@ export default async function OpeningBalancesListPage() {
  </div>
  <Link
  href="/finance/ledger/opening"
- className="bg-black text-white px-6 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-md transition-all flex items-center gap-2"
+ className="bg-black text-app-text px-6 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-md transition-all flex items-center gap-2"
  >
  <Plus size={18} /> Add Opening Balance
  </Link>

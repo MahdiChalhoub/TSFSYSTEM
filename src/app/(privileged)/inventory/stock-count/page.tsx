@@ -135,7 +135,7 @@ export default function StockCountPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <ClipboardList size={28} className="text-white" />
+ <ClipboardList size={28} className="text-app-text" />
  </div>
  Stock <span className="text-indigo-600">Count</span>
  </h1>
@@ -430,7 +430,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  </div>
  {productPreview !== null && (
  <div className="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-[1.5rem] border border-indigo-100">
- <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-white" /></div>
+ <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-app-text" /></div>
  <div>
  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Products to Count</p>
  <p className="text-2xl font-black text-indigo-900 leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">products matched</span></p>
@@ -450,7 +450,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  </div>
  <DialogFooter className="pt-6">
  <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold">Cancel</Button>
- <Button onClick={handleSubmit} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
+ <Button onClick={handleSubmit} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
  {isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <ClipboardList size={16} className="mr-2" />}
  Start Count Session
  </Button>

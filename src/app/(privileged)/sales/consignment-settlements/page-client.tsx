@@ -61,12 +61,12 @@ export default function ConsignmentPage() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-700 flex items-center justify-center shadow-lg shadow-rose-900/40">
- <Truck size={22} className="text-white" />
+ <Truck size={22} className="text-app-text" />
  </div>
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Handshake size={28} className="text-white" />
+ <Handshake size={28} className="text-app-text" />
  </div>
  Consignment <span className="text-emerald-600">Settlements</span>
  </h1>
@@ -103,7 +103,7 @@ export default function ConsignmentPage() {
  <button key={s.id} onClick={() => openDetail(s)} className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${selected?.id === s.id ? 'bg-orange-900/20 border-orange-700' : 'bg-[#0F1729] border-gray-800 hover:border-gray-700'}`}>
  <div className="flex-1">
  <div className="flex items-center gap-2">
- <span className="font-medium text-sm text-white">{s.settlement_number || `#${s.id}`}</span>
+ <span className="font-medium text-sm text-app-text">{s.settlement_number || `#${s.id}`}</span>
  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS[s.status as keyof typeof STATUS] || 'bg-gray-800 text-app-text-faint border-gray-700'}`}>{s.status}</span>
  </div>
  <div className="flex items-center gap-2 text-xs text-app-text-muted mt-0.5">
@@ -113,7 +113,7 @@ export default function ConsignmentPage() {
  {s.settlement_date}
  </div>
  </div>
- <div className="text-sm font-semibold text-white">${Number(s.total_amount || 0).toFixed(2)}</div>
+ <div className="text-sm font-semibold text-app-text">${Number(s.total_amount || 0).toFixed(2)}</div>
  <ChevronRight size={14} className="text-app-text-muted" />
  </button>
  ))}
@@ -130,13 +130,13 @@ export default function ConsignmentPage() {
  <>
  <div className="flex items-start justify-between">
  <div>
- <h2 className="text-lg font-bold text-white">{selected.settlement_number || `#${selected.id}`}</h2>
+ <h2 className="text-lg font-bold text-app-text">{selected.settlement_number || `#${selected.id}`}</h2>
  <p className="text-sm text-app-text-faint">{selected.supplier?.name || selected.supplier_name} · {selected.settlement_date}</p>
  {selected.performed_by && (
  <p className="text-xs text-app-text-muted mt-0.5">By: {selected.performed_by.first_name} {selected.performed_by.last_name}</p>
  )}
  </div>
- <div className="text-xl font-bold text-white">${Number(selected.total_amount || 0).toFixed(2)}</div>
+ <div className="text-xl font-bold text-app-text">${Number(selected.total_amount || 0).toFixed(2)}</div>
  </div>
 
  {detail?.lines && detail.lines.length > 0 && (
@@ -151,7 +151,7 @@ export default function ConsignmentPage() {
  </div>
  <div className="text-right text-xs text-app-text-faint">
  <div>{line.quantity} × ${Number(line.unit_price || 0).toFixed(2)}</div>
- <div className="font-semibold text-white">${Number(line.subtotal || 0).toFixed(2)}</div>
+ <div className="font-semibold text-app-text">${Number(line.subtotal || 0).toFixed(2)}</div>
  </div>
  </div>
  ))}

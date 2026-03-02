@@ -126,7 +126,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
  <button
  onClick={handleVerify}
  disabled={loading || pin.length < 4}
- className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white rounded-lg transition-colors disabled:opacity-50"
+ className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-app-text rounded-lg transition-colors disabled:opacity-50"
  style={{
  backgroundColor: isOfficial ? '#059669' : '#0284c7',
  }}

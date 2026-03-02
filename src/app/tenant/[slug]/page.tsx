@@ -29,10 +29,10 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
  <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
  <ShieldCheck size={40} />
  </div>
- <h1 className="text-3xl font-black text-white">Instance Suspended</h1>
- <p className="text-app-text-faint">The account for <span className="text-white font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
+ <h1 className="text-3xl font-black text-app-text">Instance Suspended</h1>
+ <p className="text-app-text-faint">The account for <span className="text-app-text font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
  <Link href="/">
- <Button variant="outline" className="border-gray-800 text-white rounded-xl">
+ <Button variant="outline" className="border-gray-800 text-app-text rounded-xl">
  Back to Home
  </Button>
  </Link>

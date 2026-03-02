@@ -46,7 +46,7 @@ export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
  {/* Decorative background gradient */}
  <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-100/20 blur-[100px] pointer-events-none rounded-full" />
 
- <div className="relative z-10 bg-white/50 backdrop-blur-md border border-gray-100/50 rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50">
+ <div className="relative z-10 bg-app-text/50 backdrop-blur-md border border-gray-100/50 rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50">
  <UnitTree
  units={tree}
  potentialParents={data}
@@ -58,7 +58,7 @@ export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
  <div className="lg:col-span-4 space-y-6">
  <UnitCalculator units={data} />
 
- <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-900/40 relative overflow-hidden group">
+ <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-app-text shadow-2xl shadow-indigo-900/40 relative overflow-hidden group">
  <div className="relative z-10">
  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
  <Calculator className="text-indigo-400" size={20} />
@@ -72,7 +72,7 @@ export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
  <span>Primary Registry</span>
  <span>{data.filter(u => !u.base_unit).length} Base Units</span>
  </div>
- <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+ <div className="w-full bg-app-text/10 h-1.5 rounded-full overflow-hidden">
  <div
  className="bg-emerald-400 h-full rounded-full transition-all duration-1000 group-hover:bg-emerald-300"
  style={{ width: `${(data.filter(u => !u.base_unit).length / data.length) * 100}%` }}
@@ -84,7 +84,7 @@ export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
  </div>
  </div>
  </div>
- <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+ <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-app-text/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
  </div>
  </div>
  </div>

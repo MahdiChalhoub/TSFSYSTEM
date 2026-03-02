@@ -135,7 +135,7 @@ export default function DiscountManager({
  {/* Create Button */}
  <div className="flex justify-end">
  <button onClick={() => setShowCreate(true)}
- className="flex items-center gap-1 px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700">
+ className="flex items-center gap-1 px-4 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-lg hover:bg-emerald-700">
  <Plus size={16} /> New Rule
  </button>
  </div>
@@ -305,7 +305,7 @@ export default function DiscountManager({
  <button onClick={() => setShowCreate(false)}
  className="px-4 py-2 text-sm text-app-text-muted hover:bg-app-surface-2 rounded-lg">Cancel</button>
  <button onClick={handleCreate} disabled={loading || !form.name || !form.value}
- className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
+ className="px-4 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
  Create Rule
  </button>
  </div>

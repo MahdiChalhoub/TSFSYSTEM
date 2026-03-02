@@ -81,7 +81,7 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
  return (
  <button
  onClick={() => setIsOpen(true)}
- className="bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 transition-all flex items-center gap-2"
+ className="bg-black text-app-text px-4 py-2 rounded-md hover:bg-stone-800 transition-all flex items-center gap-2"
  >
  <span>+ Create Fiscal Year</span>
  </button>
@@ -215,7 +215,7 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
  <button
  type="submit"
  disabled={isPending}
- className="flex-1 bg-black text-white py-3 rounded-lg font-medium hover:bg-stone-800 disabled:opacity-50"
+ className="flex-1 bg-black text-app-text py-3 rounded-lg font-medium hover:bg-stone-800 disabled:opacity-50"
  >
  {isPending ? 'Generating...' : 'Generate Periods'}
  </button>

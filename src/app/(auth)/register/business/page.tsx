@@ -63,7 +63,7 @@ function BusinessRegisterContent() {
  <div className="absolute inset-0 bg-emerald-500/5 blur-[160px] rounded-full" />
  <Card className="w-full max-w-md bg-[#0f172a]/60 border-emerald-500/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
  <Rocket className="mx-auto text-emerald-400 mb-6 animate-bounce" size={48} />
- <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Registration Complete</h2>
+ <h2 className="text-3xl font-black text-app-text tracking-tighter italic mb-4 uppercase">Registration Complete</h2>
  <p className="text-app-text-faint font-medium mb-8">Your workspace is being set up. You'll be redirected shortly.</p>
  <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-500" />
  </Card>
@@ -85,7 +85,7 @@ function BusinessRegisterContent() {
  <Sparkles size={14} className="animate-pulse" />
  New Business Setup
  </div>
- <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic uppercase">
+ <h1 className="text-4xl md:text-6xl font-black text-app-text tracking-tighter italic uppercase">
  Initialize <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-emerald-400 not-italic">{PLATFORM_CONFIG.name.split(' ')[0]}</span>
  </h1>
  </div>
@@ -99,7 +99,7 @@ function BusinessRegisterContent() {
  />
  {steps.map((s) => (
  <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
- <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-app-text-muted'
+ <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-app-text shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-app-text-muted'
  }`}>
  <span className="font-mono text-xs font-black">{s.id.toString().padStart(2, '0')}</span>
  </div>
@@ -111,7 +111,7 @@ function BusinessRegisterContent() {
  ))}
  </div>
  </div>
- <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
+ <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-app-text/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
  <CardContent className="p-10 md:p-16">
  <form action={action} className="space-y-12">
@@ -133,33 +133,33 @@ function BusinessRegisterContent() {
  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
  <ShieldCheck size={24} />
  </div>
- <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Admin Account</h3>
+ <h3 className="text-2xl font-black text-app-text italic tracking-tight uppercase">Admin Account</h3>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Admin First Name</Label>
- <Input name="admin_first_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+ <Input name="admin_first_name" required className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-bold focus:ring-2 focus:ring-cyan-500/20" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Admin Last Name</Label>
- <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+ <Input name="admin_last_name" required className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-bold focus:ring-2 focus:ring-cyan-500/20" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Username</Label>
- <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
+ <Input name="admin_username" required className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Email</Label>
- <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-cyan-500/20" />
+ <Input name="admin_email" type="email" required className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium focus:ring-2 focus:ring-cyan-500/20" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Password</Label>
- <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+ <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text focus:ring-2 focus:ring-cyan-500/20" />
  <PasswordStrength password={adminPassword} />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Confirm Password</Label>
- <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+ <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text focus:ring-2 focus:ring-cyan-500/20" />
  </div>
  </div>
  {stepErrors.length > 0 && (
@@ -185,7 +185,7 @@ function BusinessRegisterContent() {
  if (password !== confirmPassword) errors.push('Passwords do not match');
  setStepErrors(errors);
  if (errors.length === 0) setStep(2);
- }} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all">
+ }} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-app-text font-black text-lg rounded-2xl shadow-xl transition-all">
  Next: Business Identity <ArrowRight className="ml-2" />
  </Button>
  </div>
@@ -196,7 +196,7 @@ function BusinessRegisterContent() {
  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-inner">
  <Building2 size={24} />
  </div>
- <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Business Details</h3>
+ <h3 className="text-2xl font-black text-app-text italic tracking-tight uppercase">Business Details</h3>
  </div>
  <div className="space-y-8">
  <div className="space-y-2 text-left">
@@ -207,32 +207,32 @@ function BusinessRegisterContent() {
  placeholder="e.g. Acme Corp"
  value={businessName}
  onChange={handleNameChange}
- className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500/20"
+ className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-bold focus:ring-2 focus:ring-amber-500/20"
  />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Workspace URL (Slug)</Label>
  <div className="flex items-center gap-2 group">
- <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-text-muted">https://</div>
+ <div className="bg-slate-900 border border-app-text/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-text-muted">https://</div>
  <Input
  name="slug"
  required
  placeholder="acme-corp"
  value={slug}
  onChange={(e) => { setSlug(e.target.value); setSlugManuallyEdited(true); }}
- className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
+ className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
  />
- <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-text-muted">{branding.suffix}</div>
+ <div className="bg-slate-900 border border-app-text/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-app-text-muted">{branding.suffix}</div>
  </div>
  </div>
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Business Type</Label>
  <Select name="business_type_id" value={businessTypeId} onValueChange={setBusinessTypeId}>
- <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
+ <SelectTrigger className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium">
  <SelectValue placeholder="Select type" />
  </SelectTrigger>
- <SelectContent className="bg-slate-900 border-white/10 text-white">
+ <SelectContent className="bg-slate-900 border-app-text/10 text-app-text">
  {(config.business_types ?? []).map((t: Record<string, any>) => (
  <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
  ))}
@@ -242,10 +242,10 @@ function BusinessRegisterContent() {
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Currency</Label>
  <Select name="currency_id" value={currencyId} onValueChange={setCurrencyId}>
- <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
+ <SelectTrigger className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium">
  <SelectValue placeholder="Select currency" />
  </SelectTrigger>
- <SelectContent className="bg-slate-900 border-white/10 text-white">
+ <SelectContent className="bg-slate-900 border-app-text/10 text-app-text">
  {(config.currencies ?? []).map((c: Record<string, any>) => (
  <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
  ))}
@@ -255,7 +255,7 @@ function BusinessRegisterContent() {
  </div>
  </div>
  <div className="pt-8 flex gap-4">
- <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-app-text-faint hover:bg-white/5">Back</Button>
+ <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-app-text/10 text-app-text-faint hover:bg-app-text/5">Back</Button>
  <Button
  type="button"
  onClick={() => {
@@ -266,7 +266,7 @@ function BusinessRegisterContent() {
  setStepErrors([]);
  setStep(3);
  }}
- className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl"
+ className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-app-text font-black text-lg rounded-2xl shadow-xl"
  >
  Next: Location Setup <ArrowRight className="ml-2" />
  </Button>
@@ -278,7 +278,7 @@ function BusinessRegisterContent() {
  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
  <Globe size={24} />
  </div>
- <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Location & Contact</h3>
+ <h3 className="text-2xl font-black text-app-text italic tracking-tight uppercase">Location & Contact</h3>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
  {/* Left Side: Media & Core Info */}
@@ -286,7 +286,7 @@ function BusinessRegisterContent() {
  <div className="space-y-4">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Logo (Optional)</Label>
  <div className="flex items-center gap-4">
- <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
+ <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-dashed border-app-text/10 flex items-center justify-center overflow-hidden">
  {logoPreview ? (
  <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
  ) : (
@@ -294,23 +294,23 @@ function BusinessRegisterContent() {
  )}
  </div>
  <div className="flex-1">
- <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-app-text-muted" />
+ <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-app-text/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-app-text-muted" />
  <p className="text-[8px] text-app-text-muted mt-2 uppercase tracking-tight">SVG, PNG, or JPG. Max 5MB recommended.</p>
  </div>
  </div>
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Official Website (Optional)</Label>
- <Input name="website" placeholder="https://..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-emerald-500/20" />
+ <Input name="website" placeholder="https://..." className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium focus:ring-2 focus:ring-emerald-500/20" />
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Business Email</Label>
- <Input name="email" type="email" required placeholder="contact@hq.com" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="email" type="email" required placeholder="contact@hq.com" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Phone</Label>
- <Input name="phone" placeholder="+1..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="phone" placeholder="+1..." className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  </div>
  </div>
@@ -318,33 +318,33 @@ function BusinessRegisterContent() {
  <div className="space-y-8">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Address</Label>
- <Input name="address" placeholder="HQ Physical Address" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="address" placeholder="HQ Physical Address" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">City</Label>
- <Input name="city" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="city" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Zip Code</Label>
- <Input name="zip_code" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium font-mono" />
+ <Input name="zip_code" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium font-mono" />
  </div>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Country</Label>
- <Input name="country" placeholder="e.g. United Kingdom" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="country" placeholder="e.g. United Kingdom" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  <div className="space-y-2 text-left">
  <Label className="text-[10px] uppercase tracking-widest font-black text-app-text-muted ml-1">Province (State)</Label>
- <Input name="state" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+ <Input name="state" className="bg-slate-900/50 border-app-text/10 h-14 rounded-xl text-app-text font-medium" />
  </div>
  </div>
  </div>
  </div>
  <div className="pt-8 flex gap-4">
- <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-app-text-faint hover:bg-white/5">Back</Button>
- <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
+ <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-app-text/10 text-app-text-faint hover:bg-app-text/5">Back</Button>
+ <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
  {isPending ? <Loader2 className="animate-spin" /> : (
  <div className="flex items-center gap-3">
  Register Business <ArrowRight className="group-hover:translate-x-2 transition-transform" />
@@ -355,7 +355,7 @@ function BusinessRegisterContent() {
  </div>
  </form>
  </CardContent>
- <CardFooter className="bg-black/20 py-8 justify-center border-t border-white/5">
+ <CardFooter className="bg-black/20 py-8 justify-center border-t border-app-text/5">
  <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-app-text-muted">
  <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-cyan-500" /> Authorized access</div>
  <div className="flex items-center gap-1.5"><Building2 size={12} className="text-amber-500" /> multi-tenant</div>

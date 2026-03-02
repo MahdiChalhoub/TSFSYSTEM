@@ -70,7 +70,7 @@ export default function HROverviewPage() {
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Users size={28} className="text-white" />
+ <Users size={28} className="text-app-text" />
  </div>
  Talent <span className="text-emerald-600">Ops</span>
  </h1>
@@ -80,7 +80,7 @@ export default function HROverviewPage() {
  <button onClick={load} className={`h-12 w-12 rounded-2xl bg-app-surface border border-app-border shadow-sm flex items-center justify-center text-app-text-faint hover:text-emerald-600 transition-all ${loading ? 'animate-spin' : ''}`}>
  <RefreshCw size={20} />
  </button>
- <button className="h-12 px-6 rounded-2xl bg-gray-900 text-white font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center gap-2">
+ <button className="h-12 px-6 rounded-2xl bg-gray-900 text-app-text font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center gap-2">
  Resource Audit <ChevronRight size={16} />
  </button>
  </div>
@@ -102,16 +102,16 @@ export default function HROverviewPage() {
  <h2 className="text-4xl font-black text-app-text tracking-tighter">{employees.length}</h2>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 overflow-hidden group hover:shadow-xl transition-all text-white">
+ <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 overflow-hidden group hover:shadow-xl transition-all text-app-text">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
- <div className="w-12 h-12 rounded-2xl bg-white/10 text-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 text-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
  <Briefcase size={24} />
  </div>
- <Badge className="bg-white/20 text-white border-0 font-black text-[10px] px-3">ACTIVE</Badge>
+ <Badge className="bg-app-text/20 text-app-text border-0 font-black text-[10px] px-3">ACTIVE</Badge>
  </div>
  <p className="text-[11px] font-black text-emerald-200 uppercase tracking-widest leading-none mb-1">Human Capital Yield</p>
- <h2 className="text-4xl font-black text-white tracking-tighter">{activeEmp.length} <span className="text-xs text-emerald-300 font-medium">STAFF</span></h2>
+ <h2 className="text-4xl font-black text-app-text tracking-tighter">{activeEmp.length} <span className="text-xs text-emerald-300 font-medium">STAFF</span></h2>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
@@ -135,7 +135,7 @@ export default function HROverviewPage() {
  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm ${pending.length > 0 ? 'bg-app-surface text-amber-600' : 'bg-app-surface text-app-text-faint'}`}>
  <AlertTriangle size={24} />
  </div>
- {pending.length > 0 && <Badge className="bg-amber-500 text-white border-0 font-black text-[10px] px-3 animate-pulse">ACTION REQ.</Badge>}
+ {pending.length > 0 && <Badge className="bg-amber-500 text-app-text border-0 font-black text-[10px] px-3 animate-pulse">ACTION REQ.</Badge>}
  </div>
  <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Pending Leave Auth</p>
  <h2 className={`text-4xl font-black tracking-tighter ${pending.length > 0 ? 'text-amber-600' : 'text-app-text'}`}>{pending.length}</h2>
@@ -170,21 +170,21 @@ export default function HROverviewPage() {
  >
  <Icon size={14} />
  {label}
- {key === 'leaves' && pending.length > 0 && <span className="bg-amber-500 text-white text-[9px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-full ml-1">{pending.length}</span>}
+ {key === 'leaves' && pending.length > 0 && <span className="bg-amber-500 text-app-text text-[9px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-full ml-1">{pending.length}</span>}
  </button>
  ))}
  </div>
  </div>
  <div className="grid grid-cols-1 gap-4">
  {loading ? (
- Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-white/50 border border-app-border rounded-[2rem] animate-pulse" />)
+ Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-app-text/50 border border-app-border rounded-[2rem] animate-pulse" />)
  ) : tab === 'leaves' ? (
  leaves.length === 0 ? <div className="text-sm font-bold text-gray-300 py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">No active leave drafts</div> :
  leaves.map(leave => {
  const name = leave.employee ? `${leave.employee.first_name} ${leave.employee.last_name}` : (leave.employee_name || '—')
  return (
  <div key={leave.id} className="flex items-center gap-6 p-6 rounded-[2rem] bg-app-surface shadow-sm border border-slate-50 group hover:shadow-xl hover:border-emerald-100 transition-all text-app-text">
- <div className="w-14 h-14 rounded-2xl bg-app-bg text-app-text-faint flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all font-black text-xl">
+ <div className="w-14 h-14 rounded-2xl bg-app-bg text-app-text-faint flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-app-text transition-all font-black text-xl">
  {leave.leave_type?.[0] || 'L'}
  </div>
  <div className="flex-1 min-w-0">
@@ -206,7 +206,7 @@ export default function HROverviewPage() {
  </div>
  {leave.status === 'PENDING' && (
  <div className="flex gap-2">
- <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
+ <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-xl bg-emerald-600 text-app-text font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
  Approve
  </button>
  <button onClick={() => handleLeave(leave.id, 'reject')} className="h-10 px-6 rounded-xl bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all">
@@ -253,7 +253,7 @@ export default function HROverviewPage() {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {employees.map(emp => (
  <div key={emp.id} className="flex items-center gap-5 p-6 rounded-[2rem] bg-app-surface border border-app-border hover:shadow-lg transition-all group">
- <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-emerald-50 to-slate-50 text-emerald-600 flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-white transition-all">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-emerald-50 to-slate-50 text-emerald-600 flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-app-text transition-all">
  {emp.first_name?.[0]}{emp.last_name?.[0]}
  </div>
  <div className="flex-1 min-w-0">

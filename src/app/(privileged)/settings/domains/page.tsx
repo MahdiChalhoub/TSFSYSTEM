@@ -186,7 +186,7 @@ export default function CustomDomainsPage() {
  </Button>
  <Button
  onClick={() => setShowAddForm(!showAddForm)}
- className="bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl px-5"
+ className="bg-gray-900 hover:bg-gray-800 text-app-text font-bold rounded-xl px-5"
  >
  <Plus size={16} className="mr-2" /> Add Domain
  </Button>
@@ -216,7 +216,7 @@ export default function CustomDomainsPage() {
  <Button
  onClick={handleAdd}
  disabled={adding || !newDomain.trim()}
- className="h-12 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl"
+ className="h-12 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-bold rounded-xl"
  >
  {adding ? 'Adding...' : 'Add Domain'}
  </Button>
@@ -344,7 +344,7 @@ export default function CustomDomainsPage() {
  <Button
  onClick={() => handleVerify(domain.id)}
  disabled={verifying === domain.id}
- className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl px-6"
+ className="bg-amber-600 hover:bg-amber-500 text-app-text font-bold rounded-xl px-6"
  >
  {verifying === domain.id ? (
  <><RefreshCw size={14} className="mr-2 animate-spin" /> Checking DNS...</>
@@ -380,7 +380,7 @@ export default function CustomDomainsPage() {
  <div className="flex items-center gap-3">
  <Button
  onClick={() => handleCheckCname(domain.id)}
- className="bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl px-6"
+ className="bg-blue-600 hover:bg-blue-500 text-app-text font-bold rounded-xl px-6"
  >
  <Wifi size={14} className="mr-2" /> Check CNAME
  </Button>

@@ -237,7 +237,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <p className="text-app-text-muted mb-4 max-w-md">{error}</p>
  <button
  onClick={retry}
- className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+ className="px-6 py-2 bg-blue-600 text-app-text rounded-lg hover:bg-blue-700 transition-colors font-medium"
  >
  Try Again
  </button>
@@ -286,7 +286,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div className="absolute -top-4 -right-4 w-12 h-12 bg-emerald-gradient rounded-full opacity-0 group-hover:opacity-10 scale-0 group-hover:scale-150 transition-all duration-1000 blur-xl" />
 
  <div className="absolute top-0 right-0 p-5 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100 origin-top-right">
- <div className="w-8 h-8 rounded-full bg-emerald-gradient flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+ <div className="w-8 h-8 rounded-full bg-emerald-gradient flex items-center justify-center text-app-text shadow-lg shadow-emerald-500/30">
  <Plus size={16} strokeWidth={4} />
  </div>
  </div>

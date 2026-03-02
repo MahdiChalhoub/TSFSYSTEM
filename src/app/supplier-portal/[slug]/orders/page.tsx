@@ -69,10 +69,10 @@ export default function SupplierOrdersPage() {
  <div className="max-w-4xl mx-auto relative z-10 space-y-8">
  <div className="space-y-2">
  <Link href={`/supplier-portal/${slug}`}
- className="inline-flex items-center gap-2 text-app-text-muted hover:text-white text-sm font-medium transition-colors">
+ className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text text-sm font-medium transition-colors">
  <ArrowLeft size={16} /> Dashboard
  </Link>
- <h1 className="text-4xl font-black text-white">Purchase Orders</h1>
+ <h1 className="text-4xl font-black text-app-text">Purchase Orders</h1>
  <p className="text-app-text-muted text-sm">Orders placed by the buyer directed to you</p>
  </div>
 
@@ -83,7 +83,7 @@ export default function SupplierOrdersPage() {
  ) : orders.length === 0 ? (
  <div className="py-24 text-center space-y-4">
  <ShoppingCart size={48} className="mx-auto text-app-text-muted" />
- <h2 className="text-xl font-bold text-white">No purchase orders yet</h2>
+ <h2 className="text-xl font-bold text-app-text">No purchase orders yet</h2>
  <p className="text-app-text-muted">When the buyer creates POs for you, they&#39;ll appear here</p>
  </div>
  ) : (
@@ -92,13 +92,13 @@ export default function SupplierOrdersPage() {
  const st = STATUS_MAP[order.status] || STATUS_MAP.DRAFT
  return (
  <Link href={`/supplier-portal/${slug}/orders/${order.id}`} key={order.id}
- className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 hover:bg-slate-800/60 transition-all group">
- <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${st.color}`}>
+ className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 hover:bg-slate-800/60 transition-all group">
+ <div className={`w-12 h-12 bg-app-text/5 rounded-xl flex items-center justify-center ${st.color}`}>
  <Package size={22} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3">
- <p className="text-white font-bold">{order.po_number}</p>
+ <p className="text-app-text font-bold">{order.po_number}</p>
  <span className={`text-[10px] font-black uppercase tracking-widest ${st.color}`}>{st.label}</span>
  </div>
  <p className="text-app-text-muted text-sm mt-1">
@@ -108,10 +108,10 @@ export default function SupplierOrdersPage() {
  </div>
  <div className="flex items-center gap-6 text-right">
  <div>
- <p className="text-white font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
+ <p className="text-app-text font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
  <p className="text-app-text-muted text-[10px] uppercase">{order.currency}</p>
  </div>
- <Eye size={20} className="text-app-text-muted group-hover:text-white transition-colors" />
+ <Eye size={20} className="text-app-text-muted group-hover:text-app-text transition-colors" />
  </div>
  </Link>
  )

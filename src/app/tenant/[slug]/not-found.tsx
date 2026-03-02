@@ -21,7 +21,7 @@ export default function TenantNotFound() {
  </svg>
  </div>
  <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
- <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-app-text">
  <circle cx="11" cy="11" r="8" />
  <path d="m21 21-4.3-4.3" />
  </svg>
@@ -31,7 +31,7 @@ export default function TenantNotFound() {
 
  {/* Text */}
  <div className="space-y-3">
- <h1 className="text-4xl font-black text-white tracking-tight">
+ <h1 className="text-4xl font-black text-app-text tracking-tight">
  Workspace Not Found
  </h1>
  <p className="text-app-text-faint text-lg leading-relaxed max-w-sm mx-auto">
@@ -53,7 +53,7 @@ export default function TenantNotFound() {
  <div className="space-y-3 pt-2">
  <Link
  href="/register/business"
- className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-900/30 transition-all hover:shadow-emerald-500/20 hover:-translate-y-0.5"
+ className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-sm uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-900/30 transition-all hover:shadow-emerald-500/20 hover:-translate-y-0.5"
  >
  Register Your Business
  </Link>

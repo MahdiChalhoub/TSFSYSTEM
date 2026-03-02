@@ -102,7 +102,7 @@ export default function StockAdjustmentManager({
  className={clsx(
  "px-4 py-3 rounded-xl border flex-shrink-0 transition-all",
  selectedWarehouseId === w.id
- ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
+ ? "bg-indigo-600 border-indigo-600 text-app-text shadow-lg shadow-indigo-200"
  : "bg-app-bg border-app-border text-app-text-muted hover:bg-app-surface-2"
  )}
  >
@@ -221,7 +221,7 @@ export default function StockAdjustmentManager({
  className={clsx(
  "flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wide transition-all",
  isSelected
- ? (isAddition ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-rose-500 text-white shadow-lg shadow-rose-200")
+ ? (isAddition ? "bg-emerald-500 text-app-text shadow-lg shadow-emerald-200" : "bg-rose-500 text-app-text shadow-lg shadow-rose-200")
  : "text-app-text-faint hover:text-app-text-muted hover:bg-app-surface"
  )}
  >
@@ -287,7 +287,7 @@ export default function StockAdjustmentManager({
  onClick={handleAdjust}
  disabled={!selectedProduct || quantity === 0 || isPending}
  className={clsx(
- "w-full py-5 rounded-2xl font-black text-white uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3",
+ "w-full py-5 rounded-2xl font-black text-app-text uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3",
  !selectedProduct || quantity === 0
  ? "bg-gray-200 text-app-text-faint cursor-not-allowed"
  : isPending
@@ -323,7 +323,7 @@ export default function StockAdjustmentManager({
 
  {/* Product Snapshot Info */}
  {selectedProduct && (
- <div className="bg-indigo-900 text-white p-6 rounded-3xl relative overflow-hidden">
+ <div className="bg-indigo-900 text-app-text p-6 rounded-3xl relative overflow-hidden">
  <div className="absolute -bottom-8 -right-8 opacity-10">
  <Package size={150} />
  </div>

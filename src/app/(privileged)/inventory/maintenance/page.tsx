@@ -70,7 +70,7 @@ export default async function MaintenancePage(props: {
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Layers size={40} className="text-white fill-white/20" />
+ <Layers size={40} className="text-app-text fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
@@ -121,7 +121,7 @@ export default async function MaintenancePage(props: {
  {/* Content Area */}
  <div className="flex flex-1 overflow-hidden min-h-[600px] gap-8">
  {/* Generic Sidebar with Glassmorphism */}
- <div className="w-[380px] shrink-0 border border-app-border bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col">
+ <div className="w-[380px] shrink-0 border border-app-border bg-app-text/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col">
  <MaintenanceSidebar
  entities={safeEntities}
  type={tab}
@@ -146,7 +146,7 @@ export default async function MaintenancePage(props: {
  </Badge>
  </div>
 
- <div className="flex-1 min-h-0 bg-white/30">
+ <div className="flex-1 min-h-0 bg-app-text/30">
  <UnifiedReassignmentTable
  products={safeProducts}
  targetEntities={safeEntities}
@@ -156,7 +156,7 @@ export default async function MaintenancePage(props: {
  </div>
  </div>
  ) : (
- <div className="h-full flex flex-col items-center justify-center text-slate-300 card-premium bg-white/50 backdrop-blur-xl animate-in zoom-in duration-700">
+ <div className="h-full flex flex-col items-center justify-center text-slate-300 card-premium bg-app-text/50 backdrop-blur-xl animate-in zoom-in duration-700">
  <div className="w-24 h-24 bg-app-surface-2 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner shadow-slate-200">
  <Layers size={48} className="text-slate-200" />
  </div>
@@ -178,12 +178,12 @@ function TabLink({ currentTab, targetTab, icon: Icon, label }: Record<string, an
  className={`
  flex items-center gap-3 px-6 py-4 rounded-xl transition-all whitespace-nowrap relative group
  ${isActive
- ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-700/20 active:scale-95'
+ ? 'bg-emerald-600 text-app-text shadow-lg shadow-emerald-700/20 active:scale-95'
  : 'text-app-text-faint hover:text-app-text-muted hover:bg-app-surface'}
  `}
  >
- <Icon size={18} className={isActive ? "text-white fill-white/20" : "text-app-text-faint group-hover:text-emerald-500 group-hover:scale-110 transition-all"} />
- <span className={`text-[11px] font-black uppercase tracking-widest ${isActive ? "text-white" : "text-app-text-muted"}`}>{label}</span>
+ <Icon size={18} className={isActive ? "text-app-text fill-white/20" : "text-app-text-faint group-hover:text-emerald-500 group-hover:scale-110 transition-all"} />
+ <span className={`text-[11px] font-black uppercase tracking-widest ${isActive ? "text-app-text" : "text-app-text-muted"}`}>{label}</span>
  {isActive && (
  <div className="absolute -bottom-1 left-4 right-4 h-1 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
  )}

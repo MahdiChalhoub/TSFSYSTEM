@@ -113,7 +113,7 @@ export default function AssetValuationEnginePage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Landmark size={28} className="text-white" />
+ <Landmark size={28} className="text-app-text" />
  </div>
  Asset <span className="text-emerald-600">Valuation</span>
  </h1>

@@ -67,7 +67,7 @@ export default function ModuleGate({ module, moduleName, children }: ModuleGateP
  </p>
  <Link
  href="/dashboard"
- className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors font-medium"
+ className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-app-text rounded-xl hover:bg-gray-800 transition-colors font-medium"
  >
  <ArrowLeft size={16} />
  Back to Dashboard

@@ -361,7 +361,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </p>
  </div>
  </div>
- <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/60 text-app-text-faint hover:text-app-text-muted transition-all">
+ <button onClick={onClose} className="p-2 rounded-xl hover:bg-app-text/60 text-app-text-faint hover:text-app-text-muted transition-all">
  <X size={18} />
  </button>
  </div>
@@ -369,21 +369,21 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {/* Summary strip */}
  {summary && (
  <div className="mt-3 grid grid-cols-4 gap-2">
- <div className="bg-white/80 rounded-lg p-2 text-center">
+ <div className="bg-app-text/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">In</span>
  <span className="text-sm font-black text-emerald-600">{formatMoney(summary.totalIn)}</span>
  </div>
- <div className="bg-white/80 rounded-lg p-2 text-center">
+ <div className="bg-app-text/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Out</span>
  <span className="text-sm font-black text-rose-600">{formatMoney(summary.totalOut)}</span>
  </div>
- <div className="bg-white/80 rounded-lg p-2 text-center">
+ <div className="bg-app-text/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Balance</span>
  <span className={`text-sm font-black ${summary.netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
  {summary.netBalance >= 0 ? '+' : '-'}{formatMoney(summary.netBalance)}
  </span>
  </div>
- <div className="bg-white/80 rounded-lg p-2 text-center">
+ <div className="bg-app-text/80 rounded-lg p-2 text-center">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Pending</span>
  <span className="text-sm font-black text-amber-600">{summary.pendingCount}</span>
  </div>
@@ -513,21 +513,21 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'approve')}
  disabled={reviewingId === entry.id}
- className="p-1 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50"
+ className="p-1 rounded-md bg-emerald-500 text-app-text hover:bg-emerald-600 transition-all disabled:opacity-50"
  title="Approve"
  >
  {reviewingId === entry.id ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
  </button>
  <button
  onClick={() => { setShowRejectForm(showRejectForm === entry.id ? null : entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-rose-500 text-white hover:bg-rose-600 transition-all"
+ className="p-1 rounded-md bg-rose-500 text-app-text hover:bg-rose-600 transition-all"
  title="Reject"
  >
  <XCircle size={10} />
  </button>
  <button
  onClick={() => { setShowRejectForm(entry.id); setRejectNotes(''); }}
- className="p-1 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-all"
+ className="p-1 rounded-md bg-blue-500 text-app-text hover:bg-blue-600 transition-all"
  title="Request Info"
  >
  <HelpCircle size={10} />
@@ -571,14 +571,14 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'reject')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-rose-500 text-white rounded-lg text-[10px] font-bold hover:bg-rose-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-rose-500 text-app-text rounded-lg text-[10px] font-bold hover:bg-rose-600 disabled:opacity-50"
  >
  Reject
  </button>
  <button
  onClick={() => handleReview(entry.id, 'need_info')}
  disabled={reviewingId === entry.id}
- className="px-2.5 py-1.5 bg-blue-500 text-white rounded-lg text-[10px] font-bold hover:bg-blue-600 disabled:opacity-50"
+ className="px-2.5 py-1.5 bg-blue-500 text-app-text rounded-lg text-[10px] font-bold hover:bg-blue-600 disabled:opacity-50"
  >
  Need Info
  </button>
@@ -597,7 +597,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  />
  <button
  onClick={() => handleRespond(entry.id)}
- className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
+ className="px-3 py-1.5 bg-blue-500 text-app-text rounded-lg text-xs font-bold hover:bg-blue-600 flex items-center gap-1"
  >
  <Send size={10} /> Resubmit
  </button>
@@ -890,7 +890,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  onClick={handleAdd}
  disabled={saving || !form.description.trim() || !form.amount}
  className={clsx(
- "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-white",
+ "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-app-text",
  selectedType.dir === 'IN'
  ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-100'
  : 'bg-rose-500 hover:bg-rose-600 shadow-rose-100',
@@ -905,7 +905,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="p-4">
  <button
  onClick={() => setShowAddForm(true)}
- className="w-full py-3 bg-amber-500 text-white rounded-xl font-black text-sm hover:bg-amber-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
+ className="w-full py-3 bg-amber-500 text-app-text rounded-xl font-black text-sm hover:bg-amber-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
  >
  <Plus size={14} />
  New Entry

@@ -412,9 +412,9 @@ export default function AddProductForm({
  <button
  type="submit"
  disabled={isPending}
- className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+ className="px-6 py-2 bg-green-600 text-app-text rounded-lg font-medium hover:bg-green-700 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
  >
- {isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
+ {isPending && <span className="w-4 h-4 border-2 border-app-text/30 border-t-white rounded-full animate-spin"></span>}
  {isPending ? 'Creating...' : 'Create Product'}
  </button>
  </div>

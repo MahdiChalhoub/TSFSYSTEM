@@ -161,14 +161,14 @@ export default function LoansPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
- <HandCoins size={28} className="text-white" />
+ <HandCoins size={28} className="text-app-text" />
  </div>
  Partner <span className="text-app-text-muted">Loans</span>
  </h1>
  <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Financial Contracts & Agreements</p>
  </div>
  <Link href="/finance/loans/new">
- <Button className="h-12 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-stone-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+ <Button className="h-12 px-6 rounded-2xl bg-stone-900 hover:bg-black text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-stone-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
  <Plus size={18} /> New Loan Contract
  </Button>
  </Link>

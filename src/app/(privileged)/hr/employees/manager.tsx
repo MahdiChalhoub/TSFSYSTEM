@@ -116,7 +116,7 @@ export default function HumanCapitalRegistry({
  onClick={() => handleLinkGL(r, type as any)}
  disabled={linkingGL === r.id}
  variant="ghost"
- className="h-7 px-2 bg-app-bg hover:bg-indigo-600 hover:text-white text-[8px] font-black uppercase border border-app-border"
+ className="h-7 px-2 bg-app-bg hover:bg-indigo-600 hover:text-app-text text-[8px] font-black uppercase border border-app-border"
  >
  {type}
  </Button>
@@ -146,7 +146,7 @@ export default function HumanCapitalRegistry({
  headerExtra={
  <Button
  onClick={() => setIsModalOpen(true)}
- className="h-10 px-6 bg-gray-900 text-white hover:bg-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all"
+ className="h-10 px-6 bg-gray-900 text-app-text hover:bg-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all"
  >
  <Plus size={18} className="mr-2" /> Add Employee
  </Button>

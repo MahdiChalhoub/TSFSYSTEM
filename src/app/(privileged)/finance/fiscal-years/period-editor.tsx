@@ -81,7 +81,7 @@ export default function PeriodEditor({ period, onClose }: Props) {
  <button
  type="submit"
  disabled={isPending}
- className="flex-1 py-2 bg-black text-white font-medium text-sm rounded hover:bg-stone-800 disabled:opacity-50"
+ className="flex-1 py-2 bg-black text-app-text font-medium text-sm rounded hover:bg-stone-800 disabled:opacity-50"
  >
  {isPending ? 'Saving...' : 'Save Changes'}
  </button>

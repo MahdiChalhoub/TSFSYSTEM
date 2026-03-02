@@ -118,7 +118,7 @@ export default function PurchaseReturnsPage() {
  {ret.status === 'PENDING' && (
  <Button
  size="sm"
- className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-blue-100 gap-1.5"
+ className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-app-text font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-blue-100 gap-1.5"
  onClick={() => completeReturn(ret.id)}
  >
  <Truck size={13} /> Ship Out
@@ -140,7 +140,7 @@ export default function PurchaseReturnsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <Truck size={28} className="text-white" />
+ <Truck size={28} className="text-app-text" />
  </div>
  Vendor <span className="text-blue-600">Debit</span> Ledger
  </h1>

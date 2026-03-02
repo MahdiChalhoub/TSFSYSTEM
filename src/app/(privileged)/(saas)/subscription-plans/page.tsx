@@ -189,7 +189,7 @@ export default function SubscriptionPlansPage() {
  </div>
  </div>
  <DialogFooter>
- <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+ <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text">
  {catSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Category"}
  </Button>
  </DialogFooter>
@@ -198,7 +198,7 @@ export default function SubscriptionPlansPage() {
 
  <Dialog open={planOpen} onOpenChange={setPlanOpen}>
  <DialogTrigger asChild>
- <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
+ <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-app-text">
  <Plus size={18} />
  New Plan
  </Button>
@@ -323,7 +323,7 @@ export default function SubscriptionPlansPage() {
  </div>
  </div>
  <DialogFooter>
- <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+ <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text">
  {planSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Plan"}
  </Button>
  </DialogFooter>
@@ -378,7 +378,7 @@ export default function SubscriptionPlansPage() {
  <p className="text-sm text-purple-500 mt-1">Tailored to your needs</p>
  </div>
  <a href="mailto:sales@tsf-city.com?subject=Custom%20Plan%20Inquiry"
- className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
+ className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-app-text font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
  Contact Us →
  </a>
  <div className="flex flex-wrap gap-1.5">
@@ -486,7 +486,7 @@ export default function SubscriptionPlansPage() {
  </div>
  <Dialog open={addonOpen} onOpenChange={setAddonOpen}>
  <DialogTrigger asChild>
- <Button className="bg-indigo-600 hover:bg-indigo-500 gap-2 text-white">
+ <Button className="bg-indigo-600 hover:bg-indigo-500 gap-2 text-app-text">
  <Plus size={16} /> New Add-on
  </Button>
  </DialogTrigger>
@@ -563,7 +563,7 @@ export default function SubscriptionPlansPage() {
  loadData()
  } catch { toast.error('Failed to create add-on') }
  finally { setAddonSaving(false) }
- }} disabled={addonSaving} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+ }} disabled={addonSaving} className="bg-indigo-600 hover:bg-indigo-500 text-app-text">
  {addonSaving ? <Loader2 className="animate-spin" size={16} /> : 'Create Add-on'}
  </Button>
  </DialogFooter>

@@ -113,7 +113,7 @@ export default function AgentDashboard() {
  case 'thought': return 'text-purple-400'
  case 'action': return 'text-amber-400'
  case 'decision': return 'text-emerald-400 font-bold'
- default: return 'text-white/60'
+ default: return 'text-app-text/60'
  }
  }
 
@@ -124,7 +124,7 @@ export default function AgentDashboard() {
  <div className="space-y-1">
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
- <Sparkles className="w-6 h-6 text-white animate-pulse" />
+ <Sparkles className="w-6 h-6 text-app-text animate-pulse" />
  </div>
  <h1 className="page-header-title tracking-tight">Virtual Employees</h1>
  </div>
@@ -136,7 +136,7 @@ export default function AgentDashboard() {
  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
  Refresh Status
  </Button>
- <Button className="bg-gray-900 text-white hover:bg-black font-bold px-6">
+ <Button className="bg-gray-900 text-app-text hover:bg-black font-bold px-6">
  <Cpu className="w-4 h-4 mr-2" />
  Hire New Agent
  </Button>
@@ -243,9 +243,9 @@ export default function AgentDashboard() {
  {/* --- Right Column: Live Console --- */}
  <div className="space-y-6">
  <Card className="rounded-3xl border-2 border-gray-900 bg-[#0d0d1a] shadow-2xl h-[700px] flex flex-col overflow-hidden">
- <CardHeader className="bg-gray-900 border-b border-white/5 py-4">
+ <CardHeader className="bg-gray-900 border-b border-app-text/5 py-4">
  <div className="flex items-center justify-between">
- <CardTitle className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest">
+ <CardTitle className="text-sm font-black text-app-text flex items-center gap-2 uppercase tracking-widest">
  <Terminal className="w-4 h-4 text-purple-400" />
  Live Agent Intelligence
  </CardTitle>
@@ -260,19 +260,19 @@ export default function AgentDashboard() {
  <CardContent className="flex-1 overflow-auto p-4 font-mono text-[11px] space-y-3 custom-scrollbar">
  {logs.length === 0 ? (
  <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
- <Brain className="w-12 h-12 text-white/10 animate-pulse" />
- <p className="text-white/30 text-center">Waiting for agent activity...</p>
+ <Brain className="w-12 h-12 text-app-text/10 animate-pulse" />
+ <p className="text-app-text/30 text-center">Waiting for agent activity...</p>
  </div>
  ) : (
  logs.map(log => (
  <div key={log.id} className="group animate-in slide-in-from-right duration-300">
  <div className="flex items-start gap-2">
- <span className="text-white/20 shrink-0">[{new Date(log.created_at).toLocaleTimeString()}]</span>
+ <span className="text-app-text/20 shrink-0">[{new Date(log.created_at).toLocaleTimeString()}]</span>
  <span className="text-purple-400 shrink-0 font-bold">{log.agent_name} »</span>
  <div className="space-y-1 min-w-0 flex-1">
  <p className={getLogLevelColor(log.level)}>{log.message}</p>
  {log.level === 'thought' && (
- <div className="bg-white/5 p-2 rounded-lg border border-white/5 text-purple-200/50 leading-relaxed italic">
+ <div className="bg-app-text/5 p-2 rounded-lg border border-app-text/5 text-purple-200/50 leading-relaxed italic">
  {log.message}
  </div>
  )}
@@ -292,11 +292,11 @@ export default function AgentDashboard() {
  )}
  </CardContent>
 
- <CardFooter className="bg-black/50 border-t border-white/5 p-3">
- <div className="w-full flex items-center gap-4 bg-white/5 rounded-2xl px-4 py-2 border border-white/10 group focus-within:border-purple-500/50 transition-all">
- <Search className="w-4 h-4 text-white/20 group-focus-within:text-purple-400" />
+ <CardFooter className="bg-black/50 border-t border-app-text/5 p-3">
+ <div className="w-full flex items-center gap-4 bg-app-text/5 rounded-2xl px-4 py-2 border border-app-text/10 group focus-within:border-purple-500/50 transition-all">
+ <Search className="w-4 h-4 text-app-text/20 group-focus-within:text-purple-400" />
  <input
- className="bg-transparent border-none text-white text-xs w-full focus:outline-none placeholder:text-white/10"
+ className="bg-transparent border-none text-app-text text-xs w-full focus:outline-none placeholder:text-app-text/10"
  placeholder="Filter system logs or ask agent for status..."
  />
  </div>

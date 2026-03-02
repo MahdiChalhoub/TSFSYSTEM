@@ -49,7 +49,7 @@ export default async function ProductsPage({
  {/* 1. Header Section */}
  <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
  <div className="flex items-center gap-4">
- <div className="page-header-icon bg-emerald-600 text-white">
+ <div className="page-header-icon bg-emerald-600 text-app-text">
  <Database size={22} strokeWidth={2.5} />
  </div>
  <div>
@@ -76,7 +76,7 @@ export default async function ProductsPage({
  </Link>
  <Link
  href="/products/create-group"
- className="bg-emerald-600 text-white px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 text-sm"
+ className="bg-emerald-600 text-app-text px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 text-sm"
  >
  <Layers size={18} />
  <span>Variant Group</span>
@@ -186,7 +186,7 @@ export default async function ProductsPage({
 
  <Link
  href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page < totalPages ? page + 1 : totalPages}&search=${search}`}
- className={`h-14 px-6 flex items-center gap-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20 active:translate-y-1 ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
+ className={`h-14 px-6 flex items-center gap-3 bg-emerald-600 text-app-text rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20 active:translate-y-1 ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
  >
  Next <ChevronRight size={18} />
  </Link>

@@ -17,7 +17,7 @@ export default async function ShiftsPage() {
  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
  <div className="space-y-4">
  <div className="flex items-center gap-3">
- <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-2xl">
+ <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-app-text shadow-2xl">
  <Clock size={24} />
  </div>
  <span className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.4em]">Scheduling</span>

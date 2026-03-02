@@ -74,7 +74,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
  <Button
  onClick={handleStartSetup}
  disabled={loading}
- className="h-14 px-10 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all"
+ className="h-14 px-10 bg-gray-900 text-app-text rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all"
  >
  {loading ? <Loader2 className="animate-spin" /> : "Initialize 2FA"}
  </Button>
@@ -96,7 +96,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
  <div className="space-y-8">
  <div className="space-y-3">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">1</div>
+ <div className="w-8 h-8 rounded-full bg-slate-900 text-app-text flex items-center justify-center text-xs font-black">1</div>
  <h3 className="text-md font-black text-app-text uppercase tracking-tighter">Scan QR Code</h3>
  </div>
  <p className="text-[11px] text-app-text-muted leading-relaxed font-medium pl-11">
@@ -118,7 +118,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
  <div className="space-y-8">
  <div className="space-y-3">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">2</div>
+ <div className="w-8 h-8 rounded-full bg-slate-900 text-app-text flex items-center justify-center text-xs font-black">2</div>
  <h3 className="text-md font-black text-app-text uppercase tracking-tighter">Verification</h3>
  </div>
  <p className="text-[11px] text-app-text-muted leading-relaxed font-medium pl-11">
@@ -144,7 +144,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
  <Button
  onClick={handleVerify}
  disabled={loading || token.length < 6}
- className="h-16 flex-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/10 transition-all flex items-center gap-2"
+ className="h-16 flex-2 bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/10 transition-all flex items-center gap-2"
  >
  {loading ? <Loader2 className="animate-spin" /> : <Lock size={16} />}
  Verify & Activate

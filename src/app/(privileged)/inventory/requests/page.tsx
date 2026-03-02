@@ -144,7 +144,7 @@ export default function OperationalRequestsPage() {
  <header className="flex justify-between items-start">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-100">
+ <div className="p-2 bg-indigo-600 rounded-lg text-app-text shadow-lg shadow-indigo-100">
  <ClipboardList size={16} />
  </div>
  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Operational Layer</span>
@@ -287,7 +287,7 @@ export default function OperationalRequestsPage() {
  </div>
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
- <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
  {isPending ? "Syncing..." : "Publish Request"}
  </Button>
  </div>
@@ -341,7 +341,7 @@ export default function OperationalRequestsPage() {
  </div>
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setLineDialogOpen(false)} className="rounded-xl font-bold">Cancel</Button>
- <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
  {isPending ? "Adding..." : "Confirm Line"}
  </Button>
  </div>
@@ -408,7 +408,7 @@ export default function OperationalRequestsPage() {
  )}
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setConvertDialog(null)} className="rounded-xl font-bold">Back</Button>
- <Button type="submit" disabled={isPending} className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-purple-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-purple-600 hover:bg-purple-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-purple-100 transition-all">
  {isPending ? "Promoting..." : "Finalize Promotion"}
  </Button>
  </div>

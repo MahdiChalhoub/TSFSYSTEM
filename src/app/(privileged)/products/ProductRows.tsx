@@ -101,7 +101,7 @@ export function GroupRow({ group }: { group: Record<string, any> }) {
  <td className="py-6 px-8">
  <div className="flex flex-col gap-1.5">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+ <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-app-text shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
  <Layers size={16} />
  </div>
  <span className="font-black text-app-text text-lg tracking-tighter group-hover:text-emerald-700 transition-colors">{group.name}</span>
@@ -122,7 +122,7 @@ export function GroupRow({ group }: { group: Record<string, any> }) {
  </div>
  </td>
  <td className="py-6 px-8">
- <div className="flex p-2 bg-white/50 rounded-xl border border-dashed border-app-border w-fit">
+ <div className="flex p-2 bg-app-text/50 rounded-xl border border-dashed border-app-border w-fit">
  <span className="text-[10px] font-bold text-app-text-faint italic">Hierarchical Master</span>
  </div>
  </td>
@@ -135,7 +135,7 @@ export function GroupRow({ group }: { group: Record<string, any> }) {
  <td className="py-6 px-8 text-right">
  <Link
  href={`/products/groups/${group.id}/edit`}
- className="inline-flex items-center justify-center gap-2 bg-app-surface px-4 py-2 rounded-xl text-xs font-black text-emerald-600 border border-emerald-100 shadow-sm hover:shadow-md hover:bg-emerald-600 hover:text-white transition-all transform hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wider"
+ className="inline-flex items-center justify-center gap-2 bg-app-surface px-4 py-2 rounded-xl text-xs font-black text-emerald-600 border border-emerald-100 shadow-sm hover:shadow-md hover:bg-emerald-600 hover:text-app-text transition-all transform hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wider"
  >
  <Edit2 size={12} strokeWidth={3} />
  Manage Group

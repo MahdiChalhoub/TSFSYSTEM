@@ -23,7 +23,7 @@ export default async function ConsignmentPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Handshake size={28} className="text-white" />
+ <Handshake size={28} className="text-app-text" />
  </div>
  Consignment <span className="text-violet-600">Control</span>
  </h1>

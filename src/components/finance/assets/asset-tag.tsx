@@ -68,7 +68,7 @@ export function AssetTag({ asset, size = 'md' }: AssetTagProps) {
  fgColor="#1c1917" // stone-900
  />
  </div>
- <div className="mt-2 flex items-center gap-1 bg-stone-900 text-white px-1.5 py-0.5 rounded-full">
+ <div className="mt-2 flex items-center gap-1 bg-stone-900 text-app-text px-1.5 py-0.5 rounded-full">
  <QrIcon size={8} />
  <span className="text-[7px] font-black uppercase tracking-tighter">Scan to Audit</span>
  </div>

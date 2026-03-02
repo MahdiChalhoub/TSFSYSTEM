@@ -102,7 +102,7 @@ export default function CreditNotesPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <CreditCard size={28} className="text-white" />
+ <CreditCard size={28} className="text-app-text" />
  </div>
  Credit <span className="text-indigo-600">Notes</span>
  </h1>

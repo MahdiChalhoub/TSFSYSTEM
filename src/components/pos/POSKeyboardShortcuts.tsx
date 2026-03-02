@@ -121,25 +121,25 @@ export default function POSKeyboardShortcuts({
 
  return (
  <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
- <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
- <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
+ <div className="bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+ <div className="flex items-center gap-3 px-5 py-4 border-b border-app-text/5">
  <Keyboard size={18} className="text-indigo-400" />
- <h2 className="text-white font-black text-base flex-1">Keyboard Shortcuts</h2>
- <button onClick={() => setShowHelp(false)} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white flex items-center justify-center">
+ <h2 className="text-app-text font-black text-base flex-1">Keyboard Shortcuts</h2>
+ <button onClick={() => setShowHelp(false)} className="w-7 h-7 rounded-lg bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text flex items-center justify-center">
  <X size={14} />
  </button>
  </div>
  <div className="p-5 space-y-5">
  {groups.map(group => (
  <div key={group}>
- <div className="text-white/25 text-[10px] uppercase tracking-widest font-black mb-2">{group}</div>
+ <div className="text-app-text/25 text-[10px] uppercase tracking-widest font-black mb-2">{group}</div>
  <div className="space-y-1.5">
  {SHORTCUTS.filter(s => s.group === group).map(s => (
  <div key={s.description} className="flex items-center justify-between gap-4">
- <span className="text-white/60 text-sm">{s.description}</span>
+ <span className="text-app-text/60 text-sm">{s.description}</span>
  <div className="flex items-center gap-1 shrink-0">
  {s.keys.map(k => (
- <kbd key={k} className="px-2 py-0.5 rounded bg-white/10 text-white/80 text-xs font-mono font-bold border border-white/10">{k}</kbd>
+ <kbd key={k} className="px-2 py-0.5 rounded bg-app-text/10 text-app-text/80 text-xs font-mono font-bold border border-app-text/10">{k}</kbd>
  ))}
  </div>
  </div>
@@ -147,7 +147,7 @@ export default function POSKeyboardShortcuts({
  </div>
  </div>
  ))}
- <p className="text-white/20 text-xs text-center border-t border-white/5 pt-3">Press <kbd className="px-1 bg-white/10 rounded text-white/40 text-[10px]">?</kbd> to toggle this overlay</p>
+ <p className="text-app-text/20 text-xs text-center border-t border-app-text/5 pt-3">Press <kbd className="px-1 bg-app-text/10 rounded text-app-text/40 text-[10px]">?</kbd> to toggle this overlay</p>
  </div>
  </div>
  </div>

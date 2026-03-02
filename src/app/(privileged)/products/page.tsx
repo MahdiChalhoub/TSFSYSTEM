@@ -86,7 +86,7 @@ export default async function ProductsPage({
  </Link>
  <Link
  href="/products/create-group"
- className="flex items-center gap-2 px-5 h-11 rounded-xl font-bold text-sm transition-all text-white"
+ className="flex items-center gap-2 px-5 h-11 rounded-xl font-bold text-sm transition-all text-app-text"
  style={{
  background: 'var(--app-primary)',
  boxShadow: '0 4px 14px var(--app-primary-glow)',
@@ -201,7 +201,7 @@ export default async function ProductsPage({
  </p>
  <Link
  href="/products/new"
- className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white transition-all"
+ className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-app-text transition-all"
  style={{ background: 'var(--app-primary)' }}
  >
  <Plus size={14} /> Add first product
@@ -252,7 +252,7 @@ export default async function ProductsPage({
  </div>
  <Link
  href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${Math.min(totalPages, page + 1)}&search=${search}`}
- className={`flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs uppercase tracking-wider transition-all text-white ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
+ className={`flex items-center gap-1.5 px-4 h-9 rounded-lg font-bold text-xs uppercase tracking-wider transition-all text-app-text ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
  style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px var(--app-primary-glow)' }}
  >
  Next <ChevronRight size={14} />

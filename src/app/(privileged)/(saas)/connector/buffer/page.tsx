@@ -264,7 +264,7 @@ export default function ConnectorBufferPage() {
  {buffer.method}
  </Badge>
  <Badge
- className={`${statusColors[buffer.status]} text-white border-0 text-[10px] font-bold`}
+ className={`${statusColors[buffer.status]} text-app-text border-0 text-[10px] font-bold`}
  >
  {buffer.status.toUpperCase()}
  </Badge>

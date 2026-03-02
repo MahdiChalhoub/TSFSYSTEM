@@ -72,7 +72,7 @@ export default function EcommerceCatalogPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-gray-100 flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
- <ShoppingBag size={28} className="text-white" />
+ <ShoppingBag size={28} className="text-app-text" />
  </div>
  Online <span className="text-violet-400">Catalog</span>
  </h1>
@@ -83,8 +83,8 @@ export default function EcommerceCatalogPage() {
  <RefreshCw size={14} />Refresh
  </button>
  <div className="flex gap-0.5 bg-gray-800 p-1 rounded-xl">
- <button onClick={() => setView('grid')} className={`p-2 rounded-lg ${view === 'grid' ? 'bg-gray-700 text-white' : 'text-app-text-muted'}`}><Grid size={14} /></button>
- <button onClick={() => setView('list')} className={`p-2 rounded-lg ${view === 'list' ? 'bg-gray-700 text-white' : 'text-app-text-muted'}`}><Tag size={14} /></button>
+ <button onClick={() => setView('grid')} className={`p-2 rounded-lg ${view === 'grid' ? 'bg-gray-700 text-app-text' : 'text-app-text-muted'}`}><Grid size={14} /></button>
+ <button onClick={() => setView('list')} className={`p-2 rounded-lg ${view === 'list' ? 'bg-gray-700 text-app-text' : 'text-app-text-muted'}`}><Tag size={14} /></button>
  </div>
  </div>
  </div>
@@ -117,7 +117,7 @@ export default function EcommerceCatalogPage() {
  {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" /> : <Package size={32} className="text-gray-700" />}
  </div>
  <div className="p-3 flex flex-col gap-1 flex-1">
- <p className="font-semibold text-sm text-white truncate">{p.name}</p>
+ <p className="font-semibold text-sm text-app-text truncate">{p.name}</p>
  {p.sku && <p className="text-xs font-mono text-app-text-muted">{p.sku}</p>}
  <p className="text-sm font-bold text-teal-400 mt-auto">${Number(p.price || 0).toFixed(2)}</p>
  </div>
@@ -136,7 +136,7 @@ export default function EcommerceCatalogPage() {
  <div key={p.id} className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border ${p.is_published ? 'border-teal-800/40 bg-[#0F1729]' : 'border-gray-800 bg-[#0F1729] opacity-70'}`}>
  <Package size={14} className="text-teal-400 shrink-0" />
  <div className="flex-1 min-w-0">
- <div className="font-medium text-sm text-white truncate">{p.name}</div>
+ <div className="font-medium text-sm text-app-text truncate">{p.name}</div>
  <div className="text-xs text-app-text-muted">{p.sku || '—'}{p.category?.name ? ` · ${p.category.name}` : ''}</div>
  </div>
  <div className="font-mono font-bold text-sm text-teal-400 shrink-0">${Number(p.price || 0).toFixed(2)}</div>

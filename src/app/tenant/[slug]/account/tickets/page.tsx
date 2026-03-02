@@ -14,7 +14,7 @@ export default function TicketsPageRoute() {
  }
 
  const TicketsPage = (components as any).TicketsPage
- if (!TicketsPage) return <div className="p-20 text-white text-center">Tickets component not implemented in this theme.</div>
+ if (!TicketsPage) return <div className="p-20 text-app-text text-center">Tickets component not implemented in this theme.</div>
 
  return <TicketsPage />
 }

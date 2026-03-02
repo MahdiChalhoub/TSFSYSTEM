@@ -148,7 +148,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  className={clsx(
  "group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
  level === 0
- ? "bg-white/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-orange-200"
+ ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-orange-200"
  : "bg-orange-50/20 border-gray-100/50 ml-10 mt-2 hover:bg-app-surface hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/5",
  "hover:-translate-y-0.5"
  )}

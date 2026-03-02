@@ -86,7 +86,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  <button
  onClick={handleRefresh}
  disabled={isPending}
- className="bg-stone-900 text-white px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+ className="bg-stone-900 text-app-text px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
  >
  {isPending ? 'Revaluing...' : 'Generate Statement'}
  </button>
@@ -113,7 +113,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  {!isBalanced && (
  <button
  onClick={() => setShowDiagnostics(true)}
- className="bg-rose-600 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-rose-700 transition-all flex items-center gap-2"
+ className="bg-rose-600 text-app-text px-4 py-2 rounded-lg font-bold text-xs shadow-lg hover:bg-rose-700 transition-all flex items-center gap-2"
  >
  <Target size={14} /> Troubleshoot Difference
  </button>
@@ -124,7 +124,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
  {/* Left Side: ASSETS */}
  <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
- <div className="bg-stone-900 p-6 text-white flex items-center gap-3">
+ <div className="bg-stone-900 p-6 text-app-text flex items-center gap-3">
  <Landmark size={20} className="text-emerald-400" />
  <h2 className="font-serif text-xl font-bold italic">Assets</h2>
  </div>
@@ -148,7 +148,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  <div className="space-y-8">
  {/* Liabilities */}
  <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
- <div className="bg-stone-800 p-6 text-white flex items-center gap-3">
+ <div className="bg-stone-800 p-6 text-app-text flex items-center gap-3">
  <PieChart size={20} className="text-amber-400" />
  <h2 className="font-serif text-xl font-bold italic">Liabilities</h2>
  </div>
@@ -162,7 +162,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  </div>
  {/* Equity */}
  <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
- <div className="bg-stone-700 p-6 text-white flex items-center gap-3">
+ <div className="bg-stone-700 p-6 text-app-text flex items-center gap-3">
  <ShieldCheck size={20} className="text-sky-400" />
  <h2 className="font-serif text-xl font-bold italic">Equity</h2>
  </div>
@@ -203,7 +203,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  {showDiagnostics && (
  <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
  <div className="bg-app-surface rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-app-border animate-in zoom-in-95 duration-300">
- <div className="p-8 bg-stone-900 text-white flex justify-between items-center">
+ <div className="p-8 bg-stone-900 text-app-text flex justify-between items-center">
  <div className="flex items-center gap-3">
  <Target size={24} className="text-rose-400" />
  <div>
@@ -211,7 +211,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-widest mt-0.5">Automated discrepancy troubleshooter</p>
  </div>
  </div>
- <button onClick={() => setShowDiagnostics(false)} className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-all">
+ <button onClick={() => setShowDiagnostics(false)} className="bg-app-text/10 p-2 rounded-full hover:bg-app-text/20 transition-all">
  <X size={20} />
  </button>
  </div>
@@ -273,7 +273,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
  <div className="p-6 bg-app-bg border-t border-app-border flex justify-end">
  <button
  onClick={() => setShowDiagnostics(false)}
- className="bg-stone-900 text-white px-8 py-3 rounded-xl font-bold text-xs shadow-lg hover:shadow-stone-200 transition-all"
+ className="bg-stone-900 text-app-text px-8 py-3 rounded-xl font-bold text-xs shadow-lg hover:shadow-stone-200 transition-all"
  >
  I understand
  </button>

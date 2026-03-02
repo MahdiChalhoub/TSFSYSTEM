@@ -53,7 +53,7 @@ export function CategoriesClient({ initialCategories, industryVector }: { initia
  {/* Decorative background gradient */}
  <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-100/20 blur-[100px] pointer-events-none rounded-full" />
 
- <div className="relative z-10 bg-white/50 backdrop-blur-md border border-gray-100/50 rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50">
+ <div className="relative z-10 bg-app-text/50 backdrop-blur-md border border-gray-100/50 rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50">
  <CategoryTree
  categories={tree}
  allCategories={data}

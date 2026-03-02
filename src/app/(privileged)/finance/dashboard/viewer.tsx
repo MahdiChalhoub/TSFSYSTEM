@@ -132,7 +132,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
  </div>
 
  {/* Monthly Breakdown */}
- <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/40 p-10 text-white flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
+ <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/40 p-10 text-app-text flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
  <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-emerald-500/20 transition-colors"></div>
  <div className="relative z-10">
  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-app-text-muted mb-8">P&L Summary: {new Date().toLocaleString('en-US', { month: 'long' })}</h3>
@@ -145,16 +145,16 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
  <span className="text-app-text-faint text-sm font-black uppercase tracking-tight">Operational Burn</span>
  <span className="text-2xl font-black text-rose-400 tracking-tighter">-{stats.monthlyExpense.toLocaleString()}</span>
  </div>
- <div className="border-t border-white/5 pt-8 flex justify-between items-end">
+ <div className="border-t border-app-text/5 pt-8 flex justify-between items-end">
  <span className="text-[11px] font-black uppercase tracking-widest text-app-text-muted mb-1">NET PROFIT</span>
- <span className="text-5xl font-black text-white tracking-tighter glow-emerald">{stats.netProfit.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
+ <span className="text-5xl font-black text-app-text tracking-tighter glow-emerald">{stats.netProfit.toLocaleString(undefined, { minimumFractionDigits: 0 })}</span>
  </div>
  </div>
  </div>
 
  <Link
  href="/finance/reports/pnl"
- className="mt-10 h-16 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-900/20 relative z-10 active:scale-95 group/btn"
+ className="mt-10 h-16 bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-2xl flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-900/20 relative z-10 active:scale-95 group/btn"
  >
  Detailed Intelligence <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
  </Link>
@@ -168,7 +168,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
  <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest mb-1">TRANSACTIONAL FEED</p>
  <h3 className="text-2xl font-black text-app-text tracking-tight">Recent Ledger Activity</h3>
  </div>
- <Link href="/finance/ledger" className="h-10 px-6 rounded-xl bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase tracking-widest flex items-center hover:bg-emerald-600 hover:text-white transition-all">All Records</Link>
+ <Link href="/finance/ledger" className="h-10 px-6 rounded-xl bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase tracking-widest flex items-center hover:bg-emerald-600 hover:text-app-text transition-all">All Records</Link>
  </div>
  <div className="overflow-x-auto">
  <table className="w-full">
@@ -316,7 +316,7 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
  <button
  onClick={() => setShowSyncConfirm(true)}
  disabled={isSyncing}
- className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all disabled:opacity-50 shadow-sm"
+ className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center hover:bg-amber-600 hover:text-app-text transition-all disabled:opacity-50 shadow-sm"
  title="Sync Ledger to Stock Value"
  >
  <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
@@ -368,7 +368,7 @@ function QuickLink({ href, icon, title, desc }: Record<string, any>) {
  href={href}
  className="flex items-center gap-6 bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-2xl hover:shadow-emerald-700/10 hover:border-emerald-500 transition-all duration-500 group"
  >
- <div className="w-16 h-16 rounded-2xl bg-app-bg flex items-center justify-center text-app-text-faint group-hover:bg-emerald-gradient group-hover:text-white group-hover:rotate-6 transition-all duration-500 shadow-inner group-hover:shadow-emerald-500/20">
+ <div className="w-16 h-16 rounded-2xl bg-app-bg flex items-center justify-center text-app-text-faint group-hover:bg-emerald-gradient group-hover:text-app-text group-hover:rotate-6 transition-all duration-500 shadow-inner group-hover:shadow-emerald-500/20">
  {icon}
  </div>
  <div>

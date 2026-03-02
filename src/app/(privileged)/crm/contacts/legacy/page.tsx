@@ -56,7 +56,7 @@ export default async function ContactsPage() {
  <header className="flex flex-col md:flex-row justify-between items-center gap-4">
  <div>
  <h1 className="page-header-title flex items-center gap-3">
- <div className="page-header-icon bg-emerald-600 text-white">
+ <div className="page-header-icon bg-emerald-600 text-app-text">
  <Users size={20} />
  </div>
  Contact <span className="text-emerald-600">Center</span>
@@ -95,14 +95,14 @@ export default async function ContactsPage() {
  </div>
  </div>
  </div>
- <div className="card-kpi bg-gradient-to-br from-slate-900 to-slate-800 text-white border-0">
+ <div className="card-kpi bg-gradient-to-br from-slate-900 to-slate-800 text-app-text border-0">
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-sm backdrop-blur-sm">
+ <div className="w-10 h-10 rounded-xl bg-app-text/10 flex items-center justify-center shadow-sm backdrop-blur-sm">
  <TrendingUp size={18} className="text-emerald-300" />
  </div>
  <div>
  <p className="label-micro text-slate-300 mb-0.5">Total Leads</p>
- <p className="text-xl font-black text-white tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
+ <p className="text-xl font-black text-app-text tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
  </div>
  </div>
  </div>

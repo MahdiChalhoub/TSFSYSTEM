@@ -185,7 +185,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
  <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-semibold border border-app-border text-app-text-muted hover:bg-app-bg transition-colors">
  Cancel
  </button>
- <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
+ <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
  {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
  <span>Save Brand</span>
  </button>

@@ -170,7 +170,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <Button
  onClick={() => handleApprove(user.id)}
  disabled={loadingMap[user.id]}
- className="h-12 px-8 rounded-2xl bg-gray-900 hover:bg-black text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-gray-200 transition-all flex items-center gap-2"
+ className="h-12 px-8 rounded-2xl bg-gray-900 hover:bg-black text-app-text text-[10px] font-black uppercase tracking-widest shadow-lg shadow-gray-200 transition-all flex items-center gap-2"
  >
  {loadingMap[user.id] ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
  Approve
@@ -210,7 +210,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <Button
  onClick={handleRequestCorrection}
  disabled={!correctionNotes}
- className="flex-1 h-14 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest"
+ className="flex-1 h-14 rounded-2xl bg-blue-600 text-app-text text-[10px] font-black uppercase tracking-widest"
  >
  Send Request
  </Button>

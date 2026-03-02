@@ -14,7 +14,7 @@ export default function OrderDetailPageRoute() {
  }
 
  const OrderDetailPage = (components as any).OrderDetailPage
- if (!OrderDetailPage) return <div className="p-20 text-white text-center">Order detail component not implemented in this theme.</div>
+ if (!OrderDetailPage) return <div className="p-20 text-app-text text-center">Order detail component not implemented in this theme.</div>
 
  return <OrderDetailPage />
 }

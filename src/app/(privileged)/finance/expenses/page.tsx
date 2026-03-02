@@ -98,7 +98,7 @@ export default function ExpenseTrackerPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
- <Receipt size={28} className="text-white" />
+ <Receipt size={28} className="text-app-text" />
  </div>
  Expense <span className="text-rose-600">Accounts</span>
  </h1>

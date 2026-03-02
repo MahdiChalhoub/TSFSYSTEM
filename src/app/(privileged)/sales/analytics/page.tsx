@@ -112,7 +112,7 @@ export default function SalesAnalyticsPage() {
  className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg"
  style={{ background: 'var(--app-primary)', boxShadow: 'var(--app-glow)' }}
  >
- <BarChart3 size={26} className="text-white" />
+ <BarChart3 size={26} className="text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title">

@@ -102,9 +102,9 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
 
  <div className="relative w-full max-w-lg bg-app-surface rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
  {/* Header */}
- <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+ <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-app-text">
  <div className="flex items-center gap-2.5">
- <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+ <div className="w-8 h-8 rounded-xl bg-app-text/20 flex items-center justify-center">
  <Truck size={16} />
  </div>
  <div>
@@ -113,10 +113,10 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </div>
  </div>
  <div className="flex items-center gap-2">
- <button onClick={load} className="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+ <button onClick={load} className="w-7 h-7 rounded-lg bg-app-text/20 hover:bg-app-text/30 flex items-center justify-center transition-all">
  <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
  </button>
- <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+ <button onClick={onClose} className="w-7 h-7 rounded-lg bg-app-text/20 hover:bg-app-text/30 flex items-center justify-center transition-all">
  <X size={12} />
  </button>
  </div>
@@ -270,7 +270,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <button
  disabled={isConfirming || (needsReturnCode && (returnCodes[d.id] || '').length < 4)}
  onClick={() => handlePosConfirm(d)}
- className="w-full py-2 px-3 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
+ className="w-full py-2 px-3 rounded-xl bg-emerald-500 text-app-text hover:bg-emerald-600 transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
  >
  <DollarSign size={12} />
  I Received the Cash ✓

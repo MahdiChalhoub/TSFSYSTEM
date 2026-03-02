@@ -172,7 +172,7 @@ function CreatePurchaseReturnForm() {
  </div>
 
  <div className="space-y-6">
- <Card className="bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-2xl border-none">
+ <Card className="bg-gray-900 text-app-text p-8 rounded-[2.5rem] shadow-2xl border-none">
  <div className="space-y-6">
  <div>
  <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-4">Debit Summary</div>
@@ -188,13 +188,13 @@ function CreatePurchaseReturnForm() {
 
  <div className="pt-4">
  <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
- <div className="text-5xl font-black text-white text-right tracking-tighter">
+ <div className="text-5xl font-black text-app-text text-right tracking-tighter">
  {fmt(calculateTotals())}
  </div>
  </div>
 
  <Button
- className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
+ className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-app-text font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
  onClick={handleSubmit}
  disabled={submitting || calculateTotals() === 0}
  >

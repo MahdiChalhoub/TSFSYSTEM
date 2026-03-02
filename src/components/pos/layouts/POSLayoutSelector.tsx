@@ -116,7 +116,7 @@ export function POSLayoutSelector({
  </h3>
  {isActive && (
  <span
- className="text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full"
+ className="text-app-text text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full"
  style={{ background: 'var(--app-primary)' }}
  >
  Active

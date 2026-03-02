@@ -183,7 +183,7 @@ export default function OrganizationsPage() {
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Building size={40} className="text-white fill-white/20" />
+ <Building size={40} className="text-app-text fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
@@ -205,13 +205,13 @@ export default function OrganizationsPage() {
  <div className="hidden lg:flex items-center gap-4">
  <Dialog open={open} onOpenChange={setOpen}>
  <DialogTrigger asChild>
- <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
+ <button className="h-14 px-8 rounded-2xl bg-slate-900 text-app-text font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
  Register Instance <Plus size={18} className="text-emerald-400" />
  </button>
  </DialogTrigger>
- <DialogContent className="bg-white/80 backdrop-blur-2xl border-white/20 text-app-text rounded-[3rem] max-w-lg shadow-[0_30px_100px_rgba(0,0,0,0.15)] p-0 overflow-hidden">
- <div className="p-10 bg-emerald-gradient text-white relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+ <DialogContent className="bg-app-text/80 backdrop-blur-2xl border-app-text/20 text-app-text rounded-[3rem] max-w-lg shadow-[0_30px_100px_rgba(0,0,0,0.15)] p-0 overflow-hidden">
+ <div className="p-10 bg-emerald-gradient text-app-text relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-text/10 rounded-full -mr-32 -mt-32 blur-3xl" />
  <DialogTitle className="text-3xl font-black tracking-tighter mb-2">Provision Instance</DialogTitle>
  <p className="text-emerald-100 text-xs font-black uppercase tracking-widest opacity-80">Create Organization</p>
  </div>
@@ -305,7 +305,7 @@ export default function OrganizationsPage() {
  </div>
  <div className="p-10 pt-0">
  <Button
- className="w-full h-16 bg-slate-900 hover:bg-black text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/30 active:scale-95 transition-all text-xs border-b-4 border-b-black"
+ className="w-full h-16 bg-slate-900 hover:bg-black text-app-text rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/30 active:scale-95 transition-all text-xs border-b-4 border-b-black"
  onClick={handleCreate}
  disabled={isCreating}
  >
@@ -321,7 +321,7 @@ export default function OrganizationsPage() {
  </div>
  </div>
  {/* ─── Filters ────────────────────────── */}
- <div className="flex flex-wrap items-center gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-app-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
+ <div className="flex flex-wrap items-center gap-4 p-6 bg-app-text/70 backdrop-blur-xl rounded-[2rem] border border-app-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
  <div className="relative flex-1 min-w-[280px]">
  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
  <input type="text" placeholder="Search by name or domain..." value={search} onChange={e => setSearch(e.target.value)}
@@ -348,7 +348,7 @@ export default function OrganizationsPage() {
  )}
  {hasFilters && (
  <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
- className="h-12 px-5 text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 rounded-xl border border-rose-50 bg-rose-50/30 hover:bg-rose-500 hover:text-white transition-all">
+ className="h-12 px-5 text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 rounded-xl border border-rose-50 bg-rose-50/30 hover:bg-rose-500 hover:text-app-text transition-all">
  <X size={14} /> Clear Filters
  </button>
  )}
@@ -388,7 +388,7 @@ export default function OrganizationsPage() {
  )}
  <CardHeader className="pb-6 p-8">
  <div className="flex justify-between items-start mb-6">
- <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner group-hover/card:rotate-6 transition-transform duration-500 ${isSaasOrg ? 'bg-amber-100 text-amber-600 shadow-amber-200' : 'bg-emerald-gradient text-white shadow-emerald-700/10'}`}>
+ <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner group-hover/card:rotate-6 transition-transform duration-500 ${isSaasOrg ? 'bg-amber-100 text-amber-600 shadow-amber-200' : 'bg-emerald-gradient text-app-text shadow-emerald-700/10'}`}>
  {isSaasOrg ? <ShieldCheck size={32} /> : <Building size={32} />}
  </div>
  <div className="flex flex-col items-end gap-2">
@@ -441,8 +441,8 @@ export default function OrganizationsPage() {
  className={`flex-1 h-14 rounded-2xl border-app-border font-black text-[11px] uppercase tracking-widest shadow-sm transition-all ${isSaasOrg
  ? 'bg-app-bg text-slate-200 cursor-not-allowed border-dashed'
  : org.is_active
- ? 'bg-app-bg hover:bg-rose-500 hover:text-white hover:border-rose-500'
- : 'bg-emerald-50 hover:bg-emerald-600 hover:text-white hover:border-emerald-600'
+ ? 'bg-app-bg hover:bg-rose-500 hover:text-app-text hover:border-rose-500'
+ : 'bg-emerald-50 hover:bg-emerald-600 hover:text-app-text hover:border-emerald-600'
  }`}
  onClick={() => handleToggle(String(org.id), !!org.is_active, org.slug ?? '')}
  disabled={isSaasOrg}
@@ -453,7 +453,7 @@ export default function OrganizationsPage() {
  {/* Features / Modules */}
  <Button
  variant="outline"
- className="w-14 h-14 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+ className="w-14 h-14 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-app-text transition-all shadow-sm"
  onClick={() => handleOpenModules(org)}
  >
  <Settings2 size={20} />
@@ -476,9 +476,9 @@ export default function OrganizationsPage() {
  </div>
  {/* Feature Activation Dialog */}
  <Dialog open={modulesOpen} onOpenChange={setModulesOpen}>
- <DialogContent className="bg-white/80 backdrop-blur-2xl border-white/20 text-app-text rounded-[3rem] max-w-2xl overflow-hidden p-0 shadow-[0_30px_100px_rgba(0,0,0,0.15)]">
- <div className="p-10 bg-emerald-gradient text-white relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+ <DialogContent className="bg-app-text/80 backdrop-blur-2xl border-app-text/20 text-app-text rounded-[3rem] max-w-2xl overflow-hidden p-0 shadow-[0_30px_100px_rgba(0,0,0,0.15)]">
+ <div className="p-10 bg-emerald-gradient text-app-text relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-text/10 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
  <DialogTitle className="text-3xl font-black tracking-tighter flex items-center gap-4 relative z-10">
  <Layers size={32} className="text-emerald-300" /> Features
  </DialogTitle>
@@ -510,14 +510,14 @@ export default function OrganizationsPage() {
  </div>
  <div className="flex items-center gap-4">
  {m.is_core ? (
- <div className="px-4 py-1.5 rounded-full bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest border-b-2 border-b-black">
+ <div className="px-4 py-1.5 rounded-full bg-slate-900 text-app-text text-[9px] font-black uppercase tracking-widest border-b-2 border-b-black">
  Core Infrastructure
  </div>
  ) : (
  <Button
  className={`h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${m.status === 'INSTALLED'
- ? "bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white border-0"
- : "bg-emerald-600 text-white hover:bg-black border-0 shadow-lg shadow-emerald-700/10"
+ ? "bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-text border-0"
+ : "bg-emerald-600 text-app-text hover:bg-black border-0 shadow-lg shadow-emerald-700/10"
  }`}
  onClick={() => handleModuleToggle(m.code, m.status ?? '')}
  >
@@ -555,7 +555,7 @@ export default function OrganizationsPage() {
  }}
  />
  <div className="w-5 h-5 border-2 border-app-border rounded-lg group-hover/flag:border-emerald-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center">
- <Plus size={12} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+ <Plus size={12} className="text-app-text opacity-0 peer-checked:opacity-100 transition-opacity" />
  </div>
  </div>
  <span className={`text-[11px] font-bold uppercase tracking-tight text-app-text-muted group-hover/flag:text-emerald-700 transition-colors ${m.active_features?.includes(f.code) ? "text-emerald-600" : ""}`}>
@@ -570,7 +570,7 @@ export default function OrganizationsPage() {
  ))}
  </div>
  <div className="p-8 bg-app-bg border-t border-app-border flex justify-end">
- <button className="h-12 px-8 rounded-2xl bg-app-surface border border-app-border font-black text-[11px] uppercase tracking-widest text-app-text-muted hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all active:scale-95" onClick={() => setModulesOpen(false)}>
+ <button className="h-12 px-8 rounded-2xl bg-app-surface border border-app-border font-black text-[11px] uppercase tracking-widest text-app-text-muted hover:bg-slate-900 hover:text-app-text hover:border-slate-900 transition-all active:scale-95" onClick={() => setModulesOpen(false)}>
  Close
  </button>
  </div>

@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { Shield, CheckCircle, Users, Save, Plus, RefreshCw } from 'lucide-react'
+import { Shield, CheckCircle, Users, Save, Plus, RefreshCw, Pencil, Info } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 
 const AIRSI_OPTIONS = [
     { value: 'CAPITALIZE', label: 'Capitalize — add to inventory cost' },
@@ -50,6 +52,8 @@ export default function TaxPolicyPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [form, setForm] = useState<Record<string, any>>({})
+    const [profileModalOpen, setProfileModalOpen] = useState(false)
+    const [editingProfile, setEditingProfile] = useState<Record<string, any> | null>(null)
 
     useEffect(() => {
         async function load() {
@@ -114,6 +118,22 @@ export default function TaxPolicyPage() {
         }
     }
 
+    const handleSaveProfile = async () => {
+        if (!editingProfile?.name) return toast.error('Name is required')
+        setSaving(true)
+        try {
+            await saveCounterpartyTaxProfile(editingProfile.id ?? null, editingProfile)
+            toast.success('Profile saved')
+            setProfileModalOpen(false)
+            const profs = await getCounterpartyTaxProfiles()
+            setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
+        } catch {
+            toast.error('Failed to save profile')
+        } finally {
+            setSaving(false)
+        }
+    }
+
     const f = (key: string) => form[key]
     const set = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -122,7 +142,7 @@ export default function TaxPolicyPage() {
             <header>
                 <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <Shield size={28} className="text-white" />
+                        <Shield size={28} className="text-app-text" />
                     </div>
                     Tax <span className="text-indigo-600">Policy</span>
                 </h1>
@@ -246,13 +266,13 @@ export default function TaxPolicyPage() {
                                                     min="0" max="1" step="0.0001"
                                                     value={f('sales_tax_rate')}
                                                     onChange={e => set('sales_tax_rate', e.target.value)}
-                                                    className="font-mono bg-white"
+                                                    className="font-mono bg-app-surface"
                                                 />
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-semibold text-app-text-muted uppercase">Tax Trigger</label>
                                                 <Select value={f('sales_tax_trigger')} onValueChange={v => set('sales_tax_trigger', v)}>
-                                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                                    <SelectTrigger className="bg-app-surface"><SelectValue /></SelectTrigger>
                                                     <SelectContent>
                                                         {SALES_TAX_TRIGGERS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                                                     </SelectContent>
@@ -271,13 +291,13 @@ export default function TaxPolicyPage() {
                                                     min="0" step="0.01"
                                                     value={f('periodic_amount')}
                                                     onChange={e => set('periodic_amount', e.target.value)}
-                                                    className="font-mono bg-white"
+                                                    className="font-mono bg-app-surface"
                                                 />
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-semibold text-app-text-muted uppercase">Interval</label>
                                                 <Select value={f('periodic_interval')} onValueChange={v => set('periodic_interval', v)}>
-                                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                                    <SelectTrigger className="bg-app-surface"><SelectValue /></SelectTrigger>
                                                     <SelectContent>
                                                         {PERIODIC_INTERVALS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                                                     </SelectContent>
@@ -322,7 +342,7 @@ export default function TaxPolicyPage() {
                             </div>
 
                             <div className="pt-2 border-t flex items-center gap-3">
-                                <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                                <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-app-text">
                                     <Save size={14} className="mr-2" />
                                     {saving ? 'Saving…' : policy ? 'Update Policy' : 'Create Policy'}
                                 </Button>
@@ -341,7 +361,20 @@ export default function TaxPolicyPage() {
                             <CardTitle className="text-sm flex items-center gap-2">
                                 <Users size={16} className="text-app-text-faint" /> Counterparty Tax Profiles
                             </CardTitle>
-                            <Badge variant="outline" className="text-xs">{profiles.length} profiles</Badge>
+                            <div className="flex items-center gap-3">
+                                <Badge variant="outline" className="text-xs">{profiles.length} profiles</Badge>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs h-8"
+                                    onClick={() => {
+                                        setEditingProfile({ vat_registered: false, reverse_charge: false, airsi_subject: false })
+                                        setProfileModalOpen(true)
+                                    }}
+                                >
+                                    <Plus size={14} className="mr-1" /> New Profile
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             {profiles.length === 0 ? (
@@ -358,12 +391,13 @@ export default function TaxPolicyPage() {
                                             <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Reverse Charge</th>
                                             <th className="text-center px-4 py-2 font-semibold text-app-text-muted">AIRSI Subject</th>
                                             <th className="text-left px-4 py-2 font-semibold text-app-text-muted">Scopes</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Preset</th>
+                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Type</th>
+                                            <th className="text-right px-4 py-2 font-semibold text-app-text-muted">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {profiles.map((p: any) => (
-                                            <tr key={p.id} className="border-b hover:bg-app-bg">
+                                            <tr key={p.id} className="border-b hover:bg-app-bg transition-colors">
                                                 <td className="px-4 py-2 font-semibold text-app-text">{p.name}</td>
                                                 <td className="px-4 py-2 text-center">
                                                     {p.vat_registered
@@ -388,8 +422,25 @@ export default function TaxPolicyPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2 text-center">
-                                                    {p.is_system_preset && (
+                                                    {p.is_system_preset ? (
                                                         <Badge className="bg-blue-100 text-blue-700 text-[10px]">System</Badge>
+                                                    ) : (
+                                                        <Badge className="bg-stone-100 text-stone-700 text-[10px]">Custom</Badge>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2 text-right">
+                                                    {!p.is_system_preset && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-7 w-7 p-0"
+                                                            onClick={() => {
+                                                                setEditingProfile(p)
+                                                                setProfileModalOpen(true)
+                                                            }}
+                                                        >
+                                                            <Pencil size={14} className="text-app-text-muted hover:text-indigo-600" />
+                                                        </Button>
                                                     )}
                                                 </td>
                                             </tr>
@@ -399,6 +450,85 @@ export default function TaxPolicyPage() {
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Edit/Create Profile Modal */}
+                    <Dialog open={profileModalOpen} onOpenChange={setProfileModalOpen}>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>{editingProfile?.id ? 'Edit Profile' : 'Create Tax Profile'}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 pt-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-app-text-muted uppercase">Profile Name</label>
+                                    <Input
+                                        value={editingProfile?.name || ''}
+                                        onChange={e => setEditingProfile(prev => ({ ...prev!, name: e.target.value }))}
+                                        placeholder="e.g. Special Supplier (Exempt)"
+                                    />
+                                </div>
+
+                                <div className="space-y-4 bg-app-bg p-4 rounded-xl border">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold">VAT Registered</p>
+                                            <p className="text-xs text-app-text-faint">Client is registered / Supplier charges VAT</p>
+                                        </div>
+                                        <Switch
+                                            checked={!!editingProfile?.vat_registered}
+                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, vat_registered: v }))}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold text-amber-700">Reverse Charge (Foreign B2B)</p>
+                                            <p className="text-xs text-amber-600/70">Inbound autoliquidation</p>
+                                        </div>
+                                        <Switch
+                                            checked={!!editingProfile?.reverse_charge}
+                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, reverse_charge: v }))}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold text-violet-700">AIRSI Subject</p>
+                                            <p className="text-xs text-violet-600/70">Buying triggers AIRSI withholding</p>
+                                        </div>
+                                        <Switch
+                                            checked={!!editingProfile?.airsi_subject}
+                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, airsi_subject: v }))}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Dynamic Impact Summary */}
+                                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 space-y-3">
+                                    <div className="flex items-center gap-2 text-blue-800">
+                                        <Info size={16} />
+                                        <h4 className="text-xs font-bold uppercase tracking-widest">Impact Summary</h4>
+                                    </div>
+                                    <ul className="space-y-2 text-[11px] text-blue-900 leading-relaxed font-medium">
+                                        {!!editingProfile?.vat_registered ? (
+                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Purchases:</strong> Cost = HT. VAT goes to Recoverable Asset account (if Org allows).<br /><strong>Sales:</strong> Invoice includes VAT (TTC).</li>
+                                        ) : (
+                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Purchases:</strong> Cost = TTC. No VAT is recovered.<br /><strong>Sales:</strong> Invoice is HT only.</li>
+                                        )}
+                                        {!!editingProfile?.reverse_charge && (
+                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Reverse Charge:</strong> Triggers autoliquidation. VAT is self-assessed (net zero impact).</li>
+                                        )}
+                                        {!!editingProfile?.airsi_subject && (
+                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>AIRSI:</strong> Applicable percentage will be withheld from supplier payments and credited to Liability.</li>
+                                        )}
+                                    </ul>
+                                </div>
+
+                                <Button onClick={handleSaveProfile} disabled={saving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                                    {saving ? 'Saving…' : 'Save Profile'}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </>
             )}
         </div>

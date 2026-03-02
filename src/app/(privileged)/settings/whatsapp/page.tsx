@@ -60,7 +60,7 @@ export default function WhatsappSettingsPage() {
  <header>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <MessageCircle size={28} className="text-white" />
+ <MessageCircle size={28} className="text-app-text" />
  </div>
  WhatsApp <span className="text-emerald-500">Integration</span>
  </h1>
@@ -246,9 +246,9 @@ export default function WhatsappSettingsPage() {
  <button
  type="submit"
  disabled={isPending}
- className="h-12 px-8 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all disabled:opacity-50"
+ className="h-12 px-8 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-app-text font-bold rounded-2xl transition-all disabled:opacity-50"
  >
- {isPending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={20} />}
+ {isPending ? <div className="w-5 h-5 border-2 border-app-text/30 border-t-white rounded-full animate-spin" /> : <Save size={20} />}
  Save Configuration
  </button>
  </div>

@@ -11,7 +11,7 @@ export default async function PricingPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <DollarSign size={28} className="text-white" />
+ <DollarSign size={28} className="text-app-text" />
  </div>
  Pricing <span className="text-indigo-600">Engine</span>
  </h1>

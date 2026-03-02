@@ -63,7 +63,7 @@ export default async function PricingPage() {
  <div className="flex flex-col md:flex-row justify-between items-end gap-6">
  <div>
  <div className="flex items-center gap-3 mb-4">
- <div className="w-14 h-14 rounded-2xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-200">
+ <div className="w-14 h-14 rounded-2xl bg-violet-600 flex items-center justify-center text-app-text shadow-lg shadow-violet-200">
  <Tag size={28} />
  </div>
  <span className="text-xs font-black text-violet-600 uppercase tracking-[0.3em]">Revenue Optimization</span>
@@ -96,28 +96,28 @@ export default async function PricingPage() {
 
  <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12">
  <div className="space-y-4">
- <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 flex items-center justify-center text-app-text">
  <Users size={24} />
  </div>
- <h4 className="text-xl font-black text-white">Group Pricing</h4>
+ <h4 className="text-xl font-black text-app-text">Group Pricing</h4>
  <p className="text-violet-100 text-sm font-medium leading-relaxed">
  Assign contacts to price groups (VIP, Wholesale, Seasonal) for automatic bulk pricing.
  </p>
  </div>
  <div className="space-y-4">
- <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 flex items-center justify-center text-app-text">
  <DollarSign size={24} />
  </div>
- <h4 className="text-xl font-black text-white">Flexible Rules</h4>
+ <h4 className="text-xl font-black text-app-text">Flexible Rules</h4>
  <p className="text-violet-100 text-sm font-medium leading-relaxed">
  Fixed price, percentage discount, or amount off — per product, category, or globally.
  </p>
  </div>
  <div className="space-y-4">
- <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 flex items-center justify-center text-app-text">
  <Layers size={24} />
  </div>
- <h4 className="text-xl font-black text-white">Priority Cascade</h4>
+ <h4 className="text-xl font-black text-app-text">Priority Cascade</h4>
  <p className="text-violet-100 text-sm font-medium leading-relaxed">
  When multiple rules apply, the highest-priority group wins. Direct contact rules always take precedence.
  </p>

@@ -165,7 +165,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  />
 
  {/* ═══════ CLIENT INFO (Premium Dark) ═══════ */}
- <div className="h-14 bg-white/80 backdrop-blur-xl border-b border-app-border px-6 flex items-center justify-between shrink-0 relative z-10 transition-all">
+ <div className="h-14 bg-app-text/80 backdrop-blur-xl border-b border-app-border px-6 flex items-center justify-between shrink-0 relative z-10 transition-all">
  <div className="flex items-center gap-6 divide-x divide-white/5">
  <div className="flex items-center gap-4">
  <div className="w-10 h-10 rounded-xl bg-app-surface shadow-inner border border-app-border flex items-center justify-center text-emerald-500 relative group">
@@ -201,7 +201,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  </div>
 
  <div className="flex items-center gap-4">
- <div className="flex items-center gap-3 px-4 py-2 bg-white/60 border border-app-border rounded-2xl group focus-within:border-emerald-500/50 transition-all shadow-inner">
+ <div className="flex items-center gap-3 px-4 py-2 bg-app-text/60 border border-app-border rounded-2xl group focus-within:border-emerald-500/50 transition-all shadow-inner">
  <Search className="text-app-text-muted group-focus-within:text-emerald-400 transition-colors" size={14} />
  <input
  type="text"
@@ -220,7 +220,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  <select
  value={deliveryZone || ''}
  onChange={(e) => onSetDeliveryZone(e.target.value)}
- className="pl-8 pr-10 py-2 bg-white/60 border border-app-border rounded-2xl text-[10px] font-black text-app-text-faint outline-none appearance-none cursor-pointer uppercase tracking-widest hover:border-app-border transition-all italic focus:border-emerald-500/50"
+ className="pl-8 pr-10 py-2 bg-app-text/60 border border-app-border rounded-2xl text-[10px] font-black text-app-text-faint outline-none appearance-none cursor-pointer uppercase tracking-widest hover:border-app-border transition-all italic focus:border-emerald-500/50"
  >
  {deliveryZones.map(z => (
  <option key={z.id} value={z.name} className="bg-app-surface text-app-text">{z.name}</option>
@@ -235,7 +235,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  </div>
 
  {/* ═══════ SEARCH + CATEGORY BAR (Tactical) ═══════ */}
- <div className="bg-white/20 backdrop-blur-md border-b border-app-border px-6 py-4 flex items-center gap-6 shrink-0 relative z-10 transition-all">
+ <div className="bg-app-text/20 backdrop-blur-md border-b border-app-border px-6 py-4 flex items-center gap-6 shrink-0 relative z-10 transition-all">
  <div className="relative flex-1 group">
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-muted group-focus-within:text-emerald-400 transition-colors" size={16} />
  <input
@@ -257,7 +257,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  className={clsx(
  "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all italic border shadow-lg",
  activeCategoryId === null
- ? 'bg-emerald-gradient text-white border-emerald-400 scale-105 z-10'
+ ? 'bg-emerald-gradient text-app-text border-emerald-400 scale-105 z-10'
  : 'bg-app-surface text-app-text-faint border-app-border hover:text-emerald-400 hover:border-emerald-500/30'
  )}
  >
@@ -273,7 +273,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  className={clsx(
  "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all italic border",
  (activeCategoryId === cat.id || currentParentId === cat.id)
- ? 'bg-emerald-gradient text-white border-emerald-400 scale-105 z-10 shadow-emerald-900/40'
+ ? 'bg-emerald-gradient text-app-text border-emerald-400 scale-105 z-10 shadow-emerald-900/40'
  : 'bg-app-surface text-app-text-faint border-app-border hover:text-emerald-400 hover:border-emerald-500/30'
  )}
  >
@@ -290,12 +290,12 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  onSetCurrentParentId(grandParentId);
  if (grandParentId === null) onSetActiveCategoryId(null);
  }}
- className="h-10 px-4 bg-emerald-gradient text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 italic shadow-lg border border-emerald-400"
+ className="h-10 px-4 bg-emerald-gradient text-app-text rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 italic shadow-lg border border-emerald-400"
  >
  <ArrowLeft size={14} className="stroke-[3]" />
  {categories.find(c => c.id === currentParentId)?.name}
  </button>
- <div className="w-[1px] h-6 bg-white/10 mx-2 shrink-0" />
+ <div className="w-[1px] h-6 bg-app-text/10 mx-2 shrink-0" />
  {categories.filter(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
  <button
  key={cat.id}
@@ -307,7 +307,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  className={clsx(
  "px-4 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all italic border",
  activeCategoryId === cat.id
- ? 'bg-emerald-gradient text-white border-emerald-400 scale-105'
+ ? 'bg-emerald-gradient text-app-text border-emerald-400 scale-105'
  : 'bg-app-surface text-app-text-faint border-app-border hover:text-emerald-400'
  )}
  >
@@ -336,9 +336,9 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  </div>
 
  {/* ─── RIGHT: Cart + Payment ─── */}
- <div className="w-1/2 flex flex-col overflow-hidden bg-white/80 backdrop-blur-md">
+ <div className="w-1/2 flex flex-col overflow-hidden bg-app-text/80 backdrop-blur-md">
  {/* Cart Header */}
- <div className="px-6 py-3 border-b border-app-border flex items-center justify-between shrink-0 bg-white/60 transition-all">
+ <div className="px-6 py-3 border-b border-app-border flex items-center justify-between shrink-0 bg-app-text/60 transition-all">
  <div className="flex items-center gap-3">
  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse" />
  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-app-text-faint italic">Order Queue</h2>
@@ -380,7 +380,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  ? "bg-emerald-500/20 border-emerald-500/40 shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
  : lastAddedItemId === item.productId
  ? "bg-app-surface border-app-border"
- : "bg-white/50 border-app-border hover:border-app-border hover:bg-gray-50/80"
+ : "bg-app-text/50 border-app-border hover:border-app-border hover:bg-gray-50/80"
  )}
  >
  <div className="flex-1 min-w-0">
@@ -400,7 +400,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  )}
  </div>
 
- <div className="flex items-center gap-1.5 bg-white/90 p-1 rounded-xl border border-app-border">
+ <div className="flex items-center gap-1.5 bg-app-text/90 p-1 rounded-xl border border-app-border">
  <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 rounded-lg bg-app-surface hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center text-app-text-muted transition-all border border-app-border">
  <Minus size={10} strokeWidth={3} />
  </button>
@@ -518,7 +518,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
  <div className="relative z-10 flex items-center justify-between px-10">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-app-text border border-app-border group-hover:rotate-[15deg] transition-all duration-500">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 backdrop-blur-xl flex items-center justify-center text-app-text border border-app-border group-hover:rotate-[15deg] transition-all duration-500">
  {isProcessing ? <RefreshCw size={24} className="animate-spin" /> : <ShieldCheck size={28} className="stroke-[2.5]" />}
  </div>
  <div className="flex flex-col items-start">

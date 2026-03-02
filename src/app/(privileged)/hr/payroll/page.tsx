@@ -112,7 +112,7 @@ export default function CompensationEnginePage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Banknote size={28} className="text-white" />
+ <Banknote size={28} className="text-app-text" />
  </div>
  Compensation <span className="text-emerald-600">Engine</span>
  </h1>
@@ -251,7 +251,7 @@ export default function CompensationEnginePage() {
  </CardContent>
  </Card>
 
- <Card className="rounded-[2.5rem] border-0 shadow-sm bg-gray-900 text-white p-8 relative overflow-hidden group">
+ <Card className="rounded-[2.5rem] border-0 shadow-sm bg-gray-900 text-app-text p-8 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700">
  <TrendingUp size={120} />
  </div>
@@ -263,7 +263,7 @@ export default function CompensationEnginePage() {
  <div className="text-4xl font-black text-emerald-400 mt-4 tracking-tighter">
  {fmt(totalPayroll * 12)}
  </div>
- <Button className="w-full mt-8 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black uppercase text-[10px] tracking-widest border border-white/10 group">
+ <Button className="w-full mt-8 bg-app-text/10 hover:bg-app-text/20 text-app-text rounded-xl font-black uppercase text-[10px] tracking-widest border border-app-text/10 group">
  Generate Audit Manifest <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
  </Button>
  </div>

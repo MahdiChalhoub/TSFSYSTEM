@@ -258,7 +258,7 @@ export default function AutoTaskRulesPage() {
  </div>
  <button
  onClick={() => { setEditingRule(emptyRule()); setIsNew(true); }}
- className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
+ className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
  >
  <Plus size={15} /> New Rule
  </button>
@@ -502,7 +502,7 @@ export default function AutoTaskRulesPage() {
 
  <div className="p-6 border-t flex justify-end gap-3 sticky bottom-0 bg-app-surface">
  <button onClick={() => setEditingRule(null)} className="px-4 py-2 rounded-xl text-sm font-bold text-app-text-muted hover:bg-app-surface-2 transition-all">Cancel</button>
- <button onClick={saveRule} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-50">
+ <button onClick={saveRule} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-50">
  {saving ? '...' : <><Check size={14} /> Save Rule</>}
  </button>
  </div>

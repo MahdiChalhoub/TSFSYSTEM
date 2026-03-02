@@ -190,7 +190,7 @@ export default function GeneralLedgerPage() {
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <BookOpen size={40} className="text-white fill-white/20" />
+ <BookOpen size={40} className="text-app-text fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
@@ -210,12 +210,12 @@ export default function GeneralLedgerPage() {
  </div>
  </div>
  <div className="hidden lg:flex items-center gap-4">
- <Button asChild variant="outline" className="h-14 px-8 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-app-text-muted flex items-center gap-3 hover:bg-app-surface hover:text-app-text transition-all active:scale-95">
+ <Button asChild variant="outline" className="h-14 px-8 rounded-2xl bg-app-text/60 backdrop-blur-xl border border-app-text/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-app-text-muted flex items-center gap-3 hover:bg-app-surface hover:text-app-text transition-all active:scale-95">
  <Link href="/finance/ledger/opening/list">
  <Wallet size={18} className="text-emerald-500" /> Opening Balances
  </Link>
  </Button>
- <Button asChild className="h-14 px-8 rounded-2xl bg-slate-900 border-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] font-black text-[11px] uppercase tracking-widest text-white flex items-center gap-3 hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 group">
+ <Button asChild className="h-14 px-8 rounded-2xl bg-slate-900 border-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] font-black text-[11px] uppercase tracking-widest text-app-text flex items-center gap-3 hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 group">
  <Link href="/finance/ledger/new">
  <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
  <Plus size={14} className="text-emerald-400" />
@@ -229,7 +229,7 @@ export default function GeneralLedgerPage() {
 
  <Tabs value={entryType} onValueChange={setEntryType} className="space-y-6">
  <div className="flex justify-between items-center">
- <TabsList className="bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm p-2 rounded-3xl h-14">
+ <TabsList className="bg-app-text/60 backdrop-blur-xl border border-app-text/40 shadow-sm p-2 rounded-3xl h-14">
  <TabsTrigger value="ALL" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm transition-all">Global Feed</TabsTrigger>
  <TabsTrigger value="MANUAL" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">Manual Interventions</TabsTrigger>
  <TabsTrigger value="AUTO" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-rose-50 data-[state=active]:text-rose-700 data-[state=active]:shadow-sm transition-all">Bot Activity</TabsTrigger>
@@ -237,7 +237,7 @@ export default function GeneralLedgerPage() {
  </div>
 
  {/* Apple Minimalist Glassmorphic Filter Bar */}
- <Card className="rounded-[2rem] border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-2xl overflow-visible">
+ <Card className="rounded-[2rem] border border-app-text/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-app-text/60 backdrop-blur-2xl overflow-visible">
  <CardContent className="p-4 space-y-4">
  <div className="flex items-center gap-4">
  <div className="relative flex-1 group">
@@ -246,35 +246,35 @@ export default function GeneralLedgerPage() {
  placeholder="Search semantic references or narrative blocks..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="pl-12 h-14 rounded-2xl bg-white/50 border border-app-border shadow-inner focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/30 text-sm font-bold placeholder:text-app-text-faint placeholder:font-medium transition-all"
+ className="pl-12 h-14 rounded-2xl bg-app-text/50 border border-app-border shadow-inner focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/30 text-sm font-bold placeholder:text-app-text-faint placeholder:font-medium transition-all"
  />
  </div>
  <Select value={status} onValueChange={setStatus}>
- <SelectTrigger className="w-56 h-14 rounded-2xl bg-white/50 border border-app-border shadow-inner text-sm font-black text-app-text-muted focus:ring-emerald-500/20">
+ <SelectTrigger className="w-56 h-14 rounded-2xl bg-app-text/50 border border-app-border shadow-inner text-sm font-black text-app-text-muted focus:ring-emerald-500/20">
  <SelectValue placeholder="All Status" />
  </SelectTrigger>
- <SelectContent className="rounded-2xl border border-app-border shadow-2xl bg-white/90 backdrop-blur-xl">
+ <SelectContent className="rounded-2xl border border-app-border shadow-2xl bg-app-text/90 backdrop-blur-xl">
  {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="rounded-xl font-bold hover:bg-app-bg focus:bg-app-bg cursor-pointer my-0.5">{o.label}</SelectItem>)}
  </SelectContent>
  </Select>
  <Button
  variant="ghost"
  onClick={() => setShowFilters(!showFilters)}
- className={`h-14 px-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] gap-3 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm' : 'bg-white/50 border border-app-border text-app-text-muted shadow-sm hover:bg-app-surface hover:border-app-border'}`}
+ className={`h-14 px-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] gap-3 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm' : 'bg-app-text/50 border border-app-border text-app-text-muted shadow-sm hover:bg-app-surface hover:border-app-border'}`}
  >
  <Filter size={16} /> Filters
- {activeFilterCount > 1 && <Badge className="bg-emerald-500 text-white h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-lg shadow-sm">{activeFilterCount}</Badge>}
+ {activeFilterCount > 1 && <Badge className="bg-emerald-500 text-app-text h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-lg shadow-sm">{activeFilterCount}</Badge>}
  </Button>
  </div>
  {showFilters && (
- <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6 rounded-3xl bg-white/40 border border-white/60 shadow-inner animate-in slide-in-from-top-4 duration-500 mt-4">
+ <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6 rounded-3xl bg-app-text/40 border border-app-text/60 shadow-inner animate-in slide-in-from-top-4 duration-500 mt-4">
  <div className="space-y-3">
  <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Time Horizon</label>
  <Select value={fiscalYear} onValueChange={setFiscalYear}>
- <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
+ <SelectTrigger className="h-12 rounded-2xl border-white bg-app-text/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
  <SelectValue placeholder="All Years" />
  </SelectTrigger>
- <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+ <SelectContent className="rounded-2xl border-0 shadow-2xl bg-app-text/95 backdrop-blur-xl p-1">
  <SelectItem value="ALL" className="rounded-xl font-bold">All Horizons</SelectItem>
  {fiscalYears.map((fy: any) => <SelectItem key={fy.id} value={String(fy.id)} className="rounded-xl font-bold">{fy.name}</SelectItem>)}
  </SelectContent>
@@ -283,18 +283,18 @@ export default function GeneralLedgerPage() {
  <div className="space-y-3 lg:col-span-2">
  <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Chronological Window</label>
  <div className="flex items-center gap-3">
- <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
+ <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-12 rounded-2xl border-white bg-app-text/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
  <span className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">to</span>
- <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
+ <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-12 rounded-2xl border-white bg-app-text/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
  </div>
  </div>
  <div className="space-y-3">
  <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Initiator</label>
  <Select value={user} onValueChange={setUser}>
- <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
+ <SelectTrigger className="h-12 rounded-2xl border-white bg-app-text/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
  <SelectValue placeholder="All Entities" />
  </SelectTrigger>
- <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+ <SelectContent className="rounded-2xl border-0 shadow-2xl bg-app-text/95 backdrop-blur-xl p-1">
  <SelectItem value="ALL" className="rounded-xl font-bold">All Entities</SelectItem>
  {users.map((u: any) => <SelectItem key={u.id} value={String(u.id)} className="rounded-xl font-bold">{u.first_name || u.username}</SelectItem>)}
  </SelectContent>
@@ -304,10 +304,10 @@ export default function GeneralLedgerPage() {
  <div className="space-y-3">
  <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Algorithmic Source</label>
  <Select value={autoSource} onValueChange={setAutoSource}>
- <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
+ <SelectTrigger className="h-12 rounded-2xl border-white bg-app-text/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
  <SelectValue placeholder="All Sources" />
  </SelectTrigger>
- <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+ <SelectContent className="rounded-2xl border-0 shadow-2xl bg-app-text/95 backdrop-blur-xl p-1">
  <SelectItem value="ALL" className="rounded-xl font-bold">All Systems</SelectItem>
  <SelectItem value="INVOICE" className="rounded-xl font-bold">Invoicing Engine</SelectItem>
  <SelectItem value="PAYMENT" className="rounded-xl font-bold">Payment Gateway</SelectItem>
@@ -331,7 +331,7 @@ export default function GeneralLedgerPage() {
  </CardContent>
  </Card>
 
- <Card className="rounded-[2.5rem] border border-white/60 shadow-2xl shadow-slate-900/5 overflow-hidden bg-white/80 backdrop-blur-3xl">
+ <Card className="rounded-[2.5rem] border border-app-text/60 shadow-2xl shadow-slate-900/5 overflow-hidden bg-app-text/80 backdrop-blur-3xl">
  <TypicalListView
  data={entries}
  loading={loading}

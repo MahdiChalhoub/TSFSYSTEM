@@ -289,7 +289,7 @@ export default function DiscountRulesPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <Tags size={28} className="text-white" />
+ <Tags size={28} className="text-app-text" />
  </div>
  Discount <span className="text-amber-600">Rules</span>
  </h1>
@@ -299,7 +299,7 @@ export default function DiscountRulesPage() {
  <Button onClick={loadData} variant="ghost" className="h-12 w-12 p-0 rounded-2xl text-app-text-faint hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all">
  <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
  </Button>
- <Button onClick={startCreate} className="h-12 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+ <Button onClick={startCreate} className="h-12 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
  <Plus size={18} /> Deploy Rule
  </Button>
  </div>
@@ -487,7 +487,7 @@ export default function DiscountRulesPage() {
  </div>
  <div className="flex justify-end gap-3 mt-12 pt-8 border-t border-stone-50">
  <Button onClick={() => setShowForm(false)} variant="ghost" className="h-12 px-8 rounded-2xl font-black text-app-text-faint uppercase tracking-widest text-[10px]">Abandon</Button>
- <Button onClick={handleSave} className="h-12 px-10 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-100 gap-2 transition-all hover:scale-[1.02]">
+ <Button onClick={handleSave} className="h-12 px-10 rounded-2xl bg-amber-600 hover:bg-amber-700 text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-100 gap-2 transition-all hover:scale-[1.02]">
  <Check size={18} /> {editId ? 'Commit Changes' : 'Initialize Rule'}
  </Button>
  </div>

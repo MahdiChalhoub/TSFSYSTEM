@@ -61,7 +61,7 @@ export default function SupplierPortalAdminPage() {
  </div>
  <h1 className="text-5xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
- <Truck size={32} className="text-white fill-white" />
+ <Truck size={32} className="text-app-text fill-white" />
  </div>
  Supplier <span className="text-emerald-600">Ops</span>
  </h1>
@@ -70,7 +70,7 @@ export default function SupplierPortalAdminPage() {
  <button onClick={load} className="h-12 px-6 rounded-2xl bg-app-surface border border-app-border shadow-sm font-bold text-app-text-muted flex items-center gap-2 hover:bg-app-bg transition-all">
  <RefreshCw size={18} /> Refresh
  </button>
- <button className="h-12 px-6 rounded-2xl bg-emerald-600 text-white font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+ <button className="h-12 px-6 rounded-2xl bg-emerald-600 text-app-text font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
  Vendor Audit <ChevronRight size={18} />
  </button>
  </div>
@@ -89,7 +89,7 @@ export default function SupplierPortalAdminPage() {
  <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Total Value</p>
  <h2 className="text-3xl font-black text-app-text">${totalProformaValue.toFixed(2)}</h2>
  </div>
- <div className="bg-amber-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+ <div className="bg-amber-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-app-text">
  <div className="flex justify-between items-start mb-4">
  <div className="w-12 h-12 rounded-2xl bg-amber-800/50 text-amber-100 flex items-center justify-center">
  <Tag size={24} />
@@ -99,7 +99,7 @@ export default function SupplierPortalAdminPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest leading-none mb-1">Price Adjustments</p>
- <h2 className="text-3xl font-black text-white">{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
+ <h2 className="text-3xl font-black text-app-text">{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
  </div>
  <div className="bg-app-surface p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
  <div className="flex justify-between items-start mb-4">
@@ -117,7 +117,7 @@ export default function SupplierPortalAdminPage() {
  {/* Tabs */}
  <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-gray-800 p-1.5 w-fit">
  {([['pricing', 'Price Change Requests', Tag], ['proformas', 'Proformas', FileText]] as const).map(([key, label, Icon]) => (
- <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/40' : 'text-app-text-faint hover:text-gray-200'}`}>
+ <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-rose-600 text-app-text shadow-lg shadow-rose-900/40' : 'text-app-text-faint hover:text-gray-200'}`}>
  <Icon size={14} />
  {label}
  {key === 'pricing' && pendingPrice.length > 0 && <span className="bg-amber-500 text-black text-[10px] font-bold px-1.5 rounded-full">{pendingPrice.length}</span>}
@@ -164,7 +164,7 @@ export default function SupplierPortalAdminPage() {
  </div>
  </div>
  {r.status === 'PENDING' && (
- <button onClick={() => handleApprove(r.id)} className="h-12 px-6 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all self-center">
+ <button onClick={() => handleApprove(r.id)} className="h-12 px-6 rounded-2xl bg-emerald-600 text-app-text font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all self-center">
  Authorize
  </button>
  )}
@@ -178,12 +178,12 @@ export default function SupplierPortalAdminPage() {
  <FileText size={16} className="text-orange-400 shrink-0" />
  <div className="flex-1">
  <div className="flex items-center gap-2">
- <span className="font-mono font-semibold text-sm text-white">{p.proforma_number || `#${p.id}`}</span>
+ <span className="font-mono font-semibold text-sm text-app-text">{p.proforma_number || `#${p.id}`}</span>
  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_BADGE[p.status] || 'bg-gray-800 text-app-text-faint border-gray-700'}`}>{p.status}</span>
  </div>
  <p className="text-xs text-app-text-muted mt-0.5">{p.supplier?.name || p.supplier_name || '—'}{p.created_at ? ` · ${new Date(p.created_at).toLocaleDateString()}` : ''}</p>
  </div>
- <div className="font-mono font-bold text-sm text-white">${Number(p.total_amount || 0).toFixed(2)}</div>
+ <div className="font-mono font-bold text-sm text-app-text">${Number(p.total_amount || 0).toFixed(2)}</div>
  </div>
  ))
  )

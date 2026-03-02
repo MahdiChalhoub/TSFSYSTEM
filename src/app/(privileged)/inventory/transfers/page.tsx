@@ -1,25 +1,62 @@
-import { Truck } from "lucide-react";
-import { TransfersClient } from "./TransfersClient";
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { ArrowRightLeft } from 'lucide-react';
+import { UniversalDataTable } from '@/components/ui/universal-data-table';
+import { getTransfersUDLE, getTransfersMeta } from '@/app/actions/inventory/transfers';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
-export default async function TransfersPage() {
- return (
- <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
- {/* Header */}
- <header className="flex flex-col md:flex-row justify-between items-center gap-6">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
- <Truck size={28} />
- </div>
- Stock <span className="text-emerald-600">Transfers</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Global Logistics & Terminal Movement</p>
- </div>
- </header>
+export default function StockTransfersPage() {
+    const router = useRouter();
 
- <TransfersClient />
- </div>
- );
+    return (
+        <div
+            className="min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto"
+            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+        >
+            {/* ── Header ────────────────────────────── */}
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{ background: 'var(--app-primary)', boxShadow: '0 8px 24px var(--app-primary-glow)' }}
+                    >
+                        <ArrowRightLeft size={26} color="#fff" />
+                    </div>
+                    <div>
+                        <h1
+                            className="text-3xl font-black tracking-tight"
+                            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
+                        >
+                            Stock <span style={{ color: 'var(--app-primary)' }}>Transfers</span>
+                        </h1>
+                        <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            Multi-Warehouse Operations
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <Link href="/inventory/transfers/new">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-200">
+                            New Transfer
+                        </Button>
+                    </Link>
+                </div>
+            </header>
+
+            {/* ── Data Table ────────────────────────── */}
+            <UniversalDataTable
+                endpoint="inventory/stock-moves"
+                fetcher={getTransfersUDLE}
+                metaFetcher={getTransfersMeta}
+                onRowClick={(row) => {
+                    if (row.id) {
+                        router.push(`/inventory/transfers/${row.id}`);
+                    }
+                }}
+            />
+        </div>
+    );
 }

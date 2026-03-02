@@ -91,7 +91,7 @@ export function CartTotals({
  }}
  className={clsx(
  "px-2 py-0.5 border rounded text-[9px] font-black transition-all",
- pointsRedeemed > 0 ? "bg-indigo-600 text-white border-indigo-600" : "bg-app-surface text-indigo-500 border-indigo-100 hover:border-indigo-300"
+ pointsRedeemed > 0 ? "bg-indigo-600 text-app-text border-indigo-600" : "bg-app-surface text-indigo-500 border-indigo-100 hover:border-indigo-300"
  )}
  >
  {pointsRedeemed > 0 ? `Redeeming ${pointsRedeemed}` : 'Redeem All'}
@@ -137,7 +137,7 @@ export function CartTotals({
  className={clsx(
  "flex items-center gap-2 p-3 rounded-xl border transition-all",
  paymentMethod === m.id
- ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg'
+ ? 'bg-indigo-600 border-indigo-600 text-app-text shadow-lg'
  : 'bg-app-surface border-app-border text-app-text-faint hover:bg-app-bg'
  )}
  >
@@ -165,7 +165,7 @@ export function CartTotals({
  <button
  onClick={onCharge}
  disabled={isPending}
- className="w-full bg-indigo-600 text-white rounded-xl h-14 flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+ className="w-full bg-indigo-600 text-app-text rounded-xl h-14 flex flex-col items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
  >
  {isPending ? (
  <div className="flex items-center gap-3"><Loader2 size={16} className="animate-spin" /> Processing...</div>

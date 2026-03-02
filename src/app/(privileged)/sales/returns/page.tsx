@@ -117,7 +117,7 @@ export default function SalesReturnsPage() {
  {ret.status === 'PENDING' && (
  <Button
  size="sm"
- className="h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-emerald-100 gap-1.5"
+ className="h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-emerald-100 gap-1.5"
  onClick={() => approveReturn(ret.id)}
  >
  <CheckCircle2 size={13} /> Restock
@@ -139,7 +139,7 @@ export default function SalesReturnsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
- <RotateCcw size={28} className="text-white" />
+ <RotateCcw size={28} className="text-app-text" />
  </div>
  Revenue <span className="text-amber-500">Restitution</span> Control
  </h1>

@@ -14,7 +14,7 @@ export function DashboardHeader() {
  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
  System Operational
  </div>
- <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">
+ <h1 className="text-2xl md:text-3xl font-black text-app-text tracking-tight mb-1">
  Command Center
  </h1>
  <p className="text-app-text-faint text-sm max-w-xl">
@@ -22,7 +22,7 @@ export function DashboardHeader() {
  </p>
  </div>
 
- <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-slate-300 text-sm font-medium">
+ <div className="flex items-center gap-3 bg-app-text/5 backdrop-blur-md border border-app-text/10 px-4 py-2 rounded-full text-slate-300 text-sm font-medium">
  <Calendar size={16} className="text-emerald-400" />
  {today}
  </div>

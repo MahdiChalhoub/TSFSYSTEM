@@ -64,7 +64,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
  </div>
  {/* Financial Logic Guide */}
  <div className="max-w-[1600px] mx-auto px-8 py-6">
- <div className="bg-emerald-900 rounded-3xl p-6 text-white flex flex-wrap items-center gap-8 shadow-lg">
+ <div className="bg-emerald-900 rounded-3xl p-6 text-app-text flex flex-wrap items-center gap-8 shadow-lg">
  <div className="flex items-center gap-3 border-r border-emerald-800 pr-8">
  <ShieldCheck className="text-emerald-400" size={32} />
  <div>
@@ -109,7 +109,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
  key={key}
  onClick={() => toggleTemplate(key)}
  className={`flex-shrink-0 px-6 py-3 rounded-2xl border transition-all flex items-center gap-3 ${selectedTemplates.includes(key)
- ? 'bg-stone-900 border-stone-900 text-white shadow-xl shadow-stone-200'
+ ? 'bg-stone-900 border-stone-900 text-app-text shadow-xl shadow-stone-200'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-stone-400'
  }`}
  >
@@ -136,7 +136,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
  <button
  disabled={isPending}
  onClick={() => handleImport(key)}
- className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm"
+ className="bg-emerald-600 text-app-text px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-sm"
  >
  <Zap size={14} /> Import
  </button>

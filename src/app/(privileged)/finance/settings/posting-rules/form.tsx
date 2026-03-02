@@ -135,7 +135,7 @@ export default function PostingRulesForm({
  return (
  <div className="max-w-5xl mx-auto space-y-8 pb-20">
  {/* Header */}
- <div className="bg-stone-900 rounded-3xl p-8 text-white flex justify-between items-center shadow-2xl">
+ <div className="bg-stone-900 rounded-3xl p-8 text-app-text flex justify-between items-center shadow-2xl">
  <div className="flex items-center gap-4">
  <div className="bg-emerald-500/20 p-3 rounded-2xl">
  <Target className="text-emerald-400" size={32} />

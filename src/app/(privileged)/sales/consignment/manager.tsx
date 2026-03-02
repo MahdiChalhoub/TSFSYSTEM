@@ -100,54 +100,54 @@ export default function ConsignmentManager({
  <div className="space-y-6">
  {/* KPI Overview */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-none shadow-lg">
+ <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-app-text border-none shadow-lg">
  <CardContent className="p-6">
  <div className="flex justify-between items-start">
  <div>
- <p className="text-white/80 text-sm font-medium">In-Stock Consignment</p>
- <h3 className="text-3xl font-bold mt-1">{totalConsignmentValue.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
+ <p className="text-app-text/80 text-sm font-medium">In-Stock Consignment</p>
+ <h3 className="text-3xl font-bold mt-1">{totalConsignmentValue.toLocaleString()} <span className="text-sm font-normal text-app-text/70">XOF</span></h3>
  </div>
- <div className="bg-white/20 p-2 rounded-lg">
+ <div className="bg-app-text/20 p-2 rounded-lg">
  <Package size={24} />
  </div>
  </div>
- <div className="mt-4 flex items-center text-sm text-white/80">
+ <div className="mt-4 flex items-center text-sm text-app-text/80">
  <TrendingUp size={16} className="mr-1" />
  <span>{availableStock.length} unique products</span>
  </div>
  </CardContent>
  </Card>
 
- <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-none shadow-lg">
+ <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-app-text border-none shadow-lg">
  <CardContent className="p-6">
  <div className="flex justify-between items-start">
  <div>
- <p className="text-white/80 text-sm font-medium">Pending Payouts</p>
- <h3 className="text-3xl font-bold mt-1">{totalPendingPayout.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
+ <p className="text-app-text/80 text-sm font-medium">Pending Payouts</p>
+ <h3 className="text-3xl font-bold mt-1">{totalPendingPayout.toLocaleString()} <span className="text-sm font-normal text-app-text/70">XOF</span></h3>
  </div>
- <div className="bg-white/20 p-2 rounded-lg">
+ <div className="bg-app-text/20 p-2 rounded-lg">
  <DollarSign size={24} />
  </div>
  </div>
- <div className="mt-4 flex items-center text-sm text-white/80">
+ <div className="mt-4 flex items-center text-sm text-app-text/80">
  <Clock size={16} className="mr-1" />
  <span>{pendingItems.length} items sold awaiting settlement</span>
  </div>
  </CardContent>
  </Card>
 
- <Card className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white border-none shadow-lg">
+ <Card className="bg-gradient-to-br from-emerald-500 to-teal-500 text-app-text border-none shadow-lg">
  <CardContent className="p-6">
  <div className="flex justify-between items-start">
  <div>
- <p className="text-white/80 text-sm font-medium">Completed Settlements</p>
+ <p className="text-app-text/80 text-sm font-medium">Completed Settlements</p>
  <h3 className="text-3xl font-bold mt-1">{totalSettledCount}</h3>
  </div>
- <div className="bg-white/20 p-2 rounded-lg">
+ <div className="bg-app-text/20 p-2 rounded-lg">
  <History size={24} />
  </div>
  </div>
- <div className="mt-4 flex items-center text-sm text-white/80">
+ <div className="mt-4 flex items-center text-sm text-app-text/80">
  <CheckCircle2 size={16} className="mr-1" />
  <span>Archive growing</span>
  </div>
@@ -244,13 +244,13 @@ export default function ConsignmentManager({
  )}
  {Object.values(pendingBySupplier).map((supplier: Record<string, any>) => (
  <Card key={supplier.id} className="border-none shadow-xl overflow-hidden group">
- <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 flex justify-between items-center text-white">
+ <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 flex justify-between items-center text-app-text">
  <div>
  <div className="flex items-center gap-2">
  <Users size={20} className="text-amber-400" />
  <h3 className="text-lg font-bold">{supplier.name}</h3>
  </div>
- <p className="text-white/60 text-sm mt-1">{supplier.items.length} items sold • {supplier.total.toLocaleString()} XOF pending</p>
+ <p className="text-app-text/60 text-sm mt-1">{supplier.items.length} items sold • {supplier.total.toLocaleString()} XOF pending</p>
  </div>
  <button
  onClick={() => handleGenerateSettlement(supplier.id)}
@@ -323,7 +323,7 @@ export default function ConsignmentManager({
  {settlements.map((settle) => (
  <div key={settle.id} className="bg-gray-50/50 border border-app-border rounded-2xl p-5 hover:border-emerald-200 hover:bg-emerald-50/10 transition-all group">
  <div className="flex justify-between items-start mb-4">
- <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+ <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-app-text transition-colors">
  <FileText size={20} />
  </div>
  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${settle.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'

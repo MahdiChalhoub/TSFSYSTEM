@@ -61,7 +61,7 @@ export default function SwitcherPage() {
  >
  <CardHeader>
  <div className="flex justify-between items-start">
- <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+ <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-app-text transition-colors">
  <Building size={20} />
  </div>
  <Badge className={org.isActive ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-text-muted"}>

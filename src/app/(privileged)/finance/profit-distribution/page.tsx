@@ -159,12 +159,12 @@ export default function ProfitDistributionPage() {
  {/* Step Indicator */}
  <div className="flex items-center gap-2 py-2">
  <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-app-text" : "text-stone-300"}`}>
- <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-text-faint"}`}>1</span>
+ <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-app-text shadow-md" : "bg-app-surface-2 text-app-text-faint"}`}>1</span>
  <span className="text-sm font-semibold">Configure</span>
  </div>
  <ChevronRight size={16} className="text-stone-300" />
  <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-app-text" : "text-stone-300"}`}>
- <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-text-faint"}`}>2</span>
+ <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-app-text shadow-md" : "bg-app-surface-2 text-app-text-faint"}`}>2</span>
  <span className="text-sm font-semibold">Preview</span>
  </div>
  </div>

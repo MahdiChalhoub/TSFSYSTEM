@@ -34,7 +34,7 @@ export default async function ChecklistsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <ListChecks size={28} className="text-white" />
+ <ListChecks size={28} className="text-app-text" />
  </div>
  Check<span className="text-emerald-600">lists</span>
  </h1>

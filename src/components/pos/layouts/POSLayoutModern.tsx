@@ -230,8 +230,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
  <div className="flex-1 flex overflow-hidden relative">
  {/* ── Security Overlay for Cart when in Payment Mode ── */}
  {isMultiPayMode && (
- <div className="absolute top-0 right-0 w-[42%] h-full bg-white/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
- <div className="bg-white/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+ <div className="absolute top-0 right-0 w-[42%] h-full bg-app-text/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center p-8 text-center pointer-events-auto">
+ <div className="bg-app-text/90 p-6 rounded-3xl shadow-2xl border border-amber-200 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
  <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
  <Lock size={32} />
  </div>
@@ -284,7 +284,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  {/* Avatar — click to toggle search */}
  <button
  onClick={() => setShowClientPanel(p => !p)}
- className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-indigo-300 transition-all"
+ className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-app-text text-[11px] font-black shadow-md shadow-indigo-100 shrink-0 hover:ring-2 hover:ring-indigo-300 transition-all"
  >
  {showClientPanel
  ? <Search size={12} />
@@ -488,7 +488,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  }}
  className={clsx(
  "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
- (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-text-muted hover:border-indigo-300 hover:text-indigo-600'
+ (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-app-text shadow-lg shadow-indigo-100' : 'bg-app-surface border-app-border text-app-text-muted hover:border-indigo-300 hover:text-indigo-600'
  )}
  >ALL</button>
  {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
@@ -502,7 +502,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  className={clsx(
  "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
  (activeCategoryId === cat.id || currentParentId === cat.id)
- ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+ ? 'bg-emerald-600 border-emerald-600 text-app-text shadow-lg shadow-emerald-200'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-emerald-300 hover:text-emerald-600'
  )}
  >{cat.name}</button>
@@ -518,7 +518,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  onSetActiveCategoryId(grandParentId);
  setLeftExpanded(true);
  }}
- className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
+ className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-app-text rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
  >
  <ArrowLeft size={14} />
  {currentParentName}
@@ -534,7 +534,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  className={clsx(
  "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
  activeCategoryId === cat.id
- ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+ ? 'bg-emerald-600 border-emerald-600 text-app-text shadow-lg shadow-emerald-200'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-emerald-300 hover:text-emerald-600'
  )}
  >{cat.name}</button>
@@ -609,7 +609,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  ) : (
  <button
  onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
- className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-center group hover:shadow-xl transition-all border-none"
+ className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-app-text text-center group hover:shadow-xl transition-all border-none"
  >
  <Package size={20} className="mx-auto mb-1.5" />
  <span className="text-[12px] font-black uppercase tracking-wider">All Products</span>
@@ -636,7 +636,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  >
  <div className={clsx(
  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
- (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-white rotate-12' : 'bg-app-bg text-app-text-faint group-hover:bg-emerald-50 group-hover:text-emerald-500'
+ (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-app-text rotate-12' : 'bg-app-bg text-app-text-faint group-hover:bg-emerald-50 group-hover:text-emerald-500'
  )}>
  <Tag size={20} />
  </div>
@@ -665,7 +665,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  willChange: 'transform'
  }}
  className={clsx(
- "z-[50] w-[280px] p-2 bg-white/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
+ "z-[50] w-[280px] p-2 bg-app-text/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
  !isDragging && "transition-transform duration-200 ease-out"
  )}
  >
@@ -679,7 +679,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  {isMultiPayMode ? 'Multi Pay' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
  </span>
  </div>
- <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+ <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-app-text transition-all">
  <X size={12} />
  </button>
  </div>
@@ -909,7 +909,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  </span>
  <button
  onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
- className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
+ className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-app-text text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
  >
  <Plus size={12} />
  </button>
@@ -919,7 +919,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  </p>
  <button
  onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -item.quantity); }}
- className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shrink-0 flex items-center justify-center border border-rose-100"
+ className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-text transition-all shrink-0 flex items-center justify-center border border-rose-100"
  title="Delete product from cart"
  >
  <Trash2 size={14} />
@@ -961,7 +961,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  >
  <div className="flex items-center justify-center gap-1">
  <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Discount</span>
- <div className="flex items-center bg-white/80 rounded px-1 py-px">
+ <div className="flex items-center bg-app-text/80 rounded px-1 py-px">
  <button
  onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
  className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-gray-300")}
@@ -1016,10 +1016,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
  "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
  cart.length > 0 && !isProcessing
  ? deficit > 0
- ? "bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
+ ? "bg-gradient-to-br from-rose-500 to-red-600 text-app-text shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
  : changeDue > 0
- ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
- : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+ ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-app-text shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
+ : "bg-gradient-to-br from-emerald-500 to-teal-600 text-app-text shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
  : "bg-gray-200 text-app-text-faint"
  )}
  >
@@ -1038,7 +1038,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
  className={clsx(
  "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border-2 transition-all",
  storeChangeInWallet
- ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-100"
+ ? "bg-blue-500 border-blue-500 text-app-text shadow-md shadow-blue-100"
  : "bg-app-surface border-app-border text-app-text-muted hover:border-blue-300 hover:bg-blue-50"
  )}
  >

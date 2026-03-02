@@ -166,7 +166,7 @@ export default function AuditTable() {
  >
  {t}
  {t === 'UNREVIEWED' && unreviewed > 0 && (
- <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black">
+ <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-rose-500 text-app-text text-[9px] font-black">
  {unreviewed}
  </span>
  )}

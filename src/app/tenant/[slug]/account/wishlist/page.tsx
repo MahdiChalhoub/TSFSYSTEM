@@ -14,7 +14,7 @@ export default function WishlistPageRoute() {
  }
 
  const WishlistPage = (components as any).WishlistPage
- if (!WishlistPage) return <div className="p-20 text-white text-center">Wishlist component not implemented in this theme.</div>
+ if (!WishlistPage) return <div className="p-20 text-app-text text-center">Wishlist component not implemented in this theme.</div>
 
  return <WishlistPage />
 }

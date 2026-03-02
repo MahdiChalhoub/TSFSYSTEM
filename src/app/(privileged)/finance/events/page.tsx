@@ -104,7 +104,7 @@ export default function FinancialEventsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <Calendar size={28} className="text-white" />
+ <Calendar size={28} className="text-app-text" />
  </div>
  Financial <span className="text-indigo-600">Events</span>
  </h1>
@@ -171,7 +171,7 @@ export default function FinancialEventsPage() {
  <div className="flex flex-wrap gap-2">
  <button
  onClick={() => setTypeFilter(null)}
- className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-gray-900 text-white' : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
+ className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-gray-900 text-app-text' : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
  }`}
  >
  All ({events.length})
@@ -182,7 +182,7 @@ export default function FinancialEventsPage() {
  <button
  key={type}
  onClick={() => setTypeFilter(typeFilter === type ? null : type)}
- className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${typeFilter === type ? 'bg-gray-900 text-white' : `${cfg.bg} ${cfg.color} hover:opacity-80`
+ className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${typeFilter === type ? 'bg-gray-900 text-app-text' : `${cfg.bg} ${cfg.color} hover:opacity-80`
  }`}
  >
  <span>{cfg.icon}</span> {cfg.label} ({count})

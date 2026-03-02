@@ -13,20 +13,20 @@ export function StorefrontFooter() {
  const storeName = config?.storefront_title || organization?.name || slug
 
  return (
- <footer className="bg-slate-950 border-t border-white/5">
+ <footer className="bg-slate-950 border-t border-app-text/5">
  <div className="max-w-6xl mx-auto px-4 py-16">
  <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
  {/* Brand */}
  <div className="md:col-span-2 space-y-4">
  <div className="flex items-center gap-3">
  {organization?.logo ? (
- <img src={organization.logo} alt={storeName} className="w-10 h-10 rounded-xl object-cover border border-white/10" />
+ <img src={organization.logo} alt={storeName} className="w-10 h-10 rounded-xl object-cover border border-app-text/10" />
  ) : (
  <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
  <Store size={20} />
  </div>
  )}
- <span className="text-xl font-black text-white">{storeName}</span>
+ <span className="text-xl font-black text-app-text">{storeName}</span>
  </div>
  <p className="text-app-text-muted text-sm leading-relaxed max-w-sm">
  {config?.storefront_tagline || `Welcome to ${storeName}. Your trusted digital storefront for quality products and services.`}
@@ -39,26 +39,26 @@ export function StorefrontFooter() {
  <ul className="space-y-2.5">
  <li>
  <Link href={`/tenant/${slug}`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Store size={14} /> Products
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/categories`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Grid3X3 size={14} /> Categories
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/search`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Search size={14} /> Search
  </Link>
  </li>
  {storeMode !== 'CATALOG_QUOTE' && (
  <li>
  <Link href={`/tenant/${slug}/cart`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <ShoppingCart size={14} /> Cart
  </Link>
  </li>
@@ -66,7 +66,7 @@ export function StorefrontFooter() {
  {storeMode === 'CATALOG_QUOTE' && (
  <li>
  <Link href={`/tenant/${slug}/quote`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <FileQuestion size={14} /> Request Quote
  </Link>
  </li>
@@ -80,37 +80,37 @@ export function StorefrontFooter() {
  <ul className="space-y-2.5">
  <li>
  <Link href={`/tenant/${slug}/account`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <User size={14} /> Dashboard
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/account/orders`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Package size={14} /> Orders
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/account/wishlist`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Heart size={14} /> Wishlist
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/account/wallet`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Wallet size={14} /> Wallet
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/account/notifications`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <Bell size={14} /> Notifications
  </Link>
  </li>
  <li>
  <Link href={`/tenant/${slug}/account/tickets`}
- className="text-app-text-faint hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+ className="text-app-text-faint hover:text-app-text text-sm font-medium transition-colors flex items-center gap-2">
  <LifeBuoy size={14} /> Support
  </Link>
  </li>
@@ -119,7 +119,7 @@ export function StorefrontFooter() {
  </div>
 
  {/* Bottom Bar */}
- <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+ <div className="pt-6 border-t border-app-text/5 flex flex-col md:flex-row justify-between items-center gap-4">
  <p className="text-[10px] text-slate-700 font-bold uppercase tracking-widest">
  © {new Date().getFullYear()} {storeName} • Powered by {PLATFORM_CONFIG.name}
  </p>

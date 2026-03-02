@@ -152,7 +152,7 @@ export default function EncryptionPage() {
  <div>
  <h2 className="text-3xl font-black text-app-text tracking-tight flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
- <Shield className="text-white" size={22} />
+ <Shield className="text-app-text" size={22} />
  </div>
  AES-256 Encryption
  </h2>
@@ -301,7 +301,7 @@ export default function EncryptionPage() {
  <button
  onClick={handleActivate}
  disabled={actionLoading !== null}
- className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold transition-all duration-200 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-app-text font-bold transition-all duration-200 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {actionLoading === 'activate' ? (
  <RefreshCw className="animate-spin" size={18} />

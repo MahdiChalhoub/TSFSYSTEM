@@ -328,7 +328,7 @@ export default function AssetsPage() {
  </div>
  <div className="flex justify-end gap-2 pt-3 border-t mt-2">
  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl px-6 h-11 text-app-text-faint font-bold uppercase text-[10px] tracking-widest border-app-border hover:bg-app-bg">Cancel</Button>
- <Button type="submit" disabled={isPending} className="rounded-xl px-8 h-11 gap-2 shadow-lg shadow-black/10 bg-black hover:bg-stone-800 transition-all text-[10px] font-black uppercase tracking-widest text-white">
+ <Button type="submit" disabled={isPending} className="rounded-xl px-8 h-11 gap-2 shadow-lg shadow-black/10 bg-black hover:bg-stone-800 transition-all text-[10px] font-black uppercase tracking-widest text-app-text">
  {isPending ? "Acquiring..." : <><Landmark size={14} /> Finish Acquisition</>}
  </Button>
  </div>
@@ -370,7 +370,7 @@ export default function AssetsPage() {
  content={({ active, payload }) => {
  if (active && payload && payload.length) {
  return (
- <div className="bg-black/90 text-white p-3 rounded-2xl text-[10px] shadow-2xl backdrop-blur-md border border-white/10 scale-110">
+ <div className="bg-black/90 text-app-text p-3 rounded-2xl text-[10px] shadow-2xl backdrop-blur-md border border-app-text/10 scale-110">
  <p className="font-black uppercase tracking-widest opacity-50 mb-1 text-[8px]">Year {payload[0].payload.period}</p>
  <p className="font-black flex justify-between gap-6 text-sm">
  Value: <span className="text-emerald-400 font-serif">${Number(payload[0].value).toLocaleString()}</span>

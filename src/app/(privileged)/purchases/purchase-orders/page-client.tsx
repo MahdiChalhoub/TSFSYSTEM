@@ -67,7 +67,7 @@ export default function PurchaseOrdersPage() {
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <ClipboardList size={28} className="text-white" />
+ <ClipboardList size={28} className="text-app-text" />
  </div>
  Purchase <span className="text-blue-600">Orders</span>
  </h1>

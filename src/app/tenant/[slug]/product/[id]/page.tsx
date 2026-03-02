@@ -34,7 +34,7 @@ export default function ProductDetailRoute() {
  <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
  <div className="text-center space-y-4">
  <AlertCircle size={48} className="mx-auto text-app-text-muted" />
- <h1 className="text-2xl font-bold text-white">Product Not Found</h1>
+ <h1 className="text-2xl font-bold text-app-text">Product Not Found</h1>
  <Link href={`/tenant/${slug}`}
  className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium">
  <ArrowLeft size={16} /> Back to Store

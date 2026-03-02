@@ -128,7 +128,7 @@ export default function BalancesPage() {
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <Scale size={28} className="text-white" />
+ <Scale size={28} className="text-app-text" />
  </div>
  Account <span className="text-blue-600">Balances</span>
  </h1>
@@ -138,7 +138,7 @@ export default function BalancesPage() {
  <button
  onClick={() => setTab('customer')}
  className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'customer'
- ? 'bg-blue-600 shadow-lg shadow-blue-200 text-white'
+ ? 'bg-blue-600 shadow-lg shadow-blue-200 text-app-text'
  : 'text-app-text-faint hover:text-app-text-muted'
  }`}
  >
@@ -148,7 +148,7 @@ export default function BalancesPage() {
  <button
  onClick={() => setTab('supplier')}
  className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'supplier'
- ? 'bg-amber-600 shadow-lg shadow-amber-200 text-white'
+ ? 'bg-amber-600 shadow-lg shadow-amber-200 text-app-text'
  : 'text-app-text-faint hover:text-app-text-muted'
  }`}
  >

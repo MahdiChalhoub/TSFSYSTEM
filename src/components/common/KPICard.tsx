@@ -45,7 +45,7 @@ export default function KPICard({
  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
  <div className="p-5 relative">
  <div className="flex justify-between items-start mb-4">
- <div className="w-11 h-11 rounded-xl bg-white/10 text-white flex items-center justify-center backdrop-blur-md">
+ <div className="w-11 h-11 rounded-xl bg-app-text/10 text-app-text flex items-center justify-center backdrop-blur-md">
  {icon}
  </div>
  {change !== undefined && change !== 0 && (
@@ -56,9 +56,9 @@ export default function KPICard({
  )}
  </div>
  <p className="label-micro text-app-text-faint">{label}</p>
- <h2 className="text-3xl font-black text-white tracking-tighter mt-1">{value}</h2>
+ <h2 className="text-3xl font-black text-app-text tracking-tighter mt-1">{value}</h2>
  {footnote && (
- <div className="mt-4 pt-3 border-t border-white/5 flex items-center gap-2 label-micro text-app-text-muted">
+ <div className="mt-4 pt-3 border-t border-app-text/5 flex items-center gap-2 label-micro text-app-text-muted">
  {footnoteIcon} {footnote}
  </div>
  )}

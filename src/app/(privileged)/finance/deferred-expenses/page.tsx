@@ -203,7 +203,7 @@ export default function DeferredExpensesPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <Clock size={28} className="text-white" />
+ <Clock size={28} className="text-app-text" />
  </div>
  Deferred <span className="text-indigo-600">Expenses</span>
  </h1>
@@ -211,7 +211,7 @@ export default function DeferredExpensesPage() {
  </div>
  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
  <DialogTrigger asChild>
- <Button className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+ <Button className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
  <Plus size={18} /> New Expense Account
  </Button>
  </DialogTrigger>
@@ -259,7 +259,7 @@ export default function DeferredExpensesPage() {
  </div>
  <div className="col-span-2 flex justify-end gap-3 pt-6 border-t border-stone-50">
  <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl font-black text-[10px] uppercase">Cancel</Button>
- <Button type="submit" disabled={isPending} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase h-10 px-6 px-6">
+ <Button type="submit" disabled={isPending} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-app-text font-black text-[10px] uppercase h-10 px-6 px-6">
  {isPending ? "Configuring..." : "Schedule Amortization"}
  </Button>
  </div>

@@ -14,7 +14,7 @@ export default function AccountPageRoute() {
  }
 
  const DashboardPage = (components as any).DashboardPage
- if (!DashboardPage) return <div className="p-20 text-white text-center">Dashboard component not implemented in this theme.</div>
+ if (!DashboardPage) return <div className="p-20 text-app-text text-center">Dashboard component not implemented in this theme.</div>
 
  return <DashboardPage />
 }

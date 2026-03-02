@@ -10,1134 +10,1134 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { getTradeSubTypeSettings, updateTradeSubTypeSettings } from '@/app/actions/settings/trade-settings'
 interface Props {
-    settings: FinancialSettingsState
-    lock: { isLocked: boolean; reason: string | null }
-    currencies: Currency[]
-    accounts: any[]
+ settings: FinancialSettingsState
+ lock: { isLocked: boolean; reason: string | null }
+ currencies: Currency[]
+ accounts: any[]
 }
 // ────────────────────────────────────────────────────────
 // Company Type Definitions
 // ────────────────────────────────────────────────────────
 const COMPARE_ROWS = [
-    { label: 'Pricing Basis', key: 'pricing' },
-    { label: 'VAT Handling', key: 'vat' },
-    { label: 'VAT Declaration', key: 'vatDeclaration' },
-    { label: 'Dual View', key: 'dualView' },
-    { label: 'Bookkeeping', key: 'bookkeeping' },
-    { label: 'Invoicing', key: 'invoicing' },
-    { label: 'Access Control', key: 'accessControl' },
-    { label: 'Best For', key: 'bestFor' },
+ { label: 'Pricing Basis', key: 'pricing' },
+ { label: 'VAT Handling', key: 'vat' },
+ { label: 'VAT Declaration', key: 'vatDeclaration' },
+ { label: 'Dual View', key: 'dualView' },
+ { label: 'Bookkeeping', key: 'bookkeeping' },
+ { label: 'Invoicing', key: 'invoicing' },
+ { label: 'Access Control', key: 'accessControl' },
+ { label: 'Best For', key: 'bestFor' },
 ] as const
 const COMPANY_TYPES = [
-    {
-        key: 'REGULAR',
-        name: 'Regular (TTC)',
-        label: 'REGULAR (TTC Based)',
-        description: 'Standard business model. Costs and prices are managed in TTC (Tax Included), simplifying daily pricing and cost entry. VAT is calculated automatically from the TTC amounts.',
-        features: ['TTC-based pricing', 'Auto VAT calculation', 'Simple cost entry', 'Standard invoicing'],
-        recommended: 'Retail shops, restaurants, small businesses',
-        color: 'emerald',
-        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
-        compare: {
-            pricing: 'TTC (Tax Included)',
-            vat: 'Auto-calculated from TTC',
-            vatDeclaration: 'No',
-            dualView: 'No',
-            bookkeeping: 'Simple',
-            invoicing: 'Standard',
-            accessControl: 'Single scope',
-            bestFor: 'Retail, restaurants',
-        }
-    },
-    {
-        key: 'MICRO',
-        name: 'Micro Enterprise',
-        label: 'MICRO (Percentage Tax)',
-        description: 'Simplified taxation for very small businesses. You pay a fixed percentage on total sales and purchases — no detailed VAT declarations needed. Minimal bookkeeping overhead.',
-        features: ['Flat tax rate on sales', 'Flat tax rate on purchases', 'No VAT declaration', 'Minimal bookkeeping'],
-        recommended: 'Freelancers, sole proprietors, very small businesses',
-        color: 'blue',
-        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
-        compare: {
-            pricing: 'TTC (Tax Included)',
-            vat: 'Flat % on sales/purchases',
-            vatDeclaration: 'No',
-            dualView: 'No',
-            bookkeeping: 'Minimal',
-            invoicing: 'Simplified',
-            accessControl: 'Single scope',
-            bestFor: 'Freelancers, sole proprietors',
-        }
-    },
-    {
-        key: 'REAL',
-        name: 'Real (Standard VAT)',
-        label: 'REAL (Standard VAT)',
-        description: 'Professional accounting regime ("Régime Réel"). All amounts are entered in HT (Hors Taxe). VAT is tracked in detail — Collected vs. Paid — requiring formal invoices and explicit tax handling.',
-        features: ['HT-based entry', 'VAT Collected vs Paid', 'Formal invoicing', 'Official VAT declaration'],
-        recommended: 'Medium-large businesses, formal accounting requirements',
-        color: 'violet',
-        autoConfig: { worksInTTC: false, declareTVA: true, dualView: false },
-        compare: {
-            pricing: 'HT (Hors Taxe)',
-            vat: 'Collected vs Paid tracking',
-            vatDeclaration: 'Yes — full declaration',
-            dualView: 'No',
-            bookkeeping: 'Professional',
-            invoicing: 'Formal with VAT lines',
-            accessControl: 'Single scope',
-            bestFor: 'Medium-large businesses',
-        }
-    },
-    {
-        key: 'MIXED',
-        name: 'Dual View (Mixed)',
-        label: 'MIXED (Dual View)',
-        description: 'Maintains two parallel accounting scopes: Official (declared to government) and Internal (full picture including undeclared operations). Each scope has independent ledger entries. Access to Official data can be PIN-protected.',
-        features: ['Official scope (declared)', 'Internal scope (full picture)', 'Dual ledger entries', 'PIN-protected official access', 'Scope-aware reports'],
-        recommended: 'Businesses needing dual-scope reporting and access control',
-        color: 'amber',
-        autoConfig: { worksInTTC: true, declareTVA: true, dualView: true },
-        compare: {
-            pricing: 'TTC (Tax Included)',
-            vat: 'Full tracking per scope',
-            vatDeclaration: 'Yes — official scope only',
-            dualView: 'Yes — Official + Internal',
-            bookkeeping: 'Dual ledger',
-            invoicing: 'Scope-aware',
-            accessControl: 'Per-user passwords',
-            bestFor: 'Dual-scope reporting',
-        }
-    },
-    {
-        key: 'CUSTOM',
-        name: 'Custom Configuration',
-        label: 'CUSTOM (Manual Config)',
-        description: 'Full manual control over every setting. Toggle TTC/HT modes, VAT declarations, and Dual View independently. For advanced users who need a configuration that doesn\'t fit standard profiles.',
-        features: ['Manual TTC/HT toggle', 'Manual VAT toggle', 'Optional dual view', 'Custom tax rules'],
-        recommended: 'Consultants, advanced accountants, specific setups',
-        color: 'stone',
-        autoConfig: null,
-        compare: {
-            pricing: 'Manual (TTC or HT)',
-            vat: 'Manual configuration',
-            vatDeclaration: 'Optional',
-            dualView: 'Optional',
-            bookkeeping: 'Fully configurable',
-            invoicing: 'Configurable',
-            accessControl: 'Configurable',
-            bestFor: 'Advanced users',
-        }
-    }
+ {
+ key: 'REGULAR',
+ name: 'Regular (TTC)',
+ label: 'REGULAR (TTC Based)',
+ description: 'Standard business model. Costs and prices are managed in TTC (Tax Included), simplifying daily pricing and cost entry. VAT is calculated automatically from the TTC amounts.',
+ features: ['TTC-based pricing', 'Auto VAT calculation', 'Simple cost entry', 'Standard invoicing'],
+ recommended: 'Retail shops, restaurants, small businesses',
+ color: 'emerald',
+ autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
+ compare: {
+ pricing: 'TTC (Tax Included)',
+ vat: 'Auto-calculated from TTC',
+ vatDeclaration: 'No',
+ dualView: 'No',
+ bookkeeping: 'Simple',
+ invoicing: 'Standard',
+ accessControl: 'Single scope',
+ bestFor: 'Retail, restaurants',
+ }
+ },
+ {
+ key: 'MICRO',
+ name: 'Micro Enterprise',
+ label: 'MICRO (Percentage Tax)',
+ description: 'Simplified taxation for very small businesses. You pay a fixed percentage on total sales and purchases — no detailed VAT declarations needed. Minimal bookkeeping overhead.',
+ features: ['Flat tax rate on sales', 'Flat tax rate on purchases', 'No VAT declaration', 'Minimal bookkeeping'],
+ recommended: 'Freelancers, sole proprietors, very small businesses',
+ color: 'blue',
+ autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
+ compare: {
+ pricing: 'TTC (Tax Included)',
+ vat: 'Flat % on sales/purchases',
+ vatDeclaration: 'No',
+ dualView: 'No',
+ bookkeeping: 'Minimal',
+ invoicing: 'Simplified',
+ accessControl: 'Single scope',
+ bestFor: 'Freelancers, sole proprietors',
+ }
+ },
+ {
+ key: 'REAL',
+ name: 'Real (Standard VAT)',
+ label: 'REAL (Standard VAT)',
+ description: 'Professional accounting regime ("Régime Réel"). All amounts are entered in HT (Hors Taxe). VAT is tracked in detail — Collected vs. Paid — requiring formal invoices and explicit tax handling.',
+ features: ['HT-based entry', 'VAT Collected vs Paid', 'Formal invoicing', 'Official VAT declaration'],
+ recommended: 'Medium-large businesses, formal accounting requirements',
+ color: 'violet',
+ autoConfig: { worksInTTC: false, declareTVA: true, dualView: false },
+ compare: {
+ pricing: 'HT (Hors Taxe)',
+ vat: 'Collected vs Paid tracking',
+ vatDeclaration: 'Yes — full declaration',
+ dualView: 'No',
+ bookkeeping: 'Professional',
+ invoicing: 'Formal with VAT lines',
+ accessControl: 'Single scope',
+ bestFor: 'Medium-large businesses',
+ }
+ },
+ {
+ key: 'MIXED',
+ name: 'Dual View (Mixed)',
+ label: 'MIXED (Dual View)',
+ description: 'Maintains two parallel accounting scopes: Official (declared to government) and Internal (full picture including undeclared operations). Each scope has independent ledger entries. Access to Official data can be PIN-protected.',
+ features: ['Official scope (declared)', 'Internal scope (full picture)', 'Dual ledger entries', 'PIN-protected official access', 'Scope-aware reports'],
+ recommended: 'Businesses needing dual-scope reporting and access control',
+ color: 'amber',
+ autoConfig: { worksInTTC: true, declareTVA: true, dualView: true },
+ compare: {
+ pricing: 'TTC (Tax Included)',
+ vat: 'Full tracking per scope',
+ vatDeclaration: 'Yes — official scope only',
+ dualView: 'Yes — Official + Internal',
+ bookkeeping: 'Dual ledger',
+ invoicing: 'Scope-aware',
+ accessControl: 'Per-user passwords',
+ bestFor: 'Dual-scope reporting',
+ }
+ },
+ {
+ key: 'CUSTOM',
+ name: 'Custom Configuration',
+ label: 'CUSTOM (Manual Config)',
+ description: 'Full manual control over every setting. Toggle TTC/HT modes, VAT declarations, and Dual View independently. For advanced users who need a configuration that doesn\'t fit standard profiles.',
+ features: ['Manual TTC/HT toggle', 'Manual VAT toggle', 'Optional dual view', 'Custom tax rules'],
+ recommended: 'Consultants, advanced accountants, specific setups',
+ color: 'stone',
+ autoConfig: null,
+ compare: {
+ pricing: 'Manual (TTC or HT)',
+ vat: 'Manual configuration',
+ vatDeclaration: 'Optional',
+ dualView: 'Optional',
+ bookkeeping: 'Fully configurable',
+ invoicing: 'Configurable',
+ accessControl: 'Configurable',
+ bestFor: 'Advanced users',
+ }
+ }
 ]
 const COLOR_MAP: Record<string, { bg: string, border: string, badge: string, text: string, dot: string }> = {
-    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-    blue: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-700', dot: 'bg-blue-500' },
-    violet: { bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-700', dot: 'bg-violet-500' },
-    amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700', dot: 'bg-amber-500' },
-    stone: { bg: 'bg-app-bg', border: 'border-app-border', badge: 'bg-stone-200 text-stone-700', text: 'text-stone-700', dot: 'bg-stone-500' },
+ emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+ blue: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-700', dot: 'bg-blue-500' },
+ violet: { bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-700', dot: 'bg-violet-500' },
+ amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700', dot: 'bg-amber-500' },
+ stone: { bg: 'bg-app-bg', border: 'border-app-border', badge: 'bg-stone-200 text-stone-700', text: 'text-stone-700', dot: 'bg-stone-500' },
 }
 // ─── Type Detail Card ───
 function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[0], compact?: boolean }) {
-    const colors = COLOR_MAP[type.color]
-    return (
-        <div className={`${colors.bg} ${colors.border} border rounded-xl p-4`}>
-            <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
-                <h4 className={`text-sm font-bold ${colors.text}`}>{type.name}</h4>
-            </div>
-            <p className={`text-xs text-app-text-muted leading-relaxed ${compact ? 'line-clamp-3' : ''} mb-3`}>
-                {type.description}
-            </p>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-                {type.features.map(f => (
-                    <span key={f} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>{f}</span>
-                ))}
-            </div>
-            <p className="text-[10px] text-app-text-faint italic mt-2">
-                Best for: {type.recommended}
-            </p>
-        </div>
-    )
+ const colors = COLOR_MAP[type.color]
+ return (
+ <div className={`${colors.bg} ${colors.border} border rounded-xl p-4`}>
+ <div className="flex items-center gap-2 mb-2">
+ <div className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+ <h4 className={`text-sm font-bold ${colors.text}`}>{type.name}</h4>
+ </div>
+ <p className={`text-xs text-app-text-muted leading-relaxed ${compact ? 'line-clamp-3' : ''} mb-3`}>
+ {type.description}
+ </p>
+ <div className="flex flex-wrap gap-1.5 mb-2">
+ {type.features.map(f => (
+ <span key={f} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>{f}</span>
+ ))}
+ </div>
+ <p className="text-[10px] text-app-text-faint italic mt-2">
+ Best for: {type.recommended}
+ </p>
+ </div>
+ )
 }
 // ─── Edit Confirmation Modal ───
 function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) {
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-app-surface rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600">
-                        <AlertTriangle size={22} />
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-app-text">Unlock Settings?</h3>
-                        <p className="text-xs text-app-text-muted">This will allow editing core financial settings</p>
-                    </div>
-                </div>
-                <p className="text-sm text-app-text-muted mb-6 leading-relaxed">
-                    These settings are locked because they have already been saved and applied. Modifying them
-                    may affect existing transactions and reports. Are you sure you want to unlock and edit?
-                </p>
-                <div className="flex gap-3 justify-end">
-                    <button
-                        onClick={onCancel}
-                        className="px-4 py-2 text-sm font-medium text-app-text-muted bg-app-surface-2 rounded-lg hover:bg-stone-200 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={onConfirm}
-                        className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors"
-                    >
-                        Yes, Unlock Settings
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
+ return (
+ <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+ <div className="bg-app-surface rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+ <div className="flex items-center gap-3 mb-4">
+ <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600">
+ <AlertTriangle size={22} />
+ </div>
+ <div>
+ <h3 className="text-lg font-bold text-app-text">Unlock Settings?</h3>
+ <p className="text-xs text-app-text-muted">This will allow editing core financial settings</p>
+ </div>
+ </div>
+ <p className="text-sm text-app-text-muted mb-6 leading-relaxed">
+ These settings are locked because they have already been saved and applied. Modifying them
+ may affect existing transactions and reports. Are you sure you want to unlock and edit?
+ </p>
+ <div className="flex gap-3 justify-end">
+ <button
+ onClick={onCancel}
+ className="px-4 py-2 text-sm font-medium text-app-text-muted bg-app-surface-2 rounded-lg hover:bg-stone-200 transition-colors"
+ >
+ Cancel
+ </button>
+ <button
+ onClick={onConfirm}
+ className="px-4 py-2 text-sm font-semibold text-app-text bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors"
+ >
+ Yes, Unlock Settings
+ </button>
+ </div>
+ </div>
+ </div>
+ )
 }
 export default function FinancialSettingsForm({ settings, lock, currencies, accounts }: Props) {
-    const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const { register, handleSubmit, watch, setValue, control } = useForm<FinancialSettingsState>({
-        defaultValues: {
-            ...settings,
-            declarationRules: settings.declarationRules || []
-        }
-    })
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: "declarationRules"
-    })
-    const [isRecalcPending, startRecalc] = useTransition()
-    const [showCompare, setShowCompare] = useState(false)
-    const [compareType, setCompareType] = useState<string>('')
-    const [showEditConfirm, setShowEditConfirm] = useState(false)
-    const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
-    const [tradeTogglePending, setTradeTogglePending] = useState(false)
-    // Load trade sub-type setting on mount
-    useEffect(() => {
-        getTradeSubTypeSettings().then(s => setTradeSubTypesEnabled(s?.enabled ?? false)).catch(() => { })
-    }, [])
-    // Settings lock: after save, core fields are locked until user explicitly unlocks
-    const [settingsAreSaved, setSettingsAreSaved] = useState(() => {
-        // If currency and defaultTaxRate have values, settings were previously saved
-        return !!(settings.currency && settings.defaultTaxRate !== undefined && settings.defaultTaxRate !== null)
-    })
-    const [isUnlocked, setIsUnlocked] = useState(false)
-    const isCoreFieldsLocked = lock.isLocked || (settingsAreSaved && !isUnlocked)
-    const companyType = watch('companyType')
-    const dualView = watch('dualView')
-    const selectedType = COMPANY_TYPES.find(t => t.key === companyType)
-    const compareTypeObj = COMPANY_TYPES.find(t => t.key === compareType)
-    // Auto-configure settings when company type changes
-    useEffect(() => {
-        const type = COMPANY_TYPES.find(t => t.key === companyType)
-        if (type?.autoConfig) {
-            Object.entries(type.autoConfig).forEach(([key, value]) => {
-                setValue(key as keyof FinancialSettingsState, value)
-            })
-        }
-    }, [companyType, setValue])
-    const onSubmit = (data: FinancialSettingsState) => {
-        startTransition(async () => {
-            try {
-                await updateFinancialSettings(data)
-                setSettingsAreSaved(true)
-                setIsUnlocked(false)
-                toast.success('Settings Saved!')
-            } catch (err: unknown) {
-                toast.error((err instanceof Error ? err.message : String(err)))
-            }
-        })
-    }
-    const [settingsPendingAction, setSettingsPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
-    const handleRecalculate = () => {
-        setSettingsPendingAction({
-            type: 'recalculate',
-            title: 'Recalculate Balances?',
-            description: 'This will reset and recalculate all account balances based on the ledger history.',
-            variant: 'warning',
-        })
-    }
-    const handleUnlockRequest = () => {
-        setShowEditConfirm(true)
-    }
-    const handleConfirmUnlock = () => {
-        setIsUnlocked(true)
-        setShowEditConfirm(false)
-    }
-    return (
-        <div className="flex gap-6 items-start">
-            {/* Edit Confirmation Modal */}
-            {showEditConfirm && (
-                <EditConfirmModal
-                    onConfirm={handleConfirmUnlock}
-                    onCancel={() => setShowEditConfirm(false)}
-                />
-            )}
-            {/* ─── LEFT COLUMN: Main Form ─── */}
-            <div className={`space-y-4 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-app-surface p-4 rounded-xl shadow-sm border border-app-border">
-                    {/* Lock Status Warning */}
-                    {lock.isLocked && (
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
-                            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
-                                <ShieldAlert size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-amber-900">Accounting Integrity Lock Active</h3>
-                                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                                    {lock.reason}
-                                    <br />
-                                    <span className="font-bold">Structural core configuration fields have been set to read-only.</span>
-                                </p>
-                            </div>
-                        </div>
-                    )}
-                    {/* Settings Saved Lock Banner */}
-                    {settingsAreSaved && !isUnlocked && !lock.isLocked && (
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-center justify-between">
-                            <div className="flex gap-3 items-start">
-                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                    <Lock size={18} />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-blue-900">Settings Locked</h3>
-                                    <p className="text-xs text-blue-700 mt-0.5">
-                                        Core settings are locked after saving. Click Edit to modify.
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleUnlockRequest}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-app-surface border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
-                            >
-                                <Pencil size={12} />
-                                Edit
-                            </button>
-                        </div>
-                    )}
-                    {/* ─── COMPANY TYPE ─── */}
-                    <div>
-                        <h2 className="text-lg font-medium text-app-text mb-4">Core Configuration</h2>
-                        <div>
-                            <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-stone-700">Company Type</label>
-                                <button
-                                    type="button"
-                                    onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
-                                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-                                >
-                                    <GitCompareArrows size={14} />
-                                    {showCompare ? 'Hide Comparison' : 'Compare Types'}
-                                </button>
-                            </div>
-                            <select
-                                {...register('companyType')}
-                                disabled={isCoreFieldsLocked}
-                                className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-text-muted"
-                            >
-                                {COMPANY_TYPES.map(t => (
-                                    <option key={t.key} value={t.key}>{t.label}</option>
-                                ))}
-                            </select>
-                            <p className="mt-1 text-xs text-app-text-muted">
-                                Determines how costs, prices, and taxes are calculated.
-                            </p>
-                            {/* Selected Type Detail */}
-                            {selectedType && (
-                                <div className="mt-2">
-                                    <TypeDetailCard type={selectedType} compact />
-                                </div>
-                            )}
-                        </div>
-                        {/* Currency & Tax */}
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
-                                <select
-                                    {...register('currency')}
-                                    disabled={isCoreFieldsLocked}
-                                    className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-text-muted"
-                                >
-                                    <option value="">Select currency...</option>
-                                    {currencies.map(c => (
-                                        <option key={c.id} value={c.code}>{c.symbol} {c.name} ({c.code})</option>
-                                    ))}
-                                </select>
-                                <p className="mt-1 text-xs text-app-text-faint">
-                                    Manage currencies in{' '}
-                                    <a href="/saas/currencies" className="text-indigo-600 hover:underline">
-                                        SaaS → Currencies
-                                    </a>
-                                </p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
-                                <input
-                                    {...register('defaultTaxRate', { valueAsNumber: true })}
-                                    disabled={isCoreFieldsLocked}
-                                    type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm disabled:bg-app-surface-2 disabled:text-app-text-muted"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
-                    {(dualView || companyType === 'MIXED') && (
-                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
-                                    <ShieldAlert size={16} />
-                                </div>
-                                <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
-                            </div>
-                            <p className="text-xs text-amber-700 mb-4 leading-relaxed">
-                                Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
-                                The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
-                            </p>
-                            {/* Scope Preview */}
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                                        <span className="text-xs font-bold text-app-text">Official</span>
-                                    </div>
-                                    <p className="text-[10px] text-app-text-muted leading-relaxed">
-                                        Declared transactions only. Government-reported data.
-                                        Access via <strong>Viewer Password</strong>.
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
-                                        <span className="text-xs font-bold text-app-text">Internal</span>
-                                    </div>
-                                    <p className="text-[10px] text-app-text-muted leading-relaxed">
-                                        Full picture — all operations including undeclared.
-                                        Access via <strong>Full Access Password</strong>.
-                                    </p>
-                                </div>
-                            </div>
-                            {/* Per-User Access Info */}
-                            <div className="bg-app-surface rounded-lg border border-amber-200 p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Lock size={14} className="text-amber-600" />
-                                    <span className="text-sm font-bold text-app-text">Scope Access Control</span>
-                                </div>
-                                <p className="text-xs text-app-text-muted leading-relaxed">
-                                    Each user has <strong>two passwords</strong> when Dual View is enabled:
-                                </p>
-                                <ul className="mt-2 space-y-1.5 text-xs text-app-text-muted">
-                                    <li className="flex items-start gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                        <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
-                                        <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
-                                    </li>
-                                </ul>
-                                <p className="text-[10px] text-app-text-faint mt-3 italic">
-                                    Manage user scope passwords in HR &amp; Teams → Access Control.
-                                </p>
-                            </div>
-                            {/* --- AUTO-DECLARATION STRATEGY --- */}
-                            <div className="mt-4 p-5 bg-app-surface rounded-2xl border border-amber-200 shadow-sm space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
-                                            <Target size={16} />
-                                        </div>
-                                        <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Official Transaction Guard</h3>
-                                    </div>
-                                    <div className="flex items-center h-6">
-                                        <input
-                                            {...register('autoDeclarationEnabled')}
-                                            type="checkbox"
-                                            className="h-4 w-4 text-emerald-600 border-app-border rounded focus:ring-emerald-500"
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-[11px] text-app-text-muted leading-relaxed font-medium">
-                                    Automate which Sales/POS invoices are routed to the <strong>Official Scope</strong>.
-                                    Reduces manual scope toggling during high-speed checkout.
-                                </p>
-                                {/* --- STRATEGIC OVERRIDES --- */}
-                                <div className="mt-4 p-5 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-rose-500 rounded-lg text-white shadow-lg shadow-rose-100">
-                                                <Zap size={16} />
-                                            </div>
-                                            <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">Management Overrides</h3>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex items-center justify-between p-3 bg-app-surface rounded-xl border border-rose-200 shadow-sm">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Panic Mode</span>
-                                                <span className="text-[9px] text-rose-500 font-bold uppercase tracking-tighter">Force ALL Transactions to OFFICIAL</span>
-                                            </div>
-                                            <input
-                                                {...register('emergencyForceDeclared')}
-                                                type="checkbox"
-                                                className="h-5 w-5 text-rose-600 border-rose-300 rounded-lg focus:ring-rose-500 shadow-sm"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5 p-3 bg-app-surface rounded-xl border border-app-border shadow-sm">
-                                            <label className="text-[10px] font-black text-app-text uppercase tracking-widest block">High-Value Guard ($)</label>
-                                            <input
-                                                {...register('highValueAlertThreshold', { valueAsNumber: true })}
-                                                type="number"
-                                                placeholder="Amount for alert"
-                                                className="w-full px-3 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-black text-app-text focus:bg-app-surface outline-none transition-all"
-                                            />
-                                            <p className="text-[8px] text-app-text-faint italic">User must confirm if amount &gt; X is declared.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* --- RULES OF ENGAGEMENT --- */}
-                                <div className="mt-4 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-app-surface-2 rounded-lg text-app-text-muted">
-                                                <GitCompareArrows size={16} />
-                                            </div>
-                                            <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Rules of Engagement</h3>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => append({ id: Math.random().toString(36).substr(2, 9), name: 'New Strategy', startTime: '08:00', endTime: '17:00', forceScope: 'OFFICIAL' })}
-                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-                                        >
-                                            <Plus size={12} /> Add Rule
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {fields.length === 0 && (
-                                            <div className="p-8 text-center bg-app-bg rounded-2xl border-2 border-dashed border-app-border">
-                                                <Ghost size={32} className="mx-auto text-stone-300 mb-2" />
-                                                <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-widest">No active windows defined</p>
-                                            </div>
-                                        )}
-                                        {fields.map((field, index) => (
-                                            <div key={field.id} className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <Clock size={14} className="text-indigo-500" />
-                                                        <div className="flex items-center border border-app-border rounded-lg overflow-hidden bg-app-bg">
-                                                            <input {...register(`declarationRules.${index}.startTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
-                                                            <div className="px-1 text-app-text-faint font-black"><ArrowRight size={10} /></div>
-                                                            <input {...register(`declarationRules.${index}.endTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
-                                                        </div>
-                                                        <input {...register(`declarationRules.${index}.name`)} placeholder="Window Name" className="text-xs font-black text-app-text uppercase tracking-tight bg-transparent border-none focus:ring-0 w-32" />
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <select
-                                                            {...register(`declarationRules.${index}.forceScope`)}
-                                                            className="text-[10px] font-black uppercase bg-app-surface-2 rounded-lg px-2 py-1 outline-none border-none focus:ring-0"
-                                                        >
-                                                            <option value="OFFICIAL">Official</option>
-                                                            <option value="INTERNAL">Internal</option>
-                                                        </select>
-                                                        <button onClick={() => remove(index)} className="p-1.5 text-stone-300 hover:text-rose-500 transition-all"><Trash2 size={14} /></button>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-6 bg-stone-50/50 p-4 rounded-xl border border-app-border">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest block">Allowed Payment Methods</label>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {['CASH', 'WAVE', 'OM', 'CARD'].map(method => (
-                                                                <button
-                                                                    key={method}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const current = watch(`declarationRules.${index}.allowedMethods`) || [];
-                                                                        if (current.includes(method)) {
-                                                                            setValue(`declarationRules.${index}.allowedMethods`, current.filter(m => m !== method));
-                                                                        } else {
-                                                                            setValue(`declarationRules.${index}.allowedMethods`, [...current, method]);
-                                                                        }
-                                                                    }}
-                                                                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${(watch(`declarationRules.${index}.allowedMethods`) || []).includes(method)
-                                                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                                                        : 'bg-app-surface text-app-text-faint border border-app-border hover:border-indigo-100'
-                                                                        }`}
-                                                                >
-                                                                    {method}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest block">Restricted Accounts</label>
-                                                        <div className="max-h-24 overflow-y-auto custom-scrollbar space-y-1.5 p-1">
-                                                            {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
-                                                                <label key={account.id} className="flex items-center gap-2 cursor-pointer group">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={(watch(`declarationRules.${index}.allowedAccountIds`) || []).includes(account.id)}
-                                                                        onChange={(e) => {
-                                                                            const current = watch(`declarationRules.${index}.allowedAccountIds`) || [];
-                                                                            if (e.target.checked) {
-                                                                                setValue(`declarationRules.${index}.allowedAccountIds`, [...current, account.id]);
-                                                                            } else {
-                                                                                setValue(`declarationRules.${index}.allowedAccountIds`, current.filter(id => id !== account.id));
-                                                                            }
-                                                                        }}
-                                                                        className="h-3 w-3 text-indigo-600 border-app-border rounded transition-all group-hover:border-indigo-300"
-                                                                    />
-                                                                    <span className="text-[9px] font-bold text-app-text-muted truncate group-hover:text-indigo-600 transition-all">{account.name}</span>
-                                                                </label>
-                                                            ))}
-                                                        </div>
-                                                        <p className="text-[7px] text-stone-300 uppercase font-black">Leave empty to apply to all accounts</p>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Tx Min ($)</label>
-                                                        <input {...register(`declarationRules.${index}.minTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="0" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Tx Max ($)</label>
-                                                        <input {...register(`declarationRules.${index}.maxTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="Any" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Turnover Limit ($)</label>
-                                                        <input {...register(`declarationRules.${index}.limitDailyTurnover`, { valueAsNumber: true })} type="number" placeholder="No limit" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-app-border">
-                                    <div className="space-y-1.5">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Global Threshold ($)</label>
-                                            <select
-                                                {...register('autoDeclareThresholdMode')}
-                                                className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border-none outline-none"
-                                            >
-                                                <option value="ABOVE">Declare Above</option>
-                                                <option value="BELOW">Declare Below</option>
-                                            </select>
-                                        </div>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">$</span>
-                                            <input
-                                                {...register('autoDeclareThreshold', { valueAsNumber: true })}
-                                                type="number"
-                                                placeholder="e.g. 500"
-                                                className="w-full pl-7 pr-3 py-2 bg-app-bg border border-app-border rounded-xl text-xs font-black text-app-text focus:bg-app-surface focus:ring-4 focus:ring-emerald-50 focus:border-emerald-200 transition-all outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Sampling Strategy (%)</label>
-                                        <div className="relative">
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">%</span>
-                                            <input
-                                                {...register('autoDeclarePercentage', { valueAsNumber: true })}
-                                                type="number"
-                                                placeholder="e.g. 15"
-                                                className="w-full pl-3 pr-8 py-2 bg-app-bg border border-app-border rounded-xl text-xs font-black text-app-text focus:bg-app-surface focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* --- INTEGRITY PROTECTION --- */}
-                                <div className="mt-2 pt-4 border-t border-app-border space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
-                                                <Activity size={16} />
-                                            </div>
-                                            <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Financial Health Shield</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[9px] font-bold text-app-text-faint uppercase tracking-tighter">Safety Margin Active</span>
-                                            <input
-                                                {...register('integrityAlertEnabled')}
-                                                type="checkbox"
-                                                className="h-4 w-4 text-amber-600 border-app-border rounded focus:ring-amber-500"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Daily Operation Cap ($)</label>
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">$</span>
-                                                <input
-                                                    {...register('autoDeclareDailyLimit', { valueAsNumber: true })}
-                                                    type="number"
-                                                    placeholder="Global daily cap"
-                                                    className="w-full pl-7 pr-3 py-2.5 bg-app-bg border border-app-border rounded-xl text-xs font-black text-amber-600 focus:bg-app-surface focus:ring-4 focus:ring-amber-50 focus:border-amber-200 transition-all outline-none shadow-inner"
-                                                />
-                                            </div>
-                                            <p className="text-[9px] text-amber-500 font-bold italic leading-tight uppercase tracking-tighter">Strategic downgrade point to avoid over-exposure.</p>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block flex items-center gap-1.5">
-                                                <Landmark size={10} className="text-indigo-400" /> Controllable Entry Points
-                                            </label>
-                                            <div className="bg-slate-100/50 border border-app-border rounded-2xl p-4 max-h-40 overflow-y-auto custom-scrollbar space-y-2 shadow-inner">
-                                                {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').length > 0 ? (
-                                                    accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
-                                                        <label key={account.id} className="flex items-center gap-3 p-2 bg-app-surface rounded-xl border border-app-border hover:border-indigo-100 transition-all cursor-pointer shadow-sm">
-                                                            <input
-                                                                type="checkbox"
-                                                                value={account.id}
-                                                                defaultChecked={settings.controllableAccountIds?.includes(account.id)}
-                                                                onChange={(e) => {
-                                                                    const current = watch('controllableAccountIds') || [];
-                                                                    if (e.target.checked) {
-                                                                        setValue('controllableAccountIds', [...current, account.id]);
-                                                                    } else {
-                                                                        setValue('controllableAccountIds', current.filter(id => id !== account.id));
-                                                                    }
-                                                                }}
-                                                                className="h-3.5 w-3.5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500"
-                                                            />
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="text-[10px] font-black text-slate-700 truncate capitalize">{account.name.toLowerCase()}</span>
-                                                                <span className="text-[8px] font-bold text-app-text-faint uppercase tracking-tighter">{account.type}</span>
-                                                            </div>
-                                                        </label>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-[9px] text-app-text-faint text-center py-4 italic">No controllable accounts found.</p>
-                                                )}
-                                            </div>
-                                            <p className="text-[9px] text-app-text-faint italic leading-tight">Digital channels gov can trace. These always route to Official.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {/* ─── CUSTOM FLAGS ─── */}
-                    {companyType === 'CUSTOM' && (
-                        <div className="p-4 bg-app-bg rounded-md border border-app-border">
-                            <h3 className="text-sm font-medium text-app-text mb-3">Manual Configuration</h3>
-                            <div className="space-y-2">
-                                <div className="flex items-center">
-                                    <input {...register('worksInTTC')} disabled={isCoreFieldsLocked} type="checkbox" className="h-4 w-4 text-black border-app-border rounded disabled:opacity-50" />
-                                    <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
-                                </div>
-                                <div className="flex items-center">
-                                    <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {/* ─── MICRO TAX RULES ─── */}
-                    {companyType === 'MICRO' && (
-                        <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
-                            <h3 className="text-sm font-medium text-blue-900 mb-3">Micro Tax Rules</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-blue-700 mb-1">Sales Tax %</label>
-                                    <input
-                                        {...register('salesTaxPercentage', { valueAsNumber: true })}
-                                        type="number" step="0.01"
-                                        className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-blue-700 mb-1">Purchase Tax %</label>
-                                    <input
-                                        {...register('purchaseTaxPercentage', { valueAsNumber: true })}
-                                        type="number" step="0.01"
-                                        className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {/* ─── POSTING RULES ─── */}
-                    <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
-                        <div className="flex gap-3 items-center">
-                            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-                                <Target size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-emerald-900">Transaction Posting Rules</h3>
-                                <p className="text-xs text-emerald-700">Link operations (Sales, Purchases) to specific accounts.</p>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => router.push('/finance/settings/posting-rules')}
-                            className="bg-app-surface border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
-                        >
-                            Configure Auto-Mapping
-                        </button>
-                    </div>
-                    {/* ─── FIXED ASSET INTELLIGENCE STRATEGY ─── */}
-                    <div className="p-6 bg-gradient-to-br from-indigo-50/50 via-white to-stone-50 border border-indigo-100 rounded-3xl shadow-sm space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-100">
-                                    <Package size={22} />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-app-text uppercase tracking-tight">Asset Intelligence Strategy</h3>
-                                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">Universal Asset Management Engine</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-app-surface border border-indigo-100 rounded-xl shadow-inner">
-                                <Activity size={14} className="text-indigo-400 animate-pulse" />
-                                <span className="text-[10px] font-black text-indigo-900 uppercase">Live Engine Configuration</span>
-                            </div>
-                        </div>
+ const router = useRouter()
+ const [isPending, startTransition] = useTransition()
+ const { register, handleSubmit, watch, setValue, control } = useForm<FinancialSettingsState>({
+ defaultValues: {
+ ...settings,
+ declarationRules: settings.declarationRules || []
+ }
+ })
+ const { fields, append, remove } = useFieldArray({
+ control,
+ name: "declarationRules"
+ })
+ const [isRecalcPending, startRecalc] = useTransition()
+ const [showCompare, setShowCompare] = useState(false)
+ const [compareType, setCompareType] = useState<string>('')
+ const [showEditConfirm, setShowEditConfirm] = useState(false)
+ const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
+ const [tradeTogglePending, setTradeTogglePending] = useState(false)
+ // Load trade sub-type setting on mount
+ useEffect(() => {
+ getTradeSubTypeSettings().then(s => setTradeSubTypesEnabled(s?.enabled ?? false)).catch(() => { })
+ }, [])
+ // Settings lock: after save, core fields are locked until user explicitly unlocks
+ const [settingsAreSaved, setSettingsAreSaved] = useState(() => {
+ // If currency and defaultTaxRate have values, settings were previously saved
+ return !!(settings.currency && settings.defaultTaxRate !== undefined && settings.defaultTaxRate !== null)
+ })
+ const [isUnlocked, setIsUnlocked] = useState(false)
+ const isCoreFieldsLocked = lock.isLocked || (settingsAreSaved && !isUnlocked)
+ const companyType = watch('companyType')
+ const dualView = watch('dualView')
+ const selectedType = COMPANY_TYPES.find(t => t.key === companyType)
+ const compareTypeObj = COMPANY_TYPES.find(t => t.key === compareType)
+ // Auto-configure settings when company type changes
+ useEffect(() => {
+ const type = COMPANY_TYPES.find(t => t.key === companyType)
+ if (type?.autoConfig) {
+ Object.entries(type.autoConfig).forEach(([key, value]) => {
+ setValue(key as keyof FinancialSettingsState, value)
+ })
+ }
+ }, [companyType, setValue])
+ const onSubmit = (data: FinancialSettingsState) => {
+ startTransition(async () => {
+ try {
+ await updateFinancialSettings(data)
+ setSettingsAreSaved(true)
+ setIsUnlocked(false)
+ toast.success('Settings Saved!')
+ } catch (err: unknown) {
+ toast.error((err instanceof Error ? err.message : String(err)))
+ }
+ })
+ }
+ const [settingsPendingAction, setSettingsPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
+ const handleRecalculate = () => {
+ setSettingsPendingAction({
+ type: 'recalculate',
+ title: 'Recalculate Balances?',
+ description: 'This will reset and recalculate all account balances based on the ledger history.',
+ variant: 'warning',
+ })
+ }
+ const handleUnlockRequest = () => {
+ setShowEditConfirm(true)
+ }
+ const handleConfirmUnlock = () => {
+ setIsUnlocked(true)
+ setShowEditConfirm(false)
+ }
+ return (
+ <div className="flex gap-6 items-start">
+ {/* Edit Confirmation Modal */}
+ {showEditConfirm && (
+ <EditConfirmModal
+ onConfirm={handleConfirmUnlock}
+ onCancel={() => setShowEditConfirm(false)}
+ />
+ )}
+ {/* ─── LEFT COLUMN: Main Form ─── */}
+ <div className={`space-y-4 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
+ <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-app-surface p-4 rounded-xl shadow-sm border border-app-border">
+ {/* Lock Status Warning */}
+ {lock.isLocked && (
+ <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
+ <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+ <ShieldAlert size={20} />
+ </div>
+ <div>
+ <h3 className="text-sm font-bold text-amber-900">Accounting Integrity Lock Active</h3>
+ <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+ {lock.reason}
+ <br />
+ <span className="font-bold">Structural core configuration fields have been set to read-only.</span>
+ </p>
+ </div>
+ </div>
+ )}
+ {/* Settings Saved Lock Banner */}
+ {settingsAreSaved && !isUnlocked && !lock.isLocked && (
+ <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-center justify-between">
+ <div className="flex gap-3 items-start">
+ <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+ <Lock size={18} />
+ </div>
+ <div>
+ <h3 className="text-sm font-bold text-blue-900">Settings Locked</h3>
+ <p className="text-xs text-blue-700 mt-0.5">
+ Core settings are locked after saving. Click Edit to modify.
+ </p>
+ </div>
+ </div>
+ <button
+ type="button"
+ onClick={handleUnlockRequest}
+ className="flex items-center gap-1.5 px-3 py-2 bg-app-surface border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
+ >
+ <Pencil size={12} />
+ Edit
+ </button>
+ </div>
+ )}
+ {/* ─── COMPANY TYPE ─── */}
+ <div>
+ <h2 className="text-lg font-medium text-app-text mb-4">Core Configuration</h2>
+ <div>
+ <div className="flex items-center justify-between mb-1">
+ <label className="block text-sm font-medium text-stone-700">Company Type</label>
+ <button
+ type="button"
+ onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
+ className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+ >
+ <GitCompareArrows size={14} />
+ {showCompare ? 'Hide Comparison' : 'Compare Types'}
+ </button>
+ </div>
+ <select
+ {...register('companyType')}
+ disabled={isCoreFieldsLocked}
+ className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-text-muted"
+ >
+ {COMPANY_TYPES.map(t => (
+ <option key={t.key} value={t.key}>{t.label}</option>
+ ))}
+ </select>
+ <p className="mt-1 text-xs text-app-text-muted">
+ Determines how costs, prices, and taxes are calculated.
+ </p>
+ {/* Selected Type Detail */}
+ {selectedType && (
+ <div className="mt-2">
+ <TypeDetailCard type={selectedType} compact />
+ </div>
+ )}
+ </div>
+ {/* Currency & Tax */}
+ <div className="grid grid-cols-2 gap-4 mt-4">
+ <div>
+ <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
+ <select
+ {...register('currency')}
+ disabled={isCoreFieldsLocked}
+ className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-text-muted"
+ >
+ <option value="">Select currency...</option>
+ {currencies.map(c => (
+ <option key={c.id} value={c.code}>{c.symbol} {c.name} ({c.code})</option>
+ ))}
+ </select>
+ <p className="mt-1 text-xs text-app-text-faint">
+ Manage currencies in{' '}
+ <a href="/saas/currencies" className="text-indigo-600 hover:underline">
+ SaaS → Currencies
+ </a>
+ </p>
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
+ <input
+ {...register('defaultTaxRate', { valueAsNumber: true })}
+ disabled={isCoreFieldsLocked}
+ type="number" step="0.01"
+ className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm disabled:bg-app-surface-2 disabled:text-app-text-muted"
+ />
+ </div>
+ </div>
+ </div>
+ {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
+ {(dualView || companyType === 'MIXED') && (
+ <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+ <div className="flex items-center gap-2 mb-3">
+ <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
+ <ShieldAlert size={16} />
+ </div>
+ <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
+ </div>
+ <p className="text-xs text-amber-700 mb-4 leading-relaxed">
+ Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
+ The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
+ </p>
+ {/* Scope Preview */}
+ <div className="grid grid-cols-2 gap-3 mb-4">
+ <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
+ <div className="flex items-center gap-2 mb-1">
+ <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+ <span className="text-xs font-bold text-app-text">Official</span>
+ </div>
+ <p className="text-[10px] text-app-text-muted leading-relaxed">
+ Declared transactions only. Government-reported data.
+ Access via <strong>Viewer Password</strong>.
+ </p>
+ </div>
+ <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
+ <div className="flex items-center gap-2 mb-1">
+ <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
+ <span className="text-xs font-bold text-app-text">Internal</span>
+ </div>
+ <p className="text-[10px] text-app-text-muted leading-relaxed">
+ Full picture — all operations including undeclared.
+ Access via <strong>Full Access Password</strong>.
+ </p>
+ </div>
+ </div>
+ {/* Per-User Access Info */}
+ <div className="bg-app-surface rounded-lg border border-amber-200 p-4">
+ <div className="flex items-center gap-2 mb-2">
+ <Lock size={14} className="text-amber-600" />
+ <span className="text-sm font-bold text-app-text">Scope Access Control</span>
+ </div>
+ <p className="text-xs text-app-text-muted leading-relaxed">
+ Each user has <strong>two passwords</strong> when Dual View is enabled:
+ </p>
+ <ul className="mt-2 space-y-1.5 text-xs text-app-text-muted">
+ <li className="flex items-start gap-2">
+ <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+ <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
+ </li>
+ <li className="flex items-start gap-2">
+ <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
+ <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
+ </li>
+ </ul>
+ <p className="text-[10px] text-app-text-faint mt-3 italic">
+ Manage user scope passwords in HR &amp; Teams → Access Control.
+ </p>
+ </div>
+ {/* --- AUTO-DECLARATION STRATEGY --- */}
+ <div className="mt-4 p-5 bg-app-surface rounded-2xl border border-amber-200 shadow-sm space-y-4">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+ <Target size={16} />
+ </div>
+ <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Official Transaction Guard</h3>
+ </div>
+ <div className="flex items-center h-6">
+ <input
+ {...register('autoDeclarationEnabled')}
+ type="checkbox"
+ className="h-4 w-4 text-emerald-600 border-app-border rounded focus:ring-emerald-500"
+ />
+ </div>
+ </div>
+ <p className="text-[11px] text-app-text-muted leading-relaxed font-medium">
+ Automate which Sales/POS invoices are routed to the <strong>Official Scope</strong>.
+ Reduces manual scope toggling during high-speed checkout.
+ </p>
+ {/* --- STRATEGIC OVERRIDES --- */}
+ <div className="mt-4 p-5 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-4">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <div className="p-1.5 bg-rose-500 rounded-lg text-app-text shadow-lg shadow-rose-100">
+ <Zap size={16} />
+ </div>
+ <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">Management Overrides</h3>
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div className="flex items-center justify-between p-3 bg-app-surface rounded-xl border border-rose-200 shadow-sm">
+ <div className="flex flex-col">
+ <span className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Panic Mode</span>
+ <span className="text-[9px] text-rose-500 font-bold uppercase tracking-tighter">Force ALL Transactions to OFFICIAL</span>
+ </div>
+ <input
+ {...register('emergencyForceDeclared')}
+ type="checkbox"
+ className="h-5 w-5 text-rose-600 border-rose-300 rounded-lg focus:ring-rose-500 shadow-sm"
+ />
+ </div>
+ <div className="flex flex-col gap-1.5 p-3 bg-app-surface rounded-xl border border-app-border shadow-sm">
+ <label className="text-[10px] font-black text-app-text uppercase tracking-widest block">High-Value Guard ($)</label>
+ <input
+ {...register('highValueAlertThreshold', { valueAsNumber: true })}
+ type="number"
+ placeholder="Amount for alert"
+ className="w-full px-3 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-black text-app-text focus:bg-app-surface outline-none transition-all"
+ />
+ <p className="text-[8px] text-app-text-faint italic">User must confirm if amount &gt; X is declared.</p>
+ </div>
+ </div>
+ </div>
+ {/* --- RULES OF ENGAGEMENT --- */}
+ <div className="mt-4 space-y-4">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <div className="p-1.5 bg-app-surface-2 rounded-lg text-app-text-muted">
+ <GitCompareArrows size={16} />
+ </div>
+ <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Rules of Engagement</h3>
+ </div>
+ <button
+ type="button"
+ onClick={() => append({ id: Math.random().toString(36).substr(2, 9), name: 'New Strategy', startTime: '08:00', endTime: '17:00', forceScope: 'OFFICIAL' })}
+ className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+ >
+ <Plus size={12} /> Add Rule
+ </button>
+ </div>
+ <div className="space-y-3">
+ {fields.length === 0 && (
+ <div className="p-8 text-center bg-app-bg rounded-2xl border-2 border-dashed border-app-border">
+ <Ghost size={32} className="mx-auto text-stone-300 mb-2" />
+ <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-widest">No active windows defined</p>
+ </div>
+ )}
+ {fields.map((field, index) => (
+ <div key={field.id} className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-3">
+ <Clock size={14} className="text-indigo-500" />
+ <div className="flex items-center border border-app-border rounded-lg overflow-hidden bg-app-bg">
+ <input {...register(`declarationRules.${index}.startTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
+ <div className="px-1 text-app-text-faint font-black"><ArrowRight size={10} /></div>
+ <input {...register(`declarationRules.${index}.endTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
+ </div>
+ <input {...register(`declarationRules.${index}.name`)} placeholder="Window Name" className="text-xs font-black text-app-text uppercase tracking-tight bg-transparent border-none focus:ring-0 w-32" />
+ </div>
+ <div className="flex items-center gap-3">
+ <select
+ {...register(`declarationRules.${index}.forceScope`)}
+ className="text-[10px] font-black uppercase bg-app-surface-2 rounded-lg px-2 py-1 outline-none border-none focus:ring-0"
+ >
+ <option value="OFFICIAL">Official</option>
+ <option value="INTERNAL">Internal</option>
+ </select>
+ <button onClick={() => remove(index)} className="p-1.5 text-stone-300 hover:text-rose-500 transition-all"><Trash2 size={14} /></button>
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-6 bg-stone-50/50 p-4 rounded-xl border border-app-border">
+ <div className="space-y-2">
+ <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest block">Allowed Payment Methods</label>
+ <div className="flex flex-wrap gap-2">
+ {['CASH', 'WAVE', 'OM', 'CARD'].map(method => (
+ <button
+ key={method}
+ type="button"
+ onClick={() => {
+ const current = watch(`declarationRules.${index}.allowedMethods`) || [];
+ if (current.includes(method)) {
+ setValue(`declarationRules.${index}.allowedMethods`, current.filter(m => m !== method));
+ } else {
+ setValue(`declarationRules.${index}.allowedMethods`, [...current, method]);
+ }
+ }}
+ className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${(watch(`declarationRules.${index}.allowedMethods`) || []).includes(method)
+ ? 'bg-indigo-600 text-app-text shadow-lg shadow-indigo-100'
+ : 'bg-app-surface text-app-text-faint border border-app-border hover:border-indigo-100'
+ }`}
+ >
+ {method}
+ </button>
+ ))}
+ </div>
+ </div>
+ <div className="space-y-2">
+ <label className="text-[9px] font-black text-app-text-faint uppercase tracking-widest block">Restricted Accounts</label>
+ <div className="max-h-24 overflow-y-auto custom-scrollbar space-y-1.5 p-1">
+ {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
+ <label key={account.id} className="flex items-center gap-2 cursor-pointer group">
+ <input
+ type="checkbox"
+ checked={(watch(`declarationRules.${index}.allowedAccountIds`) || []).includes(account.id)}
+ onChange={(e) => {
+ const current = watch(`declarationRules.${index}.allowedAccountIds`) || [];
+ if (e.target.checked) {
+ setValue(`declarationRules.${index}.allowedAccountIds`, [...current, account.id]);
+ } else {
+ setValue(`declarationRules.${index}.allowedAccountIds`, current.filter(id => id !== account.id));
+ }
+ }}
+ className="h-3 w-3 text-indigo-600 border-app-border rounded transition-all group-hover:border-indigo-300"
+ />
+ <span className="text-[9px] font-bold text-app-text-muted truncate group-hover:text-indigo-600 transition-all">{account.name}</span>
+ </label>
+ ))}
+ </div>
+ <p className="text-[7px] text-stone-300 uppercase font-black">Leave empty to apply to all accounts</p>
+ </div>
+ </div>
+ <div className="grid grid-cols-3 gap-3">
+ <div className="space-y-1">
+ <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Tx Min ($)</label>
+ <input {...register(`declarationRules.${index}.minTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="0" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
+ </div>
+ <div className="space-y-1">
+ <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Tx Max ($)</label>
+ <input {...register(`declarationRules.${index}.maxTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="Any" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
+ </div>
+ <div className="space-y-1">
+ <label className="text-[8px] font-black text-app-text-faint uppercase tracking-widest block">Turnover Limit ($)</label>
+ <input {...register(`declarationRules.${index}.limitDailyTurnover`, { valueAsNumber: true })} type="number" placeholder="No limit" className="w-full px-2 py-1.5 bg-app-bg border border-app-border rounded-lg text-xs font-bold" />
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-4 pt-4 border-t border-app-border">
+ <div className="space-y-1.5">
+ <div className="flex items-center justify-between">
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Global Threshold ($)</label>
+ <select
+ {...register('autoDeclareThresholdMode')}
+ className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border-none outline-none"
+ >
+ <option value="ABOVE">Declare Above</option>
+ <option value="BELOW">Declare Below</option>
+ </select>
+ </div>
+ <div className="relative">
+ <span className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">$</span>
+ <input
+ {...register('autoDeclareThreshold', { valueAsNumber: true })}
+ type="number"
+ placeholder="e.g. 500"
+ className="w-full pl-7 pr-3 py-2 bg-app-bg border border-app-border rounded-xl text-xs font-black text-app-text focus:bg-app-surface focus:ring-4 focus:ring-emerald-50 focus:border-emerald-200 transition-all outline-none"
+ />
+ </div>
+ </div>
+ <div className="space-y-1.5">
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Sampling Strategy (%)</label>
+ <div className="relative">
+ <span className="absolute right-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">%</span>
+ <input
+ {...register('autoDeclarePercentage', { valueAsNumber: true })}
+ type="number"
+ placeholder="e.g. 15"
+ className="w-full pl-3 pr-8 py-2 bg-app-bg border border-app-border rounded-xl text-xs font-black text-app-text focus:bg-app-surface focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
+ />
+ </div>
+ </div>
+ </div>
+ {/* --- INTEGRITY PROTECTION --- */}
+ <div className="mt-2 pt-4 border-t border-app-border space-y-4">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-2">
+ <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
+ <Activity size={16} />
+ </div>
+ <h3 className="text-sm font-black text-app-text uppercase tracking-tight">Financial Health Shield</h3>
+ </div>
+ <div className="flex items-center gap-2">
+ <span className="text-[9px] font-bold text-app-text-faint uppercase tracking-tighter">Safety Margin Active</span>
+ <input
+ {...register('integrityAlertEnabled')}
+ type="checkbox"
+ className="h-4 w-4 text-amber-600 border-app-border rounded focus:ring-amber-500"
+ />
+ </div>
+ </div>
+ <div className="grid grid-cols-2 gap-6">
+ <div className="space-y-1.5">
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block">Daily Operation Cap ($)</label>
+ <div className="relative">
+ <span className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint font-bold">$</span>
+ <input
+ {...register('autoDeclareDailyLimit', { valueAsNumber: true })}
+ type="number"
+ placeholder="Global daily cap"
+ className="w-full pl-7 pr-3 py-2.5 bg-app-bg border border-app-border rounded-xl text-xs font-black text-amber-600 focus:bg-app-surface focus:ring-4 focus:ring-amber-50 focus:border-amber-200 transition-all outline-none shadow-inner"
+ />
+ </div>
+ <p className="text-[9px] text-amber-500 font-bold italic leading-tight uppercase tracking-tighter">Strategic downgrade point to avoid over-exposure.</p>
+ </div>
+ <div className="space-y-2">
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest block flex items-center gap-1.5">
+ <Landmark size={10} className="text-indigo-400" /> Controllable Entry Points
+ </label>
+ <div className="bg-slate-100/50 border border-app-border rounded-2xl p-4 max-h-40 overflow-y-auto custom-scrollbar space-y-2 shadow-inner">
+ {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').length > 0 ? (
+ accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
+ <label key={account.id} className="flex items-center gap-3 p-2 bg-app-surface rounded-xl border border-app-border hover:border-indigo-100 transition-all cursor-pointer shadow-sm">
+ <input
+ type="checkbox"
+ value={account.id}
+ defaultChecked={settings.controllableAccountIds?.includes(account.id)}
+ onChange={(e) => {
+ const current = watch('controllableAccountIds') || [];
+ if (e.target.checked) {
+ setValue('controllableAccountIds', [...current, account.id]);
+ } else {
+ setValue('controllableAccountIds', current.filter(id => id !== account.id));
+ }
+ }}
+ className="h-3.5 w-3.5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500"
+ />
+ <div className="flex flex-col min-w-0">
+ <span className="text-[10px] font-black text-slate-700 truncate capitalize">{account.name.toLowerCase()}</span>
+ <span className="text-[8px] font-bold text-app-text-faint uppercase tracking-tighter">{account.type}</span>
+ </div>
+ </label>
+ ))
+ ) : (
+ <p className="text-[9px] text-app-text-faint text-center py-4 italic">No controllable accounts found.</p>
+ )}
+ </div>
+ <p className="text-[9px] text-app-text-faint italic leading-tight">Digital channels gov can trace. These always route to Official.</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ )}
+ {/* ─── CUSTOM FLAGS ─── */}
+ {companyType === 'CUSTOM' && (
+ <div className="p-4 bg-app-bg rounded-md border border-app-border">
+ <h3 className="text-sm font-medium text-app-text mb-3">Manual Configuration</h3>
+ <div className="space-y-2">
+ <div className="flex items-center">
+ <input {...register('worksInTTC')} disabled={isCoreFieldsLocked} type="checkbox" className="h-4 w-4 text-black border-app-border rounded disabled:opacity-50" />
+ <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
+ </div>
+ <div className="flex items-center">
+ <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+ <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
+ </div>
+ <div className="flex items-center">
+ <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+ <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
+ </div>
+ <div className="flex items-center">
+ <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+ <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
+ </div>
+ </div>
+ </div>
+ )}
+ {/* ─── MICRO TAX RULES ─── */}
+ {companyType === 'MICRO' && (
+ <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
+ <h3 className="text-sm font-medium text-blue-900 mb-3">Micro Tax Rules</h3>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="block text-sm font-medium text-blue-700 mb-1">Sales Tax %</label>
+ <input
+ {...register('salesTaxPercentage', { valueAsNumber: true })}
+ type="number" step="0.01"
+ className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
+ />
+ </div>
+ <div>
+ <label className="block text-sm font-medium text-blue-700 mb-1">Purchase Tax %</label>
+ <input
+ {...register('purchaseTaxPercentage', { valueAsNumber: true })}
+ type="number" step="0.01"
+ className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
+ />
+ </div>
+ </div>
+ </div>
+ )}
+ {/* ─── POSTING RULES ─── */}
+ <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
+ <div className="flex gap-3 items-center">
+ <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+ <Target size={20} />
+ </div>
+ <div>
+ <h3 className="text-sm font-bold text-emerald-900">Transaction Posting Rules</h3>
+ <p className="text-xs text-emerald-700">Link operations (Sales, Purchases) to specific accounts.</p>
+ </div>
+ </div>
+ <button
+ type="button"
+ onClick={() => router.push('/finance/settings/posting-rules')}
+ className="bg-app-surface border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
+ >
+ Configure Auto-Mapping
+ </button>
+ </div>
+ {/* ─── FIXED ASSET INTELLIGENCE STRATEGY ─── */}
+ <div className="p-6 bg-gradient-to-br from-indigo-50/50 via-white to-stone-50 border border-indigo-100 rounded-3xl shadow-sm space-y-6">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center gap-3">
+ <div className="p-2.5 bg-indigo-600 rounded-xl text-app-text shadow-lg shadow-indigo-100">
+ <Package size={22} />
+ </div>
+ <div>
+ <h3 className="text-lg font-black text-app-text uppercase tracking-tight">Asset Intelligence Strategy</h3>
+ <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">Universal Asset Management Engine</p>
+ </div>
+ </div>
+ <div className="flex items-center gap-2 px-3 py-1.5 bg-app-surface border border-indigo-100 rounded-xl shadow-inner">
+ <Activity size={14} className="text-indigo-400 animate-pulse" />
+ <span className="text-[10px] font-black text-indigo-900 uppercase">Live Engine Configuration</span>
+ </div>
+ </div>
 
-                        {/* Complexity Mode Selection */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.2em] ml-1">Complexity Mode</label>
-                            <div className="grid grid-cols-3 gap-3">
-                                {[
-                                    { key: 'BASIC', label: 'Basic', desc: 'Simple list and linear depreciation', icon: Package, color: 'stone' },
-                                    { key: 'PROFESSIONAL', label: 'Professional', desc: 'Adds revaluation and schedules', icon: Landmark, color: 'indigo' },
-                                    { key: 'ENTERPRISE', label: 'Enterprise', desc: 'Full QR, Maintenance & IFRS', icon: Zap, color: 'emerald' },
-                                ].map(mode => (
-                                    <button
-                                        key={mode.key}
-                                        type="button"
-                                        onClick={() => setValue('assetTrackingMode', mode.key as any)}
-                                        className={`relative group p-4 rounded-2xl border-2 transition-all text-left overflow-hidden ${watch('assetTrackingMode') === mode.key
-                                            ? 'border-indigo-600 bg-app-surface shadow-xl shadow-indigo-100'
-                                            : 'border-app-border bg-stone-50/50 hover:border-app-border hover:bg-app-surface'
-                                            }`}
-                                    >
-                                        <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${watch('assetTrackingMode') === mode.key ? 'bg-indigo-600 text-white' : 'bg-stone-200 text-app-text-muted group-hover:bg-stone-300'}`}>
-                                            <mode.icon size={18} />
-                                        </div>
-                                        <h4 className="text-xs font-black text-app-text uppercase tracking-tighter">{mode.label}</h4>
-                                        <p className="text-[9px] text-app-text-muted font-medium leading-tight mt-1">{mode.desc}</p>
-                                        {watch('assetTrackingMode') === mode.key && (
-                                            <div className="absolute top-2 right-2 flex gap-0.5">
-                                                <div className="w-1 h-3 bg-indigo-600 rounded-full" />
-                                                <div className="w-1 h-3 bg-indigo-400 rounded-full" />
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+ {/* Complexity Mode Selection */}
+ <div className="space-y-3">
+ <label className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.2em] ml-1">Complexity Mode</label>
+ <div className="grid grid-cols-3 gap-3">
+ {[
+ { key: 'BASIC', label: 'Basic', desc: 'Simple list and linear depreciation', icon: Package, color: 'stone' },
+ { key: 'PROFESSIONAL', label: 'Professional', desc: 'Adds revaluation and schedules', icon: Landmark, color: 'indigo' },
+ { key: 'ENTERPRISE', label: 'Enterprise', desc: 'Full QR, Maintenance & IFRS', icon: Zap, color: 'emerald' },
+ ].map(mode => (
+ <button
+ key={mode.key}
+ type="button"
+ onClick={() => setValue('assetTrackingMode', mode.key as any)}
+ className={`relative group p-4 rounded-2xl border-2 transition-all text-left overflow-hidden ${watch('assetTrackingMode') === mode.key
+ ? 'border-indigo-600 bg-app-surface shadow-xl shadow-indigo-100'
+ : 'border-app-border bg-stone-50/50 hover:border-app-border hover:bg-app-surface'
+ }`}
+ >
+ <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${watch('assetTrackingMode') === mode.key ? 'bg-indigo-600 text-app-text' : 'bg-stone-200 text-app-text-muted group-hover:bg-stone-300'}`}>
+ <mode.icon size={18} />
+ </div>
+ <h4 className="text-xs font-black text-app-text uppercase tracking-tighter">{mode.label}</h4>
+ <p className="text-[9px] text-app-text-muted font-medium leading-tight mt-1">{mode.desc}</p>
+ {watch('assetTrackingMode') === mode.key && (
+ <div className="absolute top-2 right-2 flex gap-0.5">
+ <div className="w-1 h-3 bg-indigo-600 rounded-full" />
+ <div className="w-1 h-3 bg-indigo-400 rounded-full" />
+ </div>
+ )}
+ </button>
+ ))}
+ </div>
+ </div>
 
-                        {/* Power Toggles */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4">
-                                <h4 className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
-                                    <Activity size={12} className="text-indigo-400" /> Operational Powers
-                                </h4>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-app-text">QR-Code Tracking</span>
-                                            <span className="text-[9px] text-app-text-faint">Generate physical audit stickers</span>
-                                        </div>
-                                        <input {...register('enableAssetQR')} type="checkbox" className="h-5 w-5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500" />
-                                    </div>
-                                    <div className="flex items-center justify-between p-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-app-text">Maintenance Logic</span>
-                                            <span className="text-[9px] text-app-text-faint">Link assets to service records</span>
-                                        </div>
-                                        <input {...register('enableAssetMaintenance')} type="checkbox" className="h-5 w-5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500" />
-                                    </div>
-                                    <div className="flex items-center justify-between p-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-app-text">Automatic Posting</span>
-                                            <span className="text-[9px] text-app-text-faint">Post depreciation logs automatically</span>
-                                        </div>
-                                        <input {...register('autoDepreciationPosting')} type="checkbox" className="h-5 w-5 text-emerald-600 border-app-border rounded-lg focus:ring-emerald-500" />
-                                    </div>
-                                </div>
-                            </div>
+ {/* Power Toggles */}
+ <div className="grid grid-cols-2 gap-4">
+ <div className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4">
+ <h4 className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
+ <Activity size={12} className="text-indigo-400" /> Operational Powers
+ </h4>
+ <div className="space-y-3">
+ <div className="flex items-center justify-between p-1">
+ <div className="flex flex-col">
+ <span className="text-[11px] font-bold text-app-text">QR-Code Tracking</span>
+ <span className="text-[9px] text-app-text-faint">Generate physical audit stickers</span>
+ </div>
+ <input {...register('enableAssetQR')} type="checkbox" className="h-5 w-5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500" />
+ </div>
+ <div className="flex items-center justify-between p-1">
+ <div className="flex flex-col">
+ <span className="text-[11px] font-bold text-app-text">Maintenance Logic</span>
+ <span className="text-[9px] text-app-text-faint">Link assets to service records</span>
+ </div>
+ <input {...register('enableAssetMaintenance')} type="checkbox" className="h-5 w-5 text-indigo-600 border-app-border rounded-lg focus:ring-indigo-500" />
+ </div>
+ <div className="flex items-center justify-between p-1">
+ <div className="flex flex-col">
+ <span className="text-[11px] font-bold text-app-text">Automatic Posting</span>
+ <span className="text-[9px] text-app-text-faint">Post depreciation logs automatically</span>
+ </div>
+ <input {...register('autoDepreciationPosting')} type="checkbox" className="h-5 w-5 text-emerald-600 border-app-border rounded-lg focus:ring-emerald-500" />
+ </div>
+ </div>
+ </div>
 
-                            <div className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4">
-                                <h4 className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
-                                    <GitCompareArrows size={12} className="text-amber-400" /> Accounting Weapons
-                                </h4>
-                                <div className="space-y-2">
-                                    <label className="text-[9px] font-bold text-app-text-faint leading-tight">Select depreciation methods available for this organization:</label>
-                                    <div className="flex flex-wrap gap-2 pt-1">
-                                        {[
-                                            { key: 'LINEAR', label: 'Straight-Line' },
-                                            { key: 'DECLINING', label: 'Declining' },
-                                            { key: 'DOUBLE_DECLINING', label: 'Double-Declining' },
-                                            { key: 'PRODUCTION', label: 'Units of Prod.' },
-                                        ].map(method => (
-                                            <button
-                                                key={method.key}
-                                                type="button"
-                                                onClick={() => {
-                                                    const current = watch('allowedDepreciationMethods') || [];
-                                                    if (current.includes(method.key)) {
-                                                        setValue('allowedDepreciationMethods', current.filter(m => m !== method.key));
-                                                    } else {
-                                                        setValue('allowedDepreciationMethods', [...current, method.key]);
-                                                    }
-                                                }}
-                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all ${(watch('allowedDepreciationMethods') || []).includes(method.key)
-                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                                    : 'bg-app-bg text-app-text-faint border border-app-border hover:border-amber-100'
-                                                    }`}
-                                            >
-                                                {method.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <p className="text-[8px] text-stone-300 italic mt-2 uppercase tracking-tighter">Enterprise mode forces revaluation logic regardless of selection.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+ <div className="p-4 bg-app-surface rounded-2xl border border-app-border shadow-sm space-y-4">
+ <h4 className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
+ <GitCompareArrows size={12} className="text-amber-400" /> Accounting Weapons
+ </h4>
+ <div className="space-y-2">
+ <label className="text-[9px] font-bold text-app-text-faint leading-tight">Select depreciation methods available for this organization:</label>
+ <div className="flex flex-wrap gap-2 pt-1">
+ {[
+ { key: 'LINEAR', label: 'Straight-Line' },
+ { key: 'DECLINING', label: 'Declining' },
+ { key: 'DOUBLE_DECLINING', label: 'Double-Declining' },
+ { key: 'PRODUCTION', label: 'Units of Prod.' },
+ ].map(method => (
+ <button
+ key={method.key}
+ type="button"
+ onClick={() => {
+ const current = watch('allowedDepreciationMethods') || [];
+ if (current.includes(method.key)) {
+ setValue('allowedDepreciationMethods', current.filter(m => m !== method.key));
+ } else {
+ setValue('allowedDepreciationMethods', [...current, method.key]);
+ }
+ }}
+ className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all ${(watch('allowedDepreciationMethods') || []).includes(method.key)
+ ? 'bg-amber-100 text-amber-700 border border-amber-200'
+ : 'bg-app-bg text-app-text-faint border border-app-border hover:border-amber-100'
+ }`}
+ >
+ {method.label}
+ </button>
+ ))}
+ </div>
+ <p className="text-[8px] text-stone-300 italic mt-2 uppercase tracking-tighter">Enterprise mode forces revaluation logic regardless of selection.</p>
+ </div>
+ </div>
+ </div>
+ </div>
 
-                    {/* ─── TRADE SUB-TYPES TOGGLE ─── */}
-                    <div className="p-4 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
-                        <div className="flex gap-3 items-center">
-                            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                                <Layers size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-indigo-900">Sales & Purchase Sub-Types</h3>
-                                <p className="text-xs text-indigo-700 mt-0.5">
-                                    Decompose invoices and POs into Retail / Wholesale / Consignee.
-                                    Enables filter pills, badges, and sub-type columns across pages.
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            disabled={tradeTogglePending}
-                            onClick={async () => {
-                                setTradeTogglePending(true)
-                                try {
-                                    await updateTradeSubTypeSettings(!tradeSubTypesEnabled)
-                                    setTradeSubTypesEnabled(!tradeSubTypesEnabled)
-                                    toast.success(tradeSubTypesEnabled ? 'Trade sub-types disabled' : 'Trade sub-types enabled')
-                                } catch {
-                                    toast.error('Failed to update setting')
-                                } finally {
-                                    setTradeTogglePending(false)
-                                }
-                            }}
-                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${tradeSubTypesEnabled ? 'bg-indigo-600' : 'bg-stone-300'
-                                }`}
-                        >
-                            <span className={`inline-block h-5 w-5 transform rounded-full bg-app-surface shadow-sm transition-transform ${tradeSubTypesEnabled ? 'translate-x-6' : 'translate-x-1'
-                                }`} />
-                        </button>
-                    </div>
-                    {/* ─── SUBMIT ─── */}
-                    <div className="pt-4 border-t border-app-border">
-                        <button
-                            type="submit"
-                            disabled={isPending || isCoreFieldsLocked}
-                            className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
-                        >
-                            {isPending ? 'Saving...' : 'Save Configuration'}
-                        </button>
-                    </div>
-                </form>
-                {/* ─── MAINTENANCE ZONE ─── */}
-                <div className="bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
-                    <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
-                        <ShieldAlert size={20} />
-                        Maintenance Zone
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="bg-amber-50 border border-amber-100 rounded-md p-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-bold text-amber-900">Recalculate Ledger Balances</h3>
-                                <p className="text-xs text-amber-700 mt-1">
-                                    Rebuilds account balances from scratch based on the posted journal entries.
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleRecalculate}
-                                disabled={isRecalcPending}
-                                className="bg-app-surface border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
-                            >
-                                {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
-                            </button>
-                        </div>
-                        <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
-                                <p className="text-xs text-rose-700 mt-1 font-medium">
-                                    DELETES all Products, Orders, Ledger entries, CRM, and Inventory.
-                                    <br /> Use this to completely reset the system to a clean state.
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSettingsPendingAction({
-                                        type: 'wipeAll',
-                                        title: 'CRITICAL: Fresh Version',
-                                        description: 'This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. You will start with a completely fresh system.',
-                                        variant: 'danger',
-                                    })
-                                }}
-                                disabled={isPending}
-                                className="bg-rose-600 border border-rose-700 text-white hover:bg-rose-700 px-4 py-2 rounded text-xs font-black shadow-lg"
-                            >
-                                {isPending ? 'Wiping...' : 'FRESH VERSION'}
-                            </button>
-                        </div>
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
-                                <p className="text-xs text-emerald-700 mt-1 font-medium">
-                                    Fills the database with test products, suppliers, and initial stock.
-                                    <br /> Use this to quickly test system functionality.
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSettingsPendingAction({
-                                        type: 'seedData',
-                                        title: 'Seed Test Data?',
-                                        description: 'This will populate the database with test products, suppliers, and initial stock.',
-                                        variant: 'warning',
-                                    })
-                                }}
-                                disabled={isPending}
-                                className="bg-emerald-600 border border-emerald-700 text-white hover:bg-emerald-700 px-4 py-2 rounded text-xs font-black shadow-lg"
-                            >
-                                {isPending ? 'Seeding...' : 'FILL REAL DATA'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>{/* close left column */}
-            {/* ─── RIGHT COLUMN: Type Comparison ─── */}
-            {showCompare && (
-                <div className="w-1/2 shrink-0 sticky top-6">
-                    <div className="bg-app-surface rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
-                        {/* Panel Header */}
-                        <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
-                            <div className="flex items-center gap-2">
-                                <GitCompareArrows size={14} className="text-indigo-600" />
-                                <h3 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Type Comparison</h3>
-                            </div>
-                            <button type="button" onClick={() => setShowCompare(false)} className="text-indigo-400 hover:text-indigo-600 p-0.5">
-                                <X size={14} />
-                            </button>
-                        </div>
-                        {/* Two Type Column Headers */}
-                        <div className="grid grid-cols-2 border-b border-indigo-100">
-                            {/* Current Type Header */}
-                            <div className="px-4 py-3 bg-indigo-50/40 border-r border-indigo-100">
-                                <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mb-1">Current</p>
-                                {selectedType && (
-                                    <div className="flex items-center gap-1.5">
-                                        <div className={`w-2.5 h-2.5 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
-                                        <span className={`text-sm font-bold ${COLOR_MAP[selectedType.color].text}`}>{selectedType.name}</span>
-                                    </div>
-                                )}
-                            </div>
-                            {/* Compare Type Header */}
-                            <div className="px-4 py-3">
-                                <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mb-1">Compare With</p>
-                                <select
-                                    value={compareType}
-                                    onChange={e => setCompareType(e.target.value)}
-                                    className="w-full px-2 py-1 border border-app-border rounded text-sm font-semibold bg-app-surface focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
-                                        <option key={t.key} value={t.key}>{t.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        {/* Feature Rows */}
-                        <div>
-                            {COMPARE_ROWS.map((row, i) => (
-                                <div key={row.key}>
-                                    {/* Feature Label — full width */}
-                                    <div className={`px-4 py-1.5 bg-app-bg ${i > 0 ? 'border-t border-app-border' : ''}`}>
-                                        <span className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider">{row.label}</span>
-                                    </div>
-                                    {/* Two value columns */}
-                                    <div className="grid grid-cols-2">
-                                        <div className="px-4 py-2 bg-indigo-50/20 border-r border-app-border">
-                                            <span className="text-[12px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
-                                        </div>
-                                        <div className="px-4 py-2">
-                                            <span className="text-[12px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-            <ConfirmDialog
-                open={settingsPendingAction !== null}
-                onOpenChange={(open) => { if (!open) setSettingsPendingAction(null) }}
-                onConfirm={() => {
-                    if (!settingsPendingAction) return
-                    if (settingsPendingAction.type === 'recalculate') {
-                        startRecalc(async () => {
-                            try {
-                                const res = await recalculateAccountBalances()
-                                toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
-                            } catch (e: unknown) {
-                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
-                            }
-                        })
-                    } else if (settingsPendingAction.type === 'wipeAll') {
-                        startTransition(async () => {
-                            try {
-                                const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
-                                await wipeAllOperationalData()
-                                toast.success("System has been completely wiped to a Fresh Version.")
-                                router.refresh()
-                            } catch (e: unknown) {
-                                toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
-                            }
-                        })
-                    } else if (settingsPendingAction.type === 'seedData') {
-                        startTransition(async () => {
-                            try {
-                                const { seedTestData } = await import('@/app/actions/finance/system')
-                                await seedTestData()
-                                toast.success("Test data has been successfully seeded!")
-                                router.refresh()
-                            } catch (e: unknown) {
-                                toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
-                            }
-                        })
-                    }
-                    setSettingsPendingAction(null)
-                }}
-                title={settingsPendingAction?.title ?? ''}
-                description={settingsPendingAction?.description ?? ''}
-                confirmText="Confirm"
-                variant={settingsPendingAction?.variant ?? 'danger'}
-            />
-        </div>
-    )
+ {/* ─── TRADE SUB-TYPES TOGGLE ─── */}
+ <div className="p-4 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
+ <div className="flex gap-3 items-center">
+ <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+ <Layers size={20} />
+ </div>
+ <div>
+ <h3 className="text-sm font-bold text-indigo-900">Sales & Purchase Sub-Types</h3>
+ <p className="text-xs text-indigo-700 mt-0.5">
+ Decompose invoices and POs into Retail / Wholesale / Consignee.
+ Enables filter pills, badges, and sub-type columns across pages.
+ </p>
+ </div>
+ </div>
+ <button
+ type="button"
+ disabled={tradeTogglePending}
+ onClick={async () => {
+ setTradeTogglePending(true)
+ try {
+ await updateTradeSubTypeSettings(!tradeSubTypesEnabled)
+ setTradeSubTypesEnabled(!tradeSubTypesEnabled)
+ toast.success(tradeSubTypesEnabled ? 'Trade sub-types disabled' : 'Trade sub-types enabled')
+ } catch {
+ toast.error('Failed to update setting')
+ } finally {
+ setTradeTogglePending(false)
+ }
+ }}
+ className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${tradeSubTypesEnabled ? 'bg-indigo-600' : 'bg-stone-300'
+ }`}
+ >
+ <span className={`inline-block h-5 w-5 transform rounded-full bg-app-surface shadow-sm transition-transform ${tradeSubTypesEnabled ? 'translate-x-6' : 'translate-x-1'
+ }`} />
+ </button>
+ </div>
+ {/* ─── SUBMIT ─── */}
+ <div className="pt-4 border-t border-app-border">
+ <button
+ type="submit"
+ disabled={isPending || isCoreFieldsLocked}
+ className="w-full bg-black text-app-text px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
+ >
+ {isPending ? 'Saving...' : 'Save Configuration'}
+ </button>
+ </div>
+ </form>
+ {/* ─── MAINTENANCE ZONE ─── */}
+ <div className="bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
+ <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
+ <ShieldAlert size={20} />
+ Maintenance Zone
+ </h2>
+ <div className="space-y-4">
+ <div className="bg-amber-50 border border-amber-100 rounded-md p-4 flex items-center justify-between">
+ <div>
+ <h3 className="text-sm font-bold text-amber-900">Recalculate Ledger Balances</h3>
+ <p className="text-xs text-amber-700 mt-1">
+ Rebuilds account balances from scratch based on the posted journal entries.
+ </p>
+ </div>
+ <button
+ type="button"
+ onClick={handleRecalculate}
+ disabled={isRecalcPending}
+ className="bg-app-surface border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
+ >
+ {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
+ </button>
+ </div>
+ <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
+ <div>
+ <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
+ <p className="text-xs text-rose-700 mt-1 font-medium">
+ DELETES all Products, Orders, Ledger entries, CRM, and Inventory.
+ <br /> Use this to completely reset the system to a clean state.
+ </p>
+ </div>
+ <button
+ type="button"
+ onClick={() => {
+ setSettingsPendingAction({
+ type: 'wipeAll',
+ title: 'CRITICAL: Fresh Version',
+ description: 'This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. You will start with a completely fresh system.',
+ variant: 'danger',
+ })
+ }}
+ disabled={isPending}
+ className="bg-rose-600 border border-rose-700 text-app-text hover:bg-rose-700 px-4 py-2 rounded text-xs font-black shadow-lg"
+ >
+ {isPending ? 'Wiping...' : 'FRESH VERSION'}
+ </button>
+ </div>
+ <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
+ <div>
+ <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
+ <p className="text-xs text-emerald-700 mt-1 font-medium">
+ Fills the database with test products, suppliers, and initial stock.
+ <br /> Use this to quickly test system functionality.
+ </p>
+ </div>
+ <button
+ type="button"
+ onClick={() => {
+ setSettingsPendingAction({
+ type: 'seedData',
+ title: 'Seed Test Data?',
+ description: 'This will populate the database with test products, suppliers, and initial stock.',
+ variant: 'warning',
+ })
+ }}
+ disabled={isPending}
+ className="bg-emerald-600 border border-emerald-700 text-app-text hover:bg-emerald-700 px-4 py-2 rounded text-xs font-black shadow-lg"
+ >
+ {isPending ? 'Seeding...' : 'FILL REAL DATA'}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>{/* close left column */}
+ {/* ─── RIGHT COLUMN: Type Comparison ─── */}
+ {showCompare && (
+ <div className="w-1/2 shrink-0 sticky top-6">
+ <div className="bg-app-surface rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
+ {/* Panel Header */}
+ <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
+ <div className="flex items-center gap-2">
+ <GitCompareArrows size={14} className="text-indigo-600" />
+ <h3 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Type Comparison</h3>
+ </div>
+ <button type="button" onClick={() => setShowCompare(false)} className="text-indigo-400 hover:text-indigo-600 p-0.5">
+ <X size={14} />
+ </button>
+ </div>
+ {/* Two Type Column Headers */}
+ <div className="grid grid-cols-2 border-b border-indigo-100">
+ {/* Current Type Header */}
+ <div className="px-4 py-3 bg-indigo-50/40 border-r border-indigo-100">
+ <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mb-1">Current</p>
+ {selectedType && (
+ <div className="flex items-center gap-1.5">
+ <div className={`w-2.5 h-2.5 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
+ <span className={`text-sm font-bold ${COLOR_MAP[selectedType.color].text}`}>{selectedType.name}</span>
+ </div>
+ )}
+ </div>
+ {/* Compare Type Header */}
+ <div className="px-4 py-3">
+ <p className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mb-1">Compare With</p>
+ <select
+ value={compareType}
+ onChange={e => setCompareType(e.target.value)}
+ className="w-full px-2 py-1 border border-app-border rounded text-sm font-semibold bg-app-surface focus:ring-indigo-500 focus:border-indigo-500"
+ >
+ {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
+ <option key={t.key} value={t.key}>{t.name}</option>
+ ))}
+ </select>
+ </div>
+ </div>
+ {/* Feature Rows */}
+ <div>
+ {COMPARE_ROWS.map((row, i) => (
+ <div key={row.key}>
+ {/* Feature Label — full width */}
+ <div className={`px-4 py-1.5 bg-app-bg ${i > 0 ? 'border-t border-app-border' : ''}`}>
+ <span className="text-[11px] font-bold text-app-text-muted uppercase tracking-wider">{row.label}</span>
+ </div>
+ {/* Two value columns */}
+ <div className="grid grid-cols-2">
+ <div className="px-4 py-2 bg-indigo-50/20 border-r border-app-border">
+ <span className="text-[12px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
+ </div>
+ <div className="px-4 py-2">
+ <span className="text-[12px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ </div>
+ )}
+ <ConfirmDialog
+ open={settingsPendingAction !== null}
+ onOpenChange={(open) => { if (!open) setSettingsPendingAction(null) }}
+ onConfirm={() => {
+ if (!settingsPendingAction) return
+ if (settingsPendingAction.type === 'recalculate') {
+ startRecalc(async () => {
+ try {
+ const res = await recalculateAccountBalances()
+ toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
+ } catch (e: unknown) {
+ toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+ }
+ })
+ } else if (settingsPendingAction.type === 'wipeAll') {
+ startTransition(async () => {
+ try {
+ const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
+ await wipeAllOperationalData()
+ toast.success("System has been completely wiped to a Fresh Version.")
+ router.refresh()
+ } catch (e: unknown) {
+ toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
+ }
+ })
+ } else if (settingsPendingAction.type === 'seedData') {
+ startTransition(async () => {
+ try {
+ const { seedTestData } = await import('@/app/actions/finance/system')
+ await seedTestData()
+ toast.success("Test data has been successfully seeded!")
+ router.refresh()
+ } catch (e: unknown) {
+ toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
+ }
+ })
+ }
+ setSettingsPendingAction(null)
+ }}
+ title={settingsPendingAction?.title ?? ''}
+ description={settingsPendingAction?.description ?? ''}
+ confirmText="Confirm"
+ variant={settingsPendingAction?.variant ?? 'danger'}
+ />
+ </div>
+ )
 }

@@ -88,7 +88,7 @@ export default function CoaMigrationTool({
  if (step === 1) {
  return (
  <div className="space-y-8 max-w-4xl mx-auto">
- <div className="bg-stone-900 rounded-3xl p-8 text-white shadow-xl flex items-center justify-between">
+ <div className="bg-stone-900 rounded-3xl p-8 text-app-text shadow-xl flex items-center justify-between">
  <div className="flex items-center gap-4">
  <div className="bg-amber-500/20 p-3 rounded-2xl">
  <Layers className="text-amber-400" size={32} />
@@ -125,7 +125,7 @@ export default function CoaMigrationTool({
  <button
  onClick={handlePrepareTarget}
  disabled={!selectedTemplate || isPending}
- className="bg-stone-900 text-white px-12 py-4 rounded-2xl hover:bg-black font-bold shadow-xl transition-all disabled:opacity-30 flex items-center gap-3"
+ className="bg-stone-900 text-app-text px-12 py-4 rounded-2xl hover:bg-black font-bold shadow-xl transition-all disabled:opacity-30 flex items-center gap-3"
  >
  {isPending ? 'Preparing Layout...' : 'Load Standard & Continue'}
  <ArrowRight size={20} />
@@ -220,7 +220,7 @@ export default function CoaMigrationTool({
  <button
  disabled={isPending || (accountsWithBalance.length > 0 && Object.keys(mappings).length === 0)}
  onClick={handleMigrate}
- className="bg-stone-900 text-white px-12 py-3 rounded-xl hover:bg-black font-bold shadow-xl shadow-stone-900/20 transition-all flex items-center gap-2 disabled:opacity-30"
+ className="bg-stone-900 text-app-text px-12 py-3 rounded-xl hover:bg-black font-bold shadow-xl shadow-stone-900/20 transition-all flex items-center gap-2 disabled:opacity-30"
  >
  {isPending ? 'Migrating Data...' : 'Finalize & Post Migration'}
  {!isPending && <CheckCircle2 size={18} className="text-emerald-400" />}

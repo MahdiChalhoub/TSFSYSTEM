@@ -73,12 +73,12 @@ function LoginContent() {
  {tenantLogo ? (
  <img src={tenantLogo} className="w-24 h-24 object-contain rounded-xl bg-app-surface p-2" alt={displayTitle} />
  ) : (
- <div className="w-20 h-20 bg-emerald-500 text-white flex items-center justify-center text-4xl font-bold rounded-2xl shadow-xl shadow-emerald-500/20">
+ <div className="w-20 h-20 bg-emerald-500 text-app-text flex items-center justify-center text-4xl font-bold rounded-2xl shadow-xl shadow-emerald-500/20">
  {displayTitle.charAt(0)}
  </div>
  )}
  <div className="space-y-2">
- <h1 className="text-4xl font-black text-white tracking-tight">{displayTitle}</h1>
+ <h1 className="text-4xl font-black text-app-text tracking-tight">{displayTitle}</h1>
  <p className="text-app-text-faint text-lg max-w-md">{displaySubtitle}</p>
  </div>
  <div className="flex items-center gap-2 text-xs text-app-text-muted font-mono uppercase tracking-widest pt-8">
@@ -88,10 +88,10 @@ function LoginContent() {
  </div>
  </div>
  {/* Right Column: Login Form */}
- <div className="flex flex-col items-center justify-center p-8 lg:p-16 bg-[#0f172a] text-white">
+ <div className="flex flex-col items-center justify-center p-8 lg:p-16 bg-[#0f172a] text-app-text">
  <div className="w-full max-w-md space-y-8">
  <div className="space-y-2 text-center lg:text-left">
- <h2 className="text-3xl font-black tracking-tight text-white">Welcome Back</h2>
+ <h2 className="text-3xl font-black tracking-tight text-app-text">Welcome Back</h2>
  <p className="text-app-text-faint">Enter your credentials to access the workspace.</p>
  </div>
  <form action={action} className="space-y-6">
@@ -113,21 +113,21 @@ function LoginContent() {
  placeholder="000 000"
  required
  autoFocus
- className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-white font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500"
+ className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-app-text font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500"
  />
  <p className="text-[10px] text-app-text-muted uppercase font-black text-center mt-2">Enter the verification code from your device</p>
  </div>
  {/* Server-side 2FA challenge — no passwords in DOM */}
  <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
  {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
- <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+ <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
  {isPending ? <Loader2 className="animate-spin" /> : "Verify"}
  </Button>
  <div className="text-center">
  <button
  type="button"
  onClick={() => window.location.reload()}
- className="text-xs font-bold text-app-text-muted hover:text-white uppercase tracking-widest transition-colors"
+ className="text-xs font-bold text-app-text-muted hover:text-app-text uppercase tracking-widest transition-colors"
  >
  Cancel & Restart
  </button>
@@ -148,7 +148,7 @@ function LoginContent() {
  required
  defaultValue={searchParams.get('slug') || ''}
  suppressHydrationWarning
- className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
+ className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-app-text font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
  />
  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-muted text-xs font-mono select-none">
  {branding.suffix}
@@ -166,7 +166,7 @@ function LoginContent() {
  required
  defaultValue={prefilledUsername}
  suppressHydrationWarning
- className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-medium focus:ring-emerald-500 focus:border-emerald-500"
+ className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-app-text font-medium focus:ring-emerald-500 focus:border-emerald-500"
  />
  {(state?.error as any)?.username && (
  <p className="text-xs text-red-500 font-bold mt-1">{(state?.error as any).username[0]}</p>
@@ -184,17 +184,17 @@ function LoginContent() {
  type="password"
  required
  suppressHydrationWarning
- className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white focus:ring-emerald-500 focus:border-emerald-500"
+ className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-app-text focus:ring-emerald-500 focus:border-emerald-500"
  />
  </div>
  {!isRoot && sites.length > 0 && (
  <div className="space-y-2">
  <Label className="text-xs uppercase font-bold text-app-text-muted">Site Location</Label>
  <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
- <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white">
+ <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-app-text">
  <SelectValue placeholder="Select Base" />
  </SelectTrigger>
- <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
+ <SelectContent className="bg-[#1e293b] border-slate-700 text-app-text">
  {sites.map((s: Record<string, any>) => (
  <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
  ))}
@@ -203,7 +203,7 @@ function LoginContent() {
  </div>
  )}
  </div>
- <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+ <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
  {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
  </Button>
  </>
@@ -230,7 +230,7 @@ function LoginContent() {
 }
 export default function LoginPage() {
  return (
- <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}>
+ <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-app-text" /></div>}>
  <LoginContent />
  </Suspense>
  );

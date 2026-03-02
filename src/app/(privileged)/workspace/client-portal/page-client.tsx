@@ -67,7 +67,7 @@ export default function ClientPortalAdminPage() {
  </div>
  <h1 className="text-5xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-blue-600 flex items-center justify-center shadow-2xl shadow-blue-200">
- <Monitor size={32} className="text-white fill-white" />
+ <Monitor size={32} className="text-app-text fill-white" />
  </div>
  Client <span className="text-blue-600">Ops</span>
  </h1>
@@ -76,7 +76,7 @@ export default function ClientPortalAdminPage() {
  <button onClick={load} className="h-12 px-6 rounded-2xl bg-app-surface border border-app-border shadow-sm font-bold text-app-text-muted flex items-center gap-2 hover:bg-app-bg transition-all">
  <RefreshCw size={18} /> Refresh Hub
  </button>
- <button className="h-12 px-6 rounded-2xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+ <button className="h-12 px-6 rounded-2xl bg-blue-600 text-app-text font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
  Portal Audit <ChevronRight size={18} />
  </button>
  </div>
@@ -95,7 +95,7 @@ export default function ClientPortalAdminPage() {
  <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Portfolio Balance</p>
  <h2 className="text-3xl font-black text-app-text">${totalBalance.toFixed(2)}</h2>
  </div>
- <div className="bg-blue-600 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+ <div className="bg-blue-600 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-app-text">
  <div className="flex justify-between items-start mb-4">
  <div className="w-12 h-12 rounded-2xl bg-blue-500/50 text-blue-100 flex items-center justify-center">
  <MessageSquare size={24} />
@@ -105,7 +105,7 @@ export default function ClientPortalAdminPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-blue-100 uppercase tracking-widest leading-none mb-1">Support Tickets</p>
- <h2 className="text-3xl font-black text-white">{openTickets.length} <span className="text-xs text-blue-200">OPEN</span></h2>
+ <h2 className="text-3xl font-black text-app-text">{openTickets.length} <span className="text-xs text-blue-200">OPEN</span></h2>
  </div>
  <div className="bg-app-surface p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
  <div className="flex justify-between items-start mb-4">
@@ -123,7 +123,7 @@ export default function ClientPortalAdminPage() {
  {/* Tabs */}
  <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-gray-800 p-1.5 w-fit">
  {([['wallets', 'Client Wallets', Wallet], ['tickets', 'Support Tickets', MessageSquare], ['quotes', 'Quote Requests', FileQuestion]] as const).map(([key, label, Icon]) => (
- <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-fuchsia-600 text-white shadow-lg shadow-fuchsia-900/40' : 'text-app-text-faint hover:text-gray-200'}`}>
+ <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${tab === key ? 'bg-fuchsia-600 text-app-text shadow-lg shadow-fuchsia-900/40' : 'text-app-text-faint hover:text-gray-200'}`}>
  <Icon size={14} />
  {label}
  {key === 'tickets' && openTickets.length > 0 && <span className="bg-amber-500 text-black text-[10px] font-bold px-1.5 rounded-full">{openTickets.length}</span>}
@@ -139,7 +139,7 @@ export default function ClientPortalAdminPage() {
  <div key={w.id} className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-[#0F1729] border border-gray-800">
  <Wallet size={16} className="text-fuchsia-400 shrink-0" />
  <div className="flex-1">
- <div className="font-medium text-sm text-white">{w.client?.name || w.client_name || '—'}</div>
+ <div className="font-medium text-sm text-app-text">{w.client?.name || w.client_name || '—'}</div>
  </div>
  <div className={`font-mono font-bold text-sm ${Number(w.balance) > 0 ? 'text-emerald-400' : Number(w.balance) < 0 ? 'text-red-400' : 'text-app-text-faint'}`}>
  {w.currency || '$'}{Number(w.balance || 0).toFixed(2)}
@@ -162,7 +162,7 @@ export default function ClientPortalAdminPage() {
  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest truncate">{t.client?.name || t.client_name || '—'}{t.created_at ? ` · ${new Date(t.created_at).toLocaleDateString()}` : ''}</p>
  </div>
  {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && (
- <button onClick={() => resolveTicket(t.id)} className="h-10 px-6 rounded-2xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+ <button onClick={() => resolveTicket(t.id)} className="h-10 px-6 rounded-2xl bg-emerald-600 text-app-text font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
  Authorize
  </button>
  )}
@@ -174,7 +174,7 @@ export default function ClientPortalAdminPage() {
  <div key={q.id} className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-[#0F1729] border border-gray-800">
  <FileQuestion size={16} className="text-blue-400 shrink-0" />
  <div className="flex-1">
- <div className="font-medium text-sm text-white">{q.client?.name || q.client_name || '—'}</div>
+ <div className="font-medium text-sm text-app-text">{q.client?.name || q.client_name || '—'}</div>
  <p className="text-xs text-app-text-muted mt-0.5">{q.total_items != null ? `${q.total_items} items` : ''}{q.created_at ? ` · ${new Date(q.created_at).toLocaleDateString()}` : ''}{q.notes ? ` · ${q.notes}` : ''}</p>
  </div>
  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${TICKET_STATUS[q.status] || 'bg-gray-800 text-app-text-faint border-gray-700'}`}>{q.status}</span>

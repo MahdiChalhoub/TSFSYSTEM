@@ -111,7 +111,7 @@ export default function VatSettlementPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Scale size={28} className="text-white" />
+ <Scale size={28} className="text-app-text" />
  </div>
  VAT <span className="text-violet-600">Settlement</span>
  </h1>
@@ -220,7 +220,7 @@ export default function VatSettlementPage() {
  <Button
  onClick={handlePost}
  disabled={posting || !bankAccountId}
- className="bg-violet-600 hover:bg-violet-700 text-white px-6"
+ className="bg-violet-600 hover:bg-violet-700 text-app-text px-6"
  >
  <Send size={14} className="mr-2" />
  {posting ? 'Posting…' : 'Post Settlement'}

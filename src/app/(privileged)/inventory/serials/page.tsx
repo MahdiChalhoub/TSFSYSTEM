@@ -29,7 +29,7 @@ export default function SerialsPage() {
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <div className="space-y-2">
  <div className="flex items-center gap-4">
- <div className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20">
+ <div className="w-14 h-14 bg-slate-900 text-app-text rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20">
  <Barcode size={28} />
  </div>
  <div>

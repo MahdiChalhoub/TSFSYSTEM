@@ -267,7 +267,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  </div>
  <button
  onClick={() => { setShowCreate(!showCreate); setEditId(null); }}
- className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100"
+ className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-app-text rounded-xl font-bold text-sm hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100"
  >
  <Plus size={16} />
  New Register
@@ -492,7 +492,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  <button onClick={() => { setShowCreate(false); setEditId(null); }}
  className="px-4 py-2 text-app-text-muted text-sm font-bold hover:bg-app-surface-2 rounded-lg transition-all">Cancel</button>
  <button onClick={editId ? handleUpdate : handleCreate} disabled={saving}
- className="flex items-center gap-2 px-5 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-50 transition-all shadow">
+ className="flex items-center gap-2 px-5 py-2 bg-indigo-500 text-app-text rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-50 transition-all shadow">
  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
  {editId ? 'Update' : 'Create'}
  </button>
@@ -585,7 +585,7 @@ function RegistersTab({ sites, accounts, warehouses, users, lobbyData, onRefresh
  If you have locations, try refreshing. Otherwise, create them in{' '}
  <Link href="/inventory/warehouses" className="underline font-bold">Inventory → Warehouses</Link>
  </p>
- <button onClick={onRefresh} className="mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-all inline-flex items-center gap-2">
+ <button onClick={onRefresh} className="mt-3 px-4 py-2 bg-amber-500 text-app-text rounded-lg text-xs font-bold hover:bg-amber-600 transition-all inline-flex items-center gap-2">
  <RefreshCw size={12} /> Reload Data
  </button>
  </div>
@@ -730,7 +730,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  </div>
  <button onClick={() => handleSetPin(user.id)}
  disabled={savingPinFor === user.id || !(pinInputs[user.id]?.length >= 4)}
- className="p-1 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-30 transition-all shrink-0">
+ className="p-1 rounded-lg bg-indigo-500 text-app-text hover:bg-indigo-600 disabled:opacity-30 transition-all shrink-0">
  {savingPinFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
  </button>
  </div>
@@ -809,7 +809,7 @@ function UsersTab({ users, lobbyData, onRefresh }: { users: UserData[]; lobbyDat
  </div>
  <button onClick={() => handleSetOverridePin(user.id)}
  disabled={savingOverrideFor === user.id || !(overridePinInputs[user.id]?.length >= 4)}
- className="p-1 rounded-lg bg-rose-500 text-white hover:bg-rose-600 disabled:opacity-30 transition-all shrink-0">
+ className="p-1 rounded-lg bg-rose-500 text-app-text hover:bg-rose-600 disabled:opacity-30 transition-all shrink-0">
  {savingOverrideFor === user.id ? <Loader2 size={10} className="animate-spin" /> : <Save size={10} />}
  </button>
  </div>
@@ -871,7 +871,7 @@ function PaymentsTab({ methods, setMethods, accounts }: {
  <p className="text-xs text-app-text-faint">Configure POS payment buttons and link them to financial accounts</p>
  </div>
  <button onClick={handleSave} disabled={saving}
- className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
+ className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-app-text rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
  Save
  </button>
@@ -912,7 +912,7 @@ function PaymentsTab({ methods, setMethods, accounts }: {
  {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} ({acc.type || 'N/A'})</option>)}
  </select>
  <button onClick={() => setMethods(methods.filter(m => m.key !== method.key))}
- className="w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all">
+ className="w-8 h-8 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-app-text flex items-center justify-center transition-all">
  <Trash2 size={14} />
  </button>
  </div>
@@ -928,7 +928,7 @@ function PaymentsTab({ methods, setMethods, accounts }: {
  <input type="text" value={newMethodKey} onChange={(e) => setNewMethodKey(e.target.value.toUpperCase())}
  placeholder="Or custom..." className="text-sm font-bold bg-app-surface border border-app-border rounded-lg px-3 py-2 outline-none w-32" />
  <button onClick={addMethod} disabled={!newMethodKey.trim()}
- className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm hover:bg-emerald-600 disabled:opacity-40">
+ className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-app-text rounded-lg font-bold text-sm hover:bg-emerald-600 disabled:opacity-40">
  <Plus size={16} /> Add
  </button>
  </div>
@@ -1026,7 +1026,7 @@ function SecurityTab() {
  <p className="text-xs text-app-text-faint">Control POS access, overrides, reconciliation, and restrictions</p>
  </div>
  <button onClick={handleSave} disabled={saving}
- className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
+ className="flex items-center gap-2 px-5 py-2 bg-emerald-500 text-app-text rounded-xl font-bold text-sm hover:bg-emerald-600 disabled:opacity-50 shadow-lg shadow-emerald-100 transition-all">
  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
  Save
  </button>
@@ -1255,8 +1255,8 @@ function DeliveryTab() {
  <Hash size={15} className="text-amber-400" />
  </div>
  <div>
- <h2 className="text-white text-sm font-black">Confirmation Codes</h2>
- <p className="text-white/40 text-[10px]">Chain-of-custody protection for deliveries</p>
+ <h2 className="text-app-text text-sm font-black">Confirmation Codes</h2>
+ <p className="text-app-text/40 text-[10px]">Chain-of-custody protection for deliveries</p>
  </div>
  </div>
  </div>
@@ -1325,12 +1325,12 @@ function DeliveryTab() {
  <div className="bg-gradient-to-r from-emerald-700 to-teal-800 px-5 py-4">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
- <MessageSquare size={15} className="text-white" />
+ <div className="w-8 h-8 rounded-xl bg-app-text/15 flex items-center justify-center">
+ <MessageSquare size={15} className="text-app-text" />
  </div>
  <div>
- <h2 className="text-white text-sm font-black">SMS Gateway</h2>
- <p className="text-white/50 text-[10px]">Auto-send confirmation codes to clients</p>
+ <h2 className="text-app-text text-sm font-black">SMS Gateway</h2>
+ <p className="text-app-text/50 text-[10px]">Auto-send confirmation codes to clients</p>
  </div>
  </div>
  {/* Master SMS toggle */}
@@ -1340,8 +1340,8 @@ function DeliveryTab() {
  >
  {settings.sms_delivery_code_enabled
  ? <ToggleRight size={28} className="text-emerald-300" />
- : <ToggleLeft size={28} className="text-white/30" />}
- <span className="text-white/70 text-xs font-bold">
+ : <ToggleLeft size={28} className="text-app-text/30" />}
+ <span className="text-app-text/70 text-xs font-bold">
  {settings.sms_delivery_code_enabled ? 'On' : 'Off'}
  </span>
  </button>
@@ -1365,7 +1365,7 @@ function DeliveryTab() {
  isActive ? p.active : `${p.border} ${p.bg} hover:opacity-80`
  )}
  >
- <div className={clsx("w-8 h-8 rounded-xl flex items-center justify-center", isActive ? 'bg-white/70' : 'bg-app-surface')}>
+ <div className={clsx("w-8 h-8 rounded-xl flex items-center justify-center", isActive ? 'bg-app-text/70' : 'bg-app-surface')}>
  <Icon size={16} className={p.color} />
  </div>
  <span className={clsx("text-[10px] font-black leading-tight", isActive ? 'text-app-text' : 'text-app-text-muted')}>
@@ -1433,7 +1433,7 @@ function DeliveryTab() {
  <button
  onClick={handleTestSMS}
  disabled={testing || !testPhone}
- className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-xs font-black hover:bg-indigo-600 disabled:opacity-40 transition-all flex items-center gap-1.5"
+ className="px-4 py-2 bg-indigo-500 text-app-text rounded-xl text-xs font-black hover:bg-indigo-600 disabled:opacity-40 transition-all flex items-center gap-1.5"
  >
  {testing ? <Loader2 size={12} className="animate-spin" /> : <TestTube size={12} />}
  Send Test
@@ -1493,7 +1493,7 @@ function DeliveryTab() {
  <button
  onClick={handleSave}
  disabled={saving}
- className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl text-sm font-black hover:from-indigo-400 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200"
+ className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-app-text rounded-2xl text-sm font-black hover:from-indigo-400 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-200"
  >
  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
  Save Delivery & SMS Settings

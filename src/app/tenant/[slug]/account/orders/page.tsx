@@ -14,7 +14,7 @@ export default function OrdersPageRoute() {
  }
 
  const OrdersPage = (components as any).OrdersPage
- if (!OrdersPage) return <div className="p-20 text-white text-center">Orders component not implemented in this theme.</div>
+ if (!OrdersPage) return <div className="p-20 text-app-text text-center">Orders component not implemented in this theme.</div>
 
  return <OrdersPage />
 }

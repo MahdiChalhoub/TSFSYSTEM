@@ -102,14 +102,14 @@ export default function SupplierPortalPage() {
  <div className="w-20 h-20 bg-indigo-500/20 border border-indigo-500/30 rounded-3xl flex items-center justify-center mx-auto text-indigo-400">
  <Building2 size={36} />
  </div>
- <h1 className="text-3xl font-black text-white">Supplier Portal</h1>
+ <h1 className="text-3xl font-black text-app-text">Supplier Portal</h1>
  <p className="text-app-text-muted text-sm">
- Secure access for <span className="text-white font-bold">{slug}</span>
+ Secure access for <span className="text-app-text font-bold">{slug}</span>
  </p>
  </div>
 
  {/* Form */}
- <div className="p-10 bg-slate-900/50 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
+ <div className="p-10 bg-slate-900/50 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-6 shadow-2xl">
  {error && (
  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
  <AlertCircle size={18} className="shrink-0" /> {error}
@@ -123,7 +123,7 @@ export default function SupplierPortalPage() {
  value={email}
  onChange={e => setEmail(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+ className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
  />
  <input
  type="password"
@@ -131,10 +131,10 @@ export default function SupplierPortalPage() {
  value={password}
  onChange={e => setPassword(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+ className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
  />
  <button type="submit" disabled={loading}
- className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-indigo-600 hover:bg-indigo-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
  {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
  </button>
  </form>
@@ -200,18 +200,18 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  {/* Header */}
  <div className="flex justify-between items-start">
  <div>
- <h1 className="text-4xl font-black text-white">Supplier Portal</h1>
+ <h1 className="text-4xl font-black text-app-text">Supplier Portal</h1>
  <p className="text-app-text-muted text-sm mt-1">
  {session.contact.company || session.contact.name} • <span className="text-indigo-400">{session.contact.supplier_category || 'Supplier'}</span>
  </p>
  </div>
  <div className="flex items-center gap-4">
  <div className="text-right">
- <p className="text-white font-medium text-sm">{session.user.name}</p>
+ <p className="text-app-text font-medium text-sm">{session.user.name}</p>
  <p className="text-app-text-muted text-[11px]">{session.user.email}</p>
  </div>
  <button onClick={onLogout}
- className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all">
+ className="w-12 h-12 bg-app-text/5 border border-app-text/10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all">
  <LogOut size={18} />
  </button>
  </div>
@@ -220,27 +220,27 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  {/* Stats */}
  {!loading && stats && (
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in duration-500">
- <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Active POs</p>
- <p className="text-3xl font-black text-white flex items-center gap-2">
+ <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <ShoppingCart size={20} className="text-blue-400" /> {stats.active_purchase_orders || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Total POs</p>
- <p className="text-3xl font-black text-white flex items-center gap-2">
+ <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <Package size={20} className="text-emerald-400" /> {stats.total_purchase_orders || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Pending Proformas</p>
- <p className="text-3xl font-black text-white flex items-center gap-2">
+ <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <FileText size={20} className="text-amber-400" /> {stats.pending_proformas || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Price Requests</p>
- <p className="text-3xl font-black text-white flex items-center gap-2">
+ <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <TrendingDown size={20} className="text-purple-400" /> {stats.pending_price_requests || 0}
  </p>
  </div>
@@ -260,8 +260,8 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  className={`group p-8 ${item.bg} border rounded-3xl flex flex-col gap-4 transition-all`}>
  <item.icon size={32} className={item.color} />
  <div className="flex items-center justify-between">
- <span className="text-white font-bold text-lg">{item.label}</span>
- <ArrowRight size={18} className="text-app-text-muted group-hover:text-white transition-colors" />
+ <span className="text-app-text font-bold text-lg">{item.label}</span>
+ <ArrowRight size={18} className="text-app-text-muted group-hover:text-app-text transition-colors" />
  </div>
  </Link>
  ))}
@@ -271,7 +271,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  {stats?.unread_notifications > 0 && (
  <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center gap-4">
  <Bell size={20} className="text-indigo-400" />
- <span className="text-white font-medium flex-1">You have {stats.unread_notifications} unread notification{stats.unread_notifications > 1 ? 's' : ''}</span>
+ <span className="text-app-text font-medium flex-1">You have {stats.unread_notifications} unread notification{stats.unread_notifications > 1 ? 's' : ''}</span>
  </div>
  )}
  </div>

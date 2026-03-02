@@ -116,7 +116,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
  <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-emerald-200 bg-emerald-50/30' : 'border-app-border bg-gray-50/50 group-hover:border-blue-300 group-hover:bg-blue-50/30'}`}>
  {file ? (
  <>
- <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20">
+ <div className="p-4 bg-emerald-500 text-app-text rounded-2xl shadow-lg shadow-emerald-500/20">
  <FileText size={40} />
  </div>
  <div className="text-center">
@@ -239,7 +239,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
  key={s}
  type="button"
  onClick={() => setScope(s)}
- className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${scope === s ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-app-surface border-app-border text-app-text-faint'}`}
+ className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${scope === s ? 'bg-slate-900 border-slate-900 text-app-text shadow-lg' : 'bg-app-surface border-app-border text-app-text-faint'}`}
  >
  {s}
  </button>
@@ -252,7 +252,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
  <Button
  onClick={handleImport}
  disabled={loading}
- className="w-full h-16 bg-slate-900 hover:bg-black text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/40 transition-all flex items-center gap-3"
+ className="w-full h-16 bg-slate-900 hover:bg-black text-app-text rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/40 transition-all flex items-center gap-3"
  >
  {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
  {loading ? "Processing..." : "Start Import"}

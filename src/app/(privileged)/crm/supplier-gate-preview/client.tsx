@@ -171,28 +171,28 @@ export default function SupplierGatePreviewClient() {
  <Briefcase size={18} className="text-indigo-400" />
  </div>
  <div>
- <h2 className="text-xl font-black text-white">Supplier Portal</h2>
+ <h2 className="text-xl font-black text-app-text">Supplier Portal</h2>
  <p className="text-xs text-app-text-muted">Welcome, <span className="text-indigo-400 font-bold">{selectedSupplier.name}</span></p>
  </div>
  </div>
 
  {/* Stats */}
  <div className="grid grid-cols-3 gap-3 mb-6">
- <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl">
+ <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">Active Orders</span>
- <div className="text-2xl font-black text-white flex items-center gap-2">
+ <div className="text-2xl font-black text-app-text flex items-center gap-2">
  <TrendingUp size={14} className="text-emerald-400" />{activeCount}
  </div>
  </div>
- <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl">
+ <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">Fulfilled</span>
- <div className="text-2xl font-black text-white flex items-center gap-2">
+ <div className="text-2xl font-black text-app-text flex items-center gap-2">
  <CheckCircle2 size={14} className="text-indigo-400" />{receivedCount}
  </div>
  </div>
- <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl">
+ <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">Total Value</span>
- <div className="text-2xl font-black text-white flex items-center gap-2">
+ <div className="text-2xl font-black text-app-text flex items-center gap-2">
  <DollarSign size={14} className="text-amber-400" />{totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
  </div>
  </div>
@@ -219,13 +219,13 @@ export default function SupplierGatePreviewClient() {
  const style = PO_STATUS_STYLES[po.status] || PO_STATUS_STYLES.DRAFT
  const Icon = style.icon
  return (
- <div key={po.id} className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-xl hover:border-indigo-500/20 transition-all">
+ <div key={po.id} className="flex items-center gap-4 p-4 bg-app-text/5 border border-app-text/5 rounded-xl hover:border-indigo-500/20 transition-all">
  <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center flex-shrink-0`}>
  <Icon size={16} className={style.text} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2">
- <span className="text-sm font-bold text-white">{po.po_number}</span>
+ <span className="text-sm font-bold text-app-text">{po.po_number}</span>
  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${style.bg} ${style.text}`}>
  {po.status.replace(/_/g, ' ')}
  </span>
@@ -236,7 +236,7 @@ export default function SupplierGatePreviewClient() {
  </div>
  </div>
  <div className="text-right flex-shrink-0">
- <span className="text-sm font-black text-white">{Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+ <span className="text-sm font-black text-app-text">{Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
  {po.expected_date && (
  <p className="text-[10px] text-app-text-muted mt-0.5">Due {po.expected_date ? new Date(po.expected_date).toLocaleDateString() : '—'}</p>
  )}

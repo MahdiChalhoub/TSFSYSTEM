@@ -110,7 +110,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  <button
  onClick={handleSetPosPin}
  disabled={savingPos || posPin.length < 4}
- className="px-5 py-2.5 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+ className="px-5 py-2.5 bg-indigo-500 text-app-text rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
  >
  {savingPos ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  Save
@@ -159,7 +159,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  <button
  onClick={handleSetOverridePin}
  disabled={savingOverride || overridePin.length < 4}
- className="px-5 py-2.5 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+ className="px-5 py-2.5 bg-rose-500 text-app-text rounded-xl font-bold text-sm hover:bg-rose-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
  >
  {savingOverride ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  Save

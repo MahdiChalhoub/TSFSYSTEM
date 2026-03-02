@@ -54,7 +54,7 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
  onClick={handleVerify}
  disabled={loading}
  className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all ${isVerified
- ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600'
+ ? 'bg-emerald-500 text-app-text shadow-lg shadow-emerald-200 hover:bg-emerald-600'
  : 'bg-app-surface border-2 border-emerald-100 text-emerald-600 hover:bg-emerald-50'
  }`}
  >
@@ -66,7 +66,7 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
  onClick={handleLock}
  disabled={loading}
  className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all ${isLocked
- ? 'bg-amber-500 text-white shadow-lg shadow-amber-200 hover:bg-amber-600'
+ ? 'bg-amber-500 text-app-text shadow-lg shadow-amber-200 hover:bg-amber-600'
  : 'bg-app-surface border-2 border-amber-100 text-amber-600 hover:bg-amber-50'
  }`}
  >

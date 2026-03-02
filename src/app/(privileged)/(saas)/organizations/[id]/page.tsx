@@ -474,7 +474,7 @@ export default function OrganizationDetailPage() {
  <div className="text-center py-3">
  <p className="text-xs text-app-text-faint italic mb-3">No client assigned</p>
  <Button size="sm"
- className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs"
+ className="bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-xl font-bold text-xs"
  onClick={async () => {
  const data = await listClients()
  setAllClients(Array.isArray(data) ? data : [])
@@ -562,7 +562,7 @@ export default function OrganizationDetailPage() {
  <h3 className="text-lg font-bold text-app-text">Organization Users</h3>
  <p className="text-sm text-app-text-muted">{users.length} user{users.length !== 1 ? 's' : ''} in this organization</p>
  </div>
- <Button onClick={() => setShowCreateUser(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">
+ <Button onClick={() => setShowCreateUser(true)} className="bg-emerald-600 hover:bg-emerald-700 text-app-text rounded-xl font-bold shadow-md">
  <Plus size={16} className="mr-2" /> Create User
  </Button>
  </div>
@@ -620,7 +620,7 @@ export default function OrganizationDetailPage() {
  <h3 className="text-lg font-bold text-app-text">Organization Sites</h3>
  <p className="text-sm text-app-text-muted">{sites.length} site{sites.length !== 1 ? 's' : ''} — branches, warehouses, locations</p>
  </div>
- <Button onClick={() => setShowCreateSite(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md">
+ <Button onClick={() => setShowCreateSite(true)} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-xl font-bold shadow-md">
  <Plus size={16} className="mr-2" /> Add Site
  </Button>
  </div>
@@ -728,7 +728,7 @@ export default function OrganizationDetailPage() {
  <CardTitle className="text-xl font-bold text-emerald-900">Subscription</CardTitle>
  <CardDescription className="text-emerald-700">Current active plan</CardDescription>
  </div>
- <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">{usage?.plan?.name || 'Free Tier'}</Badge>
+ <Badge className="bg-emerald-600 text-app-text text-lg px-4 py-1">{usage?.plan?.name || 'Free Tier'}</Badge>
  </div>
  </CardHeader>
  <CardContent>
@@ -874,7 +874,7 @@ export default function OrganizationDetailPage() {
  <div className="flex-1" />
  {!isCurrent && (
  <Button size="sm"
- className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+ className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-app-text font-bold text-xs"
  onClick={() => setPlanSwitchTarget(p as unknown as SaasPlan)}>
  Switch to This Plan
  </Button>
@@ -1066,7 +1066,7 @@ export default function OrganizationDetailPage() {
  size="sm"
  className={`w-full mt-3 rounded-xl font-bold text-xs ${a.already_purchased
  ? 'bg-gray-200 text-app-text-muted cursor-not-allowed'
- : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+ : 'bg-indigo-600 hover:bg-indigo-500 text-app-text'
  }`}
  disabled={a.already_purchased || purchasingAddon === a.id}
  onClick={async () => {
@@ -1144,7 +1144,7 @@ export default function OrganizationDetailPage() {
  </div>
  <DialogFooter>
  <Button variant="ghost" onClick={() => setShowCreateUser(false)} className="rounded-xl">Cancel</Button>
- <Button onClick={handleCreateUser} disabled={creating} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">
+ <Button onClick={handleCreateUser} disabled={creating} className="bg-emerald-600 hover:bg-emerald-700 text-app-text rounded-xl font-bold">
  {creating ? <Loader2 size={16} className="animate-spin mr-2" /> : <UserCog size={16} className="mr-2" />}
  Create User
  </Button>
@@ -1173,7 +1173,7 @@ export default function OrganizationDetailPage() {
  )}
  <DialogFooter>
  <Button variant="ghost" onClick={() => setResetTarget(null)} className="rounded-xl">Cancel</Button>
- <Button onClick={handleResetPassword} disabled={resetting} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold">
+ <Button onClick={handleResetPassword} disabled={resetting} className="bg-amber-600 hover:bg-amber-700 text-app-text rounded-xl font-bold">
  {resetting ? <Loader2 size={16} className="animate-spin mr-2" /> : <KeyRound size={16} className="mr-2" />}
  Reset Password
  </Button>
@@ -1218,7 +1218,7 @@ export default function OrganizationDetailPage() {
  </div>
  <DialogFooter>
  <Button variant="ghost" onClick={() => setShowCreateSite(false)} className="rounded-xl">Cancel</Button>
- <Button onClick={handleCreateSite} disabled={creatingSite} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold">
+ <Button onClick={handleCreateSite} disabled={creatingSite} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-xl font-bold">
  {creatingSite ? <Loader2 size={16} className="animate-spin mr-2" /> : <Building2 size={16} className="mr-2" />}
  Create Site
  </Button>
@@ -1289,7 +1289,7 @@ export default function OrganizationDetailPage() {
  <Button variant="ghost" onClick={() => setPlanSwitchTarget(null)} className="rounded-xl">Cancel</Button>
  <Button
  disabled={switching}
- className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold"
+ className="bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-xl font-bold"
  onClick={async () => {
  if (!planSwitchTarget) return
  setSwitching(true)
@@ -1414,7 +1414,7 @@ export default function OrganizationDetailPage() {
  <Button variant="ghost" onClick={() => setShowNewClient(false)} className="rounded-xl">Back</Button>
  <Button
  disabled={savingClient || !newClient.first_name || !newClient.last_name || !newClient.email}
- className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold"
+ className="bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-xl font-bold"
  onClick={async () => {
  setSavingClient(true)
  try {

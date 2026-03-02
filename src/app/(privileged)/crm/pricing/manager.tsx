@@ -152,7 +152,7 @@ export default function PricingManager({
  </div>
  <button
  onClick={() => tab === 'groups' ? setShowGroupForm(true) : setShowRuleForm(true)}
- className="px-6 py-3 bg-violet-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-violet-100 hover:bg-violet-700 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+ className="px-6 py-3 bg-violet-600 text-app-text rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-violet-100 hover:bg-violet-700 hover:-translate-y-0.5 transition-all flex items-center gap-2"
  >
  <Plus size={18} />
  New {tab === 'groups' ? 'Group' : 'Rule'}
@@ -314,7 +314,7 @@ export default function PricingManager({
  </div>
  <div className="flex gap-4 pt-4">
  <button onClick={() => setShowGroupForm(false)} className="flex-1 px-6 py-3 rounded-2xl font-black text-app-text-faint hover:bg-app-bg transition-all text-sm uppercase tracking-widest">Cancel</button>
- <button onClick={handleCreateGroup} disabled={saving || !groupName} className="flex-[2] px-6 py-3 bg-violet-600 text-white rounded-2xl font-black shadow-lg hover:bg-violet-700 transition-all text-sm uppercase tracking-widest disabled:opacity-50">
+ <button onClick={handleCreateGroup} disabled={saving || !groupName} className="flex-[2] px-6 py-3 bg-violet-600 text-app-text rounded-2xl font-black shadow-lg hover:bg-violet-700 transition-all text-sm uppercase tracking-widest disabled:opacity-50">
  {saving ? 'Creating...' : 'Create Group'}
  </button>
  </div>
@@ -398,7 +398,7 @@ export default function PricingManager({
  </div>
  <div className="flex gap-4 pt-4">
  <button onClick={() => setShowRuleForm(false)} className="flex-1 px-6 py-3 rounded-2xl font-black text-app-text-faint hover:bg-app-bg transition-all text-sm uppercase tracking-widest">Cancel</button>
- <button onClick={handleCreateRule} disabled={saving || !ruleValue} className="flex-[2] px-6 py-3 bg-violet-600 text-white rounded-2xl font-black shadow-lg hover:bg-violet-700 transition-all text-sm uppercase tracking-widest disabled:opacity-50">
+ <button onClick={handleCreateRule} disabled={saving || !ruleValue} className="flex-[2] px-6 py-3 bg-violet-600 text-app-text rounded-2xl font-black shadow-lg hover:bg-violet-700 transition-all text-sm uppercase tracking-widest disabled:opacity-50">
  {saving ? 'Creating...' : 'Create Rule'}
  </button>
  </div>

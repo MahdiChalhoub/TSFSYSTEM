@@ -89,7 +89,7 @@ export default function NotificationPreferencesPage() {
  <header>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Bell size={28} className="text-white" />
+ <Bell size={28} className="text-app-text" />
  </div>
  Notification <span className="text-violet-500">Preferences</span>
  </h1>

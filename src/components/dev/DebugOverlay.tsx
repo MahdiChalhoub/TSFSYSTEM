@@ -132,7 +132,7 @@ export default function DebugOverlay() {
  {!isOpen ? (
  <button
  onClick={() => setIsOpen(true)}
- className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
+ className="w-14 h-14 bg-indigo-600 text-app-text rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
  >
  <Activity size={24} className="group-hover:animate-pulse" />
  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></div>
@@ -140,18 +140,18 @@ export default function DebugOverlay() {
  ) : (
  <div className="w-[450px] bg-app-surface rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
  {/* Header */}
- <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 p-6 text-white shrink-0">
+ <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 p-6 text-app-text shrink-0">
  <div className="flex justify-between items-start mb-4">
  <div>
  <h3 className="text-xl font-black tracking-tight">System Audit</h3>
  <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest mt-1">Dev Mode Terminal</p>
  </div>
- <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-xl transition-colors">
+ <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-app-text/20 rounded-xl transition-colors">
  <X size={20} />
  </button>
  </div>
  <div className="flex gap-4">
- <div className="flex-1 flex items-center gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-md">
+ <div className="flex-1 flex items-center gap-3 bg-app-text/10 p-3 rounded-2xl backdrop-blur-md">
  <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
  <ShieldCheck size={16} />
  </div>
@@ -160,7 +160,7 @@ export default function DebugOverlay() {
  <p className="text-sm font-black mt-1 leading-none">{viewScope}</p>
  </div>
  </div>
- <div className="flex-1 flex items-center gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5">
+ <div className="flex-1 flex items-center gap-3 bg-app-text/10 p-3 rounded-2xl backdrop-blur-md border border-app-text/5">
  <div className="p-2 rounded-lg bg-indigo-500">
  <Database size={16} />
  </div>
@@ -174,19 +174,19 @@ export default function DebugOverlay() {
  <div className="flex gap-1 mt-6 bg-black/10 p-1 rounded-xl">
  <button
  onClick={() => setActiveTab('logic')}
- className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'logic' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+ className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'logic' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-app-text/60 hover:text-app-text'}`}
  >
  Page Logic
  </button>
  <button
  onClick={() => setActiveTab('ledger')}
- className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'ledger' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+ className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'ledger' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-app-text/60 hover:text-app-text'}`}
  >
  Ledger Audit
  </button>
  <button
  onClick={() => setActiveTab('flow')}
- className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'flow' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-white/60 hover:text-white'}`}
+ className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${activeTab === 'flow' ? 'bg-app-surface text-indigo-600 shadow-sm' : 'text-app-text/60 hover:text-app-text'}`}
  >
  Inspector
  </button>
