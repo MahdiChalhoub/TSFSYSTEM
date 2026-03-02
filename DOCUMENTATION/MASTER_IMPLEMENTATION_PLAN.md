@@ -10,12 +10,12 @@
 ## Phase 1: Core Business Completeness 🔴 CRITICAL (2-3 weeks)
 
 ### 1.1 Dedicated Invoice Model
-- [ ] Backend: Invoice Model (`apps/finance/invoice_models.py`) — Status lifecycle, FNE/ZATCA fields, multi-currency
-- [ ] Backend: InvoiceLine Model
-- [ ] Backend: Invoice Serializer, ViewSet, URLs
-- [ ] Backend: Auto-Invoice from Sale (in `apps/pos/services.py`)
-- [ ] Frontend: Invoices List, Detail, New pages
-- [ ] Documentation: `DOCUMENTATION/invoices.md`
+- [x] Backend: Invoice Model (`apps/finance/invoice_models.py`) — Status lifecycle, FNE/ZATCA fields, multi-currency
+- [x] Backend: InvoiceLine Model
+- [x] Backend: Invoice Serializer, ViewSet, URLs
+- [x] Backend: Auto-Invoice from Sale (in `apps/pos/services.py`)
+- [x] Frontend: Invoices List, Detail, New pages
+- [x] Documentation: `DOCUMENTATION/invoices.md`
 
 ### 1.2 Payment Model & Invoice Status Flow
 - [ ] Backend: Payment Model (`apps/finance/payment_models.py`) — 6 methods, allocation logic
