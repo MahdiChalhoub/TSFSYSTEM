@@ -82,7 +82,20 @@ class VoucherService:
                 desc = f"Payment: {desc}"
 
             if not debit_acc or not credit_acc:
-                raise ValidationError("Cannot map voucher to accounting entries. Check account mappings.")
+                if voucher.voucher_type in ('RECEIPT', 'PAYMENT') and not voucher.contact_id:
+                    raise ValidationError(
+                        f"{voucher.voucher_type.capitalize()} vouchers without a contact require a source/destination "
+                        "account to be configured. Add a contact or configure the account mapping."
+                    )
+                if voucher.voucher_type in ('RECEIPT', 'PAYMENT') and voucher.contact_id:
+                    raise ValidationError(
+                        f"Cannot map {voucher.voucher_type} voucher: the linked contact has no GL account. "
+                        "Go to Contacts → Edit → Link Account to assign a Chart of Accounts entry."
+                    )
+                raise ValidationError(
+                    f"Cannot map {voucher.voucher_type} voucher to accounting entries. "
+                    "Ensure the financial account has a linked ledger account (FinancialAccount.ledger_account_id)."
+                )
 
             entry = LedgerService.create_journal_entry(
                 organization=organization,

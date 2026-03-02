@@ -7,7 +7,8 @@ import {
     XCircle, Package, Truck, Calendar, Building2, FileText,
     ArrowUpRight, Database, Search, Filter, ShieldCheck,
     AlertCircle, ListRestart, MoreHorizontal
-} from 'lucide-react'
+} from 'lucide-react';
+import { Plus } from 'lucide-react';
 import ReceiveLineDialog from './ReceiveLineDialog'
 
 type PO = {
@@ -101,6 +102,10 @@ export default function ReceiptsPage() {
                     </div>
                     <div>
                         <div className="flex items-center gap-3">
+                            <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+                                <Plus size={16} />
+                                Direct Operations
+                            </button>
                             <h1 className="text-5xl font-black tracking-tighter text-gray-900 leading-tight">
                                 Stock <span className="text-emerald-600">Reception</span>
                             </h1>
@@ -116,6 +121,10 @@ export default function ReceiptsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+                        <Plus size={16} />
+                        Direct Operations
+                    </button>
                     <button onClick={load} className="h-14 px-8 rounded-2xl bg-white border-2 border-gray-50 text-gray-600 font-black text-xs uppercase tracking-widest hover:bg-gray-50 hover:border-gray-100 shadow-sm transition-all flex items-center gap-2 active:scale-95 group">
                         <RefreshCw size={16} className="group-active:rotate-180 transition-transform" />
                         Sync Data
@@ -248,6 +257,10 @@ export default function ReceiptsPage() {
                                         </div>
                                         <div className="flex flex-wrap items-center gap-6">
                                             <div className="flex items-center gap-3">
+                                                <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+                                                    <Plus size={16} />
+                                                    Direct Operations
+                                                </button>
                                                 <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
                                                     <Building2 size={18} className="text-gray-400" />
                                                 </div>
@@ -257,6 +270,10 @@ export default function ReceiptsPage() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
+                                                <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+                                                    <Plus size={16} />
+                                                    Direct Operations
+                                                </button>
                                                 <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
                                                     <Calendar size={18} className="text-gray-400" />
                                                 </div>

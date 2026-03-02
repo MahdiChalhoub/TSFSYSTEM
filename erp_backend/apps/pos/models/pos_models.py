@@ -5,13 +5,56 @@ from erp.models import TenantModel, User
 
 class Order(TenantModel):
     TYPES = (('SALE', 'Sale'), ('PURCHASE', 'Purchase'), ('RETURN', 'Return'))
+
+    # ── Legacy flat status (kept for immutability guard & backward compat) ──
     STATUS_CHOICES = (
         ('DRAFT', 'Draft'), ('PENDING', 'Pending'), ('AUTHORIZED', 'Authorized'),
         ('RECEIVED', 'Received'), ('INVOICED', 'Invoiced'), ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled')
     )
-    type = models.CharField(max_length=20, choices=TYPES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+
+    # ── Gap 1: 4-Axis Layered Workflow Status ──────────────────────────────
+    ORDER_STATUS_CHOICES = [
+        ('DRAFT',      'Draft'),
+        ('CONFIRMED',  'Confirmed'),
+        ('PROCESSING', 'Processing'),
+        ('CLOSED',     'Closed'),
+        ('CANCELLED',  'Cancelled'),
+    ]
+    DELIVERY_STATUS_CHOICES = [
+        ('PENDING',   'Pending'),
+        ('PARTIAL',   'Partially Delivered'),
+        ('DELIVERED', 'Delivered'),
+        ('RETURNED',  'Returned'),
+        ('NA',        'Not Applicable'),
+    ]
+    PAYMENT_STATUS_CHOICES = [
+        ('UNPAID',       'Unpaid'),
+        ('PARTIAL',      'Partially Paid'),
+        ('PAID',         'Paid'),
+        ('OVERPAID',     'Overpaid'),
+        ('WRITTEN_OFF',  'Written Off'),
+    ]
+    INVOICE_STATUS_CHOICES = [
+        ('NOT_GENERATED', 'Not Generated'),
+        ('GENERATED',     'Generated'),
+        ('SENT',          'Sent to Client'),
+        ('DISPUTED',      'Disputed'),
+    ]
+
+    order_status    = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES,   default='CONFIRMED', db_index=True)
+    delivery_status = models.CharField(max_length=20, choices=DELIVERY_STATUS_CHOICES, default='PENDING',  db_index=True)
+    payment_status  = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES,  default='UNPAID',   db_index=True)
+    invoice_status  = models.CharField(max_length=20, choices=INVOICE_STATUS_CHOICES,  default='NOT_GENERATED')
+
+    # Workflow timestamps
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    invoiced_at  = models.DateTimeField(null=True, blank=True)
+    closed_at    = models.DateTimeField(null=True, blank=True)
+
+    type = models.CharField(max_length=20, choices=TYPES)
     ref_code = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -30,6 +73,23 @@ class Order(TenantModel):
     notes = models.TextField(null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
+    # Invoice document type — auto-resolved at checkout via TaxCalculator.resolve_invoice_type()
+    invoice_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('TVA_INVOICE',      'Official TVA Invoice (HT + TVA + TTC)'),
+            ('RECEIPT',          'Simple Receipt (TTC only, VAT embedded)'),
+            ('INTERNAL_RECEIPT', 'Internal Receipt (no VAT posted)'),
+            ('SIMPLE_INVOICE',   'Simple Invoice (org not VAT-registered)'),
+        ],
+        default='RECEIPT',
+        null=True, blank=True,
+        help_text='Auto-resolved from org policy + client profile + scope at checkout.'
+    )
+    is_export = models.BooleanField(
+        default=False,
+        help_text='True = export sale → VAT rate overridden to 0'
+    )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     receipt_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
@@ -69,12 +129,32 @@ class OrderLine(TenantModel):
     airsi_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     discount_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+
+    # ── Gap 6: Tax-Split Fields (HT / VAT / TTC) ──────────────────────────
+    tax_amount_ht  = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Line amount excluding VAT (HT)')
+    tax_amount_vat = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='VAT portion on this line')
+    tax_amount_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Total including VAT (TTC) — stored for audit')
+    airsi_withheld = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='AIRSI withholding on this line (if applicable)')
+    is_tax_exempt  = models.BooleanField(default=False, help_text='True = line is VAT-exempt')
+
+    # ── Gap 2: COGS Fields ────────────────────────────────────────────────
+    unit_cost_ht         = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal('0.0000'),
+        help_text='Average Moving Cost at time of sale (AMC)')
+    effective_cost       = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal('0.0000'),
+        help_text='Effective cost used for COGS posting')
+    price_override_detected = models.BooleanField(default=False,
+        help_text='True if unit_price deviated >5% below base selling price')
+
     # Tracking Fields
     expiry_date = models.DateField(null=True, blank=True)
     batch_number = models.CharField(max_length=100, null=True, blank=True)
     serial_number = models.CharField(max_length=200, null=True, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     def save(self, *args, **kwargs):

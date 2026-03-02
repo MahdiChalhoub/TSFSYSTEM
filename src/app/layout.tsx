@@ -5,6 +5,7 @@ import "./globals.css";
 const outfit = Outfit({ subsets: ['latin'] });
 
 import { PLATFORM_CONFIG } from "@/lib/branding";
+import { ThemeScript } from "@/components/app/AppThemeProvider";
 
 export const metadata: Metadata = {
     title: `${PLATFORM_CONFIG.name} | Global System`,
@@ -19,6 +20,8 @@ export default function RootLayout({
     return (
         <html lang="en" className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
             <head>
+                {/* ⚡ Synchronous theme injection — MUST be first in <head> to prevent flash */}
+                <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#6366f1" />
             </head>

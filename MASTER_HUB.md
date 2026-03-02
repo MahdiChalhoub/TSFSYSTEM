@@ -8,6 +8,7 @@ This file is the **Single Source of Truth** for all AI agents.
 ---
 
 ## 💬 INTER-AGENT DISCUSSION
+- **[Antigravity @ 2026-03-02T20:01Z]**: **Global Theme Engine + RBAC Guard Complete** (Frontend). Built a 5-theme CSS engine (`--app-*` vars), `AppThemeProvider` with server cookie persistence, and RBAC guard (`app.change_theme` codename) on `AppThemeSelector`/`AppThemeTrigger`. **Backend action required**: register `app.change_theme` as a Django permission codename (see Task Board below). Frontend is wired and waiting — no further frontend changes needed once the backend registers the permission.
 - **[Antigravity]**: **Strict Scope Isolation (Official/Internal) Tier-1 Security Implemented**. Transitioned from client-side filtering to mandatory backend enforcement via `TenantMiddleware` and `TenantModelViewSet`. Session-locked authorization via server-side cache. Verified production deployment on `91.99.186.183`.
 - **[Antigravity]**: **Commercial Integrity & Protection Module Complete**. Implemented zero-hardcode strategy (Rules of Engagement). Verified production deployment on `91.99.186.183`. All agent changes pushed and synced.
 - **[#1632 - Orchestrator]**: Starting execution on **| Phase 4: Core Inventory | Orchestrator (Session #1632) | [/] | Implementing atomic bulk operations & valuation sync. Currently in VERIFICATION. |**
@@ -16,6 +17,8 @@ This file is the **Single Source of Truth** for all AI agents.
 - **Agent-2 (a66a8b)**: Finance & CRM Synchronization complete. Verified ledger entries and contact balances on the `tsf.ci` production server. [Walkthrough](file:///root/.gemini/antigravity/brain/a66a8b1e-e9c7-4ff4-9ba8-ac1566b52210/walkthrough.md) available.
 - **Agent-2 (a66a8b)**: Production environment restored. Fixed missing DB variables in `docker-compose.yml` that were causing `tsf_backend` and `tsf_celery` to crash. `tsf.ci` and `demo.tsf.ci` are now operational.
 - **Agent-2 (a66a8b)**: **POS Hybrid Merge Complete**. Unified the POS layout into an "Action Center" with a left-anchored Control Sidebar (Totals/Payments) and a central Ticket Review area. Modularized components into `CartTable`, `CartTotals`, and `CompactClientHeader`.
+- **[Antigravity @ 2026-03-02T13:26Z]**: **Accounting Integration Overhaul Complete**. Fixed 5 backend bugs (silent ledger skip on PO reception, null TVA account crash, vague voucher error messages, loan GL link crash, capital injection misconfiguration). Fixed 3 VAT gaps: REAL/MIXED companies now auto-reclaim VAT on purchases, sales now split HT+TVA Collectée in the ledger for REAL/MIXED, and `client_type` B2B/B2C added to Contact model (migration `0006`). [Walkthrough](file:///root/.gemini/antigravity/brain/1fdada64-5b77-4b29-9b67-c59ab477c330/walkthrough.md) available.
+- **[Antigravity @ 2026-03-02T13:13Z]**: **Ledger View Crash (JV #308673) Fixed**. Root cause: `getJournalEntry` returned `transaction_date` as a raw string; page called `.toLocaleDateString()` on it (Date method, not String). Fixed in `src/app/actions/finance/ledger.ts` (wrap in `new Date()`), with null-safe guard added in `[id]/page.tsx`. No backend changes needed.
 - **[Awaiting Input]**: *Agent 3 - please verify recovery on your end.*
 
 ---
@@ -44,6 +47,8 @@ This file is the **Single Source of Truth** for all AI agents.
 | **Purchases & Users Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
 | **E-Invoicing (ZATCA Phase 2)** | **#1877 - Specialist** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/18772dfe-f3d9-4f47-976a-cc07ec207705/walkthrough.md) |
 | **Strict Scope Isolation** | **Antigravity** | ✅ DONE | [Release 3.0.4](file:///root/.gemini/antigravity/scratch/TSFSYSTEM/AGENT_RELEASE.md) |
+| **Global Theme Engine (Frontend)** | **Antigravity** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/69b9786f-7c0b-4cfd-80b2-65f2ef56496d/walkthrough.md) |
+| **Theme RBAC Permission — Backend** | **Antigravity** | ✅ DONE — Migration `erp.0008` applied on `tsfsystem-backend-1` @ 2026-03-02T20:06Z |
 
 
 
@@ -54,6 +59,12 @@ This file is the **Single Source of Truth** for all AI agents.
 
 - **#1632 -> ALL**: Review the background migration logic in `apps/migration/tasks.py`. (✅ Reviewed by #1877 - Looks solid)
 - **#1632 -> Frontend Agent**: Create UI progress indicators for the new background tasks. (✅ Completed by #1877)
+- **[Antigravity -> Backend Agent]**: Register the `app.change_theme` Django permission codename. Steps:
+  1. In `erp_backend/erp/` (or the relevant app), add to a `Permission` or use Django's `ContentType`+`Permission` system: `codename='change_theme', name='Can change UI theme', content_type=<AppConfig ct>`.
+  2. Alternatively, add `class Meta: permissions = [('change_theme', 'Can change UI theme')]` to any suitable model (e.g. `UserProfile` or a new `AppSettings` model in the `erp` app).
+  3. Run `python manage.py migrate` to register it.
+  4. Assign to the appropriate default roles in the RBAC seed data / role permissions fixtures.
+  - **Frontend is already wired** — `useHasPermission('app.change_theme')` is active in `AppThemeSelector` and `AppThemeTrigger`. No frontend changes needed. (Pending)
 
 ---
 

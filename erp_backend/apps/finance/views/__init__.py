@@ -7,7 +7,10 @@ from .ledger_views import (
 from .expense_views import DeferredExpenseViewSet, DirectExpenseViewSet, AssetViewSet
 from .voucher_views import VoucherViewSet, ProfitDistributionViewSet
 from .payment_views import PaymentViewSet, CustomerBalanceViewSet, SupplierBalanceViewSet
-from .tax_views import TaxGroupViewSet
+from .tax_views import TaxGroupViewSet, VATSettlementViewSet
+from .tax_policy_views import OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet
+from .periodic_tax_views import PeriodicTaxViewSet
+from .vat_return_views import VATReturnReportViewSet
 from .invoice_views import InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet
 from .gateway_views import GatewayConfigViewSet
 from .report_views import ReportViewSet
@@ -33,7 +36,7 @@ __all__ = [
     'PaymentViewSet',
     'CustomerBalanceViewSet',
     'SupplierBalanceViewSet',
-    'TaxGroupViewSet',
+    'TaxGroupViewSet', 'VATSettlementViewSet', 'OrgTaxPolicyViewSet', 'CounterpartyTaxProfileViewSet', 'PeriodicTaxViewSet', 'VATReturnReportViewSet',
     'InvoiceViewSet',
     'InvoiceLineViewSet',
     'PaymentAllocationViewSet',

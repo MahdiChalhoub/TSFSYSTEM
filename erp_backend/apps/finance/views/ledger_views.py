@@ -171,6 +171,56 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         LedgerService.clear_all_data(organization)
         return Response({"message": "All data cleared successfully"})
 
+    @action(detail=False, methods=['get', 'post'], url_path='vat-settlement')
+    def vat_settlement(self, request):
+        """
+        GET  → Preview the TVA settlement calculation for a period (no posting).
+        POST → Post the settlement entry to the ledger and pay the net to DGI.
+
+        Query/Body params:
+          period_start: YYYY-MM-DD
+          period_end:   YYYY-MM-DD
+          bank_account_id: int (required for POST only)
+        """
+        from apps.finance.services.vat_settlement_service import VATSettlementService
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        data = request.data if request.method == 'POST' else request.query_params
+        period_start = data.get('period_start')
+        period_end = data.get('period_end')
+
+        if not period_start or not period_end:
+            return Response(
+                {"error": "period_start and period_end are required (format: YYYY-MM-DD)"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            if request.method == 'GET':
+                report = VATSettlementService.calculate_settlement(organization, period_start, period_end)
+                return Response(report)
+
+            # POST — post the settlement entry
+            bank_account_id = data.get('bank_account_id')
+            if not bank_account_id:
+                return Response({"error": "bank_account_id is required to post the settlement"}, status=400)
+
+            result = VATSettlementService.post_settlement(
+                organization=organization,
+                period_start=period_start,
+                period_end=period_end,
+                bank_account_id=int(bank_account_id),
+                user=request.user
+            )
+            return Response(result, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def update(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
         if not organization_id:

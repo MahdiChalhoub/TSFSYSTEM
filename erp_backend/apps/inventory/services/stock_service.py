@@ -34,7 +34,7 @@ class StockService:
             
             product.cost_price = new_amc
             product.cost_price_ht = Decimal(str(cost_price_ht))
-            product.cost_price_ttc = Decimal(str(cost_price_ht)) * (Decimal('1') + Decimal(str(product.tva_rate)))
+            product.cost_price_ttc = Decimal(str(cost_price_ht)) * (Decimal('1') + (Decimal(str(product.tva_rate)) / Decimal('100')))
             product.save()
             
             inventory, _ = Inventory.objects.get_or_create(organization=organization, warehouse=warehouse, product=product)

@@ -16,6 +16,10 @@ from apps.finance.views import (
     InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
     GatewayConfigViewSet, ReportViewSet,
     EInvoiceViewSet,
+    OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet,
+    VATSettlementViewSet,
+    PeriodicTaxViewSet,
+    VATReturnReportViewSet,
 )
 
 router = SimpleRouter()
@@ -45,6 +49,11 @@ router.register(r'payment-allocations', PaymentAllocationViewSet, basename='paym
 router.register(r'gateway-configs', GatewayConfigViewSet, basename='gateway-config')
 router.register(r'reports', ReportViewSet, basename='report')
 router.register(r'einvoice', EInvoiceViewSet, basename='einvoice')
+router.register(r'org-tax-policies', OrgTaxPolicyViewSet, basename='org-tax-policy')
+router.register(r'counterparty-tax-profiles', CounterpartyTaxProfileViewSet, basename='counterparty-tax-profile')
+router.register(r'vat-settlement', VATSettlementViewSet, basename='vat-settlement')
+router.register(r'periodic-tax', PeriodicTaxViewSet, basename='periodic-tax')
+router.register(r'vat-return', VATReturnReportViewSet, basename='vat-return')
 
 urlpatterns = [
     path('', include(router.urls)),
