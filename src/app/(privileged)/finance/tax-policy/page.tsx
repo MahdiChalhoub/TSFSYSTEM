@@ -391,6 +391,47 @@ export default function TaxPolicyPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    {/* Dynamic Impact Summary for Internal Scope */}
+                                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 mt-6 space-y-3">
+                                        <div className="flex items-center gap-2 text-indigo-800">
+                                            <Info size={16} />
+                                            <h4 className="text-xs font-bold uppercase tracking-widest">Dual View Impact Summary</h4>
+                                        </div>
+                                        <ul className="space-y-2 text-[11px] text-indigo-900 leading-relaxed font-medium">
+                                            <li className="flex gap-2">
+                                                <span className="text-indigo-400">•</span>
+                                                <span>
+                                                    <strong>Ledger Engine:</strong> The system always generates two parallel sets of journal entries:
+                                                    one for <span className="font-bold">OFFICIAL</span> scope and one for <span className="font-bold">INTERNAL</span> scope.
+                                                </span>
+                                            </li>
+                                            <li className="flex gap-2">
+                                                <span className="text-indigo-400">•</span>
+                                                <span>
+                                                    <strong>Official View:</strong> Will rigorously follow the VAT, AIRSI, and Purchase Tax rules configured above.
+                                                </span>
+                                            </li>
+
+                                            {f('internal_cost_mode') === 'TTC_ALWAYS' && (
+                                                <li className="flex gap-2">
+                                                    <span className="text-indigo-400">•</span>
+                                                    <span>
+                                                        <strong>Internal View (TTC Always):</strong> VAT and Purchase taxes are <strong>completely ignored</strong> and injected directly into the Base Cost (TTC). No tax recovery assets/liabilities are logged in the internal ledger. This shows pure cash-out cost.
+                                                    </span>
+                                                </li>
+                                            )}
+
+                                            {f('internal_cost_mode') === 'SAME_AS_OFFICIAL' && (
+                                                <li className="flex gap-2">
+                                                    <span className="text-indigo-400">•</span>
+                                                    <span>
+                                                        <strong>Internal View (Same As Official):</strong> The internal view will be an exact 1:1 mirror of the official view, separating recoverable VAT and taxes into assets/liabilities.
+                                                    </span>
+                                                </li>
+                                            )}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
 
