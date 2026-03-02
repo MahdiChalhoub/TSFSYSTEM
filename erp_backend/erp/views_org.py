@@ -319,11 +319,11 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             }
         return Response(data)
 
-    @action(detail=False, methods=['get', 'patch'], url_path='me/theme')
+    @action(detail=False, methods=['get', 'patch'], url_path='me-theme')
     def me_theme(self, request):
         """
-        GET  /api/organizations/me/theme/ → { default_theme: "midnight-pro" | null }
-        PATCH /api/organizations/me/theme/ → { default_theme: "ivory-market" }
+        GET  /api/organizations/me-theme/ → { default_theme: "midnight-pro" | null }
+        PATCH /api/organizations/me-theme/ → { default_theme: "ivory-market" }
 
         Reads / writes org.settings["default_theme"].
         Used by the /settings/appearance page to set the org-wide default theme.

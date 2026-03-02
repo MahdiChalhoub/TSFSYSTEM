@@ -14,6 +14,7 @@ from apps.inventory.views import (
     InventorySessionViewSet, InventorySessionLineViewSet, SyncViewSet,
     WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
     WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
+    StockMoveViewSet, WarehouseStockView
 )
 
 router = DefaultRouter()
@@ -29,6 +30,7 @@ router.register(r'inventory-movements', InventoryMovementViewSet)
 router.register(r'adjustment-orders', StockAdjustmentOrderViewSet)
 router.register(r'transfer-orders', StockTransferOrderViewSet)
 router.register(r'requests', OperationalRequestViewSet)
+router.register(r'stock-moves', StockMoveViewSet, basename='stock-moves')
 router.register(r'counting-sessions', InventorySessionViewSet, basename='counting-sessions')
 router.register(r'counting-lines', InventorySessionLineViewSet, basename='counting-lines')
 router.register(r'sync', SyncViewSet, basename='legacy-sync')
@@ -44,6 +46,8 @@ router.register(r'shelves', WarehouseShelfViewSet, basename='warehouse-shelves')
 router.register(r'bins', WarehouseBinViewSet, basename='warehouse-bins')
 router.register(r'product-locations', ProductLocationViewSet, basename='product-locations')
 
+
 urlpatterns = [
     path('', include(router.urls)),
+    path('warehouses/<int:pk>/stock/', WarehouseStockView.as_view(), name='warehouse-stock'),
 ]

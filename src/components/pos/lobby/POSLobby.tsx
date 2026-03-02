@@ -100,8 +100,8 @@ const SiteStep = memo(function SiteStep({
         <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-6">
                 <Building2 size={40} className="text-indigo-400 mx-auto mb-3" />
-                <h2 className="text-2xl font-black text-white mb-1">Select Your Site</h2>
-                <p className="text-white/40 text-sm">Choose the location where you&apos;re working today</p>
+                <h2 className="text-2xl font-black text-app-text mb-1">Select Your Site</h2>
+                <p className="text-app-text/40 text-sm">Choose the location where you&apos;re working today</p>
             </div>
 
             {/* Tabs */}
@@ -117,13 +117,13 @@ const SiteStep = memo(function SiteStep({
                             className={clsx(
                                 "px-5 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2",
                                 isActive
-                                    ? `bg-${color}-500 text-white shadow-lg shadow-${color}-500/30`
-                                    : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80"
+                                    ? `bg-${color}-500 text-app-text shadow-lg shadow-${color}-500/30`
+                                    : "bg-app-text/5 text-app-text/50 hover:bg-app-text/10 hover:text-app-text/80"
                             )}
                         >
                             {t === 'with' ? <Monitor size={14} /> : <Building2 size={14} />}
                             {t === 'with' ? 'With Registers' : 'Without Registers'}
-                            <span className={clsx("w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center", isActive ? "bg-white/25" : "bg-white/10")}>{count}</span>
+                            <span className={clsx("w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center", isActive ? "bg-app-text/25" : "bg-app-text/10")}>{count}</span>
                         </button>
                     );
                 })}
@@ -141,8 +141,8 @@ const SiteStep = memo(function SiteStep({
                         className={clsx(
                             "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
                             site.registers.length > 0
-                                ? "bg-white/5 border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
-                                : "bg-white/[0.02] border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 opacity-70"
+                                ? "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
+                                : "bg-white/[0.02] border-app-text/5 hover:border-amber-500/30 hover:bg-amber-500/5 opacity-70"
                         )}
                     >
                         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-all" />
@@ -150,18 +150,18 @@ const SiteStep = memo(function SiteStep({
                             <div className={clsx(
                                 "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all",
                                 site.registers.length > 0
-                                    ? "bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white"
+                                    ? "bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-app-text"
                                     : "bg-amber-500/10 text-amber-400/60"
                             )}>
                                 <Building2 size={24} />
                             </div>
-                            <h3 className="font-black text-white text-lg">{site.name}</h3>
-                            {site.code && <p className="text-white/30 text-xs font-mono">{site.code}</p>}
-                            {site.address && <p className="text-white/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
+                            <h3 className="font-black text-app-text text-lg">{site.name}</h3>
+                            {site.code && <p className="text-app-text/30 text-xs font-mono">{site.code}</p>}
+                            {site.address && <p className="text-app-text/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
                             <div className="mt-3 flex items-center gap-2">
                                 {site.registers.length > 0 ? (
                                     <>
-                                        <span className="px-2 py-0.5 rounded-full bg-white/5 text-white/50 text-[10px] font-bold">
+                                        <span className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/50 text-[10px] font-bold">
                                             {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
                                         </span>
                                         {site.registers.some(r => r.isOpen) && (
@@ -183,9 +183,9 @@ const SiteStep = memo(function SiteStep({
 
             {displayed.length === 0 && (
                 <div className="text-center py-16">
-                    <AlertCircle size={48} className="text-white/10 mx-auto mb-4" />
-                    <p className="text-white/30 font-bold">{tab === 'with' ? 'No sites with registers' : 'All sites have registers'}</p>
-                    <p className="text-white/15 text-sm mt-1">{tab === 'with' ? 'Create registers in POS Settings' : 'Nothing to configure here'}</p>
+                    <AlertCircle size={48} className="text-app-text/10 mx-auto mb-4" />
+                    <p className="text-app-text/30 font-bold">{tab === 'with' ? 'No sites with registers' : 'All sites have registers'}</p>
+                    <p className="text-app-text/15 text-sm mt-1">{tab === 'with' ? 'Create registers in POS Settings' : 'Nothing to configure here'}</p>
                 </div>
             )}
         </div>
@@ -204,8 +204,8 @@ const RegisterStep = memo(function RegisterStep({
         <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-8">
                 <Monitor size={40} className="text-indigo-400 mx-auto mb-3" />
-                <h2 className="text-2xl font-black text-white mb-1">Select Register</h2>
-                <p className="text-white/40 text-sm">{site.name} — Choose your workstation</p>
+                <h2 className="text-2xl font-black text-app-text mb-1">Select Register</h2>
+                <p className="text-app-text/40 text-sm">{site.name} — Choose your workstation</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {site.registers.map(reg => (
@@ -216,7 +216,7 @@ const RegisterStep = memo(function RegisterStep({
                             "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
                             reg.isOpen
                                 ? "bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400"
-                                : "bg-white/5 border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
+                                : "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
                         )}
                     >
                         <div className="relative">
@@ -225,7 +225,7 @@ const RegisterStep = memo(function RegisterStep({
                                     "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
                                     reg.isOpen
                                         ? "bg-emerald-500/20 text-emerald-400"
-                                        : "bg-white/10 text-white/50 group-hover:bg-indigo-500 group-hover:text-white"
+                                        : "bg-app-text/10 text-app-text/50 group-hover:bg-indigo-500 group-hover:text-app-text"
                                 )}>
                                     <Monitor size={24} />
                                 </div>
@@ -234,28 +234,28 @@ const RegisterStep = memo(function RegisterStep({
                                         <Unlock size={10} /> Open
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 text-white/30 text-[10px] font-black uppercase">
+                                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-black uppercase">
                                         <Lock size={10} /> Closed
                                     </span>
                                 )}
                             </div>
-                            <h3 className="font-black text-white text-lg">{reg.name}</h3>
+                            <h3 className="font-black text-app-text text-lg">{reg.name}</h3>
                             {reg.isOpen && reg.currentSession && (
                                 <div className="mt-2 space-y-1">
                                     <p className="text-emerald-400/80 text-xs font-bold flex items-center gap-1">
                                         <User size={10} /> {reg.currentSession.cashierName}
                                     </p>
-                                    <p className="text-white/20 text-[10px] flex items-center gap-1">
+                                    <p className="text-app-text/20 text-[10px] flex items-center gap-1">
                                         <Clock size={10} /> Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}
                                     </p>
                                 </div>
                             )}
                             <div className="mt-3 flex flex-wrap gap-1">
                                 {reg.allowedAccounts.slice(0, 4).map(acc => (
-                                    <span key={acc.id} className="px-1.5 py-0.5 rounded bg-white/5 text-white/30 text-[9px] font-bold">{acc.name}</span>
+                                    <span key={acc.id} className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/30 text-[9px] font-bold">{acc.name}</span>
                                 ))}
                                 {reg.allowedAccounts.length > 4 && (
-                                    <span className="px-1.5 py-0.5 rounded bg-white/5 text-white/20 text-[9px]">+{reg.allowedAccounts.length - 4}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/20 text-[9px]">+{reg.allowedAccounts.length - 4}</span>
                                 )}
                             </div>
                         </div>
@@ -264,9 +264,9 @@ const RegisterStep = memo(function RegisterStep({
             </div>
             {site.registers.length === 0 && (
                 <div className="text-center py-16">
-                    <Monitor size={48} className="text-white/10 mx-auto mb-4" />
-                    <p className="text-white/30 font-bold">No registers at this site</p>
-                    <p className="text-white/15 text-sm mt-1">Create registers in Settings → POS</p>
+                    <Monitor size={48} className="text-app-text/10 mx-auto mb-4" />
+                    <p className="text-app-text/30 font-bold">No registers at this site</p>
+                    <p className="text-app-text/15 text-sm mt-1">Create registers in Settings → POS</p>
                 </div>
             )}
         </div>
@@ -287,8 +287,8 @@ const UserStep = memo(function UserStep({
                 <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
                     <User size={36} />
                 </div>
-                <h2 className="text-2xl font-black text-white mb-1">Who&apos;s working?</h2>
-                <p className="text-white/40 text-sm">{register.name} — tap your name to continue</p>
+                <h2 className="text-2xl font-black text-app-text mb-1">Who&apos;s working?</h2>
+                <p className="text-app-text/40 text-sm">{register.name} — tap your name to continue</p>
             </div>
             {register.authorizedUsers.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -296,12 +296,12 @@ const UserStep = memo(function UserStep({
                         <button
                             key={u.id}
                             onClick={() => onSelect(u)}
-                            className="group relative p-5 rounded-2xl border transition-all text-center active:scale-[0.97] bg-white/5 border-white/10 hover:border-indigo-400 hover:bg-indigo-500/10"
+                            className="group relative p-5 rounded-2xl border transition-all text-center active:scale-[0.97] bg-app-text/5 border-app-text/10 hover:border-indigo-400 hover:bg-indigo-500/10"
                         >
-                            <div className="w-14 h-14 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                            <div className="w-14 h-14 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-indigo-500 group-hover:text-app-text transition-all">
                                 {u.name?.substring(0, 2).toUpperCase()}
                             </div>
-                            <p className="text-sm font-black text-white">{u.name}</p>
+                            <p className="text-sm font-black text-app-text">{u.name}</p>
                             {!u.hasPin && (
                                 <p className="text-[10px] text-amber-400 mt-1 flex items-center justify-center gap-1">
                                     <AlertCircle size={10} /> No PIN set
@@ -312,9 +312,9 @@ const UserStep = memo(function UserStep({
                 </div>
             ) : (
                 <div className="text-center py-12">
-                    <AlertCircle size={40} className="text-white/20 mx-auto mb-3" />
-                    <p className="text-white/30 font-bold">No cashiers assigned to this register</p>
-                    <p className="text-white/15 text-sm mt-1">Assign users in POS Configuration → Registers</p>
+                    <AlertCircle size={40} className="text-app-text/20 mx-auto mb-3" />
+                    <p className="text-app-text/30 font-bold">No cashiers assigned to this register</p>
+                    <p className="text-app-text/15 text-sm mt-1">Assign users in POS Configuration → Registers</p>
                 </div>
             )}
         </div>
@@ -366,11 +366,11 @@ const PinStep = memo(function PinStep({
                 <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
                     <Shield size={36} />
                 </div>
-                <h2 className="text-2xl font-black text-white mb-1">Enter your PIN</h2>
-                <p className="text-white/40 text-sm">{register.name} — {cashier.name}</p>
+                <h2 className="text-2xl font-black text-app-text mb-1">Enter your PIN</h2>
+                <p className="text-app-text/40 text-sm">{register.name} — {cashier.name}</p>
             </div>
 
-            <div className="bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm">
+            <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 backdrop-blur-sm">
                 {/* PIN dots */}
                 <div className="flex justify-center gap-3 mb-6">
                     {[0, 1, 2, 3, 4, 5].map(i => (
@@ -378,7 +378,7 @@ const PinStep = memo(function PinStep({
                             key={i}
                             className={clsx(
                                 "w-10 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
-                                i < pin.length ? "border-indigo-500 bg-indigo-500/20" : "border-white/10 bg-white/5"
+                                i < pin.length ? "border-indigo-500 bg-indigo-500/20" : "border-app-text/10 bg-app-text/5"
                             )}
                         >
                             {i < pin.length && <div className="w-3 h-3 rounded-full bg-indigo-400 animate-in zoom-in duration-200" />}
@@ -420,11 +420,11 @@ const PinStep = memo(function PinStep({
                                 "h-14 rounded-xl font-black text-xl transition-all active:scale-95",
                                 key === '✓'
                                     ? pin.length >= 4
-                                        ? "bg-emerald-500 text-white hover:bg-emerald-400 shadow-lg shadow-emerald-500/30"
-                                        : "bg-white/5 text-white/20 cursor-not-allowed"
+                                        ? "bg-emerald-500 text-app-text hover:bg-emerald-400 shadow-lg shadow-emerald-500/30"
+                                        : "bg-app-text/5 text-app-text/20 cursor-not-allowed"
                                     : key === 'C'
                                         ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30"
-                                        : "bg-white/10 text-white hover:bg-white/20"
+                                        : "bg-app-text/10 text-app-text hover:bg-app-text/20"
                             )}
                         >
                             {loading && key === '✓' ? <Loader2 size={20} className="animate-spin mx-auto" /> : key}
@@ -433,11 +433,11 @@ const PinStep = memo(function PinStep({
                 </div>
 
                 {/* Authorized users hint */}
-                <div className="mt-4 pt-4 border-t border-white/5">
-                    <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold mb-2 text-center">Authorized Cashiers</p>
+                <div className="mt-4 pt-4 border-t border-app-text/5">
+                    <p className="text-[10px] text-app-text/20 uppercase tracking-widest font-bold mb-2 text-center">Authorized Cashiers</p>
                     <div className="flex flex-wrap justify-center gap-1.5">
                         {register.authorizedUsers.map(u => (
-                            <span key={u.id} className="px-2 py-0.5 rounded-full bg-white/5 text-white/30 text-[10px] font-bold flex items-center gap-1">
+                            <span key={u.id} className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-bold flex items-center gap-1">
                                 <User size={8} /> {u.name}
                                 {!u.hasPin && <span className="text-amber-400/50" title="No PIN set">⚠</span>}
                             </span>
@@ -623,7 +623,7 @@ const OpeningStep = memo(function OpeningStep({
                         <button
                             onClick={handleForceClose}
                             disabled={forceCloseLoading || forceClosePin.length < 4}
-                            className="px-4 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-sm hover:bg-amber-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+                            className="px-4 py-2.5 bg-amber-500 text-app-text rounded-xl font-bold text-sm hover:bg-amber-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
                         >
                             {forceCloseLoading ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
                             Force Close
@@ -636,8 +636,8 @@ const OpeningStep = memo(function OpeningStep({
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-emerald-500/10">
                     <CheckCircle2 size={32} />
                 </div>
-                <h2 className="text-2xl font-black text-white mb-1">Open Register</h2>
-                <p className="text-white/40 text-sm">{register.name} — {verifiedUser.name}</p>
+                <h2 className="text-2xl font-black text-app-text mb-1">Open Register</h2>
+                <p className="text-app-text/40 text-sm">{register.name} — {verifiedUser.name}</p>
             </div>
 
             {/* If register already open by this user */}
@@ -656,7 +656,7 @@ const OpeningStep = memo(function OpeningStep({
                             allowedAccounts: register.allowedAccounts,
                             siteName: site.name, paymentMethods: register.paymentMethods || [],
                         })}
-                        className="mt-3 px-6 py-2 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-400 transition-all active:scale-95"
+                        className="mt-3 px-6 py-2 rounded-xl bg-amber-500 text-app-text font-bold text-sm hover:bg-amber-400 transition-all active:scale-95"
                     >
                         Enter Existing Session →
                     </button>
@@ -675,7 +675,7 @@ const OpeningStep = memo(function OpeningStep({
                             </div>
                             {!managerUnlocked && (
                                 <button onClick={() => setShowManagerPin(!showManagerPin)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/30 text-xs font-bold text-white/40 hover:text-amber-400 transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-app-text/5 border border-app-text/10 hover:border-amber-500/30 text-xs font-bold text-app-text/40 hover:text-amber-400 transition-all"
                                 >
                                     <Lock size={12} /> Show Details
                                 </button>
@@ -695,45 +695,45 @@ const OpeningStep = memo(function OpeningStep({
                                 type="password" inputMode="numeric" value={managerPinInput}
                                 onChange={(e) => setManagerPinInput(e.target.value.replace(/\D/g, ''))}
                                 placeholder="Manager PIN" maxLength={6}
-                                className="w-32 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-bold text-center outline-none focus:border-amber-500"
+                                className="w-32 px-3 py-2 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-sm font-bold text-center outline-none focus:border-amber-500"
                                 onKeyDown={(e) => { if (e.key === 'Enter' && managerPinInput.length >= 4) { setManagerUnlocked(true); setShowManagerPin(false); toast.success('Manager access granted'); } }}
                             />
                             <button onClick={() => { setManagerUnlocked(true); setShowManagerPin(false); toast.success('Manager access granted'); }}
-                                className="px-3 py-2 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-400 transition-all"
+                                className="px-3 py-2 rounded-lg bg-amber-500 text-app-text text-xs font-bold hover:bg-amber-400 transition-all"
                             >Unlock</button>
                         </div>
                     )}
 
                     {openingMode === 'standard' ? (
-                        <div className="bg-white/5 rounded-3xl p-6 border border-white/10 space-y-4">
+                        <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 space-y-4">
                             <div>
-                                <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1.5">Opening Cash Balance ({currency})</label>
+                                <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">Opening Cash Balance ({currency})</label>
                                 <div className="relative">
-                                    <Banknote size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                                    <Banknote size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text/30" />
                                     <input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-xl font-black outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all" placeholder="0.00" />
+                                        className="w-full pl-10 pr-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-xl font-black outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all" placeholder="0.00" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-1.5">Notes (optional)</label>
+                                <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">Notes (optional)</label>
                                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-emerald-500 resize-none h-16" placeholder="Shift notes..." />
+                                    className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-emerald-500 resize-none h-16" placeholder="Shift notes..." />
                             </div>
                             <button onClick={handleOpen} disabled={loading}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-white font-black text-lg shadow-2xl shadow-emerald-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-app-text font-black text-lg shadow-2xl shadow-emerald-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {loading ? <Loader2 size={24} className="animate-spin" /> : <><Unlock size={24} /> Open Register & Start Selling</>}
                             </button>
                         </div>
                     ) : (
-                        <div className="bg-white/5 rounded-3xl p-6 border border-violet-500/20 space-y-4">
+                        <div className="bg-app-text/5 rounded-3xl p-6 border border-violet-500/20 space-y-4">
                             <div className="flex items-center gap-2 mb-2">
                                 <ArrowRightLeft size={14} className="text-violet-400" />
                                 <span className="text-[10px] text-violet-400 uppercase tracking-widest font-black">Account Reconciliation</span>
                             </div>
 
                             {/* Table header */}
-                            <div className={clsx("grid gap-2 text-[9px] text-white/30 uppercase tracking-wider font-bold px-1",
+                            <div className={clsx("grid gap-2 text-[9px] text-app-text/30 uppercase tracking-wider font-bold px-1",
                                 managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
                             )}>
                                 <span>Payment Method</span>
@@ -755,18 +755,18 @@ const OpeningStep = memo(function OpeningStep({
                                             <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                                                 {entry.type === 'BANK' ? <CreditCard size={12} /> : <Smartphone size={12} />}
                                             </span>
-                                            <span className="text-xs font-bold text-white truncate">{entry.name}</span>
+                                            <span className="text-xs font-bold text-app-text truncate">{entry.name}</span>
                                         </div>
                                         {managerUnlocked && (
                                             <input type="number" value={entry.software}
                                                 onChange={(e) => { const copy = [...reconEntries]; copy[idx] = { ...copy[idx], software: e.target.value }; setReconEntries(copy); }}
-                                                className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-indigo-500" />
+                                                className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-indigo-500" />
                                         )}
                                         <input type="number" value={entry.real}
                                             onChange={(e) => { const copy = [...reconEntries]; copy[idx] = { ...copy[idx], real: e.target.value }; setReconEntries(copy); }}
                                             className="w-full px-2 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-300 text-xs font-bold text-center outline-none focus:border-violet-500" />
                                         {managerUnlocked && (
-                                            <span className={clsx("text-xs font-black text-center", calibration > 0 ? "text-emerald-400" : calibration < 0 ? "text-rose-400" : "text-white/20")}>
+                                            <span className={clsx("text-xs font-black text-center", calibration > 0 ? "text-emerald-400" : calibration < 0 ? "text-rose-400" : "text-app-text/20")}>
                                                 {calibration > 0 ? '+' : ''}{calibration.toFixed(0)}
                                             </span>
                                         )}
@@ -775,58 +775,58 @@ const OpeningStep = memo(function OpeningStep({
                             })}
 
                             {/* Cash row */}
-                            <div className="border-t border-white/10 pt-3">
+                            <div className="border-t border-app-text/10 pt-3">
                                 <div className={clsx("grid gap-2 items-center", managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]")}>
                                     <div className="flex items-center gap-2">
                                         <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0"><Banknote size={12} /></span>
                                         <span className="text-xs font-black text-emerald-400">CASH</span>
                                     </div>
-                                    {managerUnlocked && <input type="number" value={cashSoftware} onChange={(e) => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-emerald-500" />}
+                                    {managerUnlocked && <input type="number" value={cashSoftware} onChange={(e) => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-emerald-500" />}
                                     <input type="number" value={cashReal} onChange={(e) => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-300 text-xs font-bold text-center outline-none focus:border-emerald-500" />
-                                    {managerUnlocked && <span className="text-xs font-black text-white/20 text-center">—</span>}
+                                    {managerUnlocked && <span className="text-xs font-black text-app-text/20 text-center">—</span>}
                                 </div>
                             </div>
 
                             {/* Address Book */}
-                            <div className="border-t border-white/10 pt-3">
+                            <div className="border-t border-app-text/10 pt-3">
                                 <div className={clsx("grid gap-2 items-center", managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]")}>
                                     <div className="flex items-center gap-2">
                                         <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0"><DollarSign size={12} /></span>
                                         <span className="text-xs font-bold text-amber-400">Address Book</span>
                                     </div>
-                                    {managerUnlocked && <span className="text-xs text-white/20 text-center">—</span>}
+                                    {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
                                     <input type="number" value={accountBookBalance} onChange={(e) => setAccountBookBalance(e.target.value)}
                                         className="w-full px-2 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-xs font-bold text-center outline-none focus:border-amber-500" />
-                                    {managerUnlocked && <span className="text-xs text-white/20 text-center">—</span>}
+                                    {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
                                 </div>
                             </div>
 
                             {/* Calibration Summary */}
                             {managerUnlocked ? (
-                                <div className="bg-slate-800/50 rounded-2xl p-4 border border-white/5 space-y-2">
-                                    <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
-                                    <div className="flex justify-between text-xs"><span className="text-white/50">Cash (software)</span><span className="text-white font-bold">{currency}{cashSW.toFixed(0)}</span></div>
-                                    <div className="flex justify-between text-xs"><span className="text-white/50">Calibration adjustment</span><span className={clsx("font-bold", totalCalibration > 0 ? "text-rose-400" : totalCalibration < 0 ? "text-emerald-400" : "text-white/30")}>{totalCalibration > 0 ? '+' : ''}{(-totalCalibration).toFixed(0)}</span></div>
-                                    <div className="flex justify-between text-xs border-t border-white/5 pt-2"><span className="text-white/70 font-bold">Cash expected</span><span className="text-white font-black">{currency}{cashExpected.toFixed(0)}</span></div>
-                                    <div className="flex justify-between text-xs"><span className="text-white/50">Cash counted (real)</span><span className="text-white font-bold">{currency}{cashRL.toFixed(0)}</span></div>
-                                    <div className="flex justify-between text-xs border-t border-white/5 pt-2">
-                                        <span className="text-white/70 font-bold">Cash gap</span>
-                                        <span className={clsx("font-black", cashGap > 0 ? "text-emerald-400" : cashGap < 0 ? "text-rose-400" : "text-white/30")}>{cashGap > 0 ? '+' : ''}{currency}{cashGap.toFixed(0)}</span>
+                                <div className="bg-slate-800/50 rounded-2xl p-4 border border-app-text/5 space-y-2">
+                                    <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
+                                    <div className="flex justify-between text-xs"><span className="text-app-text/50">Cash (software)</span><span className="text-app-text font-bold">{currency}{cashSW.toFixed(0)}</span></div>
+                                    <div className="flex justify-between text-xs"><span className="text-app-text/50">Calibration adjustment</span><span className={clsx("font-bold", totalCalibration > 0 ? "text-rose-400" : totalCalibration < 0 ? "text-emerald-400" : "text-app-text/30")}>{totalCalibration > 0 ? '+' : ''}{(-totalCalibration).toFixed(0)}</span></div>
+                                    <div className="flex justify-between text-xs border-t border-app-text/5 pt-2"><span className="text-app-text/70 font-bold">Cash expected</span><span className="text-app-text font-black">{currency}{cashExpected.toFixed(0)}</span></div>
+                                    <div className="flex justify-between text-xs"><span className="text-app-text/50">Cash counted (real)</span><span className="text-app-text font-bold">{currency}{cashRL.toFixed(0)}</span></div>
+                                    <div className="flex justify-between text-xs border-t border-app-text/5 pt-2">
+                                        <span className="text-app-text/70 font-bold">Cash gap</span>
+                                        <span className={clsx("font-black", cashGap > 0 ? "text-emerald-400" : cashGap < 0 ? "text-rose-400" : "text-app-text/30")}>{cashGap > 0 ? '+' : ''}{currency}{cashGap.toFixed(0)}</span>
                                     </div>
                                     {abBal !== 0 && <div className="flex justify-between text-xs"><span className="text-amber-400/70">Address book</span><span className="text-amber-400 font-bold">{abBal > 0 ? '-' : '+'}{currency}{Math.abs(abBal).toFixed(0)}</span></div>}
-                                    <div className="flex justify-between text-sm border-t border-white/10 pt-2">
-                                        <span className="text-white font-black">FINAL GAP</span>
-                                        <span className={clsx("font-black text-lg", finalGap > 0 ? "text-emerald-400" : finalGap < 0 ? "text-rose-400" : "text-white/50")}>
+                                    <div className="flex justify-between text-sm border-t border-app-text/10 pt-2">
+                                        <span className="text-app-text font-black">FINAL GAP</span>
+                                        <span className={clsx("font-black text-lg", finalGap > 0 ? "text-emerald-400" : finalGap < 0 ? "text-rose-400" : "text-app-text/50")}>
                                             {finalGap > 0 ? '+' : ''}{currency}{finalGap.toFixed(0)}
                                             {finalGap > 0 && <span className="text-[9px] ml-1 text-emerald-400/60">EXCESS</span>}
                                             {finalGap < 0 && <span className="text-[9px] ml-1 text-rose-400/60">SHORTAGE</span>}
-                                            {finalGap === 0 && <span className="text-[9px] ml-1 text-white/30">BALANCED</span>}
+                                            {finalGap === 0 && <span className="text-[9px] ml-1 text-app-text/30">BALANCED</span>}
                                         </span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="bg-slate-800/50 rounded-2xl p-5 border border-white/5 text-center">
-                                    <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold mb-3">Reconciliation Status</p>
+                                <div className="bg-slate-800/50 rounded-2xl p-5 border border-app-text/5 text-center">
+                                    <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-3">Reconciliation Status</p>
                                     <div className={clsx("text-2xl font-black", finalGap === 0 ? "text-emerald-400" : "text-amber-400")}>
                                         {finalGap === 0 ? (
                                             <span className="flex items-center justify-center gap-2"><CheckCircle2 size={28} /> Validated</span>
@@ -834,14 +834,14 @@ const OpeningStep = memo(function OpeningStep({
                                             <span className="flex items-center justify-center gap-2"><AlertCircle size={28} /> Discrepancy Detected</span>
                                         )}
                                     </div>
-                                    {finalGap !== 0 && <p className="text-xs text-white/30 mt-2">Manager has been notified</p>}
+                                    {finalGap !== 0 && <p className="text-xs text-app-text/30 mt-2">Manager has been notified</p>}
                                 </div>
                             )}
 
                             <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-violet-500 resize-none h-14" placeholder="Reconciliation notes..." />
+                                className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-violet-500 resize-none h-14" placeholder="Reconciliation notes..." />
                             <button onClick={handleOpen} disabled={loading}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-white font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-app-text font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {loading ? <Loader2 size={24} className="animate-spin" /> : <><Unlock size={24} /> Open with Reconciliation</>}
                             </button>
@@ -930,17 +930,17 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
             >
                 <div className="flex items-center gap-4">
                     {step !== 'site' && (
-                        <button onClick={goBack} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all active:scale-95">
+                        <button onClick={goBack} className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text flex items-center justify-center transition-all active:scale-95">
                             <ArrowLeft size={18} />
                         </button>
                     )}
                     <div>
-                        <h1 className="text-xl font-black text-white tracking-tight">POS Terminal</h1>
-                        <div className="flex items-center gap-2 text-[10px] text-white/40 font-bold uppercase tracking-[0.3em]">
+                        <h1 className="text-xl font-black text-app-text tracking-tight">POS Terminal</h1>
+                        <div className="flex items-center gap-2 text-[10px] text-app-text/40 font-bold uppercase tracking-[0.3em]">
                             {(['site', 'register', 'user', 'pin', 'opening'] as const).map((s, i) => (
                                 <span key={s} className="flex items-center gap-2">
                                     {i > 0 && <ChevronRight size={10} />}
-                                    <span className={step === s ? (s === 'opening' ? 'text-emerald-400' : 'text-indigo-400') : 'text-white/20'}>
+                                    <span className={step === s ? (s === 'opening' ? 'text-emerald-400' : 'text-indigo-400') : 'text-app-text/20'}>
                                         {s === 'user' ? "Who's working?" : s === 'opening' ? 'Open' : s.charAt(0).toUpperCase() + s.slice(1)}
                                     </span>
                                 </span>
@@ -951,12 +951,12 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 <div className="flex items-center gap-3">
                     {selectedSite && (
                         <div className="text-right mr-2">
-                            <p className="text-white/80 font-bold text-sm">{selectedSite.name}</p>
+                            <p className="text-app-text/80 font-bold text-sm">{selectedSite.name}</p>
                             {selectedRegister && <p className="text-indigo-400 text-xs font-bold">{selectedRegister.name}</p>}
                         </div>
                     )}
                     {step === 'site' && (
-                        <a href="/sales/pos-settings" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white text-xs font-bold transition-all border border-white/5 hover:border-white/20" title="POS Configuration">
+                        <a href="/sales/pos-settings" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text text-xs font-bold transition-all border border-app-text/5 hover:border-app-text/20" title="POS Configuration">
                             <Settings2 size={14} />
                             <span className="hidden sm:inline">Settings</span>
                         </a>
@@ -976,9 +976,9 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
             </main>
 
             {/* Footer */}
-            <footer className="px-8 py-3 border-t border-white/5 bg-black/20 flex items-center justify-between">
-                <p className="text-[10px] text-white/15 font-mono">POS Terminal v3.0</p>
-                <p className="text-[10px] text-white/15">{new Date().toLocaleString()}</p>
+            <footer className="px-8 py-3 border-t border-app-text/5 bg-black/20 flex items-center justify-between">
+                <p className="text-[10px] text-app-text/15 font-mono">POS Terminal v3.0</p>
+                <p className="text-[10px] text-app-text/15">{new Date().toLocaleString()}</p>
             </footer>
         </div>
     );

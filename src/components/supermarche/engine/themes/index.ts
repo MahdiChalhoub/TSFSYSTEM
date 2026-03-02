@@ -4,24 +4,24 @@
 // ============================================================
 
 export interface SupermarcheThemeTokens {
-    name: ThemeName;
-    label: string;
-    description: string;
-    preview: {
-        bg: string;
-        primary: string;
-        surface: string;
-        text: string;
-    };
-    tokens: Record<string, string>;
+ name: ThemeName;
+ label: string;
+ description: string;
+ preview: {
+ bg: string;
+ primary: string;
+ surface: string;
+ text: string;
+ };
+ tokens: Record<string, string>;
 }
 
 export type ThemeName =
-    | 'midnight-pro'
-    | 'ivory-market'
-    | 'neon-rush'
-    | 'savane-earth'
-    | 'arctic-glass';
+ | 'midnight-pro'
+ | 'ivory-market'
+ | 'neon-rush'
+ | 'savane-earth'
+ | 'arctic-glass';
 
 export { midnightPro } from './midnight-pro';
 export { ivoryMarket } from './ivory-market';
@@ -37,19 +37,19 @@ import { arcticGlass } from './arctic-glass';
 
 /** Master registry — order determines display order in ThemeSelector */
 export const THEMES: SupermarcheThemeTokens[] = [
-    midnightPro,
-    ivoryMarket,
-    neonRush,
-    savaneEarth,
-    arcticGlass,
+ midnightPro,
+ ivoryMarket,
+ neonRush,
+ savaneEarth,
+ arcticGlass,
 ];
 
 export const THEME_MAP: Record<ThemeName, SupermarcheThemeTokens> = {
-    'midnight-pro': midnightPro,
-    'ivory-market': ivoryMarket,
-    'neon-rush': neonRush,
-    'savane-earth': savaneEarth,
-    'arctic-glass': arcticGlass,
+ 'midnight-pro': midnightPro,
+ 'ivory-market': ivoryMarket,
+ 'neon-rush': neonRush,
+ 'savane-earth': savaneEarth,
+ 'arctic-glass': arcticGlass,
 };
 
 export const DEFAULT_THEME: ThemeName = 'midnight-pro';

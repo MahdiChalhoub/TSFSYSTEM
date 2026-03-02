@@ -50,12 +50,13 @@ class OrderViewSet(TenantModelViewSet):
         act = request.data.get('action', '').strip().lower()
         reason = request.data.get('reason', '')
         amount = request.data.get('amount', None)
+        warehouse_id = request.data.get('warehouse_id', None)
         user = request.user
 
         try:
             if act == 'confirm':
                 SalesPermissionService.require(user, 'sales.confirm_order')
-                SalesWorkflowService.confirm_order(order, user=user)
+                SalesWorkflowService.confirm_order(order, user=user, warehouse_id=warehouse_id)
 
             elif act == 'processing':
                 SalesPermissionService.require(user, 'sales.confirm_order')
@@ -152,3 +153,82 @@ class OrderViewSet(TenantModelViewSet):
             for entry in qs
         ]
         return Response({'results': data, 'count': len(data)}, status=http_status.HTTP_200_OK)
+
+    # ── Gap 5: Payment Reconciliation ─────────────────────────────────────────
+
+    @action(detail=True, methods=['get', 'post'], url_path='payments')
+    def payments(self, request, pk=None):
+        """
+        GET  /pos/orders/{id}/payments/   — reconciliation summary for this order
+        POST /pos/orders/{id}/payments/   — reconcile/write_off/refund a leg
+
+        POST body:
+          {
+            "action":    "reconcile" | "write_off" | "refund",
+            "leg_id":    <int>,
+            "reference": "<string>",      # for reconcile
+            "amount":    <decimal>,       # for write_off
+            "reason":    "<string>",      # for write_off / refund
+          }
+        """
+        order = self.get_object()
+        from apps.pos.services.reconciliation_service import PaymentReconciliationService
+
+        if request.method == 'GET':
+            summary = PaymentReconciliationService.get_summary(order)
+            return Response(summary, status=http_status.HTTP_200_OK)
+
+        # POST — reconciliation actions (require payment-management permission)
+        SalesPermissionService.require(request.user, 'sales.process_return')
+
+        act      = request.data.get('action', '').strip().lower()
+        leg_id   = request.data.get('leg_id')
+        reason   = request.data.get('reason', '')
+        reference= request.data.get('reference', '')
+        amount   = request.data.get('amount', None)
+
+        if not leg_id:
+            return Response({'error': 'leg_id is required.'}, status=http_status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if act == 'reconcile':
+                leg = PaymentReconciliationService.reconcile(
+                    organization=order.organization,
+                    leg_id=int(leg_id),
+                    reference=reference,
+                    user=request.user,
+                )
+                return Response({'status': leg.status, 'leg_id': leg.id}, status=http_status.HTTP_200_OK)
+
+            elif act == 'write_off':
+                if amount is None:
+                    return Response({'error': 'amount is required for write_off.'}, status=http_status.HTTP_400_BAD_REQUEST)
+                from decimal import Decimal
+                leg = PaymentReconciliationService.write_off(
+                    organization=order.organization,
+                    leg_id=int(leg_id),
+                    amount=Decimal(str(amount)),
+                    reason=reason,
+                    user=request.user,
+                )
+                return Response({'status': leg.status, 'leg_id': leg.id, 'write_off': str(leg.write_off)}, status=http_status.HTTP_200_OK)
+
+            elif act == 'refund':
+                leg = PaymentReconciliationService.refund(
+                    organization=order.organization,
+                    leg_id=int(leg_id),
+                    reason=reason,
+                    user=request.user,
+                )
+                return Response({'status': leg.status, 'leg_id': leg.id}, status=http_status.HTTP_200_OK)
+
+            else:
+                return Response(
+                    {'error': f"Unknown action '{act}'. Use reconcile | write_off | refund."},
+                    status=http_status.HTTP_400_BAD_REQUEST
+                )
+
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=http_status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=http_status.HTTP_500_INTERNAL_SERVER_ERROR)

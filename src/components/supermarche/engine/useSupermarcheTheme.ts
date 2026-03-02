@@ -11,14 +11,14 @@ export { useSupermarcheTheme } from './ThemeProvider';
  * Useful for reading theme values in JS (e.g., for chart colors).
  */
 export function useThemeToken(varName: string): string {
-    const { themeData } = useSupermarcheTheme();
-    return themeData.tokens[varName] ?? '';
+ const { themeData } = useSupermarcheTheme();
+ return themeData.tokens[varName] ?? '';
 }
 
 /**
  * useIsDarkTheme — returns true if the active theme has a dark background.
  */
 export function useIsDarkTheme(): boolean {
-    const { theme } = useSupermarcheTheme();
-    return theme === 'midnight-pro' || theme === 'neon-rush';
+ const { theme } = useSupermarcheTheme();
+ return theme === 'midnight-pro' || theme === 'neon-rush';
 }

@@ -28,6 +28,22 @@ const PURCHASE_TAX_MODES = [
     { value: 'EXPENSE', label: 'Expense to P&L' },
 ]
 
+const SALES_TAX_TRIGGERS = [
+    { value: 'ON_TURNOVER', label: 'Percentage of total revenue (period)' },
+    { value: 'ON_PROFIT', label: 'Percentage of gross profit (period)' },
+]
+
+const PROFIT_TAX_MODES = [
+    { value: 'STANDARD', label: 'Standard corporate tax' },
+    { value: 'FORFAIT', label: 'Fixed / Forfait tax' },
+    { value: 'EXEMPT', label: 'Tax exempt' },
+]
+
+const PERIODIC_INTERVALS = [
+    { value: 'MONTHLY', label: 'Monthly' },
+    { value: 'ANNUAL', label: 'Annual' },
+]
+
 export default function TaxPolicyPage() {
     const [policy, setPolicy] = useState<any>(null)
     const [profiles, setProfiles] = useState<any[]>([])
@@ -52,6 +68,11 @@ export default function TaxPolicyPage() {
                     internal_cost_mode: p.internal_cost_mode ?? 'TTC_ALWAYS',
                     purchase_tax_rate: p.purchase_tax_rate ?? '0.0000',
                     purchase_tax_mode: p.purchase_tax_mode ?? 'CAPITALIZE',
+                    sales_tax_rate: p.sales_tax_rate ?? '0.0000',
+                    sales_tax_trigger: p.sales_tax_trigger ?? 'ON_TURNOVER',
+                    periodic_amount: p.periodic_amount ?? '0.00',
+                    periodic_interval: p.periodic_interval ?? 'ANNUAL',
+                    profit_tax_mode: p.profit_tax_mode ?? 'STANDARD',
                     name: p.name ?? '',
                 } : {
                     vat_output_enabled: false,
@@ -60,6 +81,11 @@ export default function TaxPolicyPage() {
                     internal_cost_mode: 'TTC_ALWAYS',
                     purchase_tax_rate: '0.0000',
                     purchase_tax_mode: 'CAPITALIZE',
+                    sales_tax_rate: '0.0000',
+                    sales_tax_trigger: 'ON_TURNOVER',
+                    periodic_amount: '0.00',
+                    periodic_interval: 'ANNUAL',
+                    profit_tax_mode: 'STANDARD',
                     name: '',
                 })
                 setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
@@ -94,13 +120,13 @@ export default function TaxPolicyPage() {
     return (
         <div className="page-container">
             <header>
-                <h1 className="page-header-title tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <Shield size={28} className="text-white" />
                     </div>
                     Tax <span className="text-indigo-600">Policy</span>
                 </h1>
-                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">
+                <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
                     OrgTaxPolicy · CounterpartyTaxProfiles · AIRSI · VAT Rules
                 </p>
             </header>
@@ -120,12 +146,12 @@ export default function TaxPolicyPage() {
                                 Organization Tax Policy
                                 {policy && <Badge className="bg-indigo-100 text-indigo-700 ml-2">ID #{policy.id}</Badge>}
                             </CardTitle>
-                            {policy?.name && <span className="text-xs text-gray-400 font-medium">{policy.name}</span>}
+                            {policy?.name && <span className="text-xs text-app-text-faint font-medium">{policy.name}</span>}
                         </CardHeader>
                         <CardContent className="space-y-5">
                             {/* Policy Name */}
                             <div>
-                                <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Policy Name</label>
+                                <label className="text-xs font-semibold text-app-text-muted uppercase mb-1 block">Policy Name</label>
                                 <Input
                                     value={f('name')}
                                     onChange={e => set('name', e.target.value)}
@@ -138,10 +164,10 @@ export default function TaxPolicyPage() {
                                 {/* VAT Output */}
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-black uppercase text-indigo-600 tracking-widest">VAT Output</h3>
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border">
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-app-bg border">
                                         <div>
                                             <p className="text-sm font-semibold">VAT Output Enabled</p>
-                                            <p className="text-xs text-gray-400">Org issues TVA invoices to clients</p>
+                                            <p className="text-xs text-app-text-faint">Org issues TVA invoices to clients</p>
                                         </div>
                                         <Switch
                                             checked={!!f('vat_output_enabled')}
@@ -150,8 +176,8 @@ export default function TaxPolicyPage() {
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">VAT Input Recoverability</label>
-                                        <p className="text-[11px] text-gray-400">0 = fully capitalized, 1 = fully recoverable (REAL)</p>
+                                        <label className="text-xs font-semibold text-app-text-muted uppercase">VAT Input Recoverability</label>
+                                        <p className="text-[11px] text-app-text-faint">0 = fully capitalized, 1 = fully recoverable (REAL)</p>
                                         <Input
                                             type="number"
                                             min="0" max="1" step="0.001"
@@ -166,7 +192,7 @@ export default function TaxPolicyPage() {
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-black uppercase text-violet-600 tracking-widest">AIRSI & Purchase Tax</h3>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">AIRSI Treatment</label>
+                                        <label className="text-xs font-semibold text-app-text-muted uppercase">AIRSI Treatment</label>
                                         <Select value={f('airsi_treatment')} onValueChange={v => set('airsi_treatment', v)}>
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -179,8 +205,8 @@ export default function TaxPolicyPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">Purchase Tax Rate</label>
-                                        <p className="text-[11px] text-gray-400">e.g. 0.0300 = 3% on purchases</p>
+                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Purchase Tax Rate</label>
+                                        <p className="text-[11px] text-app-text-faint">e.g. 0.0300 = 3% on purchases</p>
                                         <Input
                                             type="number"
                                             min="0" max="1" step="0.0001"
@@ -190,7 +216,7 @@ export default function TaxPolicyPage() {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">Purchase Tax Mode</label>
+                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Purchase Tax Mode</label>
                                         <Select value={f('purchase_tax_mode')} onValueChange={v => set('purchase_tax_mode', v)}>
                                             <SelectTrigger>
                                                 <SelectValue />
@@ -204,11 +230,83 @@ export default function TaxPolicyPage() {
                                     </div>
                                 </div>
 
+                                {/* Periodic & Turnover Taxes */}
+                                <div className="space-y-4 md:col-span-2 pt-4 border-t">
+                                    <h3 className="text-xs font-black uppercase text-amber-600 tracking-widest">Periodic & Turnover Taxes</h3>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {/* Sales Tax / Turnover */}
+                                        <div className="space-y-4 p-4 rounded-xl bg-amber-50/50 border border-amber-100">
+                                            <h4 className="text-[11px] font-bold text-amber-800 uppercase">Sales / Turnover Tax</h4>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Tax Rate</label>
+                                                <p className="text-[10px] text-app-text-faint">e.g. 0.0500 = 5% micro tax</p>
+                                                <Input
+                                                    type="number"
+                                                    min="0" max="1" step="0.0001"
+                                                    value={f('sales_tax_rate')}
+                                                    onChange={e => set('sales_tax_rate', e.target.value)}
+                                                    className="font-mono bg-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Tax Trigger</label>
+                                                <Select value={f('sales_tax_trigger')} onValueChange={v => set('sales_tax_trigger', v)}>
+                                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {SALES_TAX_TRIGGERS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {/* Periodic Forfait */}
+                                        <div className="space-y-4 p-4 rounded-xl bg-orange-50/50 border border-orange-100">
+                                            <h4 className="text-[11px] font-bold text-orange-800 uppercase">Fixed Periodic Tax</h4>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Amount (Forfait)</label>
+                                                <p className="text-[10px] text-app-text-faint">Fixed fee (e.g. minimum légal)</p>
+                                                <Input
+                                                    type="number"
+                                                    min="0" step="0.01"
+                                                    value={f('periodic_amount')}
+                                                    onChange={e => set('periodic_amount', e.target.value)}
+                                                    className="font-mono bg-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Interval</label>
+                                                <Select value={f('periodic_interval')} onValueChange={v => set('periodic_interval', v)}>
+                                                    <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {PERIODIC_INTERVALS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {/* Profit Tax Mode */}
+                                        <div className="space-y-4 p-4 rounded-xl bg-app-surface border">
+                                            <h4 className="text-[11px] font-bold text-app-text uppercase">Corporate Profit Tax</h4>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Profit Tax Mode</label>
+                                                <p className="text-[10px] text-app-text-faint">Standard, Forfait, or Exempt</p>
+                                                <Select value={f('profit_tax_mode')} onValueChange={v => set('profit_tax_mode', v)}>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {PROFIT_TAX_MODES.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Internal Cost Mode */}
                                 <div className="space-y-2 md:col-span-2">
-                                    <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest">Internal Scope</h3>
+                                    <h3 className="text-xs font-black uppercase text-app-text-muted tracking-widest">Internal Scope</h3>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase">Internal Cost Mode</label>
+                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Internal Cost Mode</label>
                                         <Select value={f('internal_cost_mode')} onValueChange={v => set('internal_cost_mode', v)}>
                                             <SelectTrigger className="max-w-md">
                                                 <SelectValue />
@@ -229,7 +327,7 @@ export default function TaxPolicyPage() {
                                     {saving ? 'Saving…' : policy ? 'Update Policy' : 'Create Policy'}
                                 </Button>
                                 {policy && (
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-app-text-faint">
                                         Last updated: {policy.updated_at ? new Date(policy.updated_at).toLocaleString() : '—'}
                                     </p>
                                 )}
@@ -241,32 +339,32 @@ export default function TaxPolicyPage() {
                     <Card>
                         <CardHeader className="py-4 flex flex-row items-center justify-between">
                             <CardTitle className="text-sm flex items-center gap-2">
-                                <Users size={16} className="text-gray-400" /> Counterparty Tax Profiles
+                                <Users size={16} className="text-app-text-faint" /> Counterparty Tax Profiles
                             </CardTitle>
                             <Badge variant="outline" className="text-xs">{profiles.length} profiles</Badge>
                         </CardHeader>
                         <CardContent className="p-0">
                             {profiles.length === 0 ? (
-                                <div className="text-center py-10 text-gray-400 text-sm">
+                                <div className="text-center py-10 text-app-text-faint text-sm">
                                     <Users size={32} className="mx-auto mb-2 opacity-30" />
-                                    No profiles found. Run <code className="bg-gray-100 rounded px-1 text-xs">seed_tax_profiles</code> to create presets.
+                                    No profiles found. Run <code className="bg-app-surface-2 rounded px-1 text-xs">seed_tax_profiles</code> to create presets.
                                 </div>
                             ) : (
                                 <table className="w-full text-sm">
-                                    <thead className="bg-gray-50 border-b">
+                                    <thead className="bg-app-bg border-b">
                                         <tr>
-                                            <th className="text-left px-4 py-2 font-semibold text-gray-600">Profile Name</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-gray-600">VAT Registered</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-gray-600">Reverse Charge</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-gray-600">AIRSI Subject</th>
-                                            <th className="text-left px-4 py-2 font-semibold text-gray-600">Scopes</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-gray-600">Preset</th>
+                                            <th className="text-left px-4 py-2 font-semibold text-app-text-muted">Profile Name</th>
+                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">VAT Registered</th>
+                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Reverse Charge</th>
+                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">AIRSI Subject</th>
+                                            <th className="text-left px-4 py-2 font-semibold text-app-text-muted">Scopes</th>
+                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Preset</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {profiles.map((p: any) => (
-                                            <tr key={p.id} className="border-b hover:bg-gray-50">
-                                                <td className="px-4 py-2 font-semibold text-gray-800">{p.name}</td>
+                                            <tr key={p.id} className="border-b hover:bg-app-bg">
+                                                <td className="px-4 py-2 font-semibold text-app-text">{p.name}</td>
                                                 <td className="px-4 py-2 text-center">
                                                     {p.vat_registered
                                                         ? <CheckCircle size={16} className="text-green-500 mx-auto" />

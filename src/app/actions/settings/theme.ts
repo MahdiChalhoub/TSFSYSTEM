@@ -7,10 +7,10 @@
  * can read it on the first render (zero-flicker, even without localStorage).
  *
  * Cookie: tsfsystem-app-theme
- *   - httpOnly: false  → client can read it for SSR pre-fill
- *   - sameSite: lax
- *   - path: /
- *   - maxAge: 1 year
+ * - httpOnly: false → client can read it for SSR pre-fill
+ * - sameSite: lax
+ * - path: /
+ * - maxAge: 1 year
  */
 
 import { cookies } from 'next/headers';
@@ -43,11 +43,11 @@ export async function setOrgTheme(theme: AppThemeName): Promise<{ ok: boolean }>
 
     const cookieStore = await cookies();
     cookieStore.set(THEME_COOKIE, theme, {
-        httpOnly: false,       // client-readable so ThemeScript can SSR-prime
-        secure: false,         // set to true behind HTTPS in production via env check
+        httpOnly: false, // client-readable so ThemeScript can SSR-prime
+        secure: false, // set to true behind HTTPS in production via env check
         sameSite: 'lax',
         path: '/',
-        maxAge: 60 * 60 * 24 * 365,   // 1 year
+        maxAge: 60 * 60 * 24 * 365, // 1 year
     });
 
     return { ok: true };
@@ -72,12 +72,31 @@ export async function getPersistedTheme(): Promise<AppThemeName | null> {
  */
 export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
     try {
-        const { erpFetch } = await import('@/lib/erp-api');
-        const data = await erpFetch('organizations/me/theme/');
+        const { getTenantContext } = await import('@/lib/erp-api');
+        const context = await getTenantContext();
+        if (!context) return null;
+
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth_token')?.value;
+
+        const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000';
+        const targetUrl = `${DJANGO_URL}/api/organizations/me-theme/`;
+
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': context.id,
+            'X-Tenant-Slug': context.slug,
+        };
+        if (token) headers['Authorization'] = `Token ${token}`;
+
+        const res = await fetch(targetUrl, { headers, cache: 'no-store' });
+        if (!res.ok) return null;
+
+        const data = await res.json();
         const theme = data?.default_theme as AppThemeName | null;
         return theme && VALID_THEMES.includes(theme) ? theme : null;
     } catch {
-        // Not logged in yet, org context missing, or network error — silently return null
         return null;
     }
 }
@@ -94,14 +113,39 @@ export async function setOrgDefaultTheme(
         return { ok: false, error: 'Invalid theme name' };
     }
     try {
-        const { erpFetch } = await import('@/lib/erp-api');
-        await erpFetch('organizations/me/theme/', {
+        const { getTenantContext } = await import('@/lib/erp-api');
+        const context = await getTenantContext();
+
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth_token')?.value;
+        const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000';
+        const targetUrl = `${DJANGO_URL}/api/organizations/me-theme/`;
+
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Token ${token}`;
+        if (context) {
+            headers['X-Tenant-Id'] = context.id;
+            headers['X-Tenant-Slug'] = context.slug;
+        }
+
+        const response = await fetch(targetUrl, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ default_theme: theme }),
+            cache: 'no-store',
         });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`[Theme Action] Target URL failed: ${targetUrl} - HTTP ${response.status} - ${errorText.substring(0, 100)}`);
+            return { ok: false, error: `Failed to update org theme (HTTP ${response.status})` };
+        }
+
         return { ok: true };
     } catch (e: unknown) {
+        console.error('[Theme Action] Exception:', e);
         return {
             ok: false,
             error: e instanceof Error ? e.message : 'Failed to update org theme',

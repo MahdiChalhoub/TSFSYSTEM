@@ -4,103 +4,103 @@ import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
 export type SiteState = {
-    message?: string;
-    errors?: {
-        name?: string[];
-        code?: string[];
-    };
+ message?: string;
+ errors?: {
+ name?: string[];
+ code?: string[];
+ };
 };
 
 export async function getSites() {
-    try {
-        const result = await erpFetch('sites/')
-        const sites = Array.isArray(result) ? result : (result?.results || [])
-        return sites.map((site: Record<string, any>) => ({
-            ...site,
-            _count: {
-                warehouses: site.children_count || 0,
-                users: 0
-            }
-        }))
-    } catch (error: unknown) {
-        if ((error instanceof Error ? error.message : String(error)) && (
-            (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
-            (error instanceof Error ? error.message : String(error)).includes('Not Found') ||
-            (error instanceof Error ? error.message : String(error)).includes('No organization context')
-        )) {
-            return []
-        }
-        console.error("Failed to fetch sites:", error)
-        return []
-    }
+ try {
+ const result = await erpFetch('sites/')
+ const sites = Array.isArray(result) ? result : (result?.results || [])
+ return sites.map((site: Record<string, any>) => ({
+ ...site,
+ _count: {
+ warehouses: site.children_count || 0,
+ users: 0
+ }
+ }))
+ } catch (error: unknown) {
+ if ((error instanceof Error ? error.message : String(error)) && (
+ (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
+ (error instanceof Error ? error.message : String(error)).includes('Not Found') ||
+ (error instanceof Error ? error.message : String(error)).includes('No organization context')
+ )) {
+ return []
+ }
+ console.error("Failed to fetch sites:", error)
+ return []
+ }
 }
 
 export async function initializeMultiSite() {
-    return { success: true, siteId: 1 };
+ return { success: true, siteId: 1 };
 }
 
 export async function createSite(prevState: SiteState, formData: FormData): Promise<SiteState> {
-    const data = {
-        name: formData.get('name') as string,
-        code: (formData.get('code') as string)?.toUpperCase(),
-        address: formData.get('address') as string,
-        city: formData.get('city') as string,
-        phone: formData.get('phone') as string,
-        vat_number: formData.get('vatNumber') as string,
-        is_active: formData.get('isActive') === 'on',
-        location_type: 'BRANCH',  // Sites are always BRANCH type in the unified model
-    }
+ const data = {
+ name: formData.get('name') as string,
+ code: (formData.get('code') as string)?.toUpperCase(),
+ address: formData.get('address') as string,
+ city: formData.get('city') as string,
+ phone: formData.get('phone') as string,
+ vat_number: formData.get('vatNumber') as string,
+ is_active: formData.get('isActive') === 'on',
+ location_type: 'BRANCH', // Sites are always BRANCH type in the unified model
+ }
 
-    if (!data.name || data.name.length < 2) {
-        return { message: 'Validation Error', errors: { name: ['Name must be at least 2 characters'] } };
-    }
+ if (!data.name || data.name.length < 2) {
+ return { message: 'Validation Error', errors: { name: ['Name must be at least 2 characters'] } };
+ }
 
-    try {
-        await erpFetch('sites/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        revalidatePath('/inventory/warehouses');
-        return { message: 'success' };
-    } catch (e: unknown) {
-        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
-    }
+ try {
+ await erpFetch('sites/', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify(data)
+ })
+ revalidatePath('/inventory/warehouses');
+ return { message: 'success' };
+ } catch (e: unknown) {
+ return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
+ }
 }
 
 export async function updateSite(id: number, prevState: SiteState, formData: FormData): Promise<SiteState> {
-    const data = {
-        name: formData.get('name') as string,
-        code: (formData.get('code') as string)?.toUpperCase(),
-        address: formData.get('address') as string,
-        city: formData.get('city') as string,
-        phone: formData.get('phone') as string,
-        vat_number: formData.get('vatNumber') as string,
-        is_active: formData.get('isActive') === 'on',
-        location_type: 'BRANCH',
-    }
+ const data = {
+ name: formData.get('name') as string,
+ code: (formData.get('code') as string)?.toUpperCase(),
+ address: formData.get('address') as string,
+ city: formData.get('city') as string,
+ phone: formData.get('phone') as string,
+ vat_number: formData.get('vatNumber') as string,
+ is_active: formData.get('isActive') === 'on',
+ location_type: 'BRANCH',
+ }
 
-    try {
-        await erpFetch(`sites/${id}/`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        revalidatePath('/inventory/warehouses');
-        return { message: 'success' };
-    } catch (e: unknown) {
-        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
-    }
+ try {
+ await erpFetch(`sites/${id}/`, {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify(data)
+ })
+ revalidatePath('/inventory/warehouses');
+ return { message: 'success' };
+ } catch (e: unknown) {
+ return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
+ }
 }
 
 export async function deleteSite(id: number) {
-    try {
-        await erpFetch(`sites/${id}/`, {
-            method: 'DELETE'
-        })
-        revalidatePath('/inventory/warehouses');
-        return { success: true };
-    } catch (e: unknown) {
-        return { success: false, message: (e instanceof Error ? e.message : String(e)) };
-    }
+ try {
+ await erpFetch(`sites/${id}/`, {
+ method: 'DELETE'
+ })
+ revalidatePath('/inventory/warehouses');
+ return { success: true };
+ } catch (e: unknown) {
+ return { success: false, message: (e instanceof Error ? e.message : String(e)) };
+ }
 }

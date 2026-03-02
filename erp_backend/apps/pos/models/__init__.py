@@ -10,6 +10,7 @@ from .purchase_order_models import PurchaseOrder, PurchaseOrderLine
 from .audit_models import POSAuditRule, POSAuditEvent, SalesAuditLog
 from .tax_entry_models import OrderLineTaxEntry
 from .analytics_models import SalesDailySummary
+from .payment_models import SalesPaymentLeg
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
@@ -24,4 +25,5 @@ __all__ = [
     'POSAuditRule', 'POSAuditEvent', 'SalesAuditLog',
     'OrderLineTaxEntry',
     'SalesDailySummary',
+    'SalesPaymentLeg',
 ]
