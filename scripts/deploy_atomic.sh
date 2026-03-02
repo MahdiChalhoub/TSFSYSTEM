@@ -238,7 +238,7 @@ ok "Symlink swapped: $CURRENT_LINK → $NEW_RELEASE"
 # ── Step 6: Graceful Service Restart ──────────────────────────────────────────
 log "♻️  [6/6] Graceful service restart..."
 
-# Gunicorn graceful reload
+# Gunicorn graceful reload (Django backend)
 WSGI_PROCESS=$(pgrep -f 'gunicorn.*core.wsgi' | head -1 || true)
 if [[ -n "$WSGI_PROCESS" ]]; then
     log "  Sending SIGHUP to Gunicorn (PID: $WSGI_PROCESS)..."
@@ -246,16 +246,39 @@ if [[ -n "$WSGI_PROCESS" ]]; then
     ok "  Gunicorn workers reloading gracefully"
 fi
 
-# PM2 Restarts
+# Systemd TSF Backend service restart (if managed by systemd)
+if systemctl is-active --quiet tsf-backend.service 2>/dev/null; then
+    systemctl reload-or-restart tsf-backend.service
+    ok "  tsf-backend.service restarted"
+fi
+
+# CRITICAL: Restart Next.js frontend (tsf-frontend.service)
+# This service reads from /root/TSFSYSTEM/.next — must restart to pick up new builds
+if systemctl is-active --quiet tsf-frontend.service 2>/dev/null; then
+    log "  Restarting tsf-frontend.service (Next.js)..."
+    systemctl restart tsf-frontend.service
+    # Wait up to 15s for Next.js to come back
+    for i in $(seq 1 15); do
+        sleep 1
+        if systemctl is-active --quiet tsf-frontend.service 2>/dev/null; then
+            ok "  tsf-frontend.service restarted successfully"
+            break
+        fi
+    done
+else
+    # Fallback: try PM2 if systemd service not found
+    if pm2 show "$FRONTEND_SERVICE" > /dev/null 2>&1; then
+        pm2 restart "$FRONTEND_SERVICE" 2>/dev/null
+        ok "  Frontend ($FRONTEND_SERVICE) restarted via PM2"
+    fi
+fi
+
+# PM2 Backend Restart (fallback if not managed by systemd)
 if pm2 show "$BACKEND_SERVICE" > /dev/null 2>&1; then
     pm2 restart "$BACKEND_SERVICE" 2>/dev/null
     ok "  Backend ($BACKEND_SERVICE) restarted"
 fi
 
-if pm2 show "$FRONTEND_SERVICE" > /dev/null 2>&1; then
-    pm2 restart "$FRONTEND_SERVICE" 2>/dev/null
-    ok "  Frontend ($FRONTEND_SERVICE) restarted"
-fi
 
 # ── Post-Deploy Health Check with Auto-Rollback ───────────────────────────────
 log ""
