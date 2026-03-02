@@ -49,6 +49,21 @@ export async function createFinancialAccount(data: FinancialAccountInput) {
     }
 }
 
+export async function updateFinancialAccount(id: number, data: Partial<FinancialAccountInput>) {
+    try {
+        const result = await erpFetch(`accounts/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        revalidatePath('/finance/accounts')
+        return { success: true, id: result.id }
+    } catch (e: unknown) {
+        console.error("Failed to update financial account:", e)
+        throw new Error((e instanceof Error ? e.message : String(e)) || "Failed to update account")
+    }
+}
+
 export async function assignUserToAccount(userId: number, accountId: number) {
     try {
         await erpFetch(`accounts/${accountId}/assign_user/`, {
