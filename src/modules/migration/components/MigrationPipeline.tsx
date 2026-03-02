@@ -20,14 +20,16 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
     const fetchPipeline = useCallback(async () => {
         try {
             const data = await getMigrationPipeline(jobId)
-            if (data && data.pipeline) {
+            if (data && Array.isArray(data.pipeline) && data.pipeline.length > 0) {
                 setPipeline(data)
                 setPipelineError(null)
+            } else if (data?.error) {
+                setPipelineError(data.error)
             } else {
-                setPipelineError('No pipeline data')
+                // Pipeline may not exist yet for PENDING jobs — silent, retry via interval
+                setPipelineError(null)
             }
         } catch (e: any) {
-            console.error('Pipeline fetch error:', e)
             setPipelineError(e?.message || 'Server error')
         }
         setLoading(false)
@@ -35,9 +37,9 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
 
     useEffect(() => {
         fetchPipeline()
-        // Auto-refresh when running
-        if (jobStatus === 'RUNNING' || jobStatus === 'PARSING') {
-            const interval = setInterval(fetchPipeline, 4000)
+        // Auto-refresh when running or parsing
+        if (jobStatus === 'RUNNING' || jobStatus === 'PARSING' || jobStatus === 'PENDING') {
+            const interval = setInterval(fetchPipeline, 5000)
             return () => clearInterval(interval)
         }
     }, [fetchPipeline, jobStatus])
@@ -60,16 +62,31 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
         </Card>
     )
 
-    if (!pipeline || !pipeline.pipeline?.length) return (
-        <Card className="bg-white border-slate-200 backdrop-blur-xl">
-            <CardContent className="py-4 flex items-center justify-center gap-2">
-                <Database className="w-4 h-4 text-gray-200" />
-                <span className="text-gray-400 font-medium text-xs">
-                    Pipeline data unavailable{pipelineError ? ` (${pipelineError})` : ''}
-                </span>
-            </CardContent>
-        </Card>
-    )
+    // No pipeline yet (job hasn't started) — show a subtle placeholder, not an error
+    if (!pipeline || !pipeline.pipeline?.length) {
+        if (jobStatus === 'PENDING') return (
+            <Card className="bg-white border-slate-200">
+                <CardContent className="py-4 flex items-center justify-center gap-2">
+                    <Play className="w-4 h-4 text-gray-300" />
+                    <span className="text-gray-300 font-medium text-xs">Start the migration to track progress</span>
+                </CardContent>
+            </Card>
+        )
+        // For non-PENDING states with no data, show a subtle retry indicator
+        return (
+            <Card className="bg-white border-slate-200">
+                <CardContent className="py-3 flex items-center justify-between gap-2 px-5">
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="w-3.5 h-3.5 text-gray-300 animate-spin" />
+                        <span className="text-gray-300 font-medium text-xs">Waiting for pipeline data...</span>
+                    </div>
+                    <button onClick={fetchPipeline} className="text-[10px] text-gray-400 hover:text-gray-600 font-bold uppercase tracking-wider">
+                        Retry
+                    </button>
+                </CardContent>
+            </Card>
+        )
+    }
 
     const completedCount = pipeline.pipeline.filter(s => s.status === 'completed').length
     const totalSteps = pipeline.pipeline.length
