@@ -413,7 +413,11 @@ class SalesWorkflowService:
 
     @classmethod
     def _log(cls, order, user, action: str, note: str) -> None:
-        """Safe audit log — never blocks the main flow."""
+        """
+        Dual audit log — writes both the generic POSAuditEvent (legacy)
+        and the structured SalesAuditLog (Gap 8). Never blocks the main flow.
+        """
+        # 1. Generic POSAuditEvent (backward compat)
         try:
             from apps.pos.services.pos_service import fire_audit_event
             fire_audit_event(
@@ -423,6 +427,31 @@ class SalesWorkflowService:
                 event_name=f"[{action}] Order #{order.invoice_number or order.id}",
                 details={'note': note, 'order_id': order.id, 'action': action},
                 reference_id=order.id
+            )
+        except Exception:
+            pass
+
+        # 2. Structured SalesAuditLog (Gap 8)
+        try:
+            from apps.pos.models.audit_models import SalesAuditLog
+            _ACTION_MAP = {
+                'CONFIRMED':          'ORDER_CONFIRMED',
+                'PROCESSING':         'ORDER_PROCESSING',
+                'DELIVERY_DELIVERED': 'DELIVERY_DELIVERED',
+                'DELIVERY_PARTIAL':   'DELIVERY_PARTIAL',
+                'DELIVERY_RETURNED':  'DELIVERY_RETURNED',
+                'PAYMENT_PAID':       'PAYMENT_PAID',
+                'PAYMENT_PARTIAL':    'PAYMENT_PARTIAL',
+                'PAYMENT_WRITTEN_OFF':'PAYMENT_WRITTEN_OFF',
+                'INVOICE_GENERATED':  'INVOICE_GENERATED',
+                'INVOICE_SENT':       'INVOICE_SENT',
+                'CANCELLED':          'ORDER_CANCELLED',
+            }
+            SalesAuditLog.log(
+                order=order,
+                action_type=_ACTION_MAP.get(action, 'WORKFLOW_TRANSITION'),
+                summary=note,
+                actor=user,
             )
         except Exception:
             pass

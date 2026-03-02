@@ -55,11 +55,11 @@ export async function triggerOrderWorkflow(
 }
 
 /** Convenience wrappers for common transitions */
-export const confirmOrder = (id: number) => triggerOrderWorkflow(id, { action: 'confirm' });
-export const markDelivered = (id: number) => triggerOrderWorkflow(id, { action: 'deliver' });
-export const markPartial = (id: number) => triggerOrderWorkflow(id, { action: 'deliver_partial' });
-export const markPaid = (id: number, amount?: number) => triggerOrderWorkflow(id, { action: 'pay', amount });
-export const generateInvoice = (id: number) => triggerOrderWorkflow(id, { action: 'generate_invoice' });
-export const sendInvoice = (id: number) => triggerOrderWorkflow(id, { action: 'send_invoice' });
-export const cancelOrder = (id: number, reason?: string) => triggerOrderWorkflow(id, { action: 'cancel', reason });
-export const writeOffOrder = (id: number, reason?: string) => triggerOrderWorkflow(id, { action: 'write_off', reason });
+export async function confirmOrder(id: number) { return triggerOrderWorkflow(id, { action: 'confirm' }); }
+export async function markDelivered(id: number) { return triggerOrderWorkflow(id, { action: 'deliver' }); }
+export async function markPartial(id: number) { return triggerOrderWorkflow(id, { action: 'deliver_partial' }); }
+export async function markPaid(id: number, amount?: number) { return triggerOrderWorkflow(id, { action: 'pay', amount }); }
+export async function generateInvoice(id: number) { return triggerOrderWorkflow(id, { action: 'generate_invoice' }); }
+export async function sendInvoice(id: number) { return triggerOrderWorkflow(id, { action: 'send_invoice' }); }
+export async function cancelOrder(id: number, reason?: string) { return triggerOrderWorkflow(id, { action: 'cancel', reason }); }
+export async function writeOffOrder(id: number, reason?: string) { return triggerOrderWorkflow(id, { action: 'write_off', reason }); }

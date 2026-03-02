@@ -103,7 +103,7 @@ export default function PlanDetailPage() {
             const result = await togglePlanPublic(id as string)
             toast.success(result.message)
             setForm(f => ({ ...f, is_public: result.is_public }))
-            setPlan((p: Record<string, any>) => ({ ...p, is_public: result.is_public }))
+            setPlan((p) => p ? ({ ...p, is_public: result.is_public }) : null)
         } catch {
             toast.error("Failed to toggle visibility")
         }
@@ -165,12 +165,12 @@ export default function PlanDetailPage() {
         }))
     }
 
-    const isCustom = plan && parseFloat(plan.monthly_price) < 0
+    const isCustom = plan && parseFloat(String(plan.monthly_price ?? '0')) < 0
     const tabs = [
         { key: 'overview', label: 'Overview' },
         { key: 'modules', label: 'Modules & Features' },
         { key: 'limits', label: 'Limits' },
-        { key: 'orgs', label: `Organizations (${plan?.organizations?.length || 0})` },
+        { key: 'orgs', label: `Organizations (${Array.isArray((plan as any)?.organizations) ? (plan as any).organizations.length : 0})` },
     ]
 
     const limitConfig = [
@@ -499,9 +499,9 @@ export default function PlanDetailPage() {
                         <CardDescription>{plan.organizations?.length || 0} organization(s) currently subscribed</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {plan.organizations?.length > 0 ? (
+                        {Array.isArray((plan as any).organizations) && (plan as any).organizations.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {plan.organizations.map((org: Record<string, any>) => (
+                                {(plan as any).organizations.map((org: Record<string, any>) => (
                                     <div key={org.id}
                                         className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
                                         onClick={() => router.push(`/organizations/${org.id}`)}

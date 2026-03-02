@@ -3,14 +3,116 @@ POS Module Signals
 ==================
 Event-driven signal handlers for:
   - Sales lifecycle and supplier balance updates
-  - Order → CRM analytics auto-compute (Gap 8)
+  - Order → CRM analytics auto-compute
   - PO → Inventory stock receipt (Gap 10)
+  - Gap 8: SalesAuditLog field-diff capture via pre/post_save
 """
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# GAP 8 — SALES AUDIT: Field-level diff capture on Order save
+# =============================================================================
+
+_TRACKED_STATUS_FIELDS = [
+    'order_status', 'delivery_status', 'payment_status', 'invoice_status',
+]
+_TRACKED_EXTRA_FIELDS  = [
+    'total_amount', 'payment_method', 'is_locked', 'is_verified',
+    'invoice_number', 'scope',
+]
+_STATUS_ACTION_MAP = {
+    ('order_status',    'CONFIRMED'):   'ORDER_CONFIRMED',
+    ('order_status',    'PROCESSING'):  'ORDER_PROCESSING',
+    ('order_status',    'CLOSED'):      'ORDER_CLOSED',
+    ('order_status',    'CANCELLED'):   'ORDER_CANCELLED',
+    ('delivery_status', 'PARTIAL'):     'DELIVERY_PARTIAL',
+    ('delivery_status', 'DELIVERED'):   'DELIVERY_DELIVERED',
+    ('delivery_status', 'RETURNED'):    'DELIVERY_RETURNED',
+    ('delivery_status', 'NA'):          'DELIVERY_NA',
+    ('payment_status',  'PARTIAL'):     'PAYMENT_PARTIAL',
+    ('payment_status',  'PAID'):        'PAYMENT_PAID',
+    ('payment_status',  'WRITTEN_OFF'): 'PAYMENT_WRITTEN_OFF',
+    ('payment_status',  'OVERPAID'):    'PAYMENT_OVERPAID',
+    ('invoice_status',  'GENERATED'):   'INVOICE_GENERATED',
+    ('invoice_status',  'SENT'):        'INVOICE_SENT',
+    ('invoice_status',  'DISPUTED'):    'INVOICE_DISPUTED',
+}
+
+
+@receiver(pre_save, sender='pos.Order')
+def _capture_order_snapshot(sender, instance, **kwargs):
+    """Before save: store current DB values for diff in post_save."""
+    if not instance.pk:
+        instance._audit_snapshot = {}
+        return
+    try:
+        db_state = sender.original_objects.filter(pk=instance.pk).values(
+            *_TRACKED_STATUS_FIELDS, *_TRACKED_EXTRA_FIELDS
+        ).first() or {}
+        instance._audit_snapshot = db_state
+    except Exception:
+        instance._audit_snapshot = {}
+
+
+@receiver(post_save, sender='pos.Order')
+def _log_order_field_changes(sender, instance, created, **kwargs):
+    """After save: diff snapshot vs new state → write SalesAuditLog row."""
+    try:
+        from apps.pos.models.audit_models import SalesAuditLog
+
+        snapshot = getattr(instance, '_audit_snapshot', {})
+        if not snapshot and not created:
+            return
+
+        diff = {}
+        action_type  = 'FIELD_CHANGE'
+        summary_parts = []
+
+        for field in _TRACKED_STATUS_FIELDS + _TRACKED_EXTRA_FIELDS:
+            old_val = snapshot.get(field)
+            new_val = getattr(instance, field, None)
+            if old_val != new_val:
+                diff[field] = {
+                    'before': str(old_val) if old_val is not None else None,
+                    'after':  str(new_val) if new_val is not None else None,
+                }
+
+        for field in _TRACKED_STATUS_FIELDS:
+            if field in diff:
+                new_val = diff[field]['after']
+                mapped  = _STATUS_ACTION_MAP.get((field, new_val))
+                if mapped:
+                    action_type = mapped
+                    summary_parts.append(
+                        f"{field.replace('_', ' ').title()}: "
+                        f"{diff[field]['before']} → {diff[field]['after']}"
+                    )
+                    break
+
+        if not diff:
+            if created:
+                summary_parts = ['Order created']
+            else:
+                return
+
+        if not summary_parts:
+            summary_parts = [f"Fields changed: {', '.join(diff.keys())}"]
+
+        SalesAuditLog.log(
+            order=instance,
+            action_type=action_type,
+            summary=' | '.join(summary_parts),
+            actor=None,  # system-level; actor written separately by workflow _log()
+            diff=diff,
+        )
+    except Exception:
+        pass  # never block order saves
+
 
 
 # =============================================================================

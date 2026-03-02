@@ -56,6 +56,7 @@ import {
     Percent,
     Star,
     History,
+    Paintbrush,
     Landmark,
     UserCheck,
     Store,
@@ -359,6 +360,7 @@ export const MENU_ITEMS = [
                 ]
             },
             { title: 'Security & Roles', path: '/settings/roles', icon: Shield },
+            { title: 'Appearance & Theme', path: '/settings/appearance', icon: Paintbrush },
             { title: 'Custom Domains', path: '/settings/domains', icon: Globe },
             { title: 'Postings (Rules)', path: '/finance/settings/posting-rules', icon: ListChecks },
             { title: 'System Audit Log', path: '/finance/events', icon: History },

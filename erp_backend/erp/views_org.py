@@ -293,6 +293,13 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                 org.base_currency_id = request.data['base_currency_id']
                 update_fields.append('base_currency_id')
 
+            # Handle org-level settings (JSONField — merge, not replace)
+            if 'settings' in request.data and isinstance(request.data['settings'], dict):
+                current_settings = org.settings or {}
+                current_settings.update(request.data['settings'])
+                org.settings = current_settings
+                update_fields.append('settings')
+
             if update_fields:
                 org.save(update_fields=update_fields)
 
@@ -311,6 +318,59 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                 'name': org.base_currency.name,
             }
         return Response(data)
+
+    @action(detail=False, methods=['get', 'patch'], url_path='me/theme')
+    def me_theme(self, request):
+        """
+        GET  /api/organizations/me/theme/ → { default_theme: "midnight-pro" | null }
+        PATCH /api/organizations/me/theme/ → { default_theme: "ivory-market" }
+
+        Reads / writes org.settings["default_theme"].
+        Used by the /settings/appearance page to set the org-wide default theme.
+        Any authenticated user can read. Admin/staff/superuser can write.
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            org = Organization.objects.get(id=org_id)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'PATCH':
+            # Require admin / staff / superuser
+            is_privileged = (
+                request.user.is_staff or
+                request.user.is_superuser or
+                (getattr(request.user, 'role', None) and
+                 getattr(request.user.role, 'name', '').lower() in ('admin', 'owner', 'super admin'))
+            )
+            if not is_privileged:
+                return Response({"error": "Admin access required to change org theme"}, status=status.HTTP_403_FORBIDDEN)
+
+            theme = request.data.get('default_theme')
+            valid_themes = ['midnight-pro', 'ivory-market', 'neon-rush', 'savane-earth', 'arctic-glass']
+            if theme is not None and theme not in valid_themes:
+                return Response(
+                    {"error": f"Invalid theme. Choose from: {', '.join(valid_themes)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            settings = org.settings or {}
+            if theme is None:
+                settings.pop('default_theme', None)
+            else:
+                settings['default_theme'] = theme
+            org.settings = settings
+            org.save(update_fields=['settings'])
+
+            return Response({"default_theme": theme, "message": "Org default theme updated."})
+
+        # GET
+        default_theme = (org.settings or {}).get('default_theme', None)
+        return Response({"default_theme": default_theme})
+
 
     @action(detail=True, methods=['get'])
     def permissions_list(self, request, pk=None):
