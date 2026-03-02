@@ -111,6 +111,14 @@ export async function getPurchaseOrder(id: number) {
     return await erpFetch(`pos/purchase-orders/${id}/`)
 }
 
+export async function getLegacyPurchases() {
+    try { return await erpFetch('pos/purchase/') } catch { return [] }
+}
+
+export async function getLegacyPurchase(id: number) {
+    return await erpFetch(`pos/purchase/${id}/`)
+}
+
 export async function createPurchaseOrder(data: Record<string, any>) {
     const r = await erpFetch('pos/purchase-orders/', { method: 'POST', body: JSON.stringify(data) })
     revalidatePath('/purchases/purchase-orders')

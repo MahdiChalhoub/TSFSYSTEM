@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getPurchaseOrders, getPurchaseOrder } from '@/app/actions/inventory/locations'
+import { getPurchaseOrders, getPurchaseOrder, getLegacyPurchases, getLegacyPurchase } from '@/app/actions/inventory/locations'
 import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText, ClipboardList } from 'lucide-react'
 
 type PO = {
@@ -15,6 +15,7 @@ type PO = {
     total_amount: number
     notes?: string
     lines?: POLine[]
+    is_legacy?: boolean
 }
 
 type POLine = {
@@ -33,6 +34,7 @@ const STATUS_STYLES: Record<string, string> = {
     PARTIALLY_RECEIVED: 'bg-amber-900/40 text-amber-400 border-amber-700',
     RECEIVED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
     CANCELLED: 'bg-red-900/40 text-red-400 border-red-800',
+    COMPLETED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
 }
 
 export default function PurchaseInvoicesPage() {
@@ -45,17 +47,52 @@ export default function PurchaseInvoicesPage() {
 
     async function load() {
         setLoading(true)
-        const data = await getPurchaseOrders()
-        const raw = Array.isArray(data) ? data : (data?.results ?? [])
+        const [poData, legacyData] = await Promise.all([
+            getPurchaseOrders(),
+            getLegacyPurchases()
+        ])
+        const rawPO = Array.isArray(poData) ? poData : (poData?.results ?? [])
+        const rawLegacy = Array.isArray(legacyData) ? legacyData : (legacyData?.results ?? [])
+
+        const mappedLegacy: PO[] = rawLegacy.map((o: any) => ({
+            id: o.id,
+            is_legacy: true,
+            po_number: o.ref_code || `LEGACY-${o.id}`,
+            supplier: o.contact,
+            status: o.status,
+            order_date: o.created_at ? String(o.created_at).split('T')[0] : '',
+            total_amount: o.total_amount,
+            notes: o.notes
+        }))
+
+        const combined = [...rawPO, ...mappedLegacy]
         // Filter to only show records where invoicing/billing is the focus
-        setOrders(raw.filter((o: PO) => ['RECEIVED', 'INVOICED', 'COMPLETED'].includes(o.status)))
+        setOrders(combined.filter((o: PO) => ['RECEIVED', 'INVOICED', 'COMPLETED', 'FINAL'].includes(o.status)))
         setLoading(false)
     }
 
     async function openDetail(po: PO) {
         setSelected(po)
-        const d = await getPurchaseOrder(po.id)
-        setDetail(d)
+        setDetail(null)
+        if (po.is_legacy) {
+            const d = await getLegacyPurchase(po.id)
+            setDetail({
+                ...d,
+                po_number: d.ref_code || `LEGACY-${d.id}`,
+                supplier: d.contact,
+                order_date: d.created_at ? String(d.created_at).split('T')[0] : '',
+                lines: d.items?.map((item: any) => ({
+                    id: item.id,
+                    product: item.product,
+                    quantity_ordered: item.quantity,
+                    unit_price: item.unit_price,
+                    subtotal: item.subtotal || (item.quantity * item.unit_price)
+                })) || []
+            })
+        } else {
+            const d = await getPurchaseOrder(po.id)
+            setDetail(d)
+        }
     }
 
     const pending = orders.filter(o => ['RECEIVED', 'INVOICED'].includes(o.status))
