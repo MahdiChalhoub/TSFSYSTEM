@@ -249,6 +249,54 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         order.total_qty_transferred = agg['total_qty'] or 0
         order.save(update_fields=['total_qty_transferred'])
 
+    @action(detail=True, methods=['post'])
+    def promote_to_execution(self, request, pk=None):
+        """
+        Gap 6 Bridge: Converts an approved StockTransferOrder (Planning) 
+        into an actionable StockMove (Execution).
+        """
+        from apps.inventory.models import StockMove, StockMoveLine
+        order = self.get_object()
+
+        if order.lifecycle_status not in ['APPROVED', 'OPEN']:
+            return Response({'error': 'Only Open or Approved Manifests can be promoted'}, status=400)
+            
+        if order.lines.count() == 0:
+            return Response({'error': 'Cannot promote an empty strategy manifest'}, status=400)
+
+        try:
+            # Create the Execution Transfer (StockMove)
+            move = StockMove.objects.create(
+                organization=order.organization,
+                from_warehouse=order.from_warehouse,
+                to_warehouse=order.to_warehouse,
+                scheduled_date=order.date,
+                notes=f"Auto-generated from Strategy Manifest #{order.reference or order.id}.\n{order.notes or ''}",
+                requested_by=request.user,
+                status='PENDING', # Starts slightly advanced since it's pre-approved
+            )
+
+            # Copy all lines
+            for line in order.lines.all():
+                StockMoveLine.objects.create(
+                    organization=order.organization,
+                    move=move,
+                    product=line.product,
+                    quantity=line.qty_transferred,
+                )
+
+            # Mark Manifest as Executed
+            order.lifecycle_status = 'EXECUTED'
+            order.save(update_fields=['lifecycle_status'])
+
+            return Response({
+                'message': 'Successfully promoted to Execution',
+                'stock_move_id': move.id
+            }, status=201)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
 
 class OperationalRequestViewSet(TenantModelViewSet):
     queryset = OperationalRequest.objects.select_related(
