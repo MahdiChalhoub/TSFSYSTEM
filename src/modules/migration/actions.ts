@@ -3,52 +3,61 @@
 import { erpFetch } from '@/lib/erp-api';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SAFE WRAPPER — prevents uncaught throws from crossing the RSC wire
+// ─────────────────────────────────────────────────────────────────────────────
+
+function safeMsg(e: unknown): string {
+    try {
+        const msg = (e as any)?.message || String(e) || 'Unknown error'
+        // Unwrap JSON-encoded error messages from erpFetch
+        const parsed = JSON.parse(msg)
+        return parsed?.error || parsed?.detail || msg
+    } catch { return (e as any)?.message || String(e) || 'Unknown error' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MIGRATION SERVER ACTIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function uploadMigrationFile(formData: FormData) {
-    const res = await erpFetch('migration/jobs/upload/', {
-        method: 'POST',
-        body: formData,
-    });
-    return res;
+    try {
+        return await erpFetch('migration/jobs/upload/', { method: 'POST', body: formData })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function connectDirectDB(params: {
-    name: string;
-    db_host: string;
-    db_port: number;
-    db_name: string;
-    db_user: string;
-    db_password: string;
+    name: string; db_host: string; db_port: number;
+    db_name: string; db_user: string; db_password: string;
 }) {
-    const res = await erpFetch('migration/jobs/connect/', {
-        method: 'POST',
-        body: JSON.stringify(params),
-    });
-    return res;
+    try {
+        return await erpFetch('migration/jobs/connect/', { method: 'POST', body: JSON.stringify(params) })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function getMigrationJobs() {
-    const res = await erpFetch('migration/jobs/');
-    return res;
+    try {
+        return await erpFetch('migration/jobs/')
+    } catch (e) { return { results: [], error: safeMsg(e) } }
 }
 
 export async function getMigrationJobDetail(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/`)
+    } catch (e) { return { error: safeMsg(e) } }
 }
 
 export async function getBusinesses(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/businesses/`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/businesses/`)
+    } catch (e) { return { businesses: [], error: safeMsg(e) } }
 }
 
 export async function previewMigration(jobId: number, businessId?: number) {
-    let url = `migration/jobs/${jobId}/preview/`;
-    if (businessId) url += `?business_id=${businessId}`;
-    const res = await erpFetch(url);
-    return res;
+    try {
+        let url = `migration/jobs/${jobId}/preview/`
+        if (businessId) url += `?business_id=${businessId}`
+        return await erpFetch(url)
+    } catch (e) { return { error: safeMsg(e) } }
 }
 
 export async function startMigration(
@@ -56,113 +65,112 @@ export async function startMigration(
     params?: { source_business_id?: number; source_business_name?: string; migration_mode?: string }
 ) {
     try {
-        const res = await erpFetch(`migration/jobs/${jobId}/start/`, {
+        return await erpFetch(`migration/jobs/${jobId}/start/`, {
             method: 'POST',
             body: params ? JSON.stringify(params) : undefined,
-        });
-        return res;
-    } catch (error: any) {
-        console.error(`[MIGRATION_ACTION] Start failed for job ${jobId}:`, error);
-        return {
-            success: false,
-            error: error.message || 'Failed to start migration. Please check if analysis is complete.'
-        };
+        })
+    } catch (e) {
+        return { success: false, error: safeMsg(e) }
     }
 }
 
 export async function getMigrationLogs(jobId: number, entityType?: string) {
-    let url = `migration/jobs/${jobId}/logs/`;
-    if (entityType) url += `?entity_type=${entityType}`;
-    const res = await erpFetch(url);
-    return res;
+    try {
+        let url = `migration/jobs/${jobId}/logs/`
+        if (entityType) url += `?entity_type=${entityType}`
+        return await erpFetch(url)
+    } catch (e) { return { results: [], error: safeMsg(e) } }
 }
 
 export async function rollbackMigration(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/rollback/`, {
-        method: 'POST',
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/rollback/`, { method: 'POST' })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function getMigrationPipeline(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/pipeline/`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/pipeline/`)
+    } catch (e) { return { pipeline: null, error: safeMsg(e) } }
 }
 
 export async function resumeMigration(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/resume/`, {
-        method: 'POST',
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/resume/`, { method: 'POST' })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function getMigrationReview(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/review/`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/review/`)
+    } catch (e) { return { error: safeMsg(e) } }
 }
 
 export async function approveMigrationEntity(jobId: number, entityType: string) {
-    const res = await erpFetch(`migration/jobs/${jobId}/review/`, {
-        method: 'POST',
-        body: JSON.stringify({ entity_type: entityType, action: 'approve' }),
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/review/`, {
+            method: 'POST',
+            body: JSON.stringify({ entity_type: entityType, action: 'approve' }),
+        })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function getMigrationSamples(jobId: number, entityType: string) {
-    const res = await erpFetch(`migration/jobs/${jobId}/samples/?entity_type=${entityType}`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/samples/?entity_type=${entityType}`)
+    } catch (e) { return { results: [], error: safeMsg(e) } }
 }
 
 export async function getAllMigrationRecords(jobId: number, entityType: string, page: number = 1, pageSize: number = 50) {
-    const res = await erpFetch(`migration/jobs/${jobId}/all-records/?entity_type=${entityType}&page=${page}&page_size=${pageSize}`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/all-records/?entity_type=${entityType}&page=${page}&page_size=${pageSize}`)
+    } catch (e) { return { results: [], count: 0, error: safeMsg(e) } }
 }
 
 export async function getAuditSummary(jobId: number, entityType: string) {
-    const res = await erpFetch(`migration/jobs/${jobId}/audit-summary/?entity_type=${entityType}`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/audit-summary/?entity_type=${entityType}`)
+    } catch (e) { return { error: safeMsg(e) } }
 }
 
 export async function bulkLinkLedger(jobId: number, contactType: string) {
-    const res = await erpFetch(`migration/jobs/${jobId}/bulk-link-ledger/`, {
-        method: 'POST',
-        body: JSON.stringify({ contact_type: contactType }),
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/bulk-link-ledger/`, {
+            method: 'POST',
+            body: JSON.stringify({ contact_type: contactType }),
+        })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function linkMigrationFile(params: { file_uuid: string; name: string }) {
-    const res = await erpFetch('migration/jobs/link/', {
-        method: 'POST',
-        body: JSON.stringify(params),
-    });
-    return res;
+    try {
+        return await erpFetch('migration/jobs/link/', { method: 'POST', body: JSON.stringify(params) })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function getAccountMapping(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/account-mapping/`);
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/account-mapping/`)
+    } catch (e) { return { mappings: [], error: safeMsg(e) } }
 }
 
 export async function saveAccountMapping(jobId: number, mappings: { target_id: number; coa_id: number }[]) {
-    const res = await erpFetch(`migration/jobs/${jobId}/account-mapping/`, {
-        method: 'POST',
-        body: JSON.stringify({ mappings }),
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/account-mapping/`, {
+            method: 'POST',
+            body: JSON.stringify({ mappings }),
+        })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function deleteMigrationJob(jobId: number, force = false) {
-    const res = await erpFetch(`migration/jobs/${jobId}/delete-job/${force ? '?force=true' : ''}`, {
-        method: 'DELETE',
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/delete-job/${force ? '?force=true' : ''}`, { method: 'DELETE' })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
 
 export async function repostMigrationJournals(jobId: number) {
-    const res = await erpFetch(`migration/jobs/${jobId}/repost-journals/`, {
-        method: 'POST',
-    });
-    return res;
+    try {
+        return await erpFetch(`migration/jobs/${jobId}/repost-journals/`, { method: 'POST' })
+    } catch (e) { return { success: false, error: safeMsg(e) } }
 }
