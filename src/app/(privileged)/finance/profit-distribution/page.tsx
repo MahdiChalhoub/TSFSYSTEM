@@ -141,7 +141,7 @@ export default function ProfitDistributionPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Profit Distribution</h1>
+                    <h1 className="page-header-title  text-stone-900 font-serif tracking-tight">Profit Distribution</h1>
                     <p className="text-stone-500 font-medium mt-1">Year-end profit allocation across equity wallets</p>
                 </div>
                 <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>

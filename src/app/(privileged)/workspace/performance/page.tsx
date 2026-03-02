@@ -29,7 +29,7 @@ export default async function PerformancePage() {
         <div className="space-y-8 animate-in fade-in duration-500">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
                             <Trophy size={28} className="text-white" />
                         </div>

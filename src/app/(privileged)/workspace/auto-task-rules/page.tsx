@@ -249,7 +249,7 @@ export default function AutoTaskRulesPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                    <h1 className="page-header-title  flex items-center gap-2">
                         <Zap size={22} className="text-amber-500" /> Auto-Task Rules
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">

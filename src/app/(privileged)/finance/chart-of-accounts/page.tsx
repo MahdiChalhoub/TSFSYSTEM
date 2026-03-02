@@ -9,7 +9,7 @@ export default async function ChartOfAccountsPage() {
     let accounts: any = []
     try { accounts = await getChartOfAccounts(true, scope) } catch { /* empty fallback */ }
     return (
-        <div className="p-6 space-y-6">
+        <div className="page-container">
             <header className="flex justify-between items-end mb-10">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -20,7 +20,7 @@ export default async function ChartOfAccountsPage() {
                             <ShieldCheck size={12} /> Double-Entry Enforced
                         </span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-16 h-16 rounded-[1.8rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
                             <BookOpen size={32} className="text-white" />
                         </div>

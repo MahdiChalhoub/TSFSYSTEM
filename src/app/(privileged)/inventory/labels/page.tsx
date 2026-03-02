@@ -139,7 +139,7 @@ export default function LabelPrintingPage() {
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
                             <Tag size={28} className="text-white" />
                         </div>

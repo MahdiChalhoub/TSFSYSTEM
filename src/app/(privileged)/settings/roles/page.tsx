@@ -11,7 +11,7 @@ export default async function RolesPage() {
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header>
-                <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-4">
+                <h1 className="page-header-title  uppercase tracking-tighter flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                         <Shield className="text-white" size={28} />
                     </div>

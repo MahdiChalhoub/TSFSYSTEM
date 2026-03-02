@@ -38,11 +38,11 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
             </div>
 
             {/* Voucher Header */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden mb-8">
+            <div className="card-section border border-stone-200 overflow-hidden mb-8">
                 <div className="p-8 border-b border-stone-100 flex justify-between items-start">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold text-stone-900 font-serif">Journal Voucher</h1>
+                            <h1 className="page-header-title  text-stone-900 font-serif">Journal Voucher</h1>
                             <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${getStatusStyle(entry.status)}`}>
                                 {entry.status}
                             </span>
@@ -88,7 +88,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
             </div>
 
             {/* Lines Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+            <div className="card-section border border-stone-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-stone-50 border-b border-stone-200">

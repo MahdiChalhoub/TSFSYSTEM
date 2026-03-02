@@ -60,7 +60,7 @@ export default function DailySummaryPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl lg:text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="text-4xl lg:page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                             <CalendarDays size={28} className="text-white" />
                         </div>

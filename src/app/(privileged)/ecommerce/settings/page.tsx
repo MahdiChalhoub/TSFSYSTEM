@@ -14,7 +14,7 @@ export default async function EcommerceSettingsPage() {
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header>
-                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
                         <Settings size={28} className="text-white" />
                     </div>

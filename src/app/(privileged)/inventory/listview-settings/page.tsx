@@ -264,7 +264,7 @@ export default function ListViewSettingsPage() {
                     <Settings className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">ListView <span className="text-emerald-600">Settings</span></h1>
+                    <h1 className="page-header-title  tracking-tighter">ListView <span className="text-emerald-600">Settings</span></h1>
                     <p className="text-sm text-gray-400">Customize columns, page size, sorting, and filters for every list view</p>
                 </div>
             </div>

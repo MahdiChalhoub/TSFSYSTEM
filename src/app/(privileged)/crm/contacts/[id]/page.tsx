@@ -47,7 +47,7 @@ export default function ContactDetailPage() {
     }
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
+            <div className="page-container">
                 <Skeleton className="h-8 w-48" />
                 <div className="grid grid-cols-4 gap-4">
                     {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
@@ -84,7 +84,7 @@ export default function ContactDetailPage() {
                                 <User size={24} />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                                     <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                                         <UserCircle size={28} className="text-white" />
                                     </div>
@@ -360,7 +360,7 @@ export default function ContactDetailPage() {
                     )}
                     {/* Analytics Tab */}
                     {activeTab === 'analytics' && (
-                        <div className="p-6 space-y-6">
+                        <div className="page-container">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="bg-blue-50 rounded-xl p-4">
                                     <p className="text-xs font-bold text-blue-600 uppercase">Avg Order Value</p>

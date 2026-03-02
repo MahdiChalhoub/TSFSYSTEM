@@ -32,7 +32,7 @@ export default function CatchAllPage() {
                 </div>
 
                 {/* Title */}
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                <h1 className="page-header-title  tracking-tight">
                     Page Not Found
                 </h1>
 

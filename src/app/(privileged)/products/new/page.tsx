@@ -76,7 +76,7 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                         <PackagePlus size={28} className="text-white" />
                     </div>

@@ -138,7 +138,7 @@ export default function CountingPage() {
                     <ArrowLeft className="w-4 h-4 mr-1" /> Back
                 </Button>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold">
+                    <h1 className="page-header-title ">
                         Counting — COUNT-{session?.reference || session?.id}
                     </h1>
                     <p className="text-sm text-muted-foreground">

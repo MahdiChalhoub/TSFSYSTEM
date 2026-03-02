@@ -18,7 +18,7 @@ export default async function ExpiryAlertsPage() {
                         </div>
                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Batch Management</span>
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-4xl lg:page-header-title  tracking-tighter">
                         Expiry <span className="text-indigo-600">Timeline</span>
                     </h1>
                     <p className="mt-2 text-gray-500 font-medium max-w-xl">

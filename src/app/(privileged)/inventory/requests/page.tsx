@@ -149,7 +149,7 @@ export default function OperationalRequestsPage() {
                         </div>
                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Operational Layer</span>
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-4xl lg:page-header-title  tracking-tighter">
                         Request <span className="text-indigo-600">Pipeline</span>
                     </h1>
                     <p className="mt-2 text-gray-500 font-medium max-w-xl">

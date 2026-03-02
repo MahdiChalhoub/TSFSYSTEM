@@ -201,7 +201,7 @@ export default function AssetsPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
+                        <h1 className="page-header-title  text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
                         {settings?.assetTrackingMode && (
                             <Badge className={`rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest border-2 ${settings.assetTrackingMode === 'ENTERPRISE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                 settings.assetTrackingMode === 'PROFESSIONAL' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :

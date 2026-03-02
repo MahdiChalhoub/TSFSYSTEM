@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getPurchaseOrders, getPurchaseOrder } from '@/app/actions/inventory/locations'
-import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText, ClipboardList } from 'lucide-react'
+import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText, ClipboardList, BookOpen } from 'lucide-react'
 
 type PO = {
     id: number
@@ -142,9 +142,14 @@ export default function PurchaseOrdersPage() {
                                         {selected.expected_delivery && <span className="flex items-center gap-1"><Truck size={10} />Expected: {selected.expected_delivery}</span>}
                                     </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex flex-col items-end gap-2">
                                     <div className="text-2xl font-black text-gray-900">${Number(selected.total_amount || 0).toFixed(2)}</div>
-                                    <span className={`px-2 py-0.5 mt-1 inline-block rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[selected.status] || ''}`}>{selected.status.replace('_', ' ')}</span>
+                                    <div className="flex gap-2 items-center">
+                                        <a href={`/finance/ledger?q=${selected.po_number || selected.id}`} className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold flex items-center gap-1.5 hover:bg-indigo-100 transition-colors">
+                                            <BookOpen size={12} /> Ledger
+                                        </a>
+                                        <span className={`px-2 py-0.5 inline-block rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[selected.status] || ''}`}>{selected.status.replace('_', ' ')}</span>
+                                    </div>
                                 </div>
                             </div>
 

@@ -113,7 +113,7 @@ function CreatePurchaseReturnForm() {
                     <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-500 mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Purchase Detail
                     </Link>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-3">
+                    <h1 className="page-header-title  tracking-tighter flex items-center gap-3">
                         <Truck size={32} className="text-blue-500" />
                         Supplier Return for <span className="text-blue-500">{order.ref_code || `#${orderId}`}</span>
                     </h1>

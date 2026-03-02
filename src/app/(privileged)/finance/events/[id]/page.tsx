@@ -27,7 +27,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                         <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                     </Link>
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                             <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                                 <Calendar size={28} className="text-white" />
                             </div>

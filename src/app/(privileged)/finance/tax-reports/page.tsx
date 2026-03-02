@@ -45,7 +45,7 @@ export default function TaxReportsPage() {
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
+            <div className="page-container">
                 <Skeleton className="h-10 w-64" />
                 <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}</div>
                 <Skeleton className="h-96" />
@@ -54,9 +54,9 @@ export default function TaxReportsPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="page-container">
             <header>
-                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
                         <FileSpreadsheet size={28} className="text-white" />
                     </div>

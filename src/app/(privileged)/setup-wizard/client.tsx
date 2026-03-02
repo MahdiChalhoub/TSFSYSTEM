@@ -294,7 +294,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                         <Sparkles size={14} className="animate-pulse" />
                         <span className="text-[11px] font-black uppercase tracking-widest">Organization Setup</span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900">
                         Let&apos;s set up <span className="text-indigo-600">{data.business_name || 'your business'}</span>
                     </h1>
                     <p className="text-sm text-gray-400 mt-2 font-medium">Complete these steps to unlock your full ERP experience</p>

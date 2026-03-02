@@ -141,7 +141,7 @@ export default function AccountBookManagerPage() {
                                 </div>
                             ) : (
                                 <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-8 text-center flex flex-col items-center">
-                                    <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-500 mb-4 animate-bounce">
+                                    <div className="w-16 h-16 card-section flex items-center justify-center text-emerald-500 mb-4 animate-bounce">
                                         <Verified size={32} />
                                     </div>
                                     <h3 className="text-xl font-black text-emerald-900">All Clear!</h3>

@@ -128,7 +128,7 @@ export default function TenderInboxPage() {
         <div className="p-6 space-y-6 animate-in fade-in duration-500 pb-20">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-200">
                             <FileText size={28} className="text-white" />
                         </div>

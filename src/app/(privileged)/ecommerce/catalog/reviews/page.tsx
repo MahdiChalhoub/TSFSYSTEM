@@ -139,7 +139,7 @@ export default function ReviewManagementPage() {
                     <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
                         Social Proof Engine
                     </Badge>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 text-white">
                             <MessageSquare size={32} />
                         </div>

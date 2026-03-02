@@ -175,7 +175,7 @@ export default function CustomDomainsPage() {
                             <Globe className="w-6 h-6 text-violet-600" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Custom Domains</h1>
+                            <h1 className="page-header-title  tracking-tight">Custom Domains</h1>
                             <p className="text-sm text-gray-500">Link your own domains to your storefront and control panel</p>
                         </div>
                     </div>

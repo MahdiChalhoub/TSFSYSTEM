@@ -159,7 +159,7 @@ export default function LoansPage() {
             {/* Standard Header */}
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
                             <HandCoins size={28} className="text-white" />
                         </div>

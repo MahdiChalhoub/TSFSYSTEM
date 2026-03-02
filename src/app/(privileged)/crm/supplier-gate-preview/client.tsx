@@ -105,7 +105,7 @@ export default function SupplierGatePreviewClient() {
                     <Eye size={22} className="text-indigo-600" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 tracking-tight">Supplier Gate Preview</h1>
+                    <h1 className="page-header-title  tracking-tight">Supplier Gate Preview</h1>
                     <p className="text-sm text-gray-500">Select a supplier to see what they see when they access their portal</p>
                 </div>
             </div>

@@ -42,9 +42,9 @@ export default async function QuotationsPage() {
     } catch { /* empty */ }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="page-container">
             <div>
-                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
                         <FileText size={28} className="text-white" />
                     </div>

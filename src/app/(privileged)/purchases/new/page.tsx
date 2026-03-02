@@ -35,7 +35,7 @@ export default async function NewPurchasePage() {
 
             {/* Header */}
             <header>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                         <ShoppingCart size={28} className="text-white" />
                     </div>

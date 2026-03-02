@@ -9,7 +9,7 @@ export default async function TransfersPage() {
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
                             <Truck size={28} />
                         </div>

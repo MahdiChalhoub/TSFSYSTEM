@@ -209,7 +209,7 @@ export default function SessionHistoryPage() {
                             <ArrowLeft size={12} /> POS
                         </Link>
                     </div>
-                    <h1 className="text-2xl font-black tracking-tight">Register Sessions</h1>
+                    <h1 className="page-header-title  tracking-tight">Register Sessions</h1>
                     <p className="text-white/40 text-sm mt-0.5">All closed register sessions · {total} total</p>
                 </div>
                 <button onClick={() => load(0)} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 flex items-center justify-center transition-all">

@@ -115,7 +115,7 @@ function CreateReturnForm() {
                     <Link href={`/sales/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-rose-500 mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Sale Detail
                     </Link>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-3">
+                    <h1 className="page-header-title  tracking-tighter flex items-center gap-3">
                         <RotateCcw size={32} className="text-rose-500" />
                         Return Items from <span className="text-rose-500">{order.ref_code || `#${orderId}`}</span>
                     </h1>
