@@ -253,7 +253,9 @@ export const MENU_ITEMS = [
                     { title: 'Aging Report', path: '/finance/reports/aging' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
                     { title: 'Budget Overview', path: '/finance/budget' },
-                    { title: 'Tax (VAT) Reports', path: '/finance/tax-reports' },
+                    { title: 'Tax (VAT) Returns', path: '/finance/tax-reports' },
+                    { title: 'VAT Settlement', path: '/finance/vat-settlement' },
+                    { title: 'Tax Policy (OrgTaxPolicy)', path: '/finance/tax-policy' },
                 ]
             },
             {
