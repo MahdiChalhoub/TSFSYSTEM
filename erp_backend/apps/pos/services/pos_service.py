@@ -242,18 +242,34 @@ class POSService:
                 total_tax += item_tax
                 total_cogs += item_cogs
 
+                # ── Gap 6: Per-line tax split fields ──────────────────────────────────
+                # item_total = HT (before VAT), item_tax = VAT portion, TTC = HT + VAT
+                _vat_active   = getattr(_ctx, 'vat_active', True)
+                _is_tax_exempt = not _vat_active  # INTERNAL scope or VAT-exempt policy → exempt
+
+                # AIRSI: read rate from product (if field exists, else 0)
+                _airsi_rate   = getattr(product, 'airsi_rate', Decimal('0.00')) or Decimal('0.00')
+                _airsi_withheld = (item_total * (_airsi_rate / Decimal('100'))).quantize(Decimal('0.01')) \
+                    if (_airsi_rate and _vat_active) else Decimal('0.00')
+
                 line_obj = OrderLine.objects.create(
                     organization=organization,
                     order=order,
                     product=product,
                     quantity=qty,
-                    unit_price=price,  # Store original price
-                    discount_rate=discount_rate, # Store applied discount
+                    unit_price=price,           # original price before discount
+                    discount_rate=discount_rate,
                     tax_rate=tax_rate,
                     total=(item_total + item_tax),
                     unit_cost_ht=amc,
                     effective_cost=amc,
-                    price_override_detected=is_override
+                    price_override_detected=is_override,
+                    # ── Gap 6 tax split ────────────────────────────────────────
+                    tax_amount_ht=item_total.quantize(Decimal('0.01')),
+                    tax_amount_vat=item_tax,
+                    tax_amount_ttc=(item_total + item_tax).quantize(Decimal('0.01')),
+                    airsi_withheld=_airsi_withheld,
+                    is_tax_exempt=_is_tax_exempt,
                 )
 
                 # ── Record per-line tax entries (scope guard: no VAT if INTERNAL) ──

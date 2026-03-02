@@ -88,6 +88,12 @@ class SalesWorkflowService:
             order.save(update_fields=['order_status', 'confirmed_at'])
             # ── Gap 3: reserve stock for all lines ──
             cls._reserve_stock(order, user)
+        # ── Gap 2: post confirmation journal entry (Dr A/R, Cr Revenue, Cr VAT Payable) ──
+        try:
+            from apps.pos.services.accounting_poster import SalesAccountingPoster
+            SalesAccountingPoster.post_confirmation(order, user)
+        except Exception:
+            pass  # Never block workflow for accounting failures
         cls._log(order, user, 'CONFIRMED', f"Order confirmed by {_uname(user)}")
 
     @classmethod
@@ -212,6 +218,12 @@ class SalesWorkflowService:
             order.save(update_fields=['order_status', 'delivery_status', 'payment_status'])
             # ── Gap 3: release any stock reservations ──
             cls._release_stock(order, user)
+        # ── Gap 2: reverse all accounting entries posted on this order ──
+        try:
+            from apps.pos.services.accounting_poster import SalesAccountingPoster
+            SalesAccountingPoster.post_return(order, user)
+        except Exception:
+            pass  # Never block workflow for accounting failures
         cls._log(order, user, 'CANCELLED', f"Order cancelled. Reason: {reason}")
 
     # ─── Internal Helpers ──────────────────────────────────────────────────────

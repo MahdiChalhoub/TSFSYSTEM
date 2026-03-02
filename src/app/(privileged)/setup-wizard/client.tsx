@@ -14,7 +14,7 @@ import {
     Upload, FileSpreadsheet, ArrowUpRight,
     Scale, Shield, User, Building,
     Camera, Fingerprint, FileText, Map as MapIcon,
-    Wallet, CreditCard, Coins, AlertCircle
+    Wallet, CreditCard, Coins, AlertCircle, Paintbrush
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +24,8 @@ import {
     bulkCreatePriceGroups, bulkCreateDepartments,
     savePOSSettings, saveStorefrontConfig, bulkCreateChecklistTemplates
 } from '@/app/actions/setup-wizard'
+import { setOrgDefaultTheme } from '@/app/actions/settings/theme'
+import type { AppThemeName } from '@/app/actions/settings/theme'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -43,6 +45,7 @@ interface WizardData {
     pos_settings: { allow_negative_stock: boolean }
     ecommerce_config: { theme: string; primary_color: string; custom_domain: string }
     workspace_checklists: { name: string; trigger: string; points: number }[]
+    app_default_theme: AppThemeName | null
 }
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -57,6 +60,7 @@ const STEPS = [
     { id: 'hr', title: 'HR Setup', subtitle: 'Departments & teams', icon: Building, color: 'teal' },
     { id: 'pos', title: 'POS Config', subtitle: 'Sales & Inventory rules', icon: Wallet, color: 'emerald' },
     { id: 'ecommerce', title: 'Storefront', subtitle: 'Branding & Theme', icon: CreditCard, color: 'indigo' },
+    { id: 'appearance', title: 'Appearance', subtitle: 'Org default theme', icon: Paintbrush, color: 'violet' },
     { id: 'workspace', title: 'Workspace', subtitle: 'Daily Checklists', icon: CheckCircle2, color: 'blue' },
     { id: 'payments', title: 'Payments', subtitle: 'Cash drawers', icon: Coins, color: 'amber' },
     { id: 'launch', title: 'Launch', subtitle: 'You\'re ready!', icon: Rocket, color: 'rose' },
@@ -132,7 +136,8 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
         workspace_checklists: [
             { name: 'Start of Shift Requirements', trigger: 'SHIFT_START', points: 5 },
             { name: 'End of Shift Closing', trigger: 'SHIFT_END', points: 10 }
-        ]
+        ],
+        app_default_theme: null,
     })
 
     const getInitialStep = () => {
@@ -258,12 +263,17 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
                 result = await savePOSSettings(data.pos_settings)
             } else if (step === 8) { // E-Commerce
                 result = await saveStorefrontConfig(data.ecommerce_config)
-            } else if (step === 9) { // Workspace
+            } else if (step === 9) { // Appearance
+                if (data.app_default_theme) {
+                    await setOrgDefaultTheme(data.app_default_theme)
+                }
+                // Always succeeds (theme is optional)
+            } else if (step === 10) { // Workspace
                 const checklistsToCreate = data.workspace_checklists.filter(cl => cl.name).map(cl => ({
                     name: cl.name, trigger: cl.trigger, points: cl.points
                 }))
                 if (checklistsToCreate.length > 0) result = await bulkCreateChecklistTemplates(checklistsToCreate)
-            } else if (step === 10) {
+            } else if (step === 11) {
                 // Moving from Payments to Launch — check if we have at least one POS account
                 const totalAccounts = config.posAccounts.length + createdAccounts.length
                 if (totalAccounts === 0) {
@@ -280,11 +290,11 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
 
     if (completed) return <LaunchAnimation />
 
-    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepCRMSetup, StepHRSetup, StepPOSSetup, StepECommerceSetup, StepWorkspaceSetup, StepPaymentAccounts, StepLaunch]
+    const StepComponents = [StepLegalForm, StepFinancialFoundation, StepDataMigration, StepBusinessProfile, StepLocations, StepCRMSetup, StepHRSetup, StepPOSSetup, StepECommerceSetup, StepAppearance, StepWorkspaceSetup, StepPaymentAccounts, StepLaunch]
     const CurrentStep = StepComponents[step]
 
-    // Steps 0, 1, and 10 are MANDATORY — no skip button
-    const canSkip = step > 2 && step !== 10 && step < STEPS.length - 1
+    // Steps 0, 1, and 11 are MANDATORY — no skip button
+    const canSkip = step > 2 && step !== 11 && step < STEPS.length - 1
 
     return (
         <div className="flex flex-col items-center animate-in fade-in duration-500 w-full">
@@ -895,7 +905,88 @@ function StepECommerceSetup({ config, data, setData }: StepProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STEP 9: Workspace Setup (optional)
+// STEP 9: Appearance — Org Default Theme (optional)
+// ═══════════════════════════════════════════════════════════════
+
+const WIZARD_THEMES: { name: AppThemeName; label: string; description: string; bg: string; primary: string; accent: string; mode: 'dark' | 'light' }[] = [
+    { name: 'midnight-pro', label: 'Midnight Pro', description: 'Dark & professional', bg: '#0a0f1e', primary: '#818cf8', accent: '#312e81', mode: 'dark' },
+    { name: 'ivory-market', label: 'Ivory Market', description: 'Clean & minimal light', bg: '#faf9f7', primary: '#b45309', accent: '#fef3c7', mode: 'light' },
+    { name: 'neon-rush', label: 'Neon Rush', description: 'Bold cyberpunk energy', bg: '#050510', primary: '#f0abfc', accent: '#4c1d95', mode: 'dark' },
+    { name: 'savane-earth', label: 'Savane Earth', description: 'Warm organic tones', bg: '#1c1510', primary: '#c08d50', accent: '#3d2b1a', mode: 'dark' },
+    { name: 'arctic-glass', label: 'Arctic Glass', description: 'Cool frosted clarity', bg: '#f0f6ff', primary: '#0369a1', accent: '#bae6fd', mode: 'light' },
+]
+
+function StepAppearance({ data, setData }: StepProps) {
+    return (
+        <div className="space-y-6">
+            <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center gap-3">
+                <Paintbrush size={18} className="text-violet-600 shrink-0" />
+                <p className="text-xs font-bold text-violet-700">
+                    Choose the <strong>default visual theme</strong> for your organisation. Every user sees this on first login — they can always change it themselves later.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {WIZARD_THEMES.map(t => {
+                    const isSelected = data.app_default_theme === t.name
+                    return (
+                        <button
+                            key={t.name}
+                            onClick={() => setData({ app_default_theme: t.name })}
+                            aria-label={`Select ${t.label} as org default theme`}
+                            className="relative p-5 rounded-2xl border-2 text-left transition-all duration-300"
+                            style={{
+                                background: t.bg,
+                                borderColor: isSelected ? t.primary : 'rgba(128,128,128,0.15)',
+                                boxShadow: isSelected ? `0 0 0 3px ${t.primary}33, 0 8px 24px rgba(0,0,0,0.15)` : '0 1px 4px rgba(0,0,0,0.06)',
+                                transform: isSelected ? 'scale(1.03)' : 'scale(1)',
+                            }}
+                        >
+                            {/* Preview swatch */}
+                            <div className="w-full h-14 rounded-xl mb-3 overflow-hidden" style={{ background: t.accent }}>
+                                <div className="w-full h-full opacity-80" style={{ background: `linear-gradient(135deg, ${t.primary}44 0%, ${t.accent} 100%)` }} />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-black tracking-tight" style={{ color: t.primary }}>{t.label}</p>
+                                    <p className="text-[10px] font-medium opacity-60" style={{ color: t.primary }}>{t.description}</p>
+                                </div>
+                                {isSelected && (
+                                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: t.primary }}>
+                                        <Check size={12} color="#fff" strokeWidth={3} />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-2 flex gap-1">
+                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                    style={{ background: t.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.7)', color: t.primary }}>
+                                    {t.mode}
+                                </span>
+                                {isSelected && (
+                                    <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                                        style={{ background: t.primary + '22', color: t.primary }}>
+                                        Selected
+                                    </span>
+                                )}
+                            </div>
+                        </button>
+                    )
+                })}
+            </div>
+
+            {!data.app_default_theme && (
+                <p className="text-xs text-gray-400 font-medium text-center">
+                    No theme selected — org will default to <strong>Midnight Pro</strong>. You can always change this later from <em>Settings → Appearance</em>.
+                </p>
+            )}
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 10: Workspace Setup (optional)
 // ═══════════════════════════════════════════════════════════════
 
 function StepWorkspaceSetup({ config, data, setData }: StepProps) {

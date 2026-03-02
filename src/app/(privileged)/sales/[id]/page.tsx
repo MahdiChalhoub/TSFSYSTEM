@@ -4,14 +4,14 @@ import Link from "next/link";
 import {
     ArrowLeft, Calendar, User, Tag, MapPin,
     FileText, CheckCircle2, ShoppingCart, Receipt,
-    AlertCircle, Clock, Database, Printer, RotateCcw
+    AlertCircle, Clock, Database, Printer, RotateCcw,
+    History
 } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
 async function getOrderDetails(id: string) {
     try {
-        // Use namespaced path for consistent tenant isolation routing
         return await erpFetch(`pos/orders/${id}/`);
     } catch (e) {
         console.error("Order Fetch Error:", e);
@@ -20,6 +20,7 @@ async function getOrderDetails(id: string) {
 }
 
 import { OrderActions } from "./OrderActions";
+import { SalesAuditTimeline } from "./SalesAuditTimeline";
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
     const { id } = await params;
@@ -95,23 +96,34 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                 </div>
             </div>
 
-            {/* Status & Summary Cards */}
-            <div className="grid md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</div>
-                    <div className="text-xl font-black text-gray-900">{order.status || 'DRAFT'}</div>
+            {/* 4-Axis Status Cards */}
+            <div className="grid md:grid-cols-4 gap-4">
+                {[
+                    { label: 'Order Status', value: order.order_status || order.status || 'DRAFT', color: 'text-gray-900' },
+                    { label: 'Delivery Status', value: order.delivery_status || '—', color: 'text-blue-700' },
+                    { label: 'Payment Status', value: order.payment_status || '—', color: 'text-violet-700' },
+                    { label: 'Invoice Status', value: order.invoice_status || '—', color: 'text-indigo-700' },
+                ].map(({ label, value, color }) => (
+                    <div key={label} className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
+                        <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</div>
+                        <div className={`text-base font-black ${color}`}>{value}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Summary amount card */}
+            <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</div>
+                    <div className="text-base font-black text-gray-900">{order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}</div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</div>
-                    <div className="text-xl font-black text-gray-900">{order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}</div>
+                <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</div>
+                    <div className="text-base font-black text-gray-900 truncate">{order.contact_name || 'Walking Customer'}</div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</div>
-                    <div className="text-xl font-black text-gray-900 truncate">{order.contact_name || 'Walking Customer'}</div>
-                </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-emerald-100 bg-emerald-50/30 shadow-sm">
-                    <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
-                    <div className="text-xl font-black text-emerald-700">{fmt(totalAmount)}</div>
+                <div className="bg-emerald-50/30 p-5 rounded-[2rem] border border-emerald-100 shadow-sm">
+                    <div className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
+                    <div className="text-base font-black text-emerald-700">{fmt(totalAmount)}</div>
                 </div>
             </div>
 
@@ -172,7 +184,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                     <div className="bg-gray-900 text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
                         <div className="flex gap-8">
                             <div>
-                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Subtotal</div>
+                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Subtotal HT</div>
                                 <div className="text-xl font-bold">{fmt(totalAmount - taxAmount)}</div>
                             </div>
                             <div>
@@ -181,13 +193,13 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Grand Total Collected</div>
+                            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Grand Total TTC</div>
                             <div className="text-5xl font-black text-emerald-400 tracking-tighter">{fmt(totalAmount)}</div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Info Panels */}
+                {/* Right: Info + Audit Timeline */}
                 <div className="space-y-6">
                     <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
                         <div className="flex items-start gap-4">
@@ -219,7 +231,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                         </div>
                     </div>
 
-                    {/* Warning for Returns */}
+                    {/* Return warning */}
                     {isReturnable && (
                         <div className="bg-rose-50 p-6 rounded-[2rem] border border-rose-100">
                             <div className="flex items-center gap-3 text-rose-600 mb-2">
@@ -231,8 +243,18 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                             </p>
                         </div>
                     )}
+
+                    {/* Gap 8 — Audit Trail Timeline */}
+                    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <History size={16} className="text-gray-400" />
+                            <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest">Audit Trail</h3>
+                        </div>
+                        <SalesAuditTimeline orderId={order.id} />
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+

@@ -78,13 +78,14 @@ export default function SalesAnalyticsPage() {
             </header>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-4 gap-4">
+                {/* Row 1: Revenue KPIs */}
                 <Card className="border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50 to-white">
                     <CardContent className="py-4">
                         <div className="flex items-center gap-3">
                             <DollarSign size={22} className="text-violet-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Revenue</p>
+                                <p className="text-[10px] text-gray-500 uppercase">Revenue TTC</p>
                                 <p className="text-lg font-bold text-violet-700">{fmt(overall.revenue)}</p>
                             </div>
                         </div>
@@ -117,23 +118,70 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={22} className="text-rose-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Tax</p>
+                                <p className="text-[10px] text-gray-500 uppercase">Tax Collected</p>
                                 <p className="text-lg font-bold text-rose-700">{fmt(overall.tax)}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={22} className="text-orange-500" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
-                                <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
+
+                {/* Row 2: Margin KPIs (Gap 9) */}
+                {(overall as any).cogs !== undefined && (
+                    <>
+                        <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
+                            <CardContent className="py-4">
+                                <div className="flex items-center gap-3">
+                                    <Package size={22} className="text-amber-500" />
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase">COGS</p>
+                                        <p className="text-lg font-bold text-amber-700">{fmt((overall as any).cogs)}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-l-4 border-l-green-600 bg-gradient-to-r from-green-50 to-white col-span-2">
+                            <CardContent className="py-4">
+                                <div className="flex items-center gap-4">
+                                    <TrendingUp size={22} className="text-green-600" />
+                                    <div className="flex-1">
+                                        <p className="text-[10px] text-gray-500 uppercase">Gross Margin</p>
+                                        <p className="text-lg font-bold text-green-700">{fmt((overall as any).gross_margin)}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] text-gray-500 uppercase">Margin %</p>
+                                        <p className={`text-xl font-black ${(overall as any).gross_margin_pct >= 20 ? 'text-green-600' : 'text-orange-500'}`}>
+                                            {((overall as any).gross_margin_pct ?? 0).toFixed(1)}%
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
+                            <CardContent className="py-4">
+                                <div className="flex items-center gap-3">
+                                    <DollarSign size={22} className="text-orange-500" />
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
+                                        <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
+                {(overall as any).cogs === undefined && (
+                    <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white">
+                        <CardContent className="py-4">
+                            <div className="flex items-center gap-3">
+                                <DollarSign size={22} className="text-orange-500" />
+                                <div>
+                                    <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
+                                    <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             {/* Daily Trend (simplified bar chart) */}
