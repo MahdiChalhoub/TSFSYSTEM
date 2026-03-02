@@ -300,9 +300,14 @@ export const getUser = cache(async function getUser() {
  * Notifications
  */
 export async function getNotifications() {
-    const { erpFetch } = await import("@/lib/erp-api")
-    const result = await erpFetch('notifications/')
-    return Array.isArray(result) ? result : (result?.results || [])
+    try {
+        const { erpFetch } = await import("@/lib/erp-api")
+        const result = await erpFetch('notifications/')
+        return Array.isArray(result) ? result : (result?.results || [])
+    } catch (e) {
+        console.warn('Silent skip: getNotifications failed', e)
+        return []
+    }
 }
 
 export async function markNotificationAsRead(id: number) {
