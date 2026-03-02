@@ -88,19 +88,19 @@ export default function PaymentGatewayPage() {
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/40">
- <CreditCard size={22} className="text-white" />
+ <CreditCard size={22} className="text-app-text" />
  </div>
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <CreditCard size={28} className="text-white" />
+ <CreditCard size={28} className="text-app-text" />
  </div>
  Payment <span className="text-violet-600">Gateway</span>
  </h1>
  <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Online Payments</p>
  </div>
  </div>
- <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors">
+ <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-app-text text-sm font-semibold transition-colors">
  <Plus size={14} />
  Add Gateway
  </button>
@@ -111,7 +111,7 @@ export default function PaymentGatewayPage() {
  {GATEWAYS.map(g => (
  <div key={g.type} className="bg-[#0F1729] rounded-2xl border border-gray-800 p-4">
  <div className="text-2xl mb-2">{g.icon}</div>
- <div className="font-semibold text-white text-sm">{g.label}</div>
+ <div className="font-semibold text-app-text text-sm">{g.label}</div>
  <div className="text-xs text-app-text-muted mt-1">{g.desc}</div>
  <div className={`mt-2 inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${configs.some(c => c.gateway_type === g.type) ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-800' : 'bg-gray-800 text-app-text-muted'}`}>
  {configs.some(c => c.gateway_type === g.type) ? '✓ Configured' : 'Not configured'}
@@ -123,7 +123,7 @@ export default function PaymentGatewayPage() {
  {/* New gateway form */}
  {showNew && (
  <div className="bg-[#0F1729] rounded-2xl border border-emerald-800/50 p-6 flex flex-col gap-4">
- <h3 className="font-semibold text-white">Add Payment Gateway</h3>
+ <h3 className="font-semibold text-app-text">Add Payment Gateway</h3>
  <div className="grid grid-cols-3 gap-4">
  <div>
  <label className="text-xs text-app-text-faint mb-1 block">Gateway Type</label>
@@ -143,7 +143,7 @@ export default function PaymentGatewayPage() {
  </div>
  </div>
  <div className="flex gap-3">
- <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold">Create Gateway</button>
+ <button onClick={handleCreate} className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-app-text text-sm font-semibold">Create Gateway</button>
  <button onClick={() => setShowNew(false)} className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">Cancel</button>
  </div>
  </div>
@@ -163,7 +163,7 @@ export default function PaymentGatewayPage() {
  </div>
  <div className="flex-1">
  <div className="flex items-center gap-2">
- <span className="font-semibold text-white">{cfg.name}</span>
+ <span className="font-semibold text-app-text">{cfg.name}</span>
  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-900/40 text-blue-400 border border-blue-800">{cfg.gateway_type}</span>
  {cfg.is_test_mode && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900/40 text-amber-400 border border-amber-800">TEST MODE</span>}
  </div>
@@ -223,7 +223,7 @@ export default function PaymentGatewayPage() {
  </div>
  </div>
  <div className="flex gap-2">
- <button onClick={handleSetKeys} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold">Save Keys</button>
+ <button onClick={handleSetKeys} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-app-text text-sm font-semibold">Save Keys</button>
  <button onClick={() => setKeyForm({ id: null, api_key: '', webhook_secret: '' })} className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-sm">Cancel</button>
  </div>
  </div>

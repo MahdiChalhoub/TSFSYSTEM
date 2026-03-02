@@ -209,12 +209,12 @@ export default function PlanDetailPage() {
  Make {form.is_public ? 'Private' : 'Public'}
  </Button>
  {editing ? (
- <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2">
+ <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text gap-2">
  {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
  Save Changes
  </Button>
  ) : (
- <Button onClick={() => setEditing(true)} className="bg-gray-800 hover:bg-gray-700 text-white gap-2">
+ <Button onClick={() => setEditing(true)} className="bg-gray-800 hover:bg-gray-700 text-app-text gap-2">
  <Pencil size={16} /> Edit Plan
  </Button>
  )}

@@ -121,7 +121,7 @@ export default function SupplierOrderDetail() {
  return (
  <div className="min-h-screen bg-[#020617] p-4 lg:p-12 text-center flex flex-col items-center justify-center">
  <FileText size={48} className="text-app-text-muted mb-4" />
- <h1 className="text-2xl font-black text-white mb-2">Order Not Found</h1>
+ <h1 className="text-2xl font-black text-app-text mb-2">Order Not Found</h1>
  <Link href={`/supplier-portal/${slug}/orders`} className="text-emerald-400 hover:underline">Return to Orders</Link>
  </div>
  )
@@ -137,15 +137,15 @@ export default function SupplierOrderDetail() {
  {/* Header */}
  <div className="space-y-4">
  <Link href={`/supplier-portal/${slug}/orders`}
- className="inline-flex items-center gap-2 text-app-text-muted hover:text-white text-sm font-medium transition-colors">
+ className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text text-sm font-medium transition-colors">
  <ArrowLeft size={16} /> Back to Orders
  </Link>
  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
  <div>
- <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">{order.po_number}</h1>
+ <h1 className="text-3xl sm:text-4xl font-black text-app-text tracking-tight">{order.po_number}</h1>
  <p className="text-app-text-faint mt-1">Issued on {new Date(order.created_at).toLocaleDateString()}</p>
  </div>
- <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${st.bg} border border-white/5`}>
+ <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${st.bg} border border-app-text/5`}>
  <div className={`w-2 h-2 rounded-full ${st.color.replace('text-', 'bg-')}`} />
  <span className={`text-sm font-bold tracking-widest uppercase ${st.color}`}>{st.label}</span>
  </div>
@@ -154,8 +154,8 @@ export default function SupplierOrderDetail() {
 
  {/* Actions Panel */}
  {(order.status === 'ORDERED' || order.status === 'CONFIRMED') && (
- <div className="bg-slate-900/80 border border-white/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
- <h2 className="text-xl font-black text-white mb-4">Action Required</h2>
+ <div className="bg-slate-900/80 border border-app-text/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
+ <h2 className="text-xl font-black text-app-text mb-4">Action Required</h2>
 
  {order.status === 'ORDERED' && (
  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -171,7 +171,7 @@ export default function SupplierOrderDetail() {
  }
  }}
  disabled={actionLoading}
- className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl font-bold flex items-center gap-2 transition-all">
+ className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-app-text rounded-xl font-bold flex items-center gap-2 transition-all">
  <CheckCircle2 size={18} />
  {actionLoading ? 'Processing...' : 'Acknowledge Order'}
  </button>
@@ -192,7 +192,7 @@ export default function SupplierOrderDetail() {
  placeholder="e.g. DHL-12345678"
  value={trackingNo}
  onChange={e => setTrackingNo(e.target.value)}
- className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+ className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-emerald-500/50"
  />
  </div>
  <div className="space-y-1">
@@ -202,14 +202,14 @@ export default function SupplierOrderDetail() {
  placeholder="https://carrier.com/track/..."
  value={trackingUrl}
  onChange={e => setTrackingUrl(e.target.value)}
- className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+ className="w-full bg-app-text/5 border border-app-text/10 rounded-xl px-4 py-3 text-app-text focus:outline-none focus:border-emerald-500/50"
  />
  </div>
  </div>
  <button
  onClick={() => handleAction('dispatch_order', { tracking_number: trackingNo, tracking_url: trackingUrl })}
  disabled={actionLoading || !trackingNo}
- className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:shadow-2xl hover:shadow-emerald-900/40">
+ className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-app-text rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:shadow-2xl hover:shadow-emerald-900/40">
  <Truck size={22} />
  {actionLoading ? 'Processing...' : 'Confirm Dispatch'}
  </button>
@@ -219,9 +219,9 @@ export default function SupplierOrderDetail() {
  )}
 
  {/* Line Items */}
- <div className="bg-slate-900/60 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-xl">
- <div className="p-6 border-b border-white/5 flex items-center justify-between">
- <h3 className="text-lg font-bold text-white flex items-center gap-2">
+ <div className="bg-slate-900/60 border border-app-text/5 rounded-3xl overflow-hidden backdrop-blur-xl">
+ <div className="p-6 border-b border-app-text/5 flex items-center justify-between">
+ <h3 className="text-lg font-bold text-app-text flex items-center gap-2">
  <Package size={18} className="text-emerald-400" />
  Requested Items
  </h3>
@@ -234,7 +234,7 @@ export default function SupplierOrderDetail() {
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
- <tr className="border-b border-white/5 text-app-text-muted text-xs font-bold uppercase tracking-wider">
+ <tr className="border-b border-app-text/5 text-app-text-muted text-xs font-bold uppercase tracking-wider">
  <th className="p-4 pl-6">Product</th>
  <th className="p-4">Qty</th>
  <th className="p-4">Unit Price</th>
@@ -243,18 +243,18 @@ export default function SupplierOrderDetail() {
  </thead>
  <tbody className="divide-y divide-white/5">
  {order.lines?.map(line => (
- <tr key={line.id} className="hover:bg-white/5 transition-colors">
+ <tr key={line.id} className="hover:bg-app-text/5 transition-colors">
  <td className="p-4 pl-6">
- <p className="text-white font-medium">{line.product_name}</p>
+ <p className="text-app-text font-medium">{line.product_name}</p>
  {line.description && <p className="text-app-text-muted text-xs mt-1">{line.description}</p>}
  </td>
  <td className="p-4 text-slate-300 font-mono text-sm">{parseFloat(line.quantity)}</td>
  <td className="p-4 text-slate-300 font-mono text-sm">${parseFloat(line.unit_price).toFixed(2)}</td>
- <td className="p-4 pr-6 text-right text-white font-bold font-mono text-sm">${parseFloat(line.line_total).toFixed(2)}</td>
+ <td className="p-4 pr-6 text-right text-app-text font-bold font-mono text-sm">${parseFloat(line.line_total).toFixed(2)}</td>
  </tr>
  ))}
  </tbody>
- <tfoot className="border-t border-white/10 bg-white/5">
+ <tfoot className="border-t border-app-text/10 bg-app-text/5">
  <tr>
  <td colSpan={3} className="p-4 pl-6 text-right text-app-text-faint text-sm font-medium">Grand Total</td>
  <td className="p-4 pr-6 text-right text-emerald-400 font-black text-xl font-mono">
@@ -268,16 +268,16 @@ export default function SupplierOrderDetail() {
 
  {/* Deployment Integrity Notes */}
  {(order.tracking_number || order.notes) && (
- <div className="bg-slate-900/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
+ <div className="bg-slate-900/60 border border-app-text/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
  {order.tracking_number && (
  <div>
- <h3 className="text-white font-bold mb-2 text-sm flex items-center gap-2">
+ <h3 className="text-app-text font-bold mb-2 text-sm flex items-center gap-2">
  <Truck size={16} className="text-emerald-500" /> Dispatch Info
  </h3>
- <div className="bg-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5">
+ <div className="bg-app-text/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-app-text/5">
  <div>
  <p className="text-xs font-bold text-app-text-muted uppercase tracking-widest">Tracking Number</p>
- <p className="text-white font-mono text-lg">{order.tracking_number}</p>
+ <p className="text-app-text font-mono text-lg">{order.tracking_number}</p>
  </div>
  {order.tracking_url && (
  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
@@ -290,7 +290,7 @@ export default function SupplierOrderDetail() {
  )}
  {order.notes && (
  <div>
- <h3 className="text-white font-bold mb-2 text-sm flex items-center gap-2">
+ <h3 className="text-app-text font-bold mb-2 text-sm flex items-center gap-2">
  <FileText size={16} className="text-app-text-muted" /> Internal Notes
  </h3>
  <p className="text-app-text-faint text-sm whitespace-pre-wrap">{order.notes}</p>

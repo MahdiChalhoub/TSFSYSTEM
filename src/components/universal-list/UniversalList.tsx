@@ -156,7 +156,7 @@ export default function UniversalList<T = any>({
  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
  <div className="flex items-center gap-3">
  {Icon && (
- <div className={`p-2 ${accentBg} rounded-lg text-white`}>
+ <div className={`p-2 ${accentBg} rounded-lg text-app-text`}>
  <Icon size={18} />
  </div>
  )}
@@ -175,7 +175,7 @@ export default function UniversalList<T = any>({
  {addButton && (
  <button
  onClick={addButton.onClick}
- className={`flex items-center gap-2 px-4 py-2 text-xs font-bold text-white ${accentBg} rounded-lg hover:opacity-90 transition-all shadow-sm`}
+ className={`flex items-center gap-2 px-4 py-2 text-xs font-bold text-app-text ${accentBg} rounded-lg hover:opacity-90 transition-all shadow-sm`}
  >
  + {addButton.label}
  </button>

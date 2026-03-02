@@ -106,7 +106,7 @@ export function SessionPopulator({ sessionId, sessionRef, onComplete }: SessionP
  )}
 
  {done && !populating && (
- <div className="p-3 bg-white/60 rounded-xl border border-indigo-50 flex items-center justify-center gap-3 shadow-inner">
+ <div className="p-3 bg-app-text/60 rounded-xl border border-indigo-50 flex items-center justify-center gap-3 shadow-inner">
  <div className="text-center">
  <p className="text-[10px] uppercase font-black text-app-text-faint text-center">Batch Result</p>
  <p className="text-lg font-black text-indigo-600 leading-none mt-1">+{progress.current} Lines</p>

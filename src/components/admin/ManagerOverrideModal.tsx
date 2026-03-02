@@ -94,7 +94,7 @@ export default function ManagerOverrideModal({
  type="submit"
  disabled={loading || pin.length < 4}
  className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-lg transition-all ${pin.length >= 4
- ? 'bg-gray-900 text-white hover:bg-black'
+ ? 'bg-gray-900 text-app-text hover:bg-black'
  : 'bg-app-surface-2 text-app-text-faint cursor-not-allowed'
  }`}
  >

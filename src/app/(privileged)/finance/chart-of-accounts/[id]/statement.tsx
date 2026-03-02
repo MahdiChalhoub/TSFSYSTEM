@@ -58,7 +58,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  defaultValue={currentRange.end}
  className="border border-app-border rounded p-1"
  />
- <button type="submit" className="bg-black text-white px-3 py-1 rounded hover:bg-stone-800">
+ <button type="submit" className="bg-black text-app-text px-3 py-1 rounded hover:bg-stone-800">
  Filter
  </button>
  </form>

@@ -173,7 +173,7 @@ export default function SaaSModulesPage() {
  <Button
  onClick={() => fileInputRef.current?.click()}
  disabled={syncing}
- className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-200 text-xs md:text-sm"
+ className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-app-text px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-200 text-xs md:text-sm"
  >
  <UploadCloud size={18} />
  {syncing ? "..." : "Upload"}
@@ -240,7 +240,7 @@ export default function SaaSModulesPage() {
  <PopoverContent className="w-80 bg-app-surface p-6 rounded-3xl shadow-2xl border-app-border animate-in fade-in zoom-in-95 duration-200">
  <div className="space-y-4">
  <div className="flex items-center gap-2">
- <div className={`p-2 rounded-lg ${m.is_core ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'}`}>
+ <div className={`p-2 rounded-lg ${m.is_core ? 'bg-indigo-600 text-app-text' : 'bg-emerald-600 text-app-text'}`}>
  <Info size={14} />
  </div>
  <span className="text-[10px] font-black text-app-text uppercase tracking-widest">Module Responsibility</span>
@@ -315,7 +315,7 @@ export default function SaaSModulesPage() {
  <Button
  onClick={() => handleGlobalInstall(m.code)}
  disabled={processing === m.code}
- className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
+ className="bg-emerald-600 hover:bg-emerald-500 text-app-text rounded-2xl py-6 font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
  >
  <Zap size={16} />
  Push
@@ -341,7 +341,7 @@ export default function SaaSModulesPage() {
  History & Rollback
  </Button>
  </DialogTrigger>
- <DialogContent className="bg-[#0F172A] border-gray-800 text-white sm:max-w-md">
+ <DialogContent className="bg-[#0F172A] border-gray-800 text-app-text sm:max-w-md">
  <DialogHeader>
  <DialogTitle>Version History: {m.name}</DialogTitle>
  <DialogDescription>
@@ -435,7 +435,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
  {backups.map((b, i) => (
  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-900 border border-gray-800">
  <div>
- <div className="font-bold text-white text-sm">v{b.version as string}</div>
+ <div className="font-bold text-app-text text-sm">v{b.version as string}</div>
  <div className="text-xs text-app-text-muted mt-0.5">{b.date as string}</div>
  </div>
  {b.version !== currentVersion && (
@@ -463,7 +463,7 @@ function Tooltip({ children, text }: { children: React.ReactNode, text: string }
  return (
  <div className="relative group flex items-center">
  {children}
- <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl font-bold border border-gray-800">
+ <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-app-text text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl font-bold border border-gray-800">
  {text}
  <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-gray-900" />
  </div>

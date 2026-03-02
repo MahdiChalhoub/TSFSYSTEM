@@ -114,25 +114,25 @@ export default function POSQuickHold({
  {isOpen && (
  <div className="fixed inset-0 z-[150]" onClick={() => setIsOpen(false)}>
  <div
- className="absolute top-9 right-4 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
+ className="absolute top-9 right-4 w-72 bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
  onClick={e => e.stopPropagation()}
  >
- <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+ <div className="flex items-center gap-2 px-4 py-3 border-b border-app-text/5">
  <BookOpen size={14} className="text-indigo-400 shrink-0" />
- <span className="text-white font-black text-sm flex-1">Held Carts</span>
+ <span className="text-app-text font-black text-sm flex-1">Held Carts</span>
  <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-black text-xs transition-all">
  <Plus size={10} /> Hold Current
  </button>
- <button onClick={() => setIsOpen(false)} className="w-6 h-6 rounded-lg text-white/25 hover:text-white flex items-center justify-center ml-1">
+ <button onClick={() => setIsOpen(false)} className="w-6 h-6 rounded-lg text-app-text/25 hover:text-app-text flex items-center justify-center ml-1">
  <X size={12} />
  </button>
  </div>
 
  {holds.length === 0 ? (
- <div className="py-10 text-center text-white/20 text-xs flex flex-col items-center gap-2">
+ <div className="py-10 text-center text-app-text/20 text-xs flex flex-col items-center gap-2">
  <ShoppingBag size={24} strokeWidth={1} />
  <span>No held carts yet</span>
- <span className="text-white/15">Press Hold Current or use Ctrl+H</span>
+ <span className="text-app-text/15">Press Hold Current or use Ctrl+H</span>
  </div>
  ) : (
  <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
@@ -140,17 +140,17 @@ export default function POSQuickHold({
  <button
  key={hold.id}
  onClick={() => handleRestore(hold)}
- className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-all group"
+ className="w-full flex items-center gap-3 px-4 py-3 hover:bg-app-text/5 text-left transition-all group"
  >
  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
  <ShoppingBag size={14} className="text-indigo-400" />
  </div>
  <div className="flex-1 min-w-0">
- <p className="text-white text-xs font-bold truncate">{hold.label}</p>
+ <p className="text-app-text text-xs font-bold truncate">{hold.label}</p>
  <div className="flex items-center gap-2 mt-0.5">
- <span className="text-white/40 text-[10px] flex items-center gap-1"><Clock size={8} />{fmtTime(hold.savedAt)}</span>
- <span className="text-white/40 text-[10px]">·</span>
- <span className="text-white/40 text-[10px] truncate">{hold.clientName}</span>
+ <span className="text-app-text/40 text-[10px] flex items-center gap-1"><Clock size={8} />{fmtTime(hold.savedAt)}</span>
+ <span className="text-app-text/40 text-[10px]">·</span>
+ <span className="text-app-text/40 text-[10px] truncate">{hold.clientName}</span>
  </div>
  </div>
  <div className="flex flex-col items-end gap-1">
@@ -166,7 +166,7 @@ export default function POSQuickHold({
  ))}
  </div>
  )}
- <div className="px-4 py-2 border-t border-white/5 text-white/20 text-[10px] text-center">
+ <div className="px-4 py-2 border-t border-app-text/5 text-app-text/20 text-[10px] text-center">
  Holds are stored locally · max 20 · cleared on logout
  </div>
  </div>
@@ -227,7 +227,7 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  <Bookmark size={9} />
  <span className="text-[7px] font-black uppercase hidden xl:inline">Hold</span>
  {holds.length > 0 && (
- <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">
+ <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-500 text-app-text text-[7px] font-black rounded-full flex items-center justify-center">
  {holds.length > 9 ? '9+' : holds.length}
  </span>
  )}
@@ -236,30 +236,30 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  {isOpen && (
  <div className="fixed inset-0 z-[150]" onClick={() => setIsOpen(false)}>
  <div
- className="absolute mt-1 w-72 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
+ className="absolute mt-1 w-72 bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
  style={{ top: 36, right: 0 }}
  onClick={e => e.stopPropagation()}
  >
- <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+ <div className="flex items-center gap-2 px-4 py-3 border-b border-app-text/5">
  <BookOpen size={14} className="text-indigo-400 shrink-0" />
- <span className="text-white font-black text-sm flex-1">Held Carts</span>
+ <span className="text-app-text font-black text-sm flex-1">Held Carts</span>
  <button onClick={handleHold} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-black text-xs transition-all">
  <Plus size={10} /> Save
  </button>
  </div>
  {holds.length === 0 ? (
- <div className="py-8 text-center text-white/20 text-xs flex flex-col items-center gap-1">
+ <div className="py-8 text-center text-app-text/20 text-xs flex flex-col items-center gap-1">
  <ShoppingBag size={20} strokeWidth={1} />
  No held carts · press Save to hold current
  </div>
  ) : (
  <div className="max-h-64 overflow-y-auto divide-y divide-white/5">
  {holds.map(hold => (
- <button key={hold.id} onClick={(e) => handleRestore(hold, e)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left group transition-all">
+ <button key={hold.id} onClick={(e) => handleRestore(hold, e)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-app-text/5 text-left group transition-all">
  <ShoppingBag size={14} className="text-indigo-400 shrink-0" />
  <div className="flex-1 min-w-0">
- <p className="text-white text-xs font-bold">{hold.label}</p>
- <p className="text-white/30 text-[10px]">{hold.clientName} · {fmtTime(hold.savedAt)}</p>
+ <p className="text-app-text text-xs font-bold">{hold.label}</p>
+ <p className="text-app-text/30 text-[10px]">{hold.clientName} · {fmtTime(hold.savedAt)}</p>
  </div>
  <div className="flex flex-col items-end gap-1">
  <span className="text-indigo-400 text-xs font-black">{fmt(hold.total, hold.currency)}</span>

@@ -207,7 +207,7 @@ export default function ProductAnalyticsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Activity size={28} className="text-white" />
+ <Activity size={28} className="text-app-text" />
  </div>
  Product <span className="text-violet-600">Analytics</span>
  </h1>
@@ -238,7 +238,7 @@ export default function ProductAnalyticsPage() {
  <div key={i} className={`bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm hover:shadow-md transition-shadow ring-1 ${kpi.ring}`}>
  <div className="flex items-center justify-between mb-3">
  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${kpi.gradient} flex items-center justify-center shadow-md`}>
- <kpi.icon size={18} className="text-white" />
+ <kpi.icon size={18} className="text-app-text" />
  </div>
  </div>
  <p className="text-2xl font-black text-app-text tracking-tight">{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</p>
@@ -316,13 +316,13 @@ export default function ProductAnalyticsPage() {
  <div className="flex gap-2">
  <button
  onClick={() => openRequest('purchase_request', Array.from(selectedIds))}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-app-text text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm"
  >
  <ShoppingCart size={16} /> Purchase Request
  </button>
  <button
  onClick={() => openRequest('transfer_request', Array.from(selectedIds))}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 transition-colors shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-app-text text-sm font-semibold hover:bg-cyan-700 transition-colors shadow-sm"
  >
  <Truck size={16} /> Transfer Request
  </button>
@@ -587,14 +587,14 @@ export default function ProductAnalyticsPage() {
  <button
  onClick={handleCreateRequest}
  disabled={requestLoading}
- className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-white transition-colors shadow-lg disabled:opacity-50 ${requestType === 'purchase_request'
+ className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-app-text transition-colors shadow-lg disabled:opacity-50 ${requestType === 'purchase_request'
  ? 'bg-violet-600 hover:bg-violet-700 shadow-violet-500/25'
  : 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/25'
  }`}
  >
  {requestLoading ? (
  <span className="flex items-center justify-center gap-2">
- <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+ <div className="w-4 h-4 rounded-full border-2 border-app-text/30 border-t-white animate-spin" />
  Creating...
  </span>
  ) : (

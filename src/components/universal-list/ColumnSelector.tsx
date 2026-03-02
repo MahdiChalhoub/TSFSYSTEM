@@ -84,7 +84,7 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  ? 'bg-blue-600 border-blue-600'
  : 'border-app-border'
  }`}>
- {isActive && <Check size={10} className="text-white" />}
+ {isActive && <Check size={10} className="text-app-text" />}
  </div>
  {col.label}
  </button>

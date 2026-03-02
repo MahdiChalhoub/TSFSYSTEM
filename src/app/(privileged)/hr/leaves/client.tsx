@@ -139,12 +139,12 @@ export default function LeaveManagementHub({
  headerExtra={
  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
  <DialogTrigger asChild>
- <Button className="h-10 px-6 bg-rose-600 text-white hover:bg-rose-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-100 transition-all">
+ <Button className="h-10 px-6 bg-rose-600 text-app-text hover:bg-rose-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-100 transition-all">
  <Plus size={18} className="mr-2" /> New Request
  </Button>
  </DialogTrigger>
  <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-xl">
- <div className="bg-rose-600 p-8 text-white relative">
+ <div className="bg-rose-600 p-8 text-app-text relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <CalendarOff size={80} />
  </div>
@@ -183,7 +183,7 @@ export default function LeaveManagementHub({
  </div>
  <div className="flex gap-3 pt-2">
  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-app-border">Cancel</Button>
- <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-rose-600 text-white hover:bg-rose-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100">
+ <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-rose-600 text-app-text hover:bg-rose-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100">
  {isPending ? 'Processing...' : 'Submit Request'}
  </Button>
  </div>
@@ -206,10 +206,10 @@ export default function LeaveManagementHub({
  extra: (r) => (
  r.status === 'PENDING' ? (
  <div className="flex gap-2">
- <Button onClick={() => handleApprove(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleApprove(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
  <Check size={12} className="mr-1.5" /> Approve
  </Button>
- <Button onClick={() => handleReject(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleReject(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
  <X size={12} className="mr-1.5" /> Reject
  </Button>
  </div>

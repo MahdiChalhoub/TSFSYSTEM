@@ -153,7 +153,7 @@ export default function PurchaseReturnsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-900 flex items-center justify-center shadow-lg shadow-indigo-200">
- <Package size={28} className="text-white" />
+ <Package size={28} className="text-app-text" />
  </div>
  Supply Return <span className="text-indigo-600">Ledger</span>
  </h1>
@@ -236,7 +236,7 @@ export default function PurchaseReturnsPage() {
  <Button
  onClick={() => confirmId && handleComplete(confirmId)}
  disabled={isPending}
- className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-10 px-6 gap-2"
+ className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] uppercase h-10 px-6 gap-2"
  >
  {isPending ? "Finalizing Ledger..." : <><Send size={16} /> Authorize Reversal</>}
  </Button>

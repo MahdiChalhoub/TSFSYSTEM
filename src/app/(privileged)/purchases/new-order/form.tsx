@@ -92,7 +92,7 @@ export default function FormalOrderForm({
  <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
  <div className="flex p-1 bg-app-bg rounded-2xl h-11">
  <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-text-faint'}`}>OFFICIAL</button>
- <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-app-text-faint'}`}>INTERNAL</button>
+ <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-app-text shadow-sm' : 'text-app-text-faint'}`}>INTERNAL</button>
  </div>
  <input type="hidden" name="scope" value={scope} />
  </div>
@@ -231,7 +231,7 @@ export default function FormalOrderForm({
  </div>
 
  <div className="w-full md:w-96 space-y-4">
- <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-2xl">
+ <div className="bg-gray-900 text-app-text p-8 rounded-[2rem] shadow-2xl">
  <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-6 border-b border-gray-800 pb-4">Quotation Summary</div>
  <div className="space-y-4 mb-8">
  <div className="flex justify-between items-center text-sm">
@@ -247,7 +247,7 @@ export default function FormalOrderForm({
  <button
  type="submit"
  disabled={isPending || lines.length === 0}
- className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group"
+ className="w-full bg-indigo-500 hover:bg-indigo-400 text-app-text font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group"
  >
  {isPending ? 'CREATING RFQ...' : 'SEND RFQ TO SUPPLIER'}
  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

@@ -81,7 +81,7 @@ export default function SubscriptionPage() {
  <CardDescription className="text-emerald-700">Your active subscription tier</CardDescription>
  </div>
  {plan ? (
- <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-lg px-4 py-1">
+ <Badge className="bg-emerald-600 hover:bg-emerald-700 text-app-text text-lg px-4 py-1">
  {plan.name || "Custom Plan"}
  </Badge>
  ) : (
@@ -118,7 +118,7 @@ export default function SubscriptionPage() {
  <div className="flex gap-4">
  <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
  <DialogTrigger asChild>
- <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-12 rounded-xl shadow-lg shadow-emerald-900/20">
+ <Button className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-app-text font-bold h-12 rounded-xl shadow-lg shadow-emerald-900/20">
  Change Plan
  </Button>
  </DialogTrigger>

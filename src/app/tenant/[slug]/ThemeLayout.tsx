@@ -42,12 +42,12 @@ function ThemeShell({ children }: { children: ReactNode }) {
  {(config as any)?.logo ? (
  <img src={(config as any).logo} alt="loading" className="w-10 h-10 object-contain brightness-0 invert opacity-40 blur-[1px]" />
  ) : (
- <div className="w-8 h-8 rounded-lg bg-white/20 blur-[2px]" />
+ <div className="w-8 h-8 rounded-lg bg-app-text/20 blur-[2px]" />
  )}
  </div>
 
  {/* Loading Progress Bar - Branded */}
- <div className="w-48 h-1 bg-gray-200/10 rounded-full overflow-hidden relative border border-white/5">
+ <div className="w-48 h-1 bg-gray-200/10 rounded-full overflow-hidden relative border border-app-text/5">
  <div
  className="absolute inset-0 transition-all duration-[3s] ease-out animate-shimmer"
  style={{

@@ -57,7 +57,7 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  <div className="flex items-center gap-5">
  <h1 className="text-xl font-black tracking-tighter text-app-text flex items-center gap-2.5">
  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-100">
- <ShoppingCart size={18} className="text-white" />
+ <ShoppingCart size={18} className="text-app-text" />
  </div>
  Sales <span className="text-violet-600">Terminal</span>
  </h1>
@@ -71,11 +71,11 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  className={clsx(
  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
  activeSessionId === s.id
- ? "bg-violet-600 text-white shadow-lg shadow-violet-100"
+ ? "bg-violet-600 text-app-text shadow-lg shadow-violet-100"
  : "bg-app-bg text-app-text-faint hover:bg-app-surface-2"
  )}
  >
- <ShoppingCart size={10} className={activeSessionId === s.id ? "text-white" : "text-gray-300"} />
+ <ShoppingCart size={10} className={activeSessionId === s.id ? "text-app-text" : "text-gray-300"} />
  {s.name}
  </button>
  <button onClick={() => onRemoveSession(s.id)} className="ml-[-6px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
@@ -90,7 +90,7 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  </div>
 
  <div className="flex items-center gap-2">
- <button onClick={onToggleFullscreen} className="h-8 px-3 bg-violet-50 border border-violet-100 text-violet-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all flex items-center gap-1.5">
+ <button onClick={onToggleFullscreen} className="h-8 px-3 bg-violet-50 border border-violet-100 text-violet-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-app-text transition-all flex items-center gap-1.5">
  {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
  {isFullscreen ? 'Exit' : 'Full'}
  </button>
@@ -147,7 +147,7 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  onClick={() => onSetActiveCategoryId(null)}
  className={clsx(
  "px-3 py-1.5 whitespace-nowrap rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
- activeCategoryId === null ? 'bg-violet-600 text-white border-violet-600' : 'bg-app-surface text-app-text-muted border-app-border hover:border-violet-200'
+ activeCategoryId === null ? 'bg-violet-600 text-app-text border-violet-600' : 'bg-app-surface text-app-text-muted border-app-border hover:border-violet-200'
  )}
  >
  All
@@ -158,7 +158,7 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  onClick={() => onSetActiveCategoryId(cat.id)}
  className={clsx(
  "px-3 py-1.5 whitespace-nowrap rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border",
- activeCategoryId === cat.id ? 'bg-violet-600 text-white border-violet-600' : 'bg-app-surface text-app-text-muted border-app-border hover:border-violet-200'
+ activeCategoryId === cat.id ? 'bg-violet-600 text-app-text border-violet-600' : 'bg-app-surface text-app-text-muted border-app-border hover:border-violet-200'
  )}
  >
  {cat.name}
@@ -351,7 +351,7 @@ export function POSLayoutOriginalModern(props: POSLayoutProps) {
  className={clsx(
  "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
  cart.length > 0 && !isProcessing
- ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
+ ? "bg-violet-600 text-app-text shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
  : "bg-app-surface-2 text-gray-300 cursor-not-allowed"
  )}
  >

@@ -173,7 +173,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  />
 
  {/* ═══════ SEARCH + CATEGORIES BAR ═══════ */}
- <div className="px-6 py-4 border-b border-app-border bg-white/80 backdrop-blur-xl space-y-4 shrink-0 shadow-2xl">
+ <div className="px-6 py-4 border-b border-app-border bg-app-text/80 backdrop-blur-xl space-y-4 shrink-0 shadow-2xl">
  <div className="flex gap-4 items-center">
  <div className="relative flex-1 group">
  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint group-focus-within:text-emerald-400 transition-colors" size={18} />
@@ -195,7 +195,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  className={clsx(
  "px-6 py-3.5 rounded-[1.2rem] border-2 font-black text-[11px] uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 active:scale-95 italic",
  showNumpad
- ? "bg-amber-gradient border-amber-400 text-white shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+ ? "bg-amber-gradient border-amber-400 text-app-text shadow-[0_0_30px_rgba(245,158,11,0.2)]"
  : "bg-app-surface border-app-border text-app-text-faint hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-app-surface-2"
  )}
  >
@@ -214,7 +214,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  }}
  className={clsx(
  "px-6 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 italic",
- activeCategoryId === null ? 'bg-emerald-gradient border-emerald-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10' : 'bg-app-surface border-app-border text-app-text-faint hover:border-emerald-500/30 hover:text-emerald-400'
+ activeCategoryId === null ? 'bg-emerald-gradient border-emerald-400 text-app-text shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10' : 'bg-app-surface border-app-border text-app-text-faint hover:border-emerald-500/30 hover:text-emerald-400'
  )}
  >ALL CLUSTERS</button>
  {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
@@ -227,7 +227,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  className={clsx(
  "px-6 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 italic",
  (activeCategoryId === cat.id || currentParentId === cat.id)
- ? 'bg-emerald-gradient border-emerald-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10'
+ ? 'bg-emerald-gradient border-emerald-400 text-app-text shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10'
  : 'bg-app-surface border-app-border text-app-text-faint hover:border-emerald-500/30 hover:text-emerald-400'
  )}
  >{cat.name}</button>
@@ -242,12 +242,12 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  onSetCurrentParentId(grandParentId);
  if (grandParentId === null) onSetActiveCategoryId(null);
  }}
- className="h-10 px-5 bg-app-surface-2 border-2 border-emerald-500/50 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 shadow-lg hover:bg-emerald-gradient hover:text-white"
+ className="h-10 px-5 bg-app-surface-2 border-2 border-emerald-500/50 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shrink-0 flex items-center gap-3 shadow-lg hover:bg-emerald-gradient hover:text-app-text"
  >
  <ArrowLeft size={16} className="stroke-[3]" />
  BACK: {categories.find(c => c.id === currentParentId)?.name}
  </button>
- <div className="w-[2px] h-6 bg-white/5 mx-2 shrink-0" />
+ <div className="w-[2px] h-6 bg-app-text/5 mx-2 shrink-0" />
  {categories.filter(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
  <button
  key={cat.id}
@@ -259,7 +259,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  className={clsx(
  "px-6 py-2.5 whitespace-nowrap rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 shrink-0 italic",
  activeCategoryId === cat.id
- ? 'bg-emerald-gradient border-emerald-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10'
+ ? 'bg-emerald-gradient border-emerald-400 text-app-text shadow-[0_0_25px_rgba(16,185,129,0.3)] scale-105 z-10'
  : 'bg-app-surface border-app-border text-app-text-faint hover:border-emerald-500/30 hover:text-emerald-400'
  )}
  >{cat.name}</button>
@@ -287,7 +287,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  {/* ─── RIGHT: Order Panel ─── */}
  <aside className="w-[420px] bg-app-surface border-l border-app-border flex flex-col shrink-0 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-20">
  {/* Order Header */}
- <div className="px-6 py-5 border-b border-app-border flex items-center justify-between bg-white/90 backdrop-blur-2xl sticky top-0 z-[30]">
+ <div className="px-6 py-5 border-b border-app-border flex items-center justify-between bg-app-text/90 backdrop-blur-2xl sticky top-0 z-[30]">
  <div className="flex items-center gap-3">
  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
  <h2 className="text-[11px] font-black uppercase tracking-[0.3em] text-app-text italic">Order Details</h2>
@@ -367,7 +367,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  </div>
  </div>
  {/* Cart Items Area */}
- <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/20 backdrop-blur-sm">
+ <div className="flex-1 overflow-y-auto custom-scrollbar bg-app-text/20 backdrop-blur-sm">
  {cart.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-full text-app-text gap-6 animate-in fade-in zoom-in duration-700">
  <div className="w-32 h-32 rounded-full bg-app-surface flex items-center justify-center border-2 border-dashed border-slate-800 relative group">
@@ -391,12 +391,12 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  className={clsx(
  "p-4 rounded-[1.5rem] border transition-all duration-300 relative overflow-hidden group/item",
  highlightedItemId === item.productId
- ? "bg-emerald-gradient border-emerald-400 text-white shadow-[0_10px_30px_rgba(16,185,129,0.3)] scale-[1.02]"
+ ? "bg-emerald-gradient border-emerald-400 text-app-text shadow-[0_10px_30px_rgba(16,185,129,0.3)] scale-[1.02]"
  : isOverselling
  ? "bg-rose-500/10 border-rose-500/30 text-rose-200"
  : lastAddedItemId === item.productId
  ? "bg-app-surface border-emerald-500/30 text-app-text"
- : "bg-gray-50/80 border-app-border text-gray-700 hover:bg-white/60 hover:border-app-border"
+ : "bg-gray-50/80 border-app-border text-gray-700 hover:bg-app-text/60 hover:border-app-border"
  )}
  >
  <div className="flex items-center gap-4 relative z-10">
@@ -407,14 +407,14 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  onClick={(e) => { e.stopPropagation(); setOpenNoteId(openNoteId === item.productId ? null : item.productId); }}
  className={clsx(
  "shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all",
- item.note ? "bg-amber-500 text-white" : "bg-app-surface-2 text-app-text-faint hover:text-amber-400 group-hover/item:opacity-100 opacity-0"
+ item.note ? "bg-amber-500 text-app-text" : "bg-app-surface-2 text-app-text-faint hover:text-amber-400 group-hover/item:opacity-100 opacity-0"
  )}
  >
  <MessageSquare size={12} fill={item.note ? "currentColor" : "none"} />
  </button>
  </div>
  <div className="flex items-center gap-2 mt-1.5 font-mono text-[9px] font-black">
- {item.barcode && <span className="px-1.5 py-0.5 bg-white/50 rounded text-app-text-muted">ID://{item.barcode}</span>}
+ {item.barcode && <span className="px-1.5 py-0.5 bg-app-text/50 rounded text-app-text-muted">ID://{item.barcode}</span>}
  {isOverselling ? (
  <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-400 rounded animate-pulse">CRITICAL: SHORTAGE</span>
  ) : isLowStock ? (
@@ -425,7 +425,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  </div>
  </div>
 
- <div className="flex items-center gap-3 bg-white/80 p-1.5 rounded-2xl border border-app-border">
+ <div className="flex items-center gap-3 bg-app-text/80 p-1.5 rounded-2xl border border-app-border">
  <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, -1); }} className="w-8 h-8 rounded-xl bg-app-surface hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center text-app-text-muted transition-all active:scale-90 border border-app-border">
  <Minus size={14} className="stroke-[3]" />
  </button>
@@ -586,7 +586,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
 
  <div className="relative z-10 flex items-center justify-between px-10">
  <div className="flex items-center gap-5">
- <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-app-text border border-app-border group-hover:rotate-[15deg] transition-all duration-500 shadow-inner">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 backdrop-blur-xl flex items-center justify-center text-app-text border border-app-border group-hover:rotate-[15deg] transition-all duration-500 shadow-inner">
  {isProcessing ? <RefreshCw size={24} className="animate-spin" /> : <ShieldCheck size={28} className="stroke-[2.5]" />}
  </div>
  <div className="flex flex-col items-start">
@@ -637,7 +637,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  willChange: 'transform'
  }}
  className={clsx(
- "z-[1000] w-[320px] p-2 bg-white/95 backdrop-blur-2xl rounded-[2rem] border border-app-border shadow-[0_40px_100px_rgba(0,0,0,1)] ring-1 ring-gray-200 animate-in zoom-in-95 duration-200",
+ "z-[1000] w-[320px] p-2 bg-app-text/95 backdrop-blur-2xl rounded-[2rem] border border-app-border shadow-[0_40px_100px_rgba(0,0,0,1)] ring-1 ring-gray-200 animate-in zoom-in-95 duration-200",
  !isDragging && "transition-transform duration-200 ease-out"
  )}
  >
@@ -649,7 +649,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
  <div className="w-1.5 h-6 bg-amber-500 rounded-full group-hover/handle:scale-y-125 transition-transform" />
  <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em] italic">Quick Calculator</span>
  </div>
- <button onClick={() => setShowNumpad(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-app-surface text-app-text-muted hover:bg-rose-500 hover:text-white transition-all border border-app-border">
+ <button onClick={() => setShowNumpad(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-app-surface text-app-text-muted hover:bg-rose-500 hover:text-app-text transition-all border border-app-border">
  <X size={16} />
  </button>
  </div>

@@ -96,9 +96,9 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  onClick={handleSave}
  disabled={saving}
  className={`h-12 px-6 rounded-xl font-bold text-sm flex items-center gap-2 transition-all 
- ${saved ? 'bg-emerald-500 text-white' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+ ${saved ? 'bg-emerald-500 text-app-text' : 'bg-gray-900 text-app-text hover:bg-gray-800'}`}
  >
- {saving ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (saved ? <Sparkles size={16} /> : <Save size={16} />)}
+ {saving ? <div className="w-4 h-4 border-2 border-app-text/20 border-t-white rounded-full animate-spin" /> : (saved ? <Sparkles size={16} /> : <Save size={16} />)}
  {saved ? 'Changes Applied' : (saving ? 'Saving...' : 'Save Layout')}
  </button>
  </div>
@@ -135,7 +135,7 @@ export default function SectionBuilder({ configId, initialLayout }: SectionBuild
  </button>
  </div>
 
- <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-white shrink-0">
+ <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-app-text shrink-0">
  <Layout size={20} />
  </div>
 

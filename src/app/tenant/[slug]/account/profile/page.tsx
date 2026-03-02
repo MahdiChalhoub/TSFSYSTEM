@@ -14,7 +14,7 @@ export default function ProfilePageRoute() {
  }
 
  const ProfilePage = (components as any).ProfilePage
- if (!ProfilePage) return <div className="p-20 text-white text-center">Profile component not implemented in this theme.</div>
+ if (!ProfilePage) return <div className="p-20 text-app-text text-center">Profile component not implemented in this theme.</div>
 
  return <ProfilePage />
 }

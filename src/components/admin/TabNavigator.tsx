@@ -68,14 +68,14 @@ export function TabNavigator() {
  >
  <span className="relative flex items-center justify-center">
  <MoreHorizontal size={16} />
- <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+ <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-600 text-app-text text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
  {hiddenTabs.length}
  </span>
  </span>
  </button>
 
  {isMenuOpen && (
- <div className="absolute top-full right-0 mt-3 w-72 bg-white/98 backdrop-blur-xl border border-gray-200/60 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[100] py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5">
+ <div className="absolute top-full right-0 mt-3 w-72 bg-app-text/98 backdrop-blur-xl border border-gray-200/60 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[100] py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5">
  <div className="px-5 py-2.5 text-[10px] font-black text-app-text-faint uppercase tracking-widest border-b border-gray-50 mb-1 flex justify-between items-center">
  <span>Workspace Hub</span>
  <button
@@ -139,7 +139,7 @@ const TabItem = React.memo(({ tab, isActive, onOpen, onClose }: Record<string, a
  "group flex items-center gap-2 px-3 h-[30px] text-xs font-medium rounded-t-lg cursor-pointer border-t border-x transition-all select-none min-w-[100px] max-w-[180px] justify-between relative",
  isActive
  ? "bg-app-surface border-app-border text-emerald-700 shadow-sm z-10"
- : "bg-gray-100/60 border-transparent text-app-text-muted hover:bg-white/60 hover:text-gray-700"
+ : "bg-gray-100/60 border-transparent text-app-text-muted hover:bg-app-text/60 hover:text-gray-700"
  )}
  >
  {isActive && (

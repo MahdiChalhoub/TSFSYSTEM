@@ -67,7 +67,7 @@ export function SerialTracker() {
  <Button
  onClick={handleSearch}
  disabled={loading}
- className="h-14 px-8 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 transition-all hover:bg-black"
+ className="h-14 px-8 bg-slate-900 text-app-text rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 transition-all hover:bg-black"
  >
  {loading ? <Loader2 className="animate-spin" /> : "Verify Serial"}
  </Button>
@@ -81,12 +81,12 @@ export function SerialTracker() {
  <div
  key={s.id}
  onClick={() => fetchHistory(s)}
- className={`p-6 rounded-[2rem] border transition-all cursor-pointer group ${selectedSerial?.id === s.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-app-surface border-app-border hover:border-app-border'}`}
+ className={`p-6 rounded-[2rem] border transition-all cursor-pointer group ${selectedSerial?.id === s.id ? 'bg-slate-900 border-slate-900 text-app-text' : 'bg-app-surface border-app-border hover:border-app-border'}`}
  >
  <div className="flex justify-between items-start">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <div className={`p-2 rounded-lg ${selectedSerial?.id === s.id ? 'bg-white/10' : 'bg-app-bg text-app-text-muted'}`}>
+ <div className={`p-2 rounded-lg ${selectedSerial?.id === s.id ? 'bg-app-text/10' : 'bg-app-bg text-app-text-muted'}`}>
  <Barcode size={16} />
  </div>
  <h3 className="font-black text-lg tracking-tight uppercase">{s.serial_number}</h3>
@@ -95,9 +95,9 @@ export function SerialTracker() {
  {s.product_name}
  </p>
  </div>
- <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${s.status === 'AVAILABLE' ? 'bg-emerald-500 text-white' :
- s.status === 'SOLD' ? 'bg-blue-500 text-white' :
- 'bg-amber-500 text-white'
+ <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${s.status === 'AVAILABLE' ? 'bg-emerald-500 text-app-text' :
+ s.status === 'SOLD' ? 'bg-blue-500 text-app-text' :
+ 'bg-amber-500 text-app-text'
  }`}>
  {s.status}
  </div>

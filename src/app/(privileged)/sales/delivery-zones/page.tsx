@@ -115,14 +115,14 @@ export default function DeliveryZonesPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <MapPin size={28} className="text-white" />
+ <MapPin size={28} className="text-app-text" />
  </div>
  Delivery <span className="text-emerald-600">Zones</span>
  </h1>
  <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Coverage Areas & Delivery Zones</p>
  </div>
  <button onClick={startCreate}
- className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-200 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+ className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-200 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
  <Plus size={18} /> Add Zone
  </button>
  </header>
@@ -209,7 +209,7 @@ export default function DeliveryZonesPage() {
  Abandon
  </button>
  <button onClick={handleSave}
- className="h-11 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-100 flex items-center gap-2 transition-all hover:scale-[1.02]">
+ className="h-11 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-100 flex items-center gap-2 transition-all hover:scale-[1.02]">
  <Check size={16} /> {editId ? 'Commit Changes' : 'Initialize Zone'}
  </button>
  </div>

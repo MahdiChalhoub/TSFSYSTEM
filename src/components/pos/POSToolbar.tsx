@@ -89,7 +89,7 @@ export function POSToolbar({
  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 group hover:rotate-6 transition-transform"
  style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}
  >
- <ShoppingCart size={18} className="text-white" />
+ <ShoppingCart size={18} className="text-app-text" />
  </div>
 
  {/* Session Tabs */}
@@ -239,7 +239,7 @@ export function POSToolbar({
  >
  <Truck size={12} />
  {pendingDeliveriesCount > 0 && (
- <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
+ <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-500 text-app-text text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
  {pendingDeliveriesCount}
  </span>
  )}
@@ -256,7 +256,7 @@ export function POSToolbar({
  <div className="flex items-center gap-1.5 ml-1">
  <Link
  href="/dashboard"
- className="h-8 px-4 rounded-xl text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-[1.05] active:scale-95 border"
+ className="h-8 px-4 rounded-xl text-app-text text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-[1.05] active:scale-95 border"
  style={{
  background: 'var(--app-primary)',
  borderColor: 'var(--app-primary)',

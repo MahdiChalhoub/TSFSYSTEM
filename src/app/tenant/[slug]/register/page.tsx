@@ -14,7 +14,7 @@ export default function RegisterPageRoute() {
  }
 
  const RegisterPage = components.RegisterPage
- if (!RegisterPage) return <div className="p-20 text-white text-center">Registration component not implemented in this theme.</div>
+ if (!RegisterPage) return <div className="p-20 text-app-text text-center">Registration component not implemented in this theme.</div>
 
  return <RegisterPage />
 }

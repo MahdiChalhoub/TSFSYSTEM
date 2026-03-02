@@ -22,14 +22,14 @@ export default function SaaSLoginPage() {
  <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#020617]/80 to-[#020617] pointer-events-none" />
 
- <Card className="w-full max-w-lg bg-[#0f172a] border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] relative z-10 animate-in fade-in zoom-in-95 duration-500">
+ <Card className="w-full max-w-lg bg-[#0f172a] border-app-text/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] relative z-10 animate-in fade-in zoom-in-95 duration-500">
  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
 
  <CardHeader className="text-center pb-2 pt-8">
  <div className="w-16 h-16 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto mb-4 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
  <Command size={32} />
  </div>
- <CardTitle className="text-2xl font-black text-white uppercase tracking-widest">Admin Login</CardTitle>
+ <CardTitle className="text-2xl font-black text-app-text uppercase tracking-widest">Admin Login</CardTitle>
  <CardDescription className="font-mono text-cyan-500/60 text-xs mt-2 uppercase tracking-widest">Restricted Access // Level 5 Clearance</CardDescription>
  </CardHeader>
 
@@ -51,7 +51,7 @@ export default function SaaSLoginPage() {
  name="username"
  required
  autoComplete="off"
- className="bg-slate-900 border-white/5 h-12 text-white font-mono focus:ring-cyan-500/30 focus:border-cyan-500/50"
+ className="bg-slate-900 border-app-text/5 h-12 text-app-text font-mono focus:ring-cyan-500/30 focus:border-cyan-500/50"
  placeholder="IDENTIFIER"
  />
  </div>
@@ -61,13 +61,13 @@ export default function SaaSLoginPage() {
  name="password"
  type="password"
  required
- className="bg-slate-900 border-white/5 h-12 text-white font-mono focus:ring-cyan-500/30 focus:border-cyan-500/50"
+ className="bg-slate-900 border-app-text/5 h-12 text-app-text font-mono focus:ring-cyan-500/30 focus:border-cyan-500/50"
  placeholder="••••••••••••"
  />
  </div>
  </div>
 
- <Button className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)]" disabled={isPending}>
+ <Button className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-app-text font-bold tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)]" disabled={isPending}>
  {isPending ? <Loader2 className="animate-spin" /> : "Sign In"}
  </Button>
  </form>

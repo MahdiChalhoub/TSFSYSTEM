@@ -74,7 +74,7 @@ export default function FilterBar({
  <Filter size={13} />
  More Filters
  {activeCount > 0 && (
- <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-[10px] rounded-full">
+ <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-app-text text-[10px] rounded-full">
  {activeCount}
  </span>
  )}

@@ -259,7 +259,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
  </p>
  </div>
 
- <div className="bg-stone-900 text-white p-6 rounded-lg shadow-lg">
+ <div className="bg-stone-900 text-app-text p-6 rounded-lg shadow-lg">
  <div className="flex justify-between mb-2 opacity-80 text-sm">
  <span>Total Assets/Exp (Dr)</span>
  <span className="font-mono">{totalDebit.toFixed(2)}</span>
@@ -281,7 +281,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
  <button
  onClick={handleSubmit}
  disabled={isPending}
- className="bg-black text-white px-8 py-3 rounded-lg font-bold text-sm hover:bg-stone-800 disabled:opacity-50 flex items-center gap-2"
+ className="bg-black text-app-text px-8 py-3 rounded-lg font-bold text-sm hover:bg-stone-800 disabled:opacity-50 flex items-center gap-2"
  >
  <Save size={18} />
  {isPending ? 'Processing...' : 'Save Opening Balances'}

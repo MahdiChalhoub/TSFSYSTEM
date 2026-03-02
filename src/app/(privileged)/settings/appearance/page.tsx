@@ -17,7 +17,7 @@ export default async function AppearancePage() {
  className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg flex-shrink-0"
  style={{ background: 'var(--app-primary)', boxShadow: 'var(--app-glow)' }}
  >
- <Paintbrush size={26} className="text-white" />
+ <Paintbrush size={26} className="text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title flex items-center gap-3">

@@ -26,10 +26,10 @@ interface Props {
  kpiConfig: any;
 }
 const TIER_STYLES: Record<string, { bg: string; text: string; icon: string }> = {
- PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white', icon: '💎' },
- GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-white', icon: '🥇' },
+ PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-app-text', icon: '💎' },
+ GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-app-text', icon: '🥇' },
  SILVER: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-app-text', icon: '🥈' },
- BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-white', icon: '🥉' },
+ BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-app-text', icon: '🥉' },
 };
 export default function PerformanceClient({ leaderboard, myPerformance, kpiConfig }: Props) {
  const [tab, setTab] = useState<'leaderboard' | 'my'>('leaderboard');
@@ -78,11 +78,11 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
  {/* Tab Switch */}
  <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl shadow-lg shadow-gray-100 border border-gray-50 w-fit">
  <button onClick={() => setTab('leaderboard')}
- className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-amber-500 text-white shadow-lg shadow-amber-200' : 'text-app-text-muted hover:text-gray-700'}`}>
+ className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-amber-500 text-app-text shadow-lg shadow-amber-200' : 'text-app-text-muted hover:text-gray-700'}`}>
  🏆 Leaderboard
  </button>
  <button onClick={() => setTab('my')}
- className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-app-text-muted hover:text-gray-700'}`}>
+ className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-indigo-600 text-app-text shadow-lg shadow-indigo-200' : 'text-app-text-muted hover:text-gray-700'}`}>
  📊 My History
  </button>
  </div>

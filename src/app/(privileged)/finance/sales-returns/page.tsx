@@ -210,7 +210,7 @@ export default function SalesReturnsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
- <RotateCcw size={28} className="text-white" />
+ <RotateCcw size={28} className="text-app-text" />
  </div>
  Sales Return <span className="text-app-text-muted">Management</span>
  </h1>
@@ -328,7 +328,7 @@ export default function SalesReturnsPage() {
  variant={confirmDialog?.action === 'approve' ? 'default' : 'destructive'}
  onClick={() => confirmDialog && handleAction(confirmDialog.id, confirmDialog.action)}
  disabled={isPending}
- className={`rounded-xl font-black text-[10px] uppercase h-10 px-6 gap-2 ${confirmDialog?.action === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+ className={`rounded-xl font-black text-[10px] uppercase h-10 px-6 gap-2 ${confirmDialog?.action === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700 text-app-text' : ''}`}
  >
  {isPending ? "Configuring..." : confirmDialog?.action === 'approve' ? <><CheckCircle2 size={16} /> Authorize</> : <><Ban size={16} /> Revoke Request</>}
  </Button>

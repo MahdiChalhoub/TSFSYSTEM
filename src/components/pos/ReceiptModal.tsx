@@ -102,12 +102,12 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
  <div className="center">THANK YOU</div>
  </div>
 
- <div className="bg-emerald-600 p-8 text-center text-white relative">
- <div className="absolute top-4 right-4 cursor-pointer hover:bg-white/20 p-2 rounded-full" onClick={onClose}>
+ <div className="bg-emerald-600 p-8 text-center text-app-text relative">
+ <div className="absolute top-4 right-4 cursor-pointer hover:bg-app-text/20 p-2 rounded-full" onClick={onClose}>
  <X size={20} />
  </div>
- <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
- <CheckCircle size={32} className="text-white" />
+ <div className="w-16 h-16 bg-app-text/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+ <CheckCircle size={32} className="text-app-text" />
  </div>
  <h2 className="text-2xl font-bold">Checkout Success!</h2>
  <p className="opacity-80 mt-1">Order Ref: <span className="font-mono font-bold tracking-widest">{refCode || orderId}</span></p>
@@ -143,7 +143,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
 
  <button
  onClick={onClose}
- className="w-full py-4 mt-4 bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg active:scale-95"
+ className="w-full py-4 mt-4 bg-gray-900 text-app-text rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg active:scale-95"
  >
  New Transaction
  </button>

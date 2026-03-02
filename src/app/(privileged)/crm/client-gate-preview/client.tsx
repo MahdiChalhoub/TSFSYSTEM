@@ -114,9 +114,9 @@ export default function ClientGatePreviewClient() {
  key={type.key}
  onClick={() => setClientType(type.key)}
  className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${clientType === type.key
- ? type.color === 'stone' ? 'bg-stone-900 text-white shadow-lg'
- : type.color === 'amber' ? 'bg-amber-500 text-white shadow-lg'
- : 'bg-purple-600 text-white shadow-lg'
+ ? type.color === 'stone' ? 'bg-stone-900 text-app-text shadow-lg'
+ : type.color === 'amber' ? 'bg-amber-500 text-app-text shadow-lg'
+ : 'bg-purple-600 text-app-text shadow-lg'
  : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
  }`}
  >
@@ -138,7 +138,7 @@ export default function ClientGatePreviewClient() {
  <ShoppingBag size={18} className="text-emerald-400" />
  </div>
  <div>
- <h2 className="text-xl font-black text-white">{org?.name || 'Store'}</h2>
+ <h2 className="text-xl font-black text-app-text">{org?.name || 'Store'}</h2>
  <div className="flex items-center gap-2">
  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clientType === 'RETAIL' ? 'bg-stone-700 text-stone-300'
  : clientType === 'WHOLESALE' ? 'bg-amber-900/50 text-amber-400'
@@ -156,23 +156,23 @@ export default function ClientGatePreviewClient() {
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="Search products..."
- className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-app-text-muted focus:outline-none focus:border-emerald-500/30"
+ className="w-full pl-9 pr-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm placeholder:text-app-text-muted focus:outline-none focus:border-emerald-500/30"
  />
  </div>
  </div>
 
  {/* Stats */}
  <div className="flex gap-4 mb-6">
- <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl">
+ <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">Products</span>
- <div className="text-xl font-black text-white flex items-center gap-2">
+ <div className="text-xl font-black text-app-text flex items-center gap-2">
  <Sparkles size={14} className="text-emerald-400" />
  {filtered.length}
  </div>
  </div>
- <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl">
+ <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
  <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">{getPriceLabel()}</span>
- <div className="text-xl font-black text-white flex items-center gap-2">
+ <div className="text-xl font-black text-app-text flex items-center gap-2">
  <Tag size={14} className={clientType === 'WHOLESALE' ? 'text-amber-400' : clientType === 'CONSIGNEE' ? 'text-purple-400' : 'text-app-text-faint'} />
  Active
  </div>
@@ -194,10 +194,10 @@ export default function ClientGatePreviewClient() {
  {filtered.slice(0, 20).map(product => (
  <div
  key={product.id}
- className="bg-white/5 border border-white/5 rounded-2xl p-4 hover:border-emerald-500/20 transition-all group"
+ className="bg-app-text/5 border border-app-text/5 rounded-2xl p-4 hover:border-emerald-500/20 transition-all group"
  >
  {/* Product Image Placeholder */}
- <div className="aspect-square bg-white/5 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+ <div className="aspect-square bg-app-text/5 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
  {product.image_url ? (
  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
  ) : (
@@ -205,7 +205,7 @@ export default function ClientGatePreviewClient() {
  )}
  </div>
  {/* Product Info */}
- <h3 className="text-sm font-bold text-white truncate group-hover:text-emerald-400 transition-colors">
+ <h3 className="text-sm font-bold text-app-text truncate group-hover:text-emerald-400 transition-colors">
  {product.name}
  </h3>
  <p className="text-[10px] text-app-text-muted font-mono mt-0.5">{product.sku}</p>

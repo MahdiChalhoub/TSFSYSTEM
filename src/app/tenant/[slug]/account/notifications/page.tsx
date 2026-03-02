@@ -14,7 +14,7 @@ export default function NotificationsPageRoute() {
  }
 
  const NotificationsPage = (components as any).NotificationsPage
- if (!NotificationsPage) return <div className="p-20 text-white text-center">Notifications component not implemented in this theme.</div>
+ if (!NotificationsPage) return <div className="p-20 text-app-text text-center">Notifications component not implemented in this theme.</div>
 
  return <NotificationsPage />
 }

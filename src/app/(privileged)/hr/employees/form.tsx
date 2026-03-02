@@ -24,9 +24,9 @@ export default function EmployeeModal({
  <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
  <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-500 border border-app-border">
  {/* Header */}
- <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-10">
+ <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-app-text/80 backdrop-blur-md z-10">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-600 shadow-lg shadow-indigo-100 text-white">
+ <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-600 shadow-lg shadow-indigo-100 text-app-text">
  <Users size={24} />
  </div>
  <div>
@@ -178,7 +178,7 @@ export default function EmployeeModal({
  <button
  type="submit"
  disabled={isPending}
- className="flex-[2] bg-indigo-600 text-white px-6 py-5 rounded-[24px] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+ className="flex-[2] bg-indigo-600 text-app-text px-6 py-5 rounded-[24px] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50"
  >
  {isPending ? 'Propagating Identity...' : 'Complete Master Setup'}
  </button>

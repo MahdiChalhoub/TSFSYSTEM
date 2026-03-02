@@ -31,7 +31,7 @@ export default function UserRegisterPage() {
  <CheckCircle2 size={32} />
  </div>
  </div>
- <CardTitle className="text-2xl font-black text-white tracking-tight italic">REGISTRATION SUBMITTED</CardTitle>
+ <CardTitle className="text-2xl font-black text-app-text tracking-tight italic">REGISTRATION SUBMITTED</CardTitle>
  <CardDescription className="text-app-text-muted font-medium">Your account has been created.</CardDescription>
  </CardHeader>
  <CardContent className="text-center space-y-6 pb-10">
@@ -41,7 +41,7 @@ export default function UserRegisterPage() {
  An administrator must approve your account before you can log in.
  </p>
  </div>
- <Button className="w-full h-14 bg-white/5 hover:bg-white/10 text-white font-black rounded-xl border border-white/10 transition-all" onClick={() => window.location.href = '/login'}>
+ <Button className="w-full h-14 bg-app-text/5 hover:bg-app-text/10 text-app-text font-black rounded-xl border border-app-text/10 transition-all" onClick={() => window.location.href = '/login'}>
  Return to Login
  </Button>
  </CardContent>
@@ -59,14 +59,14 @@ export default function UserRegisterPage() {
  <Sparkles size={12} className="animate-pulse" />
  New Employee Registration
  </div>
- <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic">
+ <h1 className="text-4xl md:text-6xl font-black text-app-text tracking-tighter italic">
  JOIN <span className="text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-emerald-400 not-italic">{tenantName.toUpperCase()}</span>
  </h1>
  <p className="text-app-text-muted max-w-md mx-auto text-sm font-medium">
  Create your employee profile to join the team.
  </p>
  </div>
- <Card className="w-full max-w-lg bg-[#0f172a]/60 border-white/5 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
+ <Card className="w-full max-w-lg bg-[#0f172a]/60 border-app-text/5 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
  <CardHeader className="pt-10 px-10">
  <div className="flex items-center gap-4">
@@ -74,7 +74,7 @@ export default function UserRegisterPage() {
  <UserPlus size={24} />
  </div>
  <div>
- <CardTitle className="text-xl font-black text-white tracking-tight uppercase italic">Employee Registration</CardTitle>
+ <CardTitle className="text-xl font-black text-app-text tracking-tight uppercase italic">Employee Registration</CardTitle>
  <CardDescription className="text-app-text-muted font-medium tracking-tight">Fill in your details below</CardDescription>
  </div>
  </div>
@@ -90,37 +90,37 @@ export default function UserRegisterPage() {
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
  <Label htmlFor="first_name" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">First Name</Label>
- <Input id="first_name" name="first_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
+ <Input id="first_name" name="first_name" required className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-bold" />
  </div>
  <div className="space-y-2">
  <Label htmlFor="last_name" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Last Name</Label>
- <Input id="last_name" name="last_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
+ <Input id="last_name" name="last_name" required className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-bold" />
  </div>
  </div>
  <div className="space-y-2">
  <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Email</Label>
- <Input id="email" name="email" type="email" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
+ <Input id="email" name="email" type="email" required className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-medium" />
  {(state as any)?.error?.email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.email}</p>}
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
  <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Username</Label>
- <Input id="username" name="username" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-cyan-400" />
+ <Input id="username" name="username" required className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl font-mono text-cyan-400" />
  {(state as any)?.error?.username && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.username}</p>}
  </div>
  <div className="space-y-2">
  <Label htmlFor="password" title="password" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Password</Label>
- <Input id="password" name="password" type="password" required value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white" />
+ <Input id="password" name="password" type="password" required value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text" />
  <PasswordStrength password={passwordValue} />
  </div>
  </div>
  <div className="space-y-2">
  <Label htmlFor="role" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Role</Label>
  <Select name="role_id" required>
- <SelectTrigger className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium">
+ <SelectTrigger className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-medium">
  <SelectValue placeholder="Select role" />
  </SelectTrigger>
- <SelectContent className="bg-slate-900 border-white/10 text-white">
+ <SelectContent className="bg-slate-900 border-app-text/10 text-app-text">
  {roles.length > 0 ? (
  roles.map((r: Record<string, any>) => (
  <SelectItem key={r.id} value={r.id.toString()}>
@@ -137,23 +137,23 @@ export default function UserRegisterPage() {
  <div className="grid grid-cols-2 gap-4 pt-2">
  <div className="space-y-2">
  <Label htmlFor="phone" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Phone</Label>
- <Input id="phone" name="phone" className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
+ <Input id="phone" name="phone" className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-medium" />
  </div>
  <div className="space-y-2">
  <Label htmlFor="dob" className="text-[10px] uppercase tracking-widest font-black text-app-text-muted">Date of Birth</Label>
- <Input id="dob" name="date_of_birth" type="date" className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
+ <Input id="dob" name="date_of_birth" type="date" className="bg-slate-900/50 border-app-text/5 h-14 rounded-xl text-app-text font-medium" />
  </div>
  </div>
- <Button type="submit" className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-2xl shadow-lg shadow-cyan-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
+ <Button type="submit" className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-app-text font-black rounded-2xl shadow-lg shadow-cyan-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
  {isPending ? <Loader2 className="animate-spin" /> : (
  <div className="flex items-center gap-2">
  Submit Registration <ArrowRight size={18} />
  </div>
  )}
  </Button>
- <div className="text-center pt-4 border-t border-white/5">
+ <div className="text-center pt-4 border-t border-app-text/5">
  <span className="text-[10px] text-app-text-muted uppercase font-bold">Already registered? </span>
- <a href="/login" className="text-[10px] text-cyan-400 hover:text-white uppercase font-black tracking-widest transition-colors">Log In</a>
+ <a href="/login" className="text-[10px] text-cyan-400 hover:text-app-text uppercase font-black tracking-widest transition-colors">Log In</a>
  </div>
  </form>
  </CardContent>

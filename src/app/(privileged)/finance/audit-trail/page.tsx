@@ -144,7 +144,7 @@ export default function AuditTrailPage() {
  </div>
  <h1 className="page-header-title flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Shield size={40} className="text-white fill-white/20" />
+ <Shield size={40} className="text-app-text fill-white/20" />
  </div>
  Financial <span className="text-emerald-700">Audit Trail</span>
  </h1>
@@ -191,7 +191,7 @@ export default function AuditTrailPage() {
  </div>
  <div className="bg-slate-950 rounded-3xl p-8 shadow-2xl border border-slate-800/50 max-h-[500px] overflow-y-auto custom-scrollbar relative">
  <div className="absolute top-4 right-4 text-[10px] font-black text-emerald-500/30 uppercase tracking-[0.3em]">JSON Data</div>
- <pre className="text-[13px] text-emerald-400/90 font-mono whitespace-pre-wrap leading-relaxed selection:bg-emerald-500/30 selection:text-white">
+ <pre className="text-[13px] text-emerald-400/90 font-mono whitespace-pre-wrap leading-relaxed selection:bg-emerald-500/30 selection:text-app-text">
  {JSON.stringify(log.payload, null, 4)}
  </pre>
  </div>

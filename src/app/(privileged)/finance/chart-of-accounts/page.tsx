@@ -22,7 +22,7 @@ export default async function ChartOfAccountsPage() {
  </div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
- <BookOpen size={32} className="text-white" />
+ <BookOpen size={32} className="text-app-text" />
  </div>
  Chart of <span className="text-emerald-600">Accounts</span>
  </h1>

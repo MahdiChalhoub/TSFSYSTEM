@@ -89,7 +89,7 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
  label: 'SKUs',
  align: 'center' as const,
  render: (row: any) => (
- <Badge className="bg-gray-900 text-white border-none font-mono">
+ <Badge className="bg-gray-900 text-app-text border-none font-mono">
  {row.inventory_count || 0}
  </Badge>
  )
@@ -118,8 +118,8 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
  onClick={() => { setEditingWarehouse(row); setIsFormOpen(true); }}
  >
  {!row.is_active && (
- <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
- <Badge className="bg-stone-800 text-white font-black text-[10px] tracking-[0.2em] px-4 py-2 rounded-xl">INACTIVE</Badge>
+ <div className="absolute inset-0 bg-app-text/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+ <Badge className="bg-stone-800 text-app-text font-black text-[10px] tracking-[0.2em] px-4 py-2 rounded-xl">INACTIVE</Badge>
  </div>
  )}
 
@@ -175,7 +175,7 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
  </div>
  </div>
  {row.can_sell ? (
- <div className="px-3 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30 tracking-widest">
+ <div className="px-3 py-1.5 bg-emerald-500 text-app-text text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30 tracking-widest">
  Point of Sale
  </div>
  ) : (
@@ -228,14 +228,14 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
  </CardContent>
  </Card>
 
- <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden group hover:shadow-xl transition-all">
+ <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-900 to-slate-800 text-app-text overflow-hidden group hover:shadow-xl transition-all">
  <CardContent className="p-5 flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-white/10 text-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/10 text-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
  <BarChart3 size={24} />
  </div>
  <div>
  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Global SKUs</p>
- <h2 className="text-2xl font-black text-white mt-0.5 tracking-tighter">{globalSKUCount}</h2>
+ <h2 className="text-2xl font-black text-app-text mt-0.5 tracking-tighter">{globalSKUCount}</h2>
  </div>
  </CardContent>
  </Card>

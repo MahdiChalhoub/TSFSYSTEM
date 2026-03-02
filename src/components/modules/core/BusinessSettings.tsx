@@ -57,7 +57,7 @@ export default function BusinessSettings() {
  </div>
 
  <div className="pt-4 border-t border-app-border flex justify-end">
- <button className="px-6 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-medium transition-colors shadow-lg shadow-gray-900/10">
+ <button className="px-6 py-2 bg-gray-900 hover:bg-black text-app-text rounded-lg font-medium transition-colors shadow-lg shadow-gray-900/10">
  Save Changes
  </button>
  </div>

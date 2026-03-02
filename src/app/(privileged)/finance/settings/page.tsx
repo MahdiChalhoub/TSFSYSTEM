@@ -16,7 +16,7 @@ export default async function SettingsPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-stone-700 flex items-center justify-center shadow-lg shadow-stone-300">
- <Settings size={28} className="text-white" />
+ <Settings size={28} className="text-app-text" />
  </div>
  Financial <span className="text-app-text-muted">Settings</span>
  </h1>

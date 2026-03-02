@@ -54,9 +54,9 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  };
  if (!products || products.length === 0) {
  return (
- <div className="p-12 text-center bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
+ <div className="p-12 text-center bg-app-text/5 rounded-[3rem] border border-app-text/10 backdrop-blur-xl">
  <ShoppingBag className="mx-auto text-slate-700 mb-4" size={48} />
- <h3 className="text-xl font-bold text-white">Catalog Coming Soon</h3>
+ <h3 className="text-xl font-bold text-app-text">Catalog Coming Soon</h3>
  <p className="text-app-text-muted mt-2">We are currently updating our inventory. Please check back later.</p>
  </div>
  );
@@ -66,7 +66,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  {/* Header + Search */}
  <div className="space-y-4">
  <div className="flex items-center justify-between px-1">
- <h2 className="text-3xl font-black text-white tracking-tighter">Featured Collection</h2>
+ <h2 className="text-3xl font-black text-app-text tracking-tighter">Featured Collection</h2>
  <div className="flex gap-2">
  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
@@ -80,11 +80,11 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  placeholder="Search products..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700"
+ className="w-full bg-slate-900/60 border border-app-text/5 pl-12 pr-10 py-4 rounded-2xl text-app-text outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700"
  />
  {search && (
  <button onClick={() => setSearch('')}
- className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-muted hover:text-white">
+ className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-muted hover:text-app-text">
  <X size={16} />
  </button>
  )}
@@ -97,7 +97,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
  ${!selectedCategory
  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
- : 'bg-white/5 text-app-text-faint border-white/10 hover:border-white/20'
+ : 'bg-app-text/5 text-app-text-faint border-app-text/10 hover:border-app-text/20'
  }`}>
  All ({products.length})
  </button>
@@ -108,7 +108,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
  ${selectedCategory === cat
  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
- : 'bg-white/5 text-app-text-faint border-white/10 hover:border-white/20'
+ : 'bg-app-text/5 text-app-text-faint border-app-text/10 hover:border-app-text/20'
  }`}>
  {cat}
  </button>
@@ -120,7 +120,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  {(search || selectedCategory) && (
  <p className="text-xs text-app-text-muted px-1">
  Showing {filtered.length} of {products.length} products
- {search && <> matching &quot;<span className="text-white">{search}</span>&quot;</>}
+ {search && <> matching &quot;<span className="text-app-text">{search}</span>&quot;</>}
  {selectedCategory && <> in <span className="text-emerald-400">{selectedCategory}</span></>}
  </p>
  )}
@@ -128,7 +128,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  {filtered.length === 0 ? (
  <div className="py-16 text-center space-y-3">
  <Search size={36} className="mx-auto text-app-text-muted" />
- <p className="text-white font-bold">No products found</p>
+ <p className="text-app-text font-bold">No products found</p>
  <p className="text-app-text-muted text-sm">Try adjusting your search or filter</p>
  </div>
  ) : (
@@ -137,7 +137,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <Link
  key={p.id}
  href={`/tenant/${slug}/product/${p.id}`}
- className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
+ className="group relative bg-slate-900/40 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
  style={{ animationDelay: `${idx * 100}ms` }}
  >
  <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">
@@ -152,7 +152,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <ShoppingBag size={40} className="text-app-text" />
  </div>
  )}
- <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+ <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-app-text uppercase tracking-wider border border-app-text/10">
  {p.category_name || 'Premium'}
  </div>
  <div className="absolute top-6 right-6 flex items-center gap-2">
@@ -160,12 +160,12 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(p.id); }}
  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg backdrop-blur-md border
  ${isInWishlist(p.id)
- ? 'bg-rose-500/80 text-white border-rose-500/50'
- : 'bg-black/40 text-white/70 hover:text-rose-400 border-white/10'
+ ? 'bg-rose-500/80 text-app-text border-rose-500/50'
+ : 'bg-black/40 text-app-text/70 hover:text-rose-400 border-app-text/10'
  }`}>
  <Heart size={18} fill={isInWishlist(p.id) ? 'currentColor' : 'none'} />
  </button>
- <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
+ <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-app-text opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
  <ArrowRight size={20} />
  </div>
  </div>
@@ -173,7 +173,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <div className="p-8 space-y-4">
  <div className="space-y-1">
  <div className="flex justify-between items-start">
- <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
+ <h3 className="text-xl font-black text-app-text group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
  <div className="flex items-center gap-1 text-emerald-500">
  <Star size={12} fill="currentColor" />
  <span className="text-[10px] font-black">4.9</span>
@@ -183,7 +183,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  </div>
  <div className="flex items-center justify-between pt-2">
  {showPrice ? (
- <div className="text-2xl font-black text-white">
+ <div className="text-2xl font-black text-app-text">
  <span className="text-emerald-500 mr-1">$</span>
  {p.selling_price_ttc}
  </div>
@@ -202,8 +202,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  onClick={(e) => handleQuickAdd(p, e)}
  className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
  ${addedIds.has(p.id)
- ? 'bg-emerald-500 text-white border border-emerald-500'
- : 'bg-white/5 hover:bg-emerald-500 text-white border border-white/10 hover:border-emerald-500'
+ ? 'bg-emerald-500 text-app-text border border-emerald-500'
+ : 'bg-app-text/5 hover:bg-emerald-500 text-app-text border border-app-text/10 hover:border-emerald-500'
  }`}>
  <ShoppingCart size={12} />
  {addedIds.has(p.id) ? 'Added!' : 'Add'}
@@ -218,7 +218,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  {filtered.length > 0 && filtered.length < products.length && (
  <button
  onClick={() => { setSearch(''); setSelectedCategory(null); }}
- className="w-full py-8 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all">
+ className="w-full py-8 bg-app-text/5 border border-app-text/10 text-app-text hover:bg-app-text/10 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all">
  Show All Products <ArrowRight className="ml-2 inline" size={16} />
  </button>
  )}

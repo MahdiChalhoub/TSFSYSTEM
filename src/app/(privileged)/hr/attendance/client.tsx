@@ -139,12 +139,12 @@ export default function TimeAttendanceLedger({
  headerExtra={
  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
  <DialogTrigger asChild>
- <Button className="h-10 px-6 bg-emerald-600 text-white hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all">
+ <Button className="h-10 px-6 bg-emerald-600 text-app-text hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all">
  <Plus size={18} className="mr-2" /> Add Record
  </Button>
  </DialogTrigger>
  <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-lg">
- <div className="bg-emerald-600 p-8 text-white relative">
+ <div className="bg-emerald-600 p-8 text-app-text relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <Fingerprint size={80} />
  </div>
@@ -176,7 +176,7 @@ export default function TimeAttendanceLedger({
  </div>
  <div className="flex gap-3 pt-4">
  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-app-border">Cancel</Button>
- <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-emerald-600 text-white hover:bg-emerald-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
+ <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-emerald-600 text-app-text hover:bg-emerald-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
  {isPending ? 'Saving...' : 'Submit'}
  </Button>
  </div>
@@ -200,12 +200,12 @@ export default function TimeAttendanceLedger({
  return (
  <div className="flex gap-2">
  {!hasIn && (
- <Button onClick={() => handleCheckIn(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleCheckIn(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
  <LogIn size={12} className="mr-1.5" /> Start
  </Button>
  )}
  {hasIn && !hasOut && (
- <Button onClick={() => handleCheckOut(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleCheckOut(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
  <LogOut size={12} className="mr-1.5" /> Clock Out
  </Button>
  )}

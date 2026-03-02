@@ -69,7 +69,7 @@ export default function CatchAllPage() {
  <Link
  href="/dashboard"
  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
- bg-gray-900 text-white text-sm font-bold
+ bg-gray-900 text-app-text text-sm font-bold
  hover:bg-gray-800 transition-all shadow-md shadow-gray-900/20"
  >
  <ArrowLeft className="w-4 h-4" />

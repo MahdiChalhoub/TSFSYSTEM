@@ -114,7 +114,7 @@ export default function ConnectorDashboardPage() {
  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+ <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-app-text shadow-lg">
  <Zap size={28} />
  </div>
  <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 px-3 py-1 font-black uppercase text-[10px]">
@@ -146,27 +146,27 @@ export default function ConnectorDashboardPage() {
  </div>
  {/* Summary Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white rounded-3xl shadow-xl">
+ <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-app-text rounded-3xl shadow-xl">
  <CardHeader className="pb-2">
- <CardTitle className="text-lg font-bold text-white/80">Active Policies</CardTitle>
+ <CardTitle className="text-lg font-bold text-app-text/80">Active Policies</CardTitle>
  </CardHeader>
  <CardContent>
  <div className="text-5xl font-black">{dashboard?.summary.active_policies || 0}</div>
  <p className="text-emerald-100 text-sm mt-2">Routing rules configured</p>
  </CardContent>
  </Card>
- <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white rounded-3xl shadow-xl">
+ <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-app-text rounded-3xl shadow-xl">
  <CardHeader className="pb-2">
- <CardTitle className="text-lg font-bold text-white/80">Registered Contracts</CardTitle>
+ <CardTitle className="text-lg font-bold text-app-text/80">Registered Contracts</CardTitle>
  </CardHeader>
  <CardContent>
  <div className="text-5xl font-black">{dashboard?.summary.contracts_registered || 0}</div>
  <p className="text-blue-100 text-sm mt-2">Module declarations</p>
  </CardContent>
  </Card>
- <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-white rounded-3xl shadow-xl">
+ <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-app-text rounded-3xl shadow-xl">
  <CardHeader className="pb-2">
- <CardTitle className="text-lg font-bold text-white/80">Pending Buffers</CardTitle>
+ <CardTitle className="text-lg font-bold text-app-text/80">Pending Buffers</CardTitle>
  </CardHeader>
  <CardContent>
  <div className="text-5xl font-black">{dashboard?.buffer_stats.pending || 0}</div>
@@ -232,7 +232,7 @@ export default function ConnectorDashboardPage() {
  <div className="flex items-center justify-between mb-3">
  <span className="font-bold text-app-text">{mod.module_name}</span>
  <Badge
- className={`${stateColors[mod.state]} text-white border-0 text-[10px] font-bold`}
+ className={`${stateColors[mod.state]} text-app-text border-0 text-[10px] font-bold`}
  >
  {mod.state.toUpperCase()}
  </Badge>
@@ -255,7 +255,7 @@ export default function ConnectorDashboardPage() {
  <Link href="/connector/policies">
  <Card className="rounded-3xl border-app-border hover:border-indigo-300 hover:shadow-lg transition-all cursor-pointer group">
  <CardContent className="p-6 flex items-center gap-4">
- <div className="p-4 rounded-2xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+ <div className="p-4 rounded-2xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-app-text transition-all">
  <Settings size={28} />
  </div>
  <div className="flex-1">
@@ -269,7 +269,7 @@ export default function ConnectorDashboardPage() {
  <Link href="/connector/buffer">
  <Card className="rounded-3xl border-app-border hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
  <CardContent className="p-6 flex items-center gap-4">
- <div className="p-4 rounded-2xl bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+ <div className="p-4 rounded-2xl bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-app-text transition-all">
  <Database size={28} />
  </div>
  <div className="flex-1">
@@ -283,7 +283,7 @@ export default function ConnectorDashboardPage() {
  <Link href="/connector/logs">
  <Card className="rounded-3xl border-app-border hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
  <CardContent className="p-6 flex items-center gap-4">
- <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+ <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-app-text transition-all">
  <FileText size={28} />
  </div>
  <div className="flex-1">

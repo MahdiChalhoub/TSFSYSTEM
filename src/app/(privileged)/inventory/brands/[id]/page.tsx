@@ -50,7 +50,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  <ChevronLeft size={24} />
  </Link>
  <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <Globe size={28} className="text-white" />
+ <Globe size={28} className="text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter">{brand.name}</h1>

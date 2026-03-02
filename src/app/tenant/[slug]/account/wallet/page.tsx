@@ -14,7 +14,7 @@ export default function WalletPageRoute() {
  }
 
  const WalletPage = (components as any).WalletPage
- if (!WalletPage) return <div className="p-20 text-white text-center">Wallet component not implemented in this theme.</div>
+ if (!WalletPage) return <div className="p-20 text-app-text text-center">Wallet component not implemented in this theme.</div>
 
  return <WalletPage />
 }

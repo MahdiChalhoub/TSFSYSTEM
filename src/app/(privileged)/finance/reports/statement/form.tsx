@@ -144,7 +144,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
 
  <button
  type="submit"
- className="w-full bg-black text-white font-bold py-3 rounded-md hover:bg-stone-800 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+ className="w-full bg-black text-app-text font-bold py-3 rounded-md hover:bg-stone-800 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
  >
  <Search size={18} />
  Generate Statement

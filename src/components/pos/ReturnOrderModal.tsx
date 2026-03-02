@@ -132,25 +132,25 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
 
  return (
  <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && step !== 'processing' && onClose()}>
- <div className="w-full max-w-lg bg-slate-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+ <div className="w-full max-w-lg bg-slate-900 rounded-3xl border border-app-text/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
 
  {/* Header */}
- <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/10 px-6 py-5 border-b border-white/5 flex items-center gap-3">
+ <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/10 px-6 py-5 border-b border-app-text/5 flex items-center gap-3">
  {step === 'items' && (
- <button onClick={() => setStep('search')} className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-white/40 hover:text-white">
+ <button onClick={() => setStep('search')} className="w-8 h-8 rounded-xl bg-app-text/5 flex items-center justify-center text-app-text/40 hover:text-app-text">
  <ArrowLeft size={14} />
  </button>
  )}
  <div className="flex-1">
- <h2 className="text-white font-black text-lg">Return / Refund</h2>
- <p className="text-white/40 text-xs mt-0.5">
+ <h2 className="text-app-text font-black text-lg">Return / Refund</h2>
+ <p className="text-app-text/40 text-xs mt-0.5">
  {step === 'search' ? 'Enter the invoice number' :
  step === 'items' ? `Order ${foundOrder?.ref} — Select items to return` :
  step === 'done' ? 'Return processed ✓' : ''}
  </p>
  </div>
  {step !== 'processing' && (
- <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white flex items-center justify-center">
+ <button onClick={onClose} className="w-9 h-9 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text flex items-center justify-center">
  <X size={16} />
  </button>
  )}
@@ -160,7 +160,7 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
  {step === 'search' && (
  <div className="p-6 space-y-4">
  <div>
- <label className="block text-xs font-black text-white/40 uppercase tracking-widest mb-2">Invoice Number</label>
+ <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-2">Invoice Number</label>
  <div className="flex gap-2">
  <input
  autoFocus
@@ -169,15 +169,15 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
  onChange={e => setRefInput(e.target.value)}
  onKeyDown={e => e.key === 'Enter' && handleSearch()}
  placeholder="e.g. INV-00042"
- className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/30"
+ className="flex-1 px-4 py-3 bg-app-text/5 border border-app-text/10 rounded-2xl text-app-text font-bold outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/30"
  />
- <button onClick={handleSearch} disabled={searching || !refInput.trim()} className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all disabled:opacity-40 flex items-center gap-2">
+ <button onClick={handleSearch} disabled={searching || !refInput.trim()} className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-app-text font-black text-sm transition-all disabled:opacity-40 flex items-center gap-2">
  {searching ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
  Find
  </button>
  </div>
  </div>
- <p className="text-white/20 text-xs text-center">Search by invoice number printed on the original receipt</p>
+ <p className="text-app-text/20 text-xs text-center">Search by invoice number printed on the original receipt</p>
  </div>
  )}
 
@@ -186,37 +186,37 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
  <div className="p-6 space-y-4">
  {/* Order info */}
  <div className="grid grid-cols-3 gap-2 text-xs">
- <div className="bg-white/5 rounded-xl p-3">
- <div className="text-white/30 mb-1">Date</div>
- <div className="text-white font-bold">{fmtDate(foundOrder.date)}</div>
+ <div className="bg-app-text/5 rounded-xl p-3">
+ <div className="text-app-text/30 mb-1">Date</div>
+ <div className="text-app-text font-bold">{fmtDate(foundOrder.date)}</div>
  </div>
- <div className="bg-white/5 rounded-xl p-3">
- <div className="text-white/30 mb-1">Cashier</div>
- <div className="text-white font-bold">{foundOrder.cashierName || '—'}</div>
+ <div className="bg-app-text/5 rounded-xl p-3">
+ <div className="text-app-text/30 mb-1">Cashier</div>
+ <div className="text-app-text font-bold">{foundOrder.cashierName || '—'}</div>
  </div>
- <div className="bg-white/5 rounded-xl p-3">
- <div className="text-white/30 mb-1">Total</div>
- <div className="text-white font-bold">{fmt(foundOrder.totalAmount, currency)}</div>
+ <div className="bg-app-text/5 rounded-xl p-3">
+ <div className="text-app-text/30 mb-1">Total</div>
+ <div className="text-app-text font-bold">{fmt(foundOrder.totalAmount, currency)}</div>
  </div>
  </div>
 
  {/* Items */}
  <div className="space-y-2 max-h-52 overflow-y-auto">
  {returnItems.map((item, idx) => (
- <div key={item.productId} className={clsx("flex items-center gap-3 p-3 rounded-2xl border transition-all", item.selected ? "bg-amber-500/10 border-amber-500/30" : "bg-white/3 border-white/5")}>
+ <div key={item.productId} className={clsx("flex items-center gap-3 p-3 rounded-2xl border transition-all", item.selected ? "bg-amber-500/10 border-amber-500/30" : "bg-app-text/3 border-app-text/5")}>
  <button onClick={() => setReturnItems(prev => prev.map((it, i) => i === idx ? { ...it, selected: !it.selected } : it))}
- className={clsx("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", item.selected ? "bg-amber-500 border-amber-500" : "border-white/20")}>
- {item.selected && <CheckCircle2 size={12} className="text-white" />}
+ className={clsx("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", item.selected ? "bg-amber-500 border-amber-500" : "border-app-text/20")}>
+ {item.selected && <CheckCircle2 size={12} className="text-app-text" />}
  </button>
  <div className="flex-1 min-w-0">
- <p className="text-white text-sm font-bold truncate">{item.productName}</p>
- <p className="text-white/40 text-xs">{fmt(item.unitPrice, currency)} / unit</p>
+ <p className="text-app-text text-sm font-bold truncate">{item.productName}</p>
+ <p className="text-app-text/40 text-xs">{fmt(item.unitPrice, currency)} / unit</p>
  </div>
  <div className="flex items-center gap-1">
- <button onClick={() => setReturnItems(prev => prev.map((it, i) => i === idx ? { ...it, returnQty: Math.max(1, it.returnQty - 1) } : it))} className="w-6 h-6 rounded-lg bg-white/10 text-white/60 flex items-center justify-center text-xs hover:bg-white/20">−</button>
- <span className="w-8 text-center text-sm font-black text-white">{item.returnQty}</span>
- <button onClick={() => setReturnItems(prev => prev.map((it, i) => i === idx ? { ...it, returnQty: Math.min(it.maxQty, it.returnQty + 1) } : it))} className="w-6 h-6 rounded-lg bg-white/10 text-white/60 flex items-center justify-center text-xs hover:bg-white/20">+</button>
- <span className="text-white/30 text-xs ml-1">/{item.maxQty}</span>
+ <button onClick={() => setReturnItems(prev => prev.map((it, i) => i === idx ? { ...it, returnQty: Math.max(1, it.returnQty - 1) } : it))} className="w-6 h-6 rounded-lg bg-app-text/10 text-app-text/60 flex items-center justify-center text-xs hover:bg-app-text/20">−</button>
+ <span className="w-8 text-center text-sm font-black text-app-text">{item.returnQty}</span>
+ <button onClick={() => setReturnItems(prev => prev.map((it, i) => i === idx ? { ...it, returnQty: Math.min(it.maxQty, it.returnQty + 1) } : it))} className="w-6 h-6 rounded-lg bg-app-text/10 text-app-text/60 flex items-center justify-center text-xs hover:bg-app-text/20">+</button>
+ <span className="text-app-text/30 text-xs ml-1">/{item.maxQty}</span>
  </div>
  </div>
  ))}
@@ -224,17 +224,17 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
 
  {/* Reason */}
  <div>
- <label className="block text-xs font-black text-white/40 uppercase tracking-widest mb-2">Reason (optional)</label>
- <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="Defective, size mismatch, etc." className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-white/80 text-sm outline-none focus:ring-2 focus:ring-amber-500/40" />
+ <label className="block text-xs font-black text-app-text/40 uppercase tracking-widest mb-2">Reason (optional)</label>
+ <input type="text" value={reason} onChange={e => setReason(e.target.value)} placeholder="Defective, size mismatch, etc." className="w-full px-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-2xl text-app-text/80 text-sm outline-none focus:ring-2 focus:ring-amber-500/40" />
  </div>
 
  {/* Total + confirm */}
- <div className="flex items-center justify-between pt-2 border-t border-white/5">
+ <div className="flex items-center justify-between pt-2 border-t border-app-text/5">
  <div>
- <div className="text-white/30 text-xs">Total to refund</div>
+ <div className="text-app-text/30 text-xs">Total to refund</div>
  <div className="text-amber-400 font-black text-xl">{fmt(totalReturn, currency)}</div>
  </div>
- <button onClick={handleProcess} disabled={processing || totalReturn === 0} className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm transition-all disabled:opacity-40 flex items-center gap-2">
+ <button onClick={handleProcess} disabled={processing || totalReturn === 0} className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-app-text font-black text-sm transition-all disabled:opacity-40 flex items-center gap-2">
  {processing ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
  {processing ? 'Processing…' : 'Process Return'}
  </button>
@@ -249,14 +249,14 @@ export default function ReturnOrderModal({ currency, onClose }: ReturnOrderModal
  <CheckCircle2 size={32} className="text-emerald-400" />
  </div>
  <div>
- <div className="text-white font-black text-2xl">{fmt(result.total_returned, currency)}</div>
- <div className="text-white/50 text-sm mt-1">Return processed — {result.return_ref}</div>
+ <div className="text-app-text font-black text-2xl">{fmt(result.total_returned, currency)}</div>
+ <div className="text-app-text/50 text-sm mt-1">Return processed — {result.return_ref}</div>
  </div>
  <div className="flex gap-3">
- <button onClick={handlePrint} className="flex-1 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white/70 font-bold text-sm flex items-center justify-center gap-2">
+ <button onClick={handlePrint} className="flex-1 py-3 rounded-2xl bg-app-text/5 hover:bg-app-text/10 text-app-text/70 font-bold text-sm flex items-center justify-center gap-2">
  <Printer size={16} /> Print
  </button>
- <button onClick={onClose} className="flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm">
+ <button onClick={onClose} className="flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-app-text font-black text-sm">
  Done
  </button>
  </div>

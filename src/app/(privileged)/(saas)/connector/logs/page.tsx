@@ -183,7 +183,7 @@ export default function ConnectorLogsPage() {
 
  <div className="flex flex-wrap items-center gap-3 mb-2">
  <Badge
- className={`${stateColors[log.module_state] || 'bg-gray-400'} text-white border-0 text-[10px] font-bold`}
+ className={`${stateColors[log.module_state] || 'bg-gray-400'} text-app-text border-0 text-[10px] font-bold`}
  >
  {log.module_state?.toUpperCase() || 'UNKNOWN'}
  </Badge>

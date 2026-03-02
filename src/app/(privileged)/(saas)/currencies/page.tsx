@@ -76,13 +76,13 @@ export default function CurrenciesPage() {
  {/* Header */}
  <div className="flex items-center justify-between mb-8">
  <div className="flex items-center gap-3">
- <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl text-white shadow-lg">
+ <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl text-app-text shadow-lg">
  <Coins size={22} />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <Coins size={28} className="text-white" />
+ <Coins size={28} className="text-app-text" />
  </div>
  Currency <span className="text-amber-600">Management</span>
  </h1>
@@ -92,7 +92,7 @@ export default function CurrenciesPage() {
  </div>
  <button
  onClick={() => { resetForm(); setShowForm(true) }}
- className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-stone-800 transition-colors shadow-sm"
+ className="flex items-center gap-2 bg-black text-app-text px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-stone-800 transition-colors shadow-sm"
  >
  <Plus size={16} />
  Add Currency
@@ -159,7 +159,7 @@ export default function CurrenciesPage() {
  <button
  onClick={handleSubmit}
  disabled={isPending}
- className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-black rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+ className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-app-text bg-black rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
  >
  {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  {editingId ? 'Update' : 'Create'}

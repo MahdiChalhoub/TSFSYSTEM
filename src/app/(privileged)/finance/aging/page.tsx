@@ -155,7 +155,7 @@ export default function AgingReportPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
- <Clock size={28} className="text-white" />
+ <Clock size={28} className="text-app-text" />
  </div>
  Aging <span className="text-amber-600">Report</span>
  </h1>
@@ -186,13 +186,13 @@ export default function AgingReportPage() {
  </header>
 
  {/* Grand Total Summary Card */}
- <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-stone-900 to-stone-800 text-white overflow-hidden relative">
+ <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-stone-900 to-stone-800 text-app-text overflow-hidden relative">
  <div className="absolute top-[-20px] right-[-20px] opacity-10">
  <DollarSign size={160} />
  </div>
  <CardContent className="py-8 px-10 flex items-center justify-between relative z-10">
  <div className="flex items-center gap-6">
- <div className="w-16 h-16 rounded-[1.5rem] bg-white/10 flex items-center justify-center backdrop-blur-md">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-text/10 flex items-center justify-center backdrop-blur-md">
  <TrendingUp size={32} className="text-emerald-400" />
  </div>
  <div>
@@ -200,7 +200,7 @@ export default function AgingReportPage() {
  <p className="text-4xl font-black mt-1 tracking-tighter tabular-nums">{fmt(grandTotal)}</p>
  </div>
  </div>
- <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10">
+ <div className="flex items-center gap-3 bg-app-text/5 px-4 py-2 rounded-2xl backdrop-blur-md border border-app-text/10">
  <Users size={18} className="text-app-text-faint" />
  <span className="text-sm font-bold">{allItems.length} <span className="text-app-text-muted font-medium">Open Items</span></span>
  </div>
@@ -254,11 +254,11 @@ export default function AgingReportPage() {
  return pct > 0 ? (
  <div
  key={key}
- className={`${color} h-full first:rounded-l-2xl last:rounded-r-2xl border-r last:border-0 border-white/20 transition-all hover:brightness-110 flex items-center justify-center`}
+ className={`${color} h-full first:rounded-l-2xl last:rounded-r-2xl border-r last:border-0 border-app-text/20 transition-all hover:brightness-110 flex items-center justify-center`}
  style={{ width: `${pct}%` }}
  title={`${label}: ${pct.toFixed(1)}%`}
  >
- {pct > 10 && <span className="text-[8px] font-black text-white uppercase opacity-0 group-hover:opacity-100 transition-opacity tracking-widest">{pct.toFixed(0)}%</span>}
+ {pct > 10 && <span className="text-[8px] font-black text-app-text uppercase opacity-0 group-hover:opacity-100 transition-opacity tracking-widest">{pct.toFixed(0)}%</span>}
  </div>
  ) : null
  })

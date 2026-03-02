@@ -131,16 +131,16 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
  className={cn(
  "group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all",
  selectedRole?.id === role.id
- ? "bg-gray-900 text-white shadow-lg shadow-gray-200"
+ ? "bg-gray-900 text-app-text shadow-lg shadow-gray-200"
  : "hover:bg-app-bg text-app-text-muted"
  )}
  >
  <div className="flex items-center gap-3">
  <div className={cn(
  "w-8 h-8 rounded-lg flex items-center justify-center",
- selectedRole?.id === role.id ? "bg-white/20" : "bg-app-surface-2"
+ selectedRole?.id === role.id ? "bg-app-text/20" : "bg-app-surface-2"
  )}>
- <Shield size={16} className={selectedRole?.id === role.id ? "text-white" : "text-app-text-muted"} />
+ <Shield size={16} className={selectedRole?.id === role.id ? "text-app-text" : "text-app-text-muted"} />
  </div>
  <div>
  <p className="text-sm font-black tracking-tight">{role.name}</p>
@@ -217,7 +217,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
  </div>
  <div className={cn(
  "w-5 h-5 rounded-lg flex items-center justify-center transition-all",
- isActive ? "bg-emerald-600 text-white" : "bg-app-surface-2 text-gray-300 group-hover:bg-gray-200"
+ isActive ? "bg-emerald-600 text-app-text" : "bg-app-surface-2 text-gray-300 group-hover:bg-gray-200"
  )}>
  {isActive ? <CheckSquare size={14} /> : <Square size={14} />}
  </div>
@@ -277,7 +277,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
  <Button
  onClick={handleCreateRole}
  disabled={loading || !newRole.name}
- className="flex-1 h-14 rounded-2xl bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest"
+ className="flex-1 h-14 rounded-2xl bg-gray-900 text-app-text text-[10px] font-black uppercase tracking-widest"
  >
  {loading ? "Creating..." : "Create Role"}
  </Button>

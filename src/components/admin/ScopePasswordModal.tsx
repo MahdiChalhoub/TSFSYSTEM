@@ -96,7 +96,7 @@ export default function ScopePasswordModal({
  <button
  onClick={() => handleSetPassword('official', officialPin)}
  disabled={!officialPin || saving === 'official'}
- className="px-4 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-40"
+ className="px-4 py-3 bg-emerald-600 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-40"
  >
  {saving === 'official' ? '...' : 'Set'}
  </button>
@@ -136,7 +136,7 @@ export default function ScopePasswordModal({
  <button
  onClick={() => handleSetPassword('internal', internalPin)}
  disabled={!internalPin || saving === 'internal'}
- className="px-4 py-3 bg-gray-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-40"
+ className="px-4 py-3 bg-gray-700 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-40"
  >
  {saving === 'internal' ? '...' : 'Set'}
  </button>

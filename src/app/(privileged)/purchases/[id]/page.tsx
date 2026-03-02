@@ -108,7 +108,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  </a>
  {order.status === 'DRAFT' && (
  <form action={authorizePurchaseOrder.bind(null, id)}>
- <button className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2">
+ <button className="bg-indigo-600 text-app-text px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2">
  <CheckCircle2 size={20} />
  <span>Confirm Order</span>
  </button>
@@ -120,7 +120,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  <option value="">Target WH...</option>
  {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
  </select>
- <button className="bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
+ <button className="bg-emerald-600 text-app-text px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
  <Truck size={20} />
  <span>Receive Stock</span>
  </button>
@@ -129,7 +129,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  {(order.status === 'RECEIVED' || order.status === 'PARTIAL_RECEIVED') && (
  <form action={invoicePurchaseOrder.bind(null, id)} className="flex gap-2">
  <input name="invoiceNumber" placeholder="Vendor Bill #" className="bg-app-surface border border-app-border rounded-2xl px-4 py-3.5 text-sm font-bold shadow-sm" required />
- <button className="bg-gray-900 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-gray-200 hover:bg-gray-800 transition-all flex items-center gap-2">
+ <button className="bg-gray-900 text-app-text px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-gray-200 hover:bg-gray-800 transition-all flex items-center gap-2">
  <Receipt size={20} />
  <span>Create Bill</span>
  </button>
@@ -138,7 +138,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  {(order.status === 'RECEIVED' || order.status === 'INVOICED' || order.status === 'PARTIAL_RECEIVED') && (
  <Link
  href={`/purchases/returns/new?order_id=${id}`}
- className="bg-rose-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all flex items-center gap-2"
+ className="bg-rose-600 text-app-text px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all flex items-center gap-2"
  >
  <RotateCcw size={20} />
  <span>Return Items</span>
@@ -161,7 +161,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  return (
  <div key={step.id} className="flex flex-col items-center gap-3 relative bg-app-surface px-4">
  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 scale-110 shadow-lg ${isCompleted
- ? `bg-${step.color}-500 text-white shadow-${step.color}-200`
+ ? `bg-${step.color}-500 text-app-text shadow-${step.color}-200`
  : 'bg-app-surface border border-app-border text-gray-300'
  }`}>
  <Icon size={20} />
@@ -228,7 +228,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
  </div>
 
  {/* Totals Box */}
- <div className="bg-gray-900 text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+ <div className="bg-gray-900 text-app-text p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
  <div>
  <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Status Overview</div>
  <div className="text-2xl font-black">{order.status}</div>

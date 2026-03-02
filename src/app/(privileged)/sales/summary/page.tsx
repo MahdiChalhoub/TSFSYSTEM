@@ -62,7 +62,7 @@ export default function DailySummaryPage() {
  <div>
  <h1 className="text-4xl lg:page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <CalendarDays size={28} className="text-white" />
+ <CalendarDays size={28} className="text-app-text" />
  </div>
  Daily <span className="text-emerald-600">Summary</span>
  </h1>
@@ -72,7 +72,7 @@ export default function DailySummaryPage() {
  </div>
  <button
  onClick={loadData}
- className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center gap-2"
+ className="px-6 py-3 bg-emerald-600 text-app-text rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center gap-2"
  >
  <BarChart3 size={16} /> Refresh
  </button>
@@ -80,8 +80,8 @@ export default function DailySummaryPage() {
 
  {/* Hero KPIs */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
- <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-white shadow-xl shadow-emerald-100 relative overflow-hidden">
- <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
+ <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-app-text shadow-xl shadow-emerald-100 relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-32 h-32 bg-app-text/5 rounded-full -translate-y-10 translate-x-10" />
  <div className="relative">
  <DollarSign size={24} className="mb-3 opacity-80" />
  <div className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Today's Revenue</div>
@@ -109,7 +109,7 @@ export default function DailySummaryPage() {
  </div>
 
  {/* Revenue Breakdown Banner */}
- <div className="bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+ <div className="bg-gray-900 text-app-text p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
  <div className="flex gap-10">
  <div>
  <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Gross Revenue</div>

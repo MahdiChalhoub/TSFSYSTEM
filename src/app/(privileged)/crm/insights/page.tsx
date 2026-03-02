@@ -163,7 +163,7 @@ export default function StrategicRelationshipIntelligencePage() {
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Target size={40} className="text-white fill-white/20" />
+ <Target size={40} className="text-app-text fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
@@ -216,15 +216,15 @@ export default function StrategicRelationshipIntelligencePage() {
  </div>
  </div>
 
- <div className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-white min-h-[120px]">
+ <div className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/30 overflow-hidden group hover:scale-[1.02] transition-all duration-500 relative p-8 text-app-text min-h-[120px]">
  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-colors" />
  <div className="flex items-center gap-6 relative z-10">
- <div className="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center shadow-2xl backdrop-blur-md">
+ <div className="w-14 h-14 rounded-2xl bg-app-text/10 text-app-text flex items-center justify-center shadow-2xl backdrop-blur-md">
  <DollarSign size={28} className="text-emerald-400" />
  </div>
  <div>
  <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Aggregate Revenue</p>
- <h2 className="text-4xl font-black text-white tracking-tighter mt-1">{fmt(totalRevenue).replace('.00', '')}</h2>
+ <h2 className="text-4xl font-black text-app-text tracking-tighter mt-1">{fmt(totalRevenue).replace('.00', '')}</h2>
  </div>
  </div>
  </div>
@@ -244,7 +244,7 @@ export default function StrategicRelationshipIntelligencePage() {
 
  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
  <div className="lg:col-span-1 space-y-8">
- <Card className="rounded-[3rem] border border-app-border bg-white/70 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.02)] overflow-hidden sticky top-6">
+ <Card className="rounded-[3rem] border border-app-border bg-app-text/70 backdrop-blur-xl shadow-[0_10px_50px_rgba(0,0,0,0.02)] overflow-hidden sticky top-6">
  <div className="bg-slate-50/50 border-b border-app-border p-8 flex items-center justify-between">
  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-app-text-faint">Equity Tiers</h3>
  <Crown size={16} className="text-emerald-500" />
@@ -259,8 +259,8 @@ export default function StrategicRelationshipIntelligencePage() {
  return (
  <div key={tier} className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100/50 group hover:border-emerald-200 hover:bg-app-surface transition-all duration-300">
  <div className="flex items-center justify-between mb-4">
- <div className={`w-12 h-12 rounded-2xl ${isEmerald ? 'bg-emerald-gradient' : 'bg-slate-200'} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
- <Icon size={24} className={isEmerald ? 'text-white' : 'text-app-text-muted'} />
+ <div className={`w-12 h-12 rounded-2xl ${isEmerald ? 'bg-emerald-gradient' : 'bg-slate-200'} text-app-text flex items-center justify-center shadow-lg transition-transform group-hover:scale-110`}>
+ <Icon size={24} className={isEmerald ? 'text-app-text' : 'text-app-text-muted'} />
  </div>
  <Badge variant="outline" className="text-[10px] font-black text-app-text-faint border-app-border rounded-full py-1 px-3 group-hover:border-emerald-100 group-hover:text-emerald-600">
  {pct.toFixed(0)}% SHARE

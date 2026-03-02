@@ -118,7 +118,7 @@ export default function SupplierProfilePage() {
  return (
  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
  <div className="text-center space-y-4">
- <h1 className="text-2xl font-bold text-white">Session expired</h1>
+ <h1 className="text-2xl font-bold text-app-text">Session expired</h1>
  <Link href={`/supplier-portal/${slug}`} className="text-indigo-400 font-bold">Go to Login</Link>
  </div>
  </div>
@@ -132,10 +132,10 @@ export default function SupplierProfilePage() {
  <div className="max-w-3xl mx-auto relative z-10 space-y-8">
  <div className="space-y-2">
  <Link href={`/supplier-portal/${slug}`}
- className="inline-flex items-center gap-2 text-app-text-muted hover:text-white text-sm font-medium transition-colors">
+ className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text text-sm font-medium transition-colors">
  <ArrowLeft size={16} /> Dashboard
  </Link>
- <h1 className="text-4xl font-black text-white">Profile & Settings</h1>
+ <h1 className="text-4xl font-black text-app-text">Profile & Settings</h1>
  <p className="text-app-text-muted text-sm">Manage your account information and security</p>
  </div>
 
@@ -145,7 +145,7 @@ export default function SupplierProfilePage() {
  {session.user.name?.charAt(0).toUpperCase() || 'S'}
  </div>
  <div className="flex-1">
- <p className="text-white font-bold">{session.contact.company || session.contact.name}</p>
+ <p className="text-app-text font-bold">{session.contact.company || session.contact.name}</p>
  <div className="flex items-center gap-3 mt-1">
  <span className="text-[10px] text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1">
  <Tag size={10} /> {session.contact.supplier_category || 'Supplier'}
@@ -156,8 +156,8 @@ export default function SupplierProfilePage() {
  </div>
 
  {/* Personal Information */}
- <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
- <h2 className="text-lg font-bold text-white flex items-center gap-3">
+ <div className="p-8 bg-slate-900/60 border border-app-text/5 rounded-3xl space-y-6">
+ <h2 className="text-lg font-bold text-app-text flex items-center gap-3">
  <User size={20} className="text-indigo-400" /> Contact Information
  </h2>
 
@@ -178,14 +178,14 @@ export default function SupplierProfilePage() {
  <User size={12} /> Full Name
  </label>
  <input value={name} onChange={e => setName(e.target.value)}
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-indigo-500 transition-all" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
  <Mail size={12} /> Email
  </label>
  <input value={email} disabled
- className="w-full bg-slate-950/30 border border-white/5 p-4 rounded-xl text-app-text-muted cursor-not-allowed" />
+ className="w-full bg-slate-950/30 border border-app-text/5 p-4 rounded-xl text-app-text-muted cursor-not-allowed" />
  <p className="text-[10px] text-app-text-muted mt-1">Contact admin to change email</p>
  </div>
  <div>
@@ -193,19 +193,19 @@ export default function SupplierProfilePage() {
  <Building2 size={12} /> Company
  </label>
  <input value={company} onChange={e => setCompany(e.target.value)}
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-indigo-500 transition-all" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
  </div>
  </div>
 
  <button onClick={handleSaveProfile} disabled={saving}
- className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-indigo-600 hover:bg-indigo-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
  <Save size={18} /> {saving ? 'Saving...' : 'Save Changes'}
  </button>
  </div>
 
  {/* Change Password */}
- <div className="p-8 bg-slate-900/60 border border-white/5 rounded-3xl space-y-6">
- <h2 className="text-lg font-bold text-white flex items-center gap-3">
+ <div className="p-8 bg-slate-900/60 border border-app-text/5 rounded-3xl space-y-6">
+ <h2 className="text-lg font-bold text-app-text flex items-center gap-3">
  <Lock size={20} className="text-amber-400" /> Change Password
  </h2>
 
@@ -225,25 +225,25 @@ export default function SupplierProfilePage() {
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">Current Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={currentPassword}
  onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••"
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 pr-12" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 pr-12" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">New Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={newPassword}
  onChange={e => setNewPassword(e.target.value)} placeholder="Min 8 characters"
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">Confirm New Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={confirmPassword}
  onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password"
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
  </div>
  </div>
 
  <div className="flex items-center justify-between">
  <button onClick={() => setShowPasswords(!showPasswords)}
- className="text-sm text-app-text-muted hover:text-white flex items-center gap-2 transition-colors">
+ className="text-sm text-app-text-muted hover:text-app-text flex items-center gap-2 transition-colors">
  {showPasswords ? <EyeOff size={14} /> : <Eye size={14} />}
  {showPasswords ? 'Hide' : 'Show'} passwords
  </button>
@@ -251,7 +251,7 @@ export default function SupplierProfilePage() {
  </div>
 
  <button onClick={handleChangePassword} disabled={pwSaving || !currentPassword || !newPassword}
- className="w-full bg-amber-600 hover:bg-amber-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-amber-600 hover:bg-amber-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
  <Lock size={18} /> {pwSaving ? 'Changing...' : 'Change Password'}
  </button>
  </div>

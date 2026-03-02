@@ -101,14 +101,14 @@ export default function ProformasPage() {
  <div className="flex items-start justify-between">
  <div className="space-y-2">
  <Link href={`/supplier-portal/${slug}`}
- className="inline-flex items-center gap-2 text-app-text-muted hover:text-white text-sm font-medium transition-colors">
+ className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text text-sm font-medium transition-colors">
  <ArrowLeft size={16} /> Dashboard
  </Link>
- <h1 className="text-4xl font-black text-white">Proformas</h1>
+ <h1 className="text-4xl font-black text-app-text">Proformas</h1>
  <p className="text-app-text-muted text-sm">Create and manage quotations sent to the buyer</p>
  </div>
  <button onClick={() => setShowCreate(true)}
- className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-all">
+ className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-app-text rounded-xl font-bold hover:bg-emerald-500 transition-all">
  <Plus size={18} /> New Proforma
  </button>
  </div>
@@ -117,10 +117,10 @@ export default function ProformasPage() {
  {showCreate && (
  <div className="p-8 bg-slate-900/80 border border-emerald-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
  <div className="flex justify-between items-center">
- <h2 className="text-xl font-bold text-white flex items-center gap-3">
+ <h2 className="text-xl font-bold text-app-text flex items-center gap-3">
  <FileText size={22} className="text-emerald-400" /> New Proforma
  </h2>
- <button onClick={() => setShowCreate(false)} className="text-app-text-muted hover:text-white"><X size={20} /></button>
+ <button onClick={() => setShowCreate(false)} className="text-app-text-muted hover:text-app-text"><X size={20} /></button>
  </div>
  {error && (
  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
@@ -129,12 +129,12 @@ export default function ProformasPage() {
  )}
  <form onSubmit={handleCreate} className="space-y-4">
  <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-emerald-500 transition-all" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all" />
  <textarea placeholder="Notes / description" value={notes} onChange={e => setNotes(e.target.value)} rows={3}
- className="w-full bg-slate-950/50 border border-white/5 p-4 rounded-xl text-white outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700 resize-none" />
+ className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700 resize-none" />
  <p className="text-[11px] text-app-text-muted">You can add line items after creating the proforma</p>
  <button type="submit" disabled={creating}
- className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
  {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Create Proforma</>}
  </button>
  </form>
@@ -149,20 +149,20 @@ export default function ProformasPage() {
  ) : proformas.length === 0 ? (
  <div className="py-24 text-center space-y-4">
  <FileText size={48} className="mx-auto text-app-text-muted" />
- <h2 className="text-xl font-bold text-white">No proformas yet</h2>
+ <h2 className="text-xl font-bold text-app-text">No proformas yet</h2>
  <p className="text-app-text-muted">Create your first proforma to send a quotation</p>
  </div>
  ) : (
  <div className="space-y-3">
  {proformas.map(p => (
  <div key={p.id}
- className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 transition-all">
- <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${STATUS_COLORS[p.status] || 'text-app-text-faint'}`}>
+ className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 transition-all">
+ <div className={`w-12 h-12 bg-app-text/5 rounded-xl flex items-center justify-center ${STATUS_COLORS[p.status] || 'text-app-text-faint'}`}>
  <FileText size={22} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3">
- <p className="text-white font-bold">{p.proforma_number}</p>
+ <p className="text-app-text font-bold">{p.proforma_number}</p>
  <span className={`text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[p.status] || 'text-app-text-faint'}`}>
  {p.status.replace('_', ' ')}
  </span>
@@ -172,7 +172,7 @@ export default function ProformasPage() {
  {p.valid_until && ` • Valid until: ${new Date(p.valid_until).toLocaleDateString()}`}
  </p>
  </div>
- <p className="text-white font-black text-lg">${parseFloat(p.total_amount).toFixed(2)}</p>
+ <p className="text-app-text font-black text-lg">${parseFloat(p.total_amount).toFixed(2)}</p>
  </div>
  ))}
  </div>

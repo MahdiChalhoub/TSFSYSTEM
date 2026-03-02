@@ -125,7 +125,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
 
  {status === 'APPROVED' ? (
  <div className="p-10 flex flex-col items-center animate-in zoom-in-95">
- <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-200 mb-4">
+ <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-app-text shadow-xl shadow-emerald-200 mb-4">
  <Check size={40} strokeWidth={3} />
  </div>
  <p className="text-xs text-emerald-600 font-black uppercase tracking-widest">Proceeding...</p>
@@ -192,7 +192,7 @@ export function ManagerOverride({ isOpen, onClose, onSuccess, actionLabel }: Man
  onClick={() => handleKey(val)}
  className={`h-14 rounded-xl text-lg font-black transition-all active:scale-95 ${val === '✓'
  ? pin.length >= 4
- ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200'
+ ? 'bg-emerald-500 text-app-text hover:bg-emerald-600 shadow-lg shadow-emerald-200'
  : 'bg-app-surface-2 text-gray-300 cursor-not-allowed'
  : val === 'C'
  ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 border border-rose-100'

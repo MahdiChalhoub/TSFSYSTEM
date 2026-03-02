@@ -141,7 +141,7 @@ export default function LabelPrintingPage() {
  <div>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
- <Tag size={28} className="text-white" />
+ <Tag size={28} className="text-app-text" />
  </div>
  Label <span className="text-orange-600">Printing</span>
  </h1>
@@ -210,7 +210,7 @@ export default function LabelPrintingPage() {
  <button
  key={size}
  onClick={() => setLabelSize(size)}
- className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${labelSize === size ? 'bg-gray-900 text-white' : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
+ className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${labelSize === size ? 'bg-gray-900 text-app-text' : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
  }`}
  >
  {size.charAt(0).toUpperCase() + size.slice(1)}
@@ -223,7 +223,7 @@ export default function LabelPrintingPage() {
  {selected.size === filtered.length ? 'Deselect All' : 'Select All'}
  </button>
  <button onClick={handlePrint}
- className="px-4 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 transition-all flex items-center gap-2 disabled:opacity-50"
+ className="px-4 py-1.5 bg-orange-600 text-app-text rounded-lg text-xs font-bold hover:bg-orange-700 transition-all flex items-center gap-2 disabled:opacity-50"
  disabled={selected.size === 0}
  >
  <Printer size={14} /> Print {selected.size > 0 ? `(${selected.size})` : ''}

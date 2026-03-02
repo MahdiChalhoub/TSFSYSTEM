@@ -81,7 +81,7 @@ export function CategoryExplorer({
 
  return (
  <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
- <SheetContent side="right" className="w-full sm:max-w-xl bg-white/95 backdrop-blur-xl border-l border-app-border p-0 overflow-hidden flex flex-col">
+ <SheetContent side="right" className="w-full sm:max-w-xl bg-app-text/95 backdrop-blur-xl border-l border-app-border p-0 overflow-hidden flex flex-col">
  <div className="h-full flex flex-col relative">
  {/* Header with Glassmorphism */}
  <SheetHeader className="p-8 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
@@ -194,21 +194,21 @@ export function CategoryExplorer({
  className={clsx(
  "p-4 rounded-3xl border transition-all duration-300 cursor-pointer text-center relative overflow-hidden group hover:-translate-y-1 shadow-sm",
  activeBrandFilter === b.name
- ? "bg-blue-600 text-white border-blue-600 ring-4 ring-blue-100"
+ ? "bg-blue-600 text-app-text border-blue-600 ring-4 ring-blue-100"
  : "bg-app-surface border-app-border hover:border-blue-400 hover:shadow-blue-500/10"
  )}
  style={{ animationDelay: `${idx * 30}ms` }}
  >
  <div className={clsx(
  "w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110",
- activeBrandFilter === b.name ? "bg-white/20" : "bg-blue-50 text-blue-600"
+ activeBrandFilter === b.name ? "bg-app-text/20" : "bg-blue-50 text-blue-600"
  )}>
  <Tag size={24} />
  </div>
  <h6 className="font-extrabold text-sm truncate px-2">{b.name}</h6>
  <p className={clsx(
  "text-[10px] font-black uppercase tracking-widest mt-1",
- activeBrandFilter === b.name ? "text-white/70" : "text-app-text-faint"
+ activeBrandFilter === b.name ? "text-app-text/70" : "text-app-text-faint"
  )}>
  {b.cat_product_count} Products
  </p>
@@ -227,21 +227,21 @@ export function CategoryExplorer({
  className={clsx(
  "p-4 rounded-3xl border transition-all duration-300 cursor-pointer text-center relative overflow-hidden group hover:-translate-y-1 shadow-sm",
  activeParfumFilter === pa.name
- ? "bg-purple-600 text-white border-purple-600 ring-4 ring-purple-100"
+ ? "bg-purple-600 text-app-text border-purple-600 ring-4 ring-purple-100"
  : "bg-app-surface border-app-border hover:border-purple-400 hover:shadow-purple-500/10"
  )}
  style={{ animationDelay: `${idx * 30}ms` }}
  >
  <div className={clsx(
  "w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110",
- activeParfumFilter === pa.name ? "bg-white/20" : "bg-purple-50 text-purple-600"
+ activeParfumFilter === pa.name ? "bg-app-text/20" : "bg-purple-50 text-purple-600"
  )}>
  <Box size={24} />
  </div>
  <h6 className="font-extrabold text-sm truncate px-2">{pa.name}</h6>
  <p className={clsx(
  "text-[10px] font-black uppercase tracking-widest mt-1",
- activeParfumFilter === pa.name ? "text-white/70" : "text-app-text-faint"
+ activeParfumFilter === pa.name ? "text-app-text/70" : "text-app-text-faint"
  )}>
  {pa.cat_product_count} Products
  </p>
@@ -269,7 +269,7 @@ export function CategoryExplorer({
  <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Brands</div>
  </div>
  </div>
- <button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-extrabold flex items-center gap-2 shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
+ <button className="bg-orange-600 hover:bg-orange-700 text-app-text px-6 py-3 rounded-2xl font-extrabold flex items-center gap-2 shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
  Manage Catalog <ArrowRight size={18} />
  </button>
  </div>

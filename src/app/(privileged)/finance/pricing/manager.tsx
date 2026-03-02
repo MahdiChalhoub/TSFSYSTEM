@@ -15,7 +15,7 @@ export default function PriceListManager({ priceLists }: { priceLists: Record<st
  <h2 className="text-lg font-bold text-app-text mb-2">Create Price List</h2>
  <form action={handleCreate} className="flex gap-2">
  <input name="name" placeholder="List Name (e.g. Wholesale 2026)" className="border p-2 rounded w-full" required suppressHydrationWarning={true} />
- <button type="submit" className="bg-black text-white px-4 py-2 rounded shrink-0" suppressHydrationWarning={true}>Create</button>
+ <button type="submit" className="bg-black text-app-text px-4 py-2 rounded shrink-0" suppressHydrationWarning={true}>Create</button>
  </form>
  </div>
 

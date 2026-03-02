@@ -261,7 +261,7 @@ export default function ListViewSettingsPage() {
  {/* Page header */}
  <div className="flex items-center gap-4 mb-6">
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Settings className="h-7 w-7 text-white" />
+ <Settings className="h-7 w-7 text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter">ListView <span className="text-emerald-600">Settings</span></h1>

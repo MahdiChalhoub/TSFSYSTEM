@@ -218,7 +218,7 @@ export default function TaxGroupsPage() {
  </div>
  <h1 className="page-header-title flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Percent size={40} className="text-white fill-white/20" />
+ <Percent size={40} className="text-app-text fill-white/20" />
  </div>
  Tax <span className="text-emerald-700">Policies</span>
  </h1>
@@ -230,7 +230,7 @@ export default function TaxGroupsPage() {
  <Button onClick={load} variant="outline" className="h-14 w-14 rounded-2xl border-app-border bg-app-surface shadow-xl shadow-slate-200/50 p-0 text-app-text-faint hover:text-emerald-600 transition-all">
  <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
  </Button>
- <Button onClick={startCreate} className="h-14 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-700/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-b-emerald-800">
+ <Button onClick={startCreate} className="h-14 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-700/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-b-emerald-800">
  <Plus size={18} /> Register Policy
  </Button>
  </div>
@@ -266,7 +266,7 @@ export default function TaxGroupsPage() {
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
  <CardContent className="p-8 flex items-center gap-6">
- <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-lg shadow-emerald-200">
+ <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-app-text flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-lg shadow-emerald-200">
  <Star size={32} className="fill-white" />
  </div>
  <div className="flex-1 min-w-0">
@@ -320,7 +320,7 @@ export default function TaxGroupsPage() {
  </div>
  <div className="px-8 py-6 border-t border-app-border flex justify-end gap-4 bg-slate-50/30">
  <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[11px] uppercase tracking-widest h-12 px-6">Discard</Button>
- <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-slate-900/30 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+ <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-slate-900 hover:bg-black text-app-text font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-slate-900/30 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
  {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
  {editing ? 'Save Changes' : 'Create'}
  </Button>

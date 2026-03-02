@@ -79,14 +79,14 @@ export default function ContactDetailPage() {
  </Button>
  <div>
  <div className="flex items-center gap-3">
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg ${isCustomer ? 'bg-emerald-600 shadow-emerald-100' : 'bg-blue-600 shadow-blue-100'
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-app-text shadow-lg ${isCustomer ? 'bg-emerald-600 shadow-emerald-100' : 'bg-blue-600 shadow-blue-100'
  }`}>
  <User size={24} />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <UserCircle size={28} className="text-white" />
+ <UserCircle size={28} className="text-app-text" />
  </div>
  Contact <span className="text-indigo-600">Profile</span>
  </h1>

@@ -136,7 +136,7 @@ export default function RelationshipMasterList({
  </Button>
  <Button
  onClick={() => { setModalType('CUSTOMER'); setIsModalOpen(true); }}
- className="h-9 px-4 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100"
+ className="h-9 px-4 bg-indigo-600 text-app-text hover:bg-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100"
  >
  <Plus size={14} className="mr-2" /> New Client
  </Button>

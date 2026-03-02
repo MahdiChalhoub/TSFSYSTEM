@@ -11,7 +11,7 @@ export default async function SalesImportPage() {
  return (
  <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-700">
  {/* Header Section */}
- <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-[#0f172a] p-8 rounded-[2.5rem] text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
+ <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-[#0f172a] p-8 rounded-[2.5rem] text-app-text shadow-2xl shadow-slate-900/20 relative overflow-hidden">
  <div className="absolute top-0 right-0 p-12 opacity-5">
  <Database size={200} />
  </div>
@@ -19,7 +19,7 @@ export default async function SalesImportPage() {
  <div className="relative z-10">
  <div className="flex items-center gap-4 mb-3">
  <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-500/20">
- <FileUp size={28} className="text-white" />
+ <FileUp size={28} className="text-app-text" />
  </div>
  <h1 className="page-header-title uppercase tracking-tight">Sales Import</h1>
  </div>

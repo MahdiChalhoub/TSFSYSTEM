@@ -100,7 +100,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  <h3 className="text-xl font-bold text-app-text flex items-center gap-3">
  {year.name}
  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${year.status === 'OPEN' ? 'bg-green-100 text-green-800' :
- year.isHardLocked ? 'bg-red-600 text-white' : 'bg-app-surface-2 text-app-text-muted'
+ year.isHardLocked ? 'bg-red-600 text-app-text' : 'bg-app-surface-2 text-app-text-muted'
  }`}>
  {year.isHardLocked ? 'FINALIZED' : year.status}
  </span>
@@ -183,7 +183,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  </div>
  {/* Hover Actions */}
  {!year.isHardLocked && (
- <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-app-text-muted">
+ <div className="absolute inset-0 bg-app-text/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-app-text-muted">
  <div className="flex gap-2">
  <button
  onClick={() => handleChangeStatus(p.id, 'OPEN')}

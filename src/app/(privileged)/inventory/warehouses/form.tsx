@@ -199,7 +199,7 @@ export default function WarehouseModal({
  <button
  type="submit"
  disabled={isPending}
- className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 hover:bg-indigo-700 transition-all text-sm disabled:opacity-50"
+ className="flex-1 bg-indigo-600 text-app-text px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 hover:bg-indigo-700 transition-all text-sm disabled:opacity-50"
  >
  {isPending ? 'Saving...' : (warehouse ? 'Update Location' : 'Create Location')}
  </button>

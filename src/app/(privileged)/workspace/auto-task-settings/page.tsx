@@ -141,7 +141,7 @@ export default function AutoTaskSettingsPage() {
  </div>
  <a
  href="/workspace/auto-task-rules"
- className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
+ className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
  >
  <Plus size={14} /> Create Rule
  </a>
@@ -171,7 +171,7 @@ export default function AutoTaskSettingsPage() {
  onClick={() => setFilterType(t)}
  className={clsx(
  'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
- filterType === t ? 'bg-indigo-600 text-white shadow' : 'text-app-text-muted hover:bg-app-bg'
+ filterType === t ? 'bg-indigo-600 text-app-text shadow' : 'text-app-text-muted hover:bg-app-bg'
  )}
  >
  {t === 'ALL' ? 'All Types' : t === 'EVENT' ? '⚡ Event' : '🔄 Recurring'}
@@ -186,7 +186,7 @@ export default function AutoTaskSettingsPage() {
  onClick={() => setFilterActive(t)}
  className={clsx(
  'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
- filterActive === t ? 'bg-emerald-600 text-white shadow' : 'text-app-text-muted hover:bg-app-bg'
+ filterActive === t ? 'bg-emerald-600 text-app-text shadow' : 'text-app-text-muted hover:bg-app-bg'
  )}
  >
  {t === 'ALL' ? 'All' : t === 'ACTIVE' ? '✅ Active' : '⬜ Inactive'}
@@ -232,7 +232,7 @@ export default function AutoTaskSettingsPage() {
  )}
  >
  <div className="flex items-center gap-3">
- <div className={clsx('p-2 rounded-xl bg-white/80 shadow-sm', config.color)}>
+ <div className={clsx('p-2 rounded-xl bg-app-text/80 shadow-sm', config.color)}>
  <Icon size={18} />
  </div>
  <div className="text-left">
@@ -244,12 +244,12 @@ export default function AutoTaskSettingsPage() {
  </div>
  <div className="flex items-center gap-3">
  {group.event_count > 0 && (
- <span className="text-[10px] font-bold text-indigo-600 bg-white/80 px-2 py-0.5 rounded-full">
+ <span className="text-[10px] font-bold text-indigo-600 bg-app-text/80 px-2 py-0.5 rounded-full">
  ⚡ {group.event_count} event
  </span>
  )}
  {group.recurring_count > 0 && (
- <span className="text-[10px] font-bold text-amber-600 bg-white/80 px-2 py-0.5 rounded-full">
+ <span className="text-[10px] font-bold text-amber-600 bg-app-text/80 px-2 py-0.5 rounded-full">
  🔄 {group.recurring_count} recurring
  </span>
  )}

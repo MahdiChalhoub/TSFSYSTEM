@@ -68,9 +68,9 @@ export function Numpad({
  };
 
  const modeColors: Record<NumpadMode, string> = {
- qty: 'bg-indigo-600 text-white',
- disc: 'bg-amber-500 text-white',
- price: 'bg-emerald-600 text-white',
+ qty: 'bg-indigo-600 text-app-text',
+ disc: 'bg-amber-500 text-app-text',
+ price: 'bg-emerald-600 text-app-text',
  };
 
  return (

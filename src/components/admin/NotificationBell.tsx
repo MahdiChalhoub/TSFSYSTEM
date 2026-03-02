@@ -78,7 +78,7 @@ export function NotificationBell() {
  <button suppressHydrationWarning className="p-2.5 relative hover:bg-gray-100/50 rounded-xl text-app-text-muted hover:text-emerald-600 transition-colors outline-none">
  <Bell size={22} />
  {unreadCount > 0 && (
- <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 text-white text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white animate-in zoom-in-50 duration-300">
+ <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 text-app-text text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white animate-in zoom-in-50 duration-300">
  {unreadCount > 9 ? '9+' : unreadCount}
  </span>
  )}

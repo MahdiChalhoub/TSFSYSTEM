@@ -80,7 +80,7 @@ export default function AccountBookManagerPage() {
  <ShieldAlert size={16} className={activeTab === 'review' ? 'text-amber-500' : ''} />
  Active Review
  {summary.pendingCount > 0 && (
- <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+ <span className="ml-1 bg-amber-500 text-app-text text-[10px] px-1.5 py-0.5 rounded-full">
  {summary.pendingCount}
  </span>
  )}
@@ -122,11 +122,11 @@ export default function AccountBookManagerPage() {
  </p>
 
  <div className="flex gap-4 mt-4">
- <div className="bg-white/60 px-4 py-2 rounded-xl flex items-center gap-3">
+ <div className="bg-app-text/60 px-4 py-2 rounded-xl flex items-center gap-3">
  <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Pending IN:</span>
  <span className="font-black text-emerald-600">{formatMoney(summary.pendingIn)}</span>
  </div>
- <div className="bg-white/60 px-4 py-2 rounded-xl flex items-center gap-3">
+ <div className="bg-app-text/60 px-4 py-2 rounded-xl flex items-center gap-3">
  <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Pending OUT:</span>
  <span className="font-black text-rose-600">{formatMoney(summary.pendingOut)}</span>
  </div>
@@ -134,7 +134,7 @@ export default function AccountBookManagerPage() {
  </div>
  <button
  onClick={() => setShowReviewModal(true)}
- className="bg-amber-500 text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20"
+ className="bg-amber-500 text-app-text px-6 py-3 rounded-xl font-black text-sm hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20"
  >
  Open Audit Modal
  </button>

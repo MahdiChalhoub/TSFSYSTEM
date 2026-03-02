@@ -38,14 +38,14 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  </div>
  {/* Status badge */}
  <div className="absolute -top-2 -right-2 w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/40 rotate-12">
- <span className="text-white text-lg font-black">?</span>
+ <span className="text-app-text text-lg font-black">?</span>
  </div>
  </div>
  </div>
 
  {/* Main text */}
  <div className="space-y-3">
- <h1 className="text-4xl font-black text-white tracking-tight leading-tight">
+ <h1 className="text-4xl font-black text-app-text tracking-tight leading-tight">
  Workspace Not Found
  </h1>
  <p className="text-app-text-faint text-lg leading-relaxed max-w-sm mx-auto">
@@ -86,7 +86,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  <div className="space-y-3 pt-2 max-w-sm mx-auto">
  <Link
  href={`https://${rootDomain}/register/business`}
- className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:shadow-emerald-500/25 hover:-translate-y-0.5"
+ className="block w-full py-4 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-black text-sm uppercase tracking-[0.15em] rounded-2xl shadow-lg shadow-emerald-500/10 transition-all duration-300 hover:shadow-emerald-500/25 hover:-translate-y-0.5"
  >
  Create Your Workspace
  </Link>

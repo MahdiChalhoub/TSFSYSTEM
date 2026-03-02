@@ -95,14 +95,14 @@ export default function ReceiptsPage() {
  return (
  <div className="p-8 space-y-10 max-w-[1600px] mx-auto animate-in fade-in duration-700 pb-24">
  {/* Header Section */}
- <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 bg-white/40 p-8 rounded-[3rem] border border-white/60 shadow-xl shadow-gray-200/20 backdrop-blur-xl">
+ <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 bg-app-text/40 p-8 rounded-[3rem] border border-app-text/60 shadow-xl shadow-gray-200/20 backdrop-blur-xl">
  <div className="flex items-center gap-6">
- <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 text-white transform hover:rotate-6 transition-transform">
+ <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 text-app-text transform hover:rotate-6 transition-transform">
  <Truck size={38} strokeWidth={2.5} />
  </div>
  <div>
  <div className="flex items-center gap-3">
- <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+ <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-app-text font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
  <Plus size={16} />
  Direct Operations
  </button>
@@ -121,7 +121,7 @@ export default function ReceiptsPage() {
  </div>
 
  <div className="flex items-center gap-3">
- <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+ <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-app-text font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
  <Plus size={16} />
  Direct Operations
  </button>
@@ -179,9 +179,9 @@ export default function ReceiptsPage() {
 
  <div className="flex flex-col gap-3 overflow-y-auto max-h-[800px] pr-2 scrollbar-thin scrollbar-thumb-gray-200">
  {loading ? Array.from({ length: 5 }).map((_, i) => (
- <div key={i} className="h-24 bg-white/50 border border-app-border rounded-[2rem] animate-pulse" />
+ <div key={i} className="h-24 bg-app-text/50 border border-app-border rounded-[2rem] animate-pulse" />
  )) : filteredOrders.length === 0 ? (
- <div className="bg-white/50 rounded-[2rem] border-2 border-dashed border-app-border p-12 text-center opacity-40">
+ <div className="bg-app-text/50 rounded-[2rem] border-2 border-dashed border-app-border p-12 text-center opacity-40">
  <ShoppingBag size={40} className="mx-auto mb-4" />
  <p className="text-sm font-black uppercase tracking-widest text-emerald-900">No Orders Found</p>
  </div>
@@ -192,7 +192,7 @@ export default function ReceiptsPage() {
  <button
  key={po.id}
  onClick={() => openDetail(po)}
- className={`w-full text-left p-6 rounded-[2rem] border-2 transition-all group relative overflow-hidden active:scale-95 ${selected?.id === po.id ? 'bg-app-surface border-emerald-500 shadow-2xl shadow-emerald-500/10 ring-8 ring-emerald-500/5' : 'bg-white/60 border-transparent hover:border-app-border hover:bg-app-surface hover:shadow-xl hover:shadow-gray-200/20'}`}
+ className={`w-full text-left p-6 rounded-[2rem] border-2 transition-all group relative overflow-hidden active:scale-95 ${selected?.id === po.id ? 'bg-app-surface border-emerald-500 shadow-2xl shadow-emerald-500/10 ring-8 ring-emerald-500/5' : 'bg-app-text/60 border-transparent hover:border-app-border hover:bg-app-surface hover:shadow-xl hover:shadow-gray-200/20'}`}
  >
  {selected?.id === po.id && <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12" />}
  <div className="flex justify-between items-start mb-4">
@@ -257,7 +257,7 @@ export default function ReceiptsPage() {
  </div>
  <div className="flex flex-wrap items-center gap-6">
  <div className="flex items-center gap-3">
- <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+ <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-app-text font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
  <Plus size={16} />
  Direct Operations
  </button>
@@ -270,7 +270,7 @@ export default function ReceiptsPage() {
  </div>
  </div>
  <div className="flex items-center gap-3">
- <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+ <button onClick={() => window.location.href = '/purchases/new'} className="h-14 px-8 rounded-2xl bg-indigo-600 text-app-text font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
  <Plus size={16} />
  Direct Operations
  </button>
@@ -360,7 +360,7 @@ export default function ReceiptsPage() {
  {isReceivable && (
  <button
  onClick={() => setReceivingLine(line)}
- className="h-14 px-8 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:-translate-y-1 transition-all active:scale-95 flex items-center gap-2"
+ className="h-14 px-8 bg-emerald-600 text-app-text rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 hover:-translate-y-1 transition-all active:scale-95 flex items-center gap-2"
  >
  <CheckCircle size={16} />
  Receive
@@ -397,7 +397,7 @@ export default function ReceiptsPage() {
  </button>
  <button
  onClick={() => setSelected(null)}
- className="h-14 px-8 rounded-2xl bg-gray-900 text-white font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-900/10"
+ className="h-14 px-8 rounded-2xl bg-gray-900 text-app-text font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-900/10"
  >
  Close
  </button>

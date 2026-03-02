@@ -22,7 +22,7 @@ export default function LandingLayout({
  <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
  <div className="flex items-center gap-2">
  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
- <span className="text-white font-black text-xl">{PLATFORM_CONFIG.name.charAt(0)}</span>
+ <span className="text-app-text font-black text-xl">{PLATFORM_CONFIG.name.charAt(0)}</span>
  </div>
  <span className="text-2xl font-black tracking-tighter">
  {PLATFORM_CONFIG.name.split(' ')[0]}
@@ -31,9 +31,9 @@ export default function LandingLayout({
  </div>
 
  <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-app-text-faint">
- <a href="#features" className="hover:text-white transition-colors">Features</a>
- <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
- <a href="#register" className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
+ <a href="#features" className="hover:text-app-text transition-colors">Features</a>
+ <a href="#pricing" className="hover:text-app-text transition-colors">Pricing</a>
+ <a href="#register" className="bg-emerald-600 hover:bg-emerald-500 text-app-text px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
  Get Started
  </a>
  </nav>
@@ -47,7 +47,7 @@ export default function LandingLayout({
  <footer className="bg-slate-950 border-t border-slate-900 py-20">
  <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-app-text-faint">
  <div className="col-span-2">
- <span className="text-2xl font-black text-white tracking-tighter mb-4 block">
+ <span className="text-2xl font-black text-app-text tracking-tighter mb-4 block">
  {PLATFORM_CONFIG.name.split(' ')[0]}
  <span className="text-emerald-500">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
  </span>
@@ -57,7 +57,7 @@ export default function LandingLayout({
  </p>
  </div>
  <div>
- <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Platform</h4>
+ <h4 className="text-app-text font-bold mb-4 uppercase text-xs tracking-widest">Platform</h4>
  <ul className="space-y-3 text-sm">
  <li><a href="#" className="hover:text-emerald-400">Features</a></li>
  <li><a href="#" className="hover:text-emerald-400">Pricing</a></li>
@@ -65,7 +65,7 @@ export default function LandingLayout({
  </ul>
  </div>
  <div>
- <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Company</h4>
+ <h4 className="text-app-text font-bold mb-4 uppercase text-xs tracking-widest">Company</h4>
  <ul className="space-y-3 text-sm">
  <li><a href="#" className="hover:text-emerald-400">About Us</a></li>
  <li><a href="#" className="hover:text-emerald-400">Privacy Policy</a></li>

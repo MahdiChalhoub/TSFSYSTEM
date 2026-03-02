@@ -236,28 +236,28 @@ export const POSQuickAction = () => {
  return (
  <Link href="/sales" className="block w-full group">
  <div
- className="relative overflow-hidden rounded-3xl p-8 text-white shadow-xl transition-all hover:shadow-2xl hover:scale-[1.01]"
+ className="relative overflow-hidden rounded-3xl p-8 text-app-text shadow-xl transition-all hover:shadow-2xl hover:scale-[1.01]"
  style={{ background: 'linear-gradient(135deg, var(--app-accent), color-mix(in srgb, var(--app-accent) 70%, #059669))' }}
  >
  <div className="relative z-10 flex items-center justify-between">
  <div className="space-y-2">
  <div className="flex items-center gap-3 mb-4">
- <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
- <ShoppingCart size={24} className="text-white" />
+ <div className="p-2 bg-app-text/20 rounded-xl backdrop-blur-md">
+ <ShoppingCart size={24} className="text-app-text" />
  </div>
  <h3 className="text-2xl font-bold">Open POS Terminal</h3>
  </div>
- <p className="text-white/80 max-w-xl text-lg font-medium">
+ <p className="text-app-text/80 max-w-xl text-lg font-medium">
  Start a new sales session, manage checkout, and process transactions efficiently.
  </p>
  </div>
- <div className="bg-white/20 p-3 rounded-full backdrop-blur-md transition-transform group-hover:translate-x-1">
+ <div className="bg-app-text/20 p-3 rounded-full backdrop-blur-md transition-transform group-hover:translate-x-1">
  <ChevronRight size={24} />
  </div>
  </div>
  {/* Decorative overlays */}
  <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent" />
- <div className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
+ <div className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full bg-app-text/10 blur-3xl" />
  </div>
  </Link>
  );

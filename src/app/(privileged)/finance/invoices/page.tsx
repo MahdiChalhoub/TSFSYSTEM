@@ -254,14 +254,14 @@ export default function InvoicesPage() {
  <span className="badge-status badge-emerald">Billing Active</span>
  </div>
  <h1 className="page-header-title flex items-center gap-4">
- <div className="page-header-icon bg-emerald-600 text-white">
+ <div className="page-header-icon bg-emerald-600 text-app-text">
  <FileText size={24} />
  </div>
  Invoice <span className="text-emerald-600">Suite</span>
  </h1>
  </div>
  <div className="flex gap-3">
- <Button onClick={() => setCreateOpen(true)} className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+ <Button onClick={() => setCreateOpen(true)} className="h-12 px-6 rounded-2xl bg-indigo-600 text-app-text font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
  <Plus size={18} /> New Invoice
  </Button>
  </div>

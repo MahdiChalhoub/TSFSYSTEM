@@ -182,7 +182,7 @@ export default function DiscrepancyStrategyPage() {
  {(parent.lifecycle_status === 'OPEN' || parent.lifecycle_status === 'APPROVED') && (
  <Button
  size="sm"
- className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] h-7 px-3 rounded-lg flex items-center gap-2 shadow-sm"
+ className="bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] h-7 px-3 rounded-lg flex items-center gap-2 shadow-sm"
  onClick={() => handlePromote(parent.id)}
  >
  <Play size={10} fill="currentColor" /> INITIATE ADJUSTMENT
@@ -243,7 +243,7 @@ export default function DiscrepancyStrategyPage() {
  </div>
  <DialogFooter className="pt-6">
  <Button variant="ghost" onClick={() => setShowCreate(false)} className="rounded-xl font-bold">Cancel</Button>
- <Button onClick={handleCreate} disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-8 font-bold h-12 shadow-lg shadow-emerald-200">Initialize Discussion</Button>
+ <Button onClick={handleCreate} disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-app-text rounded-xl px-8 font-bold h-12 shadow-lg shadow-emerald-200">Initialize Discussion</Button>
  </DialogFooter>
  </DialogContent>
  </Dialog>

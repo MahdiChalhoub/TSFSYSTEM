@@ -271,8 +271,8 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  "rounded-2xl p-4 flex justify-between items-center shadow-lg transition-all",
  changeDue > 0 ? "bg-emerald-500 shadow-emerald-100" : "bg-indigo-500 shadow-indigo-100"
  )}>
- <span className="text-white font-black">Change Due</span>
- <span className="text-white font-black text-xl tabular-nums">{currency}{changeDue.toFixed(2)}</span>
+ <span className="text-app-text font-black">Change Due</span>
+ <span className="text-app-text font-black text-xl tabular-nums">{currency}{changeDue.toFixed(2)}</span>
  </div>
  </div>
  </div>
@@ -301,13 +301,13 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  onClick={() => setPaymentMethod(m.id)}
  className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${paymentMethod === m.id
  ? m.id === 'CREDIT'
- ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-100'
- : 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+ ? 'bg-amber-500 border-amber-500 text-app-text shadow-lg shadow-amber-100'
+ : 'bg-indigo-600 border-indigo-600 text-app-text shadow-lg shadow-indigo-100'
  : 'bg-app-surface border-app-border text-app-text-faint hover:border-indigo-100 hover:bg-app-bg'
  }`}
  >
- <m.icon size={20} className={paymentMethod === m.id ? 'text-white' : 'text-gray-300'} />
- <span className={`text-[8px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-white' : 'text-app-text-muted'}`}>{m.label}</span>
+ <m.icon size={20} className={paymentMethod === m.id ? 'text-app-text' : 'text-gray-300'} />
+ <span className={`text-[8px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-app-text' : 'text-app-text-muted'}`}>{m.label}</span>
  </button>
  ))}
  </div>
@@ -324,7 +324,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  <button
  onClick={handleCharge}
  disabled={isPending || cart.length === 0}
- className="bg-indigo-600 text-white rounded-2xl h-14 flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 border-0"
+ className="bg-indigo-600 text-app-text rounded-2xl h-14 flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 border-0"
  >
  {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
  Save & Close

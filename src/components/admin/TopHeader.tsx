@@ -90,7 +90,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
  <div className="relative">
  <div
  onClick={() => setProfileOpen(!profileOpen)}
- className="flex items-center gap-2 pl-1 cursor-pointer group p-1 hover:bg-white/50 rounded-xl border border-transparent hover:border-gray-200/50 transition-all"
+ className="flex items-center gap-2 pl-1 cursor-pointer group p-1 hover:bg-app-text/50 rounded-xl border border-transparent hover:border-gray-200/50 transition-all"
  >
  <div className="text-right hidden sm:block">
  <div className="text-xs font-bold text-app-text group-hover:text-emerald-800 transition-colors truncate max-w-[100px]">

@@ -26,7 +26,7 @@ export default async function LeavesPage() {
  <header className="flex flex-col md:flex-row justify-between items-center gap-6">
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-app-text">
  <CalendarDays size={28} />
  </div>
  Leave <span className="text-emerald-600">Requests</span>

@@ -32,14 +32,14 @@ export default function SitesPage() {
  <div className="flex justify-between items-end">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+ <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-app-text shadow-lg">
  <MapPin size={28} />
  </div>
  </div>
  <h2 className="text-3xl font-black text-app-text tracking-tight">Sites & Branches</h2>
  <p className="text-app-text-muted mt-2 font-medium">Manage physical locations and branch offices</p>
  </div>
- <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
+ <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-app-text">
  <Plus size={18} />
  New Site
  </Button>

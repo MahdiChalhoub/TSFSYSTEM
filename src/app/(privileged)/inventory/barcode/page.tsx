@@ -56,7 +56,7 @@ export default function BarcodeSettingsPage() {
  <div className="space-y-6 animate-in fade-in duration-500">
  <div className="flex items-center gap-4 mb-8">
  <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Barcode size={28} className="text-white" />
+ <Barcode size={28} className="text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter">Barcode <span className="text-emerald-600">Configuration</span></h1>
@@ -67,7 +67,7 @@ export default function BarcodeSettingsPage() {
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
  {/* Preview Box */}
- <div className="bg-gray-900 text-white p-6 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-xl">
+ <div className="bg-gray-900 text-app-text p-6 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-xl">
  <span className="text-xs font-mono uppercase text-app-text-faint tracking-widest">Next Barcode Preview</span>
  <div className="text-4xl font-mono font-bold tracking-widest">{exampleBarcode}</div>
  <div className="text-xs text-app-text-muted mt-2 flex gap-4">
@@ -123,7 +123,7 @@ export default function BarcodeSettingsPage() {
  <button
  type="submit"
  disabled={saving}
- className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+ className="bg-emerald-600 text-app-text px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {saving ? <RefreshCw size={20} className="animate-spin" /> : <Save size={20} />}
  <span>Save Settings</span>

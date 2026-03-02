@@ -27,7 +27,7 @@ export default async function ComboPage() {
  <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
  <div className="flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <Package size={28} className="text-white" />
+ <Package size={28} className="text-app-text" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter">Combo & <span className="text-purple-600">Bundle</span> Products</h1>
@@ -39,15 +39,15 @@ export default async function ComboPage() {
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-5 text-white">
+ <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-5 text-app-text">
  <p className="text-xs font-bold uppercase opacity-80">Total Combos</p>
  <p className="text-3xl font-bold mt-1">{comboProducts.length}</p>
  </div>
- <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-5 text-white">
+ <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-5 text-app-text">
  <p className="text-xs font-bold uppercase opacity-80">Standard Products</p>
  <p className="text-3xl font-bold mt-1">{standardProducts.length}</p>
  </div>
- <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-5 text-white">
+ <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-5 text-app-text">
  <p className="text-xs font-bold uppercase opacity-80">Total Products</p>
  <p className="text-3xl font-bold mt-1">{products.length}</p>
  </div>

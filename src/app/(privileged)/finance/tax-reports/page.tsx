@@ -98,7 +98,7 @@ export default function VatReturnReportPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
- <FileSpreadsheet size={28} className="text-white" />
+ <FileSpreadsheet size={28} className="text-app-text" />
  </div>
  VAT Return <span className="text-rose-600">Report</span>
  </h1>
@@ -118,7 +118,7 @@ export default function VatReturnReportPage() {
  <label className="text-xs text-app-text-muted uppercase font-semibold mb-1 block">Period End</label>
  <Input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} className="w-40" />
  </div>
- <Button onClick={load} disabled={loading} className="bg-rose-600 hover:bg-rose-700 text-white">
+ <Button onClick={load} disabled={loading} className="bg-rose-600 hover:bg-rose-700 text-app-text">
  <RefreshCw size={15} className={loading ? 'animate-spin mr-2' : 'mr-2'} />
  {loading ? 'Loading…' : 'Run Report'}
  </Button>

@@ -50,10 +50,10 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
  <div className="text-center space-y-6">
  <Building2 size={48} className="mx-auto text-app-text-muted" />
- <h2 className="text-xl font-bold text-white">Session Expired</h2>
+ <h2 className="text-xl font-bold text-app-text">Session Expired</h2>
  <p className="text-app-text-muted text-sm">Please log in to access the supplier portal</p>
  <Link href={`/supplier-portal/${slug}`}
- className="inline-block px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-500 transition-all">
+ className="inline-block px-8 py-4 bg-indigo-600 text-app-text rounded-2xl font-bold hover:bg-indigo-500 transition-all">
  Go to Login
  </Link>
  </div>
@@ -90,21 +90,21 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  )}
 
  {/* Sidebar */}
- <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-slate-950/80 backdrop-blur-3xl border-r border-white/5 flex flex-col z-50 transition-transform duration-300
+ <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-slate-950/80 backdrop-blur-3xl border-r border-app-text/5 flex flex-col z-50 transition-transform duration-300
  ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
  {/* Brand */}
- <div className="p-6 border-b border-white/5">
+ <div className="p-6 border-b border-app-text/5">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 bg-indigo-500/20 border border-indigo-500/30 rounded-xl flex items-center justify-center text-indigo-400">
  <Building2 size={20} />
  </div>
  <div>
- <p className="text-white font-bold text-sm">Supplier Portal</p>
+ <p className="text-app-text font-bold text-sm">Supplier Portal</p>
  <p className="text-[10px] text-app-text-muted font-medium">{session?.organization.name}</p>
  </div>
  </div>
- <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-app-text-muted hover:text-white">
+ <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-app-text-muted hover:text-app-text">
  <X size={20} />
  </button>
  </div>
@@ -118,7 +118,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
  ${isActive(item.href)
  ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
- : 'text-app-text-faint hover:text-white hover:bg-white/5 border border-transparent'
+ : 'text-app-text-faint hover:text-app-text hover:bg-app-text/5 border border-transparent'
  }`}>
  <item.icon size={18} />
  {item.label}
@@ -128,18 +128,18 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  </nav>
 
  {/* User */}
- <div className="p-4 border-t border-white/5">
+ <div className="p-4 border-t border-app-text/5">
  <div className="flex items-center gap-3 mb-3">
  <div className="w-9 h-9 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-black">
  {session?.user.name.charAt(0).toUpperCase()}
  </div>
  <div className="flex-1 min-w-0">
- <p className="text-white text-sm font-medium truncate">{session?.user.name}</p>
+ <p className="text-app-text text-sm font-medium truncate">{session?.user.name}</p>
  <p className="text-[10px] text-app-text-muted truncate">{session?.user.email}</p>
  </div>
  </div>
  <button onClick={handleLogout}
- className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all">
+ className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-xl text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all">
  <LogOut size={14} /> Sign Out
  </button>
  </div>
@@ -148,12 +148,12 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  {/* Main */}
  <div className="flex-1 min-w-0">
  {/* Mobile Top Bar */}
- <div className="lg:hidden sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
+ <div className="lg:hidden sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-app-text/5 p-4 flex items-center justify-between">
  <button onClick={() => setSidebarOpen(true)}
- className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white">
+ className="w-10 h-10 bg-app-text/5 border border-app-text/10 rounded-xl flex items-center justify-center text-app-text">
  <Menu size={18} />
  </button>
- <p className="text-white font-bold text-sm">Supplier Portal</p>
+ <p className="text-app-text font-bold text-sm">Supplier Portal</p>
  <div className="w-10" /> {/* Spacer */}
  </div>
 

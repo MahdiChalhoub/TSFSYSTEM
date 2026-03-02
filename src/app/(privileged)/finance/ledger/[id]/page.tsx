@@ -29,7 +29,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  {entry.status !== 'REVERSED' && (
  <Link
  href={`/finance/ledger/${entry.id}/edit`}
- className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-stone-800 transition-all shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 bg-black text-app-text rounded-lg text-sm font-bold hover:bg-stone-800 transition-all shadow-sm"
  >
  Edit Entry
  </Link>

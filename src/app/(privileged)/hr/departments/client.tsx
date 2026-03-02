@@ -96,7 +96,7 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  <div className="space-y-4">
  <div className="flex justify-end">
  <button onClick={() => { setEditing(null); setShowForm(!showForm) }}
- className="flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-200">
+ className="flex items-center gap-2 px-6 py-3 bg-violet-600 text-app-text rounded-2xl font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-200">
  <Plus size={18} /> Add Department
  </button>
  </div>
@@ -139,7 +139,7 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  Cancel
  </button>
  <button type="submit" disabled={isPending}
- className="px-8 py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50">
+ className="px-8 py-3 bg-violet-600 text-app-text rounded-xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50">
  {isPending ? 'Saving...' : editing ? 'Update' : 'Create'}
  </button>
  </div>

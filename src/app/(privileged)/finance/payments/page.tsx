@@ -239,7 +239,7 @@ export default function PaymentsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <CreditCard size={28} className="text-white" />
+ <CreditCard size={28} className="text-app-text" />
  </div>
  Payments & <span className="text-emerald-600">Collections</span>
  </h1>

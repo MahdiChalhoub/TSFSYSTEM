@@ -29,7 +29,7 @@ export default async function StockAlertsPage() {
  <div className="flex items-center gap-4">
  <div className="flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
- <Activity size={28} className="text-white" />
+ <Activity size={28} className="text-app-text" />
  </div>
  <h1 className="page-header-title tracking-tighter">
  Stock <span className="text-rose-600">Health</span>

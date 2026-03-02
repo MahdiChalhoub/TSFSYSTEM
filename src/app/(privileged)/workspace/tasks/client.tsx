@@ -123,7 +123,7 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
  <option value="LOW">Low</option>
  </select>
  <button onClick={() => setShowCreate(true)}
- className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-sky-500 text-white text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2">
+ className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-sky-500 text-app-text text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-2">
  <Plus size={16} /> New Task
  </button>
  </div>
@@ -161,7 +161,7 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
  <div className="flex gap-3 justify-end">
  <button onClick={() => setShowCreate(false)} className="px-6 py-2 text-sm text-app-text-muted hover:text-gray-700 font-medium">Cancel</button>
  <button onClick={() => startTransition(handleCreate)}
- className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-2xl hover:bg-indigo-700 transition-all">
+ className="px-6 py-2 bg-indigo-600 text-app-text text-sm font-bold rounded-2xl hover:bg-indigo-700 transition-all">
  {isPending ? 'Creating...' : 'Create Task'}
  </button>
  </div>

@@ -121,9 +121,9 @@ export default function EInvoicingPage() {
  <Activity size={12} /> ZATCA Phase 2 (Clearance)
  </span>
  </div>
- <h1 className="text-5xl font-black tracking-tighter text-white flex items-center gap-4">
+ <h1 className="text-5xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-900/20">
- <ShieldCheck size={32} className="text-white fill-white" />
+ <ShieldCheck size={32} className="text-app-text fill-white" />
  </div>
  Compliance <span className="text-indigo-400">Vault</span>
  </h1>
@@ -132,7 +132,7 @@ export default function EInvoicingPage() {
  <button onClick={loadInvoices} className="h-12 px-6 rounded-2xl bg-[#0F1729] border border-gray-800 font-bold text-app-text-faint flex items-center gap-2 hover:bg-gray-800 transition-all">
  <RefreshCw size={18} /> Sync Nodes
  </button>
- <button className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20">
+ <button className="h-12 px-6 rounded-2xl bg-indigo-600 text-app-text font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20">
  Audit Report <ChevronRight size={18} />
  </button>
  </div>
@@ -187,16 +187,16 @@ export default function EInvoicingPage() {
  >
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3 mb-1">
- <span className={`font-black text-xs tracking-tight ${selected?.id === inv.id ? 'text-white' : 'text-gray-200'}`}>{inv.invoice_number || `INV-${inv.id}`}</span>
+ <span className={`font-black text-xs tracking-tight ${selected?.id === inv.id ? 'text-app-text' : 'text-gray-200'}`}>{inv.invoice_number || `INV-${inv.id}`}</span>
  {statusBadge(inv.fne_status)}
  </div>
  <div className={`text-[10px] font-bold uppercase tracking-widest truncate ${selected?.id === inv.id ? 'text-indigo-200' : 'text-app-text-muted'}`}>{inv.contact_name}</div>
  </div>
  <div className="text-right shrink-0">
- <div className={`text-base font-black ${selected?.id === inv.id ? 'text-white' : 'text-indigo-400'}`}>${Number(inv.total_amount || 0).toLocaleString()}</div>
+ <div className={`text-base font-black ${selected?.id === inv.id ? 'text-app-text' : 'text-indigo-400'}`}>${Number(inv.total_amount || 0).toLocaleString()}</div>
  <div className={`text-[9px] font-black uppercase tracking-tighter ${selected?.id === inv.id ? 'text-indigo-300' : 'text-app-text-muted'}`}>{inv.issue_date}</div>
  </div>
- <ChevronRight size={16} className={`${selected?.id === inv.id ? 'text-white' : 'text-gray-700'} group-hover:translate-x-1 transition-transform`} />
+ <ChevronRight size={16} className={`${selected?.id === inv.id ? 'text-app-text' : 'text-gray-700'} group-hover:translate-x-1 transition-transform`} />
  </button>
  ))}
  </div>
@@ -216,12 +216,12 @@ export default function EInvoicingPage() {
  <div className="flex items-start justify-between pb-6 border-b border-gray-800/50">
  <div>
  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Current Subject</p>
- <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">{selected.invoice_number || `INV-${selected.id}`}</h2>
+ <h2 className="text-2xl font-black text-app-text tracking-tighter uppercase italic">{selected.invoice_number || `INV-${selected.id}`}</h2>
  <p className="text-[11px] font-bold text-app-text-muted uppercase tracking-widest mt-1">{selected.contact_name} · {selected.issue_date}</p>
  </div>
  <div className="text-right">
  <p className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Settlement</p>
- <span className="text-3xl font-black text-white tracking-tighter">${Number(selected.total_amount || 0).toLocaleString()}</span>
+ <span className="text-3xl font-black text-app-text tracking-tighter">${Number(selected.total_amount || 0).toLocaleString()}</span>
  </div>
  </div>
  {detail && (
@@ -261,7 +261,7 @@ export default function EInvoicingPage() {
  <button
  onClick={handleSubmit}
  disabled={submitting}
- className="flex-1 h-14 flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-indigo-900/40 disabled:opacity-50"
+ className="flex-1 h-14 flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-app-text font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-indigo-900/40 disabled:opacity-50"
  >
  {submitting ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
  {submitting ? 'Certification in Progress' : 'Authorize Certification'}

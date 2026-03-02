@@ -140,7 +140,7 @@ export default function ReviewManagementPage() {
  Social Proof Engine
  </Badge>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 text-white">
+ <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 text-app-text">
  <MessageSquare size={32} />
  </div>
  Customer <span className="text-indigo-600">Reviews</span>

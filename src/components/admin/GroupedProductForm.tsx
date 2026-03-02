@@ -359,11 +359,11 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
  </div>
  </div>
 
- <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur border-t border-app-border flex justify-end gap-4 z-40 md:pl-72">
+ <div className="fixed bottom-0 left-0 right-0 p-4 bg-app-text/80 backdrop-blur border-t border-app-border flex justify-end gap-4 z-40 md:pl-72">
  <button
  onClick={handleSubmit}
  disabled={pending}
- className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg flex items-center gap-2"
+ className="bg-emerald-600 text-app-text px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg flex items-center gap-2"
  >
  {pending ? <Loader2 className="animate-spin" /> : <Save />}
  Save Product Group

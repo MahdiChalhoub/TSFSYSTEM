@@ -46,7 +46,7 @@ export function CheckoutBar({
  <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
  TOTAL
  </p>
- <p className="text-3xl font-black tracking-tight text-white">
+ <p className="text-3xl font-black tracking-tight text-app-text">
  {formatCurrency(total)}
  </p>
  </div>

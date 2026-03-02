@@ -77,7 +77,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
  <button
  onClick={handleRefresh}
  disabled={isPending}
- className="bg-stone-900 text-white px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+ className="bg-stone-900 text-app-text px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
  >
  {isPending ? 'Updating...' : 'Generate Report'}
  </button>
@@ -118,7 +118,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
  <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden print:border-none print:shadow-none">
  <table className="w-full text-sm border-collapse">
  <thead>
- <tr className="bg-stone-900 text-white uppercase text-[10px] tracking-[0.2em] font-bold">
+ <tr className="bg-stone-900 text-app-text uppercase text-[10px] tracking-[0.2em] font-bold">
  <th className="p-4 text-left w-24">Code</th>
  <th className="p-4 text-left">Description</th>
  <th className="p-4 text-right w-36">Debit</th>

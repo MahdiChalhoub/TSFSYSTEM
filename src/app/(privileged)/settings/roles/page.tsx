@@ -13,7 +13,7 @@ export default async function RolesPage() {
  <header>
  <h1 className="page-header-title uppercase tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Shield className="text-white" size={28} />
+ <Shield className="text-app-text" size={28} />
  </div>
  Access <span className="text-emerald-600">Control</span>
  </h1>

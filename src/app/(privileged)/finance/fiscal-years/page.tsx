@@ -26,7 +26,7 @@ export default async function FiscalYearsPage() {
  <div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-stone-600 flex items-center justify-center shadow-lg shadow-stone-200">
- <CalendarDays size={28} className="text-white" />
+ <CalendarDays size={28} className="text-app-text" />
  </div>
  Fiscal <span className="text-app-text-muted">Years</span>
  </h1>
@@ -46,7 +46,7 @@ export default async function FiscalYearsPage() {
  <p className="text-xs text-amber-700 mb-2">Transactions occurring during these dates cannot be recorded in any period.</p>
  <div className="space-y-1">
  {gaps.map((g, i) => (
- <div key={i} className="text-xs text-amber-800 bg-white/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
+ <div key={i} className="text-xs text-amber-800 bg-app-text/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
  <strong>{g.days} Day Gap</strong> after {g.after}:
  <span className="ml-1 opacity-70">
  {g.startDate ? new Date(g.startDate).toLocaleDateString() : '—'} — {g.endDate ? new Date(g.endDate).toLocaleDateString() : '—'}

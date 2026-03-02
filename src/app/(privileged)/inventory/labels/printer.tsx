@@ -312,7 +312,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <button
  onClick={handlePrint}
  disabled={labelItems.length === 0}
- className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-300/50 disabled:opacity-40 disabled:cursor-not-allowed"
+ className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-300/50 disabled:opacity-40 disabled:cursor-not-allowed"
  >
  <Printer size={16} />
  Print {totalLabels > 0 ? `(${totalLabels})` : ''}

@@ -105,7 +105,7 @@ export default async function PurchaseRegistryPage({
  </Link>
  <Link
  href="/purchases/new-order"
- className="flex items-center gap-2 px-5 h-11 rounded-xl font-bold text-sm text-white transition-all"
+ className="flex items-center gap-2 px-5 h-11 rounded-xl font-bold text-sm text-app-text transition-all"
  style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}
  >
  <Plus size={16} /> New Purchase Order

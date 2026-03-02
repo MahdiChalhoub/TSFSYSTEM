@@ -89,7 +89,7 @@ export function TypicalFilter({
  <Select key={f.key}
  value={typeof val === 'string' ? val : ''}
  onValueChange={v => onChange?.(f.key, v === '__all__' ? '' : v)}>
- <SelectTrigger className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
+ <SelectTrigger className={`bg-app-text/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
  <SelectValue placeholder={f.label} />
  </SelectTrigger>
  <SelectContent className="rounded-xl border-app-border shadow-2xl">
@@ -106,7 +106,7 @@ export function TypicalFilter({
  <Input key={f.key} type="date"
  value={typeof val === 'string' ? val : ''}
  onChange={e => onChange?.(f.key, e.target.value)}
- className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ className={`bg-app-text/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
  placeholder={f.placeholder || f.label} />
  )
 
@@ -115,7 +115,7 @@ export function TypicalFilter({
  <Input key={f.key}
  value={typeof val === 'string' ? val : ''}
  onChange={e => onChange?.(f.key, e.target.value)}
- className={`bg-white/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ className={`bg-app-text/50 border-app-border focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
  placeholder={f.placeholder || f.label} />
  )
 
@@ -146,7 +146,7 @@ export function TypicalFilter({
  placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
  value={search.value}
  onChange={e => search.onChange(e.target.value)}
- className={`pl-11 pr-10 bg-white/50 border-app-border focus:bg-app-surface focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
+ className={`pl-11 pr-10 bg-app-text/50 border-app-border focus:bg-app-surface focus:ring-emerald-500/10 focus:border-emerald-500 transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
  {search.value && (
  <button onClick={() => search.onChange('')}
  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
@@ -166,13 +166,13 @@ export function TypicalFilter({
  <button
  onClick={() => setShowAdvanced(!showAdvanced)}
  className={`flex items-center gap-3 px-4 rounded-xl border transition-all duration-500 group/adv relative overflow-hidden ${showAdvanced
- ? 'border-emerald-500 bg-emerald-600 text-white shadow-lg shadow-emerald-700/20'
+ ? 'border-emerald-500 bg-emerald-600 text-app-text shadow-lg shadow-emerald-700/20'
  : 'border-app-border bg-app-surface text-app-text-muted hover:text-app-text hover:border-app-border hover:shadow-lg'
  } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
- <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-white' : 'text-slate-300 group-hover/adv:text-emerald-500'} transition-colors duration-500`} />
+ <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-app-text' : 'text-slate-300 group-hover/adv:text-emerald-500'} transition-colors duration-500`} />
  Advanced
  {activeCount > 0 && (
- <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-emerald-700 shadow-inner' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}>
+ <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-emerald-700 shadow-inner' : 'bg-emerald-500 text-app-text shadow-lg shadow-emerald-200'}`}>
  {activeCount}
  </span>
  )}

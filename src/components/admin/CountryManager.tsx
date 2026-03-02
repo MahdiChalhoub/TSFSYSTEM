@@ -53,7 +53,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
  </div>
  <button
  onClick={handleCreate}
- className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+ className="bg-emerald-600 text-app-text px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
  >
  <Plus size={20} />
  <span>Add Country</span>
@@ -247,7 +247,7 @@ function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClo
 
  <div className="pt-2 flex gap-3">
  <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl border font-semibold text-app-text-muted">Cancel</button>
- <button type="submit" disabled={pending} className="flex-1 py-2 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2">
+ <button type="submit" disabled={pending} className="flex-1 py-2 rounded-xl bg-emerald-600 text-app-text font-semibold flex items-center justify-center gap-2">
  {pending ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save
  </button>
  </div>

@@ -318,7 +318,7 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  <div key={s.id} className="flex items-center">
  <button onClick={() => i < step && setStep(i)} disabled={i > step}
  className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[11px] font-bold transition-all duration-300
- ${isActive ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 scale-105' : isDone ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer' : 'bg-app-bg text-gray-300 cursor-not-allowed'}`}>
+ ${isActive ? 'bg-gray-900 text-app-text shadow-lg shadow-gray-900/20 scale-105' : isDone ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer' : 'bg-app-bg text-gray-300 cursor-not-allowed'}`}>
  {isDone ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Icon size={14} />}
  <span className="hidden lg:inline">{s.title}</span>
  {isMandatory && isActive && <span className="text-rose-400 text-[9px]">*</span>}
@@ -360,9 +360,9 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  )}
  <button onClick={handleNext} disabled={!canGoNext() || saving}
  className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg
- ${step === STEPS.length - 1 ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200' : 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'}
+ ${step === STEPS.length - 1 ? 'bg-emerald-600 text-app-text hover:bg-emerald-700 shadow-emerald-200' : 'bg-gray-900 text-app-text hover:bg-gray-800 shadow-gray-900/20'}
  disabled:opacity-50 disabled:cursor-not-allowed`}>
- {saving ? (<><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>)
+ {saving ? (<><div className="w-4 h-4 border-2 border-app-text/30 border-t-white rounded-full animate-spin" /> Saving...</>)
  : step === 2 && data.want_migration ? (<><Upload size={18} /> Go to Migration</>)
  : step === STEPS.length - 1 ? (<><Rocket size={18} /> Launch Dashboard</>)
  : (<>Continue <ArrowRight size={18} /></>)}
@@ -396,19 +396,19 @@ function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
  return (
  <button key={fr.code} onClick={() => setData({ fiscal_regime: fr.code })}
  className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300
- ${isActive ? 'border-gray-900 bg-gray-900 text-white shadow-xl shadow-gray-900/20' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
+ ${isActive ? 'border-gray-900 bg-gray-900 text-app-text shadow-xl shadow-gray-900/20' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="flex items-start gap-4">
- <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-white/20' : 'bg-sky-50'} flex items-center justify-center shrink-0`}>
- <Icon size={24} className={isActive ? 'text-white' : 'text-sky-600'} />
+ <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-app-text/20' : 'bg-sky-50'} flex items-center justify-center shrink-0`}>
+ <Icon size={24} className={isActive ? 'text-app-text' : 'text-sky-600'} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="text-sm font-black">{fr.name}</div>
- <div className={`text-[11px] mt-1 font-medium leading-relaxed ${isActive ? 'text-white/60' : 'text-app-text-faint'}`}>{fr.desc}</div>
+ <div className={`text-[11px] mt-1 font-medium leading-relaxed ${isActive ? 'text-app-text/60' : 'text-app-text-faint'}`}>{fr.desc}</div>
  <div className={`mt-2 flex items-center gap-2`}>
- <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-white/20 text-white/80' : fr.taxMode === 'HT' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+ <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-app-text/20 text-app-text/80' : fr.taxMode === 'HT' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
  {fr.taxMode === 'MIXED' ? 'HT + TTC' : fr.taxMode}
  </Badge>
- {fr.vatRecovery && <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-emerald-400/30 text-white/80' : 'bg-emerald-50 text-emerald-600'}`}>VAT Recovery</Badge>}
+ {fr.vatRecovery && <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-emerald-400/30 text-app-text/80' : 'bg-emerald-50 text-emerald-600'}`}>VAT Recovery</Badge>}
  </div>
  </div>
  </div>
@@ -540,7 +540,7 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
  ${data.want_migration === true ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg">
- <FileSpreadsheet size={28} className="text-white" />
+ <FileSpreadsheet size={28} className="text-app-text" />
  </div>
  <div className="text-lg font-black text-app-text">Yes, import my data</div>
  <div className="text-xs text-app-text-faint font-medium mt-1">Import products, contacts, or transactions from Excel, CSV, or another system</div>
@@ -551,7 +551,7 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
  ${data.want_migration === false ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-4 shadow-lg">
- <Sparkles size={28} className="text-white" />
+ <Sparkles size={28} className="text-app-text" />
  </div>
  <div className="text-lg font-black text-app-text">No, start fresh</div>
  <div className="text-xs text-app-text-faint font-medium mt-1">Setting up a new business or adding data manually later</div>
@@ -1155,7 +1155,7 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
  )}
  <div className="flex gap-2">
  <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-app-text-faint hover:bg-app-bg flex-1">Cancel</button>
- <button onClick={handleAdd} disabled={!name || saving} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold flex-1 disabled:opacity-50">
+ <button onClick={handleAdd} disabled={!name || saving} className="px-4 py-2 rounded-xl bg-indigo-600 text-app-text text-xs font-bold flex-1 disabled:opacity-50">
  {saving ? 'Creating...' : 'Create Account'}
  </button>
  </div>
@@ -1175,7 +1175,7 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  return (
  <div className="space-y-6">
  <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-white" /></div>
+ <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-text" /></div>
  <h3 className="text-2xl font-black tracking-tight text-app-text">Everything looks great!</h3>
  <p className="text-sm text-app-text-faint mt-1 font-medium">Review your setup and launch</p>
  </div>
@@ -1234,14 +1234,14 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  </CardContent>
  </Card>
 
- <div className="p-5 rounded-2xl bg-gray-900 text-white shadow-xl shadow-gray-900/20">
+ <div className="p-5 rounded-2xl bg-gray-900 text-app-text shadow-xl shadow-gray-900/20">
  <div className="flex items-start gap-4">
  <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
- <Rocket size={20} className="text-white" />
+ <Rocket size={20} className="text-app-text" />
  </div>
  <div>
  <p className="text-sm font-bold">Ready to go live!</p>
- <p className="text-xs text-white/60 mt-1 leading-relaxed">
+ <p className="text-xs text-app-text/60 mt-1 leading-relaxed">
  By clicking launch, your <span className="text-emerald-400 font-bold">{data.fiscal_year_name}</span> will be initialized and you&apos;ll be redirected to your new dashboard.
  </p>
  </div>
@@ -1256,7 +1256,7 @@ function LaunchAnimation() {
  <div className="min-h-[calc(100vh-120px)] flex items-center justify-center">
  <div className="text-center animate-in fade-in zoom-in-95 duration-700">
  <div className="relative mx-auto mb-6">
- <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-white" /></div>
+ <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-text" /></div>
  <div className="absolute -inset-4 rounded-[3rem] bg-emerald-400/20 animate-ping" />
  </div>
  <h2 className="text-4xl font-black tracking-tighter text-app-text mb-2">You&apos;re all set! 🎉</h2>

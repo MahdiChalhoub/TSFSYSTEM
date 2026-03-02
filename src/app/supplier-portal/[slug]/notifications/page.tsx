@@ -111,17 +111,17 @@ export default function SupplierNotificationsPage() {
  <div className="flex items-start justify-between">
  <div className="space-y-2">
  <Link href={`/supplier-portal/${slug}`}
- className="inline-flex items-center gap-2 text-app-text-muted hover:text-white text-sm font-medium transition-colors">
+ className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text text-sm font-medium transition-colors">
  <ArrowLeft size={16} /> Dashboard
  </Link>
- <h1 className="text-4xl font-black text-white">Notifications</h1>
+ <h1 className="text-4xl font-black text-app-text">Notifications</h1>
  <p className="text-app-text-muted text-sm">
  {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up'}
  </p>
  </div>
  {unreadCount > 0 && (
  <button onClick={markAllRead}
- className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all flex items-center gap-2">
+ className="px-5 py-2.5 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all flex items-center gap-2">
  <CheckCircle2 size={16} /> Mark All Read
  </button>
  )}
@@ -134,7 +134,7 @@ export default function SupplierNotificationsPage() {
  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all
  ${filter === f
  ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
- : 'bg-white/5 text-app-text-faint border border-transparent hover:text-white'
+ : 'bg-app-text/5 text-app-text-faint border border-transparent hover:text-app-text'
  }`}>
  {f === 'all' ? `All (${notifications.length})` : `Unread (${unreadCount})`}
  </button>
@@ -149,7 +149,7 @@ export default function SupplierNotificationsPage() {
  ) : displayed.length === 0 ? (
  <div className="py-24 text-center space-y-4">
  <Bell size={48} className="mx-auto text-app-text-muted" />
- <h2 className="text-xl font-bold text-white">
+ <h2 className="text-xl font-bold text-app-text">
  {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
  </h2>
  <p className="text-app-text-muted text-sm">
@@ -166,7 +166,7 @@ export default function SupplierNotificationsPage() {
  onClick={() => !n.is_read && markAsRead(n.id)}
  className={`p-5 rounded-2xl border transition-all cursor-pointer
  ${n.is_read
- ? 'bg-slate-900/40 border-white/5'
+ ? 'bg-slate-900/40 border-app-text/5'
  : 'bg-slate-900/70 border-indigo-500/20 hover:border-indigo-500/40'
  }`}>
  <div className="flex items-start gap-4">
@@ -175,7 +175,7 @@ export default function SupplierNotificationsPage() {
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3">
- <p className={`font-bold text-sm ${n.is_read ? 'text-app-text-faint' : 'text-white'}`}>
+ <p className={`font-bold text-sm ${n.is_read ? 'text-app-text-faint' : 'text-app-text'}`}>
  {n.title}
  </p>
  {!n.is_read && (

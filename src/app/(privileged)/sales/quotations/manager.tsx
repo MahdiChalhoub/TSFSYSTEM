@@ -177,7 +177,7 @@ export default function QuotationManager({
  <CardTitle className="text-base">Quotations</CardTitle>
  <button
  onClick={() => setShowCreate(true)}
- className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
+ className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-app-text text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors"
  >
  <Plus size={14} /> New
  </button>
@@ -259,25 +259,25 @@ export default function QuotationManager({
  <div className="flex flex-wrap gap-2 mt-4">
  {selected.status === 'DRAFT' && (
  <button onClick={() => handleAction('send')} disabled={loading}
- className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-40">
+ className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-app-text text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-40">
  <Send size={14} /> Mark as Sent
  </button>
  )}
  {['DRAFT', 'SENT'].includes(selected.status) && (
  <>
  <button onClick={() => handleAction('accept')} disabled={loading}
- className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
+ className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-app-text text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
  <Check size={14} /> Accept
  </button>
  <button onClick={() => handleAction('reject')} disabled={loading}
- className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 disabled:opacity-40">
+ className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-app-text text-xs font-bold rounded-lg hover:bg-red-600 disabled:opacity-40">
  <X size={14} /> Reject
  </button>
  </>
  )}
  {['DRAFT', 'SENT', 'ACCEPTED'].includes(selected.status) && !selected.converted_order && (
  <button onClick={() => handleAction('convert')} disabled={loading}
- className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 text-white text-xs font-bold rounded-lg hover:bg-purple-700 disabled:opacity-40">
+ className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 text-app-text text-xs font-bold rounded-lg hover:bg-purple-700 disabled:opacity-40">
  <ShoppingCart size={14} /> Convert to Order
  </button>
  )}
@@ -328,7 +328,7 @@ export default function QuotationManager({
  {['DRAFT', 'SENT'].includes(selected.status) && (
  <button
  onClick={() => setShowAddLine(true)}
- className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700"
+ className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-app-text text-xs font-bold rounded-lg hover:bg-emerald-700"
  >
  <Plus size={14} /> Add Product
  </button>
@@ -399,7 +399,7 @@ export default function QuotationManager({
  <button onClick={() => setShowCreate(false)}
  className="px-4 py-2 text-sm text-app-text-muted hover:bg-app-surface-2 rounded-lg">Cancel</button>
  <button onClick={handleCreate} disabled={loading}
- className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
+ className="px-4 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
  Create
  </button>
  </div>
@@ -446,7 +446,7 @@ export default function QuotationManager({
  <button onClick={() => setShowAddLine(false)}
  className="px-4 py-2 text-sm text-app-text-muted hover:bg-app-surface-2 rounded-lg">Cancel</button>
  <button onClick={handleAddLine} disabled={loading || !lineProductId}
- className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
+ className="px-4 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
  Add to Quotation
  </button>
  </div>

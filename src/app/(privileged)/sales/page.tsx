@@ -54,7 +54,7 @@ class POSErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
  <p className="text-app-text-muted text-sm mb-4">{this.state.error || 'An unexpected error occurred. This is usually caused by a stale browser cache after a deployment.'}</p>
  <button
  onClick={() => { window.location.reload(); }}
- className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto"
+ className="px-6 py-3 bg-indigo-600 text-app-text rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto"
  >
  <RefreshCw size={16} /> Hard Reload
  </button>
@@ -279,10 +279,10 @@ function POSTerminalInner() {
  <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
  <div className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 overflow-hidden">
  <div className="bg-amber-500 px-6 py-5 flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/20 flex items-center justify-center shrink-0">
  <span className="text-2xl">⚠️</span>
  </div>
- <div className="text-white">
+ <div className="text-app-text">
  <h2 className="text-xl font-black">Credit Sale Warning</h2>
  <p className="text-amber-100 text-sm">No cash collected — client will owe this amount</p>
  </div>
@@ -303,7 +303,7 @@ function POSTerminalInner() {
  Cancel
  </button>
  <button onClick={() => { terminal.setShowCreditWarning(false); terminal.handleCharge(true); }}
- className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-sm shadow-lg shadow-amber-200 transition-all">
+ className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-app-text rounded-2xl font-black text-sm shadow-lg shadow-amber-200 transition-all">
  ✓ Confirm Credit Sale
  </button>
  </div>

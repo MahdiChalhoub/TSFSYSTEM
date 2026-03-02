@@ -45,7 +45,7 @@ export default function TerminalNodeControl({ initialWarehouses }: { initialWare
  <div>
  <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <Building2 size={28} className="text-white" />
+ <Building2 size={28} className="text-app-text" />
  </div>
  Terminal <span className="text-indigo-600">& Node</span>
  </h1>
@@ -58,7 +58,7 @@ export default function TerminalNodeControl({ initialWarehouses }: { initialWare
  </div>
  <button
  onClick={() => { setEditingWarehouse(null); setIsModalOpen(true); }}
- className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center gap-2 group text-xs uppercase tracking-widest"
+ className="bg-indigo-600 text-app-text px-6 py-3 rounded-2xl font-black shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all flex items-center gap-2 group text-xs uppercase tracking-widest"
  >
  <Plus size={18} className="group-hover:rotate-90 transition-transform" />
  Add Node
@@ -128,8 +128,8 @@ export default function TerminalNodeControl({ initialWarehouses }: { initialWare
  filtered.map((wh) => (
  <div key={wh.id} className="group bg-app-surface border-0 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-900/5 transition-all relative overflow-hidden border border-transparent hover:border-indigo-50">
  {!wh.is_active && (
- <div className="absolute top-0 left-0 w-full h-full bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
- <Badge className="bg-stone-800 text-white font-black text-[10px] tracking-[0.2em] px-4 py-2 rounded-xl">DECOMMISSIONED</Badge>
+ <div className="absolute top-0 left-0 w-full h-full bg-app-text/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+ <Badge className="bg-stone-800 text-app-text font-black text-[10px] tracking-[0.2em] px-4 py-2 rounded-xl">DECOMMISSIONED</Badge>
  </div>
  )}
 
@@ -176,7 +176,7 @@ export default function TerminalNodeControl({ initialWarehouses }: { initialWare
  </div>
  </div>
  {wh.can_sell ? (
- <div className="px-3 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30 tracking-widest animate-pulse">
+ <div className="px-3 py-1.5 bg-emerald-500 text-app-text text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30 tracking-widest animate-pulse">
  Point of Sale
  </div>
  ) : (

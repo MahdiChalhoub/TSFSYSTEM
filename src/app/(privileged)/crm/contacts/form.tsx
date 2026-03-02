@@ -28,7 +28,7 @@ export default function ContactModal({
  {/* Header */}
  <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 sticky top-0 z-10">
  <div className="flex items-center gap-4">
- <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200' : 'bg-amber-600 shadow-amber-200'} text-white`}>
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200' : 'bg-amber-600 shadow-amber-200'} text-app-text`}>
  {type === 'CUSTOMER' ? <User size={24} /> : <Briefcase size={24} />}
  </div>
  <div>
@@ -269,7 +269,7 @@ export default function ContactModal({
  <button
  type="submit"
  disabled={isPending}
- className={`flex-[2] text-white px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200 hover:bg-blue-700' : 'bg-amber-600 shadow-amber-200 hover:bg-amber-700'} hover:-translate-y-1 active:translate-y-0`}
+ className={`flex-[2] text-app-text px-6 py-4 rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-widest disabled:opacity-50 ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200 hover:bg-blue-700' : 'bg-amber-600 shadow-amber-200 hover:bg-amber-700'} hover:-translate-y-1 active:translate-y-0`}
  >
  {isPending ? 'Establishing Sub-Ledger...' : `Establish ${type}`}
  </button>

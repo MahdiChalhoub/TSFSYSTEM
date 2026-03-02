@@ -37,13 +37,13 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
- <div className="bg-app-surface w-full max-w-md rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden animate-in zoom-in-95 duration-300">
- <div className="bg-emerald-600 p-8 text-white relative">
- <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 transition-colors">
+ <div className="bg-app-surface w-full max-w-md rounded-[2.5rem] shadow-2xl border border-app-text/20 overflow-hidden animate-in zoom-in-95 duration-300">
+ <div className="bg-emerald-600 p-8 text-app-text relative">
+ <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-app-text/10 transition-colors">
  <X size={20} />
  </button>
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/20 flex items-center justify-center backdrop-blur-md">
  <Package size={24} />
  </div>
  <div>
@@ -107,10 +107,10 @@ export default function ReceiveLineDialog({ po, line, onClose, onSuccess }: Rece
  <button
  type="submit"
  disabled={loading || qty <= 0}
- className="flex-[2] h-14 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/30 hover:bg-emerald-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-2"
+ className="flex-[2] h-14 bg-emerald-600 text-app-text rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/30 hover:bg-emerald-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-2"
  >
  {loading ? (
- <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+ <div className="w-5 h-5 border-2 border-app-text/30 border-t-white rounded-full animate-spin" />
  ) : (
  <>
  <CheckCircle size={18} />

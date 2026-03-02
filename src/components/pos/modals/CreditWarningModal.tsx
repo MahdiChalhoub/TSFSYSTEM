@@ -19,10 +19,10 @@ export function CreditWarningModal({ isOpen, onClose, onConfirm, amount, currenc
  <div className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 overflow-hidden">
  {/* Amber header bar */}
  <div className="bg-amber-500 px-6 py-5 flex items-center gap-4">
- <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+ <div className="w-12 h-12 rounded-2xl bg-app-text/20 flex items-center justify-center shrink-0">
  <span className="text-2xl">⚠️</span>
  </div>
- <div className="text-white">
+ <div className="text-app-text">
  <h2 className="text-xl font-black">Credit Sale Warning</h2>
  <p className="text-amber-100 text-sm">No cash collected — client will owe this amount</p>
  </div>
@@ -61,7 +61,7 @@ export function CreditWarningModal({ isOpen, onClose, onConfirm, amount, currenc
  </button>
  <button
  onClick={onConfirm}
- className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-sm shadow-lg shadow-amber-200 transition-all font-inter"
+ className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-app-text rounded-2xl font-black text-sm shadow-lg shadow-amber-200 transition-all font-inter"
  >
  ✓ Confirm Credit Sale
  </button>

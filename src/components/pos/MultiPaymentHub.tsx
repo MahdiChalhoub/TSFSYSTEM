@@ -208,20 +208,20 @@ export function MultiPaymentDashboard({
  return (
  <div ref={containerRef} className="flex flex-col h-full bg-[#0F172A] overflow-hidden animate-in fade-in duration-500" tabIndex={0}>
  {/* ── COMPACT HEADER ── */}
- <div className="px-8 py-5 flex items-center justify-between shrink-0 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl z-20 shadow-2xl relative overflow-hidden">
+ <div className="px-8 py-5 flex items-center justify-between shrink-0 border-b border-app-text/10 bg-slate-950/80 backdrop-blur-xl z-20 shadow-2xl relative overflow-hidden">
  {/* Aesthetic Glow */}
  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 
  <div className="flex items-center gap-5">
  <button
  onClick={onCancel}
- className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all active:scale-90 group border border-white/10"
+ className="w-12 h-12 rounded-2xl bg-app-text/5 hover:bg-app-text/10 text-app-text flex items-center justify-center transition-all active:scale-90 group border border-app-text/10"
  >
  <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
  </button>
  <div>
  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-0.5">Payment Infrastructure</span>
- <h1 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+ <h1 className="text-2xl font-black text-app-text uppercase tracking-tighter flex items-center gap-3">
  Multi-Method Settlement
  <div className="h-5 px-2 bg-emerald-500/10 border border-emerald-500/20 rounded text-[9px] text-emerald-500 flex items-center">v2.4.0</div>
  </h1>
@@ -229,8 +229,8 @@ export function MultiPaymentDashboard({
  </div>
 
  <div className="text-right">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block mb-1">Operational Requirement</span>
- <div className="text-3xl font-black text-white tabular-nums tracking-tighter">
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.3em] block mb-1">Operational Requirement</span>
+ <div className="text-3xl font-black text-app-text tabular-nums tracking-tighter">
  {currency}{formatNumber(totalAmount)}
  </div>
  </div>
@@ -240,27 +240,27 @@ export function MultiPaymentDashboard({
  <div className="flex-1 flex min-h-0 relative">
 
  {/* ════ LEFT COLUMN: INTERACTION (45%) ════ */}
- <div className="w-[45%] flex flex-col bg-slate-900/40 border-r border-white/5 p-6 space-y-6 overflow-y-auto custom-scrollbar">
+ <div className="w-[45%] flex flex-col bg-slate-900/40 border-r border-app-text/5 p-6 space-y-6 overflow-y-auto custom-scrollbar">
 
  {/* 1. Value Entry Display */}
  <div className="space-y-3">
  <div className="flex items-center justify-between">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block">Manual Entry</span>
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.3em] block">Manual Entry</span>
  <div className="flex items-center gap-1.5 text-emerald-400/40">
  <Keyboard size={12} />
  <span className="text-[8px] font-black uppercase tracking-widest">Keyboard Active</span>
  </div>
  </div>
- <div className="bg-slate-950/80 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 ring-8 ring-white/[0.02] relative group overflow-hidden">
+ <div className="bg-slate-950/80 backdrop-blur-md rounded-[2.5rem] p-8 border border-app-text/10 ring-8 ring-white/[0.02] relative group overflow-hidden">
  {/* Inner Carbon Texture Overlay */}
  <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
 
  <div className="relative z-10">
  <div className="flex items-baseline justify-between mb-2">
  <span className="text-[10px] font-black text-emerald-400/80 uppercase tracking-[0.2em]">Enter Amount</span>
- <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">{currency} UNIT</span>
+ <span className="text-[10px] font-black text-app-text/20 uppercase tracking-widest">{currency} UNIT</span>
  </div>
- <div className="text-6xl font-black text-white tabular-nums tracking-[ -0.05em] flex items-center gap-3">
+ <div className="text-6xl font-black text-app-text tabular-nums tracking-[ -0.05em] flex items-center gap-3">
  {amountBuffer || '0.00'}
  <div className="w-1.5 h-12 bg-emerald-500 animate-pulse rounded-full shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
  </div>
@@ -269,7 +269,7 @@ export function MultiPaymentDashboard({
  {remaining > 0 && !amountBuffer && (
  <button
  onClick={() => setAmountBuffer(remaining.toFixed(2))}
- className="absolute bottom-6 right-8 h-10 px-6 rounded-xl bg-emerald- gradient text-white text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shadow-xl shadow-emerald-500/20 border border-emerald-400/30"
+ className="absolute bottom-6 right-8 h-10 px-6 rounded-xl bg-emerald- gradient text-app-text text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shadow-xl shadow-emerald-500/20 border border-emerald-400/30"
  >
  Fidelity Fill
  </button>
@@ -279,7 +279,7 @@ export function MultiPaymentDashboard({
 
  {/* 2. Method Grid */}
  <div className="space-y-3">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block">Select Source</span>
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.3em] block">Select Source</span>
  <div className="grid grid-cols-2 gap-2">
  {paymentMethods.filter(m => !m.key.includes('MULTI')).slice(0, 8).map(m => {
  const Icon = getMethodIcon(m.key);
@@ -291,19 +291,19 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  isSelected
- ? "bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/30 scale-[1.02]"
- : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-emerald-500/30"
+ ? "bg-emerald-gradient border-emerald-400 text-app-text shadow-2xl shadow-emerald-500/30 scale-[1.02]"
+ : "bg-app-text/5 border-app-text/10 text-app-text/40 hover:bg-app-text/10 hover:border-emerald-500/30"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
- isSelected ? "bg-white/20 text-white" : "bg-white/5 text-white/20"
+ isSelected ? "bg-app-text/20 text-app-text" : "bg-app-text/5 text-app-text/20"
  )}>
  <Icon size={20} />
  </div>
  <span className="text-[11px] font-black uppercase tracking-widest truncate">{m.label}</span>
  {isSelected && (
- <div className="absolute top-0 right-0 w-10 h-10 bg-white/20 rounded-bl-3xl flex items-center justify-center backdrop-blur-md">
+ <div className="absolute top-0 right-0 w-10 h-10 bg-app-text/20 rounded-bl-3xl flex items-center justify-center backdrop-blur-md">
  <Check size={14} strokeWidth={4} />
  </div>
  )}
@@ -319,13 +319,13 @@ export function MultiPaymentDashboard({
  className={clsx(
  "w-full h-16 rounded-[1.5rem] border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  selectedMethod?.startsWith('ACCT:')
- ? "bg-emerald-gradient border-emerald-400 text-white shadow-2xl shadow-emerald-500/30 scale-[1.02]"
- : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-emerald-500/30"
+ ? "bg-emerald-gradient border-emerald-400 text-app-text shadow-2xl shadow-emerald-500/30 scale-[1.02]"
+ : "bg-app-text/5 border-app-text/10 text-app-text/40 hover:bg-app-text/10 hover:border-emerald-500/30"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
- selectedMethod?.startsWith('ACCT:') ? "bg-white/20 text-white" : "bg-white/5 text-white/20"
+ selectedMethod?.startsWith('ACCT:') ? "bg-app-text/20 text-app-text" : "bg-app-text/5 text-app-text/20"
  )}>
  <Landmark size={20} />
  </div>
@@ -337,7 +337,7 @@ export function MultiPaymentDashboard({
  </button>
 
  {isAccountSelectOpen && (
- <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#1E293B] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-48 overflow-y-auto custom-scrollbar flex flex-col">
+ <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#1E293B] border border-app-text/10 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-48 overflow-y-auto custom-scrollbar flex flex-col">
  {allowedAccounts.map(account => (
  <button
  key={account.id}
@@ -345,10 +345,10 @@ export function MultiPaymentDashboard({
  setSelectedMethod(`ACCT:${account.id}`);
  setIsAccountSelectOpen(false);
  }}
- className="px-4 py-3 text-left border-b border-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 last:border-0"
+ className="px-4 py-3 text-left border-b border-app-text/5 hover:bg-app-text/10 transition-colors flex items-center gap-3 last:border-0"
  >
  <Landmark size={14} className="text-emerald-400" />
- <span className="text-[11px] font-bold text-white uppercase tracking-wider">{account.name}</span>
+ <span className="text-[11px] font-bold text-app-text uppercase tracking-wider">{account.name}</span>
  </button>
  ))}
  </div>
@@ -361,7 +361,7 @@ export function MultiPaymentDashboard({
  {/* 2b. Quick Actions: Reward Points / Wallet / Account */}
  {client && client.id !== 1 && (
  <div className="space-y-3">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] block">Quick Apply</span>
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.3em] block">Quick Apply</span>
  <div className="grid grid-cols-1 gap-2">
  {/* Reward Points */}
  <button
@@ -370,19 +370,19 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-2xl border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  (client.loyalty || 0) > 0 && remaining > 0
- ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/30 text-white hover:from-purple-600/40 hover:to-pink-600/40 hover:border-purple-400/50 active:scale-[0.98]"
- : "bg-white/5 border-white/5 text-white/15 cursor-not-allowed"
+ ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/30 text-app-text hover:from-purple-600/40 hover:to-pink-600/40 hover:border-purple-400/50 active:scale-[0.98]"
+ : "bg-app-text/5 border-app-text/5 text-app-text/15 cursor-not-allowed"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center",
- (client.loyalty || 0) > 0 ? "bg-purple-500/30 text-purple-300" : "bg-white/5 text-white/10"
+ (client.loyalty || 0) > 0 ? "bg-purple-500/30 text-purple-300" : "bg-app-text/5 text-app-text/10"
  )}>
  <Gift size={20} />
  </div>
  <div className="flex-1 text-left">
  <span className="text-[10px] font-black uppercase tracking-widest block">Reward Points</span>
- <span className="text-xs font-bold text-white/40">{currency}{formatNumber(client.loyalty || 0)} available</span>
+ <span className="text-xs font-bold text-app-text/40">{currency}{formatNumber(client.loyalty || 0)} available</span>
  </div>
  {(client.loyalty || 0) > 0 && remaining > 0 && (
  <div className="text-[9px] font-black text-purple-300 uppercase tracking-widest bg-purple-500/20 px-3 py-1.5 rounded-lg">Apply</div>
@@ -396,19 +396,19 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-2xl border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  (client.balance || 0) > 0 && remaining > 0
- ? "bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border-amber-500/30 text-white hover:from-amber-600/40 hover:to-yellow-600/40 hover:border-amber-400/50 active:scale-[0.98]"
- : "bg-white/5 border-white/5 text-white/15 cursor-not-allowed"
+ ? "bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border-amber-500/30 text-app-text hover:from-amber-600/40 hover:to-yellow-600/40 hover:border-amber-400/50 active:scale-[0.98]"
+ : "bg-app-text/5 border-app-text/5 text-app-text/15 cursor-not-allowed"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center",
- (client.balance || 0) > 0 ? "bg-amber-500/30 text-amber-300" : "bg-white/5 text-white/10"
+ (client.balance || 0) > 0 ? "bg-amber-500/30 text-amber-300" : "bg-app-text/5 text-app-text/10"
  )}>
  <Wallet size={20} />
  </div>
  <div className="flex-1 text-left">
  <span className="text-[10px] font-black uppercase tracking-widest block">Client Wallet</span>
- <span className="text-xs font-bold text-white/40">{currency}{formatNumber(client.balance || 0)} available</span>
+ <span className="text-xs font-bold text-app-text/40">{currency}{formatNumber(client.balance || 0)} available</span>
  </div>
  {(client.balance || 0) > 0 && remaining > 0 && (
  <div className="text-[9px] font-black text-amber-300 uppercase tracking-widest bg-amber-500/20 px-3 py-1.5 rounded-lg">Apply</div>
@@ -422,19 +422,19 @@ export function MultiPaymentDashboard({
  className={clsx(
  "h-16 rounded-2xl border flex items-center px-5 gap-4 transition-all group relative overflow-hidden",
  remaining > 0 && (remaining <= availableCredit || client?.id === 1)
- ? "bg-gradient-to-r from-rose-600/20 to-red-600/20 border-rose-500/30 text-white hover:from-rose-600/40 hover:to-red-600/40 hover:border-rose-400/50 active:scale-[0.98]"
- : "bg-white/5 border-white/5 text-white/15 cursor-not-allowed"
+ ? "bg-gradient-to-r from-rose-600/20 to-red-600/20 border-rose-500/30 text-app-text hover:from-rose-600/40 hover:to-red-600/40 hover:border-rose-400/50 active:scale-[0.98]"
+ : "bg-app-text/5 border-app-text/5 text-app-text/15 cursor-not-allowed"
  )}
  >
  <div className={clsx(
  "w-10 h-10 rounded-xl flex items-center justify-center",
- remaining > 0 ? "bg-rose-500/30 text-rose-300" : "bg-white/5 text-white/10"
+ remaining > 0 ? "bg-rose-500/30 text-rose-300" : "bg-app-text/5 text-app-text/10"
  )}>
  <UserPlus size={20} />
  </div>
  <div className="flex-1 text-left">
  <span className="text-[10px] font-black uppercase tracking-widest block">Post to Account</span>
- <span className="text-xs font-bold text-white/40">
+ <span className="text-xs font-bold text-app-text/40">
  {remaining > availableCredit && client?.id !== 1
  ? `Limit exceeded (${currency}${formatNumber(availableCredit)})`
  : `${currency}${formatNumber(availableCredit)} credit left`}
@@ -457,9 +457,9 @@ export function MultiPaymentDashboard({
  onClick={() => handleNumpadAction(d)}
  className={clsx(
  "h-14 rounded-2xl font-black text-xl transition-all active:scale-90 flex items-center justify-center",
- d === 'C' ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white" :
- d === 'X' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white" :
- "bg-white/5 text-white hover:bg-white/10 border border-white/5"
+ d === 'C' ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-app-text" :
+ d === 'X' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-app-text" :
+ "bg-app-text/5 text-app-text hover:bg-app-text/10 border border-app-text/5"
  )}
  >
  {d === 'X' ? <ArrowLeft size={18} strokeWidth={3} /> : d}
@@ -467,7 +467,7 @@ export function MultiPaymentDashboard({
  ))}
  <button
  onClick={() => handleAddLeg()}
- className="col-span-2 h-14 bg-emerald-gradient text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-400/30 shadow-lg"
+ className="col-span-2 h-14 bg-emerald-gradient text-app-text rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-400/30 shadow-lg"
  >
  <Plus size={18} strokeWidth={4} />
  Apply Entry
@@ -509,7 +509,7 @@ export function MultiPaymentDashboard({
  )}
  style={{ width: `${Math.min(100, (paidTotal / totalAmount) * 100)}%` }}
  >
- <div className="absolute inset-0 bg-white/10 animate-shimmer" />
+ <div className="absolute inset-0 bg-app-text/10 animate-shimmer" />
  </div>
  </div>
 
@@ -523,7 +523,7 @@ export function MultiPaymentDashboard({
  )}>
  <div className="flex items-center gap-4">
  <div className={clsx(
- "w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg",
+ "w-12 h-12 rounded-xl flex items-center justify-center text-app-text shadow-lg",
  remaining > availableCredit && client?.id !== 1 ? "bg-red-600" : "bg-rose-600"
  )}>
  <AlertCircle size={24} />
@@ -546,7 +546,7 @@ export function MultiPaymentDashboard({
  "h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-2xl shadow-rose-600/20",
  remaining > availableCredit && client?.id !== 1
  ? "bg-slate-200 text-app-text-faint cursor-not-allowed shadow-none"
- : "bg-rose-600 text-white hover:bg-rose-700 active:scale-95 border border-rose-400/30"
+ : "bg-rose-600 text-app-text hover:bg-rose-700 active:scale-95 border border-rose-400/30"
  )}
  >
  <UserPlus size={16} />
@@ -558,7 +558,7 @@ export function MultiPaymentDashboard({
  {remaining <= ROUND_OFF_MAX && remaining > 0.01 && (
  <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-200 animate-in slide-in-from-right-4 duration-700">
  <div className="flex items-center gap-3 mb-3">
- <div className="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
+ <div className="w-10 h-10 rounded-xl bg-indigo-500 text-app-text flex items-center justify-center shadow-lg shadow-indigo-500/30">
  <Percent size={20} />
  </div>
  <div>
@@ -576,7 +576,7 @@ export function MultiPaymentDashboard({
  <button
  key={r}
  onClick={() => handleRoundOff(r)}
- className="h-10 px-4 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 border border-emerald-100 hover:border-emerald-500"
+ className="h-10 px-4 bg-emerald-50 hover:bg-emerald-500 hover:text-app-text text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 border border-emerald-100 hover:border-emerald-500"
  >
  ↓{r} (-{currency}{formatNumber(disc)})
  </button>
@@ -584,7 +584,7 @@ export function MultiPaymentDashboard({
  })}
  <button
  onClick={() => handleRoundOff()}
- className="h-10 px-4 bg-emerald-gradient text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center gap-2 border border-emerald-400/30"
+ className="h-10 px-4 bg-emerald-gradient text-app-text rounded-xl text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-all active:scale-95 shadow-lg shadow-emerald-500/20 flex items-center gap-2 border border-emerald-400/30"
  >
  <Percent size={14} />
  Full Adjustment
@@ -596,7 +596,7 @@ export function MultiPaymentDashboard({
  ) : remaining < -0.01 ? (
  <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between animate-in slide-in-from-right-4 duration-500">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30">
+ <div className="w-12 h-12 rounded-xl bg-amber-500 text-app-text flex items-center justify-center shadow-lg shadow-amber-500/30">
  <Coins size={24} />
  </div>
  <div>
@@ -606,7 +606,7 @@ export function MultiPaymentDashboard({
  </div>
  <button
  onClick={handleSurplusToWallet}
- className="h-12 px-6 bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all flex items-center gap-3 shadow-xl shadow-amber-600/20 active:scale-95"
+ className="h-12 px-6 bg-amber-600 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all flex items-center gap-3 shadow-xl shadow-amber-600/20 active:scale-95"
  >
  <Wallet size={16} />
  Add to Wallet
@@ -614,7 +614,7 @@ export function MultiPaymentDashboard({
  </div>
  ) : (
  <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center gap-4 animate-in zoom-in-95 duration-500">
- <div className="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+ <div className="w-12 h-12 rounded-xl bg-emerald-500 text-app-text flex items-center justify-center shadow-lg shadow-emerald-500/30">
  <ShieldCheck size={24} />
  </div>
  <div>
@@ -628,13 +628,13 @@ export function MultiPaymentDashboard({
  {/* 2. Payment History / Legs */}
  <div className="flex-1 flex flex-col space-y-3 min-h-0">
  <div className="flex items-center justify-between px-2">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Payment Applied</span>
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-[0.3em]">Payment Applied</span>
  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{paymentLegs.length} Entries</span>
  </div>
 
  <div className="flex-1 overflow-y-auto pr-2 space-y-2 custom-scrollbar">
  {paymentLegs.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-white/5 border-2 border-dashed border-white/5 rounded-3xl">
+ <div className="h-full flex flex-col items-center justify-center text-app-text/5 border-2 border-dashed border-app-text/5 rounded-3xl">
  <Calculator size={48} strokeWidth={1} />
  <p className="text-[10px] font-black uppercase tracking-[0.3em] italic mt-3">Waiting for first entry...</p>
  </div>
@@ -645,14 +645,14 @@ export function MultiPaymentDashboard({
  return (
  <div
  key={idx}
- className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 hover:bg-white/10 hover:border-emerald-500/50 transition-all group animate-in slide-in-from-bottom-2"
+ className="bg-app-text/5 border border-app-text/10 rounded-2xl p-4 flex items-center gap-4 hover:bg-app-text/10 hover:border-emerald-500/50 transition-all group animate-in slide-in-from-bottom-2"
  >
- <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white group-hover:text-emerald-400 transition-colors">
+ <div className="w-12 h-12 rounded-xl bg-app-text/5 flex items-center justify-center text-app-text group-hover:text-emerald-400 transition-colors">
  <Icon size={24} />
  </div>
  <div className="flex-1">
- <span className="text-[10px] font-black text-white/30 uppercase tracking-widest block">{leg.method}</span>
- <span className="text-2xl font-black text-white tabular-nums tracking-tighter">
+ <span className="text-[10px] font-black text-app-text/30 uppercase tracking-widest block">{leg.method}</span>
+ <span className="text-2xl font-black text-app-text tabular-nums tracking-tighter">
  {currency}{formatNumber(leg.amount)}
  </span>
  </div>
@@ -667,7 +667,7 @@ export function MultiPaymentDashboard({
  return next;
  });
  }}
- className="w-10 h-10 rounded-xl bg-white/5 text-white/20 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg"
+ className="w-10 h-10 rounded-xl bg-app-text/5 text-app-text/20 hover:bg-rose-500 hover:text-app-text flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg"
  >
  <Trash2 size={18} />
  </button>
@@ -680,15 +680,15 @@ export function MultiPaymentDashboard({
  </div>
 
  {/* 3. Global Action Button */}
- <div className="pt-4 border-t border-white/5">
+ <div className="pt-4 border-t border-app-text/5">
  <button
  onClick={() => onConfirm(paymentLegs)}
  disabled={Math.abs(remaining) > 0.01 || paymentLegs.length === 0 || isProcessing}
  className={clsx(
  "w-full h-24 rounded-[2.5rem] flex items-center justify-center gap-8 transition-all relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)]",
  Math.abs(remaining) <= 0.01 && paymentLegs.length > 0 && !isProcessing
- ? "bg-emerald-gradient text-white shadow-emerald-500/40 hover:scale-[1.02] active:scale-95"
- : "bg-white/5 text-white/10 cursor-not-allowed border border-white/10"
+ ? "bg-emerald-gradient text-app-text shadow-emerald-500/40 hover:scale-[1.02] active:scale-95"
+ : "bg-app-text/5 text-app-text/10 cursor-not-allowed border border-app-text/10"
  )}
  >
  {/* Inner Carbon Texture Overlay */}
@@ -696,9 +696,9 @@ export function MultiPaymentDashboard({
 
  <div className={clsx(
  "w-16 h-16 rounded-[2rem] flex items-center justify-center transition-all duration-700 backdrop-blur-md",
- Math.abs(remaining) <= 0.01 ? "bg-white/20 scale-110 shadow-2xl shadow-emerald-500/20 border border-white/30" : "bg-white/5 border border-white/5"
+ Math.abs(remaining) <= 0.01 ? "bg-app-text/20 scale-110 shadow-2xl shadow-emerald-500/20 border border-app-text/30" : "bg-app-text/5 border border-app-text/5"
  )}>
- <Check size={36} strokeWidth={4} className={clsx("transition-all duration-700", Math.abs(remaining) <= 0.01 ? "rotate-0 scale-100 text-white" : "rotate-45 scale-50 opacity-20")} />
+ <Check size={36} strokeWidth={4} className={clsx("transition-all duration-700", Math.abs(remaining) <= 0.01 ? "rotate-0 scale-100 text-app-text" : "rotate-45 scale-50 opacity-20")} />
  </div>
  <div className="text-left">
  <span className="text-[11px] font-black uppercase tracking-[0.4em] block mb-1 text-inherit opacity-60">Complete Sale</span>
@@ -706,7 +706,7 @@ export function MultiPaymentDashboard({
  </div>
 
  {/* Glow Effect */}
- <div className="absolute -inset-4 bg-white/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+ <div className="absolute -inset-4 bg-app-text/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
  </button>
  </div>
  </div>
@@ -732,7 +732,7 @@ export function MultiPaymentHub({
  return (
  <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-8">
  <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose} />
- <div className="relative w-full max-w-4xl h-[90vh] max-h-[850px] bg-[#0F172A] rounded-[40px] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+ <div className="relative w-full max-w-4xl h-[90vh] max-h-[850px] bg-[#0F172A] rounded-[40px] shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-app-text/10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
  <MultiPaymentDashboard
  totalAmount={totalAmount}
  currency={currency}

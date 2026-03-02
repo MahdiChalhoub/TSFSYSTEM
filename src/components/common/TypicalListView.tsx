@@ -196,7 +196,7 @@ export function TypicalListView<T, D = any>({
  }
 
  return (
- <div className={cn("space-y-4 bg-white/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-app-border p-1.5 overflow-hidden", className)}>
+ <div className={cn("space-y-4 bg-app-text/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-app-border p-1.5 overflow-hidden", className)}>
  {/* ─── Header Section ────────────────── */}
  <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50">
  <div className="flex items-center gap-4">
@@ -258,7 +258,7 @@ export function TypicalListView<T, D = any>({
 
  {onAdd && (
  <Button onClick={onAdd} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs font-bold shadow-emerald-100 shadow-lg border-none px-4">
- <Plus className="h-4 w-4 mr-1 text-white stroke-[3px]" /> {addLabel || 'ADD'}
+ <Plus className="h-4 w-4 mr-1 text-app-text stroke-[3px]" /> {addLabel || 'ADD'}
  </Button>
  )}
  </div>

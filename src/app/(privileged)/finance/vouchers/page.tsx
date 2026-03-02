@@ -302,12 +302,12 @@ export default function VouchersPage() {
  </div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-amber-600 flex items-center justify-center shadow-2xl shadow-amber-200">
- <Receipt size={32} className="text-white" />
+ <Receipt size={32} className="text-app-text" />
  </div>
  Financial <span className="text-amber-600">Vouchers</span>
  </h1>
  </div>
- <Button onClick={openCreate} className="h-12 px-6 rounded-2xl bg-amber-600 text-white font-bold flex items-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
+ <Button onClick={openCreate} className="h-12 px-6 rounded-2xl bg-amber-600 text-app-text font-bold flex items-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
  <Plus size={18} /> New Voucher
  </Button>
  </header>
@@ -399,7 +399,7 @@ export default function VouchersPage() {
  )}
  <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
  <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl">Cancel</Button>
- <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white border-0">
+ <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-app-text border-0">
  {isPending ? (editVoucher ? "Saving..." : "Creating...") : <><Send size={14} /> {editVoucher ? "Save Changes" : "Create Voucher"}</>}
  </Button>
  </div>
@@ -432,7 +432,7 @@ export default function VouchersPage() {
  <Input name="comment" required placeholder="Reason for unlocking..." className="rounded-xl" />
  <div className="flex justify-end gap-2">
  <Button type="button" variant="outline" onClick={() => setCommentDialog(null)} className="rounded-xl">Cancel</Button>
- <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white border-0">
+ <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-app-text border-0">
  {isPending ? "Unlocking..." : <><Unlock size={14} /> Unlock</>}
  </Button>
  </div>
@@ -481,7 +481,7 @@ export default function VouchersPage() {
  <h2 className="text-3xl font-black text-app-text mt-1">{vouchers.length}</h2>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-sm bg-blue-600 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+ <Card className="rounded-[2rem] border-0 shadow-sm bg-blue-600 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-app-text">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-4">
  <div className="w-12 h-12 rounded-2xl bg-blue-500/50 text-blue-100 flex items-center justify-center">
@@ -492,7 +492,7 @@ export default function VouchersPage() {
  </Badge>
  </div>
  <p className="text-[11px] font-black text-blue-200 uppercase tracking-widest">PENDING ACTION</p>
- <h2 className="text-3xl font-black text-white mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</h2>
+ <h2 className="text-3xl font-black text-app-text mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</h2>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">

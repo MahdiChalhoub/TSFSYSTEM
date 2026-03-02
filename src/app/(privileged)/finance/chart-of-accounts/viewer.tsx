@@ -301,7 +301,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  </button>
  <button
  onClick={() => openAddModal()}
- className="flex items-center gap-2 text-sm bg-black text-white px-3 py-1.5 rounded-md hover:bg-stone-800 transition-colors shadow-sm"
+ className="flex items-center gap-2 text-sm bg-black text-app-text px-3 py-1.5 rounded-md hover:bg-stone-800 transition-colors shadow-sm"
  >
  <Plus size={16} /> New Account
  </button>
@@ -366,7 +366,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  </div>
  </div>
  <div className="md:col-span-1 flex gap-2">
- <button disabled={isPending} type="submit" className="w-full bg-blue-600 text-white p-2 rounded text-sm font-medium hover:bg-blue-700">
+ <button disabled={isPending} type="submit" className="w-full bg-blue-600 text-app-text p-2 rounded text-sm font-medium hover:bg-blue-700">
  {isPending ? '...' : 'Save'}
  </button>
  <button type="button" onClick={() => setIsAdding(false)} className="bg-app-surface border border-app-border text-app-text-muted p-2 rounded text-sm hover:bg-app-bg">X</button>
@@ -486,7 +486,7 @@ const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<s
  <button type="button" onClick={onClose} className="flex-1 p-4 rounded-2xl border border-app-border font-bold hover:bg-app-bg transition-all">
  Discard Changes
  </button>
- <button type="submit" disabled={isPending} className="flex-2 bg-stone-900 text-white px-12 rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
+ <button type="submit" disabled={isPending} className="flex-2 bg-stone-900 text-app-text px-12 rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
  {isPending ? 'Saving Revisions...' : 'Apply Hierarchy Changes'}
  <RefreshCcw size={18} className={isPending ? 'animate-spin text-amber-400' : 'text-emerald-400'} />
  </button>

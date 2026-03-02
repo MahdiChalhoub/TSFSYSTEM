@@ -33,12 +33,12 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  className="flex items-center gap-2 px-2 py-1 rounded-xl bg-gray-800/40 border border-gray-700 hover:bg-gray-800 transition-all group"
  suppressHydrationWarning
  >
- <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
+ <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-app-text shadow-lg shadow-indigo-900/20">
  <Building2 size={14} />
  </div>
  <div className="text-left hidden lg:block">
  <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-0.5">Active Site</div>
- <div className="text-sm font-bold text-white leading-none truncate max-w-[120px]">
+ <div className="text-sm font-bold text-app-text leading-none truncate max-w-[120px]">
  {selectedSite?.name || 'Global View'}
  </div>
  </div>
@@ -60,7 +60,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  disabled={isPending}
  className={clsx(
  "w-full flex items-center justify-between p-4 rounded-2xl transition-all group mb-1",
- site.id === currentId ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40" : "hover:bg-gray-700/50 text-app-text-faint hover:text-white"
+ site.id === currentId ? "bg-indigo-600 text-app-text shadow-lg shadow-indigo-900/40" : "hover:bg-gray-700/50 text-app-text-faint hover:text-app-text"
  )}
  >
  <div className="flex items-center gap-3 text-left">
@@ -72,7 +72,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  </div>
  </div>
  </div>
- {site.id === currentId && <Check size={18} className="text-white" />}
+ {site.id === currentId && <Check size={18} className="text-app-text" />}
  </button>
  ))}
  </div>

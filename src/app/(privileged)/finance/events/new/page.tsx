@@ -117,7 +117,7 @@ export default function NewFinancialEventPage() {
  </Link>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <CalendarPlus size={28} className="text-white" />
+ <CalendarPlus size={28} className="text-app-text" />
  </div>
  New <span className="text-indigo-600">Event</span>
  </h1>
@@ -222,7 +222,7 @@ export default function NewFinancialEventPage() {
 
  <div className="flex justify-end gap-3 pt-4">
  <Button type="button" variant="outline" onClick={() => setSelectedType(null)}>Cancel</Button>
- <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+ <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-app-text">
  {loading ? "Processing..." : "Create & Post Immediately"}
  </Button>
  </div>

@@ -212,7 +212,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
  )}
  >
  <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all",
- form.is_driver ? "bg-amber-500 text-white" : "bg-app-surface border border-app-border text-app-text-faint"
+ form.is_driver ? "bg-amber-500 text-app-text" : "bg-app-surface border border-app-border text-app-text-faint"
  )}>
  <Truck size={18} />
  </div>
@@ -230,7 +230,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
  "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
  form.is_driver ? "border-amber-500 bg-amber-500" : "border-app-border"
  )}>
- {form.is_driver && <CheckCircle2 size={12} className="text-white" strokeWidth={3} />}
+ {form.is_driver && <CheckCircle2 size={12} className="text-app-text" strokeWidth={3} />}
  </div>
  </button>
 
@@ -241,7 +241,7 @@ function CreateUserModal({ roles, onClose, onCreated }: {
  Cancel
  </button>
  <button type="submit" disabled={saving}
- className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-sm shadow-emerald-200 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+ className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-app-text rounded-2xl font-bold text-sm shadow-sm shadow-emerald-200 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
  {saving ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
  {saving ? 'Creating…' : 'Create User'}
  </button>
@@ -319,7 +319,7 @@ export default function DriverManagementPage() {
  </div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
- <Truck size={28} className="text-white" />
+ <Truck size={28} className="text-app-text" />
  </div>
  Driver &amp; User <span className="text-amber-500">Management</span>
  </h1>
@@ -333,7 +333,7 @@ export default function DriverManagementPage() {
  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
  </button>
  <button onClick={() => setShowCreate(true)}
- className="bg-emerald-600 text-white h-12 px-6 rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
+ className="bg-emerald-600 text-app-text h-12 px-6 rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
  <Plus size={18} />
  <span>New User</span>
  </button>
@@ -430,7 +430,7 @@ export default function DriverManagementPage() {
  {/* User info */}
  <div className="col-span-4 flex items-center gap-3 min-w-0">
  <div className={clsx("w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shrink-0",
- user.is_driver ? "bg-amber-500 text-white" : DRIVER_COLORS[colorIdx]
+ user.is_driver ? "bg-amber-500 text-app-text" : DRIVER_COLORS[colorIdx]
  )}>
  {user.is_driver ? <Truck size={16} /> : initials(user)}
  </div>

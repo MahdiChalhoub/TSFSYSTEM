@@ -73,7 +73,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  className={clsx(
  "group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
  level === 0
- ? "bg-white/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-emerald-200"
+ ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-emerald-200"
  : "bg-gray-50/40 border-gray-100/50 ml-10 mt-2 hover:bg-app-surface hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5",
  "hover:-translate-y-0.5"
  )}

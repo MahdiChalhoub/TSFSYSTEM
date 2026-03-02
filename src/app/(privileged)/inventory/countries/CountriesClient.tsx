@@ -222,7 +222,7 @@ function ManualCountryFormWrapper({ country, onClose }: { country?: any, onClose
 
  <div className="pt-4 flex gap-3">
  <button type="button" onClick={onClose} className="flex-1 h-12 rounded-xl border border-app-border font-bold text-app-text-faint hover:bg-app-bg transition-colors">Cancel</button>
- <button type="submit" className="flex-1 h-12 rounded-xl bg-gray-900 text-white font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95">
+ <button type="submit" className="flex-1 h-12 rounded-xl bg-gray-900 text-app-text font-bold hover:bg-gray-800 transition-all shadow-lg active:scale-95">
  Save Hub
  </button>
  </div>

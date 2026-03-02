@@ -46,7 +46,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
  <ShieldAlert size={24} />
  </div>
- <span className={`text-xs font-black px-3 py-1 rounded-full ${healthScore > 90 ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>
+ <span className={`text-xs font-black px-3 py-1 rounded-full ${healthScore > 90 ? 'bg-emerald-500 text-app-text' : 'bg-amber-500 text-app-text'}`}>
  {healthScore.toFixed(0)}% HEALTH
  </span>
  </div>
@@ -93,7 +93,7 @@ export default function ProductDashboardStats({ stats }: StatsProps) {
  <Zap size={24} />
  </div>
  {stats.missing_barcode > 0 && (
- <span className="text-[10px] font-black bg-amber-500 text-white px-3 py-1 rounded-full animate-pulse">
+ <span className="text-[10px] font-black bg-amber-500 text-app-text px-3 py-1 rounded-full animate-pulse">
  ACTION REQUIRED
  </span>
  )}

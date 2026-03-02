@@ -6,14 +6,14 @@ const initialState: Record<string, any> = { error: {} }
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
  const [state, action, isPending] = useActionState(loginAction, initialState)
  return (
- <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
+ <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
  <div className="flex justify-between items-center relative">
  <div className="space-y-1">
- <h2 className="text-xl font-bold text-white">Secure Access</h2>
+ <h2 className="text-xl font-bold text-app-text">Secure Access</h2>
  <p className="text-[10px] text-app-text-muted font-medium tracking-wide uppercase">{slug}{suffix}</p>
  </div>
- <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
+ <div className="w-12 h-12 bg-app-text/5 rounded-2xl flex items-center justify-center text-app-text border border-app-text/10 group-hover:scale-110 transition-transform">
  <Lock size={20} />
  </div>
  </div>
@@ -39,14 +39,14 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  placeholder="000 000"
  required
  autoFocus
- className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
  />
  {/* Server-side 2FA challenge — no passwords in DOM */}
  <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
  <button
  type="submit"
  disabled={isPending}
- className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+ className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
  >
  {isPending ? (
  <Loader2 className="animate-spin" size={20} />
@@ -58,7 +58,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  <button
  type="button"
  onClick={() => window.location.reload()}
- className="text-[10px] text-app-text-muted hover:text-white font-bold uppercase tracking-[0.2em] transition-colors"
+ className="text-[10px] text-app-text-muted hover:text-app-text font-bold uppercase tracking-[0.2em] transition-colors"
  >
  Cancel &amp; Restart
  </button>
@@ -71,19 +71,19 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  type="text"
  placeholder="Username"
  required
- className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
  />
  <input
  name="password"
  type="password"
  placeholder="Access Key"
  required
- className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
  />
  <button
  type="submit"
  disabled={isPending}
- className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+ className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
  >
  {isPending ? (
  <Loader2 className="animate-spin" size={20} />

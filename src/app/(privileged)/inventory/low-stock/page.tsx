@@ -92,7 +92,7 @@ export default function LowStockPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <TrendingDown size={28} className="text-white" />
+ <TrendingDown size={28} className="text-app-text" />
  </div>
  Low Stock <span className="text-amber-600">Alerts</span>
  </h1>

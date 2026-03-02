@@ -199,7 +199,7 @@ export default function DataQualityPage() {
  <div>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
- <Wrench className="w-7 h-7 text-white" />
+ <Wrench className="w-7 h-7 text-app-text" />
  </div>
  Product Data <span className="text-orange-600">Quality</span>
  </h1>

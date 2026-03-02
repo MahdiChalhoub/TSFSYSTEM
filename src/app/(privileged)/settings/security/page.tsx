@@ -81,7 +81,7 @@ export default async function SecurityPage() {
  </div>
 
  <div className="space-y-8">
- <div className="bg-slate-900 p-8 rounded-[2rem] text-white overflow-hidden relative">
+ <div className="bg-slate-900 p-8 rounded-[2rem] text-app-text overflow-hidden relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <Shield size={120} />
  </div>

@@ -31,7 +31,7 @@ export default async function SaasMasterDashboard() {
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
  <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <ShieldCheck size={40} className="text-white fill-white/20" />
+ <ShieldCheck size={40} className="text-app-text fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
@@ -57,7 +57,7 @@ export default async function SaasMasterDashboard() {
  </button>
  </Link>
  <Link href="/organizations">
- <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
+ <button className="h-14 px-8 rounded-2xl bg-slate-900 text-app-text font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
  Add Tenant <Plus size={18} className="text-emerald-400" />
  </button>
  </Link>
@@ -117,7 +117,7 @@ export default async function SaasMasterDashboard() {
  {stats?.latestTenants?.map((ten: Record<string, any>) => (
  <div key={ten.id} className="flex items-center justify-between p-6 rounded-[2rem] hover:bg-slate-50/50 transition-all border border-transparent hover:border-app-border group/ten">
  <div className="flex items-center gap-6">
- <div className="w-14 h-14 rounded-2xl bg-emerald-gradient flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-700/10 group-hover/ten:rotate-3 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-emerald-gradient flex items-center justify-center text-app-text font-black text-xl shadow-lg shadow-emerald-700/10 group-hover/ten:rotate-3 transition-transform">
  {ten.name[0]}
  </div>
  <div>

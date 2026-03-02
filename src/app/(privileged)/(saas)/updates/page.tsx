@@ -130,7 +130,7 @@ export default function SystemUpdatesPage() {
  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 sm:gap-4">
  <div className="w-full sm:w-auto">
  <div className="flex items-center gap-3">
- <div className="p-2.5 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-100 border border-indigo-400/20 shrink-0">
+ <div className="p-2.5 bg-indigo-600 rounded-2xl text-app-text shadow-xl shadow-indigo-100 border border-indigo-400/20 shrink-0">
  <Cpu size={24} className={syncing || applying ? "animate-pulse" : ""} />
  </div>
  <h2 className="text-3xl md:text-5xl font-black text-app-text tracking-tight">System Updates</h2>
@@ -141,7 +141,7 @@ export default function SystemUpdatesPage() {
  <Button
  onClick={() => fileInputRef.current?.click()}
  disabled={syncing || loading}
- className="flex-1 sm:flex-none justify-center bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-7 rounded-2xl flex gap-2 font-black transition-all shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-95"
+ className="flex-1 sm:flex-none justify-center bg-indigo-600 hover:bg-indigo-500 text-app-text px-6 py-7 rounded-2xl flex gap-2 font-black transition-all shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-95"
  >
  <UploadCloud size={20} />
  {syncing ? "Uploading..." : "Upload Update"}
@@ -159,7 +159,7 @@ export default function SystemUpdatesPage() {
  <TerminalLog logs={logs} visible={logs.length > 0} />
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
  {/* Current Status Card */}
- <Card className="lg:col-span-1 bg-white/70 backdrop-blur-xl border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50">
+ <Card className="lg:col-span-1 bg-app-text/70 backdrop-blur-xl border-app-text/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50">
  <CardHeader className="p-8">
  <CardTitle className="text-xl font-black text-app-text flex items-center gap-2">
  <Zap className="text-amber-500 fill-amber-500 shrink-0" size={20} />
@@ -171,7 +171,7 @@ export default function SystemUpdatesPage() {
  <div className="space-y-4">
  <div className="flex justify-between items-center py-4 border-b border-gray-50">
  <span className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.2em]">Build Version</span>
- <Badge className="bg-slate-900 text-white border-none px-3 py-1 font-mono font-bold text-[10px]">
+ <Badge className="bg-slate-900 text-app-text border-none px-3 py-1 font-mono font-bold text-[10px]">
  v{status?.current_version || "---"}
  </Badge>
  </div>
@@ -187,7 +187,7 @@ export default function SystemUpdatesPage() {
  <span className="text-indigo-600 font-black text-[10px] bg-indigo-50 px-2 py-0.5 rounded-full">{status?.environment || "PRODUCTION"}</span>
  </div>
  </div>
- <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl text-white shadow-xl shadow-slate-200">
+ <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl text-app-text shadow-xl shadow-slate-200">
  <div className="flex items-center gap-2 mb-2">
  <ShieldCheck className="text-emerald-400" size={16} />
  <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Security Active</h4>
@@ -199,7 +199,7 @@ export default function SystemUpdatesPage() {
  </CardContent>
  </Card>
  {/* Update History & List */}
- <Card className="lg:col-span-2 bg-white/70 backdrop-blur-xl border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50 flex flex-col">
+ <Card className="lg:col-span-2 bg-app-text/70 backdrop-blur-xl border-app-text/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50 flex flex-col">
  <CardHeader className="p-8 pb-4">
  <div className="flex justify-between items-start">
  <div className="space-y-1">
@@ -263,7 +263,7 @@ export default function SystemUpdatesPage() {
  <Button
  onClick={() => setPendingUpdate({ id: update.id, version: update.version })}
  disabled={!!applying}
- className="w-full sm:w-auto bg-slate-900 text-white hover:bg-black rounded-2xl px-8 py-6 h-auto font-black shadow-xl transition-all hover:translate-y-[-2px] active:translate-y-[0px] flex gap-3 text-xs"
+ className="w-full sm:w-auto bg-slate-900 text-app-text hover:bg-black rounded-2xl px-8 py-6 h-auto font-black shadow-xl transition-all hover:translate-y-[-2px] active:translate-y-[0px] flex gap-3 text-xs"
  >
  <Zap size={16} className="fill-emerald-400 text-emerald-400" />
  INITIATE UPGRADE
@@ -287,12 +287,12 @@ export default function SystemUpdatesPage() {
  {/* Warning Section */}
  <div className="group p-8 md:p-10 bg-red-600 rounded-[3rem] border border-red-500 flex flex-col md:flex-row gap-8 items-center shadow-2xl shadow-red-200 relative overflow-hidden transition-all hover:scale-[1.01]">
  {/* Visual warning flare */}
- <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-700" />
- <div className="w-20 h-20 rounded-[2rem] bg-white/20 flex items-center justify-center text-white shrink-0 shadow-xl backdrop-blur-md border border-white/30">
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-text/10 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-700" />
+ <div className="w-20 h-20 rounded-[2rem] bg-app-text/20 flex items-center justify-center text-app-text shrink-0 shadow-xl backdrop-blur-md border border-app-text/30">
  <ShieldAlert size={36} className="animate-pulse" />
  </div>
  <div className="relative z-10 text-center md:text-left">
- <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">Update Safety</h4>
+ <h4 className="text-xl md:text-2xl font-black text-app-text uppercase tracking-tight">Update Safety</h4>
  <p className="text-sm md:text-base text-red-50/80 font-bold leading-relaxed mt-2 max-w-2xl">
  Updates will restart services briefly.
  Always ensure a full backup of your <strong>database</strong> is active before initiating an update.

@@ -55,7 +55,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
  <button
  onClick={handleRefresh}
  disabled={isPending}
- className="bg-stone-900 text-white px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+ className="bg-stone-900 text-app-text px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
  >
  {isPending ? 'Calculating...' : 'Update Report'}
  </button>
@@ -87,7 +87,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
  color="rose"
  formatAmount={formatAmount}
  />
- <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-stone-900 border-stone-800 text-white shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-white shadow-xl shadow-rose-200'}`}>
+ <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-stone-900 border-stone-800 text-app-text shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-app-text shadow-xl shadow-rose-200'}`}>
  <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] mb-1">Net Profit / Loss</p>
  <p className="text-3xl font-mono font-bold">
  {formatAmount(netProfit)}
@@ -125,7 +125,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
  <TotalRow title="Total Expenses" amount={expenses.reduce((sum, a) => sum + a.balance, 0)} color="rose" formatAmount={formatAmount} />
 
  {/* Final Net */}
- <tr className="bg-stone-900 text-white border-t-4 border-white">
+ <tr className="bg-stone-900 text-app-text border-t-4 border-white">
  <td className="p-8 text-xl font-serif font-bold italic">Net Profit / Loss</td>
  <td className="p-8 text-right text-2xl font-mono font-bold">
  {formatAmount(netProfit)}

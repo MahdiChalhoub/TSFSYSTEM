@@ -56,7 +56,7 @@ export default function ShiftsClient({ shifts }: Props) {
  <div className="space-y-4">
  <div className="flex justify-end">
  <button onClick={() => { setEditing(null); setShowForm(!showForm) }}
- className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-2xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
+ className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-app-text rounded-2xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
  <Plus size={18} /> Add Shift
  </button>
  </div>
@@ -89,7 +89,7 @@ export default function ShiftsClient({ shifts }: Props) {
  <button type="button" onClick={() => { setShowForm(false); setEditing(null) }}
  className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-text-muted hover:bg-app-bg transition-colors">Cancel</button>
  <button type="submit" disabled={isPending}
- className="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 disabled:opacity-50 transition-all">
+ className="px-8 py-3 bg-amber-600 text-app-text rounded-xl font-bold hover:bg-amber-700 disabled:opacity-50 transition-all">
  {isPending ? 'Saving...' : editing ? 'Update' : 'Create'}
  </button>
  </div>

@@ -181,7 +181,7 @@ export default function GeneralLedgerPage() {
  </div>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
- <BookOpen size={32} className="text-white" />
+ <BookOpen size={32} className="text-app-text" />
  </div>
  General <span className="text-indigo-600">Ledger</span>
  </h1>
@@ -192,7 +192,7 @@ export default function GeneralLedgerPage() {
  <Wallet size={18} /> Opening Balances
  </Link>
  </Button>
- <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+ <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 text-app-text font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
  <Link href="/finance/ledger/new" className="flex items-center gap-2">
  <Plus size={18} /> New Journal Entry
  </Link>
@@ -234,7 +234,7 @@ export default function GeneralLedgerPage() {
  className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-app-text-faint hover:bg-app-bg hover:text-app-text'}`}
  >
  <Filter size={16} /> Filters
- {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-white h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
+ {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-app-text h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
  </Button>
  </div>
  {showFilters && (

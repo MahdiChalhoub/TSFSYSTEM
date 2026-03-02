@@ -99,7 +99,7 @@ export default function ProfitCentersPage() {
  <header>
  <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <Target size={28} className="text-white" />
+ <Target size={28} className="text-app-text" />
  </div>
  Profit <span className="text-purple-600">Centers</span>
  </h1>

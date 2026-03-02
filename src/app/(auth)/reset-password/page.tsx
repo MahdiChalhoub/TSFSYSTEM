@@ -62,15 +62,15 @@ function ResetPasswordContent() {
  return (
  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
  <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5 text-center">
+ <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-app-text/5 text-center">
  <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
  <CheckCircle2 className="text-emerald-400" size={40} />
  </div>
- <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Password Updated!</h1>
+ <h1 className="text-2xl font-black text-app-text uppercase tracking-tighter mb-2">Password Updated!</h1>
  <p className="text-app-text-faint mb-8 leading-relaxed">
  Your password has been changed successfully. Redirecting you to login...
  </p>
- <Button asChild className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black">
+ <Button asChild className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-app-text font-black">
  <Link href="/login">Login Now</Link>
  </Button>
  </div>
@@ -83,15 +83,15 @@ function ResetPasswordContent() {
  return (
  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
  <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5 text-center">
+ <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-app-text/5 text-center">
  <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
  <AlertCircle className="text-red-400" size={40} />
  </div>
- <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Invalid Link</h1>
+ <h1 className="text-2xl font-black text-app-text uppercase tracking-tighter mb-2">Invalid Link</h1>
  <p className="text-app-text-faint mb-8 leading-relaxed">
  The password reset link is missing required parameters or is invalid.
  </p>
- <Button asChild variant="outline" className="w-full h-12 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+ <Button asChild variant="outline" className="w-full h-12 rounded-2xl border-app-text/10 bg-app-text/5 text-app-text hover:bg-app-text/10 hover:text-app-text">
  <Link href="/forgot-password">Request New Link</Link>
  </Button>
  </div>
@@ -103,12 +103,12 @@ function ResetPasswordContent() {
  return (
  <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
  <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/5">
+ <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-app-text/5">
  <div className="mb-8 text-center">
  <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
  <Lock className="text-emerald-400" size={32} />
  </div>
- <h1 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">New Password</h1>
+ <h1 className="text-3xl font-black text-app-text uppercase tracking-tighter mb-2">New Password</h1>
  <p className="text-app-text-muted font-bold uppercase text-[10px] tracking-widest">Enter your new secure password</p>
  </div>
 
@@ -123,7 +123,7 @@ function ResetPasswordContent() {
  required
  value={newPassword}
  onChange={(e) => setNewPassword(e.target.value)}
- className="pl-12 h-14 rounded-2xl border-white/5 bg-slate-950/50 text-white focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium placeholder:text-app-text-muted"
+ className="pl-12 h-14 rounded-2xl border-app-text/5 bg-slate-950/50 text-app-text focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium placeholder:text-app-text-muted"
  />
  </div>
  </div>
@@ -138,7 +138,7 @@ function ResetPasswordContent() {
  required
  value={confirmPassword}
  onChange={(e) => setConfirmPassword(e.target.value)}
- className="pl-12 h-14 rounded-2xl border-white/5 bg-slate-950/50 text-white focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium placeholder:text-app-text-muted"
+ className="pl-12 h-14 rounded-2xl border-app-text/5 bg-slate-950/50 text-app-text focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium placeholder:text-app-text-muted"
  />
  </div>
  </div>
@@ -146,7 +146,7 @@ function ResetPasswordContent() {
  <Button
  type="submit"
  disabled={loading}
- className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all group"
+ className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-app-text font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all group"
  >
  {loading ? (
  <Loader2 className="animate-spin" size={24} />
@@ -163,7 +163,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
  return (
- <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}>
+ <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-app-text" /></div>}>
  <ResetPasswordContent />
  </Suspense>
  );
