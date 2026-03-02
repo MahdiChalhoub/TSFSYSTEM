@@ -186,6 +186,7 @@ export const MENU_ITEMS = [
                     { title: 'Zones & Locations', path: '/inventory/warehouses' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
                     { title: 'Stock Count', path: '/inventory/stock-count' },
+                    { title: 'Strategy Manifests', path: '/inventory/transfer-orders' },
                     { title: 'Stock Transfers', path: '/inventory/transfers' },
                     { title: 'Serial Numbers', path: '/inventory/serials' },
                     { title: 'Operational Requests', path: '/inventory/requests' },

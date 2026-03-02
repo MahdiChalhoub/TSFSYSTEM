@@ -320,6 +320,59 @@ export default function TaxPolicyPage() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Dynamic Impact Summary for Org Policy */}
+                                    <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4 mt-6 space-y-3">
+                                        <div className="flex items-center gap-2 text-amber-800">
+                                            <Info size={16} />
+                                            <h4 className="text-xs font-bold uppercase tracking-widest">Periodic Tax Impact Summary</h4>
+                                        </div>
+                                        <ul className="space-y-2 text-[11px] text-amber-900 leading-relaxed font-medium">
+                                            {(parseFloat(f('sales_tax_rate')) > 0 || parseFloat(f('periodic_amount')) > 0) ? (
+                                                <li className="flex gap-2">
+                                                    <span className="text-amber-400">•</span>
+                                                    <span>
+                                                        <strong>Accrual Engine:</strong> The background Periodic Tax Service will automatically
+                                                        generate ledger provisions ({f('periodic_interval') || 'MONTHLY'}):
+                                                    </span>
+                                                </li>
+                                            ) : (
+                                                <li className="flex gap-2">
+                                                    <span className="text-amber-400">•</span>
+                                                    <span><strong>Accrual Engine:</strong> No periodic turnover or forfait provisions are currently active.</span>
+                                                </li>
+                                            )}
+
+                                            {parseFloat(f('sales_tax_rate')) > 0 && (
+                                                <li className="flex gap-2 ml-4">
+                                                    <span className="text-amber-400">-</span>
+                                                    <span>
+                                                        A <strong>{parseFloat(f('sales_tax_rate')) * 100}%</strong> tax will be provisioned based on
+                                                        {f('sales_tax_trigger') === 'ON_PROFIT' ? ' gross profit' : ' total revenue'} generated during the period.
+                                                    </span>
+                                                </li>
+                                            )}
+
+                                            {parseFloat(f('periodic_amount')) > 0 && (
+                                                <li className="flex gap-2 ml-4">
+                                                    <span className="text-amber-400">-</span>
+                                                    <span>
+                                                        A fixed forfait charge of <strong>{f('periodic_amount')}</strong> will be provisioned directly to expenses.
+                                                    </span>
+                                                </li>
+                                            )}
+
+                                            <li className="flex gap-2 pt-2 border-t border-amber-200/50">
+                                                <span className="text-amber-400">•</span>
+                                                <span>
+                                                    <strong>Profit Tax:</strong> Set to <span className="uppercase font-bold">{f('profit_tax_mode') || 'STANDARD'}</span>.
+                                                    {f('profit_tax_mode') === 'EXEMPT' && ' Corporate income tax will not be calculated.'}
+                                                    {f('profit_tax_mode') === 'FORFAIT' && ' Income tax will be derived from the Fixed Forfait engine.'}
+                                                    {(!f('profit_tax_mode') || f('profit_tax_mode') === 'STANDARD') && ' Year-end corporate income tax applies to net profit.'}
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 {/* Internal Cost Mode */}
