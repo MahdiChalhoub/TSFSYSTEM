@@ -42,8 +42,11 @@ router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rul
 router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
 router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
 
+from apps.pos.views.analytics_views import SalesDailySummaryListView, SalesDailyRollupView  # noqa: E402
+
 urlpatterns = [
     path('', include(router.urls)),
+    # Gap 9: Analytics pre-aggregated endpoints
+    path('analytics/daily/', SalesDailySummaryListView.as_view(), name='analytics-daily'),
+    path('analytics/daily/summary/', SalesDailyRollupView.as_view(), name='analytics-daily-summary'),
 ]
-
-

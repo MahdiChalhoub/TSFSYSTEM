@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from apps.inventory.models import Product, ProductVariant, ProductAttributeValue, ComboComponent, Inventory
 from django.db.models import Sum
+from decimal import Decimal
 
 class ProductAttributeValueSerializer(serializers.ModelSerializer):
     attribute_name = serializers.CharField(source='attribute.name', read_only=True)
@@ -51,6 +52,10 @@ class ProductSerializer(serializers.ModelSerializer):
     parfum_name = serializers.CharField(source='parfum.name', read_only=True, default=None)
     size_unit_name = serializers.CharField(source='size_unit.short_name', read_only=True, default=None)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    # ── Gap 3: Reservation-aware stock quantities ──
+    on_hand_qty   = serializers.SerializerMethodField()
+    reserved_qty  = serializers.SerializerMethodField()
+    available_qty = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -68,8 +73,61 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_expiry_tracked', 'tracks_serials',
             'status', 'is_active', 'created_at', 'updated_at',
             'organization',
+            # Gap 3 stock fields
+            'on_hand_qty', 'reserved_qty', 'available_qty',
         ]
         read_only_fields = ['organization']
+
+    def _resolve_warehouse(self, obj):
+        """Resolve warehouse from request query param ?warehouse=<id>."""
+        request = self.context.get('request')
+        if request:
+            wh_id = request.query_params.get('warehouse') or request.query_params.get('site')
+            if wh_id:
+                try:
+                    from apps.inventory.models import Warehouse
+                    return Warehouse.objects.filter(
+                        id=int(wh_id), organization=obj.organization
+                    ).first()
+                except (ValueError, TypeError):
+                    pass
+        return None
+
+    def get_on_hand_qty(self, obj):
+        warehouse = self._resolve_warehouse(obj)
+        if warehouse:
+            inv = Inventory.objects.filter(
+                product=obj, warehouse=warehouse, organization=obj.organization
+            ).first()
+            return float(inv.quantity if inv else Decimal('0'))
+        # Fallback: sum across all warehouses
+        return float(
+            Inventory.objects.filter(product=obj, organization=obj.organization)
+            .aggregate(t=Sum('quantity'))['t'] or 0
+        )
+
+    def get_reserved_qty(self, obj):
+        warehouse = self._resolve_warehouse(obj)
+        if not warehouse:
+            return 0.0
+        try:
+            from apps.inventory.services import StockReservationService
+            summary = StockReservationService.get_stock_summary(obj, warehouse, obj.organization)
+            return float(summary['reserved'])
+        except Exception:
+            return 0.0
+
+    def get_available_qty(self, obj):
+        warehouse = self._resolve_warehouse(obj)
+        if not warehouse:
+            # No warehouse context — return raw on_hand as best available estimate
+            return self.get_on_hand_qty(obj)
+        try:
+            from apps.inventory.services import StockReservationService
+            summary = StockReservationService.get_stock_summary(obj, warehouse, obj.organization)
+            return float(summary['available'])
+        except Exception:
+            return self.get_on_hand_qty(obj)
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):

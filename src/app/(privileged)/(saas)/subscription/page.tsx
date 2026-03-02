@@ -142,7 +142,7 @@ export default function SubscriptionPage() {
                                                         className="w-full"
                                                         variant={plan?.id === p.id ? "outline" : "default"}
                                                         disabled={plan?.id === p.id || upgrading}
-                                                        onClick={() => handleUpgrade(p.id)}
+                                                        onClick={() => handleUpgrade(String(p.id))}
                                                     >
                                                         {upgrading ? "Processing..." : plan?.id === p.id ? "Current Plan" : "Select"}
                                                     </Button>
@@ -168,7 +168,7 @@ export default function SubscriptionPage() {
                         <div>
                             <div className="flex justify-between text-sm mb-2 font-bold text-gray-700">
                                 <span>Storage</span>
-                                <span>{Math.round((org.data_usage_bytes || 0) / 1024 / 1024)} MB</span>
+                                <span>{Math.round(Number(org.data_usage_bytes || 0) / 1024 / 1024)} MB</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 w-[5%]" />

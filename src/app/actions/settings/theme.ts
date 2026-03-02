@@ -54,11 +54,57 @@ export async function setOrgTheme(theme: AppThemeName): Promise<{ ok: boolean }>
 }
 
 /**
- * Read the persisted theme from server cookie.
+ * Read the persisted theme from server cookie (user-level).
  * Used in the root layout to avoid flash of default theme.
  */
 export async function getPersistedTheme(): Promise<AppThemeName | null> {
     const cookieStore = await cookies();
     const val = cookieStore.get(THEME_COOKIE)?.value as AppThemeName | undefined;
     return val && VALID_THEMES.includes(val) ? val : null;
+}
+
+/**
+ * Fetch the org-level default theme from the backend.
+ * Returns null if no org default has been set yet.
+ * Used in layout.tsx as a fallback when the user has no personal cookie.
+ *
+ * Priority chain: user cookie → org default (this) → system default (midnight-pro)
+ */
+export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
+    try {
+        const { erpFetch } = await import('@/lib/erp-api');
+        const data = await erpFetch('organizations/me/theme/');
+        const theme = data?.default_theme as AppThemeName | null;
+        return theme && VALID_THEMES.includes(theme) ? theme : null;
+    } catch {
+        // Not logged in yet, org context missing, or network error — silently return null
+        return null;
+    }
+}
+
+/**
+ * Set (or clear) the org-level default theme.
+ * Called from /settings/appearance by org admins.
+ * Pass null to remove the org default (falls back to system default midnight-pro).
+ */
+export async function setOrgDefaultTheme(
+    theme: AppThemeName | null
+): Promise<{ ok: boolean; error?: string }> {
+    if (theme !== null && !VALID_THEMES.includes(theme)) {
+        return { ok: false, error: 'Invalid theme name' };
+    }
+    try {
+        const { erpFetch } = await import('@/lib/erp-api');
+        await erpFetch('organizations/me/theme/', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ default_theme: theme }),
+        });
+        return { ok: true };
+    } catch (e: unknown) {
+        return {
+            ok: false,
+            error: e instanceof Error ? e.message : 'Failed to update org theme',
+        };
+    }
 }

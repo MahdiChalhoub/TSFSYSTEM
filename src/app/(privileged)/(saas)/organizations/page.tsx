@@ -35,10 +35,10 @@ export default function OrganizationsPage() {
     const uniqueCountries = [...new Set(orgs.map(o => o.country || '').filter(Boolean))].sort()
     // Apply filters
     const filteredOrgs = orgs.filter(o => {
-        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
+        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !(o.slug ?? '').toLowerCase().includes(search.toLowerCase())) return false
         if (filterPlan !== 'all' && (o.current_plan_name || 'Free Tier') !== filterPlan) return false
         if (filterType !== 'all' && (o.business_type_name || '') !== filterType) return false
-        if (filterCountry !== 'all' && !(o.country || '').toLowerCase().includes(filterCountry.toLowerCase())) return false
+        if (filterCountry !== 'all' && !(String(o.country ?? '')).toLowerCase().includes(filterCountry.toLowerCase())) return false
         if (filterStatus === 'active' && !o.is_active) return false
         if (filterStatus === 'suspended' && o.is_active) return false
         return true
@@ -104,15 +104,17 @@ export default function OrganizationsPage() {
         }
     }
     // Parse error messages from backend JSON responses
-    function tryParseError(e: Record<string, any>): string {
+    function tryParseError(e: unknown): string {
         try {
-            if (e?.message) {
-                const parsed = JSON.parse((e instanceof Error ? e.message : String(e)))
-                return parsed?.error || (e instanceof Error ? e.message : String(e))
+            const errMsg = e instanceof Error ? e.message : String(e)
+            if (errMsg) {
+                const parsed = JSON.parse(errMsg)
+                return parsed?.error || errMsg
             }
         } catch { }
-        return e?.message || "Unknown error"
+        return e instanceof Error ? e.message : String(e ?? 'Unknown error')
     }
+
     const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
     const [isCreating, setIsCreating] = useState(false)
     const [open, setOpen] = useState(false)
@@ -142,7 +144,7 @@ export default function OrganizationsPage() {
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
     async function handleOpenModules(org: Record<string, any>) {
-        setSelectedOrg(org)
+        setSelectedOrg(org as unknown as SaasOrganization)
         setModulesOpen(true)
         setLoadingModules(true)
         try {
@@ -162,13 +164,13 @@ export default function OrganizationsPage() {
     async function handleModuleToggle(moduleCode: string, currentStatus: string) {
         const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
         try {
-            const result = await toggleOrgModule(selectedOrg.id, moduleCode, action)
+            const result = await toggleOrgModule(String(selectedOrg!.id), moduleCode, action)
             if (result?.error) {
                 toast.error(result.error)
             } else {
                 toast.success(`Module ${action}d`)
             }
-            const data = await getOrgModules(selectedOrg.id)
+            const data = await getOrgModules(String(selectedOrg!.id))
             setOrgModules(data)
         } catch (e: unknown) {
             toast.error((e instanceof Error ? e.message : String(e)) || "Failed to toggle module")
@@ -442,7 +444,7 @@ export default function OrganizationsPage() {
                                                 ? 'bg-slate-50 hover:bg-rose-500 hover:text-white hover:border-rose-500'
                                                 : 'bg-emerald-50 hover:bg-emerald-600 hover:text-white hover:border-emerald-600'
                                             }`}
-                                        onClick={() => handleToggle(org.id, org.is_active, org.slug)}
+                                        onClick={() => handleToggle(String(org.id), !!org.is_active, org.slug ?? '')}
                                         disabled={isSaasOrg}
                                     >
                                         <Power size={16} className="mr-2" />
@@ -517,7 +519,7 @@ export default function OrganizationsPage() {
                                                     ? "bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white border-0"
                                                     : "bg-emerald-600 text-white hover:bg-black border-0 shadow-lg shadow-emerald-700/10"
                                                     }`}
-                                                onClick={() => handleModuleToggle(m.code, m.status)}
+                                                onClick={() => handleModuleToggle(m.code, m.status ?? '')}
                                             >
                                                 {m.status === 'INSTALLED' ? 'Deactivate' : 'Initialize'}
                                             </Button>
@@ -525,13 +527,13 @@ export default function OrganizationsPage() {
                                     </div>
                                 </div>
                                 {/* Feature Flags UI */}
-                                {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
+                                {m.status === 'INSTALLED' && Array.isArray(m.available_features) && m.available_features.length > 0 && (
                                     <div className="mt-6 pt-5 border-t border-slate-50 pl-2">
                                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                                             <Settings2 size={12} className="text-emerald-500" /> Extended Features
                                         </p>
                                         <div className="grid grid-cols-2 gap-3">
-                                            {m.available_features.map((f: Record<string, any>) => (
+                                            {(m.available_features as Array<Record<string, any>>).map((f: Record<string, any>) => (
                                                 <label key={f.code} className="flex items-center gap-3 p-3 rounded-xl border border-slate-50 hover:bg-emerald-50 hover:border-emerald-100 cursor-pointer transition-all group/flag">
                                                     <div className="relative flex items-center justify-center">
                                                         <input
@@ -543,9 +545,9 @@ export default function OrganizationsPage() {
                                                                     ? [...(m.active_features || []), f.code]
                                                                     : (m.active_features || []).filter((c: string) => c !== f.code)
                                                                 try {
-                                                                    await updateOrgModuleFeatures(selectedOrg.id, m.code, newFeatures)
+                                                                    await updateOrgModuleFeatures(String(selectedOrg!.id), m.code, newFeatures)
                                                                     toast.success("Structural feature updated")
-                                                                    const data = await getOrgModules(selectedOrg.id)
+                                                                    const data = await getOrgModules(String(selectedOrg!.id))
                                                                     setOrgModules(data)
                                                                 } catch {
                                                                     toast.error("Connection failed")

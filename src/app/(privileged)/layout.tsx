@@ -120,10 +120,13 @@ export default async function AdminLayout({
     const cookieStore = await cookies();
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
 
-    // ── Phase 5: Read server-persisted theme cookie ──────────────────
-    // Avoids flash of default theme on first hydration for returning users.
-    const { getPersistedTheme } = await import('@/app/actions/settings/theme');
-    const serverTheme = await getPersistedTheme();
+    // ── Phase 5: 3-tier theme fallback chain ────────────────────────────
+    // Priority: user cookie → org default (DB) → system default (midnight-pro)
+    const { getPersistedTheme, getOrgDefaultTheme } = await import('@/app/actions/settings/theme');
+    const userTheme = await getPersistedTheme();
+    // Only hit the backend for org default if the user has no personal preference
+    const orgTheme = userTheme ? null : await getOrgDefaultTheme();
+    const serverTheme = userTheme ?? orgTheme ?? undefined;
 
     return (
         <AppThemeProvider serverTheme={serverTheme ?? undefined}>

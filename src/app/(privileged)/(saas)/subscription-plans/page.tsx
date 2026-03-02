@@ -341,7 +341,7 @@ export default function SubscriptionPlansPage() {
                         <div key={cat.id} className="space-y-4">
                             <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
                                 <h3 className="text-xl font-bold text-gray-800">{cat.name}</h3>
-                                <Badge variant="secondary" className="text-xs font-mono">{cat.type}</Badge>
+                                <Badge variant="secondary" className="text-xs font-mono">{String(cat.type ?? '')}</Badge>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -628,7 +628,7 @@ export default function SubscriptionPlansPage() {
                 onOpenChange={(open) => { if (!open) setPendingDeleteAddon(null) }}
                 onConfirm={async () => {
                     if (pendingDeleteAddon) {
-                        await deleteAddon(pendingDeleteAddon.id)
+                        await deleteAddon(String(pendingDeleteAddon.id))
                         toast.success('Add-on deleted')
                         loadData()
                     }

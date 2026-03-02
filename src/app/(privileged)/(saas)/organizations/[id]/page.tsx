@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
 import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption } from "./actions"
@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
-    label: string; icon: Record<string, any>; current: number; limit: number; percent: number; unit?: string
+    label: string; icon: React.ElementType; current: number; limit: number; percent: number; unit?: string
 }) {
     const isWarning = percent >= 80
     const isDanger = percent >= 95
@@ -217,7 +217,7 @@ export default function OrganizationDetailPage() {
     async function handleFeatureToggle(moduleCode: string, featureCode: string, enabled: boolean) {
         const mod = modules.find(m => m.code === moduleCode)
         if (!mod) return
-        const current: string[] = mod.active_features || []
+        const current: string[] = (mod.active_features as string[]) || []
         const updated = enabled ? [...current, featureCode] : current.filter((f: string) => f !== featureCode)
         try {
             await updateModuleFeatures(orgId, moduleCode, updated)
@@ -252,7 +252,8 @@ export default function OrganizationDetailPage() {
         if (!newPassword || newPassword.length < 6) return toast.error("Password must be at least 6 characters")
         setResetting(true)
         try {
-            const result = await resetOrgUserPassword(orgId, resetTarget.id, newPassword)
+            const result = await resetOrgUserPassword(orgId, String(resetTarget!.id), newPassword)
+
             toast.success(result.message || 'Password reset')
             setResetTarget(null)
             setNewPassword('')
@@ -343,7 +344,7 @@ export default function OrganizationDetailPage() {
                     </div>
                 </div>
                 <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-gray-200 text-gray-500">
-                    {usage?.plan?.name || 'Free Tier'}
+                    {(usage?.plan as any)?.name || 'Free Tier'}
                 </Badge>
             </div>
             {/* Tab Bar */}
@@ -361,7 +362,8 @@ export default function OrganizationDetailPage() {
             {activeTab === 'overview' && (
                 <div className="space-y-6">
                     {/* Integrity Warnings */}
-                    {usage?.warnings?.length > 0 && (
+                    {Array.isArray(usage?.warnings) && usage!.warnings.length > 0 && (
+
                         <div className="space-y-2">
                             {usage.warnings.map((w: Record<string, any>) => {
                                 const styles: Record<string, string> = {
@@ -660,7 +662,7 @@ export default function OrganizationDetailPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <button onClick={() => handleToggleSite(site.id)} className="transition-transform hover:scale-110">
+                                        <button onClick={() => handleToggleSite(String(site.id))} className="transition-transform hover:scale-110">
                                             <Power size={18} className={site.is_active ? 'text-emerald-500' : 'text-gray-300'} />
                                         </button>
                                     </div>
@@ -792,10 +794,10 @@ export default function OrganizationDetailPage() {
                                         variant="outline"
                                         className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold"
                                         onClick={() => {
-                                            if (billing.client.crm_contact_id) {
-                                                router.push(`/crm/contacts/${billing.client.crm_contact_id}`)
+                                            if (billing.client!.crm_contact_id) {
+                                                router.push(`/crm/contacts/${billing.client!.crm_contact_id}`)
                                             } else {
-                                                router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)
+                                                router.push(`/crm/contacts?search=${encodeURIComponent(billing.client!.email ?? '')}`)
                                             }
                                         }}
                                     >
@@ -806,91 +808,90 @@ export default function OrganizationDetailPage() {
                         </Card>
                     </div>
                     {/* Available Plans */}
-                    {usage?.available_plans?.length > 0 && (
-                        <Card className="border-gray-100 shadow-sm">
-                            <CardHeader>
-                                <div className="flex justify-between items-center">
-                                    <CardTitle className="font-bold">Available Plans</CardTitle>
-                                    <Badge className="bg-gray-100 text-gray-500 text-[10px]">{usage.available_plans.length} plans</Badge>
-                                </div>
-                                <CardDescription className="text-xs text-gray-400">Select a plan to assign to this organization. Plans are managed from the <a href="/subscription-plans" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Subscription Plans</a> page.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {usage.available_plans.map((p: Record<string, any>) => {
-                                        const isCurrent = usage.plan?.id === p.id
-                                        const isCustom = parseFloat(p.monthly_price) < 0
-                                        const isFree = parseFloat(p.monthly_price) === 0
-                                        const limits = p.limits || {}
-                                        return (
-                                            <div key={p.id} className={`p-5 rounded-2xl border-2 transition-all flex flex-col ${isCurrent
-                                                ? 'border-emerald-300 bg-emerald-50/50 shadow-md'
-                                                : 'border-gray-100 hover:border-gray-200 hover:shadow-sm bg-white'}`}>
-                                                <div className="flex items-start justify-between mb-3">
-                                                    <div>
-                                                        <p className="font-black text-gray-900">{p.name}</p>
-                                                        {p.category && <span className="text-[10px] text-gray-400 font-medium">{p.category}</span>}
+                    {Array.isArray((usage as any)?.available_plans) && (usage as any).available_plans.length > 0 && (() => {
+                        const usageAny = usage as any
+                        return (
+                            <Card className="border-gray-100 shadow-sm">
+                                <CardHeader>
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle className="font-bold">Available Plans</CardTitle>
+                                        <Badge className="bg-gray-100 text-gray-500 text-[10px]">{usageAny.available_plans.length} plans</Badge>
+                                    </div>
+                                    <CardDescription className="text-xs text-gray-400">Select a plan to assign to this organization. Plans are managed from the <a href="/subscription-plans" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Subscription Plans</a> page.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {usageAny.available_plans.map((p: Record<string, any>) => {
+                                            const isCurrent = usageAny.plan?.id === p.id
+                                            const isCustom = parseFloat(p.monthly_price) < 0
+                                            const isFree = parseFloat(p.monthly_price) === 0
+                                            const limits = p.limits || {}
+                                            return (
+                                                <div key={p.id} className={`p-5 rounded-2xl border-2 transition-all flex flex-col ${isCurrent
+                                                    ? 'border-emerald-300 bg-emerald-50/50 shadow-md'
+                                                    : 'border-gray-100 hover:border-gray-200 hover:shadow-sm bg-white'}`}>
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div>
+                                                            <p className="font-black text-gray-900">{p.name}</p>
+                                                            {p.category && <span className="text-[10px] text-gray-400 font-medium">{p.category}</span>}
+                                                        </div>
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            {isCurrent && <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">Current</Badge>}
+                                                            {p.is_public && <Badge className="bg-blue-50 text-blue-500 text-[9px]">🌐 Public</Badge>}
+                                                            {p.trial_days > 0 && <Badge className="bg-amber-50 text-amber-600 text-[9px]">{p.trial_days}d Trial</Badge>}
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        {isCurrent && <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">Current</Badge>}
-                                                        {p.is_public && <Badge className="bg-blue-50 text-blue-500 text-[9px]">🌐 Public</Badge>}
-                                                        {p.trial_days > 0 && <Badge className="bg-amber-50 text-amber-600 text-[9px]">{p.trial_days}d Trial</Badge>}
-                                                    </div>
-                                                </div>
-                                                {/* Price */}
-                                                <div className="mb-3">
-                                                    {isCustom ? (
-                                                        <span className="text-xl font-black text-purple-600">Custom</span>
-                                                    ) : isFree ? (
-                                                        <span className="text-xl font-black text-emerald-600">Free</span>
-                                                    ) : (
-                                                        <>
-                                                            <span className="text-2xl font-black text-gray-900">${parseFloat(p.monthly_price).toFixed(0)}</span>
-                                                            <span className="text-xs text-gray-400 font-bold ml-1">/mo</span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                {/* Description */}
-                                                {p.description && <p className="text-[11px] text-gray-400 mb-3 line-clamp-2">{p.description}</p>}
-                                                {/* Modules */}
-                                                {p.modules?.length > 0 && (
-                                                    <div className="flex flex-wrap gap-1 mb-3">
-                                                        {p.modules.slice(0, 4).map((m: string) => (
-                                                            <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
-                                                        ))}
-                                                        {p.modules.length > 4 && (
-                                                            <Badge className="bg-gray-50 text-gray-400 text-[9px] border border-gray-100">+{p.modules.length - 4}</Badge>
+                                                    {/* Price */}
+                                                    <div className="mb-3">
+                                                        {isCustom ? (
+                                                            <span className="text-xl font-black text-purple-600">Custom</span>
+                                                        ) : isFree ? (
+                                                            <span className="text-xl font-black text-emerald-600">Free</span>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-2xl font-black text-gray-900">${parseFloat(p.monthly_price).toFixed(0)}</span>
+                                                                <span className="text-xs text-gray-400 font-bold ml-1">/mo</span>
+                                                            </>
                                                         )}
                                                     </div>
-                                                )}
-                                                {/* Limits */}
-                                                {Object.keys(limits).length > 0 && (
-                                                    <div className="grid grid-cols-2 gap-1 mb-3 text-[10px] text-gray-400">
-                                                        {limits.max_users != null && <span>👥 {limits.max_users < 0 ? '∞' : limits.max_users} users</span>}
-                                                        {limits.max_sites != null && <span>🏢 {limits.max_sites < 0 ? '∞' : limits.max_sites} sites</span>}
-                                                    </div>
-                                                )}
-                                                <div className="flex-1" />
-                                                {/* Switch Plan Button */}
-                                                {!isCurrent && (
-                                                    <Button size="sm"
-                                                        className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-                                                        onClick={() => setPlanSwitchTarget(p)}>
-                                                        Switch to This Plan
-                                                    </Button>
-                                                )}
-                                                {isCurrent && (
-                                                    <div className="text-center mt-3 text-[11px] text-emerald-600 font-black uppercase tracking-wider">
-                                                        ✓ Active Plan
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                                    {p.description && <p className="text-[11px] text-gray-400 mb-3 line-clamp-2">{p.description}</p>}
+                                                    {p.modules?.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mb-3">
+                                                            {p.modules.slice(0, 4).map((m: string) => (
+                                                                <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
+                                                            ))}
+                                                            {p.modules.length > 4 && (
+                                                                <Badge className="bg-gray-50 text-gray-400 text-[9px] border border-gray-100">+{p.modules.length - 4}</Badge>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {Object.keys(limits).length > 0 && (
+                                                        <div className="grid grid-cols-2 gap-1 mb-3 text-[10px] text-gray-400">
+                                                            {limits.max_users != null && <span>👥 {limits.max_users < 0 ? '∞' : limits.max_users} users</span>}
+                                                            {limits.max_sites != null && <span>🏢 {limits.max_sites < 0 ? '∞' : limits.max_sites} sites</span>}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1" />
+                                                    {!isCurrent && (
+                                                        <Button size="sm"
+                                                            className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                                                            onClick={() => setPlanSwitchTarget(p as unknown as SaasPlan)}>
+                                                            Switch to This Plan
+                                                        </Button>
+                                                    )}
+                                                    {isCurrent && (
+                                                        <div className="text-center mt-3 text-[11px] text-emerald-600 font-black uppercase tracking-wider">
+                                                            ✓ Active Plan
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })()}
                     <Card className="border-gray-100 shadow-sm">
                         <CardHeader>
                             <div className="flex justify-between items-center">
@@ -940,8 +941,10 @@ export default function OrganizationDetailPage() {
                     </Card>
                 </div>
             )}
-            {/* ─── Add-ons Tab ────────────────────────────────────────── */}
+            {/* ─── Add-ons Tab ──────────────────────────────────────────── */}
+
             {activeTab === 'addons' && (
+
                 <div className="space-y-6">
                     {/* Active Purchased Add-ons */}
                     <Card className="border-gray-100 shadow-sm">
@@ -1097,7 +1100,8 @@ export default function OrganizationDetailPage() {
                         </CardContent>
                     </Card>
                 </div>
-            )}
+            )
+            }
             {/* ─── Create User Dialog ───────────────────────────────────── */}
             <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
                 <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
@@ -1156,7 +1160,7 @@ export default function OrganizationDetailPage() {
                     {resetTarget && (
                         <div className="space-y-4 py-4">
                             <p className="text-sm text-gray-500">
-                                Set a new password for <strong className="text-gray-900">{resetTarget.username}</strong>
+                                Set a new password for <strong className="text-gray-900">{String(resetTarget.username ?? '')}</strong>
                             </p>
                             <div className="relative">
                                 <Input type={showPass ? 'text' : 'password'} value={newPassword}
@@ -1228,8 +1232,8 @@ export default function OrganizationDetailPage() {
                         <DialogTitle className="font-black text-lg">Confirm Plan Switch</DialogTitle>
                     </DialogHeader>
                     {planSwitchTarget && (() => {
-                        const currentPrice = parseFloat(usage?.plan?.monthly_price || '0')
-                        const targetPrice = parseFloat(planSwitchTarget.monthly_price)
+                        const currentPrice = parseFloat(String(usage?.plan?.monthly_price ?? '0'))
+                        const targetPrice = parseFloat(String(planSwitchTarget.price ?? planSwitchTarget.monthly_price ?? '0'))
                         const isUpgrade = targetPrice > currentPrice
                         const isDowngrade = targetPrice < currentPrice
                         const diff = Math.abs(targetPrice - currentPrice)
@@ -1268,11 +1272,11 @@ export default function OrganizationDetailPage() {
                                 {isDowngrade && (
                                     <p className="text-[11px] text-gray-400">A <strong>Credit Note</strong> of ${diff.toFixed(2)}/mo will be issued, plus a new <strong>Purchase Invoice</strong> for ${targetPrice.toFixed(2)}/mo.</p>
                                 )}
-                                {planSwitchTarget.modules?.length > 0 && (
+                                {Array.isArray((planSwitchTarget as any).modules) && (planSwitchTarget as any).modules.length > 0 && (
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Modules in new plan:</p>
                                         <div className="flex flex-wrap gap-1">
-                                            {planSwitchTarget.modules.map((m: string) => (
+                                            {(planSwitchTarget as any).modules.map((m: string) => (
                                                 <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
                                             ))}
                                         </div>
@@ -1290,7 +1294,7 @@ export default function OrganizationDetailPage() {
                                 if (!planSwitchTarget) return
                                 setSwitching(true)
                                 try {
-                                    const result = await changeOrgPlan(orgId, planSwitchTarget.id)
+                                    const result = await changeOrgPlan(orgId, String(planSwitchTarget.id))
                                     toast.success(result.message || `Switched to ${planSwitchTarget.name}`)
                                     if (result.modules_disabled?.length > 0) {
                                         toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
@@ -1437,6 +1441,6 @@ export default function OrganizationDetailPage() {
                     )}
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     )
 }

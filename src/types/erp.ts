@@ -957,21 +957,64 @@ export interface SaasOrganization {
     is_active?: boolean
     status?: string
     plan_name?: string
+    current_plan_name?: string          // used in organizations list page
     subscription_status?: string
     created_at?: string
     user_count?: number
+    site_count?: number
+    module_count?: number
+    business_email?: string
+    client_name?: string
+    business_type_name?: string
+    country?: string
     modules?: Array<Record<string, unknown>>
     sites?: Array<Record<string, unknown>>
     subscription?: Record<string, unknown>
     [key: string]: unknown
 }
 
+interface SaasUsageMeter {
+    current: number
+    limit: number
+    percent: number
+}
+
+interface SaasUsageModules {
+    current: number
+    total_available: number
+}
+
+interface SaasUsageStorage {
+    current_mb: number
+    limit_mb: number
+    percent: number
+}
+
+interface SaasUsagePlan {
+    name?: string
+    monthly_price?: string | number
+    annual_price?: string | number
+    expiry?: string
+    [key: string]: unknown
+}
+
+interface SaasUsageClient {
+    full_name?: string
+    company_name?: string | null
+    email?: string
+    phone?: string | null
+    [key: string]: unknown
+}
+
 export interface SaasUsageData {
-    users?: number
-    products?: number
-    orders?: number
-    storage?: number
-    api_calls?: number
+    users: SaasUsageMeter
+    sites: SaasUsageMeter
+    storage: SaasUsageStorage
+    invoices: SaasUsageMeter
+    modules: SaasUsageModules
+    plan?: SaasUsagePlan
+    client?: SaasUsageClient | null
+    warnings?: Array<Record<string, unknown>>
     [key: string]: unknown
 }
 
@@ -999,15 +1042,46 @@ export interface SaasAddonData {
     [key: string]: unknown
 }
 
+interface SaasPlanLimits {
+    max_users?: number
+    max_sites?: number
+    max_products?: number
+    max_storage_gb?: number
+    max_invoices_per_month?: number
+    max_customers?: number
+    storage_gb?: number
+    custom?: boolean
+    [key: string]: unknown
+}
+
+interface SaasPlanCategory {
+    id: number
+    name: string
+    slug?: string
+    type?: string
+    [key: string]: unknown
+}
+
 export interface SaasPlan {
     id: number
     name: string
+    slug?: string
     description?: string
+    monthly_price: string
+    annual_price: string
+    is_public?: boolean
+    is_active?: boolean
+    sort_order?: number
+    trial_days?: number
     price?: string | number
     max_users?: number
     max_products?: number
     max_sites?: number
+    category?: SaasPlanCategory
+    limits?: SaasPlanLimits
+    modules?: string[]
     features?: Record<string, unknown>
+    organizations?: Array<Record<string, unknown>>
     addons?: Array<Record<string, unknown>>
     [key: string]: unknown
 }
@@ -1110,8 +1184,12 @@ export interface SaasModule {
     id: number
     name: string
     code: string
+    description?: string
     is_active?: boolean
     is_core?: boolean
+    status?: string                         // 'INSTALLED' | 'DISABLED' etc.
+    active_features?: string[]             // enabled feature codes
+    available_features?: Array<{ code: string; name: string } | string>
     [key: string]: unknown
 }
 
@@ -1123,14 +1201,22 @@ export interface SaasUser {
     last_name?: string
     role?: string
     is_active?: boolean
+    is_superuser?: boolean
+    is_staff?: boolean
+    date_joined?: string
     [key: string]: unknown
 }
 
 export interface SaasSite {
     id: number
     name: string
+    code?: string
     address?: string
+    city?: string
+    phone?: string
+    vat_number?: string
     is_active?: boolean
+    created_at?: string
     [key: string]: unknown
 }
 

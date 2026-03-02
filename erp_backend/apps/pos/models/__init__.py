@@ -7,8 +7,9 @@ from .discount_models import DiscountRule, DiscountUsageLog
 from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
 from .sourcing_models import ProductSupplier, SupplierPriceHistory
 from .purchase_order_models import PurchaseOrder, PurchaseOrderLine
-from .audit_models import POSAuditRule, POSAuditEvent
+from .audit_models import POSAuditRule, POSAuditEvent, SalesAuditLog
 from .tax_entry_models import OrderLineTaxEntry
+from .analytics_models import SalesDailySummary
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
@@ -20,6 +21,7 @@ __all__ = [
     'ConsignmentSettlement', 'ConsignmentSettlementLine',
     'ProductSupplier', 'SupplierPriceHistory',
     'PurchaseOrder', 'PurchaseOrderLine',
-    'POSAuditRule', 'POSAuditEvent',
+    'POSAuditRule', 'POSAuditEvent', 'SalesAuditLog',
     'OrderLineTaxEntry',
+    'SalesDailySummary',
 ]
