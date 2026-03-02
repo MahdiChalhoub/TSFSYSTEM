@@ -6,7 +6,7 @@ derived from their existing companyType setting.
 
 companyType mapping:
     REAL   → vat_output_enabled=True,  vat_input_recoverability=1.0, airsi=RECOVER
-    MIXED  → vat_output_enabled=True,  vat_input_recoverability=1.0, airsi=CAPITALIZE
+    MIXED  → vat_output_enabled=True,  vat_input_recoverability=0.0, airsi=CAPITALIZE
     MICRO  → vat_output_enabled=False, vat_input_recoverability=0.0, airsi=EXPENSE
     REGULAR→ vat_output_enabled=False, vat_input_recoverability=0.0, airsi=CAPITALIZE
 
@@ -35,7 +35,7 @@ COMPANY_TYPE_TO_POLICY = {
     },
     'MIXED': {
         'vat_output_enabled': True,
-        'vat_input_recoverability': Decimal('1.000'),
+        'vat_input_recoverability': Decimal('0.000'),  # VAT capitalized — not recoverable
         'airsi_treatment': 'CAPITALIZE',
         'internal_cost_mode': 'TTC_ALWAYS',
         'purchase_tax_rate': Decimal('0.0000'),
