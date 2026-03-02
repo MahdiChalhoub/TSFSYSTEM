@@ -1,0 +1,156 @@
+/**
+ * TSFSYSTEM — App-Wide Animation Library
+ * =========================================
+ * All motion:
+ *   - fade-in-up      Page sections, cards mounting
+ *   - fade-in         Modals, overlays
+ *   - slide-in-right  Drawers, sheets
+ *   - slide-in-left   Back-navigation panels
+ *   - slide-up        Bottom sheets, toasts
+ *   - stagger-item    Children in a list (use animation-delay: calc(var(--i) * 60ms))
+ *   - hover-lift      Card hover (CSS utility)
+ *   - scale-in        Badges, tags, chips
+ *   - counter-up      KPI numbers (JS-driven)
+ *   - shimmer         Loading skeleton effect
+ *   - pulse-ring      Primary action rings
+ *   - spin-slow       Loading spinners
+ *   - bounce-in       Notifications, success icons
+ */
+
+/* ── Fade in from below (page mount) ─────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Fade in (opacity only) ──────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.35s ease both;
+}
+
+/* ── Slide in from right (drawers / sheets) ──────────── */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Slide in from left ──────────────────────────────── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Slide up (bottom sheet, toast) ──────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Scale in (badges, chips, tags) ──────────────────── */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Bounce in (success icon, notification) ──────────── */
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: scale(0.5); }
+  60%  { opacity: 1; transform: scale(1.1); }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.animate-bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ── Stagger helper — apply via inline style ─────────── */
+/*    <div class="animate-fade-in-up" style="--i: 0"> first  */
+/*    <div class="animate-fade-in-up" style="--i: 1"> second */
+.animate-stagger {
+  animation: fade-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* ── Shimmer skeleton loading ────────────────────────── */
+@keyframes app-shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 600px 0; }
+}
+.app-skeleton {
+  border-radius: var(--app-radius-sm, 0.5rem);
+  background: linear-gradient(
+    90deg,
+    var(--app-surface-2, #f0f0f0) 25%,
+    var(--app-surface-hover, #e0e0e0) 50%,
+    var(--app-surface-2, #f0f0f0) 75%
+  );
+  background-size: 600px 100%;
+  animation: app-shimmer 1.6s infinite ease-in-out;
+}
+
+/* ── Pulse ring around primary actions ───────────────── */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 var(--app-primary-glow, rgba(16,185,129,0.4)); }
+  70%  { box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── Spin slow (loading indicators) ─────────────────── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/* ── Counter up (JS should class-add .counting on mount) */
+@keyframes counter-pop {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+.animate-counter {
+  animation: counter-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Hover lift (utility — add to card wrappers) ─────── */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--app-shadow-lg, 0 12px 40px rgba(0,0,0,0.15));
+}
+
+/* ── Page section mount delay helpers ───────────────── */
+.delay-0   { animation-delay: 0ms; }
+.delay-50  { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }

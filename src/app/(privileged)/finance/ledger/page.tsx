@@ -9,7 +9,8 @@ import Link from 'next/link'
 import {
     Search, Filter, Calendar, BookOpen, ChevronDown,
     Plus, History, ShieldCheck, Wallet, FileText,
-    ArrowUpRight, ArrowDownRight, Hash, X
+    ArrowUpRight, ArrowDownRight, Hash, X, Activity,
+    TrendingUp, RefreshCw
 } from 'lucide-react'
 import { TypicalListView, ColumnDef } from '@/components/common/TypicalListView'
 import { useListViewSettings } from '@/hooks/useListViewSettings'
@@ -19,12 +20,14 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
 const STATUS_OPTIONS = [
     { value: 'ALL', label: 'All Status' },
     { value: 'DRAFT', label: 'Draft' },
     { value: 'POSTED', label: 'Posted' },
     { value: 'REVERSED', label: 'Reversed' },
 ]
+
 export default function GeneralLedgerPage() {
     const { fmt } = useCurrency()
     const [entries, setEntries] = useState<any[]>([])
@@ -34,6 +37,7 @@ export default function GeneralLedgerPage() {
         columns: ['id', 'transactionDate', 'reference', 'description', 'amount', 'balance', 'status', 'actions'],
         pageSize: 25, sortKey: 'transactionDate', sortDir: 'desc'
     })
+
     // Filters
     const [status, setStatus] = useState('ALL')
     const [fiscalYear, setFiscalYear] = useState('ALL')
@@ -80,6 +84,7 @@ export default function GeneralLedgerPage() {
     useEffect(() => {
         loadEntries()
     }, [loadEntries])
+
     const activeFilterCount = [
         status !== 'ALL',
         fiscalYear !== 'ALL',
@@ -92,12 +97,13 @@ export default function GeneralLedgerPage() {
         autoSource !== 'ALL',
         search
     ].filter(Boolean).length
+
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'id',
             label: 'JV ID',
             width: '80px',
-            render: (e) => <span className="font-black text-indigo-600">#{e.id}</span>
+            render: (e) => <span className="font-black text-emerald-600">#{e.id}</span>
         },
         {
             key: 'transactionDate',
@@ -105,263 +111,262 @@ export default function GeneralLedgerPage() {
             sortable: true,
             render: (e) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-gray-900">{e.transactionDate ? new Date(e.transactionDate).toLocaleDateString('en-GB') : '—'}</span>
-                    {e.fiscalYear && <span className="text-[10px] text-gray-400 font-bold uppercase">{e.fiscalYear.name || `FY ${e.fiscalYear.id}`}</span>}
+                    <span className="font-bold text-slate-800">{e.transactionDate ? new Date(e.transactionDate).toLocaleDateString('en-GB') : '—'}</span>
+                    {e.fiscalYear && <span className="text-[10px] text-slate-400 font-bold uppercase">{e.fiscalYear.name || `FY ${e.fiscalYear.id}`}</span>}
                 </div>
             )
         },
         {
             key: 'reference',
             label: 'Reference',
-            render: (e) => <span className="font-mono text-[11px] text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{e.reference || '—'}</span>
+            render: (e) => <span className="font-mono text-[11px] font-black text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">{e.reference || '—'}</span>
         },
         {
             key: 'description',
             label: 'Narrative / Description',
             render: (e) => (
-                <div className="flex flex-col">
-                    <span className="font-medium text-gray-800 line-clamp-1">{e.description}</span>
-                    <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex flex-col py-1">
+                    <span className="font-bold text-slate-800 line-clamp-1">{e.description}</span>
+                    <div className="flex items-center gap-2 mt-1.5">
                         {e.reference?.startsWith('OPEN-') && (
-                            <Badge className="bg-blue-50 text-blue-700 border-none h-4 text-[9px] font-black uppercase px-1.5">Opening</Badge>
+                            <Badge className="bg-emerald-50 text-emerald-700 border-none h-5 text-[9px] font-black uppercase px-2 shadow-inner">Opening</Badge>
                         )}
                         {e.reversalOf && (
-                            <Badge className="bg-rose-50 text-rose-700 border-none h-4 text-[9px] font-black uppercase px-1.5 font-mono">↩ Reversal of #{e.reversalOf.id}</Badge>
+                            <Badge className="bg-rose-50 text-rose-700 border-none h-5 text-[9px] font-black uppercase px-2 shadow-inner font-mono">↩ Reversal of #{e.reversalOf.id}</Badge>
                         )}
                         {e.reversedBy && (
-                            <Badge className="bg-amber-50 text-amber-700 border-none h-4 text-[9px] font-black uppercase px-1.5 font-mono">⚠ Reversed by #{e.reversedBy.id}</Badge>
+                            <Badge className="bg-amber-50 text-amber-700 border-none h-5 text-[9px] font-black uppercase px-2 shadow-inner font-mono">⚠ Reversed by #{e.reversedBy.id}</Badge>
+                        )}
+                        {/* Apple Minimalist Touch - small visual indicators */}
+                        {e.status === 'POSTED' && !e.reversalOf && !e.reversedBy && !e.reference?.startsWith('OPEN-') && (
+                            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-2 h-5 rounded-full">
+                                <Activity size={10} className="text-emerald-500" />
+                                <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Logged</span>
+                            </div>
                         )}
                     </div>
                 </div>
             )
         }
     ], [])
+
     const expandable: any = useMemo(() => ({
         getDetails: (e: any) => e.lines || [],
         columns: [
             {
                 key: 'account_code',
                 label: 'Code',
-                render: (l: any) => <span className="font-mono text-[10px] text-gray-400">{l.account?.code}</span>
+                render: (l: any) => <span className="font-mono text-[10px] text-slate-400 bg-white px-1.5 py-0.5 rounded shadow-sm border border-slate-100">{l.account?.code}</span>
             },
             {
                 key: 'account_name',
-                label: 'Financial Account',
-                render: (l: any) => <span className="font-bold text-gray-700 text-xs">{l.account?.name}</span>
+                label: 'Financial Vector',
+                render: (l: any) => <span className="font-black text-slate-700 text-xs">{l.account?.name}</span>
             },
             {
                 key: 'debit',
-                label: 'Debit',
+                label: 'Debit (Inflow)',
                 align: 'right',
-                render: (l: any) => <span className="font-black text-emerald-600 font-mono text-xs">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
+                render: (l: any) => <span className="font-black text-emerald-600 font-mono text-xs bg-emerald-50/50 px-2 py-1 rounded-lg">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
             },
             {
                 key: 'credit',
-                label: 'Credit',
+                label: 'Credit (Outflow)',
                 align: 'right',
-                render: (l: any) => <span className="font-black text-rose-600 font-mono text-xs">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
+                render: (l: any) => <span className="font-black text-rose-500 font-mono text-xs bg-rose-50/50 px-2 py-1 rounded-lg">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
             }
         ],
-        headerColor: 'bg-stone-50',
-        headerTextColor: 'text-stone-500',
-        borderColor: 'border-stone-100'
+        headerColor: 'bg-slate-50/80 backdrop-blur-sm',
+        headerTextColor: 'text-slate-500 tracking-widest uppercase font-black text-[10px]',
+        borderColor: 'border-slate-100/50'
     }), [fmt])
+
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-            {/* Standard Header */}
-            <header className="flex justify-between items-end">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Badge className="bg-stone-50 text-stone-600 border-stone-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            System Status: Online
-                        </Badge>
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                            <ShieldCheck size={12} /> Trial Balance Guard
-                        </span>
-                    </div>
-                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
-                            <BookOpen size={32} className="text-white" />
+        <div className="page-container animate-in fade-in duration-700 relative">
+            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-emerald-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-indigo-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+            <header className="flex flex-col gap-8 mb-10">
+                <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-6">
+                        <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
+                            <BookOpen size={40} className="text-white fill-white/20" />
                         </div>
-                        General <span className="text-indigo-600">Ledger</span>
-                    </h1>
-                </div>
-                <div className="flex gap-3">
-                    <Button asChild variant="outline" className="h-12 px-6 rounded-2xl border-stone-100 font-bold text-gray-600 flex items-center gap-2 hover:bg-stone-50 transition-all">
-                        <Link href="/finance/ledger/opening/list" className="flex items-center gap-2">
-                            <Wallet size={18} /> Opening Balances
-                        </Link>
-                    </Button>
-                    <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-                        <Link href="/finance/ledger/new" className="flex items-center gap-2">
-                            <Plus size={18} /> New Journal Entry
-                        </Link>
-                    </Button>
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-sm">
+                                    System: Online
+                                </Badge>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <ShieldCheck size={14} className="text-emerald-400" /> Trial Balance Guard
+                                </span>
+                            </div>
+                            <h1 className="page-header-title">
+                                Master <span className="text-emerald-700">Ledger</span>
+                            </h1>
+                            <p className="page-header-subtitle mt-1">
+                                Enterprise financial logs, vectors, and immutable entries.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex items-center gap-4">
+                        <Button asChild variant="outline" className="h-14 px-8 rounded-2xl bg-white/60 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-500 flex items-center gap-3 hover:bg-white hover:text-slate-800 transition-all active:scale-95">
+                            <Link href="/finance/ledger/opening/list">
+                                <Wallet size={18} className="text-emerald-500" /> Opening Balances
+                            </Link>
+                        </Button>
+                        <Button asChild className="h-14 px-8 rounded-2xl bg-slate-900 border-0 shadow-[0_8px_30px_rgb(0,0,0,0.12)] font-black text-[11px] uppercase tracking-widest text-white flex items-center gap-3 hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 group">
+                            <Link href="/finance/ledger/new">
+                                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Plus size={14} className="text-emerald-400" />
+                                </div>
+                                Force Journal Entry
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
             </header>
+
             <Tabs value={entryType} onValueChange={setEntryType} className="space-y-6">
                 <div className="flex justify-between items-center">
-                    <TabsList className="bg-stone-100/50 p-1.5 rounded-2xl">
-                        <TabsTrigger value="ALL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">All Entries</TabsTrigger>
-                        <TabsTrigger value="MANUAL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Manual Ledger</TabsTrigger>
-                        <TabsTrigger value="AUTO" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Auto Ledger</TabsTrigger>
+                    <TabsList className="bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm p-2 rounded-3xl h-14">
+                        <TabsTrigger value="ALL" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm transition-all">Global Feed</TabsTrigger>
+                        <TabsTrigger value="MANUAL" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700 data-[state=active]:shadow-sm transition-all">Manual Interventions</TabsTrigger>
+                        <TabsTrigger value="AUTO" className="rounded-2xl font-black text-[11px] uppercase tracking-widest px-8 h-full data-[state=active]:bg-rose-50 data-[state=active]:text-rose-700 data-[state=active]:shadow-sm transition-all">Bot Activity</TabsTrigger>
                     </TabsList>
                 </div>
-                {/* Enhanced Filter Bar */}
-                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
+
+                {/* Apple Minimalist Glassmorphic Filter Bar */}
+                <Card className="rounded-[2rem] border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white/60 backdrop-blur-2xl overflow-visible">
                     <CardContent className="p-4 space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <div className="flex items-center gap-4">
+                            <div className="relative flex-1 group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                                 <Input
-                                    placeholder="Search JV narrative or reference..."
+                                    placeholder="Search semantic references or narrative blocks..."
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
-                                    className="pl-9 h-11 rounded-2xl bg-stone-50 border-0 focus-visible:ring-indigo-500/30"
+                                    className="pl-12 h-14 rounded-2xl bg-white/50 border border-slate-100 shadow-inner focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500/30 text-sm font-bold placeholder:text-slate-400 placeholder:font-medium transition-all"
                                 />
                             </div>
                             <Select value={status} onValueChange={setStatus}>
-                                <SelectTrigger className="w-48 h-11 rounded-2xl bg-stone-50 border-0 text-sm font-bold">
+                                <SelectTrigger className="w-56 h-14 rounded-2xl bg-white/50 border border-slate-100 shadow-inner text-sm font-black text-slate-600 focus:ring-emerald-500/20">
                                     <SelectValue placeholder="All Status" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-0 shadow-xl">
-                                    {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="rounded-xl">{o.label}</SelectItem>)}
+                                <SelectContent className="rounded-2xl border border-slate-100 shadow-2xl bg-white/90 backdrop-blur-xl">
+                                    {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="rounded-xl font-bold hover:bg-slate-50 focus:bg-slate-50 cursor-pointer my-0.5">{o.label}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <Button
                                 variant="ghost"
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-gray-400 hover:bg-stone-50 hover:text-gray-900'}`}
+                                className={`h-14 px-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] gap-3 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm' : 'bg-white/50 border border-slate-100 text-slate-500 shadow-sm hover:bg-white hover:border-slate-200'}`}
                             >
                                 <Filter size={16} /> Filters
-                                {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-white h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
+                                {activeFilterCount > 1 && <Badge className="bg-emerald-500 text-white h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-lg shadow-sm">{activeFilterCount}</Badge>}
                             </Button>
                         </div>
                         {showFilters && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 rounded-2xl bg-stone-50 border border-stone-100 animate-in slide-in-from-top-2">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fiscal Year</label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6 rounded-3xl bg-white/40 border border-white/60 shadow-inner animate-in slide-in-from-top-4 duration-500 mt-4">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Time Horizon</label>
                                     <Select value={fiscalYear} onValueChange={setFiscalYear}>
-                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                        <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
                                             <SelectValue placeholder="All Years" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-0 shadow-xl">
-                                            <SelectItem value="ALL">All Years</SelectItem>
-                                            {fiscalYears.map((fy: any) => <SelectItem key={fy.id} value={String(fy.id)}>{fy.name}</SelectItem>)}
+                                        <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+                                            <SelectItem value="ALL" className="rounded-xl font-bold">All Horizons</SelectItem>
+                                            {fiscalYears.map((fy: any) => <SelectItem key={fy.id} value={String(fy.id)} className="rounded-xl font-bold">{fy.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2 lg:col-span-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date Range</label>
-                                    <div className="flex items-center gap-2">
-                                        <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold w-full" />
-                                        <span className="text-stone-300">to</span>
-                                        <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold w-full" />
+                                <div className="space-y-3 lg:col-span-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Chronological Window</label>
+                                    <div className="flex items-center gap-3">
+                                        <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">to</span>
+                                        <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold w-full focus:ring-emerald-500/20" />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">User / Creator</label>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Initiator</label>
                                     <Select value={user} onValueChange={setUser}>
-                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
-                                            <SelectValue placeholder="All Users" />
+                                        <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
+                                            <SelectValue placeholder="All Entities" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-0 shadow-xl">
-                                            <SelectItem value="ALL">All Users</SelectItem>
-                                            {users.map((u: any) => <SelectItem key={u.id} value={String(u.id)}>{u.first_name || u.username}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Verified Status</label>
-                                    <Select value={verified} onValueChange={setVerified}>
-                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
-                                            <SelectValue placeholder="All" />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-0 shadow-xl">
-                                            <SelectItem value="ALL">All</SelectItem>
-                                            <SelectItem value="TRUE">Verified Only</SelectItem>
-                                            <SelectItem value="FALSE">Unverified Only</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lock Status</label>
-                                    <Select value={locked} onValueChange={setLocked}>
-                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
-                                            <SelectValue placeholder="All" />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-0 shadow-xl">
-                                            <SelectItem value="ALL">All</SelectItem>
-                                            <SelectItem value="TRUE">Locked</SelectItem>
-                                            <SelectItem value="FALSE">Unlocked</SelectItem>
+                                        <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+                                            <SelectItem value="ALL" className="rounded-xl font-bold">All Entities</SelectItem>
+                                            {users.map((u: any) => <SelectItem key={u.id} value={String(u.id)} className="rounded-xl font-bold">{u.first_name || u.username}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 {(entryType === 'ALL' || entryType === 'AUTO') && (
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Source Module</label>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Algorithmic Source</label>
                                         <Select value={autoSource} onValueChange={setAutoSource}>
-                                            <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                            <SelectTrigger className="h-12 rounded-2xl border-white bg-white/80 shadow-sm text-xs font-bold focus:ring-emerald-500/20">
                                                 <SelectValue placeholder="All Sources" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl border-0 shadow-xl">
-                                                <SelectItem value="ALL">All Sources</SelectItem>
-                                                <SelectItem value="INVOICE">Invoices & Bills</SelectItem>
-                                                <SelectItem value="PAYMENT">Payments & Receipts</SelectItem>
-                                                <SelectItem value="RETURN">Returns & Credit Notes</SelectItem>
-                                                <SelectItem value="PAYROLL">Payroll</SelectItem>
+                                            <SelectContent className="rounded-2xl border-0 shadow-2xl bg-white/95 backdrop-blur-xl p-1">
+                                                <SelectItem value="ALL" className="rounded-xl font-bold">All Systems</SelectItem>
+                                                <SelectItem value="INVOICE" className="rounded-xl font-bold">Invoicing Engine</SelectItem>
+                                                <SelectItem value="PAYMENT" className="rounded-xl font-bold">Payment Gateway</SelectItem>
+                                                <SelectItem value="RETURN" className="rounded-xl font-bold">Return Handler</SelectItem>
+                                                <SelectItem value="PAYROLL" className="rounded-xl font-bold">HR Core</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
                                 )}
-                                <div className="flex items-end justify-end pb-1 lg:col-span-full">
+                                <div className="flex items-end justify-end pb-1 lg:col-span-full mt-2">
                                     <Button
                                         variant="ghost"
                                         onClick={() => { setStatus('ALL'); setFiscalYear('ALL'); setDateFrom(''); setDateTo(''); setEntryType('ALL'); setVerified('ALL'); setLocked('ALL'); setUser('ALL'); setAutoSource('ALL'); setSearch('') }}
-                                        className="h-8 text-[9px] font-black uppercase text-gray-400 hover:text-rose-600 gap-1.5"
+                                        className="h-10 px-5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-rose-500 hover:bg-rose-50/50 gap-2 transition-all"
                                     >
-                                        <X size={14} /> Clear All Filters
+                                        <X size={14} /> Clear Active Filters
                                     </Button>
                                 </div>
                             </div>
                         )}
                     </CardContent>
                 </Card>
-                <TypicalListView
-                    title="Financial Transaction Log"
-                    data={entries}
-                    loading={loading}
-                    getRowId={(e) => e.id}
-                    columns={columns}
-                    expandable={expandable}
-                    lifecycle={{
-                        getStatus: (e) => {
-                            if (e.status === 'POSTED') return { label: 'Posted', variant: 'success' }
-                            if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'danger' }
-                            return { label: 'Draft', variant: 'warning' }
-                        }
-                    }}
-                    actions={{
-                        extra: (e) => {
-                            const isLocked = e.fiscalYear?.status === 'LOCKED' || e.fiscalYear?.isLocked
-                            return (
-                                <LedgerEntryActions
-                                    entryId={e.id}
-                                    status={e.status}
-                                    isLocked={isLocked}
-                                />
-                            )
-                        }
-                    }}
-                    visibleColumns={settings.visibleColumns}
-                    onToggleColumn={settings.toggleColumn}
-                    pageSize={settings.pageSize}
-                    onPageSizeChange={settings.setPageSize}
-                    sortKey={settings.sortKey}
-                    sortDir={settings.sortDir}
-                    onSort={settings.setSort}
-                    className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
-                />
+
+                <Card className="rounded-[2.5rem] border border-white/60 shadow-2xl shadow-slate-900/5 overflow-hidden bg-white/80 backdrop-blur-3xl">
+                    <TypicalListView
+                        data={entries}
+                        loading={loading}
+                        getRowId={(e) => e.id}
+                        columns={columns}
+                        expandable={expandable}
+                        lifecycle={{
+                            getStatus: (e) => {
+                                if (e.status === 'POSTED') return { label: 'Posted', variant: 'success' }
+                                if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'danger' }
+                                return { label: 'Draft', variant: 'warning' }
+                            }
+                        }}
+                        actions={{
+                            extra: (e) => {
+                                const isLocked = e.fiscalYear?.status === 'LOCKED' || e.fiscalYear?.isLocked
+                                return (
+                                    <LedgerEntryActions
+                                        entryId={e.id}
+                                        status={e.status}
+                                        isLocked={isLocked}
+                                    />
+                                )
+                            }
+                        }}
+                        visibleColumns={settings.visibleColumns}
+                        onToggleColumn={settings.toggleColumn}
+                        pageSize={settings.pageSize}
+                        onPageSizeChange={settings.setPageSize}
+                        sortKey={settings.sortKey}
+                        sortDir={settings.sortDir}
+                        onSort={settings.setSort}
+                        className="border-0 bg-transparent shadow-none"
+                    />
+                </Card>
             </Tabs>
         </div>
     )

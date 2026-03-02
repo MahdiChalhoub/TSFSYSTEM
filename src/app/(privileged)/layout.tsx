@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '../globals.css';
+import '@/styles/app-theme-engine.css';
+import '@/styles/app-animations.css';
+import { AppThemeProvider } from '@/components/app/AppThemeProvider';
 import { AdminProvider } from '@/context/AdminContext';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { TopHeader } from '@/components/admin/TopHeader';
@@ -117,37 +120,44 @@ export default async function AdminLayout({
     const cookieStore = await cookies();
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
 
+    // ── Phase 5: Read server-persisted theme cookie ──────────────────
+    // Avoids flash of default theme on first hydration for returning users.
+    const { getPersistedTheme } = await import('@/app/actions/settings/theme');
+    const serverTheme = await getPersistedTheme();
+
     return (
-        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
-            <DevProvider>
-                {process.env.DEV_MODULE && <DevModeBanner moduleName={process.env.DEV_MODULE} />}
-                <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
-                    {/* Left Panel: Sidebar Tree */}
-                    <Sidebar
-                        isSaas={isSaas}
-                        isSuperuser={user?.is_superuser || false}
-                        dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
-                    />
+        <AppThemeProvider serverTheme={serverTheme ?? undefined}>
+            <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
+                <DevProvider>
+                    {process.env.DEV_MODULE && <DevModeBanner moduleName={process.env.DEV_MODULE} />}
+                    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--app-bg)', color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}>
+                        {/* Left Panel: Sidebar Tree */}
+                        <Sidebar
+                            isSaas={isSaas}
+                            isSuperuser={user?.is_superuser || false}
+                            dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
+                        />
 
-                    {/* Right Panel: Content */}
-                    <div className="flex-1 flex flex-col min-w-0">
-                        {/* 1. Global Header (Search, Profile) */}
-                        <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
+                        {/* Right Panel: Content */}
+                        <div className="flex-1 flex flex-col min-w-0">
+                            {/* 1. Global Header (Search, Profile) */}
+                            <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
 
-                        {/* 2. Tab Navigation Bar */}
-                        <TabNavigator />
+                            {/* 2. Tab Navigation Bar */}
+                            <TabNavigator />
 
-                        {/* 3. The Page Content */}
-                        <main className="flex-1 overflow-auto relative p-4 md:p-5">
-                            <Suspense fallback={null}>
-                                {children}
-                            </Suspense>
-                        </main>
+                            {/* 3. The Page Content */}
+                            <main className="flex-1 overflow-auto relative p-4 md:p-5">
+                                <Suspense fallback={null}>
+                                    {children}
+                                </Suspense>
+                            </main>
+                        </div>
+                        <DebugOverlay />
+                        <CommandPalette />
                     </div>
-                    <DebugOverlay />
-                    <CommandPalette />
-                </div>
-            </DevProvider>
-        </AdminProvider>
+                </DevProvider>
+            </AdminProvider>
+        </AppThemeProvider>
     );
 }

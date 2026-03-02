@@ -143,8 +143,8 @@ class ConfigurationService:
     def get_posting_rules(organization):
         """Read posting rules from Organization.settings JSON."""
         default_config = {
-            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None},
-            "purchases": {"payable": None, "inventory": None, "tax": None},
+            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None, "tax": None},
+            "purchases": {"payable": None, "inventory": None, "tax": None, "airsi_payable": None},
             "inventory": {"adjustment": None, "transfer": None},
             "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},
             "fixedAssets": {"depreciationExpense": None, "accumulatedDepreciation": None},

@@ -4,15 +4,14 @@ import { useState, useEffect, useMemo } from "react"
 import type { SalesOrder } from '@/types/erp'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import {
-    History, FileText, Printer, User, Search,
-    Filter, Calendar, ChevronRight, Hash,
-    ArrowUpRight, ArrowDownRight, RefreshCw,
-    Download, TrendingUp, DollarSign, Activity, AlertCircle,
+    History, Printer, User, Search,
+    Filter, Hash,
+    ArrowUpRight, RefreshCw,
+    DollarSign, Activity, AlertCircle,
     MoreHorizontal, Eye, Edit3, Trash2, Truck, Clipboard,
     Package, CreditCard, Undo2, Link2, MessageSquare, Mail, BookOpen
 } from "lucide-react"
@@ -22,21 +21,19 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
-import { Card, CardContent } from "@/components/ui/card"
 import { deleteOrder, lockOrder, verifyOrder } from "../actions"
+import {
+    confirmOrder, markDelivered, markPartial,
+    markPaid, generateInvoice, cancelOrder
+} from "../workflow-actions"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    DRAFT: { label: 'Draft', color: 'bg-stone-100 text-stone-600' },
-    PENDING: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border-amber-100' },
-    COMPLETED: { label: 'Completed', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    INVOICED: { label: 'Invoiced', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-    CANCELLED: { label: 'Cancelled', color: 'bg-rose-50 text-rose-700 border-rose-100' },
-}
-const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-    SALE: { label: 'Sale', color: 'text-indigo-600' },
-    PURCHASE: { label: 'Purchase', color: 'text-emerald-600' },
-    RETURN: { label: 'Return', color: 'text-rose-600' },
-}
+import {
+    STATUS_CONFIG, TYPE_CONFIG,
+    ORDER_STATUS_CONFIG, DELIVERY_STATUS_CONFIG,
+    PAYMENT_STATUS_CONFIG, INVOICE_STATUS_CONFIG,
+    type OrderStatus, type DeliveryStatus, type PaymentStatus, type InvoiceStatus
+} from '@/types/sales'
+import { SalesKpiCard } from '@/components/modules/sales/SalesKpiCard'
 import { useAdmin } from '@/context/AdminContext'
 export default function OrderHistoryPage() {
     const { viewScope } = useAdmin()
@@ -47,8 +44,9 @@ export default function OrderHistoryPage() {
     const settings = useListViewSettings('sales_history', {
         columns: [
             'actions', 'created_at', 'invoice_number', 'contact_name',
-            'payment_status', 'total_amount', 'total_paid', 'amount_due',
-            'shipping_status', 'is_locked'
+            'order_status', 'delivery_status', 'payment_status', 'invoice_status',
+            'total_amount', 'total_paid', 'amount_due',
+            'is_locked'
         ],
         pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
     })
@@ -103,9 +101,7 @@ export default function OrderHistoryPage() {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             const blob = await erpFetch(`pos/${orderId}/invoice-pdf/`)
-            if (!(blob instanceof Blob)) {
-                throw new Error("Invalid sequence response")
-            }
+            if (!(blob instanceof Blob)) throw new Error("Invalid sequence response")
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
@@ -120,6 +116,24 @@ export default function OrderHistoryPage() {
             toast.dismiss()
             toast.error("Dispatch sequence failed")
             console.error(e)
+        }
+    }
+
+    async function handleWorkflow(orderId: number, action: string, label: string) {
+        toast.loading(`${label}...`)
+        try {
+            const mod = await import('../workflow-actions')
+            const result = await mod.triggerOrderWorkflow(orderId, { action: action as any })
+            toast.dismiss()
+            if (result.success) {
+                toast.success(`✓ ${label}`)
+                loadOrders()
+            } else {
+                toast.error(result.error || 'Action failed')
+            }
+        } catch (e: any) {
+            toast.dismiss()
+            toast.error(e?.message || 'Action failed')
         }
     }
     const columns: ColumnDef<any>[] = useMemo(() => [
@@ -158,9 +172,55 @@ export default function OrderHistoryPage() {
 
                             <DropdownMenuSeparator />
 
-                            <DropdownMenuItem className="focus:bg-stone-50 cursor-pointer py-2.5">
-                                <Truck size={14} className="mr-2" /> Modifier l'expédition
-                            </DropdownMenuItem>
+                            {/* ── Workflow Transitions ────────────────── */}
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-stone-400 px-3 py-1">
+                                Workflow
+                            </DropdownMenuLabel>
+
+                            {(!order.order_status || order.order_status === 'DRAFT') && (
+                                <DropdownMenuItem
+                                    onClick={() => handleWorkflow(order.id, 'confirm', 'Confirming order')}
+                                    className="focus:bg-indigo-50 focus:text-indigo-600 cursor-pointer py-2.5"
+                                >
+                                    <Package size={14} className="mr-2" /> Confirm Order
+                                </DropdownMenuItem>
+                            )}
+
+                            {order.delivery_status === 'PENDING' && (
+                                <DropdownMenuItem
+                                    onClick={() => handleWorkflow(order.id, 'deliver', 'Marking as delivered')}
+                                    className="focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer py-2.5"
+                                >
+                                    <Truck size={14} className="mr-2" /> Mark Delivered
+                                </DropdownMenuItem>
+                            )}
+
+                            {order.payment_status === 'UNPAID' && (
+                                <DropdownMenuItem
+                                    onClick={() => handleWorkflow(order.id, 'pay', 'Recording payment')}
+                                    className="focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer py-2.5"
+                                >
+                                    <CreditCard size={14} className="mr-2" /> Mark Paid
+                                </DropdownMenuItem>
+                            )}
+
+                            {order.invoice_status === 'NOT_GENERATED' && (
+                                <DropdownMenuItem
+                                    onClick={() => handleWorkflow(order.id, 'generate_invoice', 'Generating invoice')}
+                                    className="focus:bg-blue-50 focus:text-blue-600 cursor-pointer py-2.5"
+                                >
+                                    <Clipboard size={14} className="mr-2" /> Generate Invoice
+                                </DropdownMenuItem>
+                            )}
+
+                            {!['CANCELLED', 'CLOSED'].includes(order.order_status) && (
+                                <DropdownMenuItem
+                                    onClick={() => handleWorkflow(order.id, 'cancel', 'Cancelling order')}
+                                    className="focus:bg-rose-50 focus:text-rose-600 cursor-pointer py-2.5 text-rose-600"
+                                >
+                                    <AlertCircle size={14} className="mr-2" /> Cancel Order
+                                </DropdownMenuItem>
+                            )}
 
                             <DropdownMenuSeparator />
 
@@ -254,14 +314,48 @@ export default function OrderHistoryPage() {
             )
         },
         {
-            key: 'payment_status',
-            label: 'Statut de paiement',
+            key: 'order_status',
+            label: 'Order Status',
             render: (order) => {
+                const cfg = ORDER_STATUS_CONFIG[order.order_status as OrderStatus]
+                    ?? { label: order.order_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
+            }
+        },
+        {
+            key: 'delivery_status',
+            label: 'Delivery',
+            render: (order) => {
+                const cfg = DELIVERY_STATUS_CONFIG[order.delivery_status as DeliveryStatus]
+                    ?? { label: order.delivery_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
+            }
+        },
+        {
+            key: 'payment_status',
+            label: 'Payment',
+            render: (order) => {
+                // Prefer new payment_status axis; fall back to derived value
+                if (order.payment_status) {
+                    const cfg = PAYMENT_STATUS_CONFIG[order.payment_status as PaymentStatus]
+                        ?? { label: order.payment_status, color: 'bg-stone-100 text-stone-500' };
+                    return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
+                }
+                // Legacy fallback: derive from total_paid
                 const paid = parseFloat(String(order.total_paid || 0))
                 const total = parseFloat(String(order.total_amount || 0))
                 if (paid >= total && total > 0) return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] font-black uppercase tracking-widest">Payé</Badge>
                 if (paid > 0) return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] font-black uppercase tracking-widest">Partiel</Badge>
                 return <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-100 text-[9px] font-black uppercase tracking-widest">Dû</Badge>
+            }
+        },
+        {
+            key: 'invoice_status',
+            label: 'Invoice',
+            render: (order) => {
+                const cfg = INVOICE_STATUS_CONFIG[order.invoice_status as InvoiceStatus]
+                    ?? { label: order.invoice_status ?? '—', color: 'bg-stone-100 text-stone-500' };
+                return <Badge variant="outline" className={`${cfg.color} text-[9px] font-black uppercase tracking-widest`}>{cfg.label}</Badge>
             }
         },
         {
@@ -431,48 +525,25 @@ export default function OrderHistoryPage() {
             </header>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                <Activity size={24} />
-                            </div>
-                            <Badge variant="outline" className="bg-indigo-50 border-0 font-black text-[10px]">
-                                VOLUME
-                            </Badge>
-                        </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Total Transaction Vol</p>
-                        <h2 className="text-3xl font-black text-gray-900 mt-1">{fmt(stats.volume)}</h2>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-stone-900 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center">
-                                <DollarSign size={24} />
-                            </div>
-                            <Badge variant="outline" className="bg-white/10 text-white border-0 font-black text-[10px]">
-                                EXPOSURE
-                            </Badge>
-                        </div>
-                        <p className="text-[11px] font-black text-stone-400 uppercase tracking-widest">Net Realized Exposure</p>
-                        <h2 className="text-3xl font-black text-white mt-1">{fmt(stats.exposure)}</h2>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <CardContent className="p-7">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                                <Hash size={24} />
-                            </div>
-                            <Badge variant="outline" className="bg-amber-50 border-0 font-black text-[10px]">
-                                COUNT
-                            </Badge>
-                        </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Transaction Count</p>
-                        <h2 className="text-3xl font-black text-gray-900 mt-1">{stats.count} <span className="text-xs text-stone-300 font-bold ml-1">Entries</span></h2>
-                    </CardContent>
-                </Card>
+                <SalesKpiCard
+                    icon={<Activity size={24} />}
+                    badge="VOLUME"
+                    label="Total Transaction Vol"
+                    value={fmt(stats.volume)}
+                />
+                <SalesKpiCard
+                    icon={<DollarSign size={24} />}
+                    badge="EXPOSURE"
+                    label="Net Realized Exposure"
+                    value={fmt(stats.exposure)}
+                    variant="dark"
+                />
+                <SalesKpiCard
+                    icon={<Hash size={24} />}
+                    badge="COUNT"
+                    label="Transaction Count"
+                    value={`${stats.count}`}
+                />
             </div>
             <TypicalListView
                 title="Registre Opérationnel des Ventes"

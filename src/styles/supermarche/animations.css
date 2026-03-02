@@ -1,0 +1,180 @@
+/* ============================================================
+   SUPERMARCHÉ ANIMATIONS — Shared keyframes across all themes
+   ============================================================ */
+
+/* ── Scan flash (barcode scan feedback) ── */
+@keyframes scan-flash {
+    0% {
+        box-shadow: 0 0 0 0 var(--sm-primary-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px var(--sm-primary-glow);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+.sm-anim-scan {
+    animation: scan-flash 0.4s ease-out;
+}
+
+/* ── Cart item bump (item added to cart) ── */
+@keyframes cart-bump {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.06);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.sm-anim-cart-bump {
+    animation: cart-bump 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Promo pulse (promotion badge) ── */
+@keyframes promo-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.85;
+        transform: scale(1.04);
+    }
+}
+
+.sm-anim-promo {
+    animation: promo-pulse 2s ease-in-out infinite;
+}
+
+/* ── Slide in from right (cart panel / sidebar) ── */
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.sm-anim-slide-right {
+    animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Slide in from bottom (checkout bar) ── */
+@keyframes slide-in-bottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.sm-anim-slide-bottom {
+    animation: slide-in-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Fade in ── */
+@keyframes sm-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sm-anim-fade-in {
+    animation: sm-fade-in 0.25s ease-out forwards;
+}
+
+/* ── Number tick (price update) ── */
+@keyframes num-tick {
+    0% {
+        transform: translateY(-4px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.sm-anim-num-tick {
+    animation: num-tick 0.15s ease-out;
+}
+
+/* ── Ripple (button press) ── */
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* ── Theme transition (smooth theme swap) ── */
+.sm-theme-transitioning * {
+    transition: background-color 0.35s ease, color 0.35s ease,
+        border-color 0.35s ease, box-shadow 0.35s ease !important;
+}
+
+/* ── Glow pulse (active product) ── */
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px var(--sm-primary-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--sm-primary-glow);
+    }
+}
+
+.sm-anim-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ── Stagger utility for product grid items ── */
+.sm-stagger-1 {
+    animation-delay: 0.05s;
+}
+
+.sm-stagger-2 {
+    animation-delay: 0.10s;
+}
+
+.sm-stagger-3 {
+    animation-delay: 0.15s;
+}
+
+.sm-stagger-4 {
+    animation-delay: 0.20s;
+}
+
+.sm-stagger-5 {
+    animation-delay: 0.25s;
+}

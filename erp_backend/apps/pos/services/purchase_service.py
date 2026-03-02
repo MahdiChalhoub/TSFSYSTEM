@@ -97,21 +97,27 @@ class PurchaseService:
             inv_acc = rules.get('purchases', {}).get('inventory')
             susp_acc = rules.get('suspense', {}).get('reception')
 
-            if inv_acc and susp_acc:
-                LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=timezone.now(),
-                    description=f"Stock Reception: PO #{order.id} | Warehouse: {warehouse.name}",
-                    reference=f"PO-REC-{order.id}",
-                    status='POSTED',
-                    scope=scope,
-                    site_id=warehouse.parent_id or warehouse.id,
-                    user=user,
-                    lines=[
-                        {"account_id": inv_acc, "debit": total_received_value, "credit": Decimal('0'), "description": "Inventory Value increase"},
-                        {"account_id": susp_acc, "debit": Decimal('0'), "credit": total_received_value, "description": "Accrued Reception Liaison"},
-                    ]
+            # BUG 4 FIX: Never silently skip accounting — raise if accounts not configured
+            if not inv_acc or not susp_acc:
+                raise ValidationError(
+                    "Cannot post stock reception to ledger: 'purchases.inventory' or 'suspense.reception' "
+                    "account not configured in Finance → Posting Rules Settings."
                 )
+
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=timezone.now(),
+                description=f"Stock Reception: PO #{order.id} | Warehouse: {warehouse.name}",
+                reference=f"PO-REC-{order.id}",
+                status='POSTED',
+                scope=scope,
+                site_id=warehouse.parent_id or warehouse.id,
+                user=user,
+                lines=[
+                    {"account_id": inv_acc, "debit": total_received_value, "credit": Decimal('0'), "description": "Inventory Value increase"},
+                    {"account_id": susp_acc, "debit": Decimal('0'), "credit": total_received_value, "description": "Accrued Reception Liaison"},
+                ]
+            )
 
             return order
 
@@ -184,12 +190,23 @@ class PurchaseService:
         with transaction.atomic():
             settings = ConfigurationService.get_global_settings(organization)
             pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
-            company_type = settings.get('companyType', 'REGULAR')
-
-            if company_type in ['MIXED', 'REGULAR', 'MICRO']:
-                vat_recoverable = False
 
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
+
+            # ── New Tax Engine Context (scope guard + OrgTaxPolicy) ───────────
+            from apps.finance.tax_calculator import TaxEngineContext, TaxCalculator, _SupplierProfile
+            _is_export = kwargs.get('is_export', False)
+            _ctx = TaxEngineContext.from_org(organization, scope=scope, is_export=_is_export)
+            _supplier_profile = _SupplierProfile.from_contact(supplier)
+
+            # Derive vat_recoverable from engine (replaces companyType/supplier_regime sniff)
+            if not _ctx.vat_active:
+                vat_recoverable = False  # INTERNAL scope or org not VAT-registered
+            elif not _supplier_profile.vat_registered:
+                vat_recoverable = False  # Supplier doesn't charge VAT
+            else:
+                vat_recoverable = float(_ctx.vat_input_recoverability) > 0
+
             global_airsi_rate = Decimal(str(settings.get('airsi_tax_percentage', 0))) / 100
 
             apply_airsi = False
@@ -244,28 +261,31 @@ class PurchaseService:
                 line_tax = line_total_ht * tax_rate
                 line_total_ttc = line_total_ht + line_tax
 
-                line_airsi = Decimal('0')
-                if apply_airsi:
-                    line_airsi = (line_total_ht * airsi_rate).quantize(Decimal('0.01'))
+                # ── Engine-driven cost resolution ──────────────────────────
+                _costs = TaxCalculator.resolve_purchase_costs(
+                    base_ht=line_total_ht,
+                    vat_rate=tax_rate,
+                    airsi_rate=airsi_rate if apply_airsi else Decimal('0'),
+                    ctx=_ctx,
+                    supplier_vat_registered=_supplier_profile.vat_registered,
+                    supplier_reverse_charge=_supplier_profile.reverse_charge,
+                    supplier_airsi_subject=_supplier_profile.airsi_subject and apply_airsi,
+                )
+
+                line_airsi = _costs['airsi_amount']
+                line_tax   = _costs['vat_amount']
 
                 total_amount_ht += line_total_ht
                 total_tax += line_tax
                 total_airsi += line_airsi
 
-                base_effective_cost = Decimal('0')
+                # cost_official is the correct inventory value (HT + non-recoverable VAT + AIRSI capitalize + purchase_tax)
                 if pricing_cost_basis == 'FORCE_HT':
-                    base_effective_cost = unit_cost_ht
+                    final_effective_cost = unit_cost_ht
                 elif pricing_cost_basis == 'FORCE_TTC':
-                    base_effective_cost = unit_cost_ttc
+                    final_effective_cost = unit_cost_ttc
                 else:
-                    base_effective_cost = unit_cost_ht if vat_recoverable else unit_cost_ttc
-
-                airsi_capitalized = True
-                if company_type == 'REAL': airsi_capitalized = False
-
-                final_effective_cost = base_effective_cost
-                if apply_airsi and airsi_capitalized and qty > 0:
-                    final_effective_cost += (line_airsi / qty).quantize(Decimal('0.01'))
+                    final_effective_cost = (_costs['cost_official'] / qty).quantize(Decimal('0.01')) if qty > 0 else _costs['cost_official']
 
                 line_obj = OrderLine(
                     organization=organization,
@@ -273,11 +293,28 @@ class PurchaseService:
                     product=product,
                     quantity=qty,
                     unit_price=final_effective_cost,
+                    unit_cost_ht=unit_cost_ht,
+                    effective_cost=final_effective_cost,
                     tax_rate=tax_rate,
                     airsi_rate=airsi_rate if apply_airsi else Decimal('0'),
-                    subtotal=line_total_ttc
+                    subtotal=_costs['ttc']
                 )
                 line_obj.save(force_audit_bypass=True)
+
+                # ── Record per-line tax entries (Step 3) ───────────────────
+                try:
+                    from apps.pos.models import OrderLineTaxEntry
+                    for tl in _costs['tax_lines']:
+                        entry = OrderLineTaxEntry.from_tax_line_dict(
+                            tax_line_dict={**tl, 'base_amount': float(line_total_ht)},
+                            order_line_id=line_obj.id,
+                            transaction_type='PURCHASE',
+                            scope=scope,
+                            organization=organization,
+                        )
+                        entry.save()
+                except Exception:
+                    pass  # Never block a purchase due to tax entry failure
 
                 batch = ProductBatch.objects.create(
                     organization=organization,
@@ -361,58 +398,91 @@ class PurchaseService:
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
 
+            # ── Inventory debit = cost_official (all non-recoverable taxes already included) ──
+            # cost_official = HT + (VAT * non_recov_ratio) + AIRSI_if_capitalize + purchase_tax
+            # We can sum up from the per-line OrderLineTaxEntry, but for simplicity:
             inventory_debit_amount = total_amount_ht
-            if not vat_recoverable: inventory_debit_amount += total_tax
+            if not vat_recoverable:
+                inventory_debit_amount += total_tax
 
-            airsi_ledger_treatment = 'CAPITALIZE'
-            if company_type == 'REAL': airsi_ledger_treatment = 'RECOVER'
-            elif company_type == 'MICRO': airsi_ledger_treatment = 'EXPENSE'
+            # AIRSI ledger treatment from engine context
+            airsi_ledger_treatment = _ctx.airsi_treatment
 
-            if apply_airsi:
+            if apply_airsi and total_airsi > 0:
                 if airsi_ledger_treatment == 'CAPITALIZE':
                     inventory_debit_amount += total_airsi
 
+            # Canonical AP credit:
+            # If AIRSI withheld → AP = TTC - AIRSI (net owed to supplier)
+            if apply_airsi and total_airsi > 0:
+                ap_credit = order.total_amount  # already has -AIRSI effect after totals
+            else:
+                ap_credit = order.total_amount
+
             posting_lines = [
-                {"account_id": ap_account_id, "debit": Decimal('0'), "credit": order.total_amount, "description": f"Payable to {supplier.name}"},
-                {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value"}
+                {"account_id": ap_account_id, "debit": Decimal('0'), "credit": ap_credit,
+                 "description": f"Payable to {supplier.name}"},
+                {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'),
+                 "description": "Inventory Value (cost_official)"},
             ]
 
-            # Handling Extra Fees in Ledger
+            # Extra Fees
             for fee in extra_fees:
                 fee_acc = fee.get('accountId') or rules['purchases'].get('delivery_fees') or stock_account_id
                 posting_lines.append({
-                    "account_id": fee_acc,
-                    "debit": Decimal(str(fee['amount'])),
-                    "credit": Decimal('0'),
+                    "account_id": fee_acc, "debit": Decimal(str(fee['amount'])), "credit": Decimal('0'),
                     "description": f"Fee: {fee['name']}"
                 })
 
-            # Handling Discount Earned
+            # Discount Earned
             if discount_amount > 0:
                 target_disc_acc = discount_earned_account_id or stock_account_id
                 posting_lines.append({
-                    "account_id": target_disc_acc,
-                    "debit": Decimal('0'),
-                    "credit": discount_amount,
+                    "account_id": target_disc_acc, "debit": Decimal('0'), "credit": discount_amount,
                     "description": "Purchase Discount Earned"
                 })
 
-            if vat_recoverable and total_tax > 0:
+            # VAT Recoverable (only when vat_active AND org can reclaim)
+            if _ctx.vat_active and vat_recoverable and total_tax > 0:
+                if not tax_account_id:
+                    raise ValidationError(
+                        "Cannot post VAT-recoverable purchase: 'purchases.tax' (TVA Récupérable) "
+                        "account not configured in Finance → Posting Rules Settings."
+                    )
                 posting_lines.append({
-                    "account_id": tax_account_id,
-                    "debit": total_tax,
-                    "credit": Decimal('0'),
-                    "description": "VAT Recoverable"
+                    "account_id": tax_account_id, "debit": total_tax, "credit": Decimal('0'),
+                    "description": "TVA Récupérable"
                 })
 
-            if apply_airsi and airsi_ledger_treatment != 'CAPITALIZE':
-                 target_acc = airsi_account_id or tax_account_id
-                 posting_lines.append({
-                    "account_id": target_acc,
-                    "debit": total_airsi,
-                    "credit": Decimal('0'),
-                    "description": f"AIRSI ({airsi_ledger_treatment})"
-                })
+            # VAT Reverse Charge (supplier.reverse_charge=True + vat_active)
+            if _ctx.vat_active and _supplier_profile.reverse_charge and total_tax > 0:
+                reverse_charge_acc = rules.get('purchases', {}).get('reverse_charge_vat') or tax_account_id
+                sales_tax_acc_rc = rules.get('sales', {}).get('tax')
+                if reverse_charge_acc and sales_tax_acc_rc:
+                    posting_lines.append({
+                        "account_id": reverse_charge_acc, "debit": total_tax, "credit": Decimal('0'),
+                        "description": "VAT Reverse Charge — Input"
+                    })
+                    posting_lines.append({
+                        "account_id": sales_tax_acc_rc, "debit": Decimal('0'), "credit": total_tax,
+                        "description": "VAT Reverse Charge — Output"
+                    })
+
+            # AIRSI non-capitalize
+            if apply_airsi and total_airsi > 0 and airsi_ledger_treatment != 'CAPITALIZE':
+                target_acc = airsi_account_id or tax_account_id
+                if target_acc:
+                    posting_lines.append({
+                        "account_id": target_acc, "debit": total_airsi, "credit": Decimal('0'),
+                        "description": f"AIRSI ({airsi_ledger_treatment})"
+                    })
+                # Canonical: CR AP net (supplier gets TTC - AIRSI) + CR AIRSI Payable
+                airsi_payable_acc = rules.get('purchases', {}).get('airsi_payable')
+                if airsi_payable_acc:
+                    posting_lines.append({
+                        "account_id": airsi_payable_acc, "debit": Decimal('0'), "credit": total_airsi,
+                        "description": "AIRSI Payable to tax authority"
+                    })
 
             LedgerService.create_journal_entry(
                 organization=organization,

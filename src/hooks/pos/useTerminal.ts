@@ -152,6 +152,8 @@ export function useTerminal() {
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [loyaltyPointValue, setLoyaltyPointValue] = useState(1);
+    const [companyType, setCompanyType] = useState('REGULAR');
+    const [declareTVA, setDeclareTVA] = useState(false);
 
     // ─── Refs (for scanner & stock policy — avoids stale closures) ─
     const productIndex = useRef<Map<string, any>>(new Map());
@@ -468,6 +470,12 @@ export function useTerminal() {
         erpFetch('settings/item/pos_security_rules/').then((s: any) => {
             if (typeof s?.allowNegativeStock === 'boolean') allowNegativeStockRef.current = s.allowNegativeStock;
         }).catch(() => { });
+
+        // Financial/VAT Context
+        import('@/app/actions/finance/settings').then(m => m.getFinancialSettings()).then((s: any) => {
+            setCompanyType(s.companyType || 'REGULAR');
+            setDeclareTVA(!!s.declareTVA);
+        }).catch(() => { });
     }, []);
 
     // ═══ Session Persistence (localStorage + cloud) ═══════════════
@@ -593,6 +601,7 @@ export function useTerminal() {
 
         // Config
         loyaltyPointValue, handleSync,
+        companyType, setCompanyType, declareTVA, setDeclareTVA,
     } as const;
 }
 

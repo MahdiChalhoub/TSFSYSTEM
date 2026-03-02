@@ -1,28 +1,21 @@
 /** Master Data Center - Contacts Logic */
-import { erpFetch } from "@/lib/erp-api";
-import ContactManager from "./manager";
-import Link from "next/link";
-import { Users, Building2, TrendingUp, ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { erpFetch } from '@/lib/erp-api';
+import ContactManager from './manager';
+import Link from 'next/link';
+import { Users, Building2, TrendingUp, ArrowLeft, CreditCard, ShieldCheck } from 'lucide-react';
+
 export const dynamic = 'force-dynamic';
+
 async function getDeliveryZones() {
     try {
         const data = await erpFetch('pos/delivery-zones/');
         return Array.isArray(data) ? data : (data?.results || []);
     } catch { return []; }
 }
+
 async function getContacts() {
     try {
         const data = await erpFetch('contacts/');
-        // Map Django camelCase/snake_case if needed. 
-        // Django DRF default is snake_case unless configured otherwise.
-        // Assuming camelCase based on previous knowledge or needing mapping.
-        // Serializer uses snake_case keys (home_site).
-        // Frontend expects camelCase often (homeSite).
-        // I will map it MANUALLY here or update Serializer to use camelCase (using djangorestframework-camel-case or manual).
-        // Let's assume snake_case from backend and map to camelCase for frontend components if they expect it.
-        // The previous code used Prisma which returns camelCase.
-        // So I MUST mapping.
         return data.map((c: Record<string, any>) => ({
             ...c,
             homeSite: c.home_site,
@@ -33,110 +26,139 @@ async function getContacts() {
             paymentTermsDays: c.payment_terms_days,
             loyaltyPoints: c.loyalty_points,
         }));
-    } catch {
-        return [];
-    }
+    } catch { return []; }
 }
+
 async function getSites() {
-    try {
-        return await erpFetch('sites/');
-    } catch (e) {
-        return [];
-    }
+    try { return await erpFetch('sites/'); } catch { return []; }
 }
+
 export default async function ContactsPage() {
     const [contacts, sites, deliveryZones] = await Promise.all([
         getContacts(),
         getSites(),
-        getDeliveryZones()
+        getDeliveryZones(),
     ]);
+
+    const customers = contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length;
+    const suppliers = contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length;
+    const leads = contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length;
+
+    const kpis = [
+        { label: 'Active Clients', value: customers, icon: Users, accent: 'var(--app-primary)' },
+        { label: 'Suppliers', value: suppliers, icon: Building2, accent: 'var(--app-info)' },
+        { label: 'Total Leads', value: leads, icon: TrendingUp, accent: 'var(--app-warning)' },
+    ];
+
+    const features = [
+        {
+            icon: Building2,
+            title: 'Site Attribution',
+            desc: "Distinguish between a contact's Home Site and their Transaction Site.",
+        },
+        {
+            icon: CreditCard,
+            title: 'Ledger Precision',
+            desc: 'Every contact has a direct 1:1 link to the General Ledger with live balances.',
+        },
+        {
+            icon: ShieldCheck,
+            title: 'Trusted Data',
+            desc: 'Contact information stays consistent across all modules.',
+        },
+    ];
+
     return (
-        <div className="page-container">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h1 className="page-header-title flex items-center gap-3">
-                        <div className="page-header-icon bg-emerald-600 text-white">
-                            <Users size={20} />
-                        </div>
-                        Contact <span className="text-emerald-600">Center</span>
-                    </h1>
-                    <p className="page-header-subtitle mt-1">Unified Client & Supplier Registry</p>
+        <div
+            className="min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto"
+            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+        >
+            {/* ── Header ──────────────────────────────────── */}
+            <header className="flex flex-col md:flex-row justify-between items-center gap-4 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{ background: 'var(--app-primary)', boxShadow: '0 8px 24px var(--app-primary-glow)' }}
+                    >
+                        <Users size={26} color="#fff" />
+                    </div>
+                    <div>
+                        <h1
+                            className="text-3xl font-black tracking-tight"
+                            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
+                        >
+                            Contact <span style={{ color: 'var(--app-primary)' }}>Center</span>
+                        </h1>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                            Unified Client & Supplier Registry
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <Link href="/crm">
-                        <Button variant="outline" className="rounded-xl h-9 px-4 gap-1.5 border-gray-200 hover:bg-gray-50 transition-all shadow-sm text-xs">
-                            <ArrowLeft size={16} /> Back
-                        </Button>
-                    </Link>
-                </div>
+                <Link
+                    href="/crm"
+                    className="flex items-center gap-1.5 px-4 h-9 rounded-xl font-bold text-sm transition-all"
+                    style={{
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                        color: 'var(--app-text-muted)',
+                        boxShadow: 'var(--app-shadow-sm)',
+                    }}
+                >
+                    <ArrowLeft size={14} /> Back
+                </Link>
             </header>
-            {/* KPI Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="card-kpi bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-100">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                            <Users size={18} className="text-emerald-600" />
-                        </div>
-                        <div>
-                            <p className="label-micro text-emerald-500 mb-0.5">Active Clients</p>
-                            <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="card-kpi bg-gradient-to-br from-slate-50 to-slate-100/50">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                            <Building2 size={18} className="text-slate-600" />
-                        </div>
-                        <div>
-                            <p className="label-micro text-slate-400 mb-0.5">Suppliers</p>
-                            <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="card-kpi bg-gradient-to-br from-slate-900 to-slate-800 text-white border-0">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-sm backdrop-blur-sm">
-                            <TrendingUp size={18} className="text-emerald-300" />
-                        </div>
-                        <div>
-                            <p className="label-micro text-slate-300 mb-0.5">Total Leads</p>
-                            <p className="text-xl font-black text-white tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
+
+            {/* ── KPI Row ─────────────────────────────────── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in-up" style={{ animationDelay: '60ms' }}>
+                {kpis.map((kpi, i) => (
+                    <div key={i} className="app-kpi-card">
+                        <div className="flex items-center gap-4">
+                            <div
+                                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                                style={{ background: kpi.accent + '22', boxShadow: `0 4px 12px ${kpi.accent}33` }}
+                            >
+                                <kpi.icon size={20} style={{ color: kpi.accent }} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                                    {kpi.label}
+                                </p>
+                                <p className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                                    {kpi.value}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                ))}
             </div>
-            {/* Feature Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="group p-4 bg-white rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
-                        <Building2 size={20} />
+
+            {/* ── Feature Grid ────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 fade-in-up" style={{ animationDelay: '100ms' }}>
+                {features.map((f, i) => (
+                    <div
+                        key={i}
+                        className="app-card app-card-hover p-4 transition-all duration-300"
+                    >
+                        <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                            style={{ background: 'var(--app-primary-light)' }}
+                        >
+                            <f.icon size={18} style={{ color: 'var(--app-primary)' }} />
+                        </div>
+                        <h4
+                            className="text-sm font-black uppercase tracking-tight mb-1.5"
+                            style={{ color: 'var(--app-text)' }}
+                        >
+                            {f.title}
+                        </h4>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--app-text-muted)' }}>
+                            {f.desc}
+                        </p>
                     </div>
-                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-1.5">Site Attribution</h4>
-                    <p className="text-gray-500 text-[11px] font-medium leading-relaxed">
-                        Distinguish between a contact's <b>Home Site</b> and their <b>Transaction Site</b>.
-                    </p>
-                </div>
-                <div className="group p-4 bg-white rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
-                        <CreditCard size={20} />
-                    </div>
-                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-1.5">Ledger Precision</h4>
-                    <p className="text-gray-500 text-[11px] font-medium leading-relaxed">
-                        Every contact has a direct 1:1 link to the General Ledger with live balances.
-                    </p>
-                </div>
-                <div className="group p-4 bg-white rounded-2xl border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
-                        <ShieldCheck size={20} />
-                    </div>
-                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-1.5">Trusted Data</h4>
-                    <p className="text-gray-500 text-[11px] font-medium leading-relaxed">
-                        Contact information stays consistent across all modules.
-                    </p>
-                </div>
+                ))}
             </div>
+
+            {/* ── Contact Manager ─────────────────────────── */}
             <ContactManager
                 contacts={contacts}
                 sites={sites}

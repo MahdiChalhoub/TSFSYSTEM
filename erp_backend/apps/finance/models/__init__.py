@@ -8,6 +8,9 @@ from .asset_models import Asset, AmortizationSchedule
 from .voucher_models import Voucher
 from .audit_models import ProfitDistribution, ForensicAuditLog
 from .tax_models import TaxGroup, BarcodeSettings
+from .org_tax_policy import OrgTaxPolicy
+from .counterparty_tax_profile import CounterpartyTaxProfile
+from .periodic_tax_models import PeriodicTaxAccrual
 from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance
 from apps.finance.invoice_models import Invoice, InvoiceLine
 from apps.finance.zatca_config import ZATCAConfig
@@ -19,7 +22,8 @@ __all__ = [
     'JournalEntry', 'JournalEntryLine', 'Transaction', 'TransactionSequence',
     'Loan', 'LoanInstallment', 'FinancialEvent', 'DeferredExpense', 'DirectExpense',
     'Asset', 'AmortizationSchedule', 'Voucher', 'ProfitDistribution', 'ForensicAuditLog',
-    'TaxGroup', 'BarcodeSettings', 'Payment', 'CustomerBalance', 'SupplierBalance',
+    'TaxGroup', 'BarcodeSettings', 'OrgTaxPolicy', 'CounterpartyTaxProfile', 'PeriodicTaxAccrual',
+    'Payment', 'CustomerBalance', 'SupplierBalance',
     'Invoice', 'InvoiceLine', 'ZATCAConfig', 'ReportDefinition', 'ReportExecution',
     'GatewayConfig'
 ]

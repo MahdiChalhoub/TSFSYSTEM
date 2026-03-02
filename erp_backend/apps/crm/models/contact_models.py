@@ -143,6 +143,60 @@ class Contact(TenantModel):
     airsi_tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     is_airsi_subject = models.BooleanField(default=False)
 
+    # ── Supplier VAT Regime (Component 1) ─────────────────────────────
+    SUPPLIER_VAT_REGIME_CHOICES = (
+        ('ASSUJETTI',     'Assujetti TVA — issues official TVA invoices (HT + TVA)'),
+        ('NON_ASSUJETTI', 'Non-assujetti — issues simple receipts (no TVA breakdown)'),
+        ('FOREIGN',       'Foreign supplier — reverse charge may apply'),
+    )
+    supplier_vat_regime = models.CharField(
+        max_length=20,
+        choices=SUPPLIER_VAT_REGIME_CHOICES,
+        default='ASSUJETTI',
+        null=True, blank=True,
+        help_text='Tax regime of this supplier — determines whether VAT appears on their invoices'
+    )
+
+    # ── B2B / B2C Classification (legacy — kept for backward compat) ──
+    CLIENT_TYPE_CHOICES = (
+        ('B2B', 'Business (B2B) — Can receive TVA invoices'),
+        ('B2C', 'Individual (B2C) — Receives simple receipts only'),
+        ('UNKNOWN', 'Unknown — Not yet classified'),
+    )
+    client_type = models.CharField(
+        max_length=10,
+        choices=CLIENT_TYPE_CHOICES,
+        default='UNKNOWN',
+        null=True, blank=True,
+        help_text='Legacy. Use tax_profile_id.vat_registered for new engine logic.'
+    )
+
+    # ── Universal Tax Profile (new engine) ────────────────────────────
+    COMMERCIAL_CATEGORY_CHOICES = (
+        ('RETAIL',            'Retail Supplier'),
+        ('WHOLESALE',         'Wholesale Supplier'),
+        ('NORMAL',            'Normal / Standard'),
+        ('FOREIGN',           'Foreign Supplier'),
+        ('MICRO',             'Micro / Non-assujetti'),
+        ('B2B_ASSUJETTI',     'B2B — VAT Registered Client'),
+        ('B2B_NON_ASSUJETTI', 'B2B — Not VAT Registered Client'),
+        ('B2C',               'B2C — Individual Client'),
+        ('INSTITUTIONAL',     'Institutional / Government'),
+        ('EXPORT',            'Export Client'),
+    )
+    commercial_category = models.CharField(
+        max_length=20,
+        choices=COMMERCIAL_CATEGORY_CHOICES,
+        default='NORMAL',
+        null=True, blank=True,
+        help_text='Commercial label only — NO fiscal effect. Tax behavior comes from tax_profile_id.'
+    )
+    tax_profile_id = models.IntegerField(
+        null=True, blank=True,
+        db_column='tax_profile_id',
+        help_text='FK to CounterpartyTaxProfile (IntegerField avoids circular import)'
+    )
+
     # Metadata
     notes = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True, help_text='Deactivate to hide without deleting')

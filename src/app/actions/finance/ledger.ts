@@ -206,7 +206,10 @@ export async function clearAllJournalEntries(confirm: 'YES_DELETE_ALL' | null = 
 export async function getOpeningEntries() {
     try {
         const result = await erpFetch('journal/opening_entries/')
-        return result
+        return result.map((e: any) => ({
+            ...e,
+            transactionDate: e.transaction_date || e.transactionDate
+        }))
     } catch (error) {
         console.error("Failed to fetch opening entries:", error)
         return []
@@ -216,6 +219,10 @@ export async function getOpeningEntries() {
 export async function getJournalEntry(id: number) {
     try {
         const result = await erpFetch(`journal/${id}/`)
+        if (result && typeof result === 'object') {
+            const rawDate = result.transaction_date || result.transactionDate
+            result.transactionDate = rawDate ? new Date(rawDate) : null
+        }
         return result
     } catch (error) {
         console.error("Failed to fetch journal entry:", error)

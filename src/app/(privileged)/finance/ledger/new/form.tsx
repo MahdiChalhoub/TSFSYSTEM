@@ -33,18 +33,22 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
     // ... rest of state ...
 
     const [header, setHeader] = useState({
-        transactionDate: initialEntry ? new Date(initialEntry.transactionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        transactionDate: initialEntry ? new Date(initialEntry.transactionDate || initialEntry.transaction_date || new Date()).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         description: initialEntry?.description || '',
         reference: initialEntry?.reference || ''
     })
 
-    const [lines, setLines] = useState(initialEntry?.lines.map((l: Record<string, any>) => ({
-        accountId: l.accountId.toString(),
-        searchString: `${l.account?.code || ''} ${l.account?.name || ''}`.trim(),
-        debit: Number(l.debit) || '',
-        credit: Number(l.credit) || '',
-        description: l.description || ''
-    })) || [
+    const [lines, setLines] = useState(initialEntry?.lines?.map((l: Record<string, any>) => {
+        const accId = (l.accountId || l.account_id || l.account || '').toString()
+        const acc = accounts.find((a: any) => a.id.toString() === accId)
+        return {
+            accountId: accId,
+            searchString: acc ? `${acc.code} ${acc.name}`.trim() : `${l.account?.code || ''} ${l.account?.name || ''}`.trim(),
+            debit: (l.debit !== undefined && l.debit !== null && l.debit !== '') ? Number(l.debit) : '',
+            credit: (l.credit !== undefined && l.credit !== null && l.credit !== '') ? Number(l.credit) : '',
+            description: l.description || ''
+        }
+    }) || [
             { accountId: '', searchString: '', debit: '', credit: '', description: '' },
             { accountId: '', searchString: '', debit: '', credit: '', description: '' }
         ])
@@ -60,14 +64,51 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
     }
 
     const removeLine = (index: number) => {
-        if (lines.length <= 2) return
-        setLines(lines.filter((_, i) => i !== index))
+        if (lines.length <= 2) return toast.error('A journal entry requires at least 2 lines')
+        setLines(lines.filter((_: any, i: number) => i !== index))
     }
 
     const updateLine = (index: number, field: string, value: string) => {
         const newLines = [...lines]
-        // @ts-ignore
-        newLines[index][field] = value
+        newLines[index] = { ...newLines[index], [field]: value }
+
+        // Enforce single-sided entry per line
+        if (field === 'debit' && value !== '') newLines[index].credit = ''
+        if (field === 'credit' && value !== '') newLines[index].debit = ''
+
+        // Handle Quick Split:
+        if (field === 'debit' && value.includes('/')) {
+            const parts = value.split('/')
+            if (parts.length === 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) {
+                const total = Number(parts[0])
+                const divisor = Number(parts[1])
+                const splitValue = (total / divisor).toFixed(2)
+
+                newLines[index].debit = splitValue
+                const addedLines = []
+                for (let i = 1; i < divisor; i++) {
+                    addedLines.push({ accountId: '', searchString: '', debit: splitValue, credit: '', description: newLines[index].description || '' })
+                }
+                setLines([...newLines.slice(0, index + 1), ...addedLines, ...newLines.slice(index + 1)])
+                return
+            }
+        }
+        if (field === 'credit' && value.includes('/')) {
+            const parts = value.split('/')
+            if (parts.length === 2 && !isNaN(Number(parts[0])) && !isNaN(Number(parts[1]))) {
+                const total = Number(parts[0])
+                const divisor = Number(parts[1])
+                const splitValue = (total / divisor).toFixed(2)
+
+                newLines[index].credit = splitValue
+                const addedLines = []
+                for (let i = 1; i < divisor; i++) {
+                    addedLines.push({ accountId: '', searchString: '', debit: '', credit: splitValue, description: newLines[index].description || '' })
+                }
+                setLines([...newLines.slice(0, index + 1), ...addedLines, ...newLines.slice(index + 1)])
+                return
+            }
+        }
 
         if (field === 'searchString') {
             const val = value.toLowerCase()
@@ -89,20 +130,11 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
             }
         }
 
-        // Auto-clear logic: If entering debit, clear credit and vice-versa
-        if (field === 'debit' && value !== '') {
-            // @ts-ignore
-            newLines[index].credit = ''
-        } else if (field === 'credit' && value !== '') {
-            // @ts-ignore
-            newLines[index].debit = ''
-        }
-
         setLines(newLines)
     }
 
-    const totalDebit = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0)
-    const totalCredit = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0)
+    const totalDebit = lines.reduce((sum: number, line: any) => sum + (Number(line.debit) || 0), 0)
+    const totalCredit = lines.reduce((sum: number, line: any) => sum + (Number(line.credit) || 0), 0)
     const diff = totalDebit - totalCredit
     const isBalanced = Math.abs(diff) < 0.01
 
@@ -140,6 +172,28 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
         if (!yearId) {
             toast.error('No active Fiscal Year found for this date.')
             return
+        }
+
+        // Anomaly Guard: Scan for abnormal VAT values
+        let vatAmount = 0
+        let revenueAmount = 0
+        for (const line of lines) {
+            const acc = accounts.find((a: any) => a.id.toString() === line.accountId)
+            if (acc) {
+                const name = (acc.name || '').toLowerCase()
+                if (name.includes('vat') || name.includes('tax')) {
+                    vatAmount += (Number(line.credit) || 0) + (Number(line.debit) || 0)
+                }
+                if (name.includes('revenue') || name.includes('sale') || name.includes('income')) {
+                    revenueAmount += (Number(line.credit) || 0) + (Number(line.debit) || 0)
+                }
+            }
+        }
+
+        if (vatAmount > 0 && revenueAmount > 0 && vatAmount > (revenueAmount * 0.5)) {
+            if (!confirm(`🚨 ANOMALY GUARD: The VAT/Tax amount ($${vatAmount.toFixed(2)}) is unusually high relative to the revenue ($${revenueAmount.toFixed(2)}). This is mathematically improbable. Are you sure you want to proceed?`)) {
+                return
+            }
         }
 
         startTransition(async () => {

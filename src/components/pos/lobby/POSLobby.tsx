@@ -912,19 +912,22 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--app-bg)' }}>
                 <div className="text-center">
-                    <Loader2 size={48} className="text-indigo-400 animate-spin mx-auto mb-4" />
-                    <p className="text-white/60 text-sm font-medium tracking-widest uppercase">Loading Registers...</p>
+                    <Loader2 size={48} className="animate-spin mx-auto mb-4" style={{ color: 'var(--app-primary)' }} />
+                    <p className="text-sm font-medium tracking-widest uppercase" style={{ color: 'var(--app-text-muted)' }}>Loading Registers...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ background: 'var(--app-bg)' }}>
             {/* Header */}
-            <header className="px-8 py-5 flex items-center justify-between border-b border-white/5 bg-black/20 backdrop-blur-sm">
+            <header
+                className="px-8 py-5 flex items-center justify-between backdrop-blur-sm"
+                style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface)' }}
+            >
                 <div className="flex items-center gap-4">
                     {step !== 'site' && (
                         <button onClick={goBack} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all active:scale-95">

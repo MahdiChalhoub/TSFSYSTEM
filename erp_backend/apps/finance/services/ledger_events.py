@@ -78,30 +78,45 @@ class FinancialEventService:
             if event.event_type in ['PARTNER_CAPITAL_INJECTION', 'PARTNER_INJECTION']:
                 debit_acc = actual_payment_acc_id
                 credit_acc = rules.get('partners', {}).get('capital') or rules.get('equity', {}).get('capital')
+                # BUG 5 FIX: actionable error for missing capital account config
+                if not credit_acc:
+                    raise ValidationError(
+                        "Cannot post capital injection: 'partners.capital' or 'equity.capital' account "
+                        "not configured. Go to Finance → Settings → Posting Rules to configure."
+                    )
                 description = f"Capital Injection from {event.contact.name}"
-                
-            elif event.event_type == 'PARTNER_LOAN':
-                debit_acc = actual_payment_acc_id
-                credit_acc = event.contact.linked_account_id
-                description = f"Loan from Partner {event.contact.name}"
 
-            elif event.event_type == 'LOAN_DISBURSEMENT':
-                debit_acc = event.contact.linked_account_id
-                credit_acc = actual_payment_acc_id
-                description = f"Loan Disbursement to {event.contact.name}"
-                
-            elif event.event_type == 'LOAN_REPAYMENT':
-                debit_acc = actual_payment_acc_id 
-                credit_acc = event.contact.linked_account_id
-                description = f"Loan Repayment from {event.contact.name}"
-                
+            elif event.event_type in ['PARTNER_LOAN', 'LOAN_DISBURSEMENT', 'LOAN_REPAYMENT']:
+                # BUG 2 FIX: explicit actionable error if contact has no linked GL account
+                if not event.contact.linked_account_id:
+                    raise ValidationError(
+                        f"Contact '{event.contact.name}' has no linked GL account. "
+                        f"Please link this contact to a Chart of Accounts entry (Contacts → Edit → Link Account) "
+                        f"before posting loan transactions."
+                    )
+                if event.event_type == 'PARTNER_LOAN':
+                    debit_acc = actual_payment_acc_id
+                    credit_acc = event.contact.linked_account_id
+                    description = f"Loan from Partner {event.contact.name}"
+                elif event.event_type == 'LOAN_DISBURSEMENT':
+                    debit_acc = event.contact.linked_account_id
+                    credit_acc = actual_payment_acc_id
+                    description = f"Loan Disbursement to {event.contact.name}"
+                elif event.event_type == 'LOAN_REPAYMENT':
+                    debit_acc = actual_payment_acc_id
+                    credit_acc = event.contact.linked_account_id
+                    description = f"Loan Repayment from {event.contact.name}"
+
             elif event.event_type == 'PARTNER_WITHDRAWAL':
                 debit_acc = rules.get('partners', {}).get('withdrawal') or rules.get('equity', {}).get('capital')
                 credit_acc = actual_payment_acc_id
                 description = f"Partner Withdrawal: {event.contact.name}"
 
             if not debit_acc or not credit_acc:
-                raise ValidationError(f"Accounting mapping failed for {event.event_type} (Dr:{debit_acc}, Cr:{credit_acc})")
+                raise ValidationError(
+                    f"Accounting mapping failed for event type '{event.event_type}'. "
+                    f"Dr: {debit_acc}, Cr: {credit_acc}. Check Finance → Settings → Posting Rules."
+                )
 
             trx_type = 'IN' if debit_acc == actual_payment_acc_id else 'OUT'
             

@@ -8,6 +8,7 @@ from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
 from .sourcing_models import ProductSupplier, SupplierPriceHistory
 from .purchase_order_models import PurchaseOrder, PurchaseOrderLine
 from .audit_models import POSAuditRule, POSAuditEvent
+from .tax_entry_models import OrderLineTaxEntry
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
@@ -20,4 +21,5 @@ __all__ = [
     'ProductSupplier', 'SupplierPriceHistory',
     'PurchaseOrder', 'PurchaseOrderLine',
     'POSAuditRule', 'POSAuditEvent',
+    'OrderLineTaxEntry',
 ]

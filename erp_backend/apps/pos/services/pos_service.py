@@ -147,6 +147,29 @@ class POSService:
                 notes=notes or ''
             )
 
+            # ── Resolve invoice type via new engine (scope guard + org policy) ──
+            # _ctx safe-default: vat_active will be derived from policy; fallback is vat_active=True (OFFICIAL scope)
+            try:
+                from apps.finance.tax_calculator import TaxEngineContext, TaxCalculator
+                _ctx = TaxEngineContext.from_org(organization, scope=scope, is_export=False)
+                _client_vat_registered = False
+                if contact_id:
+                    (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+                    if Contact:
+                        _c = Contact.objects.filter(id=contact_id, organization=organization).first()
+                        if _c:
+                            from apps.finance.tax_calculator import _ClientProfile
+                            _client_vat_registered = _ClientProfile.from_contact(_c).vat_registered
+                order.invoice_type = TaxCalculator.resolve_invoice_type(_ctx, _client_vat_registered)
+            except Exception:
+                from apps.finance.tax_calculator import TaxEngineContext
+                _ctx = TaxEngineContext(scope=scope)  # safe default — scope guard still applies
+                order.invoice_type = 'RECEIPT'
+
+
+
+
+
             for item in items:
                 # 3. Atomic Serializability: Lock Product
                 product = Product.objects.select_for_update().get(id=item['product_id'], organization=organization)
@@ -210,16 +233,16 @@ class POSService:
                     user=user
                 )
 
-                tax_rate = Decimal(str(product.tva_rate))
+                tax_rate = Decimal(str(product.tva_rate)) / Decimal('100')
                 item_total = qty * effective_price
-                item_tax = item_total * tax_rate
+                item_tax = (item_total * tax_rate).quantize(Decimal('0.01'))
                 item_cogs = qty * amc
 
                 total_amount += (item_total + item_tax)
                 total_tax += item_tax
                 total_cogs += item_cogs
 
-                OrderLine.objects.create(
+                line_obj = OrderLine.objects.create(
                     organization=organization,
                     order=order,
                     product=product,
@@ -232,6 +255,30 @@ class POSService:
                     effective_cost=amc,
                     price_override_detected=is_override
                 )
+
+                # ── Record per-line tax entries (scope guard: no VAT if INTERNAL) ──
+                try:
+                    from apps.pos.models import OrderLineTaxEntry
+                    if item_tax > 0 and _ctx.vat_active:
+                        tax_type = 'VAT'
+                        cost_ratio = float(Decimal('1') - _ctx.vat_input_recoverability)
+                        entry = OrderLineTaxEntry(
+                            organization=organization,
+                            order_line_id=line_obj.id,
+                            transaction_type='SALE',
+                            tax_type=tax_type,
+                            rate=tax_rate,
+                            base_amount=item_total,
+                            amount=item_tax,
+                            cost_impact_ratio=Decimal(str(cost_ratio)),
+                            cost_impact_amount=(item_tax * Decimal(str(cost_ratio))).quantize(Decimal('0.01')),
+                            scope=scope,
+                        )
+                        entry.save()
+                except Exception:
+                    pass  # Never block a sale due to tax entry failure
+
+
 
                 if is_override and ForensicAuditService:
                     ForensicAuditService.log_mutation(
@@ -358,17 +405,40 @@ class POSService:
                         
                 return fallback_acc_id
 
-            # Standard credit lines (always the same regardless of payment split)
-            # Revenue is credited for the full item sum minus tax AND minus the global discount
-            discount_dec = Decimal(str(global_discount or 0))
-            revenue_credit = max(Decimal('0'), (total_amount - total_tax - discount_dec))
-            
-            lines = [
-                {"account_id": rev_acc, "debit": Decimal('0'), "credit": revenue_credit},
-                {"account_id": tax_acc or rev_acc, "debit": Decimal('0'), "credit": total_tax},
-                {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
-                {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
-            ]
+            # ── VAT Split Decision: use TaxEngineContext (scope guard aware) ──
+            # vat_active = scope==OFFICIAL AND org charges VAT on official sales
+            try:
+                from apps.finance.tax_calculator import TaxEngineContext as _ctx_cls
+                _engine_ctx = _ctx_cls.from_org(organization, scope=scope)
+                should_split_vat = _engine_ctx.vat_active and sales_tax_acc and total_tax > Decimal('0')
+            except Exception:
+                # Graceful fallback to legacy companyType check
+                settings = ConfigurationService.get_global_settings(organization)
+                company_type = settings.get('companyType', 'REGULAR')
+                should_split_vat = company_type in ('REAL', 'MIXED') and sales_tax_acc and total_tax > Decimal('0')
+
+
+
+            if should_split_vat:
+                # Correct: DR Cash/AR (TTC) → CR Revenue HT + CR TVA Collectée
+                lines = [
+                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": revenue_credit,
+                     "description": "Revenue HT"},
+                    {"account_id": sales_tax_acc, "debit": Decimal('0'), "credit": total_tax,
+                     "description": "TVA Collectée"},
+                    {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0'),
+                     "description": "Cost of Goods Sold"},
+                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs,
+                     "description": "Inventory Relief"},
+                ]
+            else:
+                # REGULAR/MICRO or sales.tax not configured: TTC posted to revenue
+                lines = [
+                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": revenue_credit},
+                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": total_tax},
+                    {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
+                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
+                ]
 
             # Use structured payment_legs if provided, replacing the old notes parsing
             parsed_legs = []
