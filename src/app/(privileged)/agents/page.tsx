@@ -126,7 +126,7 @@ export default function AgentDashboard() {
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
                             <Sparkles className="w-6 h-6 text-white animate-pulse" />
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Virtual Employees</h1>
+                        <h1 className="page-header-title  tracking-tight">Virtual Employees</h1>
                     </div>
                     <p className="text-gray-500 font-medium ml-[60px]">Autonomous AI Agents managing your business data.</p>
                 </div>

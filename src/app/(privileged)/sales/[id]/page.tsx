@@ -34,7 +34,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Sale Not Found</h1>
+                <h1 className="page-header-title  tracking-tighter">Sale Not Found</h1>
                 <p className="text-gray-400 text-sm max-w-md text-center">
                     The record could not be found in your current organization context.
                     This could be due to strict tenant isolation or the record being deleted.
@@ -65,7 +65,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                         <ArrowLeft size={14} /> Back to Sales History
                     </Link>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                        <h1 className="text-3xl lg:page-header-title  tracking-tighter">
                             Sale Record <span className="text-emerald-500">{order.invoice_number || order.ref_code || `#${order.id}`}</span>
                         </h1>
                     </div>

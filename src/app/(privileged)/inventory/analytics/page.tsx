@@ -205,7 +205,7 @@ export default function ProductAnalyticsPage() {
             {/* ── Header ── */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200">
                             <Activity size={28} className="text-white" />
                         </div>

@@ -159,7 +159,7 @@ export default function LogisticsStrategyPage() {
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <ArrowRightLeft size={20} className="text-indigo-600" />
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                        <h1 className="page-header-title  tracking-tighter uppercase">
                             Logistics <span className="text-indigo-600">Strategy</span>
                         </h1>
                     </div>

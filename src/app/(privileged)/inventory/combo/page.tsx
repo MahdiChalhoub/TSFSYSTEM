@@ -30,7 +30,7 @@ export default async function ComboPage() {
                     <Package size={28} className="text-white" />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Combo & <span className="text-purple-600">Bundle</span> Products</h1>
+                    <h1 className="page-header-title  tracking-tighter">Combo & <span className="text-purple-600">Bundle</span> Products</h1>
                     <p className="text-sm text-gray-500 mt-1">
                         Create product bundles by combining multiple items into a single combo.
                         When sold, stock for each component is deducted automatically.

@@ -28,7 +28,7 @@ export default async function SecurityPage() {
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-3">
+                    <h1 className="page-header-title  uppercase tracking-tighter flex items-center gap-3">
                         <div className="p-2 bg-slate-900 rounded-xl">
                             <Shield className="text-emerald-400" size={28} />
                         </div>

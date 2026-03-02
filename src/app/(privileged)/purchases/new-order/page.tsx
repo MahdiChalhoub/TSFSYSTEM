@@ -25,7 +25,7 @@ export default async function NewFormalOrderPage() {
         <div className="space-y-6 animate-in fade-in duration-700">
             {/* Header */}
             <header>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <FileText size={28} className="text-white" />
                     </div>

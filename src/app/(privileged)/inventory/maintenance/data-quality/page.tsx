@@ -197,7 +197,7 @@ export default function DataQualityPage() {
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
                     <div>
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
                                 <Wrench className="w-7 h-7 text-white" />
                             </div>

@@ -13,7 +13,7 @@ export default async function OpeningBalancesListPage() {
                     <Link href="/finance/ledger" className="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-xs font-bold uppercase tracking-wider mb-2">
                         <ArrowLeft size={14} /> Back to Ledger
                     </Link>
-                    <h1 className="text-3xl font-bold text-stone-900 font-serif">Opening Balances</h1>
+                    <h1 className="page-header-title  text-stone-900 font-serif">Opening Balances</h1>
                     <p className="text-sm text-stone-500">View and manage initial account balances</p>
                 </div>
                 <Link

@@ -7,9 +7,9 @@ export default async function PricingPage() {
     try { priceLists = await getPriceLists() } catch { /* empty fallback */ }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="page-container">
             <header>
-                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                         <DollarSign size={28} className="text-white" />
                     </div>

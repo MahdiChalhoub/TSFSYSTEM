@@ -94,7 +94,7 @@ export default function ClientGatePreviewClient() {
                         <Eye size={22} className="text-emerald-600" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tight">Client Gate Preview</h1>
+                        <h1 className="page-header-title  tracking-tight">Client Gate Preview</h1>
                         <p className="text-sm text-gray-500">
                             Previewing <strong>{org?.name || 'Your Store'}</strong> as a customer sees it
                         </p>

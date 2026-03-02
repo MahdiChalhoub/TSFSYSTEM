@@ -7,7 +7,7 @@ export default async function OpeningBalancePage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <h1 className="text-3xl font-bold text-stone-900 font-serif mb-8 text-center">System Setup: Opening Balances</h1>
+            <h1 className="page-header-title  text-stone-900 font-serif mb-8 text-center">System Setup: Opening Balances</h1>
             <OpeningBalanceForm accounts={accounts} />
         </div>
     )

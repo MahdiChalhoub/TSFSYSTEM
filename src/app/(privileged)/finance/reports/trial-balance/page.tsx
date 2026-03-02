@@ -14,7 +14,7 @@ export default async function TrialBalancePage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold text-stone-900 font-serif mb-2">Trial Balance</h1>
+                <h1 className="page-header-title  text-stone-900 font-serif mb-2">Trial Balance</h1>
                 <p className="text-stone-500 text-sm uppercase tracking-widest font-bold">General Ledger Integrity Report</p>
             </div>
 

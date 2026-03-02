@@ -87,7 +87,7 @@ export default function NotificationPreferencesPage() {
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <header>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                <h1 className="page-header-title  tracking-tighter flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
                         <Bell size={28} className="text-white" />
                     </div>

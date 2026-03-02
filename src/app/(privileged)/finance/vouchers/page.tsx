@@ -300,7 +300,7 @@ export default function VouchersPage() {
                             <Receipt size={12} /> Lifecycle Hub
                         </span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-16 h-16 rounded-[1.8rem] bg-amber-600 flex items-center justify-center shadow-2xl shadow-amber-200">
                             <Receipt size={32} className="text-white" />
                         </div>

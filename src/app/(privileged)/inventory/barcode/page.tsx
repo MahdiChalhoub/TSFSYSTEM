@@ -59,7 +59,7 @@ export default function BarcodeSettingsPage() {
                     <Barcode size={28} className="text-white" />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Barcode <span className="text-emerald-600">Configuration</span></h1>
+                    <h1 className="page-header-title  tracking-tighter">Barcode <span className="text-emerald-600">Configuration</span></h1>
                     <p className="text-gray-500">Manage automatic EAN-13 barcode generation rules.</p>
                 </div>
             </div>

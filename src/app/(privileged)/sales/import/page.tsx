@@ -21,7 +21,7 @@ export default async function SalesImportPage() {
                         <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg shadow-emerald-500/20">
                             <FileUp size={28} className="text-white" />
                         </div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight">Sales Import</h1>
+                        <h1 className="page-header-title  uppercase tracking-tight">Sales Import</h1>
                     </div>
                     <p className="text-slate-400 text-sm max-w-xl font-medium leading-relaxed">
                         Batch process historical sales or external marketplace data. Map your CSV columns to the system and generate stock-deducted ledger entries in seconds.

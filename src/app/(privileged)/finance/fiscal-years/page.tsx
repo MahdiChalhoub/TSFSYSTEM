@@ -24,7 +24,7 @@ export default async function FiscalYearsPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-stone-600 flex items-center justify-center shadow-lg shadow-stone-200">
                             <CalendarDays size={28} className="text-white" />
                         </div>

@@ -26,7 +26,7 @@ export default async function ProformaReviewPage() {
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-stone-900 font-serif tracking-tight">
+                <h1 className="page-header-title  text-stone-900 font-serif tracking-tight">
                     📋 Supplier Proforma Review
                 </h1>
                 <p className="text-stone-500 mt-1">

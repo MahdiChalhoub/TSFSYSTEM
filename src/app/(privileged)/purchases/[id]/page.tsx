@@ -66,7 +66,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Order Not Found</h1>
+                <h1 className="page-header-title  tracking-tighter">Order Not Found</h1>
                 <Link href="/purchases" className="text-emerald-500 font-bold hover:underline">Return to Registry</Link>
             </div>
         );
@@ -90,7 +90,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
                         <ArrowLeft size={14} /> Back to Procurement
                     </Link>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                        <h1 className="text-3xl lg:page-header-title  tracking-tighter">
                             {order.status === 'DRAFT' ? 'RFQ' : 'Purchase Order'}{" "}
                             <span className="text-emerald-500">{order.ref_code || `#${order.id}`}</span>
                         </h1>
@@ -276,7 +276,7 @@ export default async function PurchaseDetailPage({ params, searchParams }: { par
                     {/* Audit Timeline Snippet */}
                     <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
                         <div className="p-5 bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">Audit History</div>
-                        <div className="p-6 space-y-6">
+                        <div className="page-container">
                             <div className="flex gap-4">
                                 <div className="flex flex-col items-center">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500" />

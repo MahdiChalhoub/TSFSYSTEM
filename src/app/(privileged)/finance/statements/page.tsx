@@ -224,7 +224,7 @@ export default function StatementsPage() {
                             <ArrowLeft size={18} />
                         </Button>
                         <div>
-                            <h1 className="text-3xl font-black tracking-tighter text-gray-900">{detail.contact?.name || selectedContact.name}</h1>
+                            <h1 className="page-header-title  tracking-tighter text-gray-900">{detail.contact?.name || selectedContact.name}</h1>
                             <div className="flex items-center gap-3 mt-1">
                                 <Badge className={`${(detail.contact?.type || selectedContact.type) === 'CUSTOMER' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'} border-none text-[10px] font-black uppercase px-2 h-5 rounded-lg`}>
                                     {detail.contact?.type || selectedContact.type}
@@ -332,7 +332,7 @@ export default function StatementsPage() {
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                             <FileBarChart size={28} className="text-white" />
                         </div>

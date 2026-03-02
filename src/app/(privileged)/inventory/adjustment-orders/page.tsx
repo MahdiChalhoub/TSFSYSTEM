@@ -144,7 +144,7 @@ export default function DiscrepancyStrategyPage() {
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <ShieldAlert size={20} className="text-indigo-600" />
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                        <h1 className="page-header-title  tracking-tighter uppercase">
                             Discrepancy <span className="text-indigo-600">Strategy</span>
                         </h1>
                     </div>

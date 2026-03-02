@@ -101,7 +101,7 @@ export default function DeliveryZonesPage() {
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
+            <div className="page-container">
                 <Skeleton className="h-10 w-64" />
                 <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}</div>
                 <Skeleton className="h-96" />
@@ -113,7 +113,7 @@ export default function DeliveryZonesPage() {
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <h1 className="page-header-title  tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                             <MapPin size={28} className="text-white" />
                         </div>

@@ -53,7 +53,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                     <Globe size={28} className="text-white" />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">{brand.name}</h1>
+                    <h1 className="page-header-title  tracking-tighter">{brand.name}</h1>
                     {brand.short_name && <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{brand.short_name}</span>}
                 </div>
             </div>

@@ -334,7 +334,7 @@ export default function OrganizationDetailPage() {
                     </Button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{org.name}</h1>
+                            <h1 className="page-header-title  tracking-tight">{org.name}</h1>
                             <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
                                 {org.is_active ? 'Active' : 'Suspended'}
                             </Badge>
