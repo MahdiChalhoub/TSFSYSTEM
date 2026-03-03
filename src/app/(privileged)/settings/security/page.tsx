@@ -25,16 +25,16 @@ export default async function SecurityPage() {
  : 'Unknown OS';
 
  return (
- <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+ <div className="app-page p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
  <div>
  <h1 className="page-header-title uppercase tracking-tighter flex items-center gap-3">
- <div className="p-2 bg-slate-900 rounded-xl">
- <Shield className="text-emerald-400" size={28} />
+ <div className="p-2 bg-app-surface rounded-xl">
+ <Shield className="text-app-primary" size={28} />
  </div>
  Security Center
  </h1>
- <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-widest mt-1">
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest mt-1">
  Protect your account with advanced security protocols
  </p>
  </div>
@@ -54,45 +54,45 @@ export default async function SecurityPage() {
 
  <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm">
  <div className="flex items-center gap-4 mb-6">
- <div className="p-3 bg-blue-50 rounded-2xl">
- <Key className="text-blue-600" size={24} />
+ <div className="p-3 bg-app-info-bg rounded-2xl">
+ <Key className="text-app-info" size={24} />
  </div>
  <div>
- <h2 className="text-lg font-black text-app-text uppercase tracking-tighter">Session Management</h2>
- <p className="text-xs text-app-text-faint font-medium tracking-tight">Active devices and login history</p>
+ <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">Session Management</h2>
+ <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Active devices and login history</p>
  </div>
  </div>
 
  <div className="space-y-4">
- <div className="flex items-center justify-between p-4 bg-app-bg rounded-2xl">
+ <div className="flex items-center justify-between p-4 bg-app-background rounded-2xl">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 bg-app-surface rounded-xl flex items-center justify-center border border-app-border">
- <Lock size={18} className="text-app-text-faint" />
+ <Lock size={18} className="text-app-muted-foreground" />
  </div>
  <div>
- <p className="text-sm font-black text-app-text tracking-tight">Current Session</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase">{os} • {browser} • {user.email || user.username || 'Authenticated'}</p>
+ <p className="text-sm font-black text-app-foreground tracking-tight">Current Session</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase">{os} • {browser} • {user.email || user.username || 'Authenticated'}</p>
  </div>
  </div>
- <Badge className="bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>
+ <Badge className="bg-app-primary-light text-app-success rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>
  </div>
  </div>
  </div>
  </div>
 
  <div className="space-y-8">
- <div className="bg-slate-900 p-8 rounded-[2rem] text-app-text overflow-hidden relative">
+ <div className="bg-app-surface p-8 rounded-[2rem] text-app-foreground overflow-hidden relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <Shield size={120} />
  </div>
  <h3 className="text-xl font-black uppercase tracking-tighter mb-2 relative z-10">Account Health</h3>
- <p className="text-xs text-app-text-faint font-medium mb-6 relative z-10">Security score and recommendations</p>
+ <p className="text-xs text-app-muted-foreground font-medium mb-6 relative z-10">Security score and recommendations</p>
 
  <div className="space-y-4 relative z-10">
- <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
- <div className="h-full bg-emerald-500 transition-all" style={{ width: user.is_2fa_enabled ? '85%' : '45%' }}></div>
+ <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
+ <div className="h-full bg-app-primary transition-all" style={{ width: user.is_2fa_enabled ? '85%' : '45%' }}></div>
  </div>
- <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-primary">
  {user.is_2fa_enabled ? 'Strong Protection' : 'Action Required'}
  </p>
  </div>

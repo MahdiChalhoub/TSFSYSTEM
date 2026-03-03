@@ -430,6 +430,16 @@ class POSSettings(TenantModel):
         )
     )
 
+    # ── Register Cash Account Isolation ──
+    restrict_unique_cash_account = models.BooleanField(
+        default=True,
+        help_text=(
+            'When enabled: each register must have its own unique cash account. '
+            'A new cash account is auto-created under RegisterCash in the COA when creating a register. '
+            'Prevents two registers from sharing the same cash ledger account.'
+        )
+    )
+
     class Meta:
         db_table = 'pos_settings'
 

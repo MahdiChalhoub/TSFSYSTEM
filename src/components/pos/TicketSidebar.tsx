@@ -77,7 +77,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  if (result.protectionWarning) {
  toast(result.protectionWarning, {
  icon: '🛡️',
- className: 'bg-amber-50 border-amber-200 text-amber-800 font-bold',
+ className: 'bg-app-warning-bg border-app-warning text-amber-800 font-bold',
  duration: 5000
  });
  }
@@ -95,8 +95,8 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  return (
  <div className="flex flex-col h-full bg-app-surface rounded-3xl border border-app-border shadow-xl overflow-hidden animate-in slide-in-from-right-4 duration-500">
  {/* Header / Client Info - Compact Single Line */}
- <div className="px-5 py-3 bg-gray-50/80 border-b border-app-border flex items-center justify-between gap-4">
- <div className="flex items-center gap-6 divide-x divide-gray-200">
+ <div className="px-5 py-3 bg-app-bg/80 border-b border-app-border flex items-center justify-between gap-4">
+ <div className="flex items-center gap-6 divide-x divide-app-border">
  <div className="flex items-center gap-3">
  <div className="flex flex-col">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest leading-none">Client</span>
@@ -111,7 +111,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  <div className="pl-6 flex flex-col">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest leading-none">Delivery Address</span>
  <div className="flex items-center gap-1 text-[10px] font-bold text-app-text-muted">
- <MapPin size={10} className="text-gray-300 shrink-0" />
+ <MapPin size={10} className="text-app-text-muted shrink-0" />
  <span className="truncate max-w-[180px]">{client.address}</span>
  </div>
  </div>
@@ -123,22 +123,22 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  <span className="text-[7px] font-black text-indigo-400 uppercase tracking-tighter">Lines</span>
  <span className="text-[11px] font-black tabular-nums text-indigo-600 leading-tight">{uniqueItems}</span>
  </div>
- <div className="flex flex-col items-center px-2 py-0.5 bg-gray-100/50 border border-app-border rounded-lg">
+ <div className="flex flex-col items-center px-2 py-0.5 bg-app-surface-2/50 border border-app-border rounded-lg">
  <span className="text-[7px] font-black text-app-text-faint uppercase tracking-tighter">Units</span>
- <span className="text-[11px] font-black tabular-nums text-gray-700 leading-tight">{totalPieces}</span>
+ <span className="text-[11px] font-black tabular-nums text-app-text leading-tight">{totalPieces}</span>
  </div>
  </div>
 
- <div className="flex gap-6 divide-x divide-gray-200">
+ <div className="flex gap-6 divide-x divide-app-border">
  <div className="flex flex-col text-right">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest leading-none">Balance</span>
- <span className={clsx("font-black text-lg tracking-tighter tabular-nums leading-tight", client.balance > 0 ? "text-rose-600" : "text-emerald-600")}>
+ <span className={clsx("font-black text-lg tracking-tighter tabular-nums leading-tight", client.balance > 0 ? "text-rose-600" : "text-app-primary")}>
  {currency}{client.balance.toLocaleString()}
  </span>
  </div>
  <div className="pl-6 flex flex-col text-right">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-widest leading-none">Loyalty</span>
- <span className="font-black text-amber-500 text-lg tracking-tighter tabular-nums leading-tight">{client.loyalty}<span className="text-[10px] ml-0.5">pts</span></span>
+ <span className="font-black text-app-warning text-lg tracking-tighter tabular-nums leading-tight">{client.loyalty}<span className="text-[10px] ml-0.5">pts</span></span>
  </div>
  </div>
  </div>
@@ -158,10 +158,10 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  <th className="p-4 pr-6 text-center">Action</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50 text-xs font-bold text-gray-700">
+ <tbody className="divide-y divide-gray-50 text-xs font-bold text-app-text">
  {cart.length === 0 ? (
  <tr>
- <td colSpan={7} className="p-20 text-center text-gray-300 italic">
+ <td colSpan={7} className="p-20 text-center text-app-text-muted italic">
  <ShoppingCart size={48} className="mx-auto mb-4 opacity-20" />
  Awaiting selection...
  </td>
@@ -173,7 +173,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  const discountedPrice = itemPrice - (itemPrice * (currentDiscount / 100));
 
  return (
- <tr key={item.productId} className="hover:bg-gray-50/50 transition-colors">
+ <tr key={item.productId} className="hover:bg-app-bg/50 transition-colors">
  <td className="p-4 pl-6">
  <div className="font-bold text-app-text">{item.name}</div>
  <div className="text-[10px] text-app-text-faint font-mono mt-0.5">{item.barcode || '123456789'} • Stock: {item.stock || 0}</div>
@@ -208,7 +208,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  setPendingAction({ type: 'delete', data: item.productId });
  setIsOverrideOpen(true);
  }}
- className="p-1.5 text-gray-300 hover:text-rose-500 transition-all"
+ className="p-1.5 text-app-text-muted hover:text-rose-500 transition-all"
  >
  <Trash2 size={16} />
  </button>
@@ -269,7 +269,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  <div className="">
  <div className={clsx(
  "rounded-2xl p-4 flex justify-between items-center shadow-lg transition-all",
- changeDue > 0 ? "bg-emerald-500 shadow-emerald-100" : "bg-indigo-500 shadow-indigo-100"
+ changeDue > 0 ? "bg-app-primary shadow-emerald-100" : "bg-indigo-500 shadow-indigo-100"
  )}>
  <span className="text-app-text font-black">Change Due</span>
  <span className="text-app-text font-black text-xl tabular-nums">{currency}{changeDue.toFixed(2)}</span>
@@ -301,12 +301,12 @@ export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, on
  onClick={() => setPaymentMethod(m.id)}
  className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${paymentMethod === m.id
  ? m.id === 'CREDIT'
- ? 'bg-amber-500 border-amber-500 text-app-text shadow-lg shadow-amber-100'
+ ? 'bg-app-warning border-app-warning text-app-text shadow-lg shadow-amber-100'
  : 'bg-indigo-600 border-indigo-600 text-app-text shadow-lg shadow-indigo-100'
  : 'bg-app-surface border-app-border text-app-text-faint hover:border-indigo-100 hover:bg-app-bg'
  }`}
  >
- <m.icon size={20} className={paymentMethod === m.id ? 'text-app-text' : 'text-gray-300'} />
+ <m.icon size={20} className={paymentMethod === m.id ? 'text-app-text' : 'text-app-text-muted'} />
  <span className={`text-[8px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-app-text' : 'text-app-text-muted'}`}>{m.label}</span>
  </button>
  ))}

@@ -18,10 +18,10 @@ export default function MidnightCartPage() {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
                 <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-6">
-                    <ShoppingBag size={32} className="text-slate-600" />
+                    <ShoppingBag size={32} className="text-app-text-muted" />
                 </div>
                 <h2 className="text-2xl font-black text-white mb-2">Your cart is empty</h2>
-                <p className="text-sm text-slate-500 mb-8">Browse our collection and add items to your cart</p>
+                <p className="text-sm text-app-text-faint mb-8">Browse our collection and add items to your cart</p>
                 <Link href={path('/')}
                     className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30">
                     Browse Products
@@ -35,11 +35,11 @@ export default function MidnightCartPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-2 transition-colors">
+                    <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-app-text-faint hover:text-white mb-2 transition-colors">
                         <ArrowLeft size={14} /> Continue Shopping
                     </button>
                     <h1 className="text-3xl font-black text-white tracking-tight">Shopping Cart</h1>
-                    <p className="text-xs text-slate-500 mt-1">{cartCount} item{cartCount !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-app-text-faint mt-1">{cartCount} item{cartCount !== 1 ? 's' : ''}</p>
                 </div>
                 <button onClick={clearCart} className="px-4 py-2 text-xs text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-all font-bold">
                     Clear Cart
@@ -58,14 +58,14 @@ export default function MidnightCartPage() {
                                     <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                        <Package size={24} className="text-slate-800" />
+                                        <Package size={24} className="text-app-text" />
                                     </div>
                                 )}
                             </div>
                             {/* Details */}
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-sm font-bold text-white truncate">{item.product_name}</h3>
-                                <p className="text-xs text-slate-500 mt-1">{formatPrice(item.unit_price)} each</p>
+                                <p className="text-xs text-app-text-faint mt-1">{formatPrice(item.unit_price)} each</p>
                             </div>
                             {/* Quantity */}
                             <div className="flex items-center bg-white/5 border border-white/10 rounded-xl">
@@ -96,11 +96,11 @@ export default function MidnightCartPage() {
             {/* Summary */}
             <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-8 space-y-4">
                 <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Subtotal</span>
+                    <span className="text-app-text-faint">Subtotal</span>
                     <span className="text-white font-bold">{formatPrice(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Shipping</span>
+                    <span className="text-app-text-faint">Shipping</span>
                     <span className="text-emerald-400 font-bold">Calculated at checkout</span>
                 </div>
                 <div className="border-t border-white/5 pt-4 flex justify-between">

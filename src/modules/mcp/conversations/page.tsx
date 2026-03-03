@@ -95,7 +95,7 @@ export default function MCPConversationsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
+                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
                         <ArrowLeft size={16} />
                         Back to MCP Dashboard
                     </Link>
@@ -107,8 +107,8 @@ export default function MCPConversationsPage() {
                             AI History
                         </Badge>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Conversations</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <h2 className="text-3xl md:text-4xl font-black text-app-text tracking-tight">Conversations</h2>
+                    <p className="text-app-text-faint mt-2 font-medium">
                         Browse and manage your AI conversation history
                     </p>
                 </div>
@@ -178,16 +178,16 @@ export default function MCPConversationsPage() {
             </div>
 
             {/* Search & Filter Bar */}
-            <Card className="rounded-2xl shadow-lg border-gray-100">
+            <Card className="rounded-2xl shadow-lg border-app-border">
                 <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
-                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
                             <Input
                                 placeholder="Search conversations by title..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-11 rounded-xl border-gray-200 bg-gray-50/50 h-12"
+                                className="pl-11 rounded-xl border-app-border bg-gray-50/50 h-12"
                             />
                         </div>
                         <Button variant="outline" className="rounded-xl h-12 px-4">
@@ -203,20 +203,20 @@ export default function MCPConversationsPage() {
                 <div className="flex items-center justify-center py-20">
                     <div className="flex flex-col items-center gap-4">
                         <RefreshCw className="w-10 h-10 animate-spin text-green-500" />
-                        <p className="text-gray-400 font-medium">Loading conversations...</p>
+                        <p className="text-app-text-faint font-medium">Loading conversations...</p>
                     </div>
                 </div>
             ) : filtered.length === 0 ? (
-                <Card className="rounded-3xl shadow-xl border-gray-100">
+                <Card className="rounded-3xl shadow-xl border-app-border">
                     <CardContent className="p-0">
                         <div className="text-center py-20">
                             <div className="p-6 rounded-[2rem] bg-gradient-to-br from-purple-50 to-indigo-50 w-fit mx-auto mb-6">
                                 <Brain className="w-16 h-16 text-purple-400" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            <h3 className="text-xl font-bold text-app-text mb-2">
                                 {searchQuery ? 'No matching conversations' : 'No conversations yet'}
                             </h3>
-                            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                            <p className="text-app-text-faint mb-6 max-w-md mx-auto">
                                 {searchQuery
                                     ? `No conversations found matching "${searchQuery}"`
                                     : 'Start your first AI conversation to unlock intelligent insights and automation.'
@@ -234,9 +234,9 @@ export default function MCPConversationsPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
+                <Card className="rounded-3xl shadow-xl border-app-border overflow-hidden">
                     <CardContent className="p-0">
-                        <div className="divide-y divide-gray-100">
+                        <div className="divide-y divide-app-border">
                             {filtered.map((conv, idx) => (
                                 <div
                                     key={conv.id}
@@ -249,11 +249,11 @@ export default function MCPConversationsPage() {
                                             <Bot size={20} />
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <h3 className="font-bold text-gray-900 truncate group-hover:text-green-700 transition-colors">
+                                            <h3 className="font-bold text-app-text truncate group-hover:text-green-700 transition-colors">
                                                 {conv.title || 'Untitled Conversation'}
                                             </h3>
                                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                                <Badge variant="outline" className="text-[10px] font-bold border-gray-200 text-gray-500">
+                                                <Badge variant="outline" className="text-[10px] font-bold border-app-border text-app-text-faint">
                                                     <MessageSquare size={10} className="mr-1" />
                                                     {conv.message_count || 0} msgs
                                                 </Badge>
@@ -275,7 +275,7 @@ export default function MCPConversationsPage() {
 
                                     <div className="flex items-center gap-3 shrink-0 ml-4">
                                         <div className="text-right hidden md:block">
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                            <div className="flex items-center gap-1.5 text-xs text-app-text-faint font-medium">
                                                 <Calendar size={12} />
                                                 {new Date(conv.created_at).toLocaleDateString()}
                                             </div>
@@ -302,7 +302,7 @@ export default function MCPConversationsPage() {
             )}
 
             {/* Quick Info Footer */}
-            <div className="flex items-center justify-center gap-6 text-xs text-gray-400 font-medium py-2">
+            <div className="flex items-center justify-center gap-6 text-xs text-app-text-faint font-medium py-2">
                 <span className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
                     {conversations.length} total conversations

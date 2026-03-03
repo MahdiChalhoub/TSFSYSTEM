@@ -79,19 +79,19 @@ export default function DiscrepancyStrategyPage() {
 
  const columns: ColumnDef<any>[] = ALL_COLUMNS.map(c => {
  const renderers: Record<string, (r: any) => React.ReactNode> = {
- date: r => <span className="text-app-text-muted font-medium">{new Date(r.date || r.created_at).toLocaleDateString()}</span>,
- reference: r => <span className="font-mono font-bold text-app-text">STRAT-{r.reference || r.id}</span>,
- wh: r => <Badge variant="outline" className="bg-app-bg text-gray-700 border-app-border uppercase text-[10px] font-black">{r.warehouse_name || r.warehouse?.name || 'GLOBAL'}</Badge>,
- qty: r => <span className={`font-black ${(r.total_qty_adjustment || 0) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{r.total_qty_adjustment ?? r.lines?.length ?? 0}</span>,
+ date: r => <span className="text-app-muted-foreground font-medium">{new Date(r.date || r.created_at).toLocaleDateString()}</span>,
+ reference: r => <span className="font-mono font-bold text-app-foreground">STRAT-{r.reference || r.id}</span>,
+ wh: r => <Badge variant="outline" className="bg-app-background text-app-muted-foreground border-app-border uppercase text-[10px] font-black">{r.warehouse_name || r.warehouse?.name || 'GLOBAL'}</Badge>,
+ qty: r => <span className={`font-black ${(r.total_qty_adjustment || 0) < 0 ? 'text-rose-600' : 'text-app-primary'}`}>{r.total_qty_adjustment ?? r.lines?.length ?? 0}</span>,
  status_label: r => {
  const status = r.lifecycle_status || 'OPEN'
  const variants: Record<string, string> = {
- OPEN: 'bg-emerald-50 text-emerald-700 border-emerald-100',
- APPROVED: 'bg-indigo-50 text-indigo-700 border-indigo-100',
- EXECUTED: 'bg-blue-50 text-blue-700 border-blue-100',
+ OPEN: 'bg-app-primary-light text-app-success border-app-success/30',
+ APPROVED: 'bg-app-primary/5 text-app-primary border-app-primary/30',
+ EXECUTED: 'bg-app-info-bg text-app-info border-app-info/30',
  CANCELED: 'bg-rose-50 text-rose-700 border-rose-100'
  }
- return <Badge variant="outline" className={`${variants[status] || 'bg-app-bg'} text-[10px] uppercase font-black`}>{status}</Badge>
+ return <Badge variant="outline" className={`${variants[status] || 'bg-app-background'} text-[10px] uppercase font-black`}>{status}</Badge>
  }
  }
  return { ...c, render: renderers[c.key] }
@@ -139,20 +139,20 @@ export default function DiscrepancyStrategyPage() {
  }
 
  return (
- <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+ <div className="app-page p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
  <header className="flex justify-between items-center border-b pb-6">
  <div className="flex items-center gap-4">
  <div className="flex items-center gap-2">
- <ShieldAlert size={20} className="text-indigo-600" />
+ <ShieldAlert size={20} className="text-app-primary" />
  <h1 className="page-header-title tracking-tighter uppercase">
- Discrepancy <span className="text-indigo-600">Strategy</span>
+ Discrepancy <span className="text-app-primary">Strategy</span>
  </h1>
  </div>
  </div>
  <div className="flex items-center gap-3">
- <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
- <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
- <span className="text-[9px] font-black uppercase text-indigo-700 tracking-widest">Internal Strategy</span>
+ <div className="flex items-center gap-2 bg-app-primary/5 px-3 py-1.5 rounded-full border border-app-primary/30">
+ <div className="w-1.5 h-1.5 bg-app-primary rounded-full animate-pulse" />
+ <span className="text-[9px] font-black uppercase text-app-primary tracking-widest">Internal Strategy</span>
  </div>
  </div>
  </header>
@@ -166,7 +166,7 @@ export default function DiscrepancyStrategyPage() {
  getRowId={r => r.id}
  columns={columns}
  headerExtras={
- <div className="flex items-center gap-2 text-[10px] font-black uppercase text-app-text-faint">
+ <div className="flex items-center gap-2 text-[10px] font-black uppercase text-app-muted-foreground">
  <MessageSquare size={14} /> Active Threads: {orders.length}
  </div>
  }
@@ -174,7 +174,7 @@ export default function DiscrepancyStrategyPage() {
  columns: [
  { key: 'item', label: 'Proposed Adjustment', render: (d: AdjustmentLine) => d.product_name || `Product #${d.product}` },
  { key: 'qty', label: 'Proposed Delta', align: 'right', render: (d: AdjustmentLine) => <span className="font-black">{(d.qty_adjustment || 0) > 0 ? '+' : ''}{d.qty_adjustment}</span> },
- { key: 'reason', label: 'Team Context', render: (d: AdjustmentLine) => <span className="italic text-app-text-faint font-medium">{d.reason || '—'}</span> },
+ { key: 'reason', label: 'Team Context', render: (d: AdjustmentLine) => <span className="italic text-app-muted-foreground font-medium">{d.reason || '—'}</span> },
  ],
  getDetails: r => r.lines || [],
  renderActions: (row, parent) => (
@@ -182,13 +182,13 @@ export default function DiscrepancyStrategyPage() {
  {(parent.lifecycle_status === 'OPEN' || parent.lifecycle_status === 'APPROVED') && (
  <Button
  size="sm"
- className="bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] h-7 px-3 rounded-lg flex items-center gap-2 shadow-sm"
+ className="bg-app-primary hover:bg-app-success text-app-foreground font-black text-[10px] h-7 px-3 rounded-lg flex items-center gap-2 shadow-sm"
  onClick={() => handlePromote(parent.id)}
  >
  <Play size={10} fill="currentColor" /> INITIATE ADJUSTMENT
  </Button>
  )}
- <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold text-app-text-faint flex items-center gap-1"><Info size={12} /> VIEW AUDIT TRAIL</Button>
+ <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold text-app-muted-foreground flex items-center gap-1"><Info size={12} /> VIEW AUDIT TRAIL</Button>
  </div>
  ),
  }}
@@ -222,11 +222,11 @@ export default function DiscrepancyStrategyPage() {
  <Dialog open={showCreate} onOpenChange={setShowCreate}>
  <DialogContent className="rounded-[2rem] border-0 shadow-2xl">
  <DialogHeader>
- <DialogTitle className="text-2xl font-black text-emerald-900">Initiate Resolution Strategy</DialogTitle>
+ <DialogTitle className="text-2xl font-black text-app-success">Initiate Resolution Strategy</DialogTitle>
  </DialogHeader>
  <div className="space-y-4 pt-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Target Terminal Location</Label>
+ <Label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Target Terminal Location</Label>
  <Select value={newWh} onValueChange={setNewWh}>
  <SelectTrigger className="rounded-xl border-app-border h-12 font-bold">
  <SelectValue placeholder="Select terminal team context" />
@@ -237,13 +237,13 @@ export default function DiscrepancyStrategyPage() {
  </Select>
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Governance Reason</Label>
+ <Label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Governance Reason</Label>
  <Input className="rounded-xl border-app-border h-12" placeholder="Describe the discrepancy analysis..." value={newReason} onChange={e => setNewReason(e.target.value)} />
  </div>
  </div>
  <DialogFooter className="pt-6">
  <Button variant="ghost" onClick={() => setShowCreate(false)} className="rounded-xl font-bold">Cancel</Button>
- <Button onClick={handleCreate} disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-app-text rounded-xl px-8 font-bold h-12 shadow-lg shadow-emerald-200">Initialize Discussion</Button>
+ <Button onClick={handleCreate} disabled={isPending} className="bg-app-primary hover:bg-app-success text-app-foreground rounded-xl px-8 font-bold h-12 shadow-lg shadow-emerald-200">Initialize Discussion</Button>
  </DialogFooter>
  </DialogContent>
  </Dialog>

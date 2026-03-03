@@ -114,7 +114,7 @@ export default function DriverDeliveryPage() {
 
  if (loading) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+ <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center bg-app-bg">
  <div className="flex flex-col items-center gap-3 text-app-text">
  <Loader2 className="animate-spin" size={36} />
  <p className="text-sm font-medium opacity-70">Loading delivery...</p>
@@ -125,7 +125,7 @@ export default function DriverDeliveryPage() {
 
  if (error && !delivery) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-red-900 to-slate-900 flex items-center justify-center p-6">
+ <div className="min-h-screen bg-gradient-to-br from-red-900 to-slate-900 flex items-center justify-center p-6 bg-app-bg">
  <div className="bg-app-text/10 backdrop-blur-md rounded-3xl p-8 text-center max-w-sm w-full">
  <Lock className="mx-auto mb-4 text-red-300" size={48} />
  <h1 className="text-app-text text-xl font-black mb-2">Access Denied</h1>
@@ -142,7 +142,7 @@ export default function DriverDeliveryPage() {
 
  if (isDelivered || success) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-teal-900 flex items-center justify-center p-6">
+ <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-teal-900 flex items-center justify-center p-6 bg-app-bg">
  <div className="text-center">
  <div className="w-28 h-28 rounded-full bg-app-text/20 flex items-center justify-center mx-auto mb-6">
  <CheckCircle className="text-app-text" size={56} />
@@ -151,14 +151,14 @@ export default function DriverDeliveryPage() {
  <p className="text-emerald-200">
  {delivery.recipient_name && `Delivered to ${delivery.recipient_name}.`}
  </p>
- <p className="text-emerald-300 text-sm mt-2 opacity-70">Order #{delivery.order_ref}</p>
+ <p className="text-app-success text-sm mt-2 opacity-70">Order #{delivery.order_ref}</p>
  </div>
  </div>
  );
  }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-app-text">
+ <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-app-text bg-app-bg">
  {/* Header */}
  <div className="bg-app-text/5 border-b border-app-text/10 px-5 py-4 flex items-center gap-3">
  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
@@ -169,7 +169,7 @@ export default function DriverDeliveryPage() {
  <p className="text-[11px] text-app-text/50">Order #{delivery.order_ref || delivery.id}</p>
  </div>
  <span className={`ml-auto text-[10px] font-black px-2.5 py-1 rounded-full uppercase ${delivery.status === 'IN_TRANSIT' ? 'bg-blue-500/30 text-blue-300' :
- delivery.status === 'PENDING' ? 'bg-amber-500/30 text-amber-300' :
+ delivery.status === 'PENDING' ? 'bg-app-warning/30 text-amber-300' :
  'bg-slate-500/30 text-slate-300'
  }`}>{delivery.status}</span>
  </div>
@@ -184,7 +184,7 @@ export default function DriverDeliveryPage() {
  <span className="text-base font-bold">{delivery.recipient_name || '—'}</span>
  </div>
  {delivery.phone && (
- <a href={`tel:${delivery.phone}`} className="flex items-center gap-2.5 text-emerald-300">
+ <a href={`tel:${delivery.phone}`} className="flex items-center gap-2.5 text-app-success">
  <Phone size={15} className="shrink-0" />
  <span className="text-sm font-medium">{delivery.phone}</span>
  </a>
@@ -243,12 +243,12 @@ export default function DriverDeliveryPage() {
  <span className="text-sm font-bold">{gpsUpdating ? 'Getting location...' : 'Share my location'}</span>
  </div>
  {gpsStatus === 'ok' && <CheckCircle size={16} className="text-emerald-400" />}
- {gpsStatus === 'error' && <AlertCircle size={16} className="text-red-400" />}
+ {gpsStatus === 'error' && <AlertCircle size={16} className="text-app-error" />}
  {gpsStatus === 'idle' && !gpsUpdating && <ArrowRight size={16} className="text-app-text/30" />}
  </button>
 
  {/* 🔑 Code 2: Driver ↔ Client — driver enters code from client */}
- <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/30 rounded-2xl p-5 border border-amber-500/20">
+ <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/30 rounded-2xl p-5 border border-app-warning/20">
  <div className="flex items-center gap-2 mb-1">
  <Hash size={14} className="text-amber-300" />
  <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest">Confirm Delivery</p>
@@ -273,13 +273,13 @@ export default function DriverDeliveryPage() {
  <button
  onClick={handleConfirmDelivery}
  disabled={submitting || clientCode.length < 4}
- className="px-5 rounded-xl bg-amber-500 text-app-text font-black text-sm hover:bg-amber-400 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-amber-500/20"
+ className="px-5 rounded-xl bg-app-warning text-app-text font-black text-sm hover:bg-amber-400 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-amber-500/20"
  >
  {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
  </button>
  </div>
  {submitError && (
- <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1">
+ <p className="text-app-error text-xs mt-2 font-bold flex items-center gap-1">
  <AlertCircle size={12} /> {submitError}
  </p>
  )}

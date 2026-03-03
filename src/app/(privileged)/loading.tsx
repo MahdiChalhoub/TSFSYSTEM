@@ -9,9 +9,9 @@ export default function Loading() {
  </div>
 
  {/* Tab bar skeleton */}
- <div className="h-10 bg-app-surface border-b border-gray-50 px-6 flex items-center gap-2">
+ <div className="h-10 bg-app-surface border-b border-app-border px-6 flex items-center gap-2">
  <div className="h-6 w-24 bg-app-surface-2 rounded-lg animate-pulse" />
- <div className="h-6 w-20 bg-app-bg rounded-lg animate-pulse" />
+ <div className="h-6 w-20 bg-app-background rounded-lg animate-pulse" />
  </div>
 
  {/* Main content skeleton */}
@@ -19,7 +19,7 @@ export default function Loading() {
  {/* Title */}
  <div className="space-y-2">
  <div className="h-4 w-32 bg-app-surface-2 rounded-lg animate-pulse" />
- <div className="h-10 w-64 bg-gray-200 rounded-xl animate-pulse" />
+ <div className="h-10 w-64 bg-app-border rounded-xl animate-pulse" />
  </div>
 
  {/* Stats grid */}
@@ -29,7 +29,7 @@ export default function Loading() {
  <div className="p-8 space-y-4">
  <div className="h-12 w-12 bg-app-surface-2 rounded-2xl" />
  <div className="h-4 w-24 bg-app-surface-2 rounded" />
- <div className="h-8 w-16 bg-gray-200 rounded" />
+ <div className="h-8 w-16 bg-app-border rounded" />
  </div>
  </div>
  ))}

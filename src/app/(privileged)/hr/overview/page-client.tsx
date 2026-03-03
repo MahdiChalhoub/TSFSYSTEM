@@ -50,17 +50,17 @@ export default function HROverviewPage() {
  const presentToday = attendance.filter(a => a.status === 'PRESENT' || a.check_in).length
  const activeEmp = employees.filter(e => !e.status || e.status === 'ACTIVE')
  const STATUS_BADGE: Record<string, string> = {
- PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
- APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+ PENDING: 'bg-app-warning-bg text-app-warning border-app-warning',
+ APPROVED: 'bg-app-primary-light text-app-success border-app-success',
  REJECTED: 'bg-rose-100 text-rose-700 border-rose-200',
- PRESENT: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+ PRESENT: 'bg-app-primary-light text-app-success border-app-success',
  ABSENT: 'bg-rose-100 text-rose-700 border-rose-200',
- LATE: 'bg-amber-100 text-amber-700 border-amber-200',
+ LATE: 'bg-app-warning-bg text-app-warning border-app-warning',
  }
  return (
  <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
  {toast && (
- <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 text-sm font-bold border ${toast.type === 'ok' ? 'bg-app-surface border-emerald-100 text-emerald-600' : 'bg-app-surface border-rose-100 text-rose-600 animate-bounce'}`}>
+ <div className={`fixed top-6 right-6 z-50 px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-3 text-sm font-bold border ${toast.type === 'ok' ? 'bg-app-surface border-app-success/30 text-app-primary' : 'bg-app-surface border-rose-100 text-rose-600 animate-bounce'}`}>
  {toast.type === 'ok' ? <CheckCircle size={20} /> : <XCircle size={20} />}
  {toast.msg}
  </div>
@@ -68,19 +68,19 @@ export default function HROverviewPage() {
  {/* Header */}
  <header className="flex flex-col md:flex-row justify-between items-center gap-6">
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Users size={28} className="text-app-text" />
+ <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <Users size={28} className="text-app-foreground" />
  </div>
- Talent <span className="text-emerald-600">Ops</span>
+ Talent <span className="text-app-primary">Ops</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Human Capital Intelligence & Workforce Hub</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Human Capital Intelligence & Workforce Hub</p>
  </div>
  <div className="flex items-center gap-3">
- <button onClick={load} className={`h-12 w-12 rounded-2xl bg-app-surface border border-app-border shadow-sm flex items-center justify-center text-app-text-faint hover:text-emerald-600 transition-all ${loading ? 'animate-spin' : ''}`}>
+ <button onClick={load} className={`h-12 w-12 rounded-2xl bg-app-surface border border-app-border shadow-sm flex items-center justify-center text-app-muted-foreground hover:text-app-primary transition-all ${loading ? 'animate-spin' : ''}`}>
  <RefreshCw size={20} />
  </button>
- <button className="h-12 px-6 rounded-2xl bg-gray-900 text-app-text font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center gap-2">
+ <button className="h-12 px-6 rounded-2xl bg-app-surface text-app-foreground font-black text-xs uppercase tracking-widest hover:bg-app-background transition-all shadow-xl shadow-app-border/20 flex items-center gap-2">
  Resource Audit <ChevronRight size={16} />
  </button>
  </div>
@@ -90,55 +90,55 @@ export default function HROverviewPage() {
  <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
- <div className="w-12 h-12 rounded-2xl bg-app-surface text-app-text-muted flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+ <div className="w-12 h-12 rounded-2xl bg-app-surface text-app-muted-foreground flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
  <Users size={24} />
  </div>
- <div className="flex items-center gap-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
- <Activity size={10} className="text-emerald-600 animate-pulse" />
- <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Realtime</span>
+ <div className="flex items-center gap-1.5 bg-app-primary-light px-3 py-1 rounded-full border border-app-success/30">
+ <Activity size={10} className="text-app-primary animate-pulse" />
+ <span className="text-[10px] font-black text-app-primary uppercase tracking-widest">Realtime</span>
  </div>
  </div>
- <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Active Employees</p>
- <h2 className="text-4xl font-black text-app-text tracking-tighter">{employees.length}</h2>
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Active Employees</p>
+ <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{employees.length}</h2>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 overflow-hidden group hover:shadow-xl transition-all text-app-text">
+ <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 overflow-hidden group hover:shadow-xl transition-all text-app-foreground">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
- <div className="w-12 h-12 rounded-2xl bg-app-text/10 text-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
+ <div className="w-12 h-12 rounded-2xl bg-app-foreground/10 text-app-success flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
  <Briefcase size={24} />
  </div>
- <Badge className="bg-app-text/20 text-app-text border-0 font-black text-[10px] px-3">ACTIVE</Badge>
+ <Badge className="bg-app-foreground/20 text-app-foreground border-0 font-black text-[10px] px-3">ACTIVE</Badge>
  </div>
- <p className="text-[11px] font-black text-emerald-200 uppercase tracking-widest leading-none mb-1">Human Capital Yield</p>
- <h2 className="text-4xl font-black text-app-text tracking-tighter">{activeEmp.length} <span className="text-xs text-emerald-300 font-medium">STAFF</span></h2>
+ <p className="text-[11px] font-black text-app-success uppercase tracking-widest leading-none mb-1">Human Capital Yield</p>
+ <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{activeEmp.length} <span className="text-xs text-app-success font-medium">STAFF</span></h2>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
- <div className="w-12 h-12 rounded-2xl bg-app-surface text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+ <div className="w-12 h-12 rounded-2xl bg-app-surface text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
  <UserCheck size={24} />
  </div>
- <div className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md">
- <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
- <span className="text-[8px] font-black text-indigo-600 uppercase">Live Tracking</span>
+ <div className="flex items-center gap-1 bg-app-primary/5 px-2 py-0.5 rounded-md">
+ <div className="w-1.5 h-1.5 bg-app-primary rounded-full animate-pulse" />
+ <span className="text-[8px] font-black text-app-primary uppercase">Live Tracking</span>
  </div>
  </div>
- <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Daily Attendance</p>
- <h2 className="text-4xl font-black text-app-text tracking-tighter">{presentToday}</h2>
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Daily Attendance</p>
+ <h2 className="text-4xl font-black text-app-foreground tracking-tighter">{presentToday}</h2>
  </CardContent>
  </Card>
- <Card className={`rounded-[2rem] border-0 shadow-sm bg-gradient-to-br transition-all overflow-hidden group hover:shadow-md ${pending.length > 0 ? 'from-amber-50 to-white border border-amber-100' : 'from-slate-50 to-white'}`}>
+ <Card className={`rounded-[2rem] border-0 shadow-sm bg-gradient-to-br transition-all overflow-hidden group hover:shadow-md ${pending.length > 0 ? 'from-amber-50 to-white border border-app-warning/30' : 'from-slate-50 to-white'}`}>
  <CardContent className="p-7">
  <div className="flex justify-between items-start mb-6">
- <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm ${pending.length > 0 ? 'bg-app-surface text-amber-600' : 'bg-app-surface text-app-text-faint'}`}>
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm ${pending.length > 0 ? 'bg-app-surface text-app-warning' : 'bg-app-surface text-app-muted-foreground'}`}>
  <AlertTriangle size={24} />
  </div>
- {pending.length > 0 && <Badge className="bg-amber-500 text-app-text border-0 font-black text-[10px] px-3 animate-pulse">ACTION REQ.</Badge>}
+ {pending.length > 0 && <Badge className="bg-app-warning text-app-foreground border-0 font-black text-[10px] px-3 animate-pulse">ACTION REQ.</Badge>}
  </div>
- <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest leading-none mb-1">Pending Leave Auth</p>
- <h2 className={`text-4xl font-black tracking-tighter ${pending.length > 0 ? 'text-amber-600' : 'text-app-text'}`}>{pending.length}</h2>
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mb-1">Pending Leave Auth</p>
+ <h2 className={`text-4xl font-black tracking-tighter ${pending.length > 0 ? 'text-app-warning' : 'text-app-foreground'}`}>{pending.length}</h2>
  </CardContent>
  </Card>
  </div>
@@ -146,13 +146,13 @@ export default function HROverviewPage() {
  {departments.length > 0 && (
  <div className="flex gap-2 flex-wrap pb-2">
  {departments.map(dept => (
- <div key={dept.id} className="flex items-center gap-3 px-5 py-2.5 rounded-[1.25rem] bg-app-surface border border-app-border shadow-sm group hover:border-emerald-200 hover:shadow-md transition-all cursor-pointer">
- <div className="w-8 h-8 rounded-xl bg-app-bg text-app-text-faint flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all">
+ <div key={dept.id} className="flex items-center gap-3 px-5 py-2.5 rounded-[1.25rem] bg-app-surface border border-app-border shadow-sm group hover:border-app-success hover:shadow-md transition-all cursor-pointer">
+ <div className="w-8 h-8 rounded-xl bg-app-background text-app-muted-foreground flex items-center justify-center group-hover:bg-app-primary-light group-hover:text-app-primary transition-all">
  <Building2 size={16} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text uppercase tracking-widest">{dept.name}</p>
- <p className="text-[9px] font-bold text-app-text-faint uppercase tracking-tighter">Nodes: {dept.employee_count ?? 0}</p>
+ <p className="text-[10px] font-black text-app-foreground uppercase tracking-widest">{dept.name}</p>
+ <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-tighter">Nodes: {dept.employee_count ?? 0}</p>
  </div>
  </div>
  ))}
@@ -161,52 +161,52 @@ export default function HROverviewPage() {
  {/* Workbench Section */}
  <div className="space-y-6">
  <div className="flex items-center justify-between">
- <div className="flex gap-1 bg-slate-100/50 rounded-2xl p-1.5 w-fit border border-app-border">
+ <div className="flex gap-1 bg-app-surface-2/50 rounded-2xl p-1.5 w-fit border border-app-border">
  {([['leaves', 'Authorization Requests', CalendarDays], ['attendance', 'Presence Monitoring', Clock], ['employees', 'Workforce Directory', Users]] as const).map(([key, label, Icon]) => (
  <button
  key={key}
  onClick={() => setTab(key)}
- className={`flex items-center gap-2 px-6 py-2.5 rounded-[1rem] text-xs font-black uppercase tracking-widest transition-all ${tab === key ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-text-faint hover:text-app-text'}`}
+ className={`flex items-center gap-2 px-6 py-2.5 rounded-[1rem] text-xs font-black uppercase tracking-widest transition-all ${tab === key ? 'bg-app-surface text-app-primary shadow-sm' : 'text-app-muted-foreground hover:text-app-foreground'}`}
  >
  <Icon size={14} />
  {label}
- {key === 'leaves' && pending.length > 0 && <span className="bg-amber-500 text-app-text text-[9px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-full ml-1">{pending.length}</span>}
+ {key === 'leaves' && pending.length > 0 && <span className="bg-app-warning text-app-foreground text-[9px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-full ml-1">{pending.length}</span>}
  </button>
  ))}
  </div>
  </div>
  <div className="grid grid-cols-1 gap-4">
  {loading ? (
- Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-app-text/50 border border-app-border rounded-[2rem] animate-pulse" />)
+ Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-app-foreground/50 border border-app-border rounded-[2rem] animate-pulse" />)
  ) : tab === 'leaves' ? (
- leaves.length === 0 ? <div className="text-sm font-bold text-gray-300 py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">No active leave drafts</div> :
+ leaves.length === 0 ? <div className="text-sm font-bold text-app-muted-foreground py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">No active leave drafts</div> :
  leaves.map(leave => {
  const name = leave.employee ? `${leave.employee.first_name} ${leave.employee.last_name}` : (leave.employee_name || '—')
  return (
- <div key={leave.id} className="flex items-center gap-6 p-6 rounded-[2rem] bg-app-surface shadow-sm border border-slate-50 group hover:shadow-xl hover:border-emerald-100 transition-all text-app-text">
- <div className="w-14 h-14 rounded-2xl bg-app-bg text-app-text-faint flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-app-text transition-all font-black text-xl">
+ <div key={leave.id} className="flex items-center gap-6 p-6 rounded-[2rem] bg-app-surface shadow-sm border border-app-border group hover:shadow-xl hover:border-app-success/30 transition-all text-app-foreground">
+ <div className="w-14 h-14 rounded-2xl bg-app-background text-app-muted-foreground flex items-center justify-center shrink-0 group-hover:bg-app-primary group-hover:text-app-foreground transition-all font-black text-xl">
  {leave.leave_type?.[0] || 'L'}
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-3 mb-1">
- <span className="font-black text-base tracking-tight text-app-text">{name}</span>
- <Badge className={`${STATUS_BADGE[leave.status] || 'bg-app-surface-2 text-app-text-faint'} border-none text-[9px] font-black px-3 py-1 rounded-lg uppercase tracking-widest`}>{leave.status}</Badge>
+ <span className="font-black text-base tracking-tight text-app-foreground">{name}</span>
+ <Badge className={`${STATUS_BADGE[leave.status] || 'bg-app-surface-2 text-app-muted-foreground'} border-none text-[9px] font-black px-3 py-1 rounded-lg uppercase tracking-widest`}>{leave.status}</Badge>
  </div>
  <div className="flex items-center gap-4">
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-1.5">
- <CalendarDays size={12} className="text-emerald-500" />
- {leave.start_date} <ChevronRight size={10} className="text-gray-300" /> {leave.end_date}
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+ <CalendarDays size={12} className="text-app-primary" />
+ {leave.start_date} <ChevronRight size={10} className="text-app-muted-foreground" /> {leave.end_date}
  </p>
- {leave.leave_type && <span className="text-[10px] font-black text-app-text-faint bg-app-bg px-2 py-0.5 rounded uppercase tracking-widest">{leave.leave_type}</span>}
+ {leave.leave_type && <span className="text-[10px] font-black text-app-muted-foreground bg-app-background px-2 py-0.5 rounded uppercase tracking-widest">{leave.leave_type}</span>}
  </div>
  </div>
- <div className="hidden lg:block max-w-[30%] px-6 border-x border-slate-50">
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Governance Insight</p>
- <p className="text-xs text-app-text-muted font-medium line-clamp-2 italic">"{leave.reason || 'No justification provided'}"</p>
+ <div className="hidden lg:block max-w-[30%] px-6 border-x border-app-border">
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Governance Insight</p>
+ <p className="text-xs text-app-muted-foreground font-medium line-clamp-2 italic">"{leave.reason || 'No justification provided'}"</p>
  </div>
  {leave.status === 'PENDING' && (
  <div className="flex gap-2">
- <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-xl bg-emerald-600 text-app-text font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
+ <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-xl bg-app-primary text-app-foreground font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-app-success transition-all">
  Approve
  </button>
  <button onClick={() => handleLeave(leave.id, 'reject')} className="h-10 px-6 rounded-xl bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all">
@@ -218,67 +218,67 @@ export default function HROverviewPage() {
  )
  })
  ) : tab === 'attendance' ? (
- attendance.length === 0 ? <div className="text-sm font-bold text-gray-300 py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">No presence data detected</div> :
+ attendance.length === 0 ? <div className="text-sm font-bold text-app-muted-foreground py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">No presence data detected</div> :
  attendance.map(att => {
  const name = att.employee ? `${att.employee.first_name} ${att.employee.last_name}` : (att.employee_name || '—')
  return (
- <div key={att.id} className="flex items-center gap-6 p-5 rounded-[1.5rem] bg-app-surface border border-app-border group hover:border-emerald-100 transition-all">
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${att.status === 'PRESENT' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+ <div key={att.id} className="flex items-center gap-6 p-5 rounded-[1.5rem] bg-app-surface border border-app-border group hover:border-app-success/30 transition-all">
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${att.status === 'PRESENT' ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-600'}`}>
  <UserCheck size={20} />
  </div>
  <div className="flex-1">
  <div className="flex items-center gap-3">
- <span className="font-black text-sm text-app-text tracking-tight">{name}</span>
- <Badge className={`${STATUS_BADGE[att.status] || 'bg-app-surface-2 text-app-text-faint'} border-none text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-tighter`}>{att.status}</Badge>
+ <span className="font-black text-sm text-app-foreground tracking-tight">{name}</span>
+ <Badge className={`${STATUS_BADGE[att.status] || 'bg-app-surface-2 text-app-muted-foreground'} border-none text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-tighter`}>{att.status}</Badge>
  </div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mt-1 flex items-center gap-2">
- <MapPin size={10} className="text-slate-300" /> Primary Terminal · {att.date || '—'}
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mt-1 flex items-center gap-2">
+ <MapPin size={10} className="text-app-muted-foreground" /> Primary Terminal · {att.date || '—'}
  </p>
  </div>
  <div className="flex items-center gap-8 text-right px-8">
  <div>
- <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">CHECK-IN</p>
- <p className="text-xs font-black text-app-text">{att.check_in || '—:—'}</p>
+ <p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">CHECK-IN</p>
+ <p className="text-xs font-black text-app-foreground">{att.check_in || '—:—'}</p>
  </div>
  <div>
- <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">CHECK-OUT</p>
- <p className="text-xs font-black text-app-text">{att.check_out || '—:—'}</p>
+ <p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">CHECK-OUT</p>
+ <p className="text-xs font-black text-app-foreground">{att.check_out || '—:—'}</p>
  </div>
  </div>
  </div>
  )
  })
  ) : (
- employees.length === 0 ? <div className="text-sm font-bold text-gray-300 py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">Workforce roster is empty</div> :
+ employees.length === 0 ? <div className="text-sm font-bold text-app-muted-foreground py-20 text-center uppercase tracking-[0.2em] bg-app-surface rounded-[2rem] border border-dashed border-app-border">Workforce roster is empty</div> :
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {employees.map(emp => (
  <div key={emp.id} className="flex items-center gap-5 p-6 rounded-[2rem] bg-app-surface border border-app-border hover:shadow-lg transition-all group">
- <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-emerald-50 to-slate-50 text-emerald-600 flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-app-text transition-all">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-emerald-50 to-slate-50 text-app-primary flex items-center justify-center text-xl font-black shrink-0 shadow-inner group-hover:from-emerald-600 group-hover:to-emerald-700 group-hover:text-app-foreground transition-all">
  {emp.first_name?.[0]}{emp.last_name?.[0]}
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-1">
- <h4 className="font-black text-app-text tracking-tight truncate">{emp.first_name} {emp.last_name}</h4>
- <Badge className={`${emp.status === 'ACTIVE' || !emp.status ? 'bg-emerald-50 text-emerald-600' : 'bg-app-surface-2 text-app-text-muted'} border-none text-[8px] font-black px-2 py-0.5 rounded uppercase`}>
+ <h4 className="font-black text-app-foreground tracking-tight truncate">{emp.first_name} {emp.last_name}</h4>
+ <Badge className={`${emp.status === 'ACTIVE' || !emp.status ? 'bg-app-primary-light text-app-primary' : 'bg-app-surface-2 text-app-muted-foreground'} border-none text-[8px] font-black px-2 py-0.5 rounded uppercase`}>
  {emp.status || 'ACTIVE'}
  </Badge>
  </div>
  <div className="flex flex-col gap-1">
  <div className="flex items-center gap-1.5 overflow-hidden">
- <Briefcase size={12} className="text-slate-300 shrink-0" />
- <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-widest truncate">{emp.position || 'Specialist'}</span>
+ <Briefcase size={12} className="text-app-muted-foreground shrink-0" />
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest truncate">{emp.position || 'Specialist'}</span>
  </div>
  <div className="flex items-center gap-1.5 overflow-hidden">
- <Building2 size={12} className="text-slate-300 shrink-0" />
- <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter truncate">{emp.department?.name || 'GEN-OPS'}</span>
+ <Building2 size={12} className="text-app-muted-foreground shrink-0" />
+ <span className="text-[10px] font-black text-app-primary uppercase tracking-tighter truncate">{emp.department?.name || 'GEN-OPS'}</span>
  </div>
  </div>
  </div>
  <div className="flex flex-col gap-2">
- <button className="p-2 rounded-xl bg-app-bg text-app-text-faint hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+ <button className="p-2 rounded-xl bg-app-background text-app-muted-foreground hover:bg-app-primary-light hover:text-app-primary transition-all">
  <Mail size={16} />
  </button>
- <button className="p-2 rounded-xl bg-app-bg text-app-text-faint hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+ <button className="p-2 rounded-xl bg-app-background text-app-muted-foreground hover:bg-app-primary-light hover:text-app-primary transition-all">
  <ShieldCheck size={16} />
  </button>
  </div>

@@ -171,3 +171,81 @@ class RegisterOrderMixin:
             'lines': lines,
         })
 
+    # ── Gap 10B: Async PDF Invoice Generation ──────────────────────────────────
+
+    @action(detail=True, methods=['post'], url_path='generate-invoice')
+    def generate_invoice(self, request, pk=None):
+        """
+        Dispatch a Celery task to generate a PDF invoice for this order.
+        Returns immediately with { doc_id, task_id, status: 'PENDING' }.
+        Poll `invoice-status` for completion.
+        """
+        from apps.pos.models import GeneratedDocument
+        from apps.pos.tasks_invoice import generate_invoice_pdf
+
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'No org context'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order = Order.objects.get(id=pk, organization_id=org_id)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        doc_type = request.data.get('doc_type', 'INVOICE')
+        if doc_type not in ('INVOICE', 'RECEIPT'):
+            doc_type = 'INVOICE'
+
+        # Create a PENDING record first so the caller gets an ID immediately
+        doc = GeneratedDocument.objects.create(
+            organization_id=org_id,
+            order_id=order.id,
+            doc_type=doc_type,
+            status='PENDING',
+        )
+
+        # Dispatch async task
+        task = generate_invoice_pdf.delay(doc.id)
+        doc.task_id = task.id
+        doc.save(update_fields=['task_id'])
+
+        return Response({
+            'doc_id':  doc.id,
+            'task_id': task.id,
+            'status':  'PENDING',
+        }, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['get'], url_path='invoice-status')
+    def invoice_status(self, request, pk=None):
+        """
+        Poll the status of a PDF generation job for this order.
+        Returns { status, pdf_url } when READY, or { status, error } if FAILED.
+        """
+        from apps.pos.models import GeneratedDocument
+        from django.conf import settings as django_settings
+
+        org_id = get_current_tenant_id()
+        doc_type = request.query_params.get('doc_type', 'INVOICE')
+
+        try:
+            doc = GeneratedDocument.objects.filter(
+                organization_id=org_id,
+                order_id=pk,
+                doc_type=doc_type,
+            ).latest('generated_at')
+        except GeneratedDocument.DoesNotExist:
+            return Response({'status': 'NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+        response: dict = {
+            'doc_id': doc.id,
+            'status': doc.status,
+        }
+
+        if doc.status == 'READY' and doc.file_path:
+            media_url = getattr(django_settings, 'MEDIA_URL', '/media/')
+            response['pdf_url'] = f"{media_url}{doc.file_path}"
+        elif doc.status == 'FAILED':
+            response['error'] = doc.error_msg or 'Unknown error'
+
+        return Response(response)
+

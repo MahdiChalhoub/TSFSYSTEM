@@ -141,11 +141,11 @@ export default function SubscriptionPlansPage() {
  }
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  <div className="flex justify-between items-end">
  <div>
- <h2 className="text-3xl md:text-4xl font-black text-app-text tracking-tight">Subscription Plans</h2>
- <p className="text-app-text-muted mt-2 font-medium">Manage pricing tiers and feature entitlements</p>
+ <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Subscription Plans</h2>
+ <p className="text-app-muted-foreground mt-2 font-medium">Manage pricing tiers and feature entitlements</p>
  </div>
  <div className="flex gap-2">
  <Dialog open={catOpen} onOpenChange={setCatOpen}>
@@ -189,7 +189,7 @@ export default function SubscriptionPlansPage() {
  </div>
  </div>
  <DialogFooter>
- <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text">
+ <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-app-primary hover:bg-app-primary text-app-foreground">
  {catSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Category"}
  </Button>
  </DialogFooter>
@@ -198,7 +198,7 @@ export default function SubscriptionPlansPage() {
 
  <Dialog open={planOpen} onOpenChange={setPlanOpen}>
  <DialogTrigger asChild>
- <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-app-text">
+ <Button className="bg-app-primary hover:bg-app-primary gap-2 text-app-foreground">
  <Plus size={18} />
  New Plan
  </Button>
@@ -256,10 +256,10 @@ export default function SubscriptionPlansPage() {
 
  {/* Limits Section */}
  <div className="border-t pt-4 mt-4">
- <Label className="text-sm font-bold text-gray-700 mb-3 block">Usage Limits</Label>
+ <Label className="text-sm font-bold text-app-muted-foreground mb-3 block">Usage Limits</Label>
  <div className="grid grid-cols-2 gap-3">
  <div className="space-y-1">
- <Label className="text-xs text-app-text-muted">Max Users</Label>
+ <Label className="text-xs text-app-muted-foreground">Max Users</Label>
  <Input
  type="number"
  value={planForm.limits.max_users}
@@ -267,7 +267,7 @@ export default function SubscriptionPlansPage() {
  />
  </div>
  <div className="space-y-1">
- <Label className="text-xs text-app-text-muted">Max Products</Label>
+ <Label className="text-xs text-app-muted-foreground">Max Products</Label>
  <Input
  type="number"
  value={planForm.limits.max_products}
@@ -275,7 +275,7 @@ export default function SubscriptionPlansPage() {
  />
  </div>
  <div className="space-y-1">
- <Label className="text-xs text-app-text-muted">Max Sites</Label>
+ <Label className="text-xs text-app-muted-foreground">Max Sites</Label>
  <Input
  type="number"
  value={planForm.limits.max_sites}
@@ -283,7 +283,7 @@ export default function SubscriptionPlansPage() {
  />
  </div>
  <div className="space-y-1">
- <Label className="text-xs text-app-text-muted">Storage (GB)</Label>
+ <Label className="text-xs text-app-muted-foreground">Storage (GB)</Label>
  <Input
  type="number"
  value={planForm.limits.storage_gb}
@@ -295,7 +295,7 @@ export default function SubscriptionPlansPage() {
 
  {/* Modules Section */}
  <div className="border-t pt-4">
- <Label className="text-sm font-bold text-gray-700 mb-3 block">Enabled Modules</Label>
+ <Label className="text-sm font-bold text-app-muted-foreground mb-3 block">Enabled Modules</Label>
  <div className="grid grid-cols-2 gap-2">
  {availableModules.map((m: Record<string, any>) => (
  <div key={m.code} className="flex items-center gap-2">
@@ -304,7 +304,7 @@ export default function SubscriptionPlansPage() {
  checked={planForm.modules.includes(m.code)}
  onCheckedChange={() => toggleModule(m.code)}
  />
- <label htmlFor={m.code} className="text-sm text-gray-700 cursor-pointer">{m.name}</label>
+ <label htmlFor={m.code} className="text-sm text-app-muted-foreground cursor-pointer">{m.name}</label>
  </div>
  ))}
  </div>
@@ -312,8 +312,8 @@ export default function SubscriptionPlansPage() {
 
  {/* Features Section */}
  <div className="border-t pt-4">
- <Label className="text-sm font-bold text-gray-700 mb-2 block">Feature Descriptions</Label>
- <p className="text-xs text-app-text-faint mb-2">One feature per line. Displayed on pricing pages.</p>
+ <Label className="text-sm font-bold text-app-muted-foreground mb-2 block">Feature Descriptions</Label>
+ <p className="text-xs text-app-muted-foreground mb-2">One feature per line. Displayed on pricing pages.</p>
  <Textarea
  value={planForm.features}
  onChange={e => setPlanForm(f => ({ ...f, features: e.target.value }))}
@@ -323,7 +323,7 @@ export default function SubscriptionPlansPage() {
  </div>
  </div>
  <DialogFooter>
- <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text">
+ <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-app-primary hover:bg-app-primary text-app-foreground">
  {planSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Plan"}
  </Button>
  </DialogFooter>
@@ -333,14 +333,14 @@ export default function SubscriptionPlansPage() {
  </div>
 
  {loading ? (
- <div className="py-20 text-center text-app-text-muted">Loading plans...</div>
+ <div className="py-20 text-center text-app-muted-foreground">Loading plans...</div>
  ) : (
  <div className="grid grid-cols-1 gap-8">
  {/* Categories Section */}
  {categories.map(cat => (
  <div key={cat.id} className="space-y-4">
  <div className="flex items-center gap-3 pb-2 border-b border-app-border">
- <h3 className="text-xl font-bold text-app-text">{cat.name}</h3>
+ <h3 className="text-xl font-bold text-app-foreground">{cat.name}</h3>
  <Badge variant="secondary" className="text-xs font-mono">{String(cat.type ?? '')}</Badge>
  </div>
 
@@ -352,16 +352,16 @@ export default function SubscriptionPlansPage() {
  return (
  <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden cursor-pointer ${isCustom
  ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200 hover:border-purple-400'
- : 'bg-app-surface hover:border-emerald-500/30'
+ : 'bg-app-surface hover:border-app-primary/30'
  }`}
  onClick={() => router.push(`/subscription-plans/${plan.id}`)}>
  <CardHeader className="pb-3">
  <div className="flex justify-between items-start">
  <div className="flex items-center gap-2">
  <CardTitle className={`text-lg font-bold ${isCustom ? 'text-purple-900' : ''}`}>{plan.name}</CardTitle>
- {plan.is_public === false && <Lock size={12} className="text-amber-500" />}
+ {plan.is_public === false && <Lock size={12} className="text-app-warning" />}
  </div>
- <Badge className={plan.is_active ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-text-muted"}>
+ <Badge className={plan.is_active ? "bg-app-primary-light text-app-primary" : "bg-app-surface-2 text-app-muted-foreground"}>
  {plan.is_active ? 'Active' : 'Draft'}
  </Badge>
  </div>
@@ -378,7 +378,7 @@ export default function SubscriptionPlansPage() {
  <p className="text-sm text-purple-500 mt-1">Tailored to your needs</p>
  </div>
  <a href="mailto:sales@tsf-city.com?subject=Custom%20Plan%20Inquiry"
- className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-app-text font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
+ className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-app-foreground font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
  Contact Us →
  </a>
  <div className="flex flex-wrap gap-1.5">
@@ -392,15 +392,15 @@ export default function SubscriptionPlansPage() {
  <>
  <div className="flex items-end gap-3">
  <div>
- <p className="text-[10px] text-app-text-faint uppercase font-bold tracking-wider">Monthly</p>
- <p className="text-2xl font-black text-emerald-600">
+ <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Monthly</p>
+ <p className="text-2xl font-black text-app-primary">
  {parseFloat(plan.monthly_price) === 0 ? 'Free' : `$${parseFloat(plan.monthly_price).toFixed(0)}`}
  </p>
  </div>
  {parseFloat(plan.annual_price) > 0 && (
  <div className="pb-0.5">
- <p className="text-[10px] text-app-text-faint uppercase font-bold tracking-wider">Annual</p>
- <p className="text-lg font-bold text-app-text-muted">
+ <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Annual</p>
+ <p className="text-lg font-bold text-app-muted-foreground">
  ${parseFloat(plan.annual_price).toFixed(0)}<span className="text-xs font-normal">/yr</span>
  </p>
  </div>
@@ -410,39 +410,39 @@ export default function SubscriptionPlansPage() {
  {/* Limits */}
  <div className="grid grid-cols-3 gap-2 text-center">
  {limits.max_users != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Users</div>
- <div className="text-sm font-bold text-app-text">{limits.max_users}</div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Users</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_users}</div>
  </div>
  )}
  {limits.max_sites != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Sites</div>
- <div className="text-sm font-bold text-app-text">{limits.max_sites}</div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Sites</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_sites}</div>
  </div>
  )}
  {limits.max_storage_gb != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Storage</div>
- <div className="text-sm font-bold text-app-text">{limits.max_storage_gb} GB</div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Storage</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_storage_gb} GB</div>
  </div>
  )}
  {limits.max_products != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Products</div>
- <div className="text-sm font-bold text-app-text">{limits.max_products >= 100000 ? `${(limits.max_products / 1000).toFixed(0)}K` : limits.max_products.toLocaleString()}</div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Products</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_products >= 100000 ? `${(limits.max_products / 1000).toFixed(0)}K` : limits.max_products.toLocaleString()}</div>
  </div>
  )}
  {limits.max_invoices_per_month != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Invoices</div>
- <div className="text-sm font-bold text-app-text">{limits.max_invoices_per_month >= 10000 ? `${(limits.max_invoices_per_month / 1000).toFixed(0)}K` : limits.max_invoices_per_month.toLocaleString()}<span className="text-[8px] text-app-text-faint">/mo</span></div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Invoices</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_invoices_per_month >= 10000 ? `${(limits.max_invoices_per_month / 1000).toFixed(0)}K` : limits.max_invoices_per_month.toLocaleString()}<span className="text-[8px] text-app-muted-foreground">/mo</span></div>
  </div>
  )}
  {limits.max_customers != null && (
- <div className="p-2 bg-app-bg rounded-xl">
- <div className="text-[9px] text-app-text-faint font-bold uppercase">Customers</div>
- <div className="text-sm font-bold text-app-text">{limits.max_customers >= 10000 ? `${(limits.max_customers / 1000).toFixed(0)}K` : limits.max_customers.toLocaleString()}</div>
+ <div className="p-2 bg-app-background rounded-xl">
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase">Customers</div>
+ <div className="text-sm font-bold text-app-foreground">{limits.max_customers >= 10000 ? `${(limits.max_customers / 1000).toFixed(0)}K` : limits.max_customers.toLocaleString()}</div>
  </div>
  )}
  </div>
@@ -451,7 +451,7 @@ export default function SubscriptionPlansPage() {
  {Array.isArray(plan.modules) && plan.modules.length > 0 && (
  <div className="flex flex-wrap gap-1">
  {plan.modules.map((m: string) => (
- <Badge key={m} className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold capitalize">{m}</Badge>
+ <Badge key={m} className="bg-app-primary-light text-app-success text-[10px] font-semibold capitalize">{m}</Badge>
  ))}
  </div>
  )}
@@ -463,7 +463,7 @@ export default function SubscriptionPlansPage() {
  )
  })}
  {plans.filter(p => p.category?.id === cat.id).length === 0 && (
- <div className="col-span-full py-8 text-center bg-app-bg rounded-2xl border border-dashed border-app-border text-app-text-faint text-sm">
+ <div className="col-span-full py-8 text-center bg-app-background rounded-2xl border border-dashed border-app-border text-app-muted-foreground text-sm">
  No plans in this category yet.
  </div>
  )}
@@ -472,7 +472,7 @@ export default function SubscriptionPlansPage() {
  ))}
 
  {categories.length === 0 && (
- <div className="py-20 text-center text-app-text-muted">
+ <div className="py-20 text-center text-app-muted-foreground">
  No categories found. Start by creating a plan category.
  </div>
  )}
@@ -481,12 +481,12 @@ export default function SubscriptionPlansPage() {
  <div className="space-y-4 mt-8">
  <div className="flex items-center justify-between pb-2 border-b border-app-border">
  <div>
- <h3 className="text-xl font-bold text-app-text">Plan Add-ons</h3>
- <p className="text-xs text-app-text-faint mt-1">Per-item upgrades clients can purchase (monthly recurring)</p>
+ <h3 className="text-xl font-bold text-app-foreground">Plan Add-ons</h3>
+ <p className="text-xs text-app-muted-foreground mt-1">Per-item upgrades clients can purchase (monthly recurring)</p>
  </div>
  <Dialog open={addonOpen} onOpenChange={setAddonOpen}>
  <DialogTrigger asChild>
- <Button className="bg-indigo-600 hover:bg-indigo-500 gap-2 text-app-text">
+ <Button className="bg-app-primary hover:bg-app-primary gap-2 text-app-foreground">
  <Plus size={16} /> New Add-on
  </Button>
  </DialogTrigger>
@@ -527,8 +527,8 @@ export default function SubscriptionPlansPage() {
  </div>
  </div>
  <div className="border-t pt-4">
- <Label className="text-sm font-bold text-gray-700 mb-3 block">Available for Plans</Label>
- <p className="text-xs text-app-text-faint mb-2">Leave all unchecked = available to all plans</p>
+ <Label className="text-sm font-bold text-app-muted-foreground mb-3 block">Available for Plans</Label>
+ <p className="text-xs text-app-muted-foreground mb-2">Leave all unchecked = available to all plans</p>
  <div className="grid grid-cols-2 gap-2">
  {plans.map((p: Record<string, any>) => (
  <div key={p.id} className="flex items-center gap-2">
@@ -538,7 +538,7 @@ export default function SubscriptionPlansPage() {
  ...f,
  plan_ids: f.plan_ids.includes(p.id) ? f.plan_ids.filter(x => x !== p.id) : [...f.plan_ids, p.id]
  }))} />
- <label htmlFor={`addon-plan-${p.id}`} className="text-sm text-gray-700 cursor-pointer">{p.name}</label>
+ <label htmlFor={`addon-plan-${p.id}`} className="text-sm text-app-muted-foreground cursor-pointer">{p.name}</label>
  </div>
  ))}
  </div>
@@ -563,7 +563,7 @@ export default function SubscriptionPlansPage() {
  loadData()
  } catch { toast.error('Failed to create add-on') }
  finally { setAddonSaving(false) }
- }} disabled={addonSaving} className="bg-indigo-600 hover:bg-indigo-500 text-app-text">
+ }} disabled={addonSaving} className="bg-app-primary hover:bg-app-primary text-app-foreground">
  {addonSaving ? <Loader2 className="animate-spin" size={16} /> : 'Create Add-on'}
  </Button>
  </DialogFooter>
@@ -576,37 +576,37 @@ export default function SubscriptionPlansPage() {
  {addons.map((addon: Record<string, any>) => {
  const Icon = ADDON_TYPE_ICONS[addon.addon_type] || Package
  return (
- <Card key={addon.id} className="bg-app-surface shadow-sm hover:shadow-md transition-all border-indigo-100 hover:border-indigo-300">
+ <Card key={addon.id} className="bg-app-surface shadow-sm hover:shadow-md transition-all border-app-primary/30 hover:border-app-primary/30">
  <CardContent className="pt-5 pb-4">
  <div className="flex items-start justify-between">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
- <Icon size={18} className="text-indigo-600" />
+ <div className="w-10 h-10 rounded-xl bg-app-primary/5 flex items-center justify-center">
+ <Icon size={18} className="text-app-primary" />
  </div>
  <div>
- <p className="font-bold text-app-text text-sm">{addon.name}</p>
- <p className="text-[10px] text-app-text-faint uppercase font-bold">{ADDON_TYPE_LABELS[addon.addon_type] || addon.addon_type}</p>
+ <p className="font-bold text-app-foreground text-sm">{addon.name}</p>
+ <p className="text-[10px] text-app-muted-foreground uppercase font-bold">{ADDON_TYPE_LABELS[addon.addon_type] || addon.addon_type}</p>
  </div>
  </div>
- <button onClick={() => setPendingDeleteAddon(addon)} className="text-gray-300 hover:text-red-500 transition-colors">
+ <button onClick={() => setPendingDeleteAddon(addon)} className="text-app-muted-foreground hover:text-app-error transition-colors">
  <Trash2 size={14} />
  </button>
  </div>
  <div className="mt-3 flex items-end gap-2">
- <span className="text-lg font-black text-indigo-600">${parseFloat(addon.monthly_price).toFixed(0)}</span>
- <span className="text-xs text-app-text-faint font-bold">/mo</span>
- <span className="text-xs text-gray-300 mx-1">|</span>
- <span className="text-sm font-bold text-app-text-muted">${parseFloat(addon.annual_price).toFixed(0)}/yr</span>
+ <span className="text-lg font-black text-app-primary">${parseFloat(addon.monthly_price).toFixed(0)}</span>
+ <span className="text-xs text-app-muted-foreground font-bold">/mo</span>
+ <span className="text-xs text-app-muted-foreground mx-1">|</span>
+ <span className="text-sm font-bold text-app-muted-foreground">${parseFloat(addon.annual_price).toFixed(0)}/yr</span>
  </div>
  <div className="mt-2">
- <Badge className="bg-indigo-50 text-indigo-700 text-[10px]">+{addon.quantity} {addon.addon_type}</Badge>
+ <Badge className="bg-app-primary/5 text-app-primary text-[10px]">+{addon.quantity} {addon.addon_type}</Badge>
  {addon.plan_ids?.length > 0 && (
- <span className="text-[10px] text-app-text-faint ml-2">
+ <span className="text-[10px] text-app-muted-foreground ml-2">
  {addon.plan_ids.length} plan(s)
  </span>
  )}
  {(!addon.plan_ids || addon.plan_ids.length === 0) && (
- <span className="text-[10px] text-app-text-faint ml-2">All plans</span>
+ <span className="text-[10px] text-app-muted-foreground ml-2">All plans</span>
  )}
  </div>
  </CardContent>
@@ -615,7 +615,7 @@ export default function SubscriptionPlansPage() {
  })}
  </div>
  ) : (
- <div className="py-8 text-center bg-app-bg rounded-2xl border border-dashed border-app-border text-app-text-faint text-sm">
+ <div className="py-8 text-center bg-app-background rounded-2xl border border-dashed border-app-border text-app-muted-foreground text-sm">
  No add-ons created yet. Add-ons let clients upgrade specific limits.
  </div>
  )}

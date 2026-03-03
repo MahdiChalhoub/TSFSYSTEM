@@ -35,7 +35,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
             <div className="max-w-6xl mx-auto px-6 py-10">
                 {/* Back */}
                 <Link href={`/tenant/${slug}`}
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-violet-600 mb-8 font-medium transition">
+                    className="inline-flex items-center gap-2 text-sm text-app-text-faint hover:text-violet-600 mb-8 font-medium transition">
                     <ArrowLeft size={16} /> Back to Store
                 </Link>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -59,7 +59,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                     {/* Details */}
                     <div className="flex flex-col justify-center">
                         {product.sku && (
-                            <p className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2">SKU: {product.sku}</p>
+                            <p className="text-xs font-mono text-app-text-faint uppercase tracking-wider mb-2">SKU: {product.sku}</p>
                         )}
                         <h1 className="text-3xl md:text-4xl font-bold text-indigo-950 tracking-tight"
                             style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -70,7 +70,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                             {[1, 2, 3, 4, 5].map(i => (
                                 <Star key={i} size={16} className={i <= 4 ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
                             ))}
-                            <span className="text-xs text-gray-400 ml-2 font-medium">4.0 (Premium Selection)</span>
+                            <span className="text-xs text-app-text-faint ml-2 font-medium">4.0 (Premium Selection)</span>
                         </div>
                         {/* Price */}
                         <div className="mt-6">
@@ -78,7 +78,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 <div className="flex items-baseline gap-3">
                                     <span className="text-4xl font-bold text-violet-600">${price?.toFixed(2)}</span>
                                     {product.tax_rate ? (
-                                        <span className="text-xs text-gray-400">incl. {product.tax_rate}% tax</span>
+                                        <span className="text-xs text-app-text-faint">incl. {product.tax_rate}% tax</span>
                                     ) : null}
                                 </div>
                             ) : (
@@ -89,7 +89,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                         </div>
                         {/* Description */}
                         {product.description && (
-                            <p className="mt-6 text-gray-500 leading-relaxed text-sm">
+                            <p className="mt-6 text-app-text-faint leading-relaxed text-sm">
                                 {product.description}
                             </p>
                         )}
@@ -109,17 +109,17 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                             {showPrice && !isQuoteMode && (
                                 <>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500 font-medium">Quantity</span>
+                                        <span className="text-sm text-app-text-faint font-medium">Quantity</span>
                                         <div className="flex items-center border border-violet-200 rounded-xl overflow-hidden">
                                             <button onClick={() => setQty(Math.max(1, qty - 1))}
-                                                className="px-3 py-2.5 text-gray-500 hover:bg-violet-50 transition">
+                                                className="px-3 py-2.5 text-app-text-faint hover:bg-violet-50 transition">
                                                 <Minus size={16} />
                                             </button>
                                             <span className="px-5 py-2.5 text-sm font-bold text-indigo-950 min-w-[40px] text-center">
                                                 {qty}
                                             </span>
                                             <button onClick={() => setQty(qty + 1)}
-                                                className="px-3 py-2.5 text-gray-500 hover:bg-violet-50 transition">
+                                                className="px-3 py-2.5 text-app-text-faint hover:bg-violet-50 transition">
                                                 <Plus size={16} />
                                             </button>
                                         </div>
@@ -130,7 +130,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                                     ? 'bg-green-500 text-white shadow-green-200'
                                                     : inStock
                                                         ? 'bg-violet-600 text-white hover:bg-violet-700 shadow-violet-200'
-                                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                                        : 'bg-app-border text-app-text-faint cursor-not-allowed shadow-none'
                                                 }`}>
                                             <ShoppingBag size={18} />
                                             {inCart ? '✓ Added to Cart' : 'Add to Cart'}
@@ -138,7 +138,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                         <button onClick={() => toggleWishlist(product.id)}
                                             className={`p-4 rounded-2xl border transition ${inWishlist
                                                     ? 'bg-pink-50 border-pink-200 text-pink-500'
-                                                    : 'border-violet-200 text-gray-400 hover:text-pink-500 hover:border-pink-200'
+                                                    : 'border-violet-200 text-app-text-faint hover:text-pink-500 hover:border-pink-200'
                                                 }`}>
                                             <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
                                         </button>
@@ -156,7 +156,7 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 <div key={i} className="text-center p-3 rounded-xl bg-violet-50/50 border border-violet-100">
                                     <badge.icon size={20} className="mx-auto text-violet-500 mb-1.5" />
                                     <p className="text-xs font-bold text-indigo-950">{badge.label}</p>
-                                    <p className="text-[10px] text-gray-400">{badge.sub}</p>
+                                    <p className="text-[10px] text-app-text-faint">{badge.sub}</p>
                                 </div>
                             ))}
                         </div>

@@ -26,20 +26,20 @@ export default async function PerformancePage() {
  const config = Array.isArray(kpiConfig) ? kpiConfig[0] : kpiConfig;
 
  return (
- <div className="space-y-8 animate-in fade-in duration-500">
- <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <Trophy size={28} className="text-app-text" />
- </div>
- Perfor<span className="text-amber-600">mance</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
- Workspace &bull; Talent Scoring
- </p>
- </div>
- </header>
+ <div className="app-page space-y-8 animate-in fade-in duration-500">
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <TrendingUp size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Workspace</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Performance <span className="text-app-primary">Hub</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  <PerformanceClient leaderboard={leaders} myPerformance={myData} kpiConfig={config} />
  </div>

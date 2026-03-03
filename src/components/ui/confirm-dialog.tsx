@@ -29,17 +29,17 @@ interface ConfirmDialogProps {
 const variantStyles: Record<Variant, { icon: typeof AlertTriangle; iconClass: string; btnClass: string }> = {
     danger: {
         icon: Trash2,
-        iconClass: 'text-red-500 bg-red-50',
-        btnClass: 'bg-red-600 hover:bg-red-500 text-white',
+        iconClass: 'text-app-error bg-app-error-bg',
+        btnClass: 'bg-app-error hover:bg-app-error text-white',
     },
     warning: {
         icon: AlertTriangle,
-        iconClass: 'text-amber-500 bg-amber-50',
-        btnClass: 'bg-amber-600 hover:bg-amber-500 text-white',
+        iconClass: 'text-app-warning bg-app-warning-bg',
+        btnClass: 'bg-app-warning hover:bg-app-warning text-white',
     },
     info: {
         icon: Info,
-        iconClass: 'text-blue-500 bg-blue-50',
+        iconClass: 'text-app-info bg-app-info-bg',
         btnClass: 'bg-blue-600 hover:bg-blue-500 text-white',
     },
 }
@@ -80,7 +80,7 @@ export function ConfirmDialog({
                         </div>
                         <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
                     </div>
-                    <DialogDescription className="mt-2 text-sm text-gray-500 leading-relaxed">
+                    <DialogDescription className="mt-2 text-sm text-app-text-faint leading-relaxed">
                         {description}
                     </DialogDescription>
                 </DialogHeader>

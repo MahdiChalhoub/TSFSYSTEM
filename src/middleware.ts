@@ -130,6 +130,32 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // ─── STOREFRONT CUSTOMER AUTH GUARD ──────────────────────────────────────
+    // /store/cart, /store/checkout, /store/account, /store/wishlist require
+    // a valid store_token cookie (set by clientLogin server action).
+    // Public storefront routes (home, catalog, login, register) pass through.
+    if (url.pathname.startsWith('/store/')) {
+        const STORE_PROTECTED = [
+            '/store/cart',
+            '/store/checkout',
+            '/store/account',
+            '/store/wishlist',
+        ];
+        const isProtected = STORE_PROTECTED.some(p => url.pathname.startsWith(p));
+        if (isProtected) {
+            const storeToken = req.cookies.get('store_token')?.value;
+            if (!storeToken) {
+                const loginUrl = req.nextUrl.clone();
+                loginUrl.pathname = '/store/login';
+                loginUrl.searchParams.set('next', url.pathname);
+                return NextResponse.redirect(loginUrl);
+            }
+        }
+        // All /store/* routes pass through without admin auth checks below
+        return NextResponse.next();
+    }
+    // ─── END STOREFRONT CUSTOMER AUTH GUARD ──────────────────────────────────
+
     // ─── HTTPS ENFORCEMENT (Security) ───
     // Removed: Cloudflare handles "Always Use HTTPS". Doing this here causes
     // an infinite redirect loop if Cloudflare connects to Nginx over HTTP (Flexible SSL).
@@ -166,14 +192,15 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/login') ||
         url.pathname.startsWith('/register');
 
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || url.pathname.startsWith('/saas/login') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
         loginUrl.hostname = hostname;
         loginUrl.port = ""; // Ensure we don't redirect to internal port 3000
-        loginUrl.pathname = '/login';
+        // On saas subdomain, use /saas/login; on tenant subdomains, use /login
+        loginUrl.pathname = isSaaSSubdomain ? '/saas/login' : '/login';
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
     }
@@ -222,7 +249,8 @@ export default async function middleware(req: NextRequest) {
 
         if (isSaaSSubdomain) {
             // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
-            if (url.pathname.startsWith('/saas')) {
+            // Exception: /saas/login is the SaaS auth page — do NOT strip or it causes a redirect loop.
+            if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
                 const cleanPath = url.pathname.replace('/saas', '') || '/';
                 const redirectUrl = url.clone();
                 redirectUrl.pathname = cleanPath;

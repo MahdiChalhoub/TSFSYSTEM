@@ -31,21 +31,21 @@ export default function WarehouseModal({
  const TypeIcon = selectedType.icon;
 
  return (
- <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ <div className="fixed inset-0 bg-app-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
  <div className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
- <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-app-bg">
+ <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-app-background">
  <div className="flex items-center gap-3">
  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center bg-${selectedType.color}-100 text-${selectedType.color}-600`}>
  <TypeIcon size={20} />
  </div>
  <div>
- <h2 className="text-lg font-bold text-app-text">
+ <h2 className="text-lg font-bold text-app-foreground">
  {warehouse ? 'Edit Location' : 'New Location'}
  </h2>
- <p className="text-[10px] text-app-text-faint font-medium uppercase tracking-wider">{selectedType.label}</p>
+ <p className="text-[10px] text-app-muted-foreground font-medium uppercase tracking-wider">{selectedType.label}</p>
  </div>
  </div>
- <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl transition-colors text-app-text-faint hover:text-app-text">
+ <button onClick={onClose} className="p-2 hover:bg-app-surface rounded-xl transition-colors text-app-muted-foreground hover:text-app-foreground">
  <X size={20} />
  </button>
  </div>
@@ -57,7 +57,7 @@ export default function WarehouseModal({
 
  {/* Location Type Picker */}
  <div>
- <label className="block text-sm font-bold text-gray-700 mb-2">Location Type</label>
+ <label className="block text-sm font-bold text-app-muted-foreground mb-2">Location Type</label>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
  {LOCATION_TYPES.map(lt => {
  const Icon = lt.icon;
@@ -78,8 +78,8 @@ export default function WarehouseModal({
  onChange={() => setLocationType(lt.value)}
  className="sr-only"
  />
- <Icon size={20} className={isSelected ? `text-${lt.color}-600` : 'text-app-text-faint'} />
- <span className={`text-xs font-bold ${isSelected ? `text-${lt.color}-700` : 'text-app-text-muted'}`}>{lt.label}</span>
+ <Icon size={20} className={isSelected ? `text-${lt.color}-600` : 'text-app-muted-foreground'} />
+ <span className={`text-xs font-bold ${isSelected ? `text-${lt.color}-700` : 'text-app-muted-foreground'}`}>{lt.label}</span>
  </label>
  );
  })}
@@ -89,34 +89,34 @@ export default function WarehouseModal({
  {/* Core Fields */}
  <div className="grid grid-cols-2 gap-4">
  <div className="col-span-2">
- <label className="block text-sm font-bold text-gray-700 mb-1">Location Name</label>
+ <label className="block text-sm font-bold text-app-muted-foreground mb-1">Location Name</label>
  <input
  name="name"
  defaultValue={warehouse?.name}
- className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all"
  placeholder="e.g., Central Warehouse, Downtown Store…"
  required
  />
  </div>
 
  <div>
- <label className="block text-sm font-bold text-gray-700 mb-1">Code</label>
+ <label className="block text-sm font-bold text-app-muted-foreground mb-1">Code</label>
  <input
  name="code"
  defaultValue={warehouse?.code}
- className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono"
+ className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all font-mono"
  placeholder="Auto-generated"
  />
- <p className="mt-1 text-[10px] text-app-text-faint">Leave blank for auto-increment</p>
+ <p className="mt-1 text-[10px] text-app-muted-foreground">Leave blank for auto-increment</p>
  </div>
 
  {parentOptions.length > 0 && (
  <div>
- <label className="block text-sm font-bold text-gray-700 mb-1">Parent Location</label>
+ <label className="block text-sm font-bold text-app-muted-foreground mb-1">Parent Location</label>
  <select
  name="parent"
  defaultValue={warehouse?.parent || ''}
- className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+ className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all"
  >
  <option value="">— None (Top Level) —</option>
  {parentOptions.map(p => (
@@ -128,8 +128,8 @@ export default function WarehouseModal({
  </div>
 
  {/* Address Section */}
- <div className="p-4 bg-app-bg rounded-2xl space-y-3">
- <div className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
+ <div className="p-4 bg-app-background rounded-2xl space-y-3">
+ <div className="flex items-center gap-2 text-sm font-bold text-app-muted-foreground mb-2">
  <MapPin size={16} />
  Physical Address
  </div>
@@ -138,75 +138,75 @@ export default function WarehouseModal({
  <input
  name="address"
  defaultValue={warehouse?.address}
- className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+ className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
  placeholder="Street address…"
  />
  </div>
  <input
  name="city"
  defaultValue={warehouse?.city}
- className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+ className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
  placeholder="City"
  />
  <div className="flex items-center gap-2">
- <Phone size={14} className="text-app-text-faint shrink-0" />
+ <Phone size={14} className="text-app-muted-foreground shrink-0" />
  <input
  name="phone"
  defaultValue={warehouse?.phone}
- className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+ className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
  placeholder="Phone"
  />
  </div>
  </div>
  <div className="flex items-center gap-2">
- <FileText size={14} className="text-app-text-faint shrink-0" />
+ <FileText size={14} className="text-app-muted-foreground shrink-0" />
  <input
  name="vat_number"
  defaultValue={warehouse?.vat_number}
- className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm"
+ className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
  placeholder="VAT / Tax ID"
  />
  </div>
  </div>
 
  {/* Operational Flags */}
- <div className="p-4 bg-emerald-50 rounded-2xl space-y-3">
+ <div className="p-4 bg-app-primary-light rounded-2xl space-y-3">
  <div className="flex items-center justify-between">
  <div>
- <h4 className="text-sm font-bold text-emerald-900">Commercial Point of Sale</h4>
- <p className="text-[10px] text-emerald-700">Can items be sold directly from this location?</p>
+ <h4 className="text-sm font-bold text-app-success">Commercial Point of Sale</h4>
+ <p className="text-[10px] text-app-success">Can items be sold directly from this location?</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer">
  <input type="checkbox" name="canSell" defaultChecked={warehouse?.can_sell !== false} className="sr-only peer" />
- <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+ <div className="w-11 h-6 bg-app-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-primary"></div>
  </label>
  </div>
  </div>
 
  <div className="flex items-center gap-2">
- <input type="checkbox" name="isActive" defaultChecked={warehouse?.is_active !== false} id="isActive" className="rounded-md border-app-border text-emerald-600 focus:ring-emerald-500" />
- <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Active and available for operations</label>
+ <input type="checkbox" name="isActive" defaultChecked={warehouse?.is_active !== false} id="isActive" className="rounded-md border-app-border text-app-primary focus:ring-app-primary" />
+ <label htmlFor="isActive" className="text-sm font-medium text-app-muted-foreground">Active and available for operations</label>
  </div>
 
- <div className="pt-4 border-t border-gray-50 flex gap-3">
+ <div className="pt-4 border-t border-app-border flex gap-3">
  <button
  type="button"
  onClick={onClose}
- className="flex-1 px-6 py-3 rounded-xl font-bold text-app-text-muted hover:bg-app-bg transition-all text-sm"
+ className="flex-1 px-6 py-3 rounded-xl font-bold text-app-muted-foreground hover:bg-app-background transition-all text-sm"
  >
  Cancel
  </button>
  <button
  type="submit"
  disabled={isPending}
- className="flex-1 bg-indigo-600 text-app-text px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 hover:bg-indigo-700 transition-all text-sm disabled:opacity-50"
+ className="flex-1 bg-app-primary text-app-foreground px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 hover:bg-app-primary transition-all text-sm disabled:opacity-50"
  >
  {isPending ? 'Saving...' : (warehouse ? 'Update Location' : 'Create Location')}
  </button>
  </div>
 
  {state.message && state.message !== 'success' && (
- <p className="text-center text-red-500 text-xs font-bold">{state.message}</p>
+ <p className="text-center text-app-error text-xs font-bold">{state.message}</p>
  )}
  </form>
  </div>

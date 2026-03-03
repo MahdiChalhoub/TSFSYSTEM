@@ -29,15 +29,15 @@ export default async function EcommerceThemesPage() {
 
  if (error) {
  return (
- <div className="p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh] text-center">
- <div className="w-20 h-20 bg-amber-100 rounded-[2rem] flex items-center justify-center text-amber-600 mb-6">
+ <div className="app-page p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh] text-center">
+ <div className="w-20 h-20 bg-app-warning-bg rounded-[2rem] flex items-center justify-center text-app-warning mb-6">
  <Palette size={40} />
  </div>
- <h2 className="text-2xl font-black text-app-text tracking-tight">Configuration Unavailable</h2>
- <p className="text-app-text-muted mt-4 max-w-md mx-auto font-medium">
+ <h2 className="text-2xl font-black text-app-foreground tracking-tight">Configuration Unavailable</h2>
+ <p className="text-app-muted-foreground mt-4 max-w-md mx-auto font-medium">
  {error}
  </p>
- <div className="mt-8 p-4 bg-app-bg rounded-2xl border border-app-border text-xs font-mono text-app-text-faint">
+ <div className="mt-8 p-4 bg-app-background rounded-2xl border border-app-border text-xs font-mono text-app-muted-foreground">
  Path: /ecommerce/themes
  </div>
  </div>
@@ -46,15 +46,19 @@ export default async function EcommerceThemesPage() {
 
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Palette size={28} className="text-app-text" />
- </div>
- Theme <span className="text-violet-600">Manager</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Storefront Type & Visual Identity</p>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Palette size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">eCommerce</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Store <span className="text-app-primary">Themes</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Step 1: Store Type */}
  <StoreTypePicker configId={configId} currentType={currentType} />

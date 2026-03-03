@@ -17,8 +17,8 @@ export default function LandingLayout({
  children: React.ReactNode;
 }) {
  return (
- <div className="bg-[#020617] text-slate-100 min-h-screen flex flex-col">
- <header className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800/50">
+ <div className="bg-[#020617] text-slate-100 min-h-screen flex flex-col bg-app-bg">
+ <header className="fixed top-0 w-full z-50 bg-app-bg/50 backdrop-blur-xl border-b border-slate-800/50">
  <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
  <div className="flex items-center gap-2">
  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -44,7 +44,7 @@ export default function LandingLayout({
  {children}
  </main>
 
- <footer className="bg-slate-950 border-t border-slate-900 py-20">
+ <footer className="bg-app-bg border-t border-slate-900 py-20">
  <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-app-text-faint">
  <div className="col-span-2">
  <span className="text-2xl font-black text-app-text tracking-tighter mb-4 block">

@@ -87,7 +87,7 @@ export default function SupplierStatementPage() {
  }
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
  <div className="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-5xl mx-auto relative z-10 space-y-8">
@@ -103,10 +103,10 @@ export default function SupplierStatementPage() {
  {/* Summary Cards */}
  {!loading && summary && (
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in duration-500">
- <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-900/20 border border-blue-500/20 rounded-2xl space-y-2">
+ <div className="p-6 bg-gradient-to-br from-blue-600/20 to-blue-900/20 border border-app-info/20 rounded-2xl space-y-2">
  <div className="flex items-center gap-2">
- <TrendingUp size={18} className="text-blue-400" />
- <p className="text-[10px] text-blue-400/70 font-black uppercase tracking-widest">Total Invoiced</p>
+ <TrendingUp size={18} className="text-app-info" />
+ <p className="text-[10px] text-app-info/70 font-black uppercase tracking-widest">Total Invoiced</p>
  </div>
  <p className="text-3xl font-black text-app-text">${parseFloat(summary.total_invoiced).toFixed(2)}</p>
  </div>
@@ -117,10 +117,10 @@ export default function SupplierStatementPage() {
  </div>
  <p className="text-3xl font-black text-app-text">${parseFloat(summary.total_paid).toFixed(2)}</p>
  </div>
- <div className="p-6 bg-gradient-to-br from-amber-600/20 to-amber-900/20 border border-amber-500/20 rounded-2xl space-y-2">
+ <div className="p-6 bg-gradient-to-br from-amber-600/20 to-amber-900/20 border border-app-warning/20 rounded-2xl space-y-2">
  <div className="flex items-center gap-2">
- <ArrowUpRight size={18} className="text-amber-400" />
- <p className="text-[10px] text-amber-400/70 font-black uppercase tracking-widest">Outstanding</p>
+ <ArrowUpRight size={18} className="text-app-warning" />
+ <p className="text-[10px] text-app-warning/70 font-black uppercase tracking-widest">Outstanding</p>
  </div>
  <p className="text-3xl font-black text-app-text">${parseFloat(summary.outstanding).toFixed(2)}</p>
  </div>
@@ -129,19 +129,19 @@ export default function SupplierStatementPage() {
 
  {loading && (
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-28 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  )}
 
  {/* Date Filter */}
  <form onSubmit={handleFilter}
- className="p-5 bg-slate-900/40 border border-app-text/5 rounded-2xl flex items-center gap-4 flex-wrap">
+ className="p-5 bg-app-surface/40 border border-app-text/5 rounded-2xl flex items-center gap-4 flex-wrap">
  <Filter size={18} className="text-app-text-muted" />
  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
- className="bg-slate-950/50 border border-app-text/5 px-4 py-2 rounded-xl text-app-text text-sm outline-none focus:border-sky-500 transition-all" />
+ className="bg-app-bg/50 border border-app-text/5 px-4 py-2 rounded-xl text-app-text text-sm outline-none focus:border-sky-500 transition-all" />
  <span className="text-app-text-muted">to</span>
  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
- className="bg-slate-950/50 border border-app-text/5 px-4 py-2 rounded-xl text-app-text text-sm outline-none focus:border-sky-500 transition-all" />
+ className="bg-app-bg/50 border border-app-text/5 px-4 py-2 rounded-xl text-app-text text-sm outline-none focus:border-sky-500 transition-all" />
  <button type="submit"
  className="px-5 py-2 bg-sky-600 text-app-text rounded-xl text-sm font-bold hover:bg-sky-500 transition-all">
  Apply
@@ -156,7 +156,7 @@ export default function SupplierStatementPage() {
  <p className="text-app-text-muted">Financial records will appear here once transactions occur</p>
  </div>
  ) : !loading && (
- <div className="bg-slate-900/60 border border-app-text/5 rounded-2xl overflow-hidden">
+ <div className="bg-app-surface/60 border border-app-text/5 rounded-2xl overflow-hidden">
  <div className="overflow-x-auto">
  <table className="w-full text-sm">
  <thead>
@@ -171,11 +171,11 @@ export default function SupplierStatementPage() {
  </thead>
  <tbody>
  {entries.map(entry => (
- <tr key={entry.id} className="border-b border-app-text/5 hover:bg-white/[0.02] transition-colors">
+ <tr key={entry.id} className="border-b border-app-text/5 hover:bg-app-surface/[0.02] transition-colors">
  <td className="p-4 text-app-text-faint">{new Date(entry.date).toLocaleDateString()}</td>
  <td className="p-4 text-app-text font-mono text-xs">{entry.reference}</td>
  <td className="p-4 text-slate-300">{entry.description}</td>
- <td className="p-4 text-right text-red-400 font-medium">
+ <td className="p-4 text-right text-app-error font-medium">
  {parseFloat(entry.debit) > 0 ? `$${parseFloat(entry.debit).toFixed(2)}` : '—'}
  </td>
  <td className="p-4 text-right text-emerald-400 font-medium">

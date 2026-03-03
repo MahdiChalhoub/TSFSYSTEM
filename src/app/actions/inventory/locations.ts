@@ -125,7 +125,7 @@ export async function createPurchaseOrder(data: Record<string, any>) {
  return r
 }
 
-export async function receivePOLine(poId: number, data: { line_id: number, quantity: number }) {
+export async function receivePOLine(poId: number, data: { line_id: number, quantity: number, qty_damaged?: number, qty_rejected?: number, qty_missing?: number, receipt_notes?: string }) {
  const r = await erpFetch(`pos/purchase-orders/${poId}/receive-line/`, {
  method: 'POST',
  body: JSON.stringify(data)

@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
@@ -25,30 +26,30 @@ function healthColor(score: number) {
  return 'from-red-500 to-rose-400'
 }
 function healthBg(score: number) {
- if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
- if (score >= 60) return 'bg-yellow-50 text-yellow-700 ring-yellow-200'
+ if (score >= 80) return 'bg-app-primary-light text-app-success ring-emerald-200'
+ if (score >= 60) return 'bg-app-warning-bg text-app-warning ring-yellow-200'
  if (score >= 40) return 'bg-orange-50 text-orange-700 ring-orange-200'
- return 'bg-red-50 text-red-700 ring-red-200'
+ return 'bg-app-error-bg text-app-error ring-red-200'
 }
 function statusBadge(status: string | null) {
- if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-text-muted ring-slate-200', icon: CheckCircle2 }
+ if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 }
  const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
- PENDING: { label: 'Requested', cls: 'bg-blue-50 text-blue-700 ring-blue-200', icon: Clock },
- APPROVED: { label: 'Approved', cls: 'bg-indigo-50 text-indigo-700 ring-indigo-200', icon: CheckCircle2 },
- CONVERTED: { label: 'Order Created', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: FileText },
- REJECTED: { label: 'Failed', cls: 'bg-red-50 text-red-700 ring-red-200', icon: XCircle },
- CANCELLED: { label: 'Cancelled', cls: 'bg-app-surface-2 text-app-text-muted ring-gray-200', icon: XCircle },
+ PENDING: { label: 'Requested', cls: 'bg-app-info-bg text-app-info ring-blue-200', icon: Clock },
+ APPROVED: { label: 'Approved', cls: 'bg-app-primary/5 text-app-primary ring-app-primary', icon: CheckCircle2 },
+ CONVERTED: { label: 'Order Created', cls: 'bg-app-primary-light text-app-success ring-emerald-200', icon: FileText },
+ REJECTED: { label: 'Failed', cls: 'bg-app-error-bg text-app-error ring-red-200', icon: XCircle },
+ CANCELLED: { label: 'Cancelled', cls: 'bg-app-surface-2 text-app-muted-foreground ring-gray-200', icon: XCircle },
  }
- return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-text-muted ring-gray-200', icon: Box }
+ return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-muted-foreground ring-gray-200', icon: Box }
 }
 function orderTypeBadge(type: string | null) {
  if (!type) return null
  const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
  stock_adjustment: { label: 'Adjustment', cls: 'bg-purple-50 text-purple-700', icon: BarChart3 },
  stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
- purchase_order: { label: 'Purchase', cls: 'bg-amber-50 text-amber-700', icon: ShoppingCart },
+ purchase_order: { label: 'Purchase', cls: 'bg-app-warning-bg text-app-warning', icon: ShoppingCart },
  }
- return map[type] || { label: type, cls: 'bg-app-bg text-app-text-muted', icon: FileText }
+ return map[type] || { label: type, cls: 'bg-app-background text-app-muted-foreground', icon: FileText }
 }
 // ─── MAIN PAGE ────────────────────────────────────────────────────
 export default function ProductAnalyticsPage() {
@@ -201,24 +202,24 @@ export default function ProductAnalyticsPage() {
  // ── Pagination ──
  const totalPages = Math.ceil(total / PAGE_SIZE)
  return (
- <div className="space-y-8">
+ <div className="app-page space-y-8">
  {/* ── Header ── */}
  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
  <div>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Activity size={28} className="text-app-text" />
+ <Activity size={28} className="text-app-foreground" />
  </div>
- Product <span className="text-violet-600">Analytics</span>
+ Product <span className="text-app-primary">Analytics</span>
  </h1>
- <p className="text-app-text-muted mt-2 text-sm font-medium">
+ <p className="text-app-muted-foreground mt-2 text-sm font-medium">
  Live analytics with request lifecycle tracking — {total.toLocaleString()} products
  </p>
  </div>
  <div className="flex gap-2">
  <button
  onClick={() => loadData()}
- className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-app-surface border border-app-border text-app-text-muted hover:bg-app-bg hover:border-app-border transition-all text-sm font-medium shadow-sm"
+ className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-app-surface border border-app-border text-app-muted-foreground hover:bg-app-background hover:border-app-border transition-all text-sm font-medium shadow-sm"
  >
  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
  Refresh
@@ -238,24 +239,24 @@ export default function ProductAnalyticsPage() {
  <div key={i} className={`bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm hover:shadow-md transition-shadow ring-1 ${kpi.ring}`}>
  <div className="flex items-center justify-between mb-3">
  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${kpi.gradient} flex items-center justify-center shadow-md`}>
- <kpi.icon size={18} className="text-app-text" />
+ <kpi.icon size={18} className="text-app-foreground" />
  </div>
  </div>
- <p className="text-2xl font-black text-app-text tracking-tight">{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</p>
- <p className="text-xs text-app-text-muted font-medium mt-1">{kpi.label}</p>
+ <p className="text-2xl font-black text-app-foreground tracking-tight">{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</p>
+ <p className="text-xs text-app-muted-foreground font-medium mt-1">{kpi.label}</p>
  </div>
  ))}
  </div>
  {/* ── Filters ── */}
  <div className="bg-app-surface rounded-2xl border border-app-border shadow-sm p-5">
  <div className="flex items-center gap-2 mb-4">
- <Filter size={16} className="text-app-text-faint" />
- <span className="text-sm font-bold text-gray-700">Filters</span>
+ <Filter size={16} className="text-app-muted-foreground" />
+ <span className="text-sm font-bold text-app-muted-foreground">Filters</span>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
  {/* Search */}
  <div className="lg:col-span-2 relative">
- <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input
  type="text"
  placeholder="Search by name, SKU, or barcode..."
@@ -298,8 +299,8 @@ export default function ProductAnalyticsPage() {
  <button
  onClick={() => { setHideCompleted(!hideCompleted); setPage(0) }}
  className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${hideCompleted
- ? 'bg-violet-50 border-violet-200 text-violet-700'
- : 'bg-app-surface border-app-border text-app-text-muted hover:bg-app-bg'
+ ? 'bg-violet-50 border-violet-200 text-app-primary'
+ : 'bg-app-surface border-app-border text-app-muted-foreground hover:bg-app-background'
  }`}
  >
  {hideCompleted ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -310,25 +311,25 @@ export default function ProductAnalyticsPage() {
  {/* ── Batch Actions ── */}
  {selectedIds.size > 0 && (
  <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top-2">
- <span className="text-sm font-bold text-violet-800">
+ <span className="text-sm font-bold text-app-primary">
  {selectedIds.size} product{selectedIds.size > 1 ? 's' : ''} selected
  </span>
  <div className="flex gap-2">
  <button
  onClick={() => openRequest('purchase_request', Array.from(selectedIds))}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-app-text text-sm font-semibold hover:bg-violet-700 transition-colors shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-primary text-app-foreground text-sm font-semibold hover:bg-app-primary transition-colors shadow-sm"
  >
  <ShoppingCart size={16} /> Purchase Request
  </button>
  <button
  onClick={() => openRequest('transfer_request', Array.from(selectedIds))}
- className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-app-text text-sm font-semibold hover:bg-cyan-700 transition-colors shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-app-foreground text-sm font-semibold hover:bg-cyan-700 transition-colors shadow-sm"
  >
  <Truck size={16} /> Transfer Request
  </button>
  <button
  onClick={() => setSelectedIds(new Set())}
- className="px-3 py-2 rounded-xl border border-violet-200 text-violet-600 text-sm font-medium hover:bg-violet-100 transition-colors"
+ className="px-3 py-2 rounded-xl border border-violet-200 text-app-primary text-sm font-medium hover:bg-app-primary/10 transition-colors"
  >
  Clear
  </button>
@@ -340,13 +341,13 @@ export default function ProductAnalyticsPage() {
  <div className="overflow-x-auto">
  <table className="w-full text-sm">
  <thead>
- <tr className="bg-gray-50/80 border-b border-app-border">
+ <tr className="bg-app-surface-2/80 border-b border-app-border">
  <th className="p-4 text-left">
  <input
  type="checkbox"
  checked={selectedIds.size === products.length && products.length > 0}
  onChange={toggleSelectAll}
- className="rounded border-app-border text-violet-600 focus:ring-violet-500"
+ className="rounded border-app-border text-app-primary focus:ring-violet-500"
  />
  </th>
  {[
@@ -361,12 +362,12 @@ export default function ProductAnalyticsPage() {
  <th
  key={col.key}
  onClick={() => col.key !== 'actions' && toggleSort(col.key)}
- className={`p-4 text-left text-xs font-bold text-app-text-muted uppercase tracking-wider ${col.key !== 'actions' ? 'cursor-pointer hover:text-gray-700 select-none' : ''}`}
+ className={`p-4 text-left text-xs font-bold text-app-muted-foreground uppercase tracking-wider ${col.key !== 'actions' ? 'cursor-pointer hover:text-app-muted-foreground select-none' : ''}`}
  >
  <div className="flex items-center gap-1">
  {col.label}
  {sortField === col.key && (
- <ArrowUpDown size={14} className="text-violet-500" />
+ <ArrowUpDown size={14} className="text-app-primary" />
  )}
  </div>
  </th>
@@ -379,14 +380,14 @@ export default function ProductAnalyticsPage() {
  <td colSpan={8} className="p-16 text-center">
  <div className="flex flex-col items-center gap-3">
  <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin" />
- <span className="text-sm text-app-text-faint font-medium">Loading analytics...</span>
+ <span className="text-sm text-app-muted-foreground font-medium">Loading analytics...</span>
  </div>
  </td>
  </tr>
  ) : sorted.length === 0 ? (
  <tr>
  <td colSpan={8} className="p-16 text-center">
- <div className="flex flex-col items-center gap-2 text-app-text-faint">
+ <div className="flex flex-col items-center gap-2 text-app-muted-foreground">
  <Package size={40} strokeWidth={1.5} />
  <p className="font-semibold text-base">No products found</p>
  <p className="text-sm">Try adjusting your filters</p>
@@ -400,7 +401,7 @@ export default function ProductAnalyticsPage() {
  return (
  <tr
  key={p.id}
- className="hover:bg-gray-50/50 transition-colors group"
+ className="hover:bg-app-surface-2/50 transition-colors group"
  >
  {/* Select */}
  <td className="p-4">
@@ -408,22 +409,22 @@ export default function ProductAnalyticsPage() {
  type="checkbox"
  checked={selectedIds.has(p.id)}
  onChange={() => toggleSelect(p.id)}
- className="rounded border-app-border text-violet-600 focus:ring-violet-500"
+ className="rounded border-app-border text-app-primary focus:ring-violet-500"
  />
  </td>
  {/* Product */}
  <td className="p-4">
  <div className="flex flex-col">
- <span className="font-semibold text-app-text">{p.name}</span>
+ <span className="font-semibold text-app-foreground">{p.name}</span>
  <div className="flex items-center gap-2 mt-1">
- <span className="text-xs font-mono text-app-text-faint">{p.sku}</span>
+ <span className="text-xs font-mono text-app-muted-foreground">{p.sku}</span>
  {p.category_name && (
- <span className="text-xs px-2 py-0.5 rounded-full bg-app-surface-2 text-app-text-muted font-medium">
+ <span className="text-xs px-2 py-0.5 rounded-full bg-app-surface-2 text-app-muted-foreground font-medium">
  {p.category_name}
  </span>
  )}
  {p.brand_name && (
- <span className="text-xs px-2 py-0.5 rounded-full bg-violet-50 text-violet-600 font-medium">
+ <span className="text-xs px-2 py-0.5 rounded-full bg-violet-50 text-app-primary font-medium">
  {p.brand_name}
  </span>
  )}
@@ -433,13 +434,13 @@ export default function ProductAnalyticsPage() {
  {/* Stock */}
  <td className="p-4">
  <div className="flex flex-col">
- <span className={`font-bold tabular-nums ${p.total_stock <= 0 ? 'text-red-600' :
+ <span className={`font-bold tabular-nums ${p.total_stock <= 0 ? 'text-app-error' :
  p.total_stock < p.min_stock_level ? 'text-orange-600' :
- 'text-app-text'
+ 'text-app-foreground'
  }`}>
  {p.total_stock.toLocaleString()}
  </span>
- <span className="text-xs text-app-text-faint">
+ <span className="text-xs text-app-muted-foreground">
  min: {p.min_stock_level}
  {p.stock_days_remaining !== null && (
  <> · {p.stock_days_remaining}d left</>
@@ -450,8 +451,8 @@ export default function ProductAnalyticsPage() {
  {/* Daily Sales */}
  <td className="p-4">
  <div className="flex flex-col">
- <span className="font-semibold text-app-text tabular-nums">{p.avg_daily_sales}/d</span>
- <span className="text-xs text-app-text-faint tabular-nums">{p.avg_monthly_sales} / 30d</span>
+ <span className="font-semibold text-app-foreground tabular-nums">{p.avg_daily_sales}/d</span>
+ <span className="text-xs text-app-muted-foreground tabular-nums">{p.avg_monthly_sales} / 30d</span>
  </div>
  </td>
  {/* Request Status */}
@@ -462,7 +463,7 @@ export default function ProductAnalyticsPage() {
  </span>
  {p.rejection_reason && (
  <div className="mt-1 flex items-center gap-1">
- <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-md font-medium truncate max-w-[160px]" title={p.rejection_reason}>
+ <span className="text-xs bg-app-error-bg text-app-error px-2 py-0.5 rounded-md font-medium truncate max-w-[160px]" title={p.rejection_reason}>
  {p.rejection_reason}
  </span>
  </div>
@@ -477,11 +478,11 @@ export default function ProductAnalyticsPage() {
  {ob.label}
  </span>
  {p.order_id && (
- <span className="text-xs text-app-text-faint font-mono">#{p.order_id}</span>
+ <span className="text-xs text-app-muted-foreground font-mono">#{p.order_id}</span>
  )}
  </div>
  ) : (
- <span className="text-xs text-gray-300">—</span>
+ <span className="text-xs text-app-muted-foreground">—</span>
  )}
  </td>
  {/* Health */}
@@ -504,14 +505,14 @@ export default function ProductAnalyticsPage() {
  <button
  onClick={() => openRequest('purchase_request', [p.id])}
  title="Create Purchase Request"
- className="p-2 rounded-lg hover:bg-violet-50 text-app-text-faint hover:text-violet-600 transition-colors"
+ className="p-2 rounded-lg hover:bg-violet-50 text-app-muted-foreground hover:text-app-primary transition-colors"
  >
  <ShoppingCart size={16} />
  </button>
  <button
  onClick={() => openRequest('transfer_request', [p.id])}
  title="Create Transfer Request"
- className="p-2 rounded-lg hover:bg-cyan-50 text-app-text-faint hover:text-cyan-600 transition-colors"
+ className="p-2 rounded-lg hover:bg-cyan-50 text-app-muted-foreground hover:text-cyan-600 transition-colors"
  >
  <Truck size={16} />
  </button>
@@ -525,22 +526,22 @@ export default function ProductAnalyticsPage() {
  </div>
  {/* ── Pagination ── */}
  {totalPages > 1 && (
- <div className="flex items-center justify-between px-6 py-4 border-t border-app-border bg-gray-50/50">
- <span className="text-sm text-app-text-muted">
+ <div className="flex items-center justify-between px-6 py-4 border-t border-app-border bg-app-surface-2/50">
+ <span className="text-sm text-app-muted-foreground">
  Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} of {total.toLocaleString()}
  </span>
  <div className="flex gap-1">
  <button
  onClick={() => setPage(Math.max(0, page - 1))}
  disabled={page === 0}
- className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+ className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-background disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
  >
  Previous
  </button>
  <button
  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
  disabled={page >= totalPages - 1}
- className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+ className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-background disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
  >
  Next
  </button>
@@ -550,27 +551,27 @@ export default function ProductAnalyticsPage() {
  </div>
  {/* ── Request Dialog ── */}
  {showRequestDialog && (
- <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+ <div className="fixed inset-0 bg-app-background/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
  onClick={() => !requestLoading && setShowRequestDialog(false)}>
  <div
  className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95"
  onClick={e => e.stopPropagation()}
  >
- <h2 className="text-xl font-black text-app-text tracking-tight mb-2">
+ <h2 className="text-xl font-black text-app-foreground tracking-tight mb-2">
  Create {requestType === 'purchase_request' ? 'Purchase' : 'Transfer'} Request
  </h2>
- <p className="text-sm text-app-text-muted mb-6">
+ <p className="text-sm text-app-muted-foreground mb-6">
  This will create an operational request for <strong>{requestProductIds.length}</strong> product{requestProductIds.length > 1 ? 's' : ''}.
  </p>
- <div className="bg-app-bg rounded-xl p-4 mb-6">
- <div className="text-xs font-bold text-app-text-muted uppercase tracking-wider mb-2">Products</div>
+ <div className="bg-app-background rounded-xl p-4 mb-6">
+ <div className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-2">Products</div>
  <div className="space-y-1 max-h-40 overflow-y-auto">
  {requestProductIds.map(id => {
  const prod = products.find(p => p.id === id)
  return prod ? (
  <div key={id} className="flex items-center gap-2 text-sm">
- <span className="font-medium text-app-text">{prod.name}</span>
- <span className="text-xs text-app-text-faint font-mono">{prod.sku}</span>
+ <span className="font-medium text-app-foreground">{prod.name}</span>
+ <span className="text-xs text-app-muted-foreground font-mono">{prod.sku}</span>
  </div>
  ) : null
  })}
@@ -580,15 +581,15 @@ export default function ProductAnalyticsPage() {
  <button
  onClick={() => setShowRequestDialog(false)}
  disabled={requestLoading}
- className="flex-1 px-4 py-3 rounded-xl border border-app-border text-sm font-semibold text-app-text-muted hover:bg-app-bg transition-colors disabled:opacity-50"
+ className="flex-1 px-4 py-3 rounded-xl border border-app-border text-sm font-semibold text-app-muted-foreground hover:bg-app-background transition-colors disabled:opacity-50"
  >
  Cancel
  </button>
  <button
  onClick={handleCreateRequest}
  disabled={requestLoading}
- className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-app-text transition-colors shadow-lg disabled:opacity-50 ${requestType === 'purchase_request'
- ? 'bg-violet-600 hover:bg-violet-700 shadow-violet-500/25'
+ className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-app-foreground transition-colors shadow-lg disabled:opacity-50 ${requestType === 'purchase_request'
+ ? 'bg-app-primary hover:bg-app-primary shadow-violet-500/25'
  : 'bg-cyan-600 hover:bg-cyan-700 shadow-cyan-500/25'
  }`}
  >

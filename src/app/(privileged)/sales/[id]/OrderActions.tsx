@@ -54,8 +54,8 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
  onClick={handleVerify}
  disabled={loading}
  className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all ${isVerified
- ? 'bg-emerald-500 text-app-text shadow-lg shadow-emerald-200 hover:bg-emerald-600'
- : 'bg-app-surface border-2 border-emerald-100 text-emerald-600 hover:bg-emerald-50'
+ ? 'bg-app-primary text-app-foreground shadow-lg shadow-emerald-200 hover:bg-app-primary'
+ : 'bg-app-surface border-2 border-app-success/30 text-app-primary hover:bg-app-primary-light'
  }`}
  >
  <CheckCircle2 size={18} />
@@ -66,8 +66,8 @@ export function OrderActions({ orderId, isLocked: initialLocked, isVerified: ini
  onClick={handleLock}
  disabled={loading}
  className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black transition-all ${isLocked
- ? 'bg-amber-500 text-app-text shadow-lg shadow-amber-200 hover:bg-amber-600'
- : 'bg-app-surface border-2 border-amber-100 text-amber-600 hover:bg-amber-50'
+ ? 'bg-app-warning text-app-foreground shadow-lg shadow-amber-200 hover:bg-app-warning'
+ : 'bg-app-surface border-2 border-app-warning/30 text-app-warning hover:bg-app-warning-bg'
  }`}
  >
  {isLocked ? <Lock size={18} /> : <Unlock size={18} />}

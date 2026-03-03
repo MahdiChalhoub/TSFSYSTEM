@@ -28,16 +28,16 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  // Authenticated state — show user card
  if (isAuthenticated && user) {
  return (
- <div className="p-8 bg-slate-900/60 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] space-y-5 relative overflow-hidden">
+ <div className="p-8 bg-app-surface/60 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] space-y-5 relative overflow-hidden">
  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent" />
  <div className="relative space-y-5">
  <div className="flex items-center gap-4">
- <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-emerald-400">
+ <div className="w-14 h-14 bg-app-primary/20 border border-app-primary/30 rounded-2xl flex items-center justify-center text-app-primary">
  <User size={24} />
  </div>
  <div className="flex-1 min-w-0">
  <p className="text-app-text font-bold text-lg truncate">{user.name}</p>
- <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">
+ <p className="text-[10px] text-app-primary font-bold uppercase tracking-widest">
  {contact?.tier || 'Customer'} {contact?.loyalty_points ? `• ${contact.loyalty_points} pts` : ''}
  </p>
  </div>
@@ -46,11 +46,11 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  <div className="grid grid-cols-2 gap-2">
  <a href={`/tenant/${slug}/account`}
  className="flex items-center gap-2 px-4 py-3 bg-app-text/5 border border-app-text/5 rounded-xl text-sm text-app-text font-semibold hover:bg-app-text/10 transition-all">
- <ShoppingBag size={16} className="text-blue-400" /> My Orders
+ <ShoppingBag size={16} className="text-app-info" /> My Orders
  </a>
  <a href={`/tenant/${slug}/account/wallet`}
  className="flex items-center gap-2 px-4 py-3 bg-app-text/5 border border-app-text/5 rounded-xl text-sm text-app-text font-semibold hover:bg-app-text/10 transition-all">
- <Wallet size={16} className="text-amber-400" /> Wallet
+ <Wallet size={16} className="text-app-warning" /> Wallet
  </a>
  <a href={`/tenant/${slug}/account/tickets`}
  className="flex items-center gap-2 px-4 py-3 bg-app-text/5 border border-app-text/5 rounded-xl text-sm text-app-text font-semibold hover:bg-app-text/10 transition-all">
@@ -58,9 +58,9 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  </a>
  <a href={`/tenant/${slug}/cart`}
  className="flex items-center gap-2 px-4 py-3 bg-app-text/5 border border-app-text/5 rounded-xl text-sm text-app-text font-semibold hover:bg-app-text/10 transition-all relative">
- <ShoppingBag size={16} className="text-emerald-400" /> Cart
+ <ShoppingBag size={16} className="text-app-primary" /> Cart
  {cart.length > 0 && (
- <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full text-[10px] flex items-center justify-center font-black text-app-text">
+ <span className="absolute -top-1 -right-1 w-5 h-5 bg-app-primary rounded-full text-[10px] flex items-center justify-center font-black text-app-text">
  {cart.length}
  </span>
  )}
@@ -68,7 +68,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  </div>
 
  <button onClick={logout}
- className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold hover:bg-red-500/20 transition-all">
+ className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-app-error-bg border border-app-error/20 rounded-xl text-sm text-app-error font-semibold hover:bg-app-error-bg transition-all">
  <LogOut size={16} /> Sign Out
  </button>
  </div>
@@ -79,7 +79,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  // Login form
  if (showForm) {
  return (
- <div className="p-8 bg-slate-900/60 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] space-y-6 relative overflow-hidden animate-in fade-in duration-300">
+ <div className="p-8 bg-app-surface/60 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] space-y-6 relative overflow-hidden animate-in fade-in duration-300">
  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent" />
  <div className="relative space-y-5">
  <div className="flex justify-between items-start">
@@ -93,7 +93,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  </div>
 
  {error && (
- <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+ <div className="p-4 bg-app-error-bg border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
  <AlertCircle size={18} className="shrink-0" />
  {error}
  </div>
@@ -106,7 +106,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  value={email}
  onChange={e => setEmail(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-blue-500 transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-app-info transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-app-text-muted"
  />
  <input
  type="password"
@@ -114,7 +114,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  value={password}
  onChange={e => setPassword(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-blue-500 transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-app-info transition-all focus:ring-4 focus:ring-blue-500/5 placeholder:text-app-text-muted"
  />
  <button
  type="submit"
@@ -124,7 +124,7 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
  </button>
  <p className="text-center">
- <button type="button" className="text-sm text-app-text-muted hover:text-blue-400 transition-colors font-medium">
+ <button type="button" className="text-sm text-app-text-muted hover:text-app-info transition-colors font-medium">
  Forgot password?
  </button>
  </p>
@@ -139,12 +139,12 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
  <div className="space-y-3">
  <button
  onClick={() => setShowForm(true)}
- className="w-full p-5 bg-blue-600/20 border border-blue-500/30 rounded-2xl text-blue-400 font-bold flex items-center justify-center gap-3 hover:bg-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+ className="w-full p-5 bg-blue-600/20 border border-app-info/30 rounded-2xl text-app-info font-bold flex items-center justify-center gap-3 hover:bg-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
  >
  <LogIn size={20} /> Client Portal Login
  </button>
  <a href={`/tenant/${slug}/register`}
- className="block text-center text-sm text-app-text-muted hover:text-emerald-400 transition-colors font-medium">
+ className="block text-center text-sm text-app-text-muted hover:text-app-primary transition-colors font-medium">
  New here? <span className="underline">Create an account</span>
  </a>
  </div>

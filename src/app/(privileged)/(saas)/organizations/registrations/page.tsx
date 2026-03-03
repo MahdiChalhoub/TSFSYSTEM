@@ -10,16 +10,16 @@ export default async function RegistrationsPage() {
  ]);
 
  return (
- <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+ <div className="app-page p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
  <div>
  <h1 className="page-header-title uppercase tracking-tighter flex items-center gap-3">
- <div className="p-2 bg-blue-50 rounded-xl">
- <ClipboardList className="text-blue-600" size={28} />
+ <div className="p-2 bg-app-info-bg rounded-xl">
+ <ClipboardList className="text-app-info" size={28} />
  </div>
  Registration Queue
  </h1>
- <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-widest mt-1">
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest mt-1">
  Review and approve new business workspace requests
  </p>
  </div>

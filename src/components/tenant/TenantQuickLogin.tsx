@@ -6,7 +6,7 @@ const initialState: Record<string, any> = { error: {} }
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
  const [state, action, isPending] = useActionState(loginAction, initialState)
  return (
- <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
+ <div className="p-10 bg-app-surface/40 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
  <div className="flex justify-between items-center relative">
  <div className="space-y-1">
@@ -20,7 +20,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  <form action={action} className="space-y-4 pt-2 relative">
  {/* Error Display */}
  {(state?.error as any)?.root && (
- <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+ <div className="p-4 bg-app-error-bg border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
  <AlertCircle size={18} className="shrink-0" />
  {(state?.error as any).root[0]}
  </div>
@@ -29,7 +29,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  {/* 2FA Step */}
  {state?.two_factor_required ? (
  <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
- <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-sm font-medium flex items-center gap-3">
+ <div className="p-4 bg-app-primary/10 border border-app-primary/20 rounded-2xl text-app-primary text-sm font-medium flex items-center gap-3">
  <ShieldCheck size={18} className="shrink-0" />
  {(state as any).message || "Enter your verification code"}
  </div>
@@ -39,14 +39,14 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  placeholder="000 000"
  required
  autoFocus
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-app-primary transition-all focus:ring-4 focus:ring-app-primary/5 placeholder:text-app-text-muted"
  />
  {/* Server-side 2FA challenge — no passwords in DOM */}
  <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
  <button
  type="submit"
  disabled={isPending}
- className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+ className="w-full bg-app-primary hover:bg-app-primary text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-app-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
  >
  {isPending ? (
  <Loader2 className="animate-spin" size={20} />
@@ -71,19 +71,19 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  type="text"
  placeholder="Username"
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-app-primary transition-all focus:ring-4 focus:ring-app-primary/5 placeholder:text-app-text-muted"
  />
  <input
  name="password"
  type="password"
  placeholder="Access Key"
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-app-primary transition-all focus:ring-4 focus:ring-app-primary/5 placeholder:text-app-text-muted"
  />
  <button
  type="submit"
  disabled={isPending}
- className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+ className="w-full bg-app-primary hover:bg-app-primary text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-app-primary/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
  >
  {isPending ? (
  <Loader2 className="animate-spin" size={20} />
@@ -92,7 +92,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
  )}
  </button>
  <div className="flex justify-center">
- <a href="/forgot-password" className="text-[10px] text-app-text-muted hover:text-emerald-400 font-bold uppercase tracking-[0.2em] transition-colors">
+ <a href="/forgot-password" className="text-[10px] text-app-text-muted hover:text-app-primary font-bold uppercase tracking-[0.2em] transition-colors">
  Forgot Password?
  </a>
  </div>

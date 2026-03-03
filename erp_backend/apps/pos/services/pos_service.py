@@ -147,6 +147,9 @@ class POSService:
                 notes=notes or ''
             )
 
+            custom_liabilities_map = {}
+            custom_liability_total = Decimal('0')
+
             # ── Resolve invoice type via new engine (scope guard + org policy) ──
             # _ctx safe-default: vat_active will be derived from policy; fallback is vat_active=True (OFFICIAL scope)
             try:
@@ -238,12 +241,31 @@ class POSService:
                 item_tax = (item_total * tax_rate).quantize(Decimal('0.01'))
                 item_cogs = qty * amc
 
-                total_amount += (item_total + item_tax)
+                # ── Custom Dynamic Taxes ───────────────────────────────
+                item_custom_tax_ttc_addition = Decimal('0')
+                item_custom_tax_entries = []
+                
+                if hasattr(_ctx, 'custom_rules'):
+                    for rule in _ctx.custom_rules:
+                        if rule.transaction_type in ('SALE', 'BOTH'):
+                            c_amt = (item_total * rule.rate).quantize(Decimal('0.01'))
+                            if c_amt > 0:
+                                item_custom_tax_entries.append({'rule': rule, 'amount': c_amt})
+                                if rule.math_behavior == 'ADDED_TO_TTC':
+                                    item_custom_tax_ttc_addition += c_amt
+
+                total_amount += (item_total + item_tax + item_custom_tax_ttc_addition)
                 total_tax += item_tax
                 total_cogs += item_cogs
 
+                for cx in item_custom_tax_entries:
+                    if cx['rule'].liability_account_id:
+                        lid = cx['rule'].liability_account_id
+                        custom_liabilities_map[lid] = custom_liabilities_map.get(lid, Decimal('0')) + cx['amount']
+                        custom_liability_total += cx['amount']
+
                 # ── Gap 6: Per-line tax split fields ──────────────────────────────────
-                # item_total = HT (before VAT), item_tax = VAT portion, TTC = HT + VAT
+                # item_total = HT (before VAT), item_tax = VAT portion, TTC = HT + VAT + CUSTOM
                 _vat_active   = getattr(_ctx, 'vat_active', True)
                 _is_tax_exempt = not _vat_active  # INTERNAL scope or VAT-exempt policy → exempt
 
@@ -260,14 +282,14 @@ class POSService:
                     unit_price=price,           # original price before discount
                     discount_rate=discount_rate,
                     tax_rate=tax_rate,
-                    total=(item_total + item_tax),
+                    total=(item_total + item_tax + item_custom_tax_ttc_addition),
                     unit_cost_ht=amc,
                     effective_cost=amc,
                     price_override_detected=is_override,
                     # ── Gap 6 tax split ────────────────────────────────────────
                     tax_amount_ht=item_total.quantize(Decimal('0.01')),
                     tax_amount_vat=item_tax,
-                    tax_amount_ttc=(item_total + item_tax).quantize(Decimal('0.01')),
+                    tax_amount_ttc=(item_total + item_tax + item_custom_tax_ttc_addition).quantize(Decimal('0.01')),
                     airsi_withheld=_airsi_withheld,
                     is_tax_exempt=_is_tax_exempt,
                 )
@@ -291,6 +313,21 @@ class POSService:
                             scope=scope,
                         )
                         entry.save()
+                        
+                    for c_tax in item_custom_tax_entries:
+                        OrderLineTaxEntry.objects.create(
+                            organization=organization,
+                            order_line_id=line_obj.id,
+                            transaction_type='SALE',
+                            tax_type='CUSTOM',
+                            custom_tax_rule_id=c_tax['rule'].id,
+                            rate=c_tax['rule'].rate,
+                            base_amount=item_total,
+                            amount=c_tax['amount'],
+                            cost_impact_amount=Decimal('0'),
+                            cost_impact_ratio=Decimal('0'),
+                            scope=scope,
+                        )
                 except Exception:
                     pass  # Never block a sale due to tax entry failure
 
@@ -436,6 +473,7 @@ class POSService:
 
 
             if should_split_vat:
+                revenue_credit = order.total_amount - total_tax - custom_liability_total
                 # Correct: DR Cash/AR (TTC) → CR Revenue HT + CR TVA Collectée
                 lines = [
                     {"account_id": rev_acc, "debit": Decimal('0'), "credit": revenue_credit,
@@ -448,13 +486,20 @@ class POSService:
                      "description": "Inventory Relief"},
                 ]
             else:
+                revenue_credit = order.total_amount - custom_liability_total
                 # REGULAR/MICRO or sales.tax not configured: TTC posted to revenue
                 lines = [
                     {"account_id": rev_acc, "debit": Decimal('0'), "credit": revenue_credit},
-                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": total_tax},
                     {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
                     {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
                 ]
+
+            for liab_acc_id, liab_amt in custom_liabilities_map.items():
+                if liab_amt > 0:
+                    lines.append({
+                        "account_id": liab_acc_id, "debit": Decimal('0'), "credit": liab_amt,
+                        "description": "Custom Tax Liability"
+                    })
 
             # Use structured payment_legs if provided, replacing the old notes parsing
             parsed_legs = []

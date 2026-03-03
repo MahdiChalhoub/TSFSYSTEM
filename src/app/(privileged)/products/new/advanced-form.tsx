@@ -12,12 +12,12 @@ import { toast } from 'sonner';
 import { PackagePlus, Plus, Search, History, Percent, BarChart3, Package, Zap, Wand2, Trash2, ShoppingCart, Truck, DollarSign, Warehouse, Lock, ChevronDown } from 'lucide-react';
 
 /* ─────────────────────────── Styles ─────────────────────────── */
-const card = "bg-app-surface rounded-xl border border-gray-200/80 overflow-hidden";
+const card = "bg-app-surface rounded-xl border border-app-border/80 overflow-hidden";
 const cardHead = (accent: string) => `px-5 py-3.5 border-l-[3px] ${accent} flex items-center justify-between`;
-const cardTitle = "text-[15px] font-semibold text-app-text tracking-[-0.01em]";
-const fieldLabel = "block text-[12px] font-medium text-app-text-muted mb-1.5 uppercase tracking-wider";
-const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all text-app-text placeholder:text-gray-300";
-const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all text-gray-700 appearance-none";
+const cardTitle = "text-[15px] font-semibold text-app-foreground tracking-[-0.01em]";
+const fieldLabel = "block text-[12px] font-medium text-app-muted-foreground mb-1.5 uppercase tracking-wider";
+const fieldInput = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-app-info/30 outline-none transition-all text-app-foreground placeholder:text-app-muted-foreground";
+const fieldSelect = "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-app-info/30 outline-none transition-all text-app-muted-foreground appearance-none";
 
 export default function AdvancedProductForm({
  categories,
@@ -153,7 +153,7 @@ export default function AdvancedProductForm({
  <form action={formAction} className="max-w-[1440px] mx-auto pb-24">
  {/* Global Errors */}
  {state.message && (
- <div className={`mb-5 px-4 py-3 rounded-lg border text-[13px] font-medium ${(state as any).errors ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+ <div className={`mb-5 px-4 py-3 rounded-lg border text-[13px] font-medium ${(state as any).errors ? 'bg-app-error-bg text-app-error border-app-error' : 'bg-app-primary-light text-app-success border-app-success'}`}>
  <p className="font-semibold">{state.message}</p>
  {(state as any).errors && Object.keys((state as any).errors).length > 0 && (
  <ul className="list-disc pl-5 mt-1 space-y-0.5 text-[12px]">
@@ -196,7 +196,7 @@ export default function AdvancedProductForm({
  </div>
 
  <div>
- <label className={fieldLabel}>Product Type <span className="text-red-400">*</span></label>
+ <label className={fieldLabel}>Product Type <span className="text-app-error">*</span></label>
  <select
  name="productType"
  value={productType}
@@ -221,7 +221,7 @@ export default function AdvancedProductForm({
  </div>
 
  <div>
- <label className={fieldLabel}>Stock Unit <span className="text-red-400">*</span></label>
+ <label className={fieldLabel}>Stock Unit <span className="text-app-error">*</span></label>
  <select name="unitId" className={fieldSelect} required>
  <option value="">Select unit...</option>
  {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.type})</option>)}
@@ -244,7 +244,7 @@ export default function AdvancedProductForm({
  name="sizeUnitId"
  value={emballageUnitId}
  onChange={(e) => setEmballageUnitId(e.target.value)}
- className="w-20 bg-app-bg border border-app-border rounded-lg px-2 py-[9px] text-[12px] outline-none text-app-text-muted font-medium shrink-0"
+ className="w-20 bg-app-background border border-app-border rounded-lg px-2 py-[9px] text-[12px] outline-none text-app-muted-foreground font-medium shrink-0"
  >
  <option value="">Unit</option>
  {units.map(u => <option key={u.id} value={u.id}>{u.shortName || u.name}</option>)}
@@ -254,10 +254,10 @@ export default function AdvancedProductForm({
  </div>
 
  {/* Auto-Generated Name */}
- <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200/60 p-4 rounded-lg">
+ <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-app-info/60 p-4 rounded-lg">
  <div className="flex items-center gap-1.5 mb-2">
- <Wand2 className="w-3.5 h-3.5 text-blue-500" />
- <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Auto-Generated Name</span>
+ <Wand2 className="w-3.5 h-3.5 text-app-info" />
+ <span className="text-[11px] font-semibold text-app-info uppercase tracking-wider">Auto-Generated Name</span>
  </div>
  <div className="flex gap-3">
  <input
@@ -265,13 +265,13 @@ export default function AdvancedProductForm({
  type="text"
  value={autoName}
  readOnly
- className="flex-1 bg-app-surface border border-blue-200 rounded-lg px-3 py-2 text-[13px] outline-none text-app-text font-semibold shadow-sm cursor-default"
+ className="flex-1 bg-app-surface border border-app-info rounded-lg px-3 py-2 text-[13px] outline-none text-app-foreground font-semibold shadow-sm cursor-default"
  placeholder="Name will generate as you fill fields..."
  required
  />
- <input type="text" name="shortName" className="w-[140px] bg-app-surface border border-app-border rounded-lg px-3 py-2 text-[12px] outline-none placeholder:text-gray-300 font-medium" placeholder="Short name" />
+ <input type="text" name="shortName" className="w-[140px] bg-app-surface border border-app-border rounded-lg px-3 py-2 text-[12px] outline-none placeholder:text-app-muted-foreground font-medium" placeholder="Short name" />
  </div>
- <p className="text-[10px] text-blue-500/70 mt-1.5 font-medium">
+ <p className="text-[10px] text-app-info/70 mt-1.5 font-medium">
  Rule: {namingRule.components.filter(c => c.enabled).map(c => (c as any).name).join(` ${namingRule.separator} `)}
  </p>
  </div>
@@ -290,8 +290,8 @@ export default function AdvancedProductForm({
  <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-md uppercase tracking-wide">Mass Generate</span>
  </div>
  <div className="p-5">
- <p className="text-[12px] text-app-text-muted mb-3 leading-relaxed">
- Type comma-separated names (e.g., Vanilla, Mint, Classic). Each creates a <span className="font-semibold text-gray-700">separate tracked product</span> sharing all other properties.
+ <p className="text-[12px] text-app-muted-foreground mb-3 leading-relaxed">
+ Type comma-separated names (e.g., Vanilla, Mint, Classic). Each creates a <span className="font-semibold text-app-muted-foreground">separate tracked product</span> sharing all other properties.
  </p>
  <input
  name="parfumName"
@@ -310,23 +310,23 @@ export default function AdvancedProductForm({
  <div className="mt-4 border border-app-border rounded-lg overflow-hidden">
  <table className="w-full text-[12px]">
  <thead>
- <tr className="bg-app-bg text-app-text-muted font-semibold uppercase tracking-wider text-left text-[10px]">
+ <tr className="bg-app-background text-app-muted-foreground font-semibold uppercase tracking-wider text-left text-[10px]">
  <th className="px-4 py-2.5 w-[30%]">Variant</th>
  <th className="px-4 py-2.5">Manufacturer Barcode</th>
  <th className="px-4 py-2.5">Manufacturer SKU</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100">
+ <tbody className="divide-y divide-app-border">
  {variations.map((v, idx) => (
- <tr key={v.id} className="hover:bg-gray-50/50 transition-colors">
- <td className="px-4 py-2.5 font-semibold text-app-text flex items-center gap-2">
+ <tr key={v.id} className="hover:bg-app-surface-2/50 transition-colors">
+ <td className="px-4 py-2.5 font-semibold text-app-foreground flex items-center gap-2">
  <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold shrink-0">{idx + 1}</span>
  {v.name}
  </td>
  <td className="px-4 py-2">
  <input
  type="text"
- className="w-full bg-app-bg border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-gray-300"
+ className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
  placeholder="Scan / type..."
  value={v.barcode}
  onChange={(e) => {
@@ -339,7 +339,7 @@ export default function AdvancedProductForm({
  <td className="px-4 py-2">
  <input
  type="text"
- className="w-full bg-app-bg border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-gray-300"
+ className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-purple-400 focus:bg-app-surface font-mono placeholder:text-app-muted-foreground"
  placeholder="Optional"
  value={v.sku}
  onChange={(e) => {
@@ -353,8 +353,8 @@ export default function AdvancedProductForm({
  ))}
  </tbody>
  </table>
- <div className="bg-app-bg px-4 py-2 text-[10px] text-app-text-muted font-medium flex items-center gap-1.5 border-t border-app-border">
- <Zap className="w-3 h-3 text-amber-500" /> Leave blank to auto-generate internal codes. Print tasks will be queued automatically.
+ <div className="bg-app-background px-4 py-2 text-[10px] text-app-muted-foreground font-medium flex items-center gap-1.5 border-t border-app-border">
+ <Zap className="w-3 h-3 text-app-warning" /> Leave blank to auto-generate internal codes. Print tasks will be queued automatically.
  </div>
  </div>
  )}
@@ -366,10 +366,10 @@ export default function AdvancedProductForm({
  <div className={card}>
  <div className={cardHead('border-l-emerald-500')}>
  <h3 className={cardTitle}>Pricing Structure</h3>
- <label className="text-[11px] font-medium text-app-text-muted cursor-pointer flex items-center gap-2 bg-app-bg border border-app-border px-2.5 py-1.5 rounded-lg select-none">
+ <label className="text-[11px] font-medium text-app-muted-foreground cursor-pointer flex items-center gap-2 bg-app-background border border-app-border px-2.5 py-1.5 rounded-lg select-none">
  <input
  type="checkbox"
- className="w-3.5 h-3.5 text-emerald-600 rounded border-app-border focus:ring-emerald-500"
+ className="w-3.5 h-3.5 text-app-primary rounded border-app-border focus:ring-app-primary"
  checked={pricing.included}
  onChange={(e) => setPricing({ ...pricing, included: e.target.checked })}
  />
@@ -383,7 +383,7 @@ export default function AdvancedProductForm({
  Cost Price {pricing.included ? '(TTC)' : '(HT)'}
  </label>
  <div className="relative">
- <span className="absolute left-3 top-[10px] text-app-text-faint text-[12px] font-semibold">$</span>
+ <span className="absolute left-3 top-[10px] text-app-muted-foreground text-[12px] font-semibold">$</span>
  <input
  type="number" step="0.01"
  value={pricing.cost || ''}
@@ -393,35 +393,35 @@ export default function AdvancedProductForm({
  />
  <input type="hidden" name="costPrice" value={pricing.cost} />
  </div>
- <p className="text-[10px] text-app-text-faint mt-1 font-medium">
+ <p className="text-[10px] text-app-muted-foreground mt-1 font-medium">
  {pricing.included ? `= ${calc.costHT.toFixed(2)} HT` : `= ${calc.costTTC.toFixed(2)} TTC`}
  </p>
  </div>
 
  <div>
  <label className={fieldLabel}>
- Selling Price <span className="text-red-400">*</span> {pricing.included ? '(TTC)' : '(HT)'}
+ Selling Price <span className="text-app-error">*</span> {pricing.included ? '(TTC)' : '(HT)'}
  </label>
  <div className="relative">
- <span className="absolute left-3 top-[10px] text-emerald-600 text-[12px] font-bold">$</span>
+ <span className="absolute left-3 top-[10px] text-app-primary text-[12px] font-bold">$</span>
  <input
  type="number" step="0.01"
  value={pricing.sell || ''}
  onChange={(e) => setPricing({ ...pricing, sell: parseFloat(e.target.value) || 0 })}
- className={fieldInput + ' pl-7 font-semibold border-emerald-200 bg-emerald-50/30'}
+ className={fieldInput + ' pl-7 font-semibold border-app-success bg-app-primary-light/30'}
  placeholder="0.00"
  required
  />
  <input type="hidden" name="basePrice" value={pricing.sell} />
  </div>
- <p className="text-[10px] text-emerald-600 mt-1 font-medium">
+ <p className="text-[10px] text-app-primary mt-1 font-medium">
  {pricing.included ? `= ${calc.sellHT.toFixed(2)} HT` : `= ${calc.sellTTC.toFixed(2)} TTC`}
  </p>
  </div>
 
  <div className="flex flex-col">
  <label className={fieldLabel}>Margin</label>
- <div className={`flex-1 rounded-lg border flex flex-col justify-center items-center ${calc.marginPercent > 30 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : calc.marginPercent > 0 ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+ <div className={`flex-1 rounded-lg border flex flex-col justify-center items-center ${calc.marginPercent > 30 ? 'bg-app-primary-light border-app-success text-app-success' : calc.marginPercent > 0 ? 'bg-app-info-bg border-app-info text-app-info' : 'bg-app-error-bg border-app-error text-app-error'}`}>
  <span className="text-[22px] font-bold leading-none">{calc.marginPercent.toFixed(1)}%</span>
  <span className="text-[10px] font-medium mt-0.5 opacity-70">{calc.marginValue.toFixed(2)}$ profit</span>
  </div>
@@ -457,11 +457,11 @@ export default function AdvancedProductForm({
  { label: 'For Purchasing', name: 'isForPurchasing', default: true, desc: 'Buy via Purchase Orders', visible: !isCombo },
  { label: 'Serialize (IMEI)', name: 'isSerialized', default: false, desc: 'Track unique serial IDs', visible: true },
  ].map((toggle, i) => toggle.visible && (
- <label key={i} className="flex items-start gap-3 p-3 rounded-lg border border-app-border hover:bg-gray-50/50 transition-colors cursor-pointer group">
- <input type="checkbox" name={toggle.name} className="w-4 h-4 mt-0.5 text-blue-600 rounded border-app-border focus:ring-blue-500 shrink-0" defaultChecked={toggle.default} />
+ <label key={i} className="flex items-start gap-3 p-3 rounded-lg border border-app-border hover:bg-app-surface-2/50 transition-colors cursor-pointer group">
+ <input type="checkbox" name={toggle.name} className="w-4 h-4 mt-0.5 text-app-info rounded border-app-border focus:ring-blue-500 shrink-0" defaultChecked={toggle.default} />
  <div>
- <div className="text-[12px] font-semibold text-app-text group-hover:text-blue-700 transition-colors">{toggle.label}</div>
- <div className="text-[10px] text-app-text-faint font-medium leading-relaxed">{toggle.desc}</div>
+ <div className="text-[12px] font-semibold text-app-foreground group-hover:text-app-info transition-colors">{toggle.label}</div>
+ <div className="text-[10px] text-app-muted-foreground font-medium leading-relaxed">{toggle.desc}</div>
  </div>
  </label>
  ))}
@@ -472,9 +472,9 @@ export default function AdvancedProductForm({
  </div>
  <div className="w-full lg:w-[36%]">
  <div className={card + ' sticky top-4'}>
- <div className="px-5 py-3.5 border-b border-app-border bg-gray-50/50">
+ <div className="px-5 py-3.5 border-b border-app-border bg-app-surface-2/50">
  <h3 className={cardTitle}>System Configuration</h3>
- <p className="text-[11px] text-app-text-faint font-medium mt-0.5">Advanced routing & mappings</p>
+ <p className="text-[11px] text-app-muted-foreground font-medium mt-0.5">Advanced routing & mappings</p>
  </div>
 
  {/* Icon Tabs */}
@@ -484,7 +484,7 @@ export default function AdvancedProductForm({
  key={tab.id}
  type="button"
  onClick={() => setActiveTab(tab.id)}
- className={`flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-all border-b-2 ${activeTab === tab.id ? 'border-blue-500 text-blue-600 bg-blue-50/30' : 'border-transparent text-app-text-faint hover:text-app-text-muted hover:bg-app-bg'}`}
+ className={`flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-all border-b-2 ${activeTab === tab.id ? 'border-app-info text-app-info bg-app-info-bg/30' : 'border-transparent text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-background'}`}
  >
  <tab.icon className="w-4 h-4" />
  {tab.label}
@@ -498,15 +498,15 @@ export default function AdvancedProductForm({
  {activeTab === 'packaging' && (
  <div className="space-y-3">
  {/* Base Level */}
- <div className="flex items-center gap-3 p-3 bg-app-bg rounded-lg border border-app-border">
- <div className="w-7 h-7 rounded-full bg-blue-500 text-app-text flex items-center justify-center shrink-0">
+ <div className="flex items-center gap-3 p-3 bg-app-background rounded-lg border border-app-border">
+ <div className="w-7 h-7 rounded-full bg-app-info text-app-foreground flex items-center justify-center shrink-0">
  <Lock className="w-3.5 h-3.5" />
  </div>
  <div className="flex-1">
- <div className="text-[12px] font-semibold text-app-text">Base Level (1x)</div>
- <div className="text-[10px] text-app-text-faint">Core barcode & base price</div>
+ <div className="text-[12px] font-semibold text-app-foreground">Base Level (1x)</div>
+ <div className="text-[10px] text-app-muted-foreground">Core barcode & base price</div>
  </div>
- <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Locked</span>
+ <span className="text-[10px] font-semibold text-app-info bg-app-info-bg px-2 py-0.5 rounded">Locked</span>
  </div>
 
  {/* Dynamic Levels */}
@@ -514,19 +514,19 @@ export default function AdvancedProductForm({
  <div key={lvl.id} className="p-3 bg-app-surface rounded-lg border border-app-border space-y-3 group relative">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">{idx + 2}</div>
- <span className="text-[12px] font-semibold text-gray-700">Level {idx + 2}</span>
+ <div className="w-5 h-5 rounded-full bg-app-primary/10 text-app-primary flex items-center justify-center text-[10px] font-bold">{idx + 2}</div>
+ <span className="text-[12px] font-semibold text-app-muted-foreground">Level {idx + 2}</span>
  </div>
- <button type="button" onClick={() => setPackagingLevels(packagingLevels.filter(x => x.id !== lvl.id))} className="text-gray-300 hover:text-red-500 transition-colors">
+ <button type="button" onClick={() => setPackagingLevels(packagingLevels.filter(x => x.id !== lvl.id))} className="text-app-muted-foreground hover:text-app-error transition-colors">
  <Trash2 className="w-3.5 h-3.5" />
  </button>
  </div>
 
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Unit</label>
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Unit</label>
  <select
- className="w-full bg-app-bg border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none text-gray-700 font-medium"
+ className="w-full bg-app-background border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none text-app-muted-foreground font-medium"
  value={lvl.unitId}
  onChange={(e) => { const arr = [...packagingLevels]; arr[idx].unitId = e.target.value; setPackagingLevels(arr); }}
  >
@@ -535,22 +535,22 @@ export default function AdvancedProductForm({
  </select>
  </div>
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Contains (ratio)</label>
- <input type="number" className="w-full bg-app-bg border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none font-semibold text-app-text" placeholder="e.g. 12"
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Contains (ratio)</label>
+ <input type="number" className="w-full bg-app-background border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none font-semibold text-app-foreground" placeholder="e.g. 12"
  value={lvl.ratio || ''} onChange={(e) => { const arr = [...packagingLevels]; arr[idx].ratio = parseFloat(e.target.value) || 0; setPackagingLevels(arr); }}
  />
  </div>
  </div>
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Barcode</label>
- <input type="text" className="w-full bg-app-bg border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none font-mono placeholder:text-gray-300" placeholder="Scan..."
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Barcode</label>
+ <input type="text" className="w-full bg-app-background border border-app-border rounded-md px-2 py-1.5 text-[11px] outline-none font-mono placeholder:text-app-muted-foreground" placeholder="Scan..."
  value={lvl.barcode} onChange={(e) => { const arr = [...packagingLevels]; arr[idx].barcode = e.target.value; setPackagingLevels(arr); }}
  />
  </div>
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Sell Price</label>
- <input type="number" className="w-full bg-emerald-50/50 border border-emerald-200 rounded-md px-2 py-1.5 text-[11px] outline-none text-emerald-700 font-semibold placeholder:text-emerald-300" placeholder="Override"
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Sell Price</label>
+ <input type="number" className="w-full bg-app-primary-light/50 border border-app-success rounded-md px-2 py-1.5 text-[11px] outline-none text-app-success font-semibold placeholder:text-app-success" placeholder="Override"
  value={lvl.price || ''} onChange={(e) => { const arr = [...packagingLevels]; arr[idx].price = parseFloat(e.target.value) || 0; setPackagingLevels(arr); }}
  />
  </div>
@@ -559,7 +559,7 @@ export default function AdvancedProductForm({
  ))}
 
  <button type="button" onClick={() => setPackagingLevels([...packagingLevels, { id: crypto.randomUUID(), unitId: '', ratio: 0, barcode: '', price: 0 }])}
- className="w-full text-blue-600 bg-blue-50/50 hover:bg-blue-100 border border-dashed border-blue-200 rounded-lg text-[11px] font-semibold py-2.5 transition-all flex justify-center items-center gap-1.5"
+ className="w-full text-app-info bg-app-info-bg/50 hover:bg-app-info-bg border border-dashed border-app-info rounded-lg text-[11px] font-semibold py-2.5 transition-all flex justify-center items-center gap-1.5"
  >
  <Plus className="w-3.5 h-3.5" /> Add Package Level
  </button>
@@ -571,27 +571,27 @@ export default function AdvancedProductForm({
  {activeTab === 'suppliers' && (
  <div className="space-y-3">
  <div className="p-3 bg-app-surface rounded-lg border border-app-border space-y-3">
- <h4 className="text-[12px] font-semibold text-app-text">Primary Supplier</h4>
- <p className="text-[10px] text-app-text-faint leading-relaxed">Map to the supplier&apos;s catalog for perfect Purchase Orders.</p>
+ <h4 className="text-[12px] font-semibold text-app-foreground">Primary Supplier</h4>
+ <p className="text-[10px] text-app-muted-foreground leading-relaxed">Map to the supplier&apos;s catalog for perfect Purchase Orders.</p>
 
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Vendor</label>
- <select name="supplierId" className="w-full bg-app-bg border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none text-gray-700 font-medium">
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Vendor</label>
+ <select name="supplierId" className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none text-app-muted-foreground font-medium">
  <option value="">No supplier attached</option>
  </select>
  </div>
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Supplier SKU</label>
- <input name="supplierSku" type="text" className="w-full bg-app-bg border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none font-mono placeholder:text-gray-300" placeholder="e.g. LOR-SHAMP-001" />
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Supplier SKU</label>
+ <input name="supplierSku" type="text" className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none font-mono placeholder:text-app-muted-foreground" placeholder="e.g. LOR-SHAMP-001" />
  </div>
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1">Buy Price</label>
- <input type="number" name="supplierPrice" className="w-full bg-app-bg border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none text-gray-700 font-semibold" placeholder="0.00" />
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1">Buy Price</label>
+ <input type="number" name="supplierPrice" className="w-full bg-app-background border border-app-border rounded-md px-2.5 py-2 text-[11px] outline-none text-app-muted-foreground font-semibold" placeholder="0.00" />
  </div>
  <div>
- <label className="block text-[10px] font-medium text-blue-400 mb-1">Lead Time</label>
- <input type="number" name="supplierLeadTime" className="w-full bg-blue-50/50 border border-blue-200 rounded-md px-2.5 py-2 text-[11px] outline-none text-blue-700 font-semibold" placeholder="Days" />
+ <label className="block text-[10px] font-medium text-app-info mb-1">Lead Time</label>
+ <input type="number" name="supplierLeadTime" className="w-full bg-app-info-bg/50 border border-app-info rounded-md px-2.5 py-2 text-[11px] outline-none text-app-info font-semibold" placeholder="Days" />
  </div>
  </div>
  </div>
@@ -603,18 +603,18 @@ export default function AdvancedProductForm({
  <div>
  {!isCombo ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
- <PackagePlus className="w-10 h-10 text-gray-200 mb-3" />
- <p className="text-[13px] text-app-text-muted font-semibold">Not a Combo</p>
- <p className="text-[11px] text-app-text-faint mt-1 max-w-[200px]">Set Product Type to &quot;Combo / Bundle&quot; to start assembling.</p>
+ <PackagePlus className="w-10 h-10 text-app-foreground mb-3" />
+ <p className="text-[13px] text-app-muted-foreground font-semibold">Not a Combo</p>
+ <p className="text-[11px] text-app-muted-foreground mt-1 max-w-[200px]">Set Product Type to &quot;Combo / Bundle&quot; to start assembling.</p>
  </div>
  ) : (
  <div className="space-y-3">
- <h4 className="text-[12px] font-semibold text-app-text">Combo Blueprint</h4>
+ <h4 className="text-[12px] font-semibold text-app-foreground">Combo Blueprint</h4>
  <div className="relative">
- <input type="text" className="w-full pl-8 pr-3 py-2 border border-app-border rounded-lg text-[11px] bg-app-bg outline-none" placeholder="Search product to add..." />
- <Search className="w-3.5 h-3.5 text-app-text-faint absolute left-2.5 top-2.5" />
+ <input type="text" className="w-full pl-8 pr-3 py-2 border border-app-border rounded-lg text-[11px] bg-app-background outline-none" placeholder="Search product to add..." />
+ <Search className="w-3.5 h-3.5 text-app-muted-foreground absolute left-2.5 top-2.5" />
  </div>
- <div className="border border-dashed border-app-border rounded-lg py-8 text-center text-[11px] text-app-text-faint font-medium">Empty blueprint</div>
+ <div className="border border-dashed border-app-border rounded-lg py-8 text-center text-[11px] text-app-muted-foreground font-medium">Empty blueprint</div>
  </div>
  )}
  </div>
@@ -624,13 +624,13 @@ export default function AdvancedProductForm({
  {activeTab === 'prices' && (
  <div className="space-y-3">
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-text flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-purple-500" /> Price Groups</h4>
- <p className="text-[10px] text-app-text-faint mb-2">Assign to VIP, Wholesale, etc.</p>
- <div className="h-16 flex items-center justify-center bg-app-bg rounded-lg border border-dashed border-app-border text-[11px] text-app-text-faint">Save product first</div>
+ <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><BarChart3 className="w-3.5 h-3.5 text-purple-500" /> Price Groups</h4>
+ <p className="text-[10px] text-app-muted-foreground mb-2">Assign to VIP, Wholesale, etc.</p>
+ <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">Save product first</div>
  </div>
  <div className="p-3 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-text flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-pink-500" /> Active Promos</h4>
- <div className="h-16 flex items-center justify-center bg-app-bg rounded-lg border border-dashed border-app-border text-[11px] text-app-text-faint">No live promos</div>
+ <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-2"><Percent className="w-3.5 h-3.5 text-pink-500" /> Active Promos</h4>
+ <div className="h-16 flex items-center justify-center bg-app-background rounded-lg border border-dashed border-app-border text-[11px] text-app-muted-foreground">No live promos</div>
  </div>
  </div>
  )}
@@ -639,33 +639,33 @@ export default function AdvancedProductForm({
  {activeTab === 'stock' && (
  <div className="space-y-4">
  <div className="p-4 bg-app-surface rounded-lg border border-app-border">
- <h4 className="text-[12px] font-semibold text-app-text flex items-center gap-1.5 mb-3">
- <Warehouse className="w-3.5 h-3.5 text-amber-500" />
+ <h4 className="text-[12px] font-semibold text-app-foreground flex items-center gap-1.5 mb-3">
+ <Warehouse className="w-3.5 h-3.5 text-app-warning" />
  Reorder Settings
  </h4>
  <div>
- <label className="block text-[10px] font-medium text-app-text-faint mb-1.5 uppercase tracking-wider">
+ <label className="block text-[10px] font-medium text-app-muted-foreground mb-1.5 uppercase tracking-wider">
  Minimum Stock Level (Alert)
  </label>
  <div className="relative">
  <input
  type="number"
  name="minStockLevel"
- className="w-full bg-app-bg border border-app-border rounded-lg px-3 py-2 text-[13px] outline-none font-semibold text-app-text"
+ className="w-full bg-app-background border border-app-border rounded-lg px-3 py-2 text-[13px] outline-none font-semibold text-app-foreground"
  placeholder="e.g. 10"
  defaultValue={initialData?.minStockLevel || "10"}
  />
  </div>
- <p className="text-[10px] text-app-text-faint mt-2 leading-relaxed">
+ <p className="text-[10px] text-app-muted-foreground mt-2 leading-relaxed">
  The system will trigger an alert when stock drops below this value.
  </p>
  </div>
  </div>
 
- <div className="flex flex-col items-center justify-center py-8 text-center bg-gray-50/50 rounded-lg border border-dashed border-app-border">
- <History className="w-8 h-8 text-gray-200 mb-2" />
- <p className="text-[12px] text-app-text-muted font-semibold">No Live Stock Data</p>
- <p className="text-[10px] text-app-text-faint mt-1 max-w-[180px]">Batch merging & splitting available after first stock-in.</p>
+ <div className="flex flex-col items-center justify-center py-8 text-center bg-app-surface-2/50 rounded-lg border border-dashed border-app-border">
+ <History className="w-8 h-8 text-app-foreground mb-2" />
+ <p className="text-[12px] text-app-muted-foreground font-semibold">No Live Stock Data</p>
+ <p className="text-[10px] text-app-muted-foreground mt-1 max-w-[180px]">Batch merging & splitting available after first stock-in.</p>
  </div>
  </div>
  )}
@@ -675,14 +675,14 @@ export default function AdvancedProductForm({
  </div>
 
  {/* ── Fixed Footer ── */}
- <div className="fixed bottom-0 left-0 right-0 z-50 bg-app-text/95 backdrop-blur-sm border-t border-app-border px-6 py-3 flex justify-end gap-3">
- <button type="button" className="px-5 py-2 bg-app-surface border border-app-border rounded-lg text-[13px] font-semibold text-app-text-muted hover:bg-app-bg transition-all outline-none">
+ <div className="fixed bottom-0 left-0 right-0 z-50 bg-app-foreground/95 backdrop-blur-sm border-t border-app-border px-6 py-3 flex justify-end gap-3">
+ <button type="button" className="px-5 py-2 bg-app-surface border border-app-border rounded-lg text-[13px] font-semibold text-app-muted-foreground hover:bg-app-background transition-all outline-none">
  Cancel
  </button>
  <button
  type="submit"
  disabled={isPending}
- className="px-6 py-2 bg-blue-600 text-app-text rounded-lg text-[13px] font-semibold hover:bg-blue-700 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 outline-none"
+ className="px-6 py-2 bg-app-info text-app-foreground rounded-lg text-[13px] font-semibold hover:bg-app-info shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 outline-none"
  >
  {isPending && <span className="w-3.5 h-3.5 border-2 border-app-text/30 border-t-white rounded-full animate-spin" />}
  {isPending ? 'Saving...' : 'Save Product'}

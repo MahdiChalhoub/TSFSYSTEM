@@ -34,12 +34,12 @@ interface PurchaseOrder {
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
  DRAFT: { label: 'Draft', color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
  SUBMITTED: { label: 'Pending Approval', color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
- APPROVED: { label: 'Approved', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
- ORDERED: { label: 'Requires Acknowledgment', color: 'text-blue-400', bg: 'bg-blue-500/10' },
- CONFIRMED: { label: 'Preparing for Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
- IN_TRANSIT: { label: 'In Transit', color: 'text-amber-400', bg: 'bg-amber-500/10' },
- RECEIVED: { label: 'Received', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
- CANCELLED: { label: 'Cancelled', color: 'text-red-400', bg: 'bg-red-500/10' },
+ APPROVED: { label: 'Approved', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+ ORDERED: { label: 'Requires Acknowledgment', color: 'text-app-info', bg: 'bg-app-info-bg' },
+ CONFIRMED: { label: 'Preparing for Dispatch', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+ IN_TRANSIT: { label: 'In Transit', color: 'text-app-warning', bg: 'bg-app-warning-bg' },
+ RECEIVED: { label: 'Received', color: 'text-emerald-400', bg: 'bg-app-success-bg' },
+ CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg' },
 }
 
 function getToken(slug: string): string | null {
@@ -111,7 +111,7 @@ export default function SupplierOrderDetail() {
 
  if (loading) {
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative flex items-center justify-center">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative flex items-center justify-center bg-app-bg">
  <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
  </div>
  )
@@ -119,7 +119,7 @@ export default function SupplierOrderDetail() {
 
  if (!order) {
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 text-center flex flex-col items-center justify-center">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 text-center flex flex-col items-center justify-center bg-app-bg">
  <FileText size={48} className="text-app-text-muted mb-4" />
  <h1 className="text-2xl font-black text-app-text mb-2">Order Not Found</h1>
  <Link href={`/supplier-portal/${slug}/orders`} className="text-emerald-400 hover:underline">Return to Orders</Link>
@@ -130,8 +130,8 @@ export default function SupplierOrderDetail() {
  const st = STATUS_MAP[order.status] || STATUS_MAP.DRAFT
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative overflow-hidden">
- <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative overflow-hidden bg-app-bg">
+ <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info-bg blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-4xl mx-auto relative z-10 space-y-8">
  {/* Header */}
@@ -154,7 +154,7 @@ export default function SupplierOrderDetail() {
 
  {/* Actions Panel */}
  {(order.status === 'ORDERED' || order.status === 'CONFIRMED') && (
- <div className="bg-slate-900/80 border border-app-text/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
+ <div className="bg-app-surface/80 border border-app-text/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
  <h2 className="text-xl font-black text-app-text mb-4">Action Required</h2>
 
  {order.status === 'ORDERED' && (
@@ -219,7 +219,7 @@ export default function SupplierOrderDetail() {
  )}
 
  {/* Line Items */}
- <div className="bg-slate-900/60 border border-app-text/5 rounded-3xl overflow-hidden backdrop-blur-xl">
+ <div className="bg-app-surface/60 border border-app-text/5 rounded-3xl overflow-hidden backdrop-blur-xl">
  <div className="p-6 border-b border-app-text/5 flex items-center justify-between">
  <h3 className="text-lg font-bold text-app-text flex items-center gap-2">
  <Package size={18} className="text-emerald-400" />
@@ -268,7 +268,7 @@ export default function SupplierOrderDetail() {
 
  {/* Deployment Integrity Notes */}
  {(order.tracking_number || order.notes) && (
- <div className="bg-slate-900/60 border border-app-text/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
+ <div className="bg-app-surface/60 border border-app-text/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
  {order.tracking_number && (
  <div>
  <h3 className="text-app-text font-bold mb-2 text-sm flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function SupplierOrderDetail() {
  </div>
  {order.tracking_url && (
  <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
- className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-bold transition-colors border border-emerald-500/20">
+ className="px-4 py-2 bg-app-success-bg hover:bg-app-success-bg text-emerald-400 rounded-xl text-sm font-bold transition-colors border border-emerald-500/20">
  Track Package
  </a>
  )}

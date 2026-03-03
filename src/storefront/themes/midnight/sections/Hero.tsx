@@ -36,7 +36,7 @@ export default function MidnightHero({ settings, products, categories }: Section
                             {title}
                         </h1>
 
-                        <p className="text-xl text-slate-400 leading-relaxed max-w-md font-medium">
+                        <p className="text-xl text-app-text-faint leading-relaxed max-w-md font-medium">
                             {description}
                         </p>
 
@@ -48,12 +48,12 @@ export default function MidnightHero({ settings, products, categories }: Section
                             <div className="flex items-center gap-6 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg font-black text-white">{products?.length || 0}</span>
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Items</span>
+                                    <span className="text-[10px] font-bold text-app-text-faint uppercase tracking-widest">Items</span>
                                 </div>
                                 <div className="w-px h-4 bg-white/10" />
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg font-black text-white">{categories?.length || 0}</span>
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Series</span>
+                                    <span className="text-[10px] font-bold text-app-text-faint uppercase tracking-widest">Series</span>
                                 </div>
                             </div>
                         </div>
@@ -66,7 +66,7 @@ export default function MidnightHero({ settings, products, categories }: Section
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <Store size={80} className="text-emerald-500/20 mb-8 transform group-hover:scale-110 transition-transform duration-700" />
                             <h3 className="text-2xl font-black text-white tracking-tighter uppercase mb-2">Original DNA</h3>
-                            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Verified Multi-Tenant Node</p>
+                            <p className="text-app-text-faint text-sm font-bold uppercase tracking-widest">Verified Multi-Tenant Node</p>
 
                             {/* Floating decorative cards */}
                             <div className="absolute top-10 right-10 w-24 h-32 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl backdrop-blur-md -rotate-12 animate-float" />

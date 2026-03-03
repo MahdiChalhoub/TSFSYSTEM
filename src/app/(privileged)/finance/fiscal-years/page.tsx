@@ -21,32 +21,32 @@ export default async function FiscalYearsPage() {
  const gaps = Array.isArray(gapsData) ? (gapsData as any[]) : []
 
  return (
- <div className="p-6">
+ <div className="app-page p-6">
  <div className="flex justify-between items-center mb-6">
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-stone-600 flex items-center justify-center shadow-lg shadow-stone-200">
- <CalendarDays size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-surface-2 flex items-center justify-center shadow-lg shadow-stone-200">
+ <CalendarDays size={28} className="text-app-foreground" />
  </div>
- Fiscal <span className="text-app-text-muted">Years</span>
+ Fiscal <span className="text-app-muted-foreground">Years</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Periods & Closing</p>
- <p className="text-sm text-app-text-muted">Manage your accounting periods and closing cycles.</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Periods & Closing</p>
+ <p className="text-sm text-app-muted-foreground">Manage your accounting periods and closing cycles.</p>
  </div>
  <FiscalYearWizard lastCreatedYear={years[0]} />
  </div>
 
  {gaps.length > 0 && (
- <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-start gap-4 animate-in fade-in slide-in-from-top-2">
- <div className="bg-amber-100 p-2 rounded-full">
- <AlertTriangle className="text-amber-600" size={20} />
+ <div className="bg-app-warning-bg border border-app-warning rounded-lg p-4 mb-6 flex items-start gap-4 animate-in fade-in slide-in-from-top-2">
+ <div className="bg-app-warning-bg p-2 rounded-full">
+ <AlertTriangle className="text-app-warning" size={20} />
  </div>
  <div>
- <h4 className="text-sm font-bold text-amber-900">Fiscal Timeline Gaps Detected</h4>
- <p className="text-xs text-amber-700 mb-2">Transactions occurring during these dates cannot be recorded in any period.</p>
+ <h4 className="text-sm font-bold text-app-warning">Fiscal Timeline Gaps Detected</h4>
+ <p className="text-xs text-app-warning mb-2">Transactions occurring during these dates cannot be recorded in any period.</p>
  <div className="space-y-1">
  {gaps.map((g, i) => (
- <div key={i} className="text-xs text-amber-800 bg-app-text/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
+ <div key={i} className="text-xs text-app-warning bg-app-foreground/50 px-2 py-1 rounded inline-block mr-2 border border-app-warning/30">
  <strong>{g.days} Day Gap</strong> after {g.after}:
  <span className="ml-1 opacity-70">
  {g.startDate ? new Date(g.startDate).toLocaleDateString() : '—'} — {g.endDate ? new Date(g.endDate).toLocaleDateString() : '—'}
@@ -68,9 +68,9 @@ export default async function FiscalYearsPage() {
  ))}
 
  {years.length === 0 && (
- <div className="text-center py-12 bg-app-bg rounded-lg border-2 border-dashed border-app-border">
- <p className="text-app-text-muted">No fiscal years configured.</p>
- <p className="text-sm text-app-text-faint mt-1">Create a year to start recording transactions.</p>
+ <div className="text-center py-12 bg-app-background rounded-lg border-2 border-dashed border-app-border">
+ <p className="text-app-muted-foreground">No fiscal years configured.</p>
+ <p className="text-sm text-app-muted-foreground mt-1">Create a year to start recording transactions.</p>
  </div>
  )}
  </div>

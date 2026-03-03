@@ -31,7 +31,7 @@ function ThemeShell({ children }: { children: ReactNode }) {
 
  return (
  <div
- className="min-h-screen flex flex-col items-center justify-center transition-all duration-700 animate-pulse"
+ className="min-h-screen flex flex-col items-center justify-center transition-all duration-700 animate-pulse bg-app-bg"
  style={{ background: bgColor }}
  >
  {/* Logo Ghost */}
@@ -72,7 +72,7 @@ function ThemeShell({ children }: { children: ReactNode }) {
  return (
  <div className={`theme-blur-transition ${!loading && components ? 'theme-active' : ''}`}>
  <Header />
- <main className="min-h-screen">
+ <main className="min-h-screen bg-app-bg">
  {children}
  </main>
  <Footer />

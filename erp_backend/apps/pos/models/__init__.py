@@ -11,6 +11,7 @@ from .audit_models import POSAuditRule, POSAuditEvent, SalesAuditLog
 from .tax_entry_models import OrderLineTaxEntry
 from .analytics_models import SalesDailySummary
 from .payment_models import SalesPaymentLeg
+from .generated_document import GeneratedDocument
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',

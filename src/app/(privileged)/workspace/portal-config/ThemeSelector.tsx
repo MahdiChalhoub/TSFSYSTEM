@@ -43,7 +43,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  const cardStyle: React.CSSProperties = {
  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
  borderRadius: 12,
- border: '1px solid rgba(255,255,255,0.06)',
+ border: '1px solid var(--app-surface)',
  padding: '1.25rem',
  }
 
@@ -52,7 +52,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
  <Palette size={18} color="#a78bfa" />
- <h3 style={{ fontWeight: 700, fontSize: '1.1rem', color: '#f1f5f9', margin: 0 }}>
+ <h3 style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--app-foreground)', margin: 0 }}>
  🎨 Storefront Theme
  </h3>
  </div>
@@ -60,7 +60,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  <span style={{
  display: 'inline-flex', alignItems: 'center', gap: 4,
  padding: '4px 12px', borderRadius: 20,
- background: 'rgba(34,197,94,0.15)', color: '#22c55e',
+ background: 'color-mix(in srgb, var(--app-success) 15%, transparent)', color: 'var(--app-success)',
  fontSize: '0.75rem', fontWeight: 600,
  }}>
  <Check size={12} /> Saved
@@ -68,7 +68,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  )}
  </div>
 
- <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem' }}>
+ <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.85rem', marginBottom: '1rem' }}>
  Choose a visual theme for your customer-facing storefront. Changes apply instantly.
  </p>
 
@@ -85,11 +85,11 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  style={{
  display: 'flex', flexDirection: 'column', alignItems: 'stretch',
  padding: 0, cursor: saving ? 'wait' : 'pointer',
- border: isSelected ? '2px solid #8b5cf6' : '2px solid rgba(255,255,255,0.08)',
+ border: isSelected ? '2px solid #8b5cf6' : '2px solid var(--app-surface)',
  borderRadius: 12, overflow: 'hidden', transition: 'all 0.2s',
- background: '#0f172a',
+ background: 'var(--app-background)',
  opacity: saving && !isSelected ? 0.5 : 1,
- boxShadow: isSelected ? '0 0 20px rgba(139,92,246,0.2)' : 'none',
+ boxShadow: isSelected ? '0 0 20px color-mix(in srgb, var(--app-primary) 20%, transparent)' : 'none',
  }}
  >
  {/* Color preview bar */}
@@ -122,7 +122,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  <div style={{
  position: 'absolute', top: 6, right: 6,
  width: 20, height: 20, borderRadius: '50%',
- background: '#8b5cf6', display: 'flex',
+ background: 'var(--app-primary)', display: 'flex',
  alignItems: 'center', justifyContent: 'center',
  }}>
  <Check size={12} color="#fff" />
@@ -136,13 +136,13 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  <Icon size={14} color={theme.colors.primary} />
  <span style={{
  fontWeight: 700, fontSize: '0.85rem',
- color: isSelected ? '#e2e8f0' : '#94a3b8',
+ color: isSelected ? 'var(--app-border)' : 'var(--app-muted-foreground)',
  }}>
  {theme.name}
  </span>
  </div>
  <p style={{
- fontSize: '0.72rem', color: '#64748b',
+ fontSize: '0.72rem', color: 'var(--app-muted-foreground)',
  margin: 0, lineHeight: 1.4,
  display: '-webkit-box', WebkitLineClamp: 2,
  WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -156,7 +156,7 @@ export default function ThemeSelector({ configId, currentTheme }: ThemeSelectorP
  <div key={i} style={{
  width: 14, height: 14, borderRadius: '50%',
  background: c,
- border: '1px solid rgba(255,255,255,0.1)',
+ border: '1px solid var(--app-surface)',
  }} />
  ))}
  </div>

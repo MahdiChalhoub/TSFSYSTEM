@@ -53,7 +53,7 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  const [expanded, setExpanded] = useState(false);
  const diff = session.difference;
 
- const diffColor = Math.abs(diff) < 1 ? 'text-emerald-400' : diff > 0 ? 'text-blue-400' : 'text-rose-400';
+ const diffColor = Math.abs(diff) < 1 ? 'text-app-primary' : diff > 0 ? 'text-app-info' : 'text-rose-400';
  const diffLabel = Math.abs(diff) < 1 ? 'Balanced ✓' : diff > 0 ? `+${currency} ${fmt(diff)}` : `−${currency} ${fmt(Math.abs(diff))}`;
 
  const handlePrint = () => {
@@ -93,28 +93,28 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
 
  return (
  <div className={clsx("border rounded-2xl overflow-hidden transition-all",
- expanded ? "border-app-text/15 bg-app-text/5" : "border-app-text/5 bg-app-text/3 hover:bg-app-text/5 hover:border-app-text/10"
+ expanded ? "border-app-text/15 bg-app-foreground/5" : "border-app-text/5 bg-app-foreground/3 hover:bg-app-foreground/5 hover:border-app-text/10"
  )}>
- <button className="w-full flex items-center gap-4 px-5 py-4 text-left" onClick={() => setExpanded(!expanded)}>
+ <button className="app-page w-full flex items-center gap-4 px-5 py-4 text-left" onClick={() => setExpanded(!expanded)}>
  {expanded
- ? <ChevronDown size={14} className="text-app-text/30 shrink-0" />
- : <ChevronRight size={14} className="text-app-text/30 shrink-0" />}
+ ? <ChevronDown size={14} className="text-app-foreground/30 shrink-0" />
+ : <ChevronRight size={14} className="text-app-foreground/30 shrink-0" />}
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2">
- <span className="text-app-text font-bold text-sm truncate">{session.registerName}</span>
+ <span className="text-app-foreground font-bold text-sm truncate">{session.registerName}</span>
  {session.status === 'FORCE_CLOSED' && (
- <span className="text-[9px] font-black uppercase bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded-md">Force</span>
+ <span className="text-[9px] font-black uppercase bg-app-error/20 text-rose-400 px-1.5 py-0.5 rounded-md">Force</span>
  )}
  </div>
- <div className="text-app-text/40 text-xs mt-0.5">{session.cashierName} · {fmtDate(session.openedAt)}</div>
+ <div className="text-app-foreground/40 text-xs mt-0.5">{session.cashierName} · {fmtDate(session.openedAt)}</div>
  </div>
  <div className="text-right shrink-0 mr-4">
- <div className="text-app-text font-black tabular-nums">{currency} {fmt(session.totalSales)}</div>
- <div className="text-app-text/30 text-xs">{session.totalTransactions} tx</div>
+ <div className="text-app-foreground font-black tabular-nums">{currency} {fmt(session.totalSales)}</div>
+ <div className="text-app-foreground/30 text-xs">{session.totalTransactions} tx</div>
  </div>
  <div className="text-right shrink-0">
  <div className={clsx("text-xs font-black", diffColor)}>{diffLabel}</div>
- <div className="text-app-text/25 text-xs">{session.duration}</div>
+ <div className="text-app-foreground/25 text-xs">{session.duration}</div>
  </div>
  </button>
 
@@ -123,18 +123,18 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  <div className="grid grid-cols-2 gap-6">
  {/* Payment Breakdown */}
  <div>
- <div className="text-app-text/25 text-[10px] uppercase tracking-widest mb-2 font-black">Payment Breakdown</div>
+ <div className="text-app-foreground/25 text-[10px] uppercase tracking-widest mb-2 font-black">Payment Breakdown</div>
  {session.paymentBreakdown.length === 0 ? (
- <div className="text-app-text/20 text-xs">No sales in this session</div>
+ <div className="text-app-foreground/20 text-xs">No sales in this session</div>
  ) : (
  <div className="space-y-1">
  {session.paymentBreakdown.map(b => (
  <div key={b.method} className="flex justify-between text-xs">
- <span className="text-app-text/60">{b.label} <span className="text-app-text/25">×{b.count}</span></span>
- <span className="text-app-text font-bold tabular-nums">{fmt(b.total)}</span>
+ <span className="text-app-foreground/60">{b.label} <span className="text-app-foreground/25">×{b.count}</span></span>
+ <span className="text-app-foreground font-bold tabular-nums">{fmt(b.total)}</span>
  </div>
  ))}
- <div className="flex justify-between border-t border-app-text/10 pt-1 text-xs font-black text-emerald-400">
+ <div className="flex justify-between border-t border-app-text/10 pt-1 text-xs font-black text-app-primary">
  <span>TOTAL</span><span tabular-nums>{fmt(session.totalSales)}</span>
  </div>
  </div>
@@ -142,12 +142,12 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  </div>
  {/* Cash Reconciliation */}
  <div>
- <div className="text-app-text/25 text-[10px] uppercase tracking-widest mb-2 font-black">Cash Recon</div>
+ <div className="text-app-foreground/25 text-[10px] uppercase tracking-widest mb-2 font-black">Cash Recon</div>
  <div className="space-y-1 text-xs">
- <div className="flex justify-between"><span className="text-app-text/50">Opening</span><span className="text-app-text/70 tabular-nums">{fmt(session.openingBalance)}</span></div>
- <div className="flex justify-between"><span className="text-app-text/50">+ Cash sales</span><span className="text-app-text/70 tabular-nums">{fmt(session.totalCashIn)}</span></div>
- <div className="flex justify-between"><span className="text-app-text/50">Expected</span><span className="text-app-text/70 tabular-nums">{fmt(session.expectedBalance)}</span></div>
- <div className="flex justify-between"><span className="text-app-text/50">Counted</span><span className="text-app-text tabular-nums">{fmt(session.closingBalance)}</span></div>
+ <div className="flex justify-between"><span className="text-app-foreground/50">Opening</span><span className="text-app-foreground/70 tabular-nums">{fmt(session.openingBalance)}</span></div>
+ <div className="flex justify-between"><span className="text-app-foreground/50">+ Cash sales</span><span className="text-app-foreground/70 tabular-nums">{fmt(session.totalCashIn)}</span></div>
+ <div className="flex justify-between"><span className="text-app-foreground/50">Expected</span><span className="text-app-foreground/70 tabular-nums">{fmt(session.expectedBalance)}</span></div>
+ <div className="flex justify-between"><span className="text-app-foreground/50">Counted</span><span className="text-app-foreground tabular-nums">{fmt(session.closingBalance)}</span></div>
  <div className={clsx("flex justify-between font-black border-t border-app-text/10 pt-1", diffColor)}>
  <span>Diff</span><span className="tabular-nums">{diff >= 0 ? '+' : ''}{fmt(diff)}</span>
  </div>
@@ -155,9 +155,9 @@ function SessionRow({ session, currency }: { session: Session; currency: string 
  </div>
  </div>
  {session.closingNotes && (
- <div className="text-app-text/30 text-xs italic">{session.closingNotes}</div>
+ <div className="text-app-foreground/30 text-xs italic">{session.closingNotes}</div>
  )}
- <button onClick={handlePrint} className="w-full py-2.5 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/60 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+ <button onClick={handlePrint} className="w-full py-2.5 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/60 font-bold text-xs flex items-center justify-center gap-2 transition-all">
  <Printer size={13} /> Print Shift Report
  </button>
  </div>
@@ -200,19 +200,19 @@ export default function SessionHistoryPage() {
  const totalSalesAll = sessions.reduce((sum, s) => sum + (s.totalSales || 0), 0);
 
  return (
- <div className="min-h-screen bg-slate-950 text-app-text p-6 space-y-6">
+ <div className="min-h-screen bg-app-background text-app-foreground p-6 space-y-6">
  {/* Header */}
  <div className="flex items-center justify-between">
  <div>
  <div className="flex items-center gap-3 mb-1">
- <Link href="/sales" className="flex items-center gap-1.5 text-app-text/30 hover:text-app-text text-xs font-bold transition-all">
+ <Link href="/sales" className="flex items-center gap-1.5 text-app-foreground/30 hover:text-app-foreground text-xs font-bold transition-all">
  <ArrowLeft size={12} /> POS
  </Link>
  </div>
  <h1 className="page-header-title tracking-tight">Register Sessions</h1>
- <p className="text-app-text/40 text-sm mt-0.5">All closed register sessions · {total} total</p>
+ <p className="text-app-foreground/40 text-sm mt-0.5">All closed register sessions · {total} total</p>
  </div>
- <button onClick={() => load(0)} className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/60 flex items-center justify-center transition-all">
+ <button onClick={() => load(0)} className="w-10 h-10 rounded-xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/60 flex items-center justify-center transition-all">
  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
  </button>
  </div>
@@ -220,15 +220,15 @@ export default function SessionHistoryPage() {
  {/* Summary Stats */}
  <div className="grid grid-cols-3 gap-4">
  {[
- { label: 'Total Sessions', value: String(total), icon: Clock, color: 'text-indigo-400' },
- { label: 'Total Sales', value: `${currency} ${fmt(totalSalesAll)}`, icon: TrendingUp, color: 'text-emerald-400' },
- { label: 'Loaded', value: String(sessions.length), icon: CreditCard, color: 'text-amber-400' },
+ { label: 'Total Sessions', value: String(total), icon: Clock, color: 'text-app-primary' },
+ { label: 'Total Sales', value: `${currency} ${fmt(totalSalesAll)}`, icon: TrendingUp, color: 'text-app-primary' },
+ { label: 'Loaded', value: String(sessions.length), icon: CreditCard, color: 'text-app-warning' },
  ].map(s => (
- <div key={s.label} className="bg-app-text/5 border border-app-text/5 rounded-2xl p-4 flex items-center gap-4">
+ <div key={s.label} className="bg-app-foreground/5 border border-app-text/5 rounded-2xl p-4 flex items-center gap-4">
  <s.icon size={20} className={clsx(s.color, 'shrink-0')} />
  <div>
- <div className="text-app-text/40 text-xs">{s.label}</div>
- <div className="text-app-text font-black text-sm mt-0.5">{s.value}</div>
+ <div className="text-app-foreground/40 text-xs">{s.label}</div>
+ <div className="text-app-foreground font-black text-sm mt-0.5">{s.value}</div>
  </div>
  </div>
  ))}
@@ -236,22 +236,22 @@ export default function SessionHistoryPage() {
 
  {/* Search */}
  <div className="relative">
- <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text/30" />
+ <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-foreground/30" />
  <input
  type="text"
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="Filter by register or cashier…"
- className="w-full pl-10 pr-4 py-3 bg-app-text/5 border border-app-text/8 rounded-2xl text-app-text/80 text-sm outline-none focus:ring-2 focus:ring-indigo-500/30"
+ className="w-full pl-10 pr-4 py-3 bg-app-foreground/5 border border-app-text/8 rounded-2xl text-app-foreground/80 text-sm outline-none focus:ring-2 focus:ring-app-primary"
  />
  </div>
 
  {/* Sessions */}
  <div className="space-y-2">
  {loading && sessions.length === 0 ? (
- <div className="text-center py-16 text-app-text/20">Loading sessions…</div>
+ <div className="text-center py-16 text-app-foreground/20">Loading sessions…</div>
  ) : filtered.length === 0 ? (
- <div className="text-center py-16 text-app-text/20 flex flex-col items-center gap-3">
+ <div className="text-center py-16 text-app-foreground/20 flex flex-col items-center gap-3">
  <Receipt size={32} strokeWidth={1} />
  No sessions found
  </div>
@@ -260,7 +260,7 @@ export default function SessionHistoryPage() {
 
  {/* Load more */}
  {sessions.length < total && !search && (
- <button onClick={() => load(offset)} disabled={loading} className="w-full py-3 rounded-2xl bg-app-text/5 hover:bg-app-text/10 text-app-text/50 font-bold text-sm transition-all disabled:opacity-40">
+ <button onClick={() => load(offset)} disabled={loading} className="w-full py-3 rounded-2xl bg-app-foreground/5 hover:bg-app-foreground/10 text-app-foreground/50 font-bold text-sm transition-all disabled:opacity-40">
  {loading ? 'Loading…' : `Load more (${total - sessions.length} remaining)`}
  </button>
  )}

@@ -109,7 +109,7 @@ export function CategoryCascader({ allCategories, selectedId, onSelect, excludeI
  {index === 0 ? 'Main Category' : `Level ${index + 1}`}
  </label>
  <select
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none bg-app-surface transition-all shadow-sm"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none bg-app-surface transition-all shadow-sm"
  value={col.selected || ''}
  onChange={(e) => {
  const val = e.target.value ? parseInt(e.target.value) : null;
@@ -134,7 +134,7 @@ export function CategoryCascader({ allCategories, selectedId, onSelect, excludeI
 
  {/* Helper message */}
  {selectedId && (
- <div className="text-xs text-emerald-600 bg-emerald-50 p-2 rounded border border-emerald-100 mt-2">
+ <div className="text-xs text-app-primary bg-app-primary-light p-2 rounded border border-emerald-100 mt-2">
  Selected Parent: <span className="font-bold">{categoryMap.get(selectedId)?.name}</span>
  </div>
  )}

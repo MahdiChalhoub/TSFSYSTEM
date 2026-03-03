@@ -30,19 +30,43 @@ class MixedTaxEngineTests(APITestCase):
         # Configure as MIXED
         ConfigurationService.save_global_settings(self.org, {
             "companyType": "MIXED",
-            "worksInTTC": True,
-            "dualView": True
         })
 
-        # Ensure Posting Rules are properly configured
-        payable_acc = ChartOfAccount.objects.get(organization=self.org, code='2101')  # AP
-        inv_acc = ChartOfAccount.objects.get(organization=self.org, code='1120')      # Inventory Stock
-        tax_acc = ChartOfAccount.objects.get(organization=self.org, code='2111')      # VAT
+        # Ensure COA accounts exist for posting rules (provisioning may fail silently in test env)
+        from apps.finance.models import ChartOfAccount
+        from django.db.models import Q
+        payable_acc, _ = ChartOfAccount.objects.get_or_create(
+            organization=self.org, code='2101',
+            defaults={'name': 'Accounts Payable', 'type': 'LIABILITY'}
+        )
+        inv_acc, _ = ChartOfAccount.objects.get_or_create(
+            organization=self.org, code='1120',
+            defaults={'name': 'Inventory Stock', 'type': 'ASSET'}
+        )
+        tax_acc, _ = ChartOfAccount.objects.get_or_create(
+            organization=self.org, code='2111',
+            defaults={'name': 'TVA Collectée / Récupérable', 'type': 'LIABILITY'}
+        )
         rules = ConfigurationService.get_posting_rules(self.org)
+        if 'purchases' not in rules:
+            rules['purchases'] = {}
         rules['purchases']['payable'] = payable_acc.id
         rules['purchases']['inventory'] = inv_acc.id
-        rules['purchases']['tax'] = tax_acc.id
+        rules['purchases']['vat_recoverable'] = tax_acc.id
         ConfigurationService.save_posting_rules(self.org, rules)
+
+        # Create a fiscal year + period covering all of 2026
+        # (required by LedgerService to post journal entries)
+        import datetime as _dt
+        from apps.finance.models import FiscalYear, FiscalPeriod
+        fy = FiscalYear.objects.create(
+            organization=self.org, name='FY2026',
+            start_date=_dt.date(2026, 1, 1), end_date=_dt.date(2026, 12, 31)
+        )
+        FiscalPeriod.objects.create(
+            organization=self.org, fiscal_year=fy, name='FY2026-ALL',
+            start_date=_dt.date(2026, 1, 1), end_date=_dt.date(2026, 12, 31)
+        )
 
         from apps.inventory.models import Product
         self.product = Product.objects.create(
@@ -142,9 +166,7 @@ class MixedTaxEngineTests(APITestCase):
         # 1. Setup AIRSI
         ConfigurationService.save_global_settings(self.org, {
             "companyType": "MIXED",
-            "worksInTTC": True,
-            "dualView": True,
-            "airsi_tax_percentage": 5 # 5% Global Rate
+            "airsi_tax_percentage": 5  # 5% Global Rate
         })
 
         # Enable AIRSI for Supplier
@@ -189,8 +211,139 @@ class MixedTaxEngineTests(APITestCase):
         inventory_line = lines.filter(account__code='1120').first() # Stock
         payable_line = lines.filter(account__code='2101').first() # AP
 
-        # Assert Inventory Debit includes VAT + AIRSI (1230)
+        # Inventory Debit = TTC + AIRSI (capitalized in MIXED mode) = 1180 + 50 = 1230
         self.assertEqual(inventory_line.debit, Decimal('1230.00'))
+
+        # AP Credit: since no AIRSI Payable account is configured in this test,
+        # AP = TTC + AIRSI = 1180 + 50 = 1230 (full supplier invoice amount).
+        # AIRSI withholding posting only happens when AIRSI Payable account is set.
         self.assertEqual(payable_line.credit, Decimal('1230.00'))
 
-        print("[OK] AIRSI Capitalized correctly in Mixed Mode.")
+        print("[OK] AIRSI Capitalized. AP = full invoice (1230) when no AIRSI Payable configured.")
+
+
+    def test_internal_scope_no_vat_posting(self):
+        """
+        SCOPE GUARD: INTERNAL scope purchases must NEVER post VAT lines,
+        regardless of org VAT policy. Inventory debit = full TTC.
+        """
+        print("\n>>> Testing INTERNAL scope — scope guard (no VAT posting)...")
+
+        # Switch to REAL (would normally have full VAT recovery)
+        ConfigurationService.save_global_settings(self.org, {
+            "companyType": "REAL",
+        })
+
+        lines_data = [{
+            "productId": self.product.id,
+            "quantity": 5,
+            "unitCostHT": 100,
+            "unitCostTTC": 118,
+            "taxRate": 0.18,
+            "expiryDate": None
+        }]
+
+        # Purchase with INTERNAL scope
+        order = PurchaseService.quick_purchase(
+            organization=self.org,
+            supplier_id=self.supplier.id,
+            warehouse_id=self.warehouse.id,
+            site_id=self.branch.id,
+            scope='INTERNAL',       # ← INTERNAL scope
+            invoice_price_type='HT_BASED',
+            vat_recoverable=True,
+            lines=lines_data,
+            user=self.user
+        )
+
+        je = JournalEntry.objects.get(reference=f"ORD-{order.id}")
+        self.assertEqual(je.scope, 'INTERNAL')
+
+        je_lines = je.lines.all()
+        inventory_line = je_lines.filter(account__code='1120').first()
+        tax_line = je_lines.filter(account__code='2111').first()
+
+        # Inventory debit = TTC (cost_internal = TTC_ALWAYS for INTERNAL scope)
+        self.assertEqual(inventory_line.debit, Decimal('590.00'))  # 5 * 118
+
+        # No VAT line posted — scope guard enforced
+        self.assertIsNone(tax_line, "No VAT line should be posted for INTERNAL scope purchase")
+
+        print("[OK] Scope guard: no VAT posted in INTERNAL scope.")
+
+
+    def test_real_vat_recovery_purchase(self):
+        """
+        REAL company + ASSUJETTI supplier: full VAT recovery.
+        DR Inventory (HT), DR TVA Récupérable, CR AP (TTC).
+        """
+        print("\n>>> Testing REAL company - full VAT recovery...")
+
+        # Configure as REAL
+        ConfigurationService.save_global_settings(self.org, {
+            "companyType": "REAL",
+        })
+
+        # Set tax account for VAT recoverable
+        from apps.finance.models import ChartOfAccount
+        try:
+            tax_acc = ChartOfAccount.objects.get(organization=self.org, code='2111')
+        except ChartOfAccount.DoesNotExist:
+            print("[SKIP] No 2111 account provisioned — skipping REAL VAT test.")
+            return
+
+        rules = ConfigurationService.get_posting_rules(self.org)
+        rules['purchases']['vat_recoverable'] = tax_acc.id
+        ConfigurationService.save_posting_rules(self.org, rules)
+
+        # Create a REAL org tax policy
+        from apps.finance.models import OrgTaxPolicy
+        OrgTaxPolicy.objects.filter(organization=self.org).update(is_default=False)
+        OrgTaxPolicy.objects.create(
+            organization=self.org,
+            name='REAL Policy',
+            is_default=True,
+            vat_output_enabled=True,
+            vat_input_recoverability='1.000',
+            airsi_treatment='RECOVER',
+            allowed_scopes=['OFFICIAL'],
+        )
+
+        lines_data = [{
+            "productId": self.product.id,
+            "quantity": 10,
+            "unitCostHT": 100,
+            "unitCostTTC": 118,
+            "taxRate": 0.18,
+            "expiryDate": None
+        }]
+
+        order = PurchaseService.quick_purchase(
+            organization=self.org,
+            supplier_id=self.supplier.id,
+            warehouse_id=self.warehouse.id,
+            site_id=self.branch.id,
+            scope='OFFICIAL',
+            invoice_price_type='HT_BASED',
+            vat_recoverable=True,
+            lines=lines_data,
+            user=self.user
+        )
+
+        je = JournalEntry.objects.get(reference=f"ORD-{order.id}")
+        je_lines = je.lines.all()
+
+        inventory_line = je_lines.filter(account__code='1120').first()  # Inventory
+        tax_line = je_lines.filter(account__code='2111').first()         # TVA Récupérable
+        payable_line = je_lines.filter(account__code='2101').first()     # AP
+
+        # Inventory = HT only (VAT is recoverable, not in cost)
+        self.assertEqual(inventory_line.debit, Decimal('1000.00'))
+        # TVA Récupérable = 180
+        self.assertIsNotNone(tax_line, "VAT recoverable line must be posted for REAL company")
+        self.assertEqual(tax_line.debit, Decimal('180.00'))
+        # AP = TTC
+        self.assertEqual(payable_line.credit, Decimal('1180.00'))
+
+        print("[OK] REAL: DR Inventory 1000 + DR TVA Réc. 180 = CR AP 1180.")
+

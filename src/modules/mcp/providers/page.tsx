@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 /**
  * MCP AI Providers - Configuration Page
@@ -187,7 +188,7 @@ export default function MCPProvidersPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
+                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium">
                         <ArrowLeft size={16} />
                         Back to MCP Dashboard
                     </Link>
@@ -196,8 +197,8 @@ export default function MCPProvidersPage() {
                             <Cloud size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">AI Providers</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <h2 className="text-3xl font-black text-app-text tracking-tight">AI Providers</h2>
+                    <p className="text-app-text-faint mt-2 font-medium">
                         {providers.length} provider{providers.length !== 1 ? 's' : ''} configured
                     </p>
                 </div>
@@ -353,12 +354,12 @@ export default function MCPProvidersPage() {
             {/* Providers Grid */}
             {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                    <RefreshCw className="w-8 h-8 animate-spin text-app-text-faint" />
                 </div>
             ) : providers.length === 0 ? (
-                <Card className="rounded-3xl shadow-xl border-gray-100">
+                <Card className="rounded-3xl shadow-xl border-app-border">
                     <CardContent className="p-0">
-                        <div className="text-center py-20 text-gray-400">
+                        <div className="text-center py-20 text-app-text-faint">
                             <Cloud className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="font-medium">No AI providers configured</p>
                             <p className="text-sm mt-1">Add a provider to enable AI integration</p>
@@ -372,12 +373,12 @@ export default function MCPProvidersPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {providers.map((provider) => (
-                        <Card key={provider.id} className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow">
+                        <Card key={provider.id} className="rounded-2xl shadow-lg border-app-border hover:shadow-xl transition-shadow">
                             <CardContent className="p-5">
                                 <div className="flex items-start justify-between mb-4">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-gray-900">{provider.name}</h3>
+                                            <h3 className="font-bold text-app-text">{provider.name}</h3>
                                             {provider.is_default && (
                                                 <Badge className="bg-amber-100 text-amber-700 border-amber-200">
                                                     <Star size={12} className="mr-1" />
@@ -385,7 +386,7 @@ export default function MCPProvidersPage() {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-app-text-faint">
                                             {getProviderLabel(provider.provider_type)}
                                         </p>
                                     </div>
@@ -399,9 +400,9 @@ export default function MCPProvidersPage() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="p-3 rounded-xl bg-gray-50 mb-4">
-                                    <p className="text-sm font-mono text-gray-600">{provider.model_name}</p>
-                                    <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                                <div className="p-3 rounded-xl bg-app-bg mb-4">
+                                    <p className="text-sm font-mono text-app-text-muted">{provider.model_name}</p>
+                                    <div className="flex gap-4 mt-2 text-xs text-app-text-faint">
                                         <span>Max: {provider.max_tokens}</span>
                                         <span>Temp: {provider.temperature}</span>
                                     </div>

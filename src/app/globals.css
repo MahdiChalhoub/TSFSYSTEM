@@ -7,23 +7,17 @@
 @theme {
   /* Premium Brand Colors */
   --color-primary: #10B981;
-  /* Emerald 500 */
   --color-primary-dark: #059669;
-  /* Emerald 600 */
   --color-primary-light: #6EE7B7;
-  /* Emerald 300 */
 
   --color-secondary: #0F172A;
-  /* Slate 900 */
   --color-accent: #F59E0B;
-  /* Amber 500 */
 
-  --color-background: #F8FAFC;
-  /* Slate 50 */
-  --color-surface: #FFFFFF;
-
-  --color-text-main: #0F172A;
-  --color-text-muted: #64748B;
+  /* Static fallbacks for build time — runtime overrides come from app-theme-engine.css */
+  --color-background: #020617;
+  --color-surface: #0F172A;
+  --color-text-main: #F1F5F9;
+  --color-text-muted: #94A3B8;
 
   /* Status Colors */
   --color-success: #10B981;
@@ -42,27 +36,88 @@
   /* Shadows */
   --shadow-glow: 0 0 20px -5px rgba(16, 185, 129, 0.3);
 
-  /* V2 App Theme Engine Bindings */
+  /* V2 App Theme Engine Bindings — Core */
   --color-app-bg: var(--app-bg);
   --color-app-surface: var(--app-surface);
   --color-app-surface-2: var(--app-surface-2);
+  --color-app-surface-hover: var(--app-surface-hover);
   --color-app-border: var(--app-border);
+  --color-app-border-strong: var(--app-border-strong);
   --color-app-text: var(--app-text);
   --color-app-text-muted: var(--app-text-muted);
   --color-app-text-faint: var(--app-text-faint);
   --color-app-primary: var(--app-primary);
-  --color-app-primary-hover: var(--app-primary-hover);
+  --color-app-primary-dark: var(--app-primary-dark);
+  --color-app-primary-hover: var(--app-primary-hover, var(--app-primary-dark));
   --color-app-primary-light: var(--app-primary-light);
+  --color-app-primary-glow: var(--app-primary-glow);
+
+  /* V2 App Theme Engine Bindings — Semantic Status */
+  --color-app-success: var(--app-success);
+  --color-app-success-bg: var(--app-success-bg);
+  --color-app-error: var(--app-error);
+  --color-app-error-bg: var(--app-error-bg);
+  --color-app-warning: var(--app-warning);
+  --color-app-warning-bg: var(--app-warning-bg);
+  --color-app-info: var(--app-info);
+  --color-app-info-bg: var(--app-info-bg);
+
+  /* V2 App Theme Engine Bindings — Sidebar */
+  --color-app-sidebar-bg: var(--app-sidebar-bg);
+  --color-app-sidebar-surface: var(--app-sidebar-surface);
+  --color-app-sidebar-text: var(--app-sidebar-text);
+  --color-app-sidebar-muted: var(--app-sidebar-muted);
+  --color-app-sidebar-active: var(--app-sidebar-active);
+  --color-app-sidebar-border: var(--app-sidebar-border);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL THEME INHERITANCE — all pages follow the active V2 theme
+   No page should need its own background — it inherits from here.
+══════════════════════════════════════════════════════════════ */
+@layer base {
+
+  html,
+  body {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    font-family: var(--app-font, 'Outfit', sans-serif);
+    min-height: 100%;
+  }
+
+  /* Force Shadcn components to inherit the V2 theme engine */
+  :root {
+    --background: var(--app-bg);
+    --foreground: var(--app-text);
+    --card: var(--app-surface);
+    --card-foreground: var(--app-text);
+    --popover: var(--app-surface);
+    --popover-foreground: var(--app-text);
+    --muted: var(--app-surface-2);
+    --muted-foreground: var(--app-text-muted);
+    --border: var(--app-border);
+    --input: var(--app-border);
+    --ring: var(--app-primary);
+    --primary: var(--app-primary);
+    --primary-foreground: #ffffff;
+    --secondary: var(--app-surface-2);
+    --secondary-foreground: var(--app-text-muted);
+    --accent: var(--app-surface-hover);
+    --accent-foreground: var(--app-text);
+    --destructive: var(--app-error);
+    --destructive-foreground: #ffffff;
+  }
 }
 
 /* Custom Utilities layer */
+
 @layer utilities {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/50;
+    @apply bg-app-surface/70 backdrop-blur-md border border-app-border/50;
   }
 
   .card-premium {
-    @apply bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg transition-all duration-300;
+    @apply bg-app-surface/80 backdrop-blur-sm rounded-2xl border border-app-border/60 shadow-lg transition-all duration-300;
   }
 
   .card-premium:hover {
@@ -70,7 +125,7 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
+    @apply w-full px-4 py-2.5 rounded-xl border border-app-border bg-app-bg/50 text-app-text focus:bg-app-surface focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
   }
 
   /* ─── Page Layout System ─── */
@@ -80,11 +135,11 @@
 
   /* ─── Page Header System ─── */
   .page-header-title {
-    @apply text-2xl md:text-3xl font-black tracking-tighter text-slate-900;
+    @apply text-2xl md:text-3xl font-black tracking-tighter text-app-text;
   }
 
   .page-header-subtitle {
-    @apply text-xs font-bold text-slate-400 uppercase tracking-widest;
+    @apply text-xs font-bold text-app-text-faint uppercase tracking-widest;
   }
 
   .page-header-icon {
@@ -93,28 +148,28 @@
 
   /* ─── Typography System ─── */
   .label-micro {
-    @apply text-[10px] font-black text-slate-400 uppercase tracking-widest;
+    @apply text-[10px] font-black text-app-text-faint uppercase tracking-widest;
   }
 
   .label-small {
-    @apply text-xs font-bold text-slate-500 uppercase tracking-wider;
+    @apply text-xs font-bold text-app-text-muted uppercase tracking-wider;
   }
 
   .value-large {
-    @apply text-3xl font-black text-slate-900 tracking-tighter;
+    @apply text-3xl font-black text-app-text tracking-tighter;
   }
 
   .value-medium {
-    @apply text-xl font-black text-slate-900 tracking-tighter;
+    @apply text-xl font-black text-app-text tracking-tighter;
   }
 
   /* ─── Card Variants ─── */
   .card-kpi {
-    @apply bg-white rounded-2xl border border-slate-100 shadow-sm p-5 transition-all duration-300 hover:shadow-md;
+    @apply bg-app-surface rounded-2xl border border-app-border shadow-sm p-5 transition-all duration-300 hover:shadow-md;
   }
 
   .card-section {
-    @apply bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden;
+    @apply bg-app-surface rounded-2xl border border-app-border shadow-sm overflow-hidden;
   }
 
   /* ─── Badge System ─── */
@@ -135,7 +190,7 @@
   }
 
   .badge-slate {
-    @apply bg-slate-50 text-slate-500 border-slate-200;
+    @apply bg-app-bg text-app-text-muted border-app-border;
   }
 
   /* Custom Scrollbar */
@@ -188,7 +243,7 @@
 /* Global Base Styles */
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    @apply bg-app-bg text-app-text font-sans antialiased;
     /* Subtle background pattern */
     background-image:
       radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),
@@ -250,73 +305,41 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: var(--app-bg);
+  --foreground: var(--app-text);
+  --card: var(--app-surface);
+  --card-foreground: var(--app-text);
+  --popover: var(--app-surface-2);
+  --popover-foreground: var(--app-text);
+  --primary: var(--app-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--app-surface-2);
+  --secondary-foreground: var(--app-text);
+  --muted: var(--app-bg);
+  --muted-foreground: var(--app-text-muted);
+  --accent: var(--app-surface-2);
+  --accent-foreground: var(--app-text);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: var(--app-border);
+  --input: var(--app-border);
+  --ring: var(--app-primary-light);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: var(--app-surface);
+  --sidebar-foreground: var(--app-text);
+  --sidebar-primary: var(--app-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--app-surface-2);
+  --sidebar-accent-foreground: var(--app-text);
+  --sidebar-border: var(--app-border);
+  --sidebar-ring: var(--app-primary-light);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
+/* Note: We delete the .dark manual override since the V2 App Theme Engine natively dictates colors
+via the --app-* variables based on body/root class injections in realtime! */
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);

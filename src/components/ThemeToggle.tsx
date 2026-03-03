@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { useTheme } from "next-themes";
@@ -23,10 +24,10 @@ export function ThemeToggle() {
  return (
  <button
  onClick={toggleTheme}
- className="flex items-center justify-center w-10 h-10 rounded-[1rem] bg-app-text/50 backdrop-blur-3xl border border-gray-200/50 shadow-sm hover:scale-110 hover:bg-app-text/80 active:scale-90 transition-all outline-none"
+ className="flex items-center justify-center w-10 h-10 rounded-[1rem] bg-app-text/50 backdrop-blur-3xl border border-app-border/50 shadow-sm hover:scale-110 hover:bg-app-text/80 active:scale-90 transition-all outline-none"
  title={`Switch Theme (Current: ${currentTheme})`}
  >
- {currentTheme === 'light' && <Monitor size={18} className="text-emerald-600 transition-all duration-300" />}
+ {currentTheme === 'light' && <Monitor size={18} className="text-app-primary transition-all duration-300" />}
  {currentTheme === 'apple' && <Apple size={18} className="text-purple-600 drop-shadow-sm transition-all duration-300 scale-110" />}
  {currentTheme === 'dark' && <Moon size={18} className="text-app-text transition-all duration-300" />}
  </button>

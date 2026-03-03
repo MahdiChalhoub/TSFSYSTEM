@@ -299,41 +299,41 @@ export default function PurchaseForm({
  <div className="grid lg:grid-cols-12 gap-5">
  {/* 1.1 Commercial Scope Card - SHOWN IF DISCRETION MODE IS INACTIVE */}
  {showInternalSwitcher && (
- <div className="lg:col-span-4 card p-6 bg-app-text/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/50 border border-app-text/50 flex flex-col justify-between">
+ <div className="lg:col-span-4 card p-6 bg-app-foreground/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-app-border/20 border border-app-text/50 flex flex-col justify-between">
  <div className="flex justify-between items-start mb-4">
  <div>
- <h4 className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.15em]">Transaction Scope</h4>
- <p className="text-xs text-app-text-muted font-medium">Select reporting standard</p>
+ <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.15em]">Transaction Scope</h4>
+ <p className="text-xs text-app-muted-foreground font-medium">Select reporting standard</p>
  </div>
- <div className={`px-2 py-1 rounded-full text-[8px] font-black tracking-widest ${scope === 'OFFICIAL' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+ <div className={`px-2 py-1 rounded-full text-[8px] font-black tracking-widest ${scope === 'OFFICIAL' ? 'bg-app-primary-light text-app-success' : 'bg-app-warning-bg text-app-warning'}`}>
  {scope === 'OFFICIAL' ? 'PURCHASE INVOICE' : 'INTERNAL RECORD'}
  </div>
  </div>
- <div className="flex p-1.5 bg-slate-100/80 rounded-2xl h-11">
- <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-extrabold transition-all duration-300 ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-md ring-1 ring-emerald-50' : 'text-app-text-faint hover:text-app-text-muted'}`}>PURCHASE INVOICE</button>
- <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-extrabold transition-all duration-300 ${scope === 'INTERNAL' ? 'bg-slate-900 text-app-text shadow-lg' : 'text-app-text-faint hover:text-app-text-muted'}`}>INTERNAL PURCHASE</button>
+ <div className="flex p-1.5 bg-app-surface-2/80 rounded-2xl h-11">
+ <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-extrabold transition-all duration-300 ${scope === 'OFFICIAL' ? 'bg-app-surface text-app-primary shadow-md ring-1 ring-emerald-50' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>PURCHASE INVOICE</button>
+ <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-extrabold transition-all duration-300 ${scope === 'INTERNAL' ? 'bg-app-surface text-app-foreground shadow-lg' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>INTERNAL PURCHASE</button>
  </div>
  <input type="hidden" name="scope" value={scope} />
  </div>
  )}
 
  {/* 1.2 Fulfillment & Supplier Context Card */}
- <div className={`${showInternalSwitcher ? 'lg:col-span-8' : 'lg:col-span-12'} card p-6 bg-app-text/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/50 border border-app-text/50 space-y-4`}>
+ <div className={`${showInternalSwitcher ? 'lg:col-span-8' : 'lg:col-span-12'} card p-6 bg-app-foreground/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-app-border/20 border border-app-text/50 space-y-4`}>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
  <div className="space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
- <FileText size={10} className="text-blue-500" /> {showInternalSwitcher ? 'System Sequence' : 'Document ID'}
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
+ <FileText size={10} className="text-app-info" /> {showInternalSwitcher ? 'System Sequence' : 'Document ID'}
  </label>
  <input
  name="refCode"
  value={refCode}
  onChange={(e) => setRefCode(e.target.value)}
  placeholder="INV-XXXX"
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-black text-blue-600 focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all outline-none"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-black text-app-info focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-app-info transition-all outline-none"
  />
  </div>
  <div className="space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
  <FileSearch size={10} className="text-rose-500" /> Tax / Declared Ref
  </label>
  <input
@@ -341,27 +341,27 @@ export default function PurchaseForm({
  placeholder="TAX-XXXXX"
  value={declaredRef}
  onChange={(e) => setDeclaredRef(e.target.value)}
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-rose-50 focus:border-rose-200 transition-all outline-none"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-rose-50 focus:border-rose-200 transition-all outline-none"
  />
  </div>
  <div className="space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
- <Search size={10} className="text-indigo-500" /> Supplier Ref
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
+ <Search size={10} className="text-app-primary" /> Supplier Ref
  </label>
  <input
  name="supplierRef"
  placeholder="FR-XXXXX"
  value={supplierRef}
  onChange={(e) => setSupplierRef(e.target.value)}
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all outline-none"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-app-info transition-all outline-none"
  />
  </div>
  <div className="space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
- <LayoutGrid size={10} className="text-emerald-500" /> Site
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
+ <LayoutGrid size={10} className="text-app-primary" /> Site
  </label>
  <select
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-emerald-50 focus:border-emerald-200 transition-all outline-none appearance-none cursor-pointer"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-emerald-50 focus:border-app-success transition-all outline-none appearance-none cursor-pointer"
  value={selectedSiteId}
  onChange={(e) => setSelectedSiteId(Number(e.target.value))}
  name="siteId"
@@ -372,11 +372,11 @@ export default function PurchaseForm({
  </select>
  </div>
  <div className="space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
- <Trash2 size={10} className="text-amber-500" /> Partner
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
+ <Trash2 size={10} className="text-app-warning" /> Partner
  </label>
  <select
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-amber-50 focus:border-amber-200 transition-all outline-none appearance-none cursor-pointer"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-amber-50 focus:border-app-warning transition-all outline-none appearance-none cursor-pointer"
  name="supplierId"
  required
  value={selectedSupplierId}
@@ -389,9 +389,9 @@ export default function PurchaseForm({
  </div>
 
  {/* Additional Reference Row */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1 border-t border-slate-50">
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-1 border-t border-app-border">
  <div className="col-span-2 space-y-1.5">
- <label className="flex items-center gap-1.5 text-[9px] font-black text-app-text-faint uppercase tracking-widest leading-none">
+ <label className="flex items-center gap-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-widest leading-none">
  <CheckCircle2 size={10} className="text-teal-500" /> Delivery Receipt (BL)
  </label>
  <input
@@ -399,7 +399,7 @@ export default function PurchaseForm({
  placeholder="BL-XXXXX (Optional)"
  value={deliveryNoteRef}
  onChange={(e) => setDeliveryNoteRef(e.target.value)}
- className="w-full bg-app-bg border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-teal-50 focus:border-teal-200 transition-all outline-none"
+ className="w-full bg-app-background border border-app-border rounded-xl px-3 py-2 text-[11px] font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-teal-50 focus:border-teal-200 transition-all outline-none"
  />
  </div>
  </div>
@@ -408,20 +408,20 @@ export default function PurchaseForm({
 
  {/* 1.B High-Speed Source Selection */}
  <div className="grid lg:grid-cols-4 gap-5">
- <div className="lg:col-span-2 card p-5 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[1.5rem] shadow-lg shadow-blue-200/40 flex items-center gap-5 text-app-text group cursor-pointer hover:scale-[1.02] transition-all duration-500">
- <div className="w-12 h-12 bg-app-text/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-app-text/30 group-hover:rotate-12 transition-transform">
+ <div className="lg:col-span-2 card p-5 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[1.5rem] shadow-lg shadow-blue-200/40 flex items-center gap-5 text-app-foreground group cursor-pointer hover:scale-[1.02] transition-all duration-500">
+ <div className="w-12 h-12 bg-app-foreground/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-app-text/30 group-hover:rotate-12 transition-transform">
  <FileSearch size={24} />
  </div>
  <div className="flex-1">
- <label className="block text-[10px] font-black text-blue-100 uppercase tracking-widest mb-1">Fulfill Pending Order</label>
+ <label className="block text-[10px] font-black text-app-info uppercase tracking-widest mb-1">Fulfill Pending Order</label>
  <select
- className="w-full bg-transparent text-sm font-black text-app-text border-none p-0 focus:ring-0 cursor-pointer"
+ className="w-full bg-transparent text-sm font-black text-app-foreground border-none p-0 focus:ring-0 cursor-pointer"
  value={selectedPOId}
  onChange={(e) => handlePOLoad(Number(e.target.value))}
  >
- <option value="" className="text-app-text font-bold">New Direct Operation</option>
+ <option value="" className="text-app-foreground font-bold">New Direct Operation</option>
  {openPOs.map(po => (
- <option key={po.id} value={po.id} className="text-app-text font-bold">
+ <option key={po.id} value={po.id} className="text-app-foreground font-bold">
  {po.po_number || `PO-${po.id}`} — Total: ${po.total_amount}
  </option>
  ))}
@@ -430,12 +430,12 @@ export default function PurchaseForm({
  </div>
 
  <div className="card p-5 bg-app-surface border border-app-border rounded-[1.5rem] shadow-sm flex items-center gap-4">
- <div className="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-100">
+ <div className="w-10 h-10 bg-app-primary-light rounded-2xl flex items-center justify-center text-app-primary border border-app-success/30">
  <LayoutGrid size={18} />
  </div>
  <div>
- <label className="block text-[9px] font-black text-app-text-faint uppercase tracking-wider mb-0.5">Inventory Logic</label>
- <div className="text-xs font-black text-app-text">INSTANT STOCK-IN</div>
+ <label className="block text-[9px] font-black text-app-muted-foreground uppercase tracking-wider mb-0.5">Inventory Logic</label>
+ <div className="text-xs font-black text-app-foreground">INSTANT STOCK-IN</div>
  </div>
  </div>
 
@@ -444,26 +444,26 @@ export default function PurchaseForm({
  <FileText size={18} />
  </div>
  <div>
- <label className="block text-[9px] font-black text-app-text-faint uppercase tracking-wider mb-0.5">Ledger Impact</label>
- <div className="text-xs font-black text-app-text">AUTOMATIC POSTING</div>
+ <label className="block text-[9px] font-black text-app-muted-foreground uppercase tracking-wider mb-0.5">Ledger Impact</label>
+ <div className="text-xs font-black text-app-foreground">AUTOMATIC POSTING</div>
  </div>
  </div>
  </div>
 
  {/* 1.C Commercial Parameters */}
  <div className="flex flex-wrap gap-4 items-center">
- <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
- <button type="button" onClick={() => setInvoicePriceType('HT')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${invoicePriceType === 'HT' ? 'bg-app-surface text-blue-600 shadow-md ring-1 ring-blue-50' : 'text-app-text-faint hover:text-app-text-muted'}`}>HT PRICING</button>
- <button type="button" onClick={() => setInvoicePriceType('TTC')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${invoicePriceType === 'TTC' ? 'bg-app-surface text-indigo-600 shadow-md ring-1 ring-indigo-50' : 'text-app-text-faint hover:text-app-text-muted'}`}>TTC PRICING</button>
+ <div className="flex bg-app-surface-2/50 p-1 rounded-2xl border border-app-border/50">
+ <button type="button" onClick={() => setInvoicePriceType('HT')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${invoicePriceType === 'HT' ? 'bg-app-surface text-app-info shadow-md ring-1 ring-blue-50' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>HT PRICING</button>
+ <button type="button" onClick={() => setInvoicePriceType('TTC')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${invoicePriceType === 'TTC' ? 'bg-app-surface text-app-primary shadow-md ring-1 ring-indigo-50' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>TTC PRICING</button>
  <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
  </div>
 
- <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 transition-all">
+ <div className="flex bg-app-surface-2/50 p-1 rounded-2xl border border-app-border/50 transition-all">
  <button
  type="button"
  disabled={scope === 'INTERNAL'}
  onClick={() => setVatRecoverable(true)}
- className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${vatRecoverable ? 'bg-emerald-600 text-app-text shadow-lg' : 'text-app-text-faint hover:text-app-text-muted'} ${scope === 'INTERNAL' ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
+ className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${vatRecoverable ? 'bg-app-primary text-app-foreground shadow-lg' : 'text-app-muted-foreground hover:text-app-muted-foreground'} ${scope === 'INTERNAL' ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
  >
  TVA RECOVERABLE
  </button>
@@ -471,35 +471,35 @@ export default function PurchaseForm({
  type="button"
  disabled={scope === 'INTERNAL'}
  onClick={() => setVatRecoverable(false)}
- className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${!vatRecoverable ? 'bg-rose-600 text-app-text shadow-lg' : 'text-app-text-faint hover:text-app-text-muted'} ${scope === 'INTERNAL' ? 'opacity-100 ring-2 ring-rose-300 ring-offset-2' : ''}`}
+ className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${!vatRecoverable ? 'bg-rose-600 text-app-foreground shadow-lg' : 'text-app-muted-foreground hover:text-app-muted-foreground'} ${scope === 'INTERNAL' ? 'opacity-100 ring-2 ring-rose-300 ring-offset-2' : ''}`}
  >
  NON-RECOVERABLE
  </button>
  <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
  </div>
 
- <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
- <button type="button" onClick={() => setProfitMode('MARGIN')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${profitMode === 'MARGIN' ? 'bg-app-surface text-emerald-600 shadow-md ring-1 ring-emerald-50' : 'text-app-text-faint hover:text-app-text-muted'}`}>MARGIN ANALYSIS</button>
- <button type="button" onClick={() => setProfitMode('MARKUP')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${profitMode === 'MARKUP' ? 'bg-app-surface text-emerald-600 shadow-md ring-1 ring-emerald-50' : 'text-app-text-faint hover:text-app-text-muted'}`}>MARKUP ANALYSIS</button>
+ <div className="flex bg-app-surface-2/50 p-1 rounded-2xl border border-app-border/50">
+ <button type="button" onClick={() => setProfitMode('MARGIN')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${profitMode === 'MARGIN' ? 'bg-app-surface text-app-primary shadow-md ring-1 ring-emerald-50' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>MARGIN ANALYSIS</button>
+ <button type="button" onClick={() => setProfitMode('MARKUP')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${profitMode === 'MARKUP' ? 'bg-app-surface text-app-primary shadow-md ring-1 ring-emerald-50' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>MARKUP ANALYSIS</button>
  </div>
 
- <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-app-text-faint bg-app-bg px-4 py-2.5 rounded-2xl border border-dashed border-app-border">
- <CheckCircle2 size={14} className="text-emerald-500" />
+ <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-app-muted-foreground bg-app-background px-4 py-2.5 rounded-2xl border border-dashed border-app-border">
+ <CheckCircle2 size={14} className="text-app-primary" />
  <span className="uppercase tracking-[0.05em]">Commercial Integrity Active</span>
  </div>
  </div>
 
  {/* 2. Product Search */}
- <div className="bg-app-surface rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-app-border overflow-hidden">
+ <div className="bg-app-surface rounded-[2.5rem] shadow-2xl shadow-app-border/20 border border-app-border overflow-hidden">
  <div className="p-8 bg-gradient-to-r from-slate-50 to-white border-b border-app-border flex items-center gap-6">
  <div className="relative flex-1 group flex items-center gap-3">
  <div className="relative flex-1">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+ <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground group-focus-within:text-app-info transition-colors" size={20} />
  <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
  </div>
  <button
  type="button"
- className="h-11 px-5 bg-slate-900 text-app-text rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
+ className="h-11 px-5 bg-app-surface text-app-foreground rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-app-surface-2 transition-all shadow-lg shadow-app-border/20"
  onClick={() => setIsDiscoveryOpen(true)}
  >
  <LayoutGrid size={16} />
@@ -507,19 +507,19 @@ export default function PurchaseForm({
  </button>
  </div>
  <div className="hidden md:flex flex-col items-end">
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Selected Items</span>
- <span className="text-xl font-black text-app-text leading-none">{lines.length}</span>
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Selected Items</span>
+ <span className="text-xl font-black text-app-foreground leading-none">{lines.length}</span>
  </div>
  </div>
 
  <div className="overflow-x-auto">
  <table className="w-full text-xs text-left border-collapse">
- <thead className="bg-[#FBFCFE] text-app-text-faint font-black uppercase tracking-[0.2em] text-[9px] border-b border-slate-50">
+ <thead className="bg-[#FBFCFE] text-app-muted-foreground font-black uppercase tracking-[0.2em] text-[9px] border-b border-app-border">
  <tr>
  <th className="p-6 min-w-[240px]">Operation Item</th>
  <th className="p-3 text-center">Current</th>
- <th className="p-3 text-center bg-blue-50/20">Target HT</th>
- <th className="p-3 w-48 text-center bg-slate-50/50">Unit Cost (Base / Taxed)</th>
+ <th className="p-3 text-center bg-app-info-bg/20">Target HT</th>
+ <th className="p-3 w-48 text-center bg-app-surface-2/50">Unit Cost (Base / Taxed)</th>
  <th className="p-3 w-48 text-center bg-purple-50/20">Market Price</th>
  <th className="p-3 text-center">Profitability</th>
  <th className="p-3 w-32">Expiry</th>
@@ -531,7 +531,7 @@ export default function PurchaseForm({
  {lines.length === 0 && (
  <tr>
  <td colSpan={12} className="p-12 text-center">
- <div className="flex flex-col items-center gap-3 text-app-text-faint">
+ <div className="flex flex-col items-center gap-3 text-app-muted-foreground">
  <ShoppingCartSkeleton />
  <p className="font-medium">No products selected. Search above to begin.</p>
  </div>
@@ -541,18 +541,18 @@ export default function PurchaseForm({
  {lines.map((line, idx) => (
  <tr
  key={line.productId}
- className={`group transition-all duration-300 ${focusedProductId === line.productId ? 'bg-blue-50/30' : 'hover:bg-slate-50/50'}`}
+ className={`group transition-all duration-300 ${focusedProductId === line.productId ? 'bg-app-info-bg/30' : 'hover:bg-app-surface-2/50'}`}
  onMouseEnter={() => setFocusedProductId(line.productId)}
  >
  <td className="p-6">
  <div className="flex gap-4 items-center">
- <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center text-app-text-faint group-hover:bg-app-surface group-hover:shadow-md transition-all">
+ <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:bg-app-surface group-hover:shadow-md transition-all">
  <Plus size={18} />
  </div>
  <div>
- <div className="font-black text-app-text text-sm mb-0.5">{line.productName}</div>
+ <div className="font-black text-app-foreground text-sm mb-0.5">{line.productName}</div>
  <div className="flex items-center gap-2">
- <span className="text-[10px] font-mono text-app-text-faint">SKU: {line.barcode || 'NO_SKU'}</span>
+ <span className="text-[10px] font-mono text-app-muted-foreground">SKU: {line.barcode || 'NO_SKU'}</span>
  {line.stockLevel < 10 && <span className="bg-rose-50 text-rose-600 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">Low Stock</span>}
  </div>
  </div>
@@ -562,38 +562,38 @@ export default function PurchaseForm({
  </td>
 
  <td className="p-3 text-center">
- <div className="text-[10px] font-black text-app-text-faint uppercase mb-1 tracking-tighter">Stock</div>
- <div className="font-mono font-black text-slate-700">{line.stockLevel}</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase mb-1 tracking-tighter">Stock</div>
+ <div className="font-mono font-black text-app-muted-foreground">{line.stockLevel}</div>
  </td>
 
- <td className="p-3 text-center bg-blue-50/10">
- <div className="text-[10px] font-black text-blue-400 uppercase mb-1 tracking-tighter italic">Proposed</div>
+ <td className="p-3 text-center bg-app-info-bg/10">
+ <div className="text-[10px] font-black text-app-info uppercase mb-1 tracking-tighter italic">Proposed</div>
  <input
  type="number"
- className="w-20 bg-app-surface border border-blue-100 rounded-xl p-2 text-center font-black text-blue-600 focus:ring-4 focus:ring-blue-100 focus:border-blue-300 outline-none shadow-sm transition-all"
+ className="w-20 bg-app-surface border border-app-info/30 rounded-xl p-2 text-center font-black text-app-info focus:ring-4 focus:ring-blue-100 focus:border-app-info/30 outline-none shadow-sm transition-all"
  value={line.quantity}
  onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
  name={`lines[${idx}][quantity]`}
  />
  </td>
 
- <td className="p-3 bg-slate-50/30">
+ <td className="p-3 bg-app-surface-2/30">
  <div className="space-y-2">
  <div className="flex items-center gap-2">
- <span className="text-[8px] font-black text-slate-300 w-4 tracking-tighter">HT</span>
+ <span className="text-[8px] font-black text-app-muted-foreground w-4 tracking-tighter">HT</span>
  <input
  type="number" step="0.01"
- className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${invoicePriceType === 'HT' ? 'border-blue-300 ring-2 ring-blue-50 text-blue-700' : 'border-app-border text-app-text-muted'}`}
+ className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${invoicePriceType === 'HT' ? 'border-app-info/30 ring-2 ring-blue-50 text-app-info' : 'border-app-border text-app-muted-foreground'}`}
  value={line.unitCostHT}
  onChange={(e) => updateLine(idx, { unitCostHT: Number(e.target.value) })}
  name={`lines[${idx}][unitCostHT]`}
  />
  </div>
  <div className="flex items-center gap-2">
- <span className="text-[8px] font-black text-slate-300 w-4 tracking-tighter">TTC</span>
+ <span className="text-[8px] font-black text-app-muted-foreground w-4 tracking-tighter">TTC</span>
  <input
  type="number" step="0.01"
- className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${invoicePriceType === 'TTC' ? 'border-indigo-300 ring-2 ring-indigo-50 text-indigo-700' : 'border-app-border text-app-text-muted'}`}
+ className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${invoicePriceType === 'TTC' ? 'border-app-primary/30 ring-2 ring-indigo-50 text-app-primary' : 'border-app-border text-app-muted-foreground'}`}
  value={line.unitCostTTC}
  onChange={(e) => updateLine(idx, { unitCostTTC: Number(e.target.value) })}
  name={`lines[${idx}][unitCostTTC]`}
@@ -605,20 +605,20 @@ export default function PurchaseForm({
  <td className="p-3 bg-purple-50/10">
  <div className="space-y-2">
  <div className="flex items-center gap-2">
- <span className="text-[8px] font-black text-slate-300 w-4 tracking-tighter">HT</span>
+ <span className="text-[8px] font-black text-app-muted-foreground w-4 tracking-tighter">HT</span>
  <input
  type="number" step="0.01"
- className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${!worksInTTC ? 'border-purple-300 ring-2 ring-purple-50 text-purple-700' : 'border-app-border text-app-text-muted'}`}
+ className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${!worksInTTC ? 'border-purple-300 ring-2 ring-purple-50 text-purple-700' : 'border-app-border text-app-muted-foreground'}`}
  value={line.sellingPriceHT}
  onChange={(e) => updateLine(idx, { sellingPriceHT: Number(e.target.value) })}
  name={`lines[${idx}][sellingPriceHT]`}
  />
  </div>
  <div className="flex items-center gap-2">
- <span className="text-[8px] font-black text-slate-300 w-4 tracking-tighter">TTC</span>
+ <span className="text-[8px] font-black text-app-muted-foreground w-4 tracking-tighter">TTC</span>
  <input
  type="number" step="0.01"
- className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${worksInTTC ? 'border-fuchsia-300 ring-2 ring-fuchsia-50 text-fuchsia-700' : 'border-app-border text-app-text-muted'}`}
+ className={`flex-1 bg-app-surface p-2 text-[11px] font-mono font-black border rounded-xl shadow-sm transition-all ${worksInTTC ? 'border-fuchsia-300 ring-2 ring-fuchsia-50 text-fuchsia-700' : 'border-app-border text-app-muted-foreground'}`}
  value={line.sellingPriceTTC}
  onChange={(e) => updateLine(idx, { sellingPriceTTC: Number(e.target.value) })}
  name={`lines[${idx}][sellingPriceTTC]`}
@@ -632,7 +632,7 @@ export default function PurchaseForm({
  const { margin } = getProfitAnalysis(line);
  return (
  <div className="flex flex-col items-center">
- <div className={`w-14 h-14 rounded-full border-4 flex flex-col items-center justify-center transition-all ${margin < 15 ? 'border-rose-100 bg-rose-50 text-rose-600' : 'border-emerald-100 bg-emerald-50 text-emerald-600'}`}>
+ <div className={`w-14 h-14 rounded-full border-4 flex flex-col items-center justify-center transition-all ${margin < 15 ? 'border-rose-100 bg-rose-50 text-rose-600' : 'border-app-success/30 bg-app-primary-light text-app-primary'}`}>
  <span className="text-xs font-black leading-none">{margin.toFixed(0)}%</span>
  <span className="text-[7px] font-black uppercase opacity-60">PROFIT</span>
  </div>
@@ -645,7 +645,7 @@ export default function PurchaseForm({
  <div className="relative group/exp">
  <input
  type="date"
- className="w-full text-[10px] font-black bg-app-bg border border-app-border p-2.5 rounded-xl focus:bg-app-surface focus:ring-4 focus:ring-slate-100 transition-all outline-none cursor-pointer"
+ className="w-full text-[10px] font-black bg-app-background border border-app-border p-2.5 rounded-xl focus:bg-app-surface focus:ring-4 focus:ring-slate-100 transition-all outline-none cursor-pointer"
  value={line.expiryDate}
  onChange={(e) => updateLine(idx, { expiryDate: e.target.value })}
  name={`lines[${idx}][expiryDate]`}
@@ -654,8 +654,8 @@ export default function PurchaseForm({
  </td>
 
  <td className="p-3 text-right pr-6">
- <div className="text-[10px] text-app-text-faint font-bold mb-1 uppercase tracking-widest">Total</div>
- <div className="text-sm font-mono font-black text-app-text bg-slate-50/50 px-3 py-1 rounded-lg inline-block border border-slate-200/50">
+ <div className="text-[10px] text-app-muted-foreground font-bold mb-1 uppercase tracking-widest">Total</div>
+ <div className="text-sm font-mono font-black text-app-foreground bg-app-surface-2/50 px-3 py-1 rounded-lg inline-block border border-app-border/50">
  ${(line.quantity * (invoicePriceType === 'TTC' ? (line.unitCostTTC || 0) : (line.unitCostHT || 0))).toFixed(2)}
  </div>
  </td>
@@ -664,7 +664,7 @@ export default function PurchaseForm({
  <button
  type="button"
  onClick={() => removeLine(idx)}
- className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 hover:shadow-inner rounded-xl transition-all"
+ className="w-8 h-8 flex items-center justify-center text-app-muted-foreground hover:text-rose-600 hover:bg-rose-50 hover:shadow-inner rounded-xl transition-all"
  >
  <Trash2 size={16} />
  </button>
@@ -680,33 +680,33 @@ export default function PurchaseForm({
  <div className="grid lg:grid-cols-2 gap-8 pt-6">
  {/* 3.1 Context & Audit Trail */}
  <div className="space-y-6">
- <div className="card p-8 bg-app-text/80 backdrop-blur-xl rounded-[2.5rem] border border-app-border shadow-xl shadow-slate-200/40 space-y-4">
- <label className="flex items-center gap-3 text-[10px] font-black text-app-text-faint uppercase tracking-[0.2em]">
- <FileText size={16} className="text-blue-500" /> Executive Observations
+ <div className="card p-8 bg-app-foreground/80 backdrop-blur-xl rounded-[2.5rem] border border-app-border shadow-xl shadow-app-border/20 space-y-4">
+ <label className="flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em]">
+ <FileText size={16} className="text-app-info" /> Executive Observations
  </label>
  <textarea
  name="notes"
  rows={4}
- className="w-full border-2 border-slate-50 bg-slate-50/50 rounded-[1.5rem] p-5 text-sm font-medium focus:bg-app-surface focus:border-blue-200 focus:ring-4 focus:ring-blue-50 outline-none transition-all resize-none shadow-inner"
+ className="w-full border-2 border-app-border bg-app-surface-2/50 rounded-[1.5rem] p-5 text-sm font-medium focus:bg-app-surface focus:border-app-info focus:ring-4 focus:ring-blue-50 outline-none transition-all resize-none shadow-inner"
  placeholder="Enter specific operation directives or audit notes..."
  />
  </div>
 
  {/* 3.2 Dynamic Friction Costs (Fees) */}
- <div className="card p-8 bg-app-text/80 backdrop-blur-xl rounded-[2.5rem] border border-app-border shadow-xl shadow-slate-200/40">
+ <div className="card p-8 bg-app-foreground/80 backdrop-blur-xl rounded-[2.5rem] border border-app-border shadow-xl shadow-app-border/20">
  <div className="flex justify-between items-center mb-6">
- <label className="flex items-center gap-3 text-[10px] font-black text-app-text-faint uppercase tracking-[0.2em]">
- <Plus size={16} className="text-emerald-500" /> Incidental Fees
+ <label className="flex items-center gap-3 text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em]">
+ <Plus size={16} className="text-app-primary" /> Incidental Fees
  </label>
- <button type="button" onClick={() => setExtraFees([...extraFees, { name: '', amount: 0 }])} className="text-[10px] font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-colors shadow-sm ring-1 ring-emerald-100">ADD SURCHARGE</button>
+ <button type="button" onClick={() => setExtraFees([...extraFees, { name: '', amount: 0 }])} className="text-[10px] font-black text-app-primary bg-app-primary-light hover:bg-app-primary-light px-4 py-2 rounded-xl transition-colors shadow-sm ring-1 ring-emerald-100">ADD SURCHARGE</button>
  </div>
  <div className="space-y-3">
  {extraFees.map((fee, idx) => (
- <div key={idx} className="flex gap-4 items-center bg-slate-50/80 p-3 rounded-2xl border border-app-border group">
+ <div key={idx} className="flex gap-4 items-center bg-app-surface-2/80 p-3 rounded-2xl border border-app-border group">
  <div className="flex-1">
  <input
  placeholder="Surcharge Name"
- className="w-full bg-transparent border-none text-xs font-black text-app-text focus:ring-0"
+ className="w-full bg-transparent border-none text-xs font-black text-app-foreground focus:ring-0"
  value={fee.name}
  name={`extraFees[${idx}][name]`}
  onChange={(e) => {
@@ -717,11 +717,11 @@ export default function PurchaseForm({
  />
  </div>
  <div className="w-32 relative">
- <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">$</span>
+ <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-app-muted-foreground">$</span>
  <input
  type="number"
  placeholder="0.00"
- className="w-full bg-app-surface border border-app-border rounded-xl pl-6 pr-3 py-2 text-xs font-black text-right text-app-text focus:ring-4 focus:ring-emerald-50 focus:border-emerald-300 transition-all shadow-sm"
+ className="w-full bg-app-surface border border-app-border rounded-xl pl-6 pr-3 py-2 text-xs font-black text-right text-app-foreground focus:ring-4 focus:ring-emerald-50 focus:border-app-success transition-all shadow-sm"
  value={fee.amount}
  name={`extraFees[${idx}][amount]`}
  onChange={(e) => {
@@ -731,83 +731,83 @@ export default function PurchaseForm({
  }}
  />
  </div>
- <button type="button" onClick={() => setExtraFees(extraFees.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-600 transition-colors"><Trash2 size={16} /></button>
+ <button type="button" onClick={() => setExtraFees(extraFees.filter((_, i) => i !== idx))} className="text-app-muted-foreground hover:text-rose-600 transition-colors"><Trash2 size={16} /></button>
  </div>
  ))}
- {extraFees.length === 0 && <div className="text-[11px] text-slate-300 font-medium text-center py-6 border-2 border-dashed border-slate-50 rounded-2xl italic">No incidental fees recorded for this operation.</div>}
+ {extraFees.length === 0 && <div className="text-[11px] text-app-muted-foreground font-medium text-center py-6 border-2 border-dashed border-app-border rounded-2xl italic">No incidental fees recorded for this operation.</div>}
  </div>
  </div>
  </div>
 
  {/* 3.3 Settlement Hub (Totals & Payment) */}
- <div className="card p-10 bg-slate-900 rounded-[3rem] shadow-2xl shadow-slate-900/40 text-app-text space-y-8 relative overflow-hidden">
+ <div className="card p-10 bg-app-surface rounded-[3rem] shadow-2xl shadow-app-border/20 text-app-foreground space-y-8 relative overflow-hidden">
  {/* Decorative Background Element */}
- <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-info-bg rounded-full blur-3xl -mr-32 -mt-32"></div>
 
  <div className="relative space-y-6">
- <h3 className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em]">Financial Settlement</h3>
+ <h3 className="text-[10px] font-black text-app-info uppercase tracking-[0.3em]">Financial Settlement</h3>
 
  <div className="space-y-4">
  <div className="flex justify-between items-end border-b border-app-text/10 pb-4">
- <span className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Subtotal (Net)</span>
+ <span className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">Subtotal (Net)</span>
  <span className="text-xl font-mono font-black">${getInvoiceTotals().subtotal.toFixed(2)}</span>
  </div>
  <div className="flex justify-between items-end border-b border-app-text/10 pb-4">
- <span className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Aggregate Tax (VAT)</span>
- <span className="text-xl font-mono font-black text-indigo-400">${getInvoiceTotals().tax.toFixed(2)}</span>
+ <span className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">Aggregate Tax (VAT)</span>
+ <span className="text-xl font-mono font-black text-app-primary">${getInvoiceTotals().tax.toFixed(2)}</span>
  </div>
  <div className="flex justify-between items-end">
  <div className="flex flex-col gap-2">
- <span className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Adjustments (Fees/Disc)</span>
+ <span className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest">Adjustments (Fees/Disc)</span>
  <input
  type="number"
  placeholder="Global Discount"
- className="bg-app-text/5 border border-app-text/10 rounded-xl px-3 py-1.5 text-[11px] font-black text-rose-400 focus:bg-app-text/10 transition-all outline-none"
+ className="bg-app-foreground/5 border border-app-text/10 rounded-xl px-3 py-1.5 text-[11px] font-black text-rose-400 focus:bg-app-foreground/10 transition-all outline-none"
  value={discountAmount}
  onChange={(e) => setDiscountAmount(Number(e.target.value))}
  name="discountAmount"
  />
  </div>
- <span className="text-xl font-mono font-black text-emerald-400">+{(getInvoiceTotals().fees - discountAmount).toFixed(2)}</span>
+ <span className="text-xl font-mono font-black text-app-primary">+{(getInvoiceTotals().fees - discountAmount).toFixed(2)}</span>
  </div>
  </div>
 
  <div className="pt-6 border-t border-app-text/20 flex justify-between items-center">
- <span className="text-blue-300 text-sm font-black uppercase tracking-[0.2em]">Grand Total</span>
- <span className="text-5xl font-mono font-black tracking-tighter text-app-text drop-shadow-lg">${getInvoiceTotals().total.toFixed(2)}</span>
+ <span className="text-app-info text-sm font-black uppercase tracking-[0.2em]">Grand Total</span>
+ <span className="text-5xl font-mono font-black tracking-tighter text-app-foreground drop-shadow-lg">${getInvoiceTotals().total.toFixed(2)}</span>
  </div>
 
  {/* Immediate Settlement */}
- <div className="bg-app-text/5 backdrop-blur-md p-6 rounded-[2rem] border border-app-text/10 space-y-4 shadow-inner">
+ <div className="bg-app-foreground/5 backdrop-blur-md p-6 rounded-[2rem] border border-app-text/10 space-y-4 shadow-inner">
  <div className="flex items-center justify-between">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Immediate Payment</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Immediate Payment</label>
  <div className="flex items-center gap-2">
- <div className={`w-2 h-2 rounded-full ${paidAmount >= getInvoiceTotals().total ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></div>
- <span className="text-[10px] font-black text-app-text uppercase">{paidAmount >= getInvoiceTotals().total ? 'FULLY PAID' : 'PARTIAL/CREDIT'}</span>
+ <div className={`w-2 h-2 rounded-full ${paidAmount >= getInvoiceTotals().total ? 'bg-app-primary shadow-[0_0_10px_var(--app-success)]' : 'bg-app-warning shadow-[0_0_10px_var(--app-warning)]'}`}></div>
+ <span className="text-[10px] font-black text-app-foreground uppercase">{paidAmount >= getInvoiceTotals().total ? 'FULLY PAID' : 'PARTIAL/CREDIT'}</span>
  </div>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <span className="text-[9px] font-black text-app-text-muted uppercase">Amount Paid</span>
+ <span className="text-[9px] font-black text-app-muted-foreground uppercase">Amount Paid</span>
  <input
  type="number"
- className="w-full bg-app-text/10 border border-app-text/20 rounded-xl px-4 py-3 text-sm font-black text-app-text focus:ring-4 focus:ring-blue-500/20 outline-none transition-all"
+ className="w-full bg-app-foreground/10 border border-app-text/20 rounded-xl px-4 py-3 text-sm font-black text-app-foreground focus:ring-4 focus:ring-blue-500/20 outline-none transition-all"
  value={paidAmount}
  onChange={(e) => setPaidAmount(Number(e.target.value))}
  name="paidAmount"
  />
  </div>
  <div className="space-y-2">
- <span className="text-[9px] font-black text-app-text-muted uppercase">Funding Account</span>
+ <span className="text-[9px] font-black text-app-muted-foreground uppercase">Funding Account</span>
  <select
- className="w-full bg-app-text/10 border border-app-text/20 rounded-xl px-4 py-3 text-xs font-black text-app-text focus:ring-4 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer"
+ className="w-full bg-app-foreground/10 border border-app-text/20 rounded-xl px-4 py-3 text-xs font-black text-app-foreground focus:ring-4 focus:ring-blue-500/20 outline-none transition-all appearance-none cursor-pointer"
  value={paymentAccountId}
  onChange={(e) => setPaymentAccountId(Number(e.target.value))}
  name="paymentAccountId"
  >
- <option value="" className="text-app-text">Choose...</option>
+ <option value="" className="text-app-foreground">Choose...</option>
  {(financialSettings?.paymentAccounts || []).map((acc: any) => (
- <option key={acc.id} value={acc.id} className="text-app-text">{acc.name} ({acc.currency})</option>
+ <option key={acc.id} value={acc.id} className="text-app-foreground">{acc.name} ({acc.currency})</option>
  ))}
  </select>
  </div>
@@ -817,11 +817,11 @@ export default function PurchaseForm({
  <button
  type="submit"
  disabled={isPending || lines.length === 0}
- className={`w-full py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] transition-all duration-500 flex items-center justify-center gap-3 shadow-2xl ${isPending || lines.length === 0 ? 'bg-slate-800 text-app-text-muted cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-app-text shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98]'}`}
+ className={`w-full py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.3em] transition-all duration-500 flex items-center justify-center gap-3 shadow-2xl ${isPending || lines.length === 0 ? 'bg-app-surface-2 text-app-muted-foreground cursor-not-allowed' : 'bg-app-info hover:bg-app-info text-app-foreground shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98]'}`}
  >
  {isPending ? (
  <>
- <div className="w-5 h-5 border-4 border-blue-200 border-t-white rounded-full animate-spin"></div>
+ <div className="w-5 h-5 border-4 border-app-info border-t-white rounded-full animate-spin"></div>
  Processing...
  </>
  ) : (
@@ -833,7 +833,7 @@ export default function PurchaseForm({
  </button>
 
  {state.message && (
- <div className={`mt-4 p-4 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider relative z-10 ${state.errors ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+ <div className={`mt-4 p-4 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider relative z-10 ${state.errors ? 'bg-app-error/20 text-rose-300' : 'bg-app-primary/20 text-app-success'}`}>
  {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
  {state.message}
  </div>
@@ -846,15 +846,15 @@ export default function PurchaseForm({
  {/* B. Product Intelligence Sidebar (The "Genome" Panel) */}
  <aside className="w-full lg:w-[420px] shrink-0 space-y-6">
  <div className="sticky top-6">
- <div className="card bg-slate-900 rounded-[3rem] shadow-2xl shadow-slate-900/20 border border-slate-800 overflow-hidden min-h-[720px] flex flex-col">
- <div className="p-8 bg-gradient-to-b from-slate-800 to-slate-900 border-b border-slate-800/50">
+ <div className="card bg-app-surface rounded-[3rem] shadow-2xl shadow-app-border/20 border border-app-border overflow-hidden min-h-[720px] flex flex-col">
+ <div className="p-8 bg-gradient-to-b from-slate-800 to-slate-900 border-b border-app-border/50">
  <div className="flex items-center gap-4 mb-4">
- <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/30">
+ <div className="w-12 h-12 bg-app-info/20 rounded-2xl flex items-center justify-center text-app-info border border-app-info/30">
  <Info size={24} />
  </div>
  <div>
- <h3 className="text-lg font-black text-app-text leading-tight underline decoration-blue-500 decoration-4 underline-offset-4">Product Details</h3>
- <p className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mt-1">Supplier Pricing</p>
+ <h3 className="text-lg font-black text-app-foreground leading-tight underline decoration-blue-500 decoration-4 underline-offset-4">Product Details</h3>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mt-1">Supplier Pricing</p>
  </div>
  </div>
  </div>
@@ -862,70 +862,70 @@ export default function PurchaseForm({
  <div className="flex-1 p-8 space-y-8 overflow-y-auto custom-scrollbar">
  {!focusedProductId ? (
  <div className="h-full flex flex-col items-center justify-center text-center space-y-4 px-4">
- <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center text-app-text-muted">
+ <div className="w-20 h-20 bg-app-surface-2/50 rounded-full flex items-center justify-center text-app-muted-foreground">
  <Search size={32} />
  </div>
  <div className="space-y-1">
- <p className="text-app-text-faint font-black text-xs uppercase tracking-widest">Waiting for Focus</p>
- <p className="text-app-text-muted text-[10px] font-medium leading-relaxed">Hover over a product in the table to generate real-time commercial intelligence.</p>
+ <p className="text-app-muted-foreground font-black text-xs uppercase tracking-widest">Waiting for Focus</p>
+ <p className="text-app-muted-foreground text-[10px] font-medium leading-relaxed">Hover over a product in the table to generate real-time commercial intelligence.</p>
  </div>
  </div>
  ) : isIntelligenceLoading ? (
  <div className="space-y-8 animate-pulse">
- <div className="h-32 bg-slate-800/50 rounded-[2rem]"></div>
- <div className="h-48 bg-slate-800/30 rounded-[2rem]"></div>
- <div className="h-24 bg-slate-800/50 rounded-[2rem]"></div>
+ <div className="h-32 bg-app-surface-2/50 rounded-[2rem]"></div>
+ <div className="h-48 bg-app-surface-2/30 rounded-[2rem]"></div>
+ <div className="h-24 bg-app-surface-2/50 rounded-[2rem]"></div>
  </div>
  ) : intelligence ? (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
  {/* Score Card */}
- <div className="bg-gradient-to-br from-slate-800 to-blue-900/40 p-6 rounded-[2rem] border border-blue-500/20">
+ <div className="bg-gradient-to-br from-slate-800 to-blue-900/40 p-6 rounded-[2rem] border border-app-info/20">
  <div className="flex justify-between items-start mb-4">
- <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest">Commercial Health</span>
- <div className="text-3xl font-mono font-black text-app-text leading-none">88<span className="text-sm text-blue-400">/100</span></div>
+ <span className="text-[10px] font-black text-app-info uppercase tracking-widest">Commercial Health</span>
+ <div className="text-3xl font-mono font-black text-app-foreground leading-none">88<span className="text-sm text-app-info">/100</span></div>
  </div>
- <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden flex gap-0.5">
- <div className="h-full bg-blue-400 w-[60%] shadow-[0_0_10px_rgba(96,165,250,0.5)]"></div>
- <div className="h-full bg-indigo-400 w-[28%]"></div>
- <div className="h-full bg-slate-700 flex-1"></div>
+ <div className="h-1.5 bg-app-surface rounded-full overflow-hidden flex gap-0.5">
+ <div className="h-full bg-app-info/10 w-[60%] shadow-[0_0_10px_rgba(96,165,250,0.5)]"></div>
+ <div className="h-full bg-app-primary/10 w-[28%]"></div>
+ <div className="h-full bg-app-surface flex-1"></div>
  </div>
- <p className="text-[9px] text-app-text-faint mt-2 font-medium">Aggregated score based on margins, sales velocity, and sourcing efficiency.</p>
+ <p className="text-[9px] text-app-muted-foreground mt-2 font-medium">Aggregated score based on margins, sales velocity, and sourcing efficiency.</p>
  </div>
 
  {/* Velocity Widget */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black text-app-text-muted uppercase tracking-widest flex items-center gap-2">
- <LayoutGrid size={12} className="text-indigo-400" /> Market Momentum
+ <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2">
+ <LayoutGrid size={12} className="text-app-primary" /> Market Momentum
  </h4>
  <div className="grid grid-cols-2 gap-4">
- <div className="bg-slate-800/30 p-4 rounded-2xl border border-slate-800">
- <div className="text-[9px] text-app-text-muted font-black uppercase mb-1">Sales Velocity</div>
- <div className="text-xl font-mono font-black text-app-text">{intelligence.stats?.sales_velocity?.toFixed(1) || '0.0'} <span className="text-[10px] text-indigo-400 uppercase font-bold">U/Day</span></div>
+ <div className="bg-app-surface-2/30 p-4 rounded-2xl border border-app-border">
+ <div className="text-[9px] text-app-muted-foreground font-black uppercase mb-1">Sales Velocity</div>
+ <div className="text-xl font-mono font-black text-app-foreground">{intelligence.stats?.sales_velocity?.toFixed(1) || '0.0'} <span className="text-[10px] text-app-primary uppercase font-bold">U/Day</span></div>
  </div>
- <div className="bg-slate-800/30 p-4 rounded-2xl border border-slate-800">
- <div className="text-[9px] text-app-text-muted font-black uppercase mb-1">Forecast Demand</div>
- <div className="text-xl font-mono font-black text-app-text">+{intelligence.stats?.units_sold_30d || '0'} <span className="text-[10px] text-emerald-400 uppercase font-bold">U/30d</span></div>
+ <div className="bg-app-surface-2/30 p-4 rounded-2xl border border-app-border">
+ <div className="text-[9px] text-app-muted-foreground font-black uppercase mb-1">Forecast Demand</div>
+ <div className="text-xl font-mono font-black text-app-foreground">+{intelligence.stats?.units_sold_30d || '0'} <span className="text-[10px] text-app-primary uppercase font-bold">U/30d</span></div>
  </div>
  </div>
  </div>
 
  {/* Pricing Benchmarks */}
  <div className="space-y-4">
- <h4 className="text-[10px] font-black text-app-text-muted uppercase tracking-widest flex items-center gap-2">
- <Plus size={12} className="text-emerald-400" /> Sourcing Benchmarks
+ <h4 className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2">
+ <Plus size={12} className="text-app-primary" /> Sourcing Benchmarks
  </h4>
  <div className="space-y-3">
- <div className="flex justify-between items-center p-3 bg-slate-800/20 rounded-xl border border-slate-800/50 group/row hover:bg-slate-800/40 transition-colors">
- <span className="text-[10px] font-bold text-app-text-faint uppercase">Avg. Sourcing Price</span>
- <span className="text-sm font-mono font-black text-app-text">${intelligence.stats?.avg_purchase_price?.toFixed(2) || '---'}</span>
+ <div className="flex justify-between items-center p-3 bg-app-surface-2/20 rounded-xl border border-app-border/50 group/row hover:bg-app-surface-2/40 transition-colors">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase">Avg. Sourcing Price</span>
+ <span className="text-sm font-mono font-black text-app-foreground">${intelligence.stats?.avg_purchase_price?.toFixed(2) || '---'}</span>
  </div>
- <div className="flex justify-between items-center p-3 bg-slate-800/20 rounded-xl border border-slate-800/50 group/row hover:bg-slate-800/40 transition-colors">
- <span className="text-[10px] font-bold text-app-text-faint uppercase">Lowest Recorded</span>
- <span className="text-sm font-mono font-black text-emerald-400">${intelligence.stats?.min_purchase_price?.toFixed(2) || '---'}</span>
+ <div className="flex justify-between items-center p-3 bg-app-surface-2/20 rounded-xl border border-app-border/50 group/row hover:bg-app-surface-2/40 transition-colors">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase">Lowest Recorded</span>
+ <span className="text-sm font-mono font-black text-app-primary">${intelligence.stats?.min_purchase_price?.toFixed(2) || '---'}</span>
  </div>
- <div className="flex justify-between items-center p-3 bg-slate-800/20 rounded-xl border border-slate-800/50 group/row hover:bg-slate-800/40 transition-colors">
- <span className="text-[10px] font-bold text-app-text-faint uppercase">Last Price Applied</span>
- <span className="text-sm font-mono font-black text-amber-400">${intelligence.stats?.last_purchase_price?.toFixed(2) || '---'}</span>
+ <div className="flex justify-between items-center p-3 bg-app-surface-2/20 rounded-xl border border-app-border/50 group/row hover:bg-app-surface-2/40 transition-colors">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase">Last Price Applied</span>
+ <span className="text-sm font-mono font-black text-app-warning">${intelligence.stats?.last_purchase_price?.toFixed(2) || '---'}</span>
  </div>
  </div>
  </div>
@@ -951,17 +951,17 @@ export default function PurchaseForm({
  ) : null}
  </div>
 
- <div className="p-8 bg-slate-950 border-t border-slate-800/50">
- <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-app-text-muted mb-4">
+ <div className="p-8 bg-app-background border-t border-app-border/50">
+ <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-4">
  <span>Global Inventory Index</span>
- <span className="text-blue-500">Live Sync</span>
+ <span className="text-app-info">Live Sync</span>
  </div>
  <div className="flex gap-1.5 h-1">
- <div className="flex-1 bg-blue-500 rounded-full"></div>
- <div className="flex-1 bg-blue-500 rounded-full opacity-60"></div>
- <div className="flex-1 bg-slate-800 rounded-full"></div>
- <div className="flex-1 bg-slate-800 rounded-full"></div>
- <div className="flex-1 bg-slate-800 rounded-full"></div>
+ <div className="flex-1 bg-app-info rounded-full"></div>
+ <div className="flex-1 bg-app-info rounded-full opacity-60"></div>
+ <div className="flex-1 bg-app-surface-2 rounded-full"></div>
+ <div className="flex-1 bg-app-surface-2 rounded-full"></div>
+ <div className="flex-1 bg-app-surface-2 rounded-full"></div>
  </div>
  </div>
  </div>
@@ -984,9 +984,9 @@ export default function PurchaseForm({
 
 function ShoppingCartSkeleton() {
  return (
- <div className="relative w-24 h-24 text-slate-100 flex items-center justify-center">
+ <div className="relative w-24 h-24 text-app-foreground flex items-center justify-center">
  <LayoutGrid size={48} className="animate-pulse" />
- <div className="absolute top-0 right-0 w-6 h-6 bg-blue-500 rounded-full border-4 border-white animate-bounce"></div>
+ <div className="absolute top-0 right-0 w-6 h-6 bg-app-info rounded-full border-4 border-white animate-bounce"></div>
  </div>
  );
 }
@@ -1024,14 +1024,14 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
  <div className="relative">
  <input
  type="text"
- className="w-full bg-transparent p-2 text-sm font-black text-app-text placeholder:text-slate-300 outline-none"
+ className="w-full bg-transparent p-2 text-sm font-black text-app-foreground placeholder:text-app-muted-foreground outline-none"
  placeholder="Search Item, Barcode or SKU..."
  value={query}
  onChange={(e) => setQuery(e.target.value)}
  onFocus={() => query.length > 1 && setOpen(true)}
  />
  {open && results.length > 0 && (
- <div className="absolute top-full left-[-32px] right-[-32px] mt-4 bg-app-surface rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] border border-app-border z-50 overflow-hidden ring-1 ring-slate-200">
+ <div className="absolute top-full left-[-32px] right-[-32px] mt-4 bg-app-surface rounded-[2rem] shadow-[0_32px_64px_-16px_var(--app-border)] border border-app-border z-50 overflow-hidden ring-1 ring-slate-200">
  {results.map(r => (
  <button
  key={r.id}
@@ -1041,20 +1041,20 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
  setQuery('');
  setOpen(false);
  }}
- className="w-full p-6 text-left hover:bg-blue-50 flex items-center justify-between group transition-all border-b border-slate-50 last:border-none"
+ className="w-full p-6 text-left hover:bg-app-info-bg flex items-center justify-between group transition-all border-b border-app-border last:border-none"
  >
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 bg-app-bg rounded-xl flex items-center justify-center text-app-text-faint group-hover:bg-app-surface group-hover:text-blue-500 transition-all font-black text-xs">
+ <div className="w-10 h-10 bg-app-background rounded-xl flex items-center justify-center text-app-muted-foreground group-hover:bg-app-surface group-hover:text-app-info transition-all font-black text-xs">
  SKU
  </div>
  <div>
- <div className="font-black text-sm text-app-text group-hover:text-blue-600 transition-colors">{r.name}</div>
- <div className="text-[10px] text-app-text-faint font-mono tracking-tighter">REF: {r.sku} • IN STOCK: {r.stockLevel}</div>
+ <div className="font-black text-sm text-app-foreground group-hover:text-app-info transition-colors">{r.name}</div>
+ <div className="text-[10px] text-app-muted-foreground font-mono tracking-tighter">REF: {r.sku} • IN STOCK: {r.stockLevel}</div>
  </div>
  </div>
  <div className="text-right">
- <div className="text-xs font-black text-app-text">${r.costPriceHT} <span className="text-[8px] font-bold text-app-text-faint uppercase">HT</span></div>
- <div className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-0.5">Recommended: +{r.proposedQty}</div>
+ <div className="text-xs font-black text-app-foreground">${r.costPriceHT} <span className="text-[8px] font-bold text-app-muted-foreground uppercase">HT</span></div>
+ <div className="text-[10px] text-app-primary font-black uppercase tracking-widest mt-0.5">Recommended: +{r.proposedQty}</div>
  </div>
  </button>
  ))}
@@ -1127,24 +1127,24 @@ function DiscoveryHubModal({
  <DialogHeader className="p-8 bg-app-surface border-b border-app-border shrink-0">
  <div className="flex justify-between items-center">
  <div>
- <DialogTitle className="text-2xl font-black text-app-text leading-tight">Product Search</DialogTitle>
- <p className="text-xs font-black text-app-text-faint uppercase tracking-widest mt-1 italic">Browse product catalog</p>
+ <DialogTitle className="text-2xl font-black text-app-foreground leading-tight">Product Search</DialogTitle>
+ <p className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mt-1 italic">Browse product catalog</p>
  </div>
- <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl bg-app-bg text-app-text-faint hover:bg-rose-50 hover:text-rose-500 transition-all"><X size={20} /></button>
+ <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl bg-app-background text-app-muted-foreground hover:bg-rose-50 hover:text-rose-500 transition-all"><X size={20} /></button>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
  <div className="relative group">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={16} />
+ <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground group-focus-within:text-app-info transition-colors" size={16} />
  <input
- className="w-full bg-app-bg border border-app-border rounded-2xl pl-11 pr-4 py-3 text-xs font-bold text-app-text focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all outline-none"
+ className="w-full bg-app-background border border-app-border rounded-2xl pl-11 pr-4 py-3 text-xs font-bold text-app-foreground focus:bg-app-surface focus:ring-4 focus:ring-blue-50 focus:border-app-info transition-all outline-none"
  placeholder="Universal Search..."
  value={query}
  onChange={(e) => setQuery(e.target.value)}
  />
  </div>
  <select
- className="bg-app-bg border border-app-border rounded-2xl px-4 text-xs font-bold text-app-text outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
+ className="bg-app-background border border-app-border rounded-2xl px-4 text-xs font-bold text-app-foreground outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
  value={categoryId}
  onChange={(e) => setCategoryId(e.target.value)}
  >
@@ -1152,7 +1152,7 @@ function DiscoveryHubModal({
  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
  </select>
  <select
- className="bg-app-bg border border-app-border rounded-2xl px-4 text-xs font-bold text-app-text outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
+ className="bg-app-background border border-app-border rounded-2xl px-4 text-xs font-bold text-app-foreground outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
  value={brandId}
  onChange={(e) => setBrandId(e.target.value)}
  >
@@ -1160,7 +1160,7 @@ function DiscoveryHubModal({
  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
  </select>
  <select
- className="bg-app-bg border border-app-border rounded-2xl px-4 text-xs font-bold text-app-text outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
+ className="bg-app-background border border-app-border rounded-2xl px-4 text-xs font-bold text-app-foreground outline-none focus:ring-4 focus:ring-slate-100 h-12 appearance-none cursor-pointer"
  value={supplierId}
  onChange={(e) => setSupplierId(e.target.value)}
  >
@@ -1178,7 +1178,7 @@ function DiscoveryHubModal({
  ))}
  </div>
  ) : products.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-50">
+ <div className="h-full flex flex-col items-center justify-center text-app-muted-foreground gap-4 opacity-50">
  <LayoutGrid size={64} />
  <p className="font-black text-xs uppercase tracking-widest">No matching assets identified</p>
  </div>
@@ -1191,27 +1191,27 @@ function DiscoveryHubModal({
  onSelect(p);
  // onClose(); // Might want to keep it open for multiple adds
  }}
- className="group relative bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all text-left overflow-hidden ring-1 ring-slate-100"
+ className="group relative bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm hover:shadow-xl hover:shadow-app-border/20 hover:-translate-y-1 transition-all text-left overflow-hidden ring-1 ring-slate-100"
  >
- <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-all"></div>
- <div className="text-[9px] font-black text-app-text-faint uppercase tracking-widest mb-2 flex justify-between">
+ <div className="absolute top-0 left-0 w-1 h-full bg-app-info opacity-0 group-hover:opacity-100 transition-all"></div>
+ <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 flex justify-between">
  <span>SKU: {p.sku || 'N/A'}</span>
- <span className="text-blue-500">{p.brand_name}</span>
+ <span className="text-app-info">{p.brand_name}</span>
  </div>
- <div className="font-black text-app-text text-sm line-clamp-2 min-h-[40px] mb-4 group-hover:text-blue-600 transition-colors">
+ <div className="font-black text-app-foreground text-sm line-clamp-2 min-h-[40px] mb-4 group-hover:text-app-info transition-colors">
  {p.name}
  </div>
  <div className="space-y-3">
- <div className="flex justify-between items-end border-b border-slate-50 pb-2">
- <span className="text-[10px] font-bold text-app-text-faint">STOCK</span>
- <span className="text-xs font-mono font-black text-slate-700">{p.stockLevel || 0}</span>
+ <div className="flex justify-between items-end border-b border-app-border pb-2">
+ <span className="text-[10px] font-bold text-app-muted-foreground">STOCK</span>
+ <span className="text-xs font-mono font-black text-app-muted-foreground">{p.stockLevel || 0}</span>
  </div>
  <div className="flex justify-between items-end">
- <span className="text-[10px] font-bold text-app-text-faint">COST HT</span>
- <span className="text-sm font-mono font-black text-app-text">${p.costPriceHT || '0.00'}</span>
+ <span className="text-[10px] font-bold text-app-muted-foreground">COST HT</span>
+ <span className="text-sm font-mono font-black text-app-foreground">${p.costPriceHT || '0.00'}</span>
  </div>
  </div>
- <div className="mt-4 w-full py-2 bg-app-bg text-[9px] font-black uppercase text-center rounded-xl text-app-text-faint group-hover:bg-blue-600 group-hover:text-app-text transition-all">
+ <div className="mt-4 w-full py-2 bg-app-background text-[9px] font-black uppercase text-center rounded-xl text-app-muted-foreground group-hover:bg-app-info group-hover:text-app-foreground transition-all">
  Add to Hub
  </div>
  </button>
@@ -1221,7 +1221,7 @@ function DiscoveryHubModal({
  </div>
 
  <div className="p-4 bg-app-surface border-t border-app-border shrink-0 text-center">
- <button onClick={onClose} className="px-8 py-3 bg-slate-900 text-app-text rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 hover:scale-105 active:scale-95 transition-all">Close Pipeline</button>
+ <button onClick={onClose} className="px-8 py-3 bg-app-surface text-app-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-app-border/20 hover:scale-105 active:scale-95 transition-all">Close Pipeline</button>
  </div>
  </DialogContent>
  </Dialog>

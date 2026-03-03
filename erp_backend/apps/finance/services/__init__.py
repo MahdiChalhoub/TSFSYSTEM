@@ -6,6 +6,7 @@ from .tax_service import TaxService
 from .audit_service import ForensicAuditService, AuditVerificationService
 from .asset_service import AssetService, DeferredExpenseService
 from .voucher_service import VoucherService, ProfitDistributionService
+from .airsi_remittance_service import AIRSIRemittanceService
 
 __all__ = [
     'FinancialAccountService', 'SequenceService', 'BarcodeService',
@@ -14,5 +15,6 @@ __all__ = [
     'LoanService', 'TaxService',
     'ForensicAuditService', 'AuditVerificationService',
     'AssetService', 'DeferredExpenseService',
-    'VoucherService', 'ProfitDistributionService'
+    'VoucherService', 'ProfitDistributionService',
+    'AIRSIRemittanceService',
 ]

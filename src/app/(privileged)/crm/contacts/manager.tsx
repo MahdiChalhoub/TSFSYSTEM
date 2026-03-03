@@ -53,28 +53,28 @@ export default function RelationshipMasterList({
  const renderers: Record<string, (r: Contact) => React.ReactNode> = {
  name: r => (
  <div className="flex items-center gap-3">
- <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 ${r.type === 'CUSTOMER' ? 'bg-blue-50 text-blue-600' :
- r.type === 'SUPPLIER' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+ <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 ${r.type === 'CUSTOMER' ? 'bg-app-info-bg text-app-info' :
+ r.type === 'SUPPLIER' ? 'bg-app-warning-bg text-app-warning' : 'bg-app-primary-light text-app-primary'
  }`}>
  {r.type === 'CUSTOMER' ? <User size={16} /> :
  r.type === 'SUPPLIER' ? <Briefcase size={16} /> : <Users size={16} />}
  </div>
  <div>
- <div className="font-bold text-app-text group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{r.name}</div>
- <div className="text-[10px] font-mono text-app-text-faint group-hover:text-indigo-400">Account: {r.linkedAccount?.code || 'UNLINKED'}</div>
+ <div className="font-bold text-app-foreground group-hover:text-app-primary transition-colors uppercase tracking-tight">{r.name}</div>
+ <div className="text-[10px] font-mono text-app-muted-foreground group-hover:text-app-primary">Account: {r.linkedAccount?.code || 'UNLINKED'}</div>
  </div>
  </div>
  ),
  type: r => (
  <div className="flex gap-1.5 flex-wrap">
- <Badge variant="secondary" className={`text-[10px] font-black uppercase tracking-tighter border-0 ${r.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' :
- r.type === 'SUPPLIER' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+ <Badge variant="secondary" className={`text-[10px] font-black uppercase tracking-tighter border-0 ${r.type === 'CUSTOMER' ? 'bg-app-info-bg text-app-info' :
+ r.type === 'SUPPLIER' ? 'bg-app-warning-bg text-app-warning' : 'bg-app-primary-light text-app-success'
  }`}>
  {r.type}
  </Badge>
  {r.customer_tier && r.customer_tier !== 'STANDARD' && (
- <Badge variant="outline" className="text-[10px] font-bold border-app-border text-app-text-muted bg-app-bg">
- {r.customer_tier === 'VIP' && <Star size={10} className="mr-1 fill-yellow-400 text-yellow-400" />}
+ <Badge variant="outline" className="text-[10px] font-bold border-app-border text-app-muted-foreground bg-app-background">
+ {r.customer_tier === 'VIP' && <Star size={10} className="mr-1 fill-yellow-400 text-app-warning" />}
  {r.customer_tier}
  </Badge>
  )}
@@ -82,25 +82,25 @@ export default function RelationshipMasterList({
  ),
  contact: r => (
  <div className="flex flex-col gap-0.5">
- <div className="flex items-center gap-1.5 text-xs font-bold text-app-text-muted">
- <Mail size={12} className="text-app-text-faint" />
+ <div className="flex items-center gap-1.5 text-xs font-bold text-app-muted-foreground">
+ <Mail size={12} className="text-app-muted-foreground" />
  {r.email || 'No Email'}
  </div>
- <div className="flex items-center gap-1.5 text-xs font-medium text-app-text-faint">
+ <div className="flex items-center gap-1.5 text-xs font-medium text-app-muted-foreground">
  <Phone size={12} />
  {r.phone || 'No Phone'}
  </div>
  </div>
  ),
  site: r => r.homeSite ? (
- <Badge variant="outline" className="text-[10px] font-bold border-indigo-100 text-indigo-600 bg-indigo-50/50">
+ <Badge variant="outline" className="text-[10px] font-bold border-app-primary/30 text-app-primary bg-app-primary/5/50">
  <Building2 size={10} className="mr-1" /> {r.homeSite.name}
  </Badge>
- ) : <span className="text-gray-300">—</span>,
+ ) : <span className="text-app-muted-foreground">—</span>,
  balance: r => {
  const bal = Number(r.balance || 0);
  return (
- <div className={`font-black flex items-center justify-end gap-1.5 ${bal > 0 ? 'text-emerald-600' : bal < 0 ? 'text-rose-600' : 'text-stone-300'
+ <div className={`font-black flex items-center justify-end gap-1.5 ${bal > 0 ? 'text-app-primary' : bal < 0 ? 'text-rose-600' : 'text-app-muted-foreground'
  }`}>
  {bal > 0 ? <TrendingUp size={14} /> : bal < 0 ? <TrendingDown size={14} /> : null}
  {fmt(Math.abs(bal))}
@@ -130,13 +130,13 @@ export default function RelationshipMasterList({
  <Button
  onClick={() => { setModalType('SUPPLIER'); setIsModalOpen(true); }}
  variant="ghost"
- className="h-9 px-4 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-100"
+ className="h-9 px-4 bg-app-warning-bg text-app-warning hover:bg-app-warning-bg hover:text-app-warning rounded-xl font-black text-[10px] uppercase tracking-widest border border-app-warning/30"
  >
  <Briefcase size={14} className="mr-2" /> New Supplier
  </Button>
  <Button
  onClick={() => { setModalType('CUSTOMER'); setIsModalOpen(true); }}
- className="h-9 px-4 bg-indigo-600 text-app-text hover:bg-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100"
+ className="h-9 px-4 bg-app-primary text-app-foreground hover:bg-app-primary rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100"
  >
  <Plus size={14} className="mr-2" /> New Client
  </Button>
@@ -148,7 +148,7 @@ export default function RelationshipMasterList({
  extra: (r) => (
  <button
  type="button"
- className="p-1.5 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+ className="p-1.5 text-app-primary hover:text-app-primary hover:bg-app-primary/5 rounded-lg transition-all"
  onClick={(e) => { e.stopPropagation(); router.push(`/crm/contacts/${r.id}`); }}
  title="Open contact profile"
  >

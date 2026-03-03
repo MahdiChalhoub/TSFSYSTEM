@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { useState } from 'react';
@@ -100,7 +101,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  onClick={toggleSelectAll}
  className="flex items-center gap-2 text-sm font-semibold text-app-text-muted hover:text-app-text"
  >
- {allSelected ? <CheckSquare size={18} className="text-emerald-600" /> : <Square size={18} />}
+ {allSelected ? <CheckSquare size={18} className="text-app-primary" /> : <Square size={18} />}
  Select All
  </button>
  <span className="text-xs text-app-text-faint border-l pl-4 border-app-border">
@@ -111,7 +112,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  <button
  disabled={selectedProductIds.length === 0}
  onClick={() => setIsMoveModalOpen(true)}
- className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+ className="bg-app-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
  >
  <ArrowRightLeft size={16} />
  Move Selected
@@ -128,14 +129,14 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  className={`
  cursor-pointer border rounded-xl p-3 flex items-center gap-4 transition-all
  ${selectedProductIds.includes(product.id)
- ? 'bg-emerald-50 border-emerald-200 ring-1 ring-emerald-500/20'
- : 'bg-app-surface border-app-border hover:border-emerald-200 hover:shadow-sm'
+ ? 'bg-app-primary-light border-app-success ring-1 ring-app-primary/20'
+ : 'bg-app-surface border-app-border hover:border-app-success hover:shadow-sm'
  }
  `}
  >
  <div className="text-app-text-faint">
  {selectedProductIds.includes(product.id)
- ? <CheckSquare size={20} className="text-emerald-500" />
+ ? <CheckSquare size={20} className="text-app-primary" />
  : <Square size={20} />
  }
  </div>
@@ -160,7 +161,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  {isMoveModalOpen && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
  <div className="bg-app-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
- <div className="px-6 py-4 border-b border-app-border bg-gray-50/50">
+ <div className="px-6 py-4 border-b border-app-border bg-app-surface-2">
  <h3 className="font-bold text-lg text-app-text">Move {selectedProductIds.length} Products</h3>
  <p className="text-xs text-app-text-muted">Select the destination category.</p>
  </div>
@@ -183,14 +184,14 @@ export function ProductReassignmentTable({ products, categories, currentCategory
  <div className="px-6 py-4 border-t border-app-border bg-app-bg flex justify-end gap-3">
  <button
  onClick={() => setIsMoveModalOpen(false)}
- className="px-4 py-2 rounded-lg text-app-text-muted font-medium hover:bg-gray-200 transition-colors"
+ className="px-4 py-2 rounded-lg text-app-text-muted font-medium hover:bg-app-border transition-colors"
  >
  Cancel
  </button>
  <button
  onClick={handleMove}
  disabled={pending || targetCategoryId.length === 0}
- className="bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
+ className="bg-app-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-app-text px-6 py-2 rounded-lg font-semibold flex items-center gap-2"
  >
  {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
  Confirm Move

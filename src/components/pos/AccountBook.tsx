@@ -98,10 +98,10 @@ const ENTRY_TYPES = [
 const TYPE_MAP = Object.fromEntries(ENTRY_TYPES.map(t => [t.key, t]));
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
- PENDING: { label: 'Pending Review', bg: 'bg-amber-50', text: 'text-amber-600', icon: Clock },
- APPROVED: { label: 'Approved', bg: 'bg-emerald-50', text: 'text-emerald-600', icon: Check },
+ PENDING: { label: 'Pending Review', bg: 'bg-app-warning-bg', text: 'text-app-warning', icon: Clock },
+ APPROVED: { label: 'Approved', bg: 'bg-app-primary-light', text: 'text-app-primary', icon: Check },
  REJECTED: { label: 'Rejected', bg: 'bg-rose-50', text: 'text-rose-600', icon: XCircle },
- NEED_INFO: { label: 'Info Requested', bg: 'bg-blue-50', text: 'text-blue-600', icon: HelpCircle },
+ NEED_INFO: { label: 'Info Requested', bg: 'bg-app-info-bg', text: 'text-app-info', icon: HelpCircle },
  MODIFIED: { label: 'Resubmitted', bg: 'bg-violet-50', text: 'text-violet-600', icon: RefreshCw },
 };
 
@@ -372,7 +372,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="shrink-0 px-5 py-4 border-b border-app-border bg-gradient-to-r from-amber-50 to-orange-50">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+ <div className="w-10 h-10 rounded-xl bg-app-warning-bg text-app-warning flex items-center justify-center">
  <BookOpen size={20} />
  </div>
  <div>
@@ -392,23 +392,23 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="mt-3 space-y-2">
  {/* Pending balance — NOT YET POSTED */}
  {summary.pendingCount > 0 && (
- <div className="bg-amber-100/80 border border-amber-200/60 rounded-xl p-2.5">
+ <div className="bg-app-warning-bg/80 border border-app-warning/60 rounded-xl p-2.5">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-1.5">
- <Clock size={10} className="text-amber-600" />
- <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
+ <Clock size={10} className="text-app-warning" />
+ <span className="text-[9px] font-black text-app-warning uppercase tracking-widest">
  Awaiting Approval ({summary.pendingCount})
  </span>
  </div>
  <span className={clsx(
  "text-sm font-black",
- summary.pendingBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'
+ summary.pendingBalance >= 0 ? 'text-app-success' : 'text-rose-700'
  )}>
  {summary.pendingBalance >= 0 ? '+' : ''}{formatMoney(summary.pendingBalance)}
  </span>
  </div>
  <div className="flex items-center gap-3 mt-1">
- <span className="text-[9px] text-emerald-600 font-bold">↓ In: {formatMoney(summary.pendingIn)}</span>
+ <span className="text-[9px] text-app-primary font-bold">↓ In: {formatMoney(summary.pendingIn)}</span>
  <span className="text-[9px] text-rose-600 font-bold">↑ Out: {formatMoney(summary.pendingOut)}</span>
  </div>
  </div>
@@ -416,23 +416,23 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
 
  {/* Approved balance — ALREADY POSTED */}
  {summary.approvedCount > 0 && (
- <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-xl p-2.5">
+ <div className="bg-app-primary-light/80 border border-app-success/60 rounded-xl p-2.5">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-1.5">
- <Check size={10} className="text-emerald-600" />
- <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">
+ <Check size={10} className="text-app-primary" />
+ <span className="text-[9px] font-black text-app-success uppercase tracking-widest">
  Posted ({summary.approvedCount})
  </span>
  </div>
  <span className={clsx(
  "text-sm font-black",
- summary.approvedBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'
+ summary.approvedBalance >= 0 ? 'text-app-success' : 'text-rose-700'
  )}>
  {summary.approvedBalance >= 0 ? '+' : ''}{formatMoney(summary.approvedBalance)}
  </span>
  </div>
  <div className="flex items-center gap-3 mt-1">
- <span className="text-[9px] text-emerald-600 font-bold">↓ In: {formatMoney(summary.approvedIn)}</span>
+ <span className="text-[9px] text-app-primary font-bold">↓ In: {formatMoney(summary.approvedIn)}</span>
  <span className="text-[9px] text-rose-600 font-bold">↑ Out: {formatMoney(summary.approvedOut)}</span>
  </div>
  </div>
@@ -446,7 +446,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </span>
  )}
  {summary.needInfoCount > 0 && (
- <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-500">
+ <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-app-info-bg text-app-info">
  {summary.needInfoCount} need info
  </span>
  )}
@@ -462,13 +462,13 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="flex-1 overflow-y-auto">
  {loading ? (
  <div className="flex items-center justify-center h-40">
- <Loader2 size={24} className="animate-spin text-gray-300" />
+ <Loader2 size={24} className="animate-spin text-app-text-muted" />
  </div>
  ) : entries.length === 0 ? (
- <div className="flex flex-col items-center justify-center h-40 text-gray-300 gap-2">
+ <div className="flex flex-col items-center justify-center h-40 text-app-text-muted gap-2">
  <BookOpen size={32} strokeWidth={1} />
  <p className="text-xs text-app-text-faint">No entries yet</p>
- <p className="text-[10px] text-gray-300">Log all money in/out during your shift</p>
+ <p className="text-[10px] text-app-text-muted">Log all money in/out during your shift</p>
  </div>
  ) : (
  <div className="divide-y divide-gray-50">
@@ -480,16 +480,16 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
 
  return (
  <div key={entry.id} className={clsx(
- "px-4 py-3 hover:bg-gray-50/50 transition-colors",
+ "px-4 py-3 hover:bg-app-bg/50 transition-colors",
  entry.status === 'REJECTED' && 'bg-rose-50/30',
- entry.status === 'NEED_INFO' && 'bg-blue-50/30',
+ entry.status === 'NEED_INFO' && 'bg-app-info-bg/30',
  )}>
  <div className="flex items-start justify-between gap-3">
  {/* Left: icon + info */}
  <div className="flex items-start gap-2.5 flex-1 min-w-0">
  <div className={clsx(
  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
- isIn ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'
+ isIn ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-500'
  )}>
  <TypeIcon size={14} />
  </div>
@@ -498,7 +498,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
  <span className={clsx(
  "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
- isIn ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+ isIn ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-600'
  )}>
  {getTypeLabel(entry.entryType)}
  </span>
@@ -507,7 +507,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <Hash size={7} /> {entry.reference}
  </span>
  )}
- <span className="text-[9px] text-gray-300">
+ <span className="text-[9px] text-app-text-muted">
  {new Date(entry.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
@@ -555,7 +555,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </p>
  )}
  {entry.cashierResponse && (
- <p className="text-[10px] text-blue-500 mt-1 italic bg-blue-50 px-2 py-1 rounded">
+ <p className="text-[10px] text-app-info mt-1 italic bg-app-info-bg px-2 py-1 rounded">
  ↩️ {entry.cashierResponse}
  </p>
  )}
@@ -566,7 +566,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="text-right shrink-0">
  <p className={clsx(
  "text-sm font-black",
- isIn ? 'text-emerald-600' : 'text-rose-600'
+ isIn ? 'text-app-primary' : 'text-rose-600'
  )}>
  {isIn ? '+' : '-'}{formatMoney(isIn ? entry.amountIn : entry.amountOut)}
  </p>
@@ -580,7 +580,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  onClick={() => handleReview(entry.id, 'approve')}
  disabled={reviewingId === entry.id}
- className="p-1 rounded-md bg-emerald-500 text-app-text hover:bg-emerald-600 transition-all disabled:opacity-50"
+ className="p-1 rounded-md bg-app-primary text-app-text hover:bg-app-primary transition-all disabled:opacity-50"
  title="Approve"
  >
  {reviewingId === entry.id ? <Loader2 size={10} className="animate-spin" /> : <Check size={10} />}
@@ -606,7 +606,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {(entry.status === 'REJECTED' || entry.status === 'NEED_INFO') && entry.cashierId === cashierId && (
  <button
  onClick={() => setShowRespondForm(showRespondForm === entry.id ? null : entry.id)}
- className="mt-1 px-2 py-1 rounded-md bg-blue-50 text-blue-600 text-[9px] font-bold hover:bg-blue-100 transition-all flex items-center gap-1 ml-auto"
+ className="mt-1 px-2 py-1 rounded-md bg-app-info-bg text-app-info text-[9px] font-bold hover:bg-app-info-bg transition-all flex items-center gap-1 ml-auto"
  >
  <MessageSquare size={9} /> Respond
  </button>
@@ -616,7 +616,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  {entry.status === 'PENDING' && entry.cashierId === cashierId && !isManager && (
  <button
  onClick={() => handleDelete(entry.id)}
- className="mt-1 p-1 rounded-md text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all"
+ className="mt-1 p-1 rounded-md text-app-text-muted hover:text-rose-500 hover:bg-rose-50 transition-all"
  title="Delete entry"
  >
  <Trash2 size={10} />
@@ -659,7 +659,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  value={respondText}
  onChange={(e) => setRespondText(e.target.value)}
  placeholder="Your explanation or correction..."
- className="flex-1 px-3 py-1.5 border border-blue-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-200"
+ className="flex-1 px-3 py-1.5 border border-app-info rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-200"
  autoFocus
  />
  <button
@@ -703,7 +703,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  "p-2 rounded-lg border text-center transition-all text-[9px] font-bold flex flex-col items-center gap-1",
  isSelected
  ? t.dir === 'IN'
- ? 'bg-emerald-50 border-emerald-300 text-emerald-700 ring-2 ring-emerald-100'
+ ? 'bg-app-primary-light border-app-success text-app-success ring-2 ring-emerald-100'
  : 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-100'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
  )}
@@ -729,7 +729,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div>
  <label className={clsx(
  "text-[9px] font-black uppercase tracking-widest block mb-1",
- selectedType.dir === 'IN' ? 'text-emerald-600' : 'text-rose-600'
+ selectedType.dir === 'IN' ? 'text-app-primary' : 'text-rose-600'
  )}>
  {selectedType.dir === 'IN' ? <><ArrowDownLeft size={8} className="inline" /> Amount In</> : <><ArrowUpRight size={8} className="inline" /> Amount Out</>}
  </label>
@@ -741,7 +741,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className={clsx(
  "w-full px-3 py-2.5 border rounded-xl text-lg font-black outline-none focus:ring-2 text-center tabular-nums",
  selectedType.dir === 'IN'
- ? 'border-emerald-200 text-emerald-700 focus:ring-emerald-200'
+ ? 'border-app-success text-app-success focus:ring-emerald-200'
  : 'border-rose-200 text-rose-700 focus:ring-rose-200'
  )}
  />
@@ -762,7 +762,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <Building2 size={8} className="inline mr-0.5" /> Select Supplier
  </label>
  {form.supplierId ? (
- <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+ <div className="flex items-center justify-between bg-app-warning-bg border border-app-warning rounded-xl px-3 py-2">
  <span className="text-sm font-bold text-app-text">{form.supplierName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, supplierId: null, supplierName: '', supplierInvoiceId: null, supplierInvoiceRef: '' })); setInvoices([]); }}
@@ -790,14 +790,14 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  key={c.id}
  onClick={() => selectContact(c, true)}
- className="w-full px-3 py-2 text-left hover:bg-amber-50 transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+ className="w-full px-3 py-2 text-left hover:bg-app-warning-bg transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
  >
  <div>
  <span className="font-bold text-app-text">{c.name}</span>
  {c.phone && <span className="text-app-text-faint ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
- <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-rose-500' : 'text-emerald-500')}>
+ <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-rose-500' : 'text-app-primary')}>
  {currency}{Math.abs(c.balance).toFixed(0)}
  </span>
  )}
@@ -806,7 +806,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  )}
  {contactSearching && (
- <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+ <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-text-muted" /></div>
  )}
  </div>
  )}
@@ -820,7 +820,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <Users size={8} className="inline mr-0.5" /> Select Client
  </label>
  {form.clientId ? (
- <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+ <div className="flex items-center justify-between bg-app-primary-light border border-app-success rounded-xl px-3 py-2">
  <span className="text-sm font-bold text-app-text">{form.clientName}</span>
  <button
  onClick={() => { setForm(f => ({ ...f, clientId: null, clientName: '', clientInvoiceId: null, clientInvoiceRef: '' })); setInvoices([]); }}
@@ -848,14 +848,14 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <button
  key={c.id}
  onClick={() => selectContact(c, false)}
- className="w-full px-3 py-2 text-left hover:bg-emerald-50 transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
+ className="w-full px-3 py-2 text-left hover:bg-app-primary-light transition-colors flex items-center justify-between text-sm border-b border-gray-50 last:border-0"
  >
  <div>
  <span className="font-bold text-app-text">{c.name}</span>
  {c.phone && <span className="text-app-text-faint ml-2 text-xs">{c.phone}</span>}
  </div>
  {c.balance !== 0 && (
- <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-emerald-500' : 'text-rose-500')}>
+ <span className={clsx("text-xs font-bold", c.balance > 0 ? 'text-app-primary' : 'text-rose-500')}>
  {currency}{Math.abs(c.balance).toFixed(0)}
  </span>
  )}
@@ -864,7 +864,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  )}
  {contactSearching && (
- <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+ <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-text-muted" /></div>
  )}
  </div>
  )}
@@ -895,7 +895,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className={clsx(
  "w-full px-3 py-2 rounded-lg border text-left flex items-center justify-between transition-all text-xs",
  isSelected
- ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-100'
+ ? 'bg-app-warning-bg border-amber-300 ring-2 ring-amber-100'
  : 'bg-app-surface border-app-border hover:border-app-border'
  )}
  >
@@ -904,7 +904,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <span className="text-app-text-faint ml-1.5">
  {inv.status === 'PARTIAL_PAID' ? '(partial)' : inv.status === 'OVERDUE' ? '(overdue!)' : ''}
  </span>
- {inv.dueDate && <span className="text-gray-300 ml-1 text-[9px]">due {inv.dueDate}</span>}
+ {inv.dueDate && <span className="text-app-text-muted ml-1 text-[9px]">due {inv.dueDate}</span>}
  </div>
  <div className="text-right">
  <span className="font-black text-rose-600">{currency}{inv.balanceDue.toFixed(0)}</span>
@@ -995,7 +995,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  </div>
  )}
  {contactSearching && (
- <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-gray-300" /></div>
+ <div className="absolute right-3 top-2.5"><Loader2 size={14} className="animate-spin text-app-text-muted" /></div>
  )}
  </div>
  )}
@@ -1019,7 +1019,7 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  className={clsx(
  "w-full py-2.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg text-app-text",
  selectedType.dir === 'IN'
- ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-100'
+ ? 'bg-app-primary hover:bg-app-primary shadow-emerald-100'
  : 'bg-rose-500 hover:bg-rose-600 shadow-rose-100',
  "disabled:opacity-50"
  )}
@@ -1032,13 +1032,13 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
  <div className="p-4">
  <button
  onClick={() => setShowAddForm(true)}
- className="w-full py-3 bg-amber-500 text-app-text rounded-xl font-black text-sm hover:bg-amber-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
+ className="w-full py-3 bg-app-warning text-app-text rounded-xl font-black text-sm hover:bg-app-warning transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-100"
  >
  <Plus size={14} />
  New Entry
  </button>
  <p className="text-center text-[9px] text-app-text-faint mt-2">
- <AlertTriangle size={8} className="inline text-amber-500" /> Entries require manager approval • You are responsible for accuracy
+ <AlertTriangle size={8} className="inline text-app-warning" /> Entries require manager approval • You are responsible for accuracy
  </p>
  </div>
  )}

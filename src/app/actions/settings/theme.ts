@@ -20,7 +20,9 @@ export type AppThemeName =
     | 'ivory-market'
     | 'neon-rush'
     | 'savane-earth'
-    | 'arctic-glass';
+    | 'arctic-glass'
+    | 'lumina-sky'
+    | 'warm-enterprise';
 
 const VALID_THEMES: AppThemeName[] = [
     'midnight-pro',
@@ -28,6 +30,8 @@ const VALID_THEMES: AppThemeName[] = [
     'neon-rush',
     'savane-earth',
     'arctic-glass',
+    'lumina-sky',
+    'warm-enterprise',
 ];
 
 const THEME_COOKIE = 'tsfsystem-app-theme';

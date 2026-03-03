@@ -10,7 +10,7 @@ async function getData(groupId: number) {
  try {
  const [group, brands, categories, units, countries] = await Promise.all([
  erpFetch(`product-groups/${groupId}/`),
- erpFetch('brands/'),
+ erpFetch('inventory/brands/'),
  erpFetch('inventory/categories/'),
  erpFetch('units/'),
  erpFetch('countries/')
@@ -40,17 +40,17 @@ export default async function EditGroupPage({ params }: { params: Promise<{ id: 
  }
 
  return (
- <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
+ <div className="app-page max-w-7xl mx-auto space-y-6 animate-in fade-in">
  <div>
  <h1 className="page-header-title ">Edit Product Family</h1>
- <p className="text-app-text-muted">Update the Parfum/Group details or add new variants.</p>
+ <p className="text-app-muted-foreground">Update the Parfum/Group details or add new variants.</p>
  </div>
 
  <GroupedProductForm {...data} />
 
  <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm mt-12 overflow-hidden">
- <h2 className="text-xl font-bold text-app-text mb-6 flex items-center gap-2 tracking-tighter">
- <Box className="text-emerald-600" size={24} />
+ <h2 className="text-xl font-bold text-app-foreground mb-6 flex items-center gap-2 tracking-tighter">
+ <Box className="text-app-primary" size={24} />
  Family Digital Assets
  </h2>
  <AttachmentManager

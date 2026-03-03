@@ -15,6 +15,9 @@ router.register(r'admin-wallets', views.ClientWalletAdminViewSet, basename='admi
 router.register(r'order-lines', views.ClientOrderLineViewSet)
 router.register(r'config', views.ClientPortalConfigViewSet, basename='client-portal-config')
 router.register(r'quote-requests', views.QuoteRequestViewSet, basename='quote-requests')
+router.register(r'coupons', views.CouponAdminViewSet, basename='coupons')
+router.register(r'cart-promotions', views.CartPromotionViewSet, basename='cart-promotions')
+router.register(r'shipping-rates', views.ShippingRateViewSet, basename='shipping-rates')
 
 # Client-side endpoints
 router.register(r'dashboard', views.ClientDashboardViewSet, basename='client-dashboard')
@@ -27,6 +30,7 @@ router.register(r'wishlist', views.WishlistItemViewSet, basename='wishlist')
 urlpatterns = [
     # Portal auth (public)
     path('portal-auth/login/', views.ClientPortalLoginView.as_view(), name='client-portal-login'),
+    path('portal-auth/register/', views.ClientPortalRegisterView.as_view(), name='client-portal-register'),
     path('storefront/config/', views.StorefrontPublicConfigView.as_view(), name='storefront-config'),
 
     # Router URLs

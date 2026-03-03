@@ -200,9 +200,9 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <CardHeader className="pb-3">
  <CardTitle className="text-base">Select Products</CardTitle>
  <div className="relative mt-2">
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input
- className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+ className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-app-primary focus:border-app-primary outline-none"
  placeholder="Search by name, SKU, or barcode..."
  value={searchQuery}
  onChange={e => setSearchQuery(e.target.value)}
@@ -217,28 +217,28 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  key={p.id}
  onClick={() => addProduct(p)}
  className={`w-full text-left flex items-center gap-3 p-2.5 rounded-xl transition-all ${isAdded
- ? 'bg-emerald-50 border border-emerald-200'
- : 'hover:bg-app-bg border border-transparent'
+ ? 'bg-app-primary-light border border-app-success'
+ : 'hover:bg-app-background border border-transparent'
  }`}
  >
- <div className="w-8 h-8 bg-app-surface-2 rounded-lg flex items-center justify-center text-app-text-faint shrink-0">
+ <div className="w-8 h-8 bg-app-surface-2 rounded-lg flex items-center justify-center text-app-muted-foreground shrink-0">
  <Tag size={14} />
  </div>
  <div className="flex-1 min-w-0">
  <p className="text-sm font-medium truncate">{p.name}</p>
- <div className="flex items-center gap-2 text-xs text-app-text-faint">
+ <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
  <span>{p.sku}</span>
  {p.barcode && <span>· {p.barcode}</span>}
  </div>
  </div>
- <span className="text-xs font-semibold text-app-text-muted shrink-0">
+ <span className="text-xs font-semibold text-app-muted-foreground shrink-0">
  {fmt(p.selling_price_ttc)}
  </span>
  </button>
  )
  })}
  {filteredProducts.length === 0 && (
- <p className="text-sm text-app-text-faint text-center py-8">No products found</p>
+ <p className="text-sm text-app-muted-foreground text-center py-8">No products found</p>
  )}
  </CardContent>
  </Card>
@@ -251,14 +251,14 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <div className="flex flex-wrap items-center gap-4">
  {/* Label Size */}
  <div className="flex items-center gap-2">
- <span className="text-xs font-medium text-app-text-muted">Size:</span>
+ <span className="text-xs font-medium text-app-muted-foreground">Size:</span>
  {(['small', 'medium', 'large'] as LabelSize[]).map(size => (
  <button
  key={size}
  onClick={() => setLabelSize(size)}
  className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${labelSize === size
- ? 'bg-emerald-100 text-emerald-700'
- : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
+ ? 'bg-app-primary-light text-app-success'
+ : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-border'
  }`}
  >
  {sizeLabels[size]}
@@ -266,7 +266,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  ))}
  </div>
 
- <div className="h-6 w-px bg-gray-200" />
+ <div className="h-6 w-px bg-app-border" />
 
  {/* Toggle Options */}
  <label className="flex items-center gap-1.5 text-xs cursor-pointer">
@@ -274,7 +274,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  type="checkbox"
  checked={showPrice}
  onChange={e => setShowPrice(e.target.checked)}
- className="w-3.5 h-3.5 rounded text-emerald-600"
+ className="w-3.5 h-3.5 rounded text-app-primary"
  />
  Price
  </label>
@@ -283,7 +283,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  type="checkbox"
  checked={showBarcode}
  onChange={e => setShowBarcode(e.target.checked)}
- className="w-3.5 h-3.5 rounded text-emerald-600"
+ className="w-3.5 h-3.5 rounded text-app-primary"
  />
  Barcode
  </label>
@@ -292,7 +292,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  type="checkbox"
  checked={showSku}
  onChange={e => setShowSku(e.target.checked)}
- className="w-3.5 h-3.5 rounded text-emerald-600"
+ className="w-3.5 h-3.5 rounded text-app-primary"
  />
  SKU
  </label>
@@ -301,7 +301,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  type="checkbox"
  checked={showBrand}
  onChange={e => setShowBrand(e.target.checked)}
- className="w-3.5 h-3.5 rounded text-emerald-600"
+ className="w-3.5 h-3.5 rounded text-app-primary"
  />
  Brand
  </label>
@@ -312,7 +312,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <button
  onClick={handlePrint}
  disabled={labelItems.length === 0}
- className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg hover:shadow-emerald-300/50 disabled:opacity-40 disabled:cursor-not-allowed"
+ className="flex items-center gap-2 px-5 py-2 bg-app-primary text-app-foreground text-sm font-bold rounded-xl hover:bg-app-success transition-all shadow-lg hover:shadow-app-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
  >
  <Printer size={16} />
  Print {totalLabels > 0 ? `(${totalLabels})` : ''}
@@ -327,13 +327,13 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <CardTitle className="text-base">
  Print Queue
  {totalLabels > 0 && (
- <Badge className="ml-2 bg-emerald-100 text-emerald-700">{totalLabels} labels</Badge>
+ <Badge className="ml-2 bg-app-primary-light text-app-success">{totalLabels} labels</Badge>
  )}
  </CardTitle>
  </CardHeader>
  <CardContent>
  {labelItems.length === 0 ? (
- <div className="text-center py-12 text-app-text-faint">
+ <div className="text-center py-12 text-app-muted-foreground">
  <Tag size={40} className="mx-auto mb-3 opacity-30" />
  <p className="text-sm">No products in print queue</p>
  <p className="text-xs mt-1">Click products from the left panel to add</p>
@@ -343,11 +343,11 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  {labelItems.map(item => (
  <div
  key={item.product.id}
- className="flex items-center gap-4 p-3 bg-app-bg rounded-xl"
+ className="flex items-center gap-4 p-3 bg-app-background rounded-xl"
  >
  <div className="flex-1 min-w-0">
  <p className="text-sm font-medium truncate">{item.product.name}</p>
- <div className="flex gap-3 text-xs text-app-text-faint mt-0.5">
+ <div className="flex gap-3 text-xs text-app-muted-foreground mt-0.5">
  <span>{item.product.sku}</span>
  {item.product.barcode && <span>{item.product.barcode}</span>}
  <span>{fmt(item.product.selling_price_ttc)}</span>
@@ -358,14 +358,14 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  <div className="flex items-center gap-1 shrink-0">
  <button
  onClick={() => updateQty(item.product.id, -1)}
- className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 text-app-text-muted transition-colors"
+ className="w-7 h-7 flex items-center justify-center rounded-lg bg-app-border hover:bg-app-surface-hover text-app-muted-foreground transition-colors"
  >
  <Minus size={12} />
  </button>
  <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
  <button
  onClick={() => updateQty(item.product.id, 1)}
- className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors"
+ className="w-7 h-7 flex items-center justify-center rounded-lg bg-app-primary-light hover:bg-app-success/10 text-app-success transition-colors"
  >
  <Plus size={12} />
  </button>
@@ -373,7 +373,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
 
  <button
  onClick={() => removeItem(item.product.id)}
- className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+ className="p-1.5 text-app-error hover:text-app-error hover:bg-app-error-bg rounded-lg transition-colors shrink-0"
  >
  <Trash2 size={14} />
  </button>
@@ -416,7 +416,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  {item.product.name}
  </p>
  {showBrand && item.product.brand_name && (
- <p className="text-[7px] text-app-text-muted">{item.product.brand_name}</p>
+ <p className="text-[7px] text-app-muted-foreground">{item.product.brand_name}</p>
  )}
  </div>
  {showBarcode && item.product.barcode && (
@@ -429,7 +429,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  )}
  <div className="flex justify-between items-end">
  {showSku && (
- <span className="text-[7px] text-app-text-faint">{item.product.sku}</span>
+ <span className="text-[7px] text-app-muted-foreground">{item.product.sku}</span>
  )}
  {showPrice && (
  <span
@@ -448,7 +448,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
  )),
  )}
  {totalLabels > labelItems.reduce((s, i) => s + Math.min(i.quantity, 4), 0) && (
- <div className="w-full text-center text-xs text-app-text-faint pt-2">
+ <div className="w-full text-center text-xs text-app-muted-foreground pt-2">
  Showing preview of first 4 labels per product. Full set prints when you click Print.
  </div>
  )}

@@ -91,7 +91,7 @@ const COA_DISPLAY: Record<string, { name: string; flag: string; desc: string }> 
  'US_GAAP': { name: 'US GAAP', flag: '🇺🇸', desc: 'Generally Accepted Accounting Principles' },
 }
 
-const INPUT_CLS = "w-full px-3 py-2 rounded-lg border border-app-border bg-gray-50/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+const INPUT_CLS = "w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface-2/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary/30 transition-all"
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -300,14 +300,14 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  <div className="flex flex-col items-center animate-in fade-in duration-500 w-full">
  <div className="w-full max-w-4xl mx-auto px-4 pt-2">
  <div className="text-center mb-4">
- <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 mb-2">
+ <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-app-primary/5 text-app-primary mb-2">
  <Sparkles size={14} className="animate-pulse" />
  <span className="text-[11px] font-black uppercase tracking-widest">Organization Setup</span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-text">
- Let&apos;s set up <span className="text-indigo-600">{data.business_name || 'your business'}</span>
+ <h1 className="page-header-title tracking-tighter text-app-foreground">
+ Let&apos;s set up <span className="text-app-primary">{data.business_name || 'your business'}</span>
  </h1>
- <p className="text-sm text-app-text-faint mt-2 font-medium">Complete these steps to unlock your full ERP experience</p>
+ <p className="text-sm text-app-muted-foreground mt-2 font-medium">Complete these steps to unlock your full ERP experience</p>
  </div>
  {/* Progress */}
  <div className="flex items-center justify-center gap-0.5 mb-8 flex-wrap">
@@ -318,12 +318,12 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  <div key={s.id} className="flex items-center">
  <button onClick={() => i < step && setStep(i)} disabled={i > step}
  className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[11px] font-bold transition-all duration-300
- ${isActive ? 'bg-gray-900 text-app-text shadow-lg shadow-gray-900/20 scale-105' : isDone ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer' : 'bg-app-bg text-gray-300 cursor-not-allowed'}`}>
- {isDone ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Icon size={14} />}
+ ${isActive ? 'bg-app-surface text-app-foreground shadow-lg shadow-app-border/20 scale-105' : isDone ? 'bg-app-primary-light text-app-primary hover:bg-app-primary-light cursor-pointer' : 'bg-app-background text-app-muted-foreground cursor-not-allowed'}`}>
+ {isDone ? <CheckCircle2 size={14} className="text-app-primary" /> : <Icon size={14} />}
  <span className="hidden lg:inline">{s.title}</span>
  {isMandatory && isActive && <span className="text-rose-400 text-[9px]">*</span>}
  </button>
- {i < STEPS.length - 1 && <ChevronRight size={12} className={`mx-0.5 ${i < step ? 'text-emerald-300' : 'text-gray-200'}`} />}
+ {i < STEPS.length - 1 && <ChevronRight size={12} className={`mx-0.5 ${i < step ? 'text-app-success' : 'text-app-foreground'}`} />}
  </div>
  )
  })}
@@ -331,36 +331,36 @@ export default function SetupWizardClient({ config, orgProfile }: { config: Wiza
  </div>
  <div className="w-full max-w-4xl mx-auto px-4 flex-1">
  <div className="bg-app-surface rounded-[2rem] border border-app-border shadow-sm">
- <div className="px-8 pt-8 pb-4 border-b border-gray-50">
+ <div className="px-8 pt-8 pb-4 border-b border-app-border">
  <div className="flex items-center gap-3">
- <div className="w-12 h-12 rounded-2xl bg-app-surface-2 text-app-text-muted flex items-center justify-center">
+ <div className="w-12 h-12 rounded-2xl bg-app-surface-2 text-app-muted-foreground flex items-center justify-center">
  {(() => { const Icon = STEPS[step].icon; return <Icon size={24} /> })()}
  </div>
  <div>
- <h2 className="text-xl font-black tracking-tight text-app-text">{STEPS[step].title}</h2>
- <p className="text-xs text-app-text-faint font-medium">{STEPS[step].subtitle}</p>
+ <h2 className="text-xl font-black tracking-tight text-app-foreground">{STEPS[step].title}</h2>
+ <p className="text-xs text-app-muted-foreground font-medium">{STEPS[step].subtitle}</p>
  </div>
  <div className="ml-auto flex items-center gap-2">
  {step <= 1 && <Badge className="bg-rose-50 text-rose-600 border-0 font-black text-[9px] uppercase tracking-widest">Required</Badge>}
- <Badge className="bg-app-bg text-app-text-faint border-0 font-black text-[10px] uppercase tracking-widest">Step {step + 1}/{STEPS.length}</Badge>
+ <Badge className="bg-app-background text-app-muted-foreground border-0 font-black text-[10px] uppercase tracking-widest">Step {step + 1}/{STEPS.length}</Badge>
  </div>
  </div>
  </div>
  <div className="p-8 animate-in fade-in slide-in-from-right-4 duration-300" key={step}>
  <CurrentStep config={config} data={data} setData={setData} orgProfile={orgProfile} createdAccounts={createdAccounts} onAccountCreated={onAccountCreated} />
  </div>
- <div className="px-8 py-6 bg-gray-50/50 border-t border-app-border flex items-center justify-between">
+ <div className="px-8 py-6 bg-app-surface-2/50 border-t border-app-border flex items-center justify-between">
  <button onClick={() => step > 0 && setStep(s => s - 1)} disabled={step === 0}
- className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${step === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-app-text-muted hover:bg-app-surface-2'}`}>
+ className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${step === 0 ? 'text-app-muted-foreground cursor-not-allowed' : 'text-app-muted-foreground hover:bg-app-surface-2'}`}>
  <ChevronLeft size={18} /> Back
  </button>
  <div className="flex items-center gap-3">
  {canSkip && (
- <button onClick={() => setStep(s => s + 1)} className="px-6 py-3 rounded-xl font-bold text-sm text-app-text-faint hover:text-app-text-muted transition-all">Skip</button>
+ <button onClick={() => setStep(s => s + 1)} className="px-6 py-3 rounded-xl font-bold text-sm text-app-muted-foreground hover:text-app-muted-foreground transition-all">Skip</button>
  )}
  <button onClick={handleNext} disabled={!canGoNext() || saving}
  className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg
- ${step === STEPS.length - 1 ? 'bg-emerald-600 text-app-text hover:bg-emerald-700 shadow-emerald-200' : 'bg-gray-900 text-app-text hover:bg-gray-800 shadow-gray-900/20'}
+ ${step === STEPS.length - 1 ? 'bg-app-primary text-app-foreground hover:bg-app-success shadow-emerald-200' : 'bg-app-surface text-app-foreground hover:bg-app-surface-2 shadow-app-border/20'}
  disabled:opacity-50 disabled:cursor-not-allowed`}>
  {saving ? (<><div className="w-4 h-4 border-2 border-app-text/30 border-t-white rounded-full animate-spin" /> Saving...</>)
  : step === 2 && data.want_migration ? (<><Upload size={18} /> Go to Migration</>)
@@ -387,7 +387,7 @@ function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
  ⚠️ This is <strong>required</strong> before you can use the system. It determines your tax mode (HT or TTC), VAT recovery, and accounting behavior.
  </p>
  </div>
- <p className="text-sm text-app-text-muted font-medium">
+ <p className="text-sm text-app-muted-foreground font-medium">
  What is the fiscal regime of your company? This determines how taxes are calculated, whether you work in HT or TTC, and your VAT obligations.
  </p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -396,23 +396,23 @@ function StepLegalForm({ config, data, setData, orgProfile }: StepProps) {
  return (
  <button key={fr.code} onClick={() => setData({ fiscal_regime: fr.code })}
  className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300
- ${isActive ? 'border-gray-900 bg-gray-900 text-app-text shadow-xl shadow-gray-900/20' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
+ ${isActive ? 'border-app-border bg-app-surface text-app-foreground shadow-xl shadow-app-border/20' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="flex items-start gap-4">
- <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-app-text/20' : 'bg-sky-50'} flex items-center justify-center shrink-0`}>
- <Icon size={24} className={isActive ? 'text-app-text' : 'text-sky-600'} />
+ <div className={`w-12 h-12 rounded-xl ${isActive ? 'bg-app-foreground/20' : 'bg-sky-50'} flex items-center justify-center shrink-0`}>
+ <Icon size={24} className={isActive ? 'text-app-foreground' : 'text-sky-600'} />
  </div>
  <div className="flex-1 min-w-0">
  <div className="text-sm font-black">{fr.name}</div>
- <div className={`text-[11px] mt-1 font-medium leading-relaxed ${isActive ? 'text-app-text/60' : 'text-app-text-faint'}`}>{fr.desc}</div>
+ <div className={`text-[11px] mt-1 font-medium leading-relaxed ${isActive ? 'text-app-foreground/60' : 'text-app-muted-foreground'}`}>{fr.desc}</div>
  <div className={`mt-2 flex items-center gap-2`}>
- <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-app-text/20 text-app-text/80' : fr.taxMode === 'HT' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+ <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-app-foreground/20 text-app-foreground/80' : fr.taxMode === 'HT' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'}`}>
  {fr.taxMode === 'MIXED' ? 'HT + TTC' : fr.taxMode}
  </Badge>
- {fr.vatRecovery && <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-emerald-400/30 text-app-text/80' : 'bg-emerald-50 text-emerald-600'}`}>VAT Recovery</Badge>}
+ {fr.vatRecovery && <Badge className={`text-[9px] font-black uppercase border-0 ${isActive ? 'bg-app-success/10/30 text-app-foreground/80' : 'bg-app-primary-light text-app-primary'}`}>VAT Recovery</Badge>}
  </div>
  </div>
  </div>
- {isActive && <CheckCircle2 size={18} className="absolute top-3 right-3 text-emerald-400" />}
+ {isActive && <CheckCircle2 size={18} className="absolute top-3 right-3 text-app-primary" />}
  </button>
  )
  })}
@@ -436,18 +436,18 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Currency */}
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4 flex items-center gap-2">
- <Banknote size={16} className="text-emerald-500" /> Base Currency <span className="text-rose-400">*</span>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <Banknote size={16} className="text-app-primary" /> Base Currency <span className="text-rose-400">*</span>
  </h3>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
  {config.currencies.map((c: any) => (
  <button key={c.id} onClick={() => setData({ base_currency_id: c.id.toString() })}
  className={`p-4 rounded-2xl border-2 text-left transition-all duration-200
- ${data.base_currency_id === c.id.toString() ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
+ ${data.base_currency_id === c.id.toString() ? 'border-app-primary bg-app-primary-light shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
  <div className="text-2xl font-black mb-1">{c.symbol}</div>
- <div className="text-xs font-bold text-app-text uppercase">{c.code}</div>
- <div className="text-[10px] text-app-text-faint font-medium mt-0.5">{c.name}</div>
- {data.base_currency_id === c.id.toString() && <CheckCircle2 size={16} className="text-emerald-500 mt-2" />}
+ <div className="text-xs font-bold text-app-foreground uppercase">{c.code}</div>
+ <div className="text-[10px] text-app-muted-foreground font-medium mt-0.5">{c.name}</div>
+ {data.base_currency_id === c.id.toString() && <CheckCircle2 size={16} className="text-app-primary mt-2" />}
  </button>
  ))}
  </div>
@@ -455,21 +455,21 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* COA Template */}
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-2 flex items-center gap-2">
- <BookOpen size={16} className="text-indigo-500" /> Chart of Accounts <span className="text-rose-400">*</span>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <BookOpen size={16} className="text-app-primary" /> Chart of Accounts <span className="text-rose-400">*</span>
  </h3>
- <p className="text-xs text-app-text-faint font-medium mb-4">Select the accounting standard for your country. This creates your entire account tree.</p>
+ <p className="text-xs text-app-muted-foreground font-medium mb-4">Select the accounting standard for your country. This creates your entire account tree.</p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {Object.entries(COA_DISPLAY).map(([key, info]) => (
  <button key={key} onClick={() => setData({ coa_template: key })}
  className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 flex items-start gap-4
- ${data.coa_template === key ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
+ ${data.coa_template === key ? 'border-app-primary/30 bg-app-primary/5 shadow-lg shadow-indigo-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
  <span className="text-3xl">{info.flag}</span>
  <div className="flex-1">
- <div className="text-sm font-black text-app-text">{info.name}</div>
- <div className="text-xs text-app-text-faint font-medium mt-0.5">{info.desc}</div>
+ <div className="text-sm font-black text-app-foreground">{info.name}</div>
+ <div className="text-xs text-app-muted-foreground font-medium mt-0.5">{info.desc}</div>
  </div>
- {data.coa_template === key && <CheckCircle2 size={18} className="text-indigo-500 mt-1" />}
+ {data.coa_template === key && <CheckCircle2 size={18} className="text-app-primary mt-1" />}
  </button>
  ))}
  </div>
@@ -477,27 +477,27 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Fiscal Year */}
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-2 flex items-center gap-2">
- <CalendarDays size={16} className="text-violet-500" /> Fiscal Year <span className="text-rose-400">*</span>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <CalendarDays size={16} className="text-app-primary" /> Fiscal Year <span className="text-rose-400">*</span>
  </h3>
- <p className="text-xs text-app-text-faint font-medium mb-4">Your first accounting period. Most companies use Jan 1 — Dec 31.</p>
+ <p className="text-xs text-app-muted-foreground font-medium mb-4">Your first accounting period. Most companies use Jan 1 — Dec 31.</p>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase tracking-wider">Name</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase tracking-wider">Name</label>
  <input type="text" value={data.fiscal_year_name} onChange={e => setData({ fiscal_year_name: e.target.value })} placeholder="FY 2026" className={INPUT_CLS} />
  </div>
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase tracking-wider">Start Date</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase tracking-wider">Start Date</label>
  <input type="date" value={data.fiscal_year_start} onChange={e => setData({ fiscal_year_start: e.target.value })} className={INPUT_CLS} />
  </div>
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase tracking-wider">End Date</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase tracking-wider">End Date</label>
  <input type="date" value={data.fiscal_year_end} onChange={e => setData({ fiscal_year_end: e.target.value })} className={INPUT_CLS} />
  </div>
  </div>
  <div className="mt-4 p-4 rounded-xl bg-violet-50/50 border border-violet-100 flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-app-surface flex items-center justify-center text-violet-600 shadow-sm font-black text-xs">12</div>
- <p className="text-xs text-violet-700 font-medium line-clamp-1">
+ <div className="w-8 h-8 rounded-lg bg-app-surface flex items-center justify-center text-app-primary shadow-sm font-black text-xs">12</div>
+ <p className="text-xs text-app-primary font-medium line-clamp-1">
  We will automatically generate <strong>12 monthly periods</strong> (P01 to P12) for this fiscal year.
  </p>
  </div>
@@ -505,18 +505,18 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 
  {/* Pricing Mode */}
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-2 flex items-center gap-2">
- <ToggleLeft size={16} className="text-amber-500" /> Pricing Mode
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+ <ToggleLeft size={16} className="text-app-warning" /> Pricing Mode
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {[{ ttc: true, title: 'Tax Inclusive (TTC)', desc: 'Prices include tax. Common in retail/B2C.' },
  { ttc: false, title: 'Tax Exclusive (HT)', desc: 'Prices exclude tax. Common in B2B/wholesale.' }].map(opt => (
  <button key={String(opt.ttc)} onClick={() => setData({ works_in_ttc: opt.ttc })}
  className={`p-5 rounded-2xl border-2 text-left transition-all
- ${data.works_in_ttc === opt.ttc ? 'border-amber-500 bg-amber-50 shadow-lg shadow-amber-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
- <div className="text-sm font-black text-app-text">{opt.title}</div>
- <div className="text-xs text-app-text-faint font-medium mt-1">{opt.desc}</div>
- {data.works_in_ttc === opt.ttc && <CheckCircle2 size={16} className="text-amber-500 mt-2" />}
+ ${data.works_in_ttc === opt.ttc ? 'border-app-warning bg-app-warning-bg shadow-lg shadow-amber-100' : 'border-app-border bg-app-surface hover:border-app-border'}`}>
+ <div className="text-sm font-black text-app-foreground">{opt.title}</div>
+ <div className="text-xs text-app-muted-foreground font-medium mt-1">{opt.desc}</div>
+ {data.works_in_ttc === opt.ttc && <CheckCircle2 size={16} className="text-app-warning mt-2" />}
  </button>
  ))}
  </div>
@@ -532,7 +532,7 @@ function StepFinancialFoundation({ config, data, setData }: StepProps) {
 function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  return (
  <div className="space-y-6">
- <p className="text-sm text-app-text-muted font-medium">
+ <p className="text-sm text-app-muted-foreground font-medium">
  Now that your financial foundation is set, do you want to import existing data from another system?
  </p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -540,27 +540,27 @@ function StepDataMigration({ config, data, setData, orgProfile }: StepProps) {
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
  ${data.want_migration === true ? 'border-orange-500 bg-orange-50 shadow-lg shadow-orange-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg">
- <FileSpreadsheet size={28} className="text-app-text" />
+ <FileSpreadsheet size={28} className="text-app-foreground" />
  </div>
- <div className="text-lg font-black text-app-text">Yes, import my data</div>
- <div className="text-xs text-app-text-faint font-medium mt-1">Import products, contacts, or transactions from Excel, CSV, or another system</div>
+ <div className="text-lg font-black text-app-foreground">Yes, import my data</div>
+ <div className="text-xs text-app-muted-foreground font-medium mt-1">Import products, contacts, or transactions from Excel, CSV, or another system</div>
  <div className="mt-3 flex items-center gap-1 text-xs font-bold text-orange-600"><ArrowUpRight size={14} /> Opens the Migration Center</div>
  {data.want_migration === true && <CheckCircle2 size={18} className="absolute top-3 right-3 text-orange-500" />}
  </button>
  <button onClick={() => setData({ want_migration: false })}
  className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 relative
- ${data.want_migration === false ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
+ ${data.want_migration === false ? 'border-app-primary bg-app-primary-light shadow-lg shadow-emerald-100' : 'border-app-border bg-app-surface hover:border-app-border hover:shadow-md'}`}>
  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-4 shadow-lg">
- <Sparkles size={28} className="text-app-text" />
+ <Sparkles size={28} className="text-app-foreground" />
  </div>
- <div className="text-lg font-black text-app-text">No, start fresh</div>
- <div className="text-xs text-app-text-faint font-medium mt-1">Setting up a new business or adding data manually later</div>
- <div className="mt-3 flex items-center gap-1 text-xs font-bold text-emerald-600"><ArrowRight size={14} /> Continue setup</div>
- {data.want_migration === false && <CheckCircle2 size={18} className="absolute top-3 right-3 text-emerald-500" />}
+ <div className="text-lg font-black text-app-foreground">No, start fresh</div>
+ <div className="text-xs text-app-muted-foreground font-medium mt-1">Setting up a new business or adding data manually later</div>
+ <div className="mt-3 flex items-center gap-1 text-xs font-bold text-app-primary"><ArrowRight size={14} /> Continue setup</div>
+ {data.want_migration === false && <CheckCircle2 size={18} className="absolute top-3 right-3 text-app-primary" />}
  </button>
  </div>
- <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
- <p className="text-xs font-bold text-blue-700">💡 You can always import data later from <strong>Import from Third Party</strong> in the sidebar.</p>
+ <div className="p-4 rounded-xl bg-app-info-bg border border-app-info/30">
+ <p className="text-xs font-bold text-app-info">💡 You can always import data later from <strong>Import from Third Party</strong> in the sidebar.</p>
  </div>
  </div>
  )
@@ -585,17 +585,17 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  <div className="flex flex-col md:flex-row gap-8">
  {/* Logo Upload */}
  <div className="shrink-0 flex flex-col items-center">
- <label className="block text-xs font-bold text-app-text-muted mb-3 uppercase tracking-wider">Company Logo</label>
+ <label className="block text-xs font-bold text-app-muted-foreground mb-3 uppercase tracking-wider">Company Logo</label>
  <div className="relative group">
- <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-app-border bg-app-bg flex items-center justify-center overflow-hidden transition-all group-hover:border-indigo-300 group-hover:bg-indigo-50/30">
+ <div className="w-32 h-32 rounded-3xl border-2 border-dashed border-app-border bg-app-background flex items-center justify-center overflow-hidden transition-all group-hover:border-app-primary/30 group-hover:bg-app-primary/5/30">
  {data.logo ? (
  <img src={data.logo} alt="Logo" className="w-full h-full object-contain p-2" />
  ) : (
- <Camera size={32} className="text-gray-300 group-hover:text-indigo-400 transition-colors" />
+ <Camera size={32} className="text-app-muted-foreground group-hover:text-app-primary transition-colors" />
  )}
  </div>
  <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
- <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-app-surface shadow-md border border-app-border flex items-center justify-center text-app-text-faint group-hover:text-indigo-600 transition-colors">
+ <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-app-surface shadow-md border border-app-border flex items-center justify-center text-app-muted-foreground group-hover:text-app-primary transition-colors">
  <Upload size={14} />
  </div>
  </div>
@@ -603,16 +603,16 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
 
  <div className="flex-1 space-y-6">
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4 flex items-center gap-2">
- <Building2 size={16} className="text-indigo-500" /> Business Identity
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <Building2 size={16} className="text-app-primary" /> Business Identity
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
  <div className="md:col-span-2">
- <label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Company Name</label>
+ <label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Company Name</label>
  <input type="text" value={data.business_name} onChange={e => setData({ business_name: e.target.value })} placeholder="Acme Corporation" className={INPUT_CLS} />
  </div>
  <div>
- <label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Legal Entity</label>
+ <label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Legal Entity</label>
  <select value={data.legal_entity} onChange={e => setData({ legal_entity: e.target.value })} className={INPUT_CLS}>
  <option value="INDIVIDUAL">Individual / Sole Proprietorship</option>
  <option value="SARL">SARL / limited Liability</option>
@@ -622,7 +622,7 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </select>
  </div>
  <div>
- <label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">
+ <label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">
  <Fingerprint size={12} className="inline mr-1" /> Tax ID / VAT Number
  </label>
  <input type="text" value={data.vat_number} onChange={e => setData({ vat_number: e.target.value })} placeholder="VAT-12345678" className={INPUT_CLS} />
@@ -631,8 +631,8 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </div>
 
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4 flex items-center gap-2">
- <Clock size={16} className="text-amber-500" /> Timezone
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+ <Clock size={16} className="text-app-warning" /> Timezone
  </h3>
  <select value={data.timezone} onChange={e => setData({ timezone: e.target.value })} className={INPUT_CLS}>
  {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>)}
@@ -642,24 +642,24 @@ function StepBusinessProfile({ config, data, setData }: StepProps) {
  </div>
 
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4 flex items-center gap-2"><Mail size={16} className="text-emerald-500" /> Contact</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2"><Mail size={16} className="text-app-primary" /> Contact</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
- <div><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Email</label>
+ <div><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Email</label>
  <input type="email" value={data.business_email} onChange={e => setData({ business_email: e.target.value })} placeholder="hello@acme.com" className={INPUT_CLS} /></div>
- <div><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Phone</label>
+ <div><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Phone</label>
  <input type="tel" value={data.phone} onChange={e => setData({ phone: e.target.value })} placeholder="+1 555 123 4567" className={INPUT_CLS} /></div>
- <div className="md:col-span-2"><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Website</label>
+ <div className="md:col-span-2"><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Website</label>
  <input type="url" value={data.website} onChange={e => setData({ website: e.target.value })} placeholder="https://www.acme.com" className={INPUT_CLS} /></div>
  </div>
  </div>
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4 flex items-center gap-2"><MapPinned size={16} className="text-violet-500" /> Address</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4 flex items-center gap-2"><MapPinned size={16} className="text-app-primary" /> Address</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
- <div className="md:col-span-2"><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Street</label>
+ <div className="md:col-span-2"><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Street</label>
  <input type="text" value={data.address} onChange={e => setData({ address: e.target.value })} placeholder="123 Main Street" className={INPUT_CLS} /></div>
- <div><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">City</label>
+ <div><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">City</label>
  <input type="text" value={data.city} onChange={e => setData({ city: e.target.value })} placeholder="New York" className={INPUT_CLS} /></div>
- <div><label className="block text-xs font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">Country</label>
+ <div><label className="block text-xs font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">Country</label>
  <input type="text" value={data.country} onChange={e => setData({ country: e.target.value })} placeholder="United States" className={INPUT_CLS} /></div>
  </div>
  </div>
@@ -689,21 +689,21 @@ function StepLocations({ config, data, setData }: StepProps) {
 
  return (
  <div className="space-y-6">
- <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-100">
+ <div className="p-5 rounded-2xl bg-app-primary-light border border-app-success/30">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><Check size={20} /></div>
- <div><p className="text-sm font-bold text-emerald-800">Main Warehouse already created</p>
- <p className="text-xs text-emerald-600 font-medium">Default &quot;Main Warehouse&quot; (WH01) was set up during registration.</p></div>
+ <div className="w-10 h-10 rounded-xl bg-app-primary-light text-app-primary flex items-center justify-center"><Check size={20} /></div>
+ <div><p className="text-sm font-bold text-app-success">Main Warehouse already created</p>
+ <p className="text-xs text-app-primary font-medium">Default &quot;Main Warehouse&quot; (WH01) was set up during registration.</p></div>
  </div>
  </div>
  {config.warehouses.length > 0 && (
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-3">Existing ({config.warehouses.length})</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">Existing ({config.warehouses.length})</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {config.warehouses.map((wh: any) => (
- <div key={wh.id} className="p-4 rounded-xl border border-app-border bg-gray-50/50 flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-black">{wh.code?.substring(0, 2) || 'WH'}</div>
- <div><p className="text-sm font-bold text-app-text">{wh.name}</p><p className="text-[10px] text-app-text-faint uppercase font-bold">{wh.code}</p></div>
+ <div key={wh.id} className="p-4 rounded-xl border border-app-border bg-app-surface-2/50 flex items-center gap-3">
+ <div className="w-8 h-8 rounded-lg bg-app-primary/10 text-app-primary flex items-center justify-center text-xs font-black">{wh.code?.substring(0, 2) || 'WH'}</div>
+ <div><p className="text-sm font-bold text-app-foreground">{wh.name}</p><p className="text-[10px] text-app-muted-foreground uppercase font-bold">{wh.code}</p></div>
  </div>
  ))}
  </div>
@@ -711,43 +711,43 @@ function StepLocations({ config, data, setData }: StepProps) {
  )}
  <div>
  <div className="flex items-center justify-between mb-3">
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider">Add More</h3>
- <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 font-bold text-xs hover:bg-indigo-100 transition-all"><Plus size={14} /> Add</button>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider">Add More</h3>
+ <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-primary/5 text-app-primary font-bold text-xs hover:bg-app-primary/10 transition-all"><Plus size={14} /> Add</button>
  </div>
  {data.warehouses.length === 0 && (
  <div className="p-8 rounded-2xl border-2 border-dashed border-app-border text-center">
- <WarehouseIcon size={32} className="mx-auto text-gray-300 mb-3" />
- <p className="text-sm font-bold text-app-text-faint">No additional locations</p>
+ <WarehouseIcon size={32} className="mx-auto text-app-muted-foreground mb-3" />
+ <p className="text-sm font-bold text-app-muted-foreground">No additional locations</p>
  </div>
  )}
  <div className="space-y-4 mt-4">
  {data.warehouses.map((wh, i) => (
  <div key={i} className="p-5 rounded-2xl border border-app-border bg-app-surface space-y-4 group relative">
- <button onClick={() => rm(i)} className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-3 right-3 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
- <div className="lg:col-span-2"><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Name</label><input type="text" value={wh.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Downtown" className={INPUT_CLS} /></div>
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Code</label><input type="text" value={wh.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SD01" maxLength={8} className={INPUT_CLS + ' uppercase'} /></div>
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Type</label>
+ <div className="lg:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Name</label><input type="text" value={wh.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Downtown" className={INPUT_CLS} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Code</label><input type="text" value={wh.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SD01" maxLength={8} className={INPUT_CLS + ' uppercase'} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Type</label>
  <select value={wh.type} onChange={e => upd(i, 'type', e.target.value)} className={INPUT_CLS}>
  <option value="BRANCH">Branch</option><option value="STORE">Store</option><option value="WAREHOUSE">Warehouse</option><option value="VIRTUAL">Virtual</option>
  </select></div>
  </div>
- <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
+ <div className="pt-2 border-t border-app-border flex items-center justify-between">
  <label className="flex items-center gap-2 cursor-pointer group/label">
  <div className="relative">
  <input type="checkbox" checked={wh.is_company_address} onChange={e => upd(i, 'is_company_address', e.target.checked)} className="sr-only" />
- <div className={`w-8 h-4 rounded-full transition-colors ${wh.is_company_address ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+ <div className={`w-8 h-4 rounded-full transition-colors ${wh.is_company_address ? 'bg-app-primary' : 'bg-app-border'}`} />
  <div className={`absolute left-0.5 top-0.5 w-3 h-3 rounded-full bg-app-surface transition-transform ${wh.is_company_address ? 'translate-x-4' : 'translate-x-0'}`} />
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-app-text-faint group-hover/label:text-app-text-muted transition-colors flex items-center gap-1">
+ <span className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground group-hover/label:text-app-muted-foreground transition-colors flex items-center gap-1">
  <MapIcon size={10} /> Same as company address
  </span>
  </label>
  </div>
  {!wh.is_company_address && (
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Street Address</label><input type="text" value={wh.address} onChange={e => upd(i, 'address', e.target.value)} placeholder="123 Main St" className={INPUT_CLS} /></div>
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">City</label><input type="text" value={wh.city} onChange={e => upd(i, 'city', e.target.value)} placeholder="New York" className={INPUT_CLS} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Street Address</label><input type="text" value={wh.address} onChange={e => upd(i, 'address', e.target.value)} placeholder="123 Main St" className={INPUT_CLS} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">City</label><input type="text" value={wh.city} onChange={e => upd(i, 'city', e.target.value)} placeholder="New York" className={INPUT_CLS} /></div>
  </div>
  )}
  </div>
@@ -775,24 +775,24 @@ function StepCRMSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-1">Pricing Tiers</h3>
- <p className="text-xs text-app-text-muted">Configure default customer categories for CRM and POS.</p>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Pricing Tiers</h3>
+ <p className="text-xs text-app-muted-foreground">Configure default customer categories for CRM and POS.</p>
  </div>
- <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all"><Plus size={14} /> Add Tier</button>
+ <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-info-bg text-app-info font-bold text-xs hover:bg-app-info-bg transition-all"><Plus size={14} /> Add Tier</button>
  </div>
  {data.crm_price_groups.length === 0 && (
  <div className="p-8 rounded-2xl border-2 border-dashed border-app-border text-center">
- <User size={32} className="mx-auto text-gray-300 mb-3" />
- <p className="text-sm font-bold text-app-text-faint">No pricing tiers defined</p>
+ <User size={32} className="mx-auto text-app-muted-foreground mb-3" />
+ <p className="text-sm font-bold text-app-muted-foreground">No pricing tiers defined</p>
  </div>
  )}
  <div className="space-y-4 mt-4">
  {data.crm_price_groups.map((g, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Tier Name</label><input type="text" value={g.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="VIP" className={INPUT_CLS} /></div>
- <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Description</label><input type="text" value={g.description} onChange={e => upd(i, 'description', e.target.value)} placeholder="Customers with 10%+ lifetime discount" className={INPUT_CLS} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Tier Name</label><input type="text" value={g.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="VIP" className={INPUT_CLS} /></div>
+ <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Description</label><input type="text" value={g.description} onChange={e => upd(i, 'description', e.target.value)} placeholder="Customers with 10%+ lifetime discount" className={INPUT_CLS} /></div>
  </div>
  </div>
  ))}
@@ -818,24 +818,24 @@ function StepHRSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-1">Departments</h3>
- <p className="text-xs text-app-text-muted">Set up the organizational structure of your company.</p>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Departments</h3>
+ <p className="text-xs text-app-muted-foreground">Set up the organizational structure of your company.</p>
  </div>
  <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-50 text-teal-600 font-bold text-xs hover:bg-teal-100 transition-all"><Plus size={14} /> Add Dept</button>
  </div>
  {data.hr_departments.length === 0 && (
  <div className="p-8 rounded-2xl border-2 border-dashed border-app-border text-center">
- <Building size={32} className="mx-auto text-gray-300 mb-3" />
- <p className="text-sm font-bold text-app-text-faint">No departments defined</p>
+ <Building size={32} className="mx-auto text-app-muted-foreground mb-3" />
+ <p className="text-sm font-bold text-app-muted-foreground">No departments defined</p>
  </div>
  )}
  <div className="space-y-4 mt-4">
  {data.hr_departments.map((d, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mr-8">
- <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Department Name</label><input type="text" value={d.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Sales & Marketing" className={INPUT_CLS} /></div>
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Code</label><input type="text" value={d.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SALES" maxLength={10} className={INPUT_CLS + ' uppercase'} /></div>
+ <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Department Name</label><input type="text" value={d.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Sales & Marketing" className={INPUT_CLS} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Code</label><input type="text" value={d.code} onChange={e => upd(i, 'code', e.target.value.toUpperCase())} placeholder="SALES" maxLength={10} className={INPUT_CLS + ' uppercase'} /></div>
  </div>
  </div>
  ))}
@@ -852,16 +852,16 @@ function StepPOSSetup({ config, data, setData }: StepProps) {
  const upd = (v: boolean) => setData({ pos_settings: { ...data.pos_settings, allow_negative_stock: v } })
  return (
  <div className="space-y-6">
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-3">POS Configuration</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">POS Configuration</h3>
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface">
  <div className="flex items-start justify-between">
  <div>
- <label className="block text-sm font-bold text-app-text mb-1">Allow Negative Stock Override</label>
- <p className="text-xs text-app-text-muted max-w-sm">When enabled, cashiers can sell items even if the system shows zero inventory. This is useful for high-volume retail where physical counts drift from digital counts.</p>
+ <label className="block text-sm font-bold text-app-foreground mb-1">Allow Negative Stock Override</label>
+ <p className="text-xs text-app-muted-foreground max-w-sm">When enabled, cashiers can sell items even if the system shows zero inventory. This is useful for high-volume retail where physical counts drift from digital counts.</p>
  </div>
  <label className="relative inline-flex items-center cursor-pointer ml-4">
  <input type="checkbox" className="sr-only peer" checked={data.pos_settings.allow_negative_stock} onChange={e => upd(e.target.checked)} />
- <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+ <div className="w-11 h-6 bg-app-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-primary"></div>
  </label>
  </div>
  </div>
@@ -877,17 +877,17 @@ function StepECommerceSetup({ config, data, setData }: StepProps) {
  const upd = (k: string, v: string) => setData({ ecommerce_config: { ...data.ecommerce_config, [k]: v } })
  return (
  <div className="space-y-6">
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-3">Online Storefront</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-3">Online Storefront</h3>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface">
- <label className="block text-[10px] font-bold text-app-text-faint mb-2 uppercase">Theme Primary Color</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-2 uppercase">Theme Primary Color</label>
  <div className="flex items-center gap-3">
  <input type="color" value={data.ecommerce_config.primary_color} onChange={e => upd('primary_color', e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
- <span className="font-mono text-xs font-medium text-app-text-muted uppercase">{data.ecommerce_config.primary_color}</span>
+ <span className="font-mono text-xs font-medium text-app-muted-foreground uppercase">{data.ecommerce_config.primary_color}</span>
  </div>
  </div>
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface flex flex-col justify-center">
- <label className="block text-[10px] font-bold text-app-text-faint mb-2 uppercase">Theme Style</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-2 uppercase">Theme Style</label>
  <select value={data.ecommerce_config.theme} onChange={e => upd('theme', e.target.value)} className={INPUT_CLS}>
  <option value="DEFAULT">Default (Clean & Modern)</option>
  <option value="DARK">Dark Mode (Premium)</option>
@@ -895,9 +895,9 @@ function StepECommerceSetup({ config, data, setData }: StepProps) {
  </select>
  </div>
  <div className="p-4 rounded-2xl border border-app-border bg-app-surface md:col-span-2">
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Custom Domain (Optional)</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Custom Domain (Optional)</label>
  <input type="text" value={data.ecommerce_config.custom_domain} onChange={e => upd('custom_domain', e.target.value)} placeholder="shop.yourcompany.com" className={INPUT_CLS} />
- <p className="text-[10px] text-app-text-faint mt-2">You will need to configure DNS settings later if you provide a custom domain.</p>
+ <p className="text-[10px] text-app-muted-foreground mt-2">You will need to configure DNS settings later if you provide a custom domain.</p>
  </div>
  </div>
  </div>
@@ -920,8 +920,8 @@ function StepAppearance({ data, setData }: StepProps) {
  return (
  <div className="space-y-6">
  <div className="p-4 rounded-xl bg-violet-50 border border-violet-100 flex items-center gap-3">
- <Paintbrush size={18} className="text-violet-600 shrink-0" />
- <p className="text-xs font-bold text-violet-700">
+ <Paintbrush size={18} className="text-app-primary shrink-0" />
+ <p className="text-xs font-bold text-app-primary">
  Choose the <strong>default visual theme</strong> for your organisation. Every user sees this on first login — they can always change it themselves later.
  </p>
  </div>
@@ -937,8 +937,8 @@ function StepAppearance({ data, setData }: StepProps) {
  className="relative p-5 rounded-2xl border-2 text-left transition-all duration-300"
  style={{
  background: t.bg,
- borderColor: isSelected ? t.primary : 'rgba(128,128,128,0.15)',
- boxShadow: isSelected ? `0 0 0 3px ${t.primary}33, 0 8px 24px rgba(0,0,0,0.15)` : '0 1px 4px rgba(0,0,0,0.06)',
+ borderColor: isSelected ? t.primary : 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)',
+ boxShadow: isSelected ? `0 0 0 3px ${t.primary}33, 0 8px 24px var(--app-border)` : '0 1px 4px var(--app-border)',
  transform: isSelected ? 'scale(1.03)' : 'scale(1)',
  }}
  >
@@ -961,7 +961,7 @@ function StepAppearance({ data, setData }: StepProps) {
 
  <div className="mt-2 flex gap-1">
  <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
- style={{ background: t.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.7)', color: t.primary }}>
+ style={{ background: t.mode === 'dark' ? 'var(--app-border)' : 'var(--app-surface)', color: t.primary }}>
  {t.mode}
  </span>
  {isSelected && (
@@ -977,7 +977,7 @@ function StepAppearance({ data, setData }: StepProps) {
  </div>
 
  {!data.app_default_theme && (
- <p className="text-xs text-app-text-faint font-medium text-center">
+ <p className="text-xs text-app-muted-foreground font-medium text-center">
  No theme selected — org will default to <strong>Midnight Pro</strong>. You can always change this later from <em>Settings → Appearance</em>.
  </p>
  )}
@@ -1002,25 +1002,25 @@ function StepWorkspaceSetup({ config, data, setData }: StepProps) {
  <div className="space-y-6">
  <div className="flex items-center justify-between mb-3">
  <div>
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-1">Daily Checklists</h3>
- <p className="text-xs text-app-text-muted">Define operational checklists for your team (e.g., Opening, Closing).</p>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-1">Daily Checklists</h3>
+ <p className="text-xs text-app-muted-foreground">Define operational checklists for your team (e.g., Opening, Closing).</p>
  </div>
- <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs hover:bg-blue-100 transition-all"><Plus size={14} /> Add Checklist</button>
+ <button onClick={add} className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-app-info-bg text-app-info font-bold text-xs hover:bg-app-info-bg transition-all"><Plus size={14} /> Add Checklist</button>
  </div>
  {data.workspace_checklists.length === 0 && (
  <div className="p-8 rounded-2xl border-2 border-dashed border-app-border text-center">
- <CheckCircle2 size={32} className="mx-auto text-gray-300 mb-3" />
- <p className="text-sm font-bold text-app-text-faint">No checklists defined</p>
+ <CheckCircle2 size={32} className="mx-auto text-app-muted-foreground mb-3" />
+ <p className="text-sm font-bold text-app-muted-foreground">No checklists defined</p>
  </div>
  )}
  <div className="space-y-4 mt-4">
  {data.workspace_checklists.map((c, i) => (
  <div key={i} className="p-4 rounded-2xl border border-app-border bg-app-surface group relative">
- <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
+ <button onClick={() => rm(i)} className="absolute top-4 right-4 p-1.5 rounded-lg text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={14} /></button>
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mr-8">
- <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Name</label><input type="text" value={c.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Opening" className={INPUT_CLS} /></div>
+ <div className="md:col-span-2"><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Name</label><input type="text" value={c.name} onChange={e => upd(i, 'name', e.target.value)} placeholder="Store Opening" className={INPUT_CLS} /></div>
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Trigger</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Trigger</label>
  <select value={c.trigger} onChange={e => upd(i, 'trigger', e.target.value)} className={INPUT_CLS}>
  <option value="SHIFT_START">Start of Shift</option>
  <option value="SHIFT_MID">Mid Shift</option>
@@ -1029,14 +1029,14 @@ function StepWorkspaceSetup({ config, data, setData }: StepProps) {
  <option value="CUSTOM">Custom</option>
  </select>
  </div>
- <div><label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Reward Points</label><input type="number" value={c.points} onChange={e => upd(i, 'points', parseInt(e.target.value) || 0)} className={INPUT_CLS} min={0} /></div>
+ <div><label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Reward Points</label><input type="number" value={c.points} onChange={e => upd(i, 'points', parseInt(e.target.value) || 0)} className={INPUT_CLS} min={0} /></div>
  </div>
  </div>
  ))}
  </div>
- <div className="bg-amber-50 rounded-xl p-4 flex items-start gap-3 mt-4">
- <AlertCircle className="text-amber-500 mt-1 shrink-0" size={16} />
- <p className="text-xs text-amber-800 leading-relaxed">
+ <div className="bg-app-warning-bg rounded-xl p-4 flex items-start gap-3 mt-4">
+ <AlertCircle className="text-app-warning mt-1 shrink-0" size={16} />
+ <p className="text-xs text-app-warning leading-relaxed">
  <strong>Note:</strong> You can add specific items (checkboxes) to these checklists later from the Workspace module. Right now, we are just creating the top-level templates.
  </p>
  </div>
@@ -1089,11 +1089,11 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
 
  return (
  <div className="space-y-6">
- <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex gap-3">
- <Coins className="text-amber-600 shrink-0" size={20} />
+ <div className="p-4 rounded-xl bg-app-warning-bg border border-app-warning/30 flex gap-3">
+ <Coins className="text-app-warning shrink-0" size={20} />
  <div>
- <p className="text-xs font-bold text-amber-900">Mandatory Payment Account</p>
- <p className="text-[11px] text-amber-700 leading-relaxed mt-0.5">
+ <p className="text-xs font-bold text-app-warning">Mandatory Payment Account</p>
+ <p className="text-[11px] text-app-warning leading-relaxed mt-0.5">
  To process sales and record payments, you must have at least one <strong>POS-enabled account</strong>.
  This acts as your digital cash drawer or bank ledger.
  </p>
@@ -1103,35 +1103,35 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
  {allAccounts.length > 0 && (
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  {allAccounts.map((acc: any, idx: number) => (
- <div key={acc.id || `new-${idx}`} className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/30 flex items-center justify-between">
+ <div key={acc.id || `new-${idx}`} className="p-4 rounded-xl border border-app-success/30 bg-app-primary-light/30 flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-app-surface border border-emerald-100 flex items-center justify-center text-emerald-600">
+ <div className="w-10 h-10 rounded-xl bg-app-surface border border-app-success/30 flex items-center justify-center text-app-primary">
  {acc.type === 'BANK' ? <Landmark size={20} /> : <Wallet size={20} />}
  </div>
  <div>
- <p className="text-sm font-bold text-app-text">{acc.name}</p>
- <p className="text-[10px] text-emerald-600 font-bold uppercase">{acc.type}</p>
+ <p className="text-sm font-bold text-app-foreground">{acc.name}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase">{acc.type}</p>
  </div>
  </div>
- <CheckCircle2 size={20} className="text-emerald-500" />
+ <CheckCircle2 size={20} className="text-app-primary" />
  </div>
  ))}
  </div>
  )}
 
  {!adding ? (
- <button onClick={() => setAdding(true)} className="w-full p-4 rounded-2xl border-2 border-dashed border-app-border text-app-text-faint hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/30 transition-all flex items-center justify-center gap-2 font-bold text-sm">
+ <button onClick={() => setAdding(true)} className="w-full p-4 rounded-2xl border-2 border-dashed border-app-border text-app-muted-foreground hover:border-app-primary/30 hover:text-app-primary hover:bg-app-primary/5/30 transition-all flex items-center justify-center gap-2 font-bold text-sm">
  <Plus size={18} /> Add Payment Account
  </button>
  ) : (
- <div className="p-6 rounded-2xl border-2 border-indigo-100 bg-app-surface space-y-4 animate-in slide-in-from-top-4 duration-300">
+ <div className="p-6 rounded-2xl border-2 border-app-primary/30 bg-app-surface space-y-4 animate-in slide-in-from-top-4 duration-300">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="md:col-span-2">
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Account Name</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Account Name</label>
  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Main Cash Register" className={INPUT_CLS} />
  </div>
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Type</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Type</label>
  <select value={type} onChange={e => setType(e.target.value)} className={INPUT_CLS}>
  <option value="CASH">Cash Drawer</option>
  <option value="BANK">Bank Account</option>
@@ -1139,7 +1139,7 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
  </select>
  </div>
  <div>
- <label className="block text-[10px] font-bold text-app-text-faint mb-1 uppercase">Ledger Parent (COA)</label>
+ <label className="block text-[10px] font-bold text-app-muted-foreground mb-1 uppercase">Ledger Parent (COA)</label>
  <select value={coa} onChange={e => setCoa(e.target.value)} className={INPUT_CLS}>
  <option value="">Auto-assign...</option>
  {assetCoaItems.map((c: any) => (
@@ -1154,8 +1154,8 @@ function StepPaymentAccounts({ config, data, setData, orgProfile, createdAccount
  </div>
  )}
  <div className="flex gap-2">
- <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-app-text-faint hover:bg-app-bg flex-1">Cancel</button>
- <button onClick={handleAdd} disabled={!name || saving} className="px-4 py-2 rounded-xl bg-indigo-600 text-app-text text-xs font-bold flex-1 disabled:opacity-50">
+ <button onClick={() => setAdding(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-app-muted-foreground hover:bg-app-background flex-1">Cancel</button>
+ <button onClick={handleAdd} disabled={!name || saving} className="px-4 py-2 rounded-xl bg-app-primary text-app-foreground text-xs font-bold flex-1 disabled:opacity-50">
  {saving ? 'Creating...' : 'Create Account'}
  </button>
  </div>
@@ -1175,42 +1175,42 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  return (
  <div className="space-y-6">
  <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-text" /></div>
- <h3 className="text-2xl font-black tracking-tight text-app-text">Everything looks great!</h3>
- <p className="text-sm text-app-text-faint mt-1 font-medium">Review your setup and launch</p>
+ <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-emerald-200"><Rocket size={36} className="text-app-foreground" /></div>
+ <h3 className="text-2xl font-black tracking-tight text-app-foreground">Everything looks great!</h3>
+ <p className="text-sm text-app-muted-foreground mt-1 font-medium">Review your setup and launch</p>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><Scale size={16} className="text-sky-500" /><span className="text-xs font-black text-app-text-faint uppercase tracking-widest">Fiscal Regime</span></div>
- <p className="text-lg font-black text-app-text">{fr?.name || data.fiscal_regime}</p>
- <p className="text-xs text-app-text-faint mt-1">{fr?.taxMode === 'HT' ? 'Tax Exclusive (HT)' : fr?.taxMode === 'MIXED' ? 'Mixed (HT + TTC)' : 'Tax Inclusive (TTC)'}</p>
+ <div className="flex items-center gap-2 mb-3"><Scale size={16} className="text-sky-500" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Fiscal Regime</span></div>
+ <p className="text-lg font-black text-app-foreground">{fr?.name || data.fiscal_regime}</p>
+ <p className="text-xs text-app-muted-foreground mt-1">{fr?.taxMode === 'HT' ? 'Tax Exclusive (HT)' : fr?.taxMode === 'MIXED' ? 'Mixed (HT + TTC)' : 'Tax Inclusive (TTC)'}</p>
  </CardContent></Card>
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><Landmark size={16} className="text-emerald-500" /><span className="text-xs font-black text-app-text-faint uppercase tracking-widest">Financial</span></div>
- {cur && <div className="flex items-center gap-2"><span className="text-lg font-black">{cur.symbol}</span><span className="text-sm font-bold text-app-text-muted">{cur.code}</span></div>}
- {coa && <p className="text-xs text-app-text-faint mt-1">{coa.flag} {coa.name}</p>}
- <p className="text-xs text-app-text-faint">{data.works_in_ttc ? 'Tax Inclusive' : 'Tax Exclusive'}</p>
+ <div className="flex items-center gap-2 mb-3"><Landmark size={16} className="text-app-primary" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Financial</span></div>
+ {cur && <div className="flex items-center gap-2"><span className="text-lg font-black">{cur.symbol}</span><span className="text-sm font-bold text-app-muted-foreground">{cur.code}</span></div>}
+ {coa && <p className="text-xs text-app-muted-foreground mt-1">{coa.flag} {coa.name}</p>}
+ <p className="text-xs text-app-muted-foreground">{data.works_in_ttc ? 'Tax Inclusive' : 'Tax Exclusive'}</p>
  </CardContent></Card>
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><CalendarDays size={16} className="text-violet-500" /><span className="text-xs font-black text-app-text-faint uppercase tracking-widest">Fiscal Year</span></div>
- <p className="text-lg font-black text-app-text">{data.fiscal_year_name}</p>
- <p className="text-xs text-app-text-faint">{data.fiscal_year_start} → {data.fiscal_year_end}</p>
+ <div className="flex items-center gap-2 mb-3"><CalendarDays size={16} className="text-app-primary" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Fiscal Year</span></div>
+ <p className="text-lg font-black text-app-foreground">{data.fiscal_year_name}</p>
+ <p className="text-xs text-app-muted-foreground">{data.fiscal_year_start} → {data.fiscal_year_end}</p>
  </CardContent></Card>
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><MapPin size={16} className="text-violet-500" /><span className="text-xs font-black text-app-text-faint uppercase tracking-widest">Locations</span></div>
- <p className="text-lg font-black text-app-text">{config.warehouses.length + data.warehouses.filter(w => w.name).length}</p>
- <p className="text-xs text-app-text-faint">{config.warehouses.length} existing + {data.warehouses.filter(w => w.name).length} new</p>
+ <div className="flex items-center gap-2 mb-3"><MapPin size={16} className="text-app-primary" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Locations</span></div>
+ <p className="text-lg font-black text-app-foreground">{config.warehouses.length + data.warehouses.filter(w => w.name).length}</p>
+ <p className="text-xs text-app-muted-foreground">{config.warehouses.length} existing + {data.warehouses.filter(w => w.name).length} new</p>
  </CardContent></Card>
  <Card className="rounded-2xl border-app-border shadow-sm"><CardContent className="p-5">
- <div className="flex items-center gap-2 mb-3"><Coins size={16} className="text-amber-500" /><span className="text-xs font-black text-app-text-faint uppercase tracking-widest">Payments</span></div>
- <p className="text-lg font-black text-app-text">{config.posAccounts.length}</p>
- <p className="text-xs text-app-text-faint">POS-enabled accounts ready</p>
+ <div className="flex items-center gap-2 mb-3"><Coins size={16} className="text-app-warning" /><span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">Payments</span></div>
+ <p className="text-lg font-black text-app-foreground">{config.posAccounts.length}</p>
+ <p className="text-xs text-app-muted-foreground">POS-enabled accounts ready</p>
  </CardContent></Card>
  </div>
- <Card className="rounded-[2rem] border-emerald-100 bg-gradient-to-br from-white to-emerald-50/30 overflow-hidden">
+ <Card className="rounded-[2rem] border-app-success/30 bg-gradient-to-br from-white to-emerald-50/30 overflow-hidden">
  <CardContent className="p-8">
- <h4 className="text-sm font-black text-app-text uppercase tracking-widest mb-6 flex items-center gap-2">
- <Sparkles size={16} className="text-emerald-500" /> What happens next?
+ <h4 className="text-sm font-black text-app-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
+ <Sparkles size={16} className="text-app-primary" /> What happens next?
  </h4>
  <div className="space-y-4">
  {[
@@ -1221,12 +1221,12 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  { title: 'Team Access', desc: 'Invite your colleagues from the Users & Roles menu to start collaborating.' }
  ].map((item, i) => (
  <div key={i} className="flex gap-4 group">
- <div className="w-6 h-6 rounded-full bg-app-surface border border-emerald-100 text-[10px] font-black text-emerald-600 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+ <div className="w-6 h-6 rounded-full bg-app-surface border border-app-success/30 text-[10px] font-black text-app-primary flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition-transform">
  {i + 1}
  </div>
  <div>
- <p className="text-sm font-bold text-app-text mb-0.5">{item.title}</p>
- <p className="text-xs text-app-text-muted leading-relaxed">{item.desc}</p>
+ <p className="text-sm font-bold text-app-foreground mb-0.5">{item.title}</p>
+ <p className="text-xs text-app-muted-foreground leading-relaxed">{item.desc}</p>
  </div>
  </div>
  ))}
@@ -1234,15 +1234,15 @@ function StepLaunch({ config, data, setData, orgProfile }: StepProps) {
  </CardContent>
  </Card>
 
- <div className="p-5 rounded-2xl bg-gray-900 text-app-text shadow-xl shadow-gray-900/20">
+ <div className="p-5 rounded-2xl bg-app-surface text-app-foreground shadow-xl shadow-app-border/20">
  <div className="flex items-start gap-4">
- <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
- <Rocket size={20} className="text-app-text" />
+ <div className="w-10 h-10 rounded-xl bg-app-primary flex items-center justify-center shrink-0">
+ <Rocket size={20} className="text-app-foreground" />
  </div>
  <div>
  <p className="text-sm font-bold">Ready to go live!</p>
- <p className="text-xs text-app-text/60 mt-1 leading-relaxed">
- By clicking launch, your <span className="text-emerald-400 font-bold">{data.fiscal_year_name}</span> will be initialized and you&apos;ll be redirected to your new dashboard.
+ <p className="text-xs text-app-foreground/60 mt-1 leading-relaxed">
+ By clicking launch, your <span className="text-app-primary font-bold">{data.fiscal_year_name}</span> will be initialized and you&apos;ll be redirected to your new dashboard.
  </p>
  </div>
  </div>
@@ -1256,15 +1256,15 @@ function LaunchAnimation() {
  <div className="min-h-[calc(100vh-120px)] flex items-center justify-center">
  <div className="text-center animate-in fade-in zoom-in-95 duration-700">
  <div className="relative mx-auto mb-6">
- <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-text" /></div>
- <div className="absolute -inset-4 rounded-[3rem] bg-emerald-400/20 animate-ping" />
+ <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200 animate-bounce"><CheckCircle2 size={48} className="text-app-foreground" /></div>
+ <div className="absolute -inset-4 rounded-[3rem] bg-app-success/10/20 animate-ping" />
  </div>
- <h2 className="text-4xl font-black tracking-tighter text-app-text mb-2">You&apos;re all set! 🎉</h2>
- <p className="text-sm text-app-text-faint font-medium mb-6">Redirecting to your dashboard...</p>
+ <h2 className="text-4xl font-black tracking-tighter text-app-foreground mb-2">You&apos;re all set! 🎉</h2>
+ <p className="text-sm text-app-muted-foreground font-medium mb-6">Redirecting to your dashboard...</p>
  <div className="flex items-center justify-center gap-2">
- <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0s' }} />
- <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.15s' }} />
- <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.3s' }} />
+ <div className="w-2 h-2 rounded-full bg-app-primary animate-bounce" style={{ animationDelay: '0s' }} />
+ <div className="w-2 h-2 rounded-full bg-app-primary animate-bounce" style={{ animationDelay: '0.15s' }} />
+ <div className="w-2 h-2 rounded-full bg-app-primary animate-bounce" style={{ animationDelay: '0.3s' }} />
  </div>
  </div>
  </div>

@@ -230,6 +230,7 @@ export function usePOSTerminal() {
                 clientId: selectedClientId || undefined,
                 paymentMethod: currentMethod,
                 paymentAccountId: accId,
+                warehouseId: registerConfig?.warehouseId || registerConfig?.warehouse_id || undefined,
                 totalAmount,
                 globalDiscount: discount,
                 notes: currentNotes,
@@ -238,6 +239,7 @@ export function usePOSTerminal() {
                 pointsRedeemed,
                 cashReceived: Number(currentCash) || 0
             });
+
 
             if (result.success) {
                 const orderData = { id: result.orderId, ref: result.ref };
@@ -335,7 +337,15 @@ export function usePOSTerminal() {
     const onOpenReturn = useCallback(() => setShowReturn(true), []);
     const onLockRegister = useCallback(() => toast.info("Terminal Locked"), []);
     const onOpenRegister = useCallback(() => toast.info("Register menu opened"), []);
-    const onCloseRegister = useCallback(() => setShowCloseRegister(true), []);
+    const onCloseRegister = useCallback(() => {
+        // 🔒 Security Rule: Cannot close register with pending unsaved tickets
+        if (cart.length > 0) {
+            toast.error('⚠️ Cannot close register: active ticket has unsaved items. Complete or clear all tickets first.', { duration: 5000 });
+            return;
+        }
+        setShowCloseRegister(true);
+    }, [cart]);
+
 
     const handleLayoutChange = useCallback((layout: POSLayoutVariant) => {
         setCurrentLayout(layout);

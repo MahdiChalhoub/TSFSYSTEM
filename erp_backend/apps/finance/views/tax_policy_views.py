@@ -7,9 +7,9 @@ from .base import (
     status, Response, action,
     TenantModelViewSet, get_current_tenant_id
 )
-from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile
+from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile, CustomTaxRule
 from apps.finance.serializers.tax_policy_serializers import (
-    OrgTaxPolicySerializer, CounterpartyTaxProfileSerializer
+    OrgTaxPolicySerializer, CounterpartyTaxProfileSerializer, CustomTaxRuleSerializer
 )
 from apps.finance.models.counterparty_tax_profile import (
     PRESET_ASSUJETTI, PRESET_NON_ASSUJETTI, PRESET_FOREIGN_B2B,
@@ -91,3 +91,8 @@ class CounterpartyTaxProfileViewSet(TenantModelViewSet):
             'total_presets': len(presets),
             'message': f'{len(created)} preset(s) created, {len(presets) - len(created)} already existed.'
         })
+
+
+class CustomTaxRuleViewSet(TenantModelViewSet):
+    queryset = CustomTaxRule.objects.all()
+    serializer_class = CustomTaxRuleSerializer

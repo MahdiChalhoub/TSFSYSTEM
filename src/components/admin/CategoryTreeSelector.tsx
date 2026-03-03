@@ -30,7 +30,7 @@ export function CategoryTreeSelector({ categories, selectedIds, onChange, maxHei
  };
 
  return (
- <div className={`${maxHeight} overflow-y-auto px-4 py-3 bg-slate-50/50 backdrop-blur-sm rounded-2xl border border-app-border space-y-1.5 scrollbar-premium shadow-inner`}>
+ <div className={`${maxHeight} overflow-y-auto px-4 py-3 bg-app-surface-2 backdrop-blur-sm rounded-2xl border border-app-border space-y-1.5 scrollbar-premium shadow-inner`}>
  {categories.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-10 text-slate-300">
  <Folder size={32} className="mb-4 opacity-50" />
@@ -74,13 +74,13 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  className={`
  flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-300 group/node relative overflow-hidden
  hover:bg-app-surface hover:shadow-lg hover:shadow-slate-200/50
- ${isSelected ? 'bg-emerald-50/80 border border-emerald-100/50 shadow-sm' : 'bg-transparent border border-transparent'}
+ ${isSelected ? 'bg-app-primary-light/80 border border-emerald-100/50 shadow-sm' : 'bg-transparent border border-transparent'}
  `}
  style={{ marginLeft: `${level * 1.5}rem` }}
  onClick={() => onToggle(category.id)}
  >
  {isSelected && (
- <div className="absolute left-0 top-2 bottom-2 w-1 bg-emerald-500 rounded-r-lg shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+ <div className="absolute left-0 top-2 bottom-2 w-1 bg-app-primary rounded-r-lg shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
  )}
 
  {/* Expand Toggle */}
@@ -91,7 +91,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  e.stopPropagation();
  setIsExpanded(!isExpanded);
  }}
- className={`w-6 h-6 flex items-center justify-center rounded-lg transition-all duration-300 ${isExpanded ? 'bg-app-surface-2 text-app-text rotate-0' : 'text-app-text-faint hover:bg-app-surface-2 hover:text-emerald-600'}`}
+ className={`w-6 h-6 flex items-center justify-center rounded-lg transition-all duration-300 ${isExpanded ? 'bg-app-surface-2 text-app-text rotate-0' : 'text-app-text-faint hover:bg-app-surface-2 hover:text-app-primary'}`}
  >
  {isExpanded ? <ChevronDown size={14} className="group-hover/node:scale-110" /> : <ChevronRight size={14} className="group-hover/node:translate-x-0.5" />}
  </button>
@@ -103,7 +103,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  <div className={`
  w-4 h-4 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300
  ${isSelected
- ? 'bg-emerald-600 border-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.3)]'
+ ? 'bg-app-primary border-app-primary shadow-[0_0_8px_rgba(16,185,129,0.3)]'
  : 'border-app-border bg-app-surface group-hover/node:border-emerald-400 group-hover/node:scale-110'}
  `}>
  {isSelected && <div className="w-1.5 h-1.5 rounded-sm bg-app-surface" />}
@@ -112,21 +112,21 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  {/* Icon */}
  <Folder
  size={16}
- className={`flex-shrink-0 transition-transform duration-500 group-hover/node:scale-110 group-hover/node:rotate-6 ${isSelected ? 'text-emerald-600' : level === 0 ? 'text-app-text-faint' : 'text-slate-300'}`}
+ className={`flex-shrink-0 transition-transform duration-500 group-hover/node:scale-110 group-hover/node:rotate-6 ${isSelected ? 'text-app-primary' : level === 0 ? 'text-app-text-faint' : 'text-slate-300'}`}
  />
 
  {/* Category Name */}
  <div className="flex-1 min-w-0 flex items-center gap-3">
- <span className={`text-[11px] font-black uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-emerald-800' : 'text-app-text-muted group-hover/node:text-app-text'}`}>
+ <span className={`text-[11px] font-black uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-app-success' : 'text-app-text-muted group-hover/node:text-app-text'}`}>
  {category.name}
  </span>
  {category.code && (
- <span className="text-[9px] font-mono text-app-text-faint bg-app-surface-2 px-1.5 py-0.5 rounded-lg border border-slate-200/50 group-hover/node:bg-app-surface group-hover/node:text-app-text-muted transition-all">
+ <span className="text-[9px] font-mono text-app-text-faint bg-app-surface-2 px-1.5 py-0.5 rounded-lg border border-app-border/50 group-hover/node:bg-app-surface group-hover/node:text-app-text-muted transition-all">
  {category.code}
  </span>
  )}
  {level === 0 && (
- <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+ <div className="w-1.5 h-1.5 rounded-full bg-app-primary" />
  )}
  </div>
  </div>

@@ -119,6 +119,14 @@ class Order(TenantModel):
 
     class Meta:
         db_table = 'pos_order'
+        indexes = [
+            # Gap 10 — Performance Architecture: compound indexes for common filter patterns
+            models.Index(fields=['order_status', 'created_at'],     name='pos_order_status_date_idx'),
+            models.Index(fields=['contact', 'payment_status'],      name='pos_order_contact_payment_idx'),
+            models.Index(fields=['site', 'delivery_status'],        name='pos_order_site_delivery_idx'),
+            models.Index(fields=['user', 'created_at'],             name='pos_order_cashier_date_idx'),
+            models.Index(fields=['organization', 'type', 'created_at'], name='pos_order_org_type_date_idx'),
+        ]
 
 class OrderLine(TenantModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='lines')

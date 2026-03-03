@@ -16,7 +16,7 @@ async function getSitesAndWarehouses() {
 
  // Actually, let's check if we have a specific action for this already in src/app/actions
  // But for now, direct fetch:
- return await erpFetch('sites/?include_warehouses=true');
+ return await erpFetch('erp/sites/?include_warehouses=true');
  } catch (e) {
  console.error("Failed to fetch sites", e);
  return [];
@@ -31,17 +31,17 @@ export default async function NewPurchasePage() {
  ]);
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
 
  {/* Header */}
  <header>
  <h1 className="page-header-title tracking-tighter flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <ShoppingCart size={28} className="text-app-text" />
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <ShoppingCart size={28} className="text-app-foreground" />
  </div>
- Inventory <span className="text-emerald-500">Replenishment</span>
+ Inventory <span className="text-app-primary">Replenishment</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Commercial Operations & Stock Procurement</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Commercial Operations & Stock Procurement</p>
  </header>
 
  <PurchaseForm

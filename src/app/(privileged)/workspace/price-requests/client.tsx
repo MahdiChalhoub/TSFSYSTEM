@@ -5,8 +5,8 @@ import { Check, X, ArrowLeftRight, Search, TrendingUp, TrendingDown } from 'luci
 import { approvePriceRequest, rejectPriceRequest, counterProposePriceRequest } from '@/app/actions/supplier-portal';
 
 const STATUS_COLORS: Record<string, string> = {
- PENDING: '#f59e0b', APPROVED: '#22c55e', REJECTED: '#ef4444',
- COUNTER: '#a855f7', ACCEPTED: '#06b6d4',
+ PENDING: 'var(--app-warning)', APPROVED: 'var(--app-success)', REJECTED: '#ef4444',
+ COUNTER: '#a855f7', ACCEPTED: 'var(--app-info)',
 };
 
 export default function PriceRequestClient({ requests: init }: any) {
@@ -41,7 +41,7 @@ export default function PriceRequestClient({ requests: init }: any) {
 
  const cardStyle: React.CSSProperties = {
  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
- borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', padding: '1rem',
+ borderRadius: 12, border: '1px solid var(--app-surface)', padding: '1rem',
  };
 
  return (
@@ -49,16 +49,16 @@ export default function PriceRequestClient({ requests: init }: any) {
  <div style={{ display: 'flex', gap: 12, marginBottom: '1.5rem', alignItems: 'center' }}>
  <div style={{
  flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem',
- background: '#0f172a', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
+ background: 'var(--app-background)', borderRadius: 8, border: '1px solid var(--app-surface)',
  }}>
- <Search size={16} color="#64748b" />
+ <Search size={16} color="var(--app-muted-foreground)" />
  <input value={search} onChange={e => setSearch(e.target.value)}
  placeholder="Search by supplier or product..."
- style={{ flex: 1, background: 'none', border: 'none', color: '#e2e8f0', outline: 'none' }} />
+ style={{ flex: 1, background: 'none', border: 'none', color: 'var(--app-border)', outline: 'none' }} />
  </div>
  <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{
- padding: '0.5rem 1rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)',
- borderRadius: 8, color: '#e2e8f0',
+ padding: '0.5rem 1rem', background: 'var(--app-background)', border: '1px solid var(--app-surface)',
+ borderRadius: 8, color: 'var(--app-border)',
  }}>
  <option value="ALL">All Statuses</option>
  {['PENDING', 'APPROVED', 'REJECTED', 'COUNTER', 'ACCEPTED'].map(s =>
@@ -77,28 +77,28 @@ export default function PriceRequestClient({ requests: init }: any) {
  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
  <div style={{ flex: 1 }}>
  <div style={{ fontWeight: 600 }}>{r.product_name}</div>
- <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+ <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.85rem' }}>
  {r.supplier_name} · {r.request_type === 'SELLING' ? 'Selling Price' : 'Purchase Price'}
  </div>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
  <div style={{ textAlign: 'center' }}>
- <div style={{ color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Current</div>
+ <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Current</div>
  <div style={{ fontWeight: 600 }}>{Number(r.current_price).toLocaleString()}</div>
  </div>
- <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: isIncrease ? '#ef4444' : '#22c55e' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: isIncrease ? '#ef4444' : 'var(--app-success)' }}>
  {isIncrease ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{changePct}%</span>
  </div>
  <div style={{ textAlign: 'center' }}>
- <div style={{ color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Proposed</div>
- <div style={{ fontWeight: 600, color: isIncrease ? '#ef4444' : '#22c55e' }}>
+ <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Proposed</div>
+ <div style={{ fontWeight: 600, color: isIncrease ? '#ef4444' : 'var(--app-success)' }}>
  {Number(r.proposed_price).toLocaleString()}
  </div>
  </div>
  {r.counter_price && (
  <div style={{ textAlign: 'center' }}>
- <div style={{ color: '#64748b', fontSize: '0.7rem', textTransform: 'uppercase' }}>Counter</div>
+ <div style={{ color: 'var(--app-muted-foreground)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Counter</div>
  <div style={{ fontWeight: 600, color: '#a855f7' }}>{Number(r.counter_price).toLocaleString()}</div>
  </div>
  )}
@@ -113,7 +113,7 @@ export default function PriceRequestClient({ requests: init }: any) {
  {r.status === 'PENDING' && (
  <>
  <button onClick={() => handleApprove(r.id)} title="Approve"
- style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#22c55e' }}>
+ style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--app-success)' }}>
  <Check size={18} />
  </button>
  <button onClick={() => { setActionId(r.id); setActionType('reject'); }}
@@ -130,7 +130,7 @@ export default function PriceRequestClient({ requests: init }: any) {
  </div>
 
  {r.reason && (
- <div style={{ marginTop: 8, color: '#94a3b8', fontSize: '0.85rem', fontStyle: 'italic' }}>
+ <div style={{ marginTop: 8, color: 'var(--app-muted-foreground)', fontSize: '0.85rem', fontStyle: 'italic' }}>
  &quot;{r.reason}&quot;
  </div>
  )}
@@ -140,19 +140,19 @@ export default function PriceRequestClient({ requests: init }: any) {
  {actionType === 'counter' && (
  <input value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
  placeholder="Counter price..." type="number"
- style={{ width: 120, padding: '0.5rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#e2e8f0' }} />
+ style={{ width: 120, padding: '0.5rem', background: 'var(--app-background)', border: '1px solid var(--app-surface)', borderRadius: 6, color: 'var(--app-border)' }} />
  )}
  <input value={actionText} onChange={e => setActionText(e.target.value)}
  placeholder={actionType === 'reject' ? 'Rejection reason...' : 'Notes...'}
- style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#e2e8f0' }} />
+ style={{ flex: 1, padding: '0.5rem', background: 'var(--app-background)', border: '1px solid var(--app-surface)', borderRadius: 6, color: 'var(--app-border)' }} />
  <button onClick={() => actionType === 'reject' ? handleReject(r.id) : handleCounter(r.id)}
  style={{
- padding: '0.5rem 1rem', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, color: '#fff',
+ padding: '0.5rem 1rem', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600,
  background: actionType === 'reject' ? '#ef4444' : '#a855f7',
  }}>
  {actionType === 'reject' ? 'Reject' : 'Send Counter'}
  </button>
- <button onClick={() => setActionId(null)} style={{ padding: '0.5rem', background: '#334155', border: 'none', borderRadius: 6, color: '#e2e8f0', cursor: 'pointer' }}>
+ <button onClick={() => setActionId(null)} style={{ padding: '0.5rem', background: '#334155', border: 'none', borderRadius: 6, color: 'var(--app-border)', cursor: 'pointer' }}>
  Cancel
  </button>
  </div>
@@ -161,7 +161,7 @@ export default function PriceRequestClient({ requests: init }: any) {
  );
  })}
  {filtered.length === 0 && (
- <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No price change requests found</div>
+ <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>No price change requests found</div>
  )}
  </div>
  </div>

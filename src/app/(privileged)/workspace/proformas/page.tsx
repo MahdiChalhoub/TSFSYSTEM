@@ -17,19 +17,19 @@ export default async function ProformaReviewPage() {
  const rejected = proformas.filter((p: any) => p.status === 'REJECTED').length;
 
  const stats = [
- { label: 'Total Proformas', value: proformas.length, icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
- { label: 'Pending Review', value: pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
- { label: 'Approved', value: approved, icon: CheckCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
- { label: 'Rejected', value: rejected, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
+ { label: 'Total Proformas', value: proformas.length, icon: FileText, color: 'text-app-primary', bg: 'bg-app-primary/5', border: 'border-app-primary/30' },
+ { label: 'Pending Review', value: pending, icon: Clock, color: 'text-app-warning', bg: 'bg-app-warning-bg', border: 'border-app-warning/30' },
+ { label: 'Approved', value: approved, icon: CheckCheck, color: 'text-app-primary', bg: 'bg-app-primary-light', border: 'border-app-success/30' },
+ { label: 'Rejected', value: rejected, icon: XCircle, color: 'text-app-error', bg: 'bg-app-error-bg', border: 'border-app-error/30' },
  ];
 
  return (
- <div className="p-6 max-w-7xl mx-auto">
+ <div className="app-page p-6 max-w-7xl mx-auto">
  <div className="mb-6">
- <h1 className="page-header-title text-app-text font-serif tracking-tight">
+ <h1 className="page-header-title text-app-foreground font-serif tracking-tight">
  📋 Supplier Proforma Review
  </h1>
- <p className="text-app-text-muted mt-1">
+ <p className="text-app-muted-foreground mt-1">
  Review, approve, negotiate, or reject supplier proformas. Approved proformas convert to Purchase Orders.
  </p>
  </div>
@@ -41,7 +41,7 @@ export default async function ProformaReviewPage() {
  <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5 shadow-sm`}>
  <div className="flex items-center gap-2 mb-3">
  <Icon size={18} className={s.color} />
- <span className="text-xs font-bold text-app-text-muted uppercase tracking-wider">{s.label}</span>
+ <span className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">{s.label}</span>
  </div>
  <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
  </div>

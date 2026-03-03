@@ -78,7 +78,7 @@ export default function MCPUsagePage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
+                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
                         <ArrowLeft size={16} />
                         Back to MCP Dashboard
                     </Link>
@@ -90,14 +90,14 @@ export default function MCPUsagePage() {
                             Analytics
                         </Badge>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Usage Analytics</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <h2 className="text-3xl md:text-4xl font-black text-app-text tracking-tight">Usage Analytics</h2>
+                    <p className="text-app-text-faint mt-2 font-medium">
                         Token consumption, costs, and usage trends
                     </p>
                 </div>
                 <div className="flex gap-3">
                     {/* Period Selector */}
-                    <div className="flex bg-gray-100 rounded-2xl p-1">
+                    <div className="flex bg-app-surface-2 rounded-2xl p-1">
                         {[
                             { value: '7', label: '7D' },
                             { value: '30', label: '30D' },
@@ -107,8 +107,8 @@ export default function MCPUsagePage() {
                                 key={p.value}
                                 onClick={() => setPeriod(p.value as '7' | '30' | '90')}
                                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-all ${period === p.value
-                                    ? 'bg-white text-gray-900 shadow-lg'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-app-surface text-app-text shadow-lg'
+                                    : 'text-app-text-faint hover:text-app-text-muted'
                                     }`}
                             >
                                 {p.label}
@@ -130,7 +130,7 @@ export default function MCPUsagePage() {
                 <div className="flex items-center justify-center py-20">
                     <div className="flex flex-col items-center gap-4">
                         <RefreshCw className="w-10 h-10 animate-spin text-cyan-500" />
-                        <p className="text-gray-400 font-medium">Loading analytics...</p>
+                        <p className="text-app-text-faint font-medium">Loading analytics...</p>
                     </div>
                 </div>
             ) : (
@@ -198,7 +198,7 @@ export default function MCPUsagePage() {
                     </div>
 
                     {/* Provider Breakdown */}
-                    <Card className="rounded-3xl shadow-xl border-gray-100">
+                    <Card className="rounded-3xl shadow-xl border-app-border">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3">
                                 <Brain size={24} className="text-purple-500" />
@@ -215,15 +215,15 @@ export default function MCPUsagePage() {
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-3 h-3 rounded-full ${['bg-purple-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-red-500'][i % 5]
                                                         }`} />
-                                                    <span className="font-bold text-gray-900">{provider.provider}</span>
+                                                    <span className="font-bold text-app-text">{provider.provider}</span>
                                                 </div>
                                                 <div className="flex items-center gap-6 text-sm">
-                                                    <span className="text-gray-500">{formatNumber(provider.tokens)} tokens</span>
-                                                    <span className="text-gray-500">{provider.requests} reqs</span>
-                                                    <span className="font-bold text-gray-900">${provider.cost.toFixed(2)}</span>
+                                                    <span className="text-app-text-faint">{formatNumber(provider.tokens)} tokens</span>
+                                                    <span className="text-app-text-faint">{provider.requests} reqs</span>
+                                                    <span className="font-bold text-app-text">${provider.cost.toFixed(2)}</span>
                                                 </div>
                                             </div>
-                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full transition-all duration-1000 ${['bg-purple-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-red-500'][i % 5]
                                                         }`}
@@ -234,7 +234,7 @@ export default function MCPUsagePage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-12 text-gray-400">
+                                <div className="text-center py-12 text-app-text-faint">
                                     <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-50" />
                                     <p className="font-medium">No provider data available</p>
                                     <p className="text-sm mt-1">Start making AI requests to see breakdown</p>
@@ -244,7 +244,7 @@ export default function MCPUsagePage() {
                     </Card>
 
                     {/* Daily Activity */}
-                    <Card className="rounded-3xl shadow-xl border-gray-100">
+                    <Card className="rounded-3xl shadow-xl border-app-border">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3">
                                 <Calendar size={24} className="text-cyan-500" />
@@ -281,13 +281,13 @@ export default function MCPUsagePage() {
                                         })}
                                     </div>
                                     {/* Date labels */}
-                                    <div className="flex justify-between px-2 text-[10px] text-gray-400 font-medium mt-2">
+                                    <div className="flex justify-between px-2 text-[10px] text-app-text-faint font-medium mt-2">
                                         <span>{usage.daily_breakdown[0]?.date}</span>
                                         <span>{usage.daily_breakdown[usage.daily_breakdown.length - 1]?.date}</span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center py-12 text-gray-400">
+                                <div className="text-center py-12 text-app-text-faint">
                                     <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
                                     <p className="font-medium">No daily data available</p>
                                     <p className="text-sm mt-1">Usage history will appear here</p>

@@ -83,11 +83,11 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
  <div className="bg-app-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
- <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-gray-50/50">
+ <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-app-surface-2">
  <h3 className="font-bold text-lg text-app-text">
  {attribute ? 'Edit Attribute' : 'Add New Attribute'}
  </h3>
- <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-app-text-faint hover:text-app-text-muted transition-colors">
+ <button onClick={onClose} className="p-1 rounded-full hover:bg-app-border text-app-text-faint hover:text-app-text-muted transition-colors">
  <X size={18} />
  </button>
  </div>
@@ -99,7 +99,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
  >
 
  {state.message && state.message !== 'success' && (
- <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+ <div className="p-3 bg-app-error-bg text-app-error text-sm rounded-lg border border-red-100">
  {state.message}
  </div>
  )}
@@ -111,7 +111,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
  name="name"
  defaultValue={attribute?.name || ''}
  placeholder="e.g. Vanilla"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
  required
  />
  </div>
@@ -121,7 +121,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
  name="shortName"
  defaultValue={attribute?.short_name || ''}
  placeholder="e.g. VAN"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
  />
  </div>
  </div>
@@ -158,7 +158,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
  <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-semibold border border-app-border text-app-text-muted hover:bg-app-bg transition-colors">
  Cancel
  </button>
- <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
+ <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-app-primary text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-app-primary/20 flex items-center justify-center gap-2">
  {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
  <span>Save Attribute</span>
  </button>

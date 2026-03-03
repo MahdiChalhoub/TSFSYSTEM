@@ -63,47 +63,47 @@ export default function HumanCapitalRegistry({
  identity: r => (
  <div className="flex items-center gap-3">
  <div className="relative group">
- <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${r.isStandaloneUser ? 'bg-amber-50 text-amber-500' : 'bg-indigo-50 text-indigo-600'
+ <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${r.isStandaloneUser ? 'bg-app-warning-bg text-app-warning' : 'bg-app-primary/5 text-app-primary'
  }`}>
  <User size={20} />
  </div>
  {r.user && (
- <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-app-surface rounded-full flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-50">
+ <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-app-surface rounded-full flex items-center justify-center text-app-primary shadow-sm border border-emerald-50">
  <ShieldCheck size={10} />
  </div>
  )}
  </div>
  <div>
- <div className="font-bold text-app-text group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+ <div className="font-bold text-app-foreground group-hover:text-app-primary transition-colors uppercase tracking-tight">
  {r.firstName} {r.lastName}
  </div>
- <div className="text-[10px] font-medium text-app-text-faint">
+ <div className="text-[10px] font-medium text-app-muted-foreground">
  {r.user?.email || 'No System Access'}
  </div>
  </div>
  </div>
  ),
- id: r => <span className="font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-lg text-[10px]">{r.employeeId}</span>,
+ id: r => <span className="font-mono font-bold text-app-primary bg-app-primary/5 px-2 py-0.5 rounded-lg text-[10px]">{r.employeeId}</span>,
  role: r => (
  <div className="flex flex-col gap-0.5">
- <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{r.jobTitle || 'Unassigned Role'}</span>
- <span className="text-[10px] text-app-text-faint font-medium">ID: {r.id}</span>
+ <span className="text-xs font-black text-app-muted-foreground uppercase tracking-widest">{r.jobTitle || 'Unassigned Role'}</span>
+ <span className="text-[10px] text-app-muted-foreground font-medium">ID: {r.id}</span>
  </div>
  ),
  attribution: r => (
- <Badge variant="outline" className="text-[10px] font-bold border-app-border text-app-text-muted bg-app-bg">
+ <Badge variant="outline" className="text-[10px] font-bold border-app-border text-app-muted-foreground bg-app-background">
  <Building2 size={10} className="mr-1" /> {r.homeSite?.name || 'All Sites'}
  </Badge>
  ),
  ledger: r => (
  <div className="flex justify-end items-center gap-2">
  {r.isStandaloneUser ? (
- <span className="text-[10px] font-black text-gray-300 uppercase italic">N/A Profile Incomplete</span>
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase italic">N/A Profile Incomplete</span>
  ) : r.linkedAccount ? (
  <div className="flex flex-col items-end">
- <span className="font-mono font-bold text-emerald-600 text-xs">{r.linkedAccount.code}</span>
+ <span className="font-mono font-bold text-app-primary text-xs">{r.linkedAccount.code}</span>
  {r.employeeType && r.employeeType !== 'EMPLOYEE' && (
- <Badge className="mt-0.5 bg-violet-50 text-violet-600 border-violet-100 text-[8px] h-4">
+ <Badge className="mt-0.5 bg-violet-50 text-app-primary border-violet-100 text-[8px] h-4">
  {r.employeeType}
  </Badge>
  )}
@@ -116,7 +116,7 @@ export default function HumanCapitalRegistry({
  onClick={() => handleLinkGL(r, type as any)}
  disabled={linkingGL === r.id}
  variant="ghost"
- className="h-7 px-2 bg-app-bg hover:bg-indigo-600 hover:text-app-text text-[8px] font-black uppercase border border-app-border"
+ className="h-7 px-2 bg-app-background hover:bg-app-primary hover:text-app-foreground text-[8px] font-black uppercase border border-app-border"
  >
  {type}
  </Button>
@@ -146,7 +146,7 @@ export default function HumanCapitalRegistry({
  headerExtra={
  <Button
  onClick={() => setIsModalOpen(true)}
- className="h-10 px-6 bg-gray-900 text-app-text hover:bg-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all"
+ className="h-10 px-6 bg-app-surface text-app-foreground hover:bg-app-primary rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all"
  >
  <Plus size={18} className="mr-2" /> Add Employee
  </Button>
@@ -164,7 +164,7 @@ export default function HumanCapitalRegistry({
  <Button
  variant="ghost"
  size="icon"
- className="h-8 w-8 text-emerald-500 hover:bg-emerald-50"
+ className="h-8 w-8 text-app-primary hover:bg-app-primary-light"
  onClick={() => setScopeEmployee({
  ...r,
  firstName: r.firstName || r.first_name,
@@ -174,7 +174,7 @@ export default function HumanCapitalRegistry({
  <Lock size={14} />
  </Button>
  )}
- <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50">
+ <Button variant="ghost" size="icon" className="h-8 w-8 text-app-primary hover:text-app-primary hover:bg-app-primary/5">
  <ExternalLink size={14} />
  </Button>
  </div>

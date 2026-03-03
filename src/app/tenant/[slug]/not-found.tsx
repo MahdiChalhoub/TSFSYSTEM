@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function TenantNotFound() {
  return (
- <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
+ <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
  {/* Background effects */}
  <div className="absolute inset-0 overflow-hidden">
  <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl" />
@@ -20,7 +20,7 @@ export default function TenantNotFound() {
  <polyline points="9 22 9 12 15 12 15 22" />
  </svg>
  </div>
- <div className="absolute -top-2 -right-2 w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+ <div className="absolute -top-2 -right-2 w-8 h-8 bg-app-warning rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-app-text">
  <circle cx="11" cy="11" r="8" />
  <path d="m21 21-4.3-4.3" />
@@ -40,11 +40,11 @@ export default function TenantNotFound() {
  </div>
 
  {/* Slug Display */}
- <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 inline-block backdrop-blur-sm">
+ <div className="bg-app-surface-2/50 border border-slate-700/50 rounded-2xl p-4 inline-block backdrop-blur-sm">
  <p className="text-xs font-black text-app-text-muted uppercase tracking-widest mb-1">Requested Workspace</p>
  <p className="text-slate-300 font-mono font-bold text-lg">
  <span className="text-app-text-muted">https://</span>
- <span className="text-amber-400">???</span>
+ <span className="text-app-warning">???</span>
  <span className="text-app-text-muted">.tsf.ci</span>
  </p>
  </div>
@@ -60,13 +60,13 @@ export default function TenantNotFound() {
  <div className="flex gap-3">
  <Link
  href="/"
- className="flex-1 py-3 px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
+ className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
  >
  Home
  </Link>
  <Link
  href="/login"
- className="flex-1 py-3 px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
+ className="flex-1 py-3 px-6 bg-app-surface-2 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all"
  >
  Sign In
  </Link>
@@ -76,7 +76,7 @@ export default function TenantNotFound() {
  {/* Footer hint */}
  <p className="text-xs text-app-text-muted pt-4">
  Already have a workspace?{' '}
- <Link href="/login" className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-2">
+ <Link href="/login" className="text-emerald-400 hover:text-app-success font-bold underline underline-offset-2">
  Sign in here
  </Link>
  </p>

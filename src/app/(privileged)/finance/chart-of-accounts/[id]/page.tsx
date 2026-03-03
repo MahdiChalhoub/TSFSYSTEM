@@ -1,7 +1,7 @@
 import { getAccountStatement } from '@/app/actions/finance/accounts'
 import AccountStatementView from './statement'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft , BookOpen} from 'lucide-react'
 
 import { cookies } from 'next/headers'
 
@@ -34,8 +34,21 @@ export default async function AccountStatementPage({
  } catch { /* graceful fallback */ }
 
  return (
- <div className="p-6 max-w-5xl mx-auto">
- <Link href="/finance/chart-of-accounts" className="inline-flex items-center gap-2 text-app-text-muted hover:text-app-text mb-6 font-medium text-sm">
+ <div className="app-page p-6 max-w-5xl mx-auto">
+  {/* V2 Header */}
+  <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 fade-in-up">
+    <div className="flex items-center gap-4">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-primary)20', border: `1px solid ${color}40` }}>
+        <BookOpen size={26} style={{ color: 'var(--app-primary)' }} />
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Management</p>
+        <h1 className="text-3xl font-black tracking-tight text-app-foreground">Account Detail</h1>
+        <p className="text-sm text-app-muted-foreground mt-0.5">Chart of account details and ledger</p>
+      </div>
+    </div>
+  </header>
+ <Link href="/finance/chart-of-accounts" className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground mb-6 font-medium text-sm">
  <ArrowLeft size={16} /> Back to Chart of Accounts
  </Link>
 

@@ -84,7 +84,7 @@ export function CategoryExplorer({
  <SheetContent side="right" className="w-full sm:max-w-xl bg-app-text/95 backdrop-blur-xl border-l border-app-border p-0 overflow-hidden flex flex-col">
  <div className="h-full flex flex-col relative">
  {/* Header with Glassmorphism */}
- <SheetHeader className="p-8 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/50 to-white/50">
+ <SheetHeader className="p-8 border-b border-app-border bg-gradient-to-r from-gray-50/50 to-white/50">
  <div className="flex items-center gap-3 mb-2">
  <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-inner ring-4 ring-orange-50/50">
  <Search size={20} strokeWidth={2.5} />
@@ -111,11 +111,11 @@ export function CategoryExplorer({
  </div>
  ) : data ? (
  <Tabs defaultValue="products" className="w-full">
- <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-50/50 p-1.5 rounded-2xl border border-gray-100/50 shadow-inner">
+ <TabsList className="grid w-full grid-cols-3 mb-8 bg-app-surface-2 p-1.5 rounded-2xl border border-app-border shadow-inner">
  <TabsTrigger value="products" className="rounded-xl data-[state=active]:bg-app-surface data-[state=active]:shadow-lg data-[state=active]:text-orange-600 font-bold transition-all">
  Products ({data.products.length})
  </TabsTrigger>
- <TabsTrigger value="brands" className="rounded-xl data-[state=active]:bg-app-surface data-[state=active]:shadow-lg data-[state=active]:text-blue-600 font-bold transition-all">
+ <TabsTrigger value="brands" className="rounded-xl data-[state=active]:bg-app-surface data-[state=active]:shadow-lg data-[state=active]:text-app-info font-bold transition-all">
  Brands ({data.brands.length})
  </TabsTrigger>
  <TabsTrigger value="parfums" className="rounded-xl data-[state=active]:bg-app-surface data-[state=active]:shadow-lg data-[state=active]:text-purple-600 font-bold transition-all">
@@ -129,12 +129,12 @@ export function CategoryExplorer({
  {(activeBrandFilter || activeParfumFilter) && (
  <div className="flex flex-wrap gap-2 mb-4">
  {activeBrandFilter && (
- <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 px-3 py-1 rounded-full flex items-center gap-2 font-bold cursor-pointer hover:bg-red-50 hover:text-red-500 transition-colors" onClick={() => setActiveBrandFilter(null)}>
+ <Badge variant="secondary" className="bg-app-info-bg text-app-info border-blue-100 px-3 py-1 rounded-full flex items-center gap-2 font-bold cursor-pointer hover:bg-app-error-bg hover:text-app-error transition-colors" onClick={() => setActiveBrandFilter(null)}>
  {activeBrandFilter} ├ù
  </Badge>
  )}
  {activeParfumFilter && (
- <Badge variant="secondary" className="bg-purple-50 text-purple-600 border-purple-100 px-3 py-1 rounded-full flex items-center gap-2 font-bold cursor-pointer hover:bg-red-50 hover:text-red-500 transition-colors" onClick={() => setActiveParfumFilter(null)}>
+ <Badge variant="secondary" className="bg-purple-50 text-purple-600 border-purple-100 px-3 py-1 rounded-full flex items-center gap-2 font-bold cursor-pointer hover:bg-app-error-bg hover:text-app-error transition-colors" onClick={() => setActiveParfumFilter(null)}>
  {activeParfumFilter} ├ù
  </Badge>
  )}
@@ -156,17 +156,17 @@ export function CategoryExplorer({
  ) : (
  <Package size={24} className="text-gray-300" />
  )}
- <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-emerald-500" />
+ <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-app-primary" />
  </div>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 mb-0.5">
  <span className="text-[10px] font-black tracking-widest uppercase text-app-text-faint">{p.sku}</span>
- <div className="h-1 w-1 bg-gray-200 rounded-full" />
+ <div className="h-1 w-1 bg-app-border rounded-full" />
  <span className="text-[10px] font-black tracking-widest uppercase text-orange-500">{p.brand_name || 'Generic'}</span>
  </div>
  <h5 className="font-extrabold text-sm text-app-text truncate group-hover:text-orange-600 transition-colors">{p.name}</h5>
  <div className="flex items-center gap-3 mt-1">
- <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+ <span className="text-[11px] font-bold text-app-primary bg-app-primary-light px-1.5 py-0.5 rounded border border-emerald-100">
  {p.selling_price_ttc.toLocaleString()} TTC
  </span>
  {p.parfum_name && (
@@ -201,7 +201,7 @@ export function CategoryExplorer({
  >
  <div className={clsx(
  "w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110",
- activeBrandFilter === b.name ? "bg-app-text/20" : "bg-blue-50 text-blue-600"
+ activeBrandFilter === b.name ? "bg-app-text/20" : "bg-app-info-bg text-app-info"
  )}>
  <Tag size={24} />
  </div>
@@ -256,14 +256,14 @@ export function CategoryExplorer({
 
  {/* Footer / Stats with Glassmorphism */}
  {data && (
- <div className="p-8 border-t border-gray-100/50 bg-gray-50/30 backdrop-blur-sm">
+ <div className="p-8 border-t border-app-border bg-app-surface-2 backdrop-blur-sm">
  <div className="flex items-center justify-between">
  <div className="flex gap-4">
  <div className="text-center">
  <div className="text-xl font-black text-app-text">{data.products.length}</div>
  <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Total SKU</div>
  </div>
- <div className="w-px h-8 bg-gray-200 self-center" />
+ <div className="w-px h-8 bg-app-border self-center" />
  <div className="text-center">
  <div className="text-xl font-black text-app-text">{data.brands.length}</div>
  <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Brands</div>

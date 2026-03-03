@@ -97,7 +97,7 @@ export default function GeneralLedgerPage() {
  key: 'id',
  label: 'JV ID',
  width: '80px',
- render: (e) => <span className="font-black text-indigo-600">#{e.id}</span>
+ render: (e) => <span className="font-black text-app-primary">#{e.id}</span>
  },
  {
  key: 'transactionDate',
@@ -105,31 +105,31 @@ export default function GeneralLedgerPage() {
  sortable: true,
  render: (e) => (
  <div className="flex flex-col">
- <span className="font-bold text-app-text">{e.transactionDate ? new Date(e.transactionDate).toLocaleDateString('en-GB') : '—'}</span>
- {e.fiscalYear && <span className="text-[10px] text-app-text-faint font-bold uppercase">{e.fiscalYear.name || `FY ${e.fiscalYear.id}`}</span>}
+ <span className="font-bold text-app-foreground">{e.transactionDate ? new Date(e.transactionDate).toLocaleDateString('en-GB') : '—'}</span>
+ {e.fiscalYear && <span className="text-[10px] text-app-muted-foreground font-bold uppercase">{e.fiscalYear.name || `FY ${e.fiscalYear.id}`}</span>}
  </div>
  )
  },
  {
  key: 'reference',
  label: 'Reference',
- render: (e) => <span className="font-mono text-[11px] text-app-text-muted bg-app-bg px-1.5 py-0.5 rounded border border-app-border">{e.reference || '—'}</span>
+ render: (e) => <span className="font-mono text-[11px] text-app-muted-foreground bg-app-background px-1.5 py-0.5 rounded border border-app-border">{e.reference || '—'}</span>
  },
  {
  key: 'description',
  label: 'Narrative / Description',
  render: (e) => (
  <div className="flex flex-col">
- <span className="font-medium text-app-text line-clamp-1">{e.description}</span>
+ <span className="font-medium text-app-foreground line-clamp-1">{e.description}</span>
  <div className="flex items-center gap-2 mt-0.5">
  {e.reference?.startsWith('OPEN-') && (
- <Badge className="bg-emerald-50 text-emerald-700 border-none h-4 text-[9px] font-black uppercase px-1.5">Opening</Badge>
+ <Badge className="bg-app-primary-light text-app-success border-none h-4 text-[9px] font-black uppercase px-1.5">Opening</Badge>
  )}
  {e.reversalOf && (
  <Badge className="bg-rose-50 text-rose-700 border-none h-4 text-[9px] font-black uppercase px-1.5 font-mono">↩ Reversal of #{e.reversalOf.id}</Badge>
  )}
  {e.reversedBy && (
- <Badge className="bg-amber-50 text-amber-700 border-none h-4 text-[9px] font-black uppercase px-1.5 font-mono">⚠ Reversed by #{e.reversedBy.id}</Badge>
+ <Badge className="bg-app-warning-bg text-app-warning border-none h-4 text-[9px] font-black uppercase px-1.5 font-mono">⚠ Reversed by #{e.reversedBy.id}</Badge>
  )}
  </div>
  </div>
@@ -142,18 +142,18 @@ export default function GeneralLedgerPage() {
  {
  key: 'account_code',
  label: 'Code',
- render: (l: any) => <span className="font-mono text-[10px] text-app-text-faint">{l.account?.code}</span>
+ render: (l: any) => <span className="font-mono text-[10px] text-app-muted-foreground">{l.account?.code}</span>
  },
  {
  key: 'account_name',
  label: 'Financial Account',
- render: (l: any) => <span className="font-bold text-gray-700 text-xs">{l.account?.name}</span>
+ render: (l: any) => <span className="font-bold text-app-muted-foreground text-xs">{l.account?.name}</span>
  },
  {
  key: 'debit',
  label: 'Debit',
  align: 'right',
- render: (l: any) => <span className="font-black text-emerald-600 font-mono text-xs">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
+ render: (l: any) => <span className="font-black text-app-primary font-mono text-xs">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
  },
  {
  key: 'credit',
@@ -162,8 +162,8 @@ export default function GeneralLedgerPage() {
  render: (l: any) => <span className="font-black text-rose-600 font-mono text-xs">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
  }
  ],
- headerColor: 'bg-app-bg',
- headerTextColor: 'text-app-text-muted',
+ headerColor: 'bg-app-background',
+ headerTextColor: 'text-app-muted-foreground',
  borderColor: 'border-app-border'
  }), [fmt])
  return (
@@ -172,27 +172,27 @@ export default function GeneralLedgerPage() {
  <header className="flex justify-between items-end">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <Badge className="bg-app-bg text-app-text-muted border-app-border font-black text-[10px] uppercase tracking-widest px-3 py-1">
+ <Badge className="bg-app-background text-app-muted-foreground border-app-border font-black text-[10px] uppercase tracking-widest px-3 py-1">
  System Status: Online
  </Badge>
- <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest flex items-center gap-1">
  <ShieldCheck size={12} /> Trial Balance Guard
  </span>
  </div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
- <BookOpen size={32} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-16 h-16 rounded-[1.8rem] bg-app-surface flex items-center justify-center shadow-2xl shadow-stone-200">
+ <BookOpen size={32} className="text-app-foreground" />
  </div>
- General <span className="text-indigo-600">Ledger</span>
+ General <span className="text-app-primary">Ledger</span>
  </h1>
  </div>
  <div className="flex gap-3">
- <Button asChild variant="outline" className="h-12 px-6 rounded-2xl border-app-border font-bold text-app-text-muted flex items-center gap-2 hover:bg-app-bg transition-all">
+ <Button asChild variant="outline" className="h-12 px-6 rounded-2xl border-app-border font-bold text-app-muted-foreground flex items-center gap-2 hover:bg-app-background transition-all">
  <Link href="/finance/ledger/opening/list" className="flex items-center gap-2">
  <Wallet size={18} /> Opening Balances
  </Link>
  </Button>
- <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 text-app-text font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+ <Button asChild className="h-12 px-6 rounded-2xl bg-app-primary text-app-foreground font-bold flex items-center gap-2 hover:bg-app-primary transition-all shadow-lg shadow-indigo-200">
  <Link href="/finance/ledger/new" className="flex items-center gap-2">
  <Plus size={18} /> New Journal Entry
  </Link>
@@ -201,10 +201,10 @@ export default function GeneralLedgerPage() {
  </header>
  <Tabs value={entryType} onValueChange={setEntryType} className="space-y-6">
  <div className="flex justify-between items-center">
- <TabsList className="bg-stone-100/50 p-1.5 rounded-2xl">
- <TabsTrigger value="ALL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">All Entries</TabsTrigger>
- <TabsTrigger value="MANUAL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Manual Ledger</TabsTrigger>
- <TabsTrigger value="AUTO" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Auto Ledger</TabsTrigger>
+ <TabsList className="bg-app-surface-2/50 p-1.5 rounded-2xl">
+ <TabsTrigger value="ALL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-app-primary data-[state=active]:shadow-sm">All Entries</TabsTrigger>
+ <TabsTrigger value="MANUAL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-app-primary data-[state=active]:shadow-sm">Manual Ledger</TabsTrigger>
+ <TabsTrigger value="AUTO" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-app-surface data-[state=active]:text-app-primary data-[state=active]:shadow-sm">Auto Ledger</TabsTrigger>
  </TabsList>
  </div>
  {/* Enhanced Filter Bar */}
@@ -212,16 +212,16 @@ export default function GeneralLedgerPage() {
  <CardContent className="p-4 space-y-4">
  <div className="flex items-center gap-3">
  <div className="relative flex-1">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-text-faint" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-muted-foreground" />
  <Input
  placeholder="Search JV narrative or reference..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="pl-9 h-11 rounded-2xl bg-app-bg border-0 focus-visible:ring-indigo-500/30"
+ className="pl-9 h-11 rounded-2xl bg-app-background border-0 focus-visible:ring-app-primary"
  />
  </div>
  <Select value={status} onValueChange={setStatus}>
- <SelectTrigger className="w-48 h-11 rounded-2xl bg-app-bg border-0 text-sm font-bold">
+ <SelectTrigger className="w-48 h-11 rounded-2xl bg-app-background border-0 text-sm font-bold">
  <SelectValue placeholder="All Status" />
  </SelectTrigger>
  <SelectContent className="rounded-2xl border-0 shadow-xl">
@@ -231,16 +231,16 @@ export default function GeneralLedgerPage() {
  <Button
  variant="ghost"
  onClick={() => setShowFilters(!showFilters)}
- className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-app-text-faint hover:bg-app-bg hover:text-app-text'}`}
+ className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-app-primary/5 text-app-primary hover:bg-app-primary/10' : 'text-app-muted-foreground hover:bg-app-background hover:text-app-foreground'}`}
  >
  <Filter size={16} /> Filters
- {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-app-text h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
+ {activeFilterCount > 1 && <Badge className="bg-app-primary text-app-foreground h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
  </Button>
  </div>
  {showFilters && (
- <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 rounded-2xl bg-app-bg border border-app-border animate-in slide-in-from-top-2">
+ <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 rounded-2xl bg-app-background border border-app-border animate-in slide-in-from-top-2">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Fiscal Year</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Fiscal Year</label>
  <Select value={fiscalYear} onValueChange={setFiscalYear}>
  <SelectTrigger className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold">
  <SelectValue placeholder="All Years" />
@@ -252,15 +252,15 @@ export default function GeneralLedgerPage() {
  </Select>
  </div>
  <div className="space-y-2 lg:col-span-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Date Range</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Date Range</label>
  <div className="flex items-center gap-2">
  <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold w-full" />
- <span className="text-stone-300">to</span>
+ <span className="text-app-muted-foreground">to</span>
  <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold w-full" />
  </div>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">User / Creator</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">User / Creator</label>
  <Select value={user} onValueChange={setUser}>
  <SelectTrigger className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold">
  <SelectValue placeholder="All Users" />
@@ -272,7 +272,7 @@ export default function GeneralLedgerPage() {
  </Select>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Verified Status</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Verified Status</label>
  <Select value={verified} onValueChange={setVerified}>
  <SelectTrigger className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold">
  <SelectValue placeholder="All" />
@@ -285,7 +285,7 @@ export default function GeneralLedgerPage() {
  </Select>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Lock Status</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Lock Status</label>
  <Select value={locked} onValueChange={setLocked}>
  <SelectTrigger className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold">
  <SelectValue placeholder="All" />
@@ -299,7 +299,7 @@ export default function GeneralLedgerPage() {
  </div>
  {(entryType === 'ALL' || entryType === 'AUTO') && (
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Source Module</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Source Module</label>
  <Select value={autoSource} onValueChange={setAutoSource}>
  <SelectTrigger className="h-10 rounded-xl border-app-border bg-app-surface text-xs font-bold">
  <SelectValue placeholder="All Sources" />
@@ -318,7 +318,7 @@ export default function GeneralLedgerPage() {
  <Button
  variant="ghost"
  onClick={() => { setStatus('ALL'); setFiscalYear('ALL'); setDateFrom(''); setDateTo(''); setEntryType('ALL'); setVerified('ALL'); setLocked('ALL'); setUser('ALL'); setAutoSource('ALL'); setSearch('') }}
- className="h-8 text-[9px] font-black uppercase text-app-text-faint hover:text-rose-600 gap-1.5"
+ className="h-8 text-[9px] font-black uppercase text-app-muted-foreground hover:text-rose-600 gap-1.5"
  >
  <X size={14} /> Clear All Filters
  </Button>

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 type PayrollRecord = Record<string, any>;
 
 const TYPE_BADGE: Record<string, string> = {
- EMPLOYEE: 'bg-blue-100 text-blue-700',
+ EMPLOYEE: 'bg-app-info-bg text-app-info',
  PARTNER: 'bg-purple-100 text-purple-700',
  BOTH: 'bg-teal-100 text-teal-700',
 };
@@ -81,26 +81,26 @@ export default function CompensationEnginePage() {
  const columns: ColumnDef<PayrollRecord>[] = ALL_COLUMNS.map(c => {
  const renderers: Record<string, (r: PayrollRecord) => React.ReactNode> = {
  identity: r => (
- <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs">
+ <div className="app-page flex items-center gap-3">
+ <div className="w-8 h-8 rounded-lg bg-app-primary-light text-app-primary flex items-center justify-center font-black text-xs">
  {(r.first_name || '?').charAt(0)}
  </div>
- <span className="font-bold text-app-text uppercase tracking-tight">{r.first_name} {r.last_name}</span>
+ <span className="font-bold text-app-foreground uppercase tracking-tight">{r.first_name} {r.last_name}</span>
  </div>
  ),
- id: r => <span className="font-mono text-[10px] text-app-text-faint font-black tracking-widest">{r.employee_id}</span>,
+ id: r => <span className="font-mono text-[10px] text-app-muted-foreground font-black tracking-widest">{r.employee_id}</span>,
  classification: r => (
  <Badge className={`${TYPE_BADGE[r.employee_type] || 'bg-app-surface-2'} border-0 text-[9px] font-black uppercase`}>
  {r.employee_type}
  </Badge>
  ),
- role: r => <span className="text-xs font-bold text-app-text-muted">{r.job_title || '—'}</span>,
- salary: r => <span className="font-black text-emerald-600">{fmt(parseFloat(r.salary || 0))}</span>,
- annual: r => <span className="text-xs text-app-text-faint font-medium">{fmt(parseFloat(r.salary || 0) * 12)}</span>,
+ role: r => <span className="text-xs font-bold text-app-muted-foreground">{r.job_title || '—'}</span>,
+ salary: r => <span className="font-black text-app-primary">{fmt(parseFloat(r.salary || 0))}</span>,
+ annual: r => <span className="text-xs text-app-muted-foreground font-medium">{fmt(parseFloat(r.salary || 0) * 12)}</span>,
  pct: r => {
  const s = parseFloat(r.salary || 0);
  const p = totalPayroll > 0 ? (s / totalPayroll * 100) : 0;
- return <span className="text-[10px] font-black text-app-text-faint">{p.toFixed(1)}%</span>;
+ return <span className="text-[10px] font-black text-app-muted-foreground">{p.toFixed(1)}%</span>;
  }
  };
  return { ...c, render: renderers[c.key] };
@@ -108,68 +108,66 @@ export default function CompensationEnginePage() {
 
  return (
  <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Banknote size={28} className="text-app-text" />
- </div>
- Compensation <span className="text-emerald-600">Engine</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Global Payroll & Economic Exposure</p>
- </div>
- <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
- <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Pricing Engine Active</span>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Banknote size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Human Resources</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Payroll <span className="text-app-primary">Center</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Economic Intelligence */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Wallet size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider text-left">Monthly Exposure</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{fmt(totalPayroll)}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider text-left">Monthly Exposure</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{fmt(totalPayroll)}</h2>
  </div>
  </CardContent>
  </Card>
 
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Users size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider text-left">Active Headcount</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{employees.length}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider text-left">Active Headcount</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{employees.length}</h2>
  </div>
  </CardContent>
  </Card>
 
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-warning-bg text-app-warning flex items-center justify-center group-hover:scale-110 transition-transform">
  <TrendingUp size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider text-left">Avg Compensation</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{fmt(avgSalary)}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider text-left">Avg Compensation</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{fmt(avgSalary)}</h2>
  </div>
  </CardContent>
  </Card>
 
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-violet-50 text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Landmark size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider text-left">Max Liability</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{fmt(maxSalary)}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider text-left">Max Liability</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{fmt(maxSalary)}</h2>
  </div>
  </CardContent>
  </Card>
@@ -215,9 +213,9 @@ export default function CompensationEnginePage() {
 
  <div className="space-y-6">
  <Card className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden">
- <CardHeader className="bg-stone-50/50 border-b border-app-border p-6 flex flex-row items-center justify-between">
- <CardTitle className="text-xs font-black uppercase tracking-widest text-app-text-faint">Resource Concentration</CardTitle>
- <BarChart3 size={14} className="text-stone-300" />
+ <CardHeader className="bg-app-surface/50 border-b border-app-border p-6 flex flex-row items-center justify-between">
+ <CardTitle className="text-xs font-black uppercase tracking-widest text-app-muted-foreground">Resource Concentration</CardTitle>
+ <BarChart3 size={14} className="text-app-muted-foreground" />
  </CardHeader>
  <CardContent className="p-6">
  <div className="space-y-6">
@@ -228,14 +226,14 @@ export default function CompensationEnginePage() {
  <div key={e.id} className="space-y-2 group">
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
- <span className="text-[10px] font-black text-app-text-muted uppercase tracking-tight truncate max-w-[120px]">{e.first_name} {e.last_name}</span>
+ <div className="w-1.5 h-1.5 rounded-full bg-app-success/10" />
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-tight truncate max-w-[120px]">{e.first_name} {e.last_name}</span>
  </div>
- <span className="text-[10px] font-mono font-bold text-app-text-faint">{fmt(salary)}</span>
+ <span className="text-[10px] font-mono font-bold text-app-muted-foreground">{fmt(salary)}</span>
  </div>
  <div className="relative h-2 bg-app-surface-2 rounded-full overflow-hidden">
  <div
- className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all duration-1000 group-hover:bg-emerald-400"
+ className="absolute inset-y-0 left-0 bg-app-primary rounded-full transition-all duration-1000 group-hover:bg-app-success/10"
  style={{ width: `${pct}%` }}
  />
  </div>
@@ -244,26 +242,26 @@ export default function CompensationEnginePage() {
  })}
  {filtered.length > 10 && (
  <div className="pt-4 border-t border-stone-50 text-center">
- <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest">Showing top concentration nodes</p>
+ <p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest">Showing top concentration nodes</p>
  </div>
  )}
  </div>
  </CardContent>
  </Card>
 
- <Card className="rounded-[2.5rem] border-0 shadow-sm bg-gray-900 text-app-text p-8 relative overflow-hidden group">
+ <Card className="rounded-[2.5rem] border-0 shadow-sm bg-app-surface text-app-foreground p-8 relative overflow-hidden group">
  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700">
  <TrendingUp size={120} />
  </div>
  <div className="relative z-10">
  <h3 className="text-xl font-black tracking-tighter mb-2">Liability Pulse</h3>
- <p className="text-app-text-faint text-[10px] font-black uppercase tracking-widest leading-relaxed">
+ <p className="text-app-muted-foreground text-[10px] font-black uppercase tracking-widest leading-relaxed">
  Total annual operational liability currently calculated at
  </p>
- <div className="text-4xl font-black text-emerald-400 mt-4 tracking-tighter">
+ <div className="text-4xl font-black text-app-primary mt-4 tracking-tighter">
  {fmt(totalPayroll * 12)}
  </div>
- <Button className="w-full mt-8 bg-app-text/10 hover:bg-app-text/20 text-app-text rounded-xl font-black uppercase text-[10px] tracking-widest border border-app-text/10 group">
+ <Button className="w-full mt-8 bg-app-foreground/10 hover:bg-app-foreground/20 text-app-foreground rounded-xl font-black uppercase text-[10px] tracking-widest border border-app-text/10 group">
  Generate Audit Manifest <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
  </Button>
  </div>

@@ -41,7 +41,7 @@ export default function DailySummaryPage() {
 
  if (loading || !data) {
  return (
- <div className="space-y-8 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <div className="app-page space-y-8 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <Skeleton className="h-12 w-72" />
  <div className="grid grid-cols-4 gap-6">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-[2rem]" />)}</div>
  <Skeleton className="h-64 rounded-[2rem]" />
@@ -58,30 +58,24 @@ export default function DailySummaryPage() {
  return (
  <div className="space-y-8 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
  {/* Header */}
- <header className="flex items-center justify-between">
- <div>
- <h1 className="text-4xl lg:page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <CalendarDays size={28} className="text-app-text" />
- </div>
- Daily <span className="text-emerald-600">Summary</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest flex items-center gap-2">
- <Clock size={14} /> {dateStr} · Last updated {timeStr}
- </p>
- </div>
- <button
- onClick={loadData}
- className="px-6 py-3 bg-emerald-600 text-app-text rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center gap-2"
- >
- <BarChart3 size={16} /> Refresh
- </button>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <BarChart3 size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Sales <span className="text-app-primary">Summary</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Hero KPIs */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
- <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-app-text shadow-xl shadow-emerald-100 relative overflow-hidden">
- <div className="absolute top-0 right-0 w-32 h-32 bg-app-text/5 rounded-full -translate-y-10 translate-x-10" />
+ <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-app-foreground shadow-xl shadow-emerald-100 relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-32 h-32 bg-app-foreground/5 rounded-full -translate-y-10 translate-x-10" />
  <div className="relative">
  <DollarSign size={24} className="mb-3 opacity-80" />
  <div className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Today's Revenue</div>
@@ -90,58 +84,58 @@ export default function DailySummaryPage() {
  </div>
 
  <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
- <ShoppingCart size={24} className="text-blue-500 mb-3" />
- <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Total Orders</div>
- <div className="text-3xl font-black text-app-text tracking-tight">{overall?.orders || 0}</div>
+ <ShoppingCart size={24} className="text-app-info mb-3" />
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Total Orders</div>
+ <div className="text-3xl font-black text-app-foreground tracking-tight">{overall?.orders || 0}</div>
  </div>
 
  <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
- <TrendingUp size={24} className="text-violet-500 mb-3" />
- <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Avg. Order</div>
- <div className="text-3xl font-black text-app-text tracking-tight">{fmt(overall?.avg_order || 0)}</div>
+ <TrendingUp size={24} className="text-app-primary mb-3" />
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Avg. Order</div>
+ <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.avg_order || 0)}</div>
  </div>
 
  <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
  <Receipt size={24} className="text-rose-500 mb-3" />
- <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">Tax Collected</div>
- <div className="text-3xl font-black text-app-text tracking-tight">{fmt(overall?.tax || 0)}</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Tax Collected</div>
+ <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.tax || 0)}</div>
  </div>
  </div>
 
  {/* Revenue Breakdown Banner */}
- <div className="bg-gray-900 text-app-text p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+ <div className="bg-app-surface text-app-foreground p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
  <div className="flex gap-10">
  <div>
- <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Gross Revenue</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Gross Revenue</div>
  <div className="text-2xl font-bold">{fmt((overall?.revenue || 0) + (overall?.discount || 0))}</div>
  </div>
  <div>
- <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Discounts</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Discounts</div>
  <div className="text-2xl font-bold text-orange-400">−{fmt(overall?.discount || 0)}</div>
  </div>
  <div>
- <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Tax</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Tax</div>
  <div className="text-2xl font-bold text-rose-400">{fmt(overall?.tax || 0)}</div>
  </div>
  </div>
  <div className="text-right">
- <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-1">Net Revenue</div>
- <div className="text-4xl font-black text-emerald-400 tracking-tighter">{fmt(overall?.revenue || 0)}</div>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Net Revenue</div>
+ <div className="text-4xl font-black text-app-primary tracking-tighter">{fmt(overall?.revenue || 0)}</div>
  </div>
  </div>
 
  <div className="grid lg:grid-cols-2 gap-8">
  {/* Top Products Today */}
  <Card className="rounded-[2rem] border shadow-sm overflow-hidden">
- <CardHeader className="py-4 bg-app-bg border-b">
+ <CardHeader className="py-4 bg-app-background border-b">
  <CardTitle className="text-base flex items-center gap-2 font-black">
- <Package size={18} className="text-emerald-500" /> Top Products Today
+ <Package size={18} className="text-app-primary" /> Top Products Today
  </CardTitle>
  </CardHeader>
  <CardContent className="p-0">
  <Table>
  <TableHeader>
- <TableRow className="bg-gray-50/50 text-[10px] uppercase tracking-widest text-app-text-faint">
+ <TableRow className="bg-app-surface-2/50 text-[10px] uppercase tracking-widest text-app-muted-foreground">
  <TableHead className="font-black">#</TableHead>
  <TableHead className="font-black">Product</TableHead>
  <TableHead className="text-right font-black">Qty</TableHead>
@@ -150,17 +144,17 @@ export default function DailySummaryPage() {
  </TableHeader>
  <TableBody>
  {top_products?.map((p: Record<string, any>, i: number) => (
- <TableRow key={i} className="hover:bg-emerald-50/30 transition-colors">
- <TableCell className="font-bold text-gray-300">{i + 1}</TableCell>
- <TableCell className="font-semibold text-app-text">{p.name || 'Unknown'}</TableCell>
- <TableCell className="text-right text-sm text-app-text-muted">{Math.round(p.qty)}</TableCell>
- <TableCell className="text-right font-bold text-emerald-600">{fmt(p.revenue)}</TableCell>
+ <TableRow key={i} className="hover:bg-app-primary-light/30 transition-colors">
+ <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
+ <TableCell className="font-semibold text-app-foreground">{p.name || 'Unknown'}</TableCell>
+ <TableCell className="text-right text-sm text-app-muted-foreground">{Math.round(p.qty)}</TableCell>
+ <TableCell className="text-right font-bold text-app-primary">{fmt(p.revenue)}</TableCell>
  </TableRow>
  ))}
  {(!top_products?.length) && (
  <TableRow>
- <TableCell colSpan={4} className="text-center py-12 text-app-text-faint">
- <Package size={32} className="mx-auto mb-2 text-gray-200" />
+ <TableCell colSpan={4} className="text-center py-12 text-app-muted-foreground">
+ <Package size={32} className="mx-auto mb-2 text-app-foreground" />
  No sales recorded today
  </TableCell>
  </TableRow>
@@ -172,15 +166,15 @@ export default function DailySummaryPage() {
 
  {/* Top Customers Today */}
  <Card className="rounded-[2rem] border shadow-sm overflow-hidden">
- <CardHeader className="py-4 bg-app-bg border-b">
+ <CardHeader className="py-4 bg-app-background border-b">
  <CardTitle className="text-base flex items-center gap-2 font-black">
- <Users size={18} className="text-blue-500" /> Top Customers Today
+ <Users size={18} className="text-app-info" /> Top Customers Today
  </CardTitle>
  </CardHeader>
  <CardContent className="p-0">
  <Table>
  <TableHeader>
- <TableRow className="bg-gray-50/50 text-[10px] uppercase tracking-widest text-app-text-faint">
+ <TableRow className="bg-app-surface-2/50 text-[10px] uppercase tracking-widest text-app-muted-foreground">
  <TableHead className="font-black">#</TableHead>
  <TableHead className="font-black">Customer</TableHead>
  <TableHead className="text-right font-black">Orders</TableHead>
@@ -189,17 +183,17 @@ export default function DailySummaryPage() {
  </TableHeader>
  <TableBody>
  {top_customers?.map((c: Record<string, any>, i: number) => (
- <TableRow key={i} className="hover:bg-blue-50/30 transition-colors">
- <TableCell className="font-bold text-gray-300">{i + 1}</TableCell>
- <TableCell className="font-semibold text-app-text">{c.name || 'Walk-in'}</TableCell>
- <TableCell className="text-right text-sm text-app-text-muted">{c.orders}</TableCell>
- <TableCell className="text-right font-bold text-blue-600">{fmt(c.spent)}</TableCell>
+ <TableRow key={i} className="hover:bg-app-info-bg/30 transition-colors">
+ <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
+ <TableCell className="font-semibold text-app-foreground">{c.name || 'Walk-in'}</TableCell>
+ <TableCell className="text-right text-sm text-app-muted-foreground">{c.orders}</TableCell>
+ <TableCell className="text-right font-bold text-app-info">{fmt(c.spent)}</TableCell>
  </TableRow>
  ))}
  {(!top_customers?.length) && (
  <TableRow>
- <TableCell colSpan={4} className="text-center py-12 text-app-text-faint">
- <Users size={32} className="mx-auto mb-2 text-gray-200" />
+ <TableCell colSpan={4} className="text-center py-12 text-app-muted-foreground">
+ <Users size={32} className="mx-auto mb-2 text-app-foreground" />
  No customer data today
  </TableCell>
  </TableRow>
@@ -212,9 +206,9 @@ export default function DailySummaryPage() {
 
  {/* Payment Methods */}
  <Card className="rounded-[2rem] border shadow-sm overflow-hidden">
- <CardHeader className="py-4 bg-app-bg border-b">
+ <CardHeader className="py-4 bg-app-background border-b">
  <CardTitle className="text-base flex items-center gap-2 font-black">
- <CreditCard size={18} className="text-violet-500" /> Payment Methods
+ <CreditCard size={18} className="text-app-primary" /> Payment Methods
  </CardTitle>
  </CardHeader>
  <CardContent className="p-6">
@@ -223,24 +217,24 @@ export default function DailySummaryPage() {
  const totalRev = overall?.revenue || 1
  const pct = (p.total / totalRev * 100)
  return (
- <div key={i} className="bg-app-bg rounded-2xl p-5 flex items-center gap-4 hover:bg-app-surface-2 transition-all">
+ <div key={i} className="bg-app-background rounded-2xl p-5 flex items-center gap-4 hover:bg-app-surface-2 transition-all">
  <div className="text-3xl">{PAYMENT_ICONS[p.method] || '💳'}</div>
  <div className="flex-1 min-w-0">
  <div className="flex justify-between items-baseline mb-2">
- <span className="font-bold text-app-text">{p.method}</span>
- <span className="text-xs text-app-text-faint font-medium">{p.count} orders</span>
+ <span className="font-bold text-app-foreground">{p.method}</span>
+ <span className="text-xs text-app-muted-foreground font-medium">{p.count} orders</span>
  </div>
- <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+ <div className="h-2 bg-app-border rounded-full overflow-hidden">
  <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
  </div>
- <div className="mt-1 text-right text-sm font-bold text-emerald-600">{fmt(p.total)}</div>
+ <div className="mt-1 text-right text-sm font-bold text-app-primary">{fmt(p.total)}</div>
  </div>
  </div>
  )
  })}
  {(!payment_methods?.length) && (
- <div className="col-span-3 text-center py-12 text-app-text-faint">
- <CreditCard size={32} className="mx-auto mb-2 text-gray-200" />
+ <div className="col-span-3 text-center py-12 text-app-muted-foreground">
+ <CreditCard size={32} className="mx-auto mb-2 text-app-foreground" />
  No payment data today
  </div>
  )}

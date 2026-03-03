@@ -61,12 +61,12 @@ export default function BalancesPage() {
  render: (b) => (
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-full bg-app-surface-2 flex items-center justify-center shrink-0">
- <Users size={14} className="text-app-text-faint" />
+ <Users size={14} className="text-app-muted-foreground" />
  </div>
  <div className="flex flex-col">
- <span className="font-bold text-app-text text-sm">{b.contact?.name || b.contact_name || '—'}</span>
+ <span className="font-bold text-app-foreground text-sm">{b.contact?.name || b.contact_name || '—'}</span>
  {b.contact?.email && (
- <div className="flex items-center gap-1 text-[10px] text-app-text-faint font-medium">
+ <div className="flex items-center gap-1 text-[10px] text-app-muted-foreground font-medium">
  <Mail size={10} />
  {b.contact.email}
  </div>
@@ -84,10 +84,10 @@ export default function BalancesPage() {
  const bal = Number(b.balance || 0)
  return (
  <div className="flex flex-col items-end">
- <span className={`font-mono font-black text-sm ${bal > 0 ? 'text-emerald-600' : bal < 0 ? 'text-blue-600' : 'text-app-text-faint'}`}>
+ <span className={`font-mono font-black text-sm ${bal > 0 ? 'text-app-primary' : bal < 0 ? 'text-app-info' : 'text-app-muted-foreground'}`}>
  {fmt(bal)}
  </span>
- <Badge className={`mt-1 border-none shadow-none text-[8px] font-black uppercase px-1.5 py-0 h-4 ${bal > 0 ? 'bg-emerald-50 text-emerald-600' : bal < 0 ? 'bg-blue-50 text-blue-600' : 'bg-app-bg text-app-text-faint'}`}>
+ <Badge className={`mt-1 border-none shadow-none text-[8px] font-black uppercase px-1.5 py-0 h-4 ${bal > 0 ? 'bg-app-primary-light text-app-primary' : bal < 0 ? 'bg-app-info-bg text-app-info' : 'bg-app-background text-app-muted-foreground'}`}>
  {bal > 0 ? (tab === 'customer' ? 'Payable' : 'Payable') : bal < 0 ? 'Credit' : 'Settled'}
  </Badge>
  </div>
@@ -99,13 +99,13 @@ export default function BalancesPage() {
  label: 'Credit Limit',
  align: 'right',
  sortable: true,
- render: (b) => <span className="font-mono text-xs text-app-text-faint">{b.credit_limit != null ? fmt(b.credit_limit) : '—'}</span>
+ render: (b) => <span className="font-mono text-xs text-app-muted-foreground">{b.credit_limit != null ? fmt(b.credit_limit) : '—'}</span>
  },
  {
  key: 'last_transaction_date',
  label: 'Last Transaction',
  sortable: true,
- render: (b) => <span className="text-xs text-app-text-muted font-medium">{b.last_transaction_date || '—'}</span>
+ render: (b) => <span className="text-xs text-app-muted-foreground font-medium">{b.last_transaction_date || '—'}</span>
  }
  ], [fmt, tab])
 
@@ -122,24 +122,24 @@ export default function BalancesPage() {
  }
 
  return (
- <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 min-h-screen bg-stone-50/30">
+ <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 min-h-screen bg-app-surface/30 bg-app-background">
  {/* Standard Header */}
  <header className="flex justify-between items-center">
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <Scale size={28} className="text-app-text" />
+ <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-info flex items-center justify-center shadow-lg shadow-blue-200">
+ <Scale size={28} className="text-app-foreground" />
  </div>
- Account <span className="text-blue-600">Balances</span>
+ Account <span className="text-app-info">Balances</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Real-time Financial Positions</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Real-time Financial Positions</p>
  </div>
  <div className="flex bg-app-surface p-1 rounded-2xl shadow-sm border border-app-border">
  <button
  onClick={() => setTab('customer')}
  className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'customer'
- ? 'bg-blue-600 shadow-lg shadow-blue-200 text-app-text'
- : 'text-app-text-faint hover:text-app-text-muted'
+ ? 'bg-app-info shadow-lg shadow-blue-200 text-app-foreground'
+ : 'text-app-muted-foreground hover:text-app-muted-foreground'
  }`}
  >
  <Users size={16} />
@@ -148,8 +148,8 @@ export default function BalancesPage() {
  <button
  onClick={() => setTab('supplier')}
  className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'supplier'
- ? 'bg-amber-600 shadow-lg shadow-amber-200 text-app-text'
- : 'text-app-text-faint hover:text-app-text-muted'
+ ? 'bg-app-warning shadow-lg shadow-amber-200 text-app-foreground'
+ : 'text-app-muted-foreground hover:text-app-muted-foreground'
  }`}
  >
  <Briefcase size={16} />
@@ -162,23 +162,23 @@ export default function BalancesPage() {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <TrendingUp size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Net Exposure</p>
- <p className={`text-3xl font-black mt-1 tracking-tighter tabular-nums ${stats.total >= 0 ? 'text-emerald-600' : 'text-blue-600'}`}>{fmt(stats.total)}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Net Exposure</p>
+ <p className={`text-3xl font-black mt-1 tracking-tighter tabular-nums ${stats.total >= 0 ? 'text-app-primary' : 'text-app-info'}`}>{fmt(stats.total)}</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Briefcase size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Active Accounts</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.active}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Active Accounts</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.active}</p>
  </div>
  </CardContent>
  </Card>
@@ -188,8 +188,8 @@ export default function BalancesPage() {
  <DollarSign size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Credit Limit</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{fmt(stats.totalCredit)}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Credit Limit</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{fmt(stats.totalCredit)}</p>
  </div>
  </CardContent>
  </Card>
@@ -212,7 +212,7 @@ export default function BalancesPage() {
  headerExtra={
  <button
  onClick={loadAll}
- className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase text-app-text-muted hover:text-app-text transition-colors"
+ className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase text-app-muted-foreground hover:text-app-foreground transition-colors"
  >
  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
  Reload Data

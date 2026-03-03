@@ -46,24 +46,24 @@ export default function CreditNotesPage() {
  key: 'credit_number',
  label: 'Credit Note #',
  sortable: true,
- render: (cn) => <span className="font-mono text-sm font-black text-app-text">{cn.credit_number || `CN-${cn.id}`}</span>
+ render: (cn) => <span className="font-mono text-sm font-black text-app-foreground">{cn.credit_number || `CN-${cn.id}`}</span>
  },
  {
  key: 'date',
  label: 'Issue Date',
  sortable: true,
- render: (cn) => <span className="text-sm text-app-text-muted font-medium">{cn.date || cn.created_at?.split('T')[0] || '—'}</span>
+ render: (cn) => <span className="text-sm text-app-muted-foreground font-medium">{cn.date || cn.created_at?.split('T')[0] || '—'}</span>
  },
  {
  key: 'customer',
  label: 'Customer',
  sortable: true,
  render: (cn) => (
- <div className="flex items-center gap-2">
+ <div className="app-page flex items-center gap-2">
  <div className="w-7 h-7 rounded-lg bg-app-surface-2 flex items-center justify-center">
- <User size={12} className="text-app-text-faint" />
+ <User size={12} className="text-app-muted-foreground" />
  </div>
- <span className="font-bold text-app-text text-sm">{cn.customer_name || 'Anonymous'}</span>
+ <span className="font-bold text-app-foreground text-sm">{cn.customer_name || 'Anonymous'}</span>
  </div>
  )
  },
@@ -72,14 +72,14 @@ export default function CreditNotesPage() {
  label: 'Amount',
  align: 'right' as const,
  sortable: true,
- render: (cn) => <span className="font-mono text-sm font-black text-indigo-600">{fmt(Number(cn.amount || 0))}</span>
+ render: (cn) => <span className="font-mono text-sm font-black text-app-primary">{fmt(Number(cn.amount || 0))}</span>
  },
  {
  key: 'status',
  label: 'Status',
  align: 'center' as const,
  render: (cn) => (
- <Badge variant="outline" className="gap-1 rounded-lg border bg-blue-50 border-blue-200 text-blue-700 font-semibold text-[10px] uppercase h-5">
+ <Badge variant="outline" className="gap-1 rounded-lg border bg-app-info-bg border-app-info text-app-info font-semibold text-[10px] uppercase h-5">
  <FileText size={10} /> {cn.status || 'ISSUED'}
  </Badge>
  )
@@ -98,58 +98,52 @@ export default function CreditNotesPage() {
 
  return (
  <div className="p-6 space-y-6 animate-in fade-in duration-500 pb-20">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <CreditCard size={28} className="text-app-text" />
- </div>
- Credit <span className="text-indigo-600">Notes</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
- Post-Return Credit Ledger
- </p>
- </div>
- <button
- onClick={loadData}
- className="h-12 w-12 rounded-2xl border border-app-border flex items-center justify-center text-app-text-faint hover:text-app-text hover:bg-app-bg transition-all"
- >
- <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
- </button>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <FileText size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Credit <span className="text-app-primary">Notes</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* KPI Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary/5 text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <CreditCard size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Notes</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.total}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Notes</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.total}</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <DollarSign size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Value</p>
- <p className="text-xl font-black mt-1 tracking-tight text-emerald-600 truncate">{fmt(stats.totalAmount)}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Value</p>
+ <p className="text-xl font-black mt-1 tracking-tight text-app-primary truncate">{fmt(stats.totalAmount)}</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-violet-50 text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Clock size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">This Month</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">This Month</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">
  {creditNotes.filter(cn => {
  const d = cn.date || cn.created_at
  if (!d) return false

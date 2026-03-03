@@ -65,27 +65,27 @@ export function NotificationBell() {
 
  const getIcon = (type: string) => {
  switch (type) {
- case 'SUCCESS': return <CheckCircle className="text-emerald-500" size={16} />;
- case 'WARNING': return <AlertTriangle className="text-amber-500" size={16} />;
- case 'ERROR': return <XCircle className="text-red-500" size={16} />;
- default: return <Info className="text-blue-500" size={16} />;
+ case 'SUCCESS': return <CheckCircle className="text-app-primary" size={16} />;
+ case 'WARNING': return <AlertTriangle className="text-app-warning" size={16} />;
+ case 'ERROR': return <XCircle className="text-app-error" size={16} />;
+ default: return <Info className="text-app-info" size={16} />;
  }
  };
 
  return (
  <DropdownMenu>
  <DropdownMenuTrigger asChild>
- <button suppressHydrationWarning className="p-2.5 relative hover:bg-gray-100/50 rounded-xl text-app-text-muted hover:text-emerald-600 transition-colors outline-none">
+ <button suppressHydrationWarning className="p-2.5 relative hover:bg-app-surface-hover rounded-xl text-app-text-muted hover:text-app-primary transition-colors outline-none">
  <Bell size={22} />
  {unreadCount > 0 && (
- <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 text-app-text text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white animate-in zoom-in-50 duration-300">
+ <span className="absolute top-2 right-2.5 w-4 h-4 bg-app-error text-app-text text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white animate-in zoom-in-50 duration-300">
  {unreadCount > 9 ? '9+' : unreadCount}
  </span>
  )}
  </button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end" className="w-[380px] p-0 shadow-2xl border-app-border rounded-2xl overflow-hidden">
- <div className="bg-gray-50/80 p-4 border-b border-app-border flex items-center justify-between">
+ <div className="bg-app-surface-2 p-4 border-b border-app-border flex items-center justify-between">
  <div>
  <h3 className="text-sm font-black text-app-text uppercase tracking-tighter">Notifications</h3>
  <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-tight">You have {unreadCount} unread alerts</p>
@@ -95,7 +95,7 @@ export function NotificationBell() {
  variant="ghost"
  size="sm"
  onClick={handleMarkAllRead}
- className="h-8 text-[10px] font-black uppercase text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg"
+ className="h-8 text-[10px] font-black uppercase text-app-primary hover:text-app-success hover:bg-app-primary-light rounded-lg"
  >
  Mark all read
  </Button>
@@ -118,7 +118,7 @@ export function NotificationBell() {
  key={notif.id}
  className={cn(
  "p-4 hover:bg-app-bg transition-colors group relative cursor-pointer",
- !notif.read_at && "bg-emerald-50/30"
+ !notif.read_at && "bg-app-primary-light/30"
  )}
  onClick={() => !notif.read_at && handleMarkRead(notif.id)}
  >
@@ -145,7 +145,7 @@ export function NotificationBell() {
  </div>
  {!notif.read_at && (
  <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
- <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+ <div className="w-2 h-2 bg-app-primary rounded-full"></div>
  </div>
  )}
  </div>
@@ -155,7 +155,7 @@ export function NotificationBell() {
  </ScrollArea>
 
  <div className="p-3 bg-app-bg border-t border-app-border text-center">
- <Button variant="link" className="text-[10px] font-black uppercase text-app-text-faint hover:text-emerald-600 h-auto p-0">
+ <Button variant="link" className="text-[10px] font-black uppercase text-app-text-faint hover:text-app-primary h-auto p-0">
  View all activity
  </Button>
  </div>

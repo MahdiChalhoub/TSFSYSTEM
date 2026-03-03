@@ -125,7 +125,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
  return (
  <div className={clsx(
- "flex flex-col bg-app-bg overflow-hidden select-none h-full text-slate-100 font-sans transition-colors duration-700 relative",
+ "flex flex-col bg-app-bg overflow-hidden select-none h-full text-app-text font-sans transition-colors duration-700 relative",
  isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
  )}>
  {/* Ambient Background Glows */}
@@ -380,7 +380,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  ? "bg-emerald-500/20 border-emerald-500/40 shadow-[0_10px_20px_rgba(0,0,0,0.3)]"
  : lastAddedItemId === item.productId
  ? "bg-app-surface border-app-border"
- : "bg-app-text/50 border-app-border hover:border-app-border hover:bg-gray-50/80"
+ : "bg-app-text/50 border-app-border hover:border-app-border hover:bg-app-bg/80"
  )}
  >
  <div className="flex-1 min-w-0">
@@ -418,7 +418,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
  <button
  onClick={() => onUpdateQuantity(item.productId, -100)}
- className="opacity-0 group-hover/item:opacity-100 text-gray-700 hover:text-rose-500 transition-all ml-1"
+ className="opacity-0 group-hover/item:opacity-100 text-app-text hover:text-rose-500 transition-all ml-1"
  >
  <X size={14} strokeWidth={3} />
  </button>
@@ -471,7 +471,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
  className={clsx(
  "py-3 rounded-[1rem] text-[9px] font-black uppercase tracking-widest transition-all italic border",
  !isLinked
- ? "bg-app-bg border-app-border text-gray-700 opacity-40 cursor-not-allowed"
+ ? "bg-app-bg border-app-border text-app-text opacity-40 cursor-not-allowed"
  : isActive
  ? "bg-emerald-500 text-black border-emerald-400 shadow-[0_5px_15px_rgba(16,185,129,0.3)] scale-105"
  : "bg-app-surface border-app-border text-app-text-faint hover:text-app-text hover:border-emerald-500/30"

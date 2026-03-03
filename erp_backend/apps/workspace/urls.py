@@ -28,6 +28,9 @@ router.register(r'evaluations', views.QuestionnaireResponseViewSet, basename='qu
 # Dashboard & Config
 router.register(r'config', views.WorkspaceConfigViewSet, basename='workspace-config')
 router.register(r'performance', views.EmployeePerformanceViewSet, basename='employee-performance')
+# ── Aliases expected by the frontend actions layer ──────────────────────────
+router.register(r'scores', views.EmployeePerformanceViewSet, basename='workspace-scores')
+router.register(r'kpi-config', views.WorkspaceConfigViewSet, basename='workspace-kpi-config')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -239,7 +239,7 @@ export function POSToolbar({
  >
  <Truck size={12} />
  {pendingDeliveriesCount > 0 && (
- <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-500 text-app-text text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
+ <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-app-warning text-app-text text-[8px] font-black flex items-center justify-center shadow-lg animate-bounce">
  {pendingDeliveriesCount}
  </span>
  )}

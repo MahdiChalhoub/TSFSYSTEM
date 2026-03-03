@@ -63,6 +63,9 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     Palette,
+    Truck,
+    Webhook,
+    MailQuestion,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -74,7 +77,6 @@ import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
 import { useAppTheme } from '@/components/app/AppThemeProvider';
 import { AppThemeSelector } from '@/components/app/AppThemeSelector';
 
-// ── Icon map ──────────────────────────────────────────────────
 const ICON_MAP: Record<string, any> = {
     LayoutDashboard, ShoppingBag, Box, Users, Briefcase, FileText,
     ShieldCheck, Settings, Zap, Layers, BarChart3, ShoppingCart, Package,
@@ -82,6 +84,7 @@ const ICON_MAP: Record<string, any> = {
     TrendingUp, Calendar, DollarSign, Bell, Tag, Warehouse, FolderTree,
     ServerCog, Building2, Shield, ClipboardList, ScrollText, Wallet,
     Globe, ListChecks, Trophy, Star, History, Landmark, UserCheck, Store,
+    Truck, Webhook, MailQuestion, Percent,
 };
 
 function getIcon(name: string) { return ICON_MAP[name] || Box; }
@@ -93,7 +96,7 @@ export const MENU_ITEMS = [
         icon: LayoutDashboard,
         module: 'core',
         children: [
-            { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, badge: 'REVIEW' },
+            { title: 'Org Dashboard', path: '/dashboard', icon: LayoutDashboard, badge: 'REVIEW' },
             { title: 'Dashboard (Legacy)', path: '/dashboard/legacy', icon: LayoutDashboard, badge: 'LOCKED' },
             { title: 'Setup Wizard', path: '/setup-wizard', icon: Sparkles },
             { title: 'TaskBoard & Performance', path: '/workspace/tasks', icon: ClipboardList },
@@ -139,10 +142,16 @@ export const MENU_ITEMS = [
                 title: 'eCommerce',
                 icon: Globe,
                 children: [
-                    { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
-                    { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
+                    { title: 'Analytics', path: '/ecommerce/dashboard', icon: BarChart3 },
                     { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
                     { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+                    { title: 'Coupons', path: '/ecommerce/coupons', icon: Percent, badge: 'NEW' },
+                    { title: 'Promotions', path: '/ecommerce/promotions', icon: Percent, badge: 'NEW' },
+                    { title: 'Shipping Rates', path: '/ecommerce/shipping', icon: Truck, badge: 'NEW' },
+                    { title: 'Webhooks', path: '/ecommerce/webhooks', icon: Webhook, badge: 'NEW' },
+                    { title: 'Quote Inbox', path: '/ecommerce/quotes', icon: MailQuestion, badge: 'NEW' },
+                    { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
+                    { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
                 ]
             },
         ]
@@ -323,7 +332,7 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'Platform Dashboard', path: '/dashboard', icon: Globe },
+            { title: 'Platform Dashboard', externalHref: '__saas_dashboard__', path: '/dashboard', icon: Globe },
             {
                 title: 'Organization Mgmt',
                 icon: Building2,
@@ -374,11 +383,11 @@ export const MENU_ITEMS = [
 
 // ── Badge helper ──────────────────────────────────────────────
 const BADGE_COLORS: Record<string, string> = {
-    NEW: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-    PENDING: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+    NEW: 'bg-blue-500/20 text-app-info border border-app-info/30',
+    PENDING: 'bg-app-warning/20 text-app-warning border border-app-warning/30',
     REVIEW: 'bg-violet-500/20 text-violet-400 border border-violet-500/30',
     LOCKED: 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
-    FINAL: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30',
+    FINAL: 'bg-app-primary/10 text-app-primary border border-app-primary/30',
 };
 
 function getBadge(badge?: string) {
@@ -669,7 +678,17 @@ function MenuItem({
 
     const handleClick = () => {
         if (hasChildren) setExpanded(!expanded);
-        else if (item.path) openTab(item.title, item.path);
+        else if (item.externalHref) {
+            // Cross-domain navigation (e.g., from tenant to saas subdomain)
+            // '__saas_dashboard__' is resolved at click time using the current domain
+            if (item.externalHref === '__saas_dashboard__') {
+                const parts = window.location.hostname.split('.');
+                const rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : window.location.hostname;
+                window.location.href = `https://saas.${rootDomain}/dashboard`;
+            } else {
+                window.location.href = item.externalHref;
+            }
+        } else if (item.path) openTab(item.title, item.path);
     };
 
     const badge = getBadge(item.badge);

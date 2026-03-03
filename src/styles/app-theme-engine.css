@@ -17,24 +17,26 @@
 ══════════════════════════════════════════════════════════════ */
 :root {
   /* Geometry — shared baseline */
-  --app-radius:    1rem;
+  --app-radius: 1rem;
   --app-radius-sm: 0.5rem;
   --app-radius-lg: 1.5rem;
 
   /* Shadows — shared baseline */
-  --app-shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.06);
-  --app-shadow-md:  0 4px 16px rgba(0, 0, 0, 0.10);
-  --app-shadow-lg:  0 12px 40px rgba(0, 0, 0, 0.14);
+  --app-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.06);
+  --app-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --app-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
 
   /* Performance-aware blur variants */
-  --app-backdrop:      blur(16px) saturate(180%);
-  --app-backdrop-soft: blur(6px) saturate(140%);   /* POS use: lower GPU cost */
-  --app-backdrop-off:  none;                        /* Low-end device fallback */
+  --app-backdrop: blur(16px) saturate(180%);
+  --app-backdrop-soft: blur(6px) saturate(140%);
+  /* POS use: lower GPU cost */
+  --app-backdrop-off: none;
+  /* Low-end device fallback */
 
   /* Transitions */
-  --app-transition-fast:   0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --app-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --app-transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --app-transition-slow:   0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  --app-transition-slow: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Spacing grid (8px base — reference only, use Tailwind gap-* for actual spacing) */
   --app-space-1: 0.25rem;
@@ -46,38 +48,42 @@
   --app-space-12: 3rem;
 
   /* DEFAULT: Midnight Pro (dark fallback — prevents white flash on dark-preferring users) */
-  --app-bg:             #020617;
-  --app-surface:        #0F172A;
-  --app-surface-2:      rgba(255, 255, 255, 0.04);
-  --app-surface-hover:  rgba(255, 255, 255, 0.07);
+  --app-bg: #020617;
+  --app-surface: #0F172A;
+  --app-surface-2: rgba(255, 255, 255, 0.04);
+  --app-surface-hover: rgba(255, 255, 255, 0.07);
 
-  --app-primary:        #10B981;
-  --app-primary-dark:   #059669;
-  --app-primary-light:  rgba(16, 185, 129, 0.12);
-  --app-primary-glow:   rgba(16, 185, 129, 0.35);
+  --app-primary: #10B981;
+  --app-primary-dark: #059669;
+  --app-primary-light: rgba(16, 185, 129, 0.12);
+  --app-primary-glow: rgba(16, 185, 129, 0.35);
 
-  --app-text:           #F1F5F9;
-  --app-text-muted:     #94A3B8;
-  --app-text-faint:     #475569;
+  --app-text: #F1F5F9;
+  --app-text-muted: #94A3B8;
+  --app-text-faint: #475569;
 
-  --app-border:         rgba(255, 255, 255, 0.08);
-  --app-border-strong:  rgba(16, 185, 129, 0.5);
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(16, 185, 129, 0.5);
 
-  --app-font:         'Outfit', 'Inter', ui-sans-serif, sans-serif;
+  --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
   --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
 
-  --app-sidebar-bg:      #0B1628;
+  --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
-  --app-sidebar-text:    #CBD5E1;
-  --app-sidebar-muted:   #475569;
-  --app-sidebar-active:  rgba(16, 185, 129, 0.15);
-  --app-sidebar-border:  rgba(255, 255, 255, 0.06);
+  --app-sidebar-text: #CBD5E1;
+  --app-sidebar-muted: #475569;
+  --app-sidebar-active: rgba(16, 185, 129, 0.15);
+  --app-sidebar-border: rgba(255, 255, 255, 0.06);
 
   /* Status — semantic (consistent across all themes) */
-  --app-success:     #10B981; --app-success-bg: rgba(16, 185, 129, 0.12);
-  --app-warning:     #F59E0B; --app-warning-bg: rgba(245, 158, 11, 0.12);
-  --app-error:       #EF4444; --app-error-bg:   rgba(239, 68, 68, 0.12);
-  --app-info:        #3B82F6; --app-info-bg:    rgba(59, 130, 246, 0.12);
+  --app-success: #10B981;
+  --app-success-bg: rgba(16, 185, 129, 0.12);
+  --app-warning: #F59E0B;
+  --app-warning-bg: rgba(245, 158, 11, 0.12);
+  --app-error: #EF4444;
+  --app-error-bg: rgba(239, 68, 68, 0.12);
+  --app-info: #3B82F6;
+  --app-info-bg: rgba(59, 130, 246, 0.12);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -87,34 +93,34 @@
 ══════════════════════════════════════════════════════════════ */
 .theme-midnight-pro {
   /* :root already defines this theme — only explicit to guarantee class precedence */
-  --app-bg:             #020617;
-  --app-surface:        #0F172A;
-  --app-surface-2:      rgba(255, 255, 255, 0.04);
-  --app-surface-hover:  rgba(255, 255, 255, 0.07);
-  --app-primary:        #10B981;
-  --app-primary-dark:   #059669;
-  --app-primary-light:  rgba(16, 185, 129, 0.12);
-  --app-primary-glow:   rgba(16, 185, 129, 0.35);
-  --app-text:           #F1F5F9;
-  --app-text-muted:     #94A3B8;
-  --app-text-faint:     #475569;
-  --app-border:         rgba(255, 255, 255, 0.08);
-  --app-border-strong:  rgba(16, 185, 129, 0.5);
-  --app-font:           'Outfit', 'Inter', ui-sans-serif, sans-serif;
-  --app-font-display:   'Outfit', ui-sans-serif, sans-serif;
-  --app-sidebar-bg:      #0B1628;
+  --app-bg: #020617;
+  --app-surface: #0F172A;
+  --app-surface-2: rgba(255, 255, 255, 0.04);
+  --app-surface-hover: rgba(255, 255, 255, 0.07);
+  --app-primary: #10B981;
+  --app-primary-dark: #059669;
+  --app-primary-light: rgba(16, 185, 129, 0.12);
+  --app-primary-glow: rgba(16, 185, 129, 0.35);
+  --app-text: #F1F5F9;
+  --app-text-muted: #94A3B8;
+  --app-text-faint: #475569;
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(16, 185, 129, 0.5);
+  --app-font: 'Outfit', 'Inter', ui-sans-serif, sans-serif;
+  --app-font-display: 'Outfit', ui-sans-serif, sans-serif;
+  --app-sidebar-bg: #0B1628;
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
-  --app-sidebar-text:    #CBD5E1;
-  --app-sidebar-muted:   #475569;
-  --app-sidebar-active:  rgba(16, 185, 129, 0.15);
-  --app-sidebar-border:  rgba(255, 255, 255, 0.06);
+  --app-sidebar-text: #CBD5E1;
+  --app-sidebar-muted: #475569;
+  --app-sidebar-active: rgba(16, 185, 129, 0.15);
+  --app-sidebar-border: rgba(255, 255, 255, 0.06);
   --app-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5);
   --app-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
-  --app-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.04);
+  --app-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --app-success-bg: rgba(16, 185, 129, 0.12);
   --app-warning-bg: rgba(245, 158, 11, 0.12);
-  --app-error-bg:   rgba(239, 68, 68, 0.12);
-  --app-info-bg:    rgba(59, 130, 246, 0.12);
+  --app-error-bg: rgba(239, 68, 68, 0.12);
+  --app-info-bg: rgba(59, 130, 246, 0.12);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -123,37 +129,41 @@
    Overrides: everything (opposite of default dark)
 ══════════════════════════════════════════════════════════════ */
 .theme-ivory-market {
-  --app-bg:             #F8FAFC;
-  --app-surface:        #FFFFFF;
-  --app-surface-2:      #F1F5F9;
-  --app-surface-hover:  #F8FAFC;
-  --app-primary:        #6366F1;
-  --app-primary-dark:   #4F46E5;
-  --app-primary-light:  rgba(99, 102, 241, 0.08);
-  --app-primary-glow:   rgba(99, 102, 241, 0.2);
-  --app-text:           #0F172A;
-  --app-text-muted:     #64748B;
-  --app-text-faint:     #CBD5E1;
-  --app-border:         #E2E8F0;
-  --app-border-strong:  #6366F1;
-  --app-radius:         0.875rem;
-  --app-font:           'Inter', ui-sans-serif, sans-serif;
-  --app-font-display:   'Inter', ui-sans-serif, sans-serif;
+  --app-bg: #F8FAFC;
+  --app-surface: #FFFFFF;
+  --app-surface-2: #F1F5F9;
+  --app-surface-hover: #F8FAFC;
+  --app-primary: #6366F1;
+  --app-primary-dark: #4F46E5;
+  --app-primary-light: rgba(99, 102, 241, 0.08);
+  --app-primary-glow: rgba(99, 102, 241, 0.2);
+  --app-text: #0F172A;
+  --app-text-muted: #64748B;
+  --app-text-faint: #CBD5E1;
+  --app-border: #E2E8F0;
+  --app-border-strong: #6366F1;
+  --app-radius: 0.875rem;
+  --app-font: 'Inter', ui-sans-serif, sans-serif;
+  --app-font-display: 'Inter', ui-sans-serif, sans-serif;
   --app-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
   --app-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
   --app-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
-  --app-backdrop:      blur(8px);
+  --app-backdrop: blur(8px);
   --app-backdrop-soft: blur(4px);
-  --app-sidebar-bg:      #FFFFFF;
+  --app-sidebar-bg: #FFFFFF;
   --app-sidebar-surface: #F8FAFC;
-  --app-sidebar-text:    #374151;
-  --app-sidebar-muted:   #9CA3AF;
-  --app-sidebar-active:  rgba(99, 102, 241, 0.08);
-  --app-sidebar-border:  #E5E7EB;
-  --app-success:     #10B981; --app-success-bg: #ECFDF5;
-  --app-warning:     #D97706; --app-warning-bg: #FFFBEB;
-  --app-error:       #DC2626; --app-error-bg:   #FEF2F2;
-  --app-info:        #2563EB; --app-info-bg:    #EFF6FF;
+  --app-sidebar-text: #374151;
+  --app-sidebar-muted: #9CA3AF;
+  --app-sidebar-active: rgba(99, 102, 241, 0.08);
+  --app-sidebar-border: #E5E7EB;
+  --app-success: #10B981;
+  --app-success-bg: #ECFDF5;
+  --app-warning: #D97706;
+  --app-warning-bg: #FFFBEB;
+  --app-error: #DC2626;
+  --app-error-bg: #FEF2F2;
+  --app-info: #2563EB;
+  --app-info-bg: #EFF6FF;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -162,37 +172,41 @@
    Overrides: colors + shadows (dark like default, different hue)
 ══════════════════════════════════════════════════════════════ */
 .theme-neon-rush {
-  --app-bg:             #09090B;
-  --app-surface:        #111113;
-  --app-surface-2:      rgba(139, 92, 246, 0.06);
-  --app-surface-hover:  rgba(139, 92, 246, 0.1);
-  --app-primary:        #8B5CF6;
-  --app-primary-dark:   #7C3AED;
-  --app-primary-light:  rgba(139, 92, 246, 0.15);
-  --app-primary-glow:   rgba(139, 92, 246, 0.5);
-  --app-text:           #FAFAFA;
-  --app-text-muted:     #A1A1AA;
-  --app-text-faint:     #52525B;
-  --app-border:         rgba(139, 92, 246, 0.15);
-  --app-border-strong:  #8B5CF6;
-  --app-radius:         0.75rem;
-  --app-font:           'Rajdhani', 'Outfit', ui-sans-serif, sans-serif;
-  --app-font-display:   'Rajdhani', 'Outfit', ui-sans-serif, sans-serif;
+  --app-bg: #09090B;
+  --app-surface: #111113;
+  --app-surface-2: rgba(139, 92, 246, 0.06);
+  --app-surface-hover: rgba(139, 92, 246, 0.1);
+  --app-primary: #8B5CF6;
+  --app-primary-dark: #7C3AED;
+  --app-primary-light: rgba(139, 92, 246, 0.15);
+  --app-primary-glow: rgba(139, 92, 246, 0.5);
+  --app-text: #FAFAFA;
+  --app-text-muted: #A1A1AA;
+  --app-text-faint: #52525B;
+  --app-border: rgba(139, 92, 246, 0.15);
+  --app-border-strong: #8B5CF6;
+  --app-radius: 0.75rem;
+  --app-font: 'Rajdhani', 'Outfit', ui-sans-serif, sans-serif;
+  --app-font-display: 'Rajdhani', 'Outfit', ui-sans-serif, sans-serif;
   --app-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.8);
   --app-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.1);
   --app-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(139, 92, 246, 0.2);
-  --app-backdrop:      blur(20px) saturate(200%) brightness(1.1);
+  --app-backdrop: blur(20px) saturate(200%) brightness(1.1);
   --app-backdrop-soft: blur(8px) saturate(160%);
-  --app-sidebar-bg:      #0C0C0E;
+  --app-sidebar-bg: #0C0C0E;
   --app-sidebar-surface: rgba(139, 92, 246, 0.08);
-  --app-sidebar-text:    #D4D4D8;
-  --app-sidebar-muted:   #52525B;
-  --app-sidebar-active:  rgba(139, 92, 246, 0.2);
-  --app-sidebar-border:  rgba(139, 92, 246, 0.1);
-  --app-success:     #22D3EE; --app-success-bg: rgba(34, 211, 238, 0.1);
-  --app-warning:     #FCD34D; --app-warning-bg: rgba(252, 211, 77, 0.1);
-  --app-error:       #F87171; --app-error-bg:   rgba(248, 113, 113, 0.1);
-  --app-info:        #818CF8; --app-info-bg:    rgba(129, 140, 248, 0.1);
+  --app-sidebar-text: #D4D4D8;
+  --app-sidebar-muted: #52525B;
+  --app-sidebar-active: rgba(139, 92, 246, 0.2);
+  --app-sidebar-border: rgba(139, 92, 246, 0.1);
+  --app-success: #22D3EE;
+  --app-success-bg: rgba(34, 211, 238, 0.1);
+  --app-warning: #FCD34D;
+  --app-warning-bg: rgba(252, 211, 77, 0.1);
+  --app-error: #F87171;
+  --app-error-bg: rgba(248, 113, 113, 0.1);
+  --app-info: #818CF8;
+  --app-info-bg: rgba(129, 140, 248, 0.1);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -201,36 +215,40 @@
    Overrides: all colors + serif display font
 ══════════════════════════════════════════════════════════════ */
 .theme-savane-earth {
-  --app-bg:             #FEF3C7;
-  --app-surface:        #FFFBEB;
-  --app-surface-2:      #FDE68A;
-  --app-surface-hover:  #FEF9EC;
-  --app-primary:        #D97706;
-  --app-primary-dark:   #B45309;
-  --app-primary-light:  rgba(217, 119, 6, 0.1);
-  --app-primary-glow:   rgba(217, 119, 6, 0.3);
-  --app-text:           #292524;
-  --app-text-muted:     #78716C;
-  --app-text-faint:     #C4B5B0;
-  --app-border:         #FDE68A;
-  --app-border-strong:  #D97706;
-  --app-font:           'DM Sans', 'Outfit', ui-sans-serif, sans-serif;
-  --app-font-display:   'Playfair Display', 'Georgia', ui-serif, serif;
+  --app-bg: #FEF3C7;
+  --app-surface: #FFFBEB;
+  --app-surface-2: #FDE68A;
+  --app-surface-hover: #FEF9EC;
+  --app-primary: #D97706;
+  --app-primary-dark: #B45309;
+  --app-primary-light: rgba(217, 119, 6, 0.1);
+  --app-primary-glow: rgba(217, 119, 6, 0.3);
+  --app-text: #292524;
+  --app-text-muted: #78716C;
+  --app-text-faint: #C4B5B0;
+  --app-border: #FDE68A;
+  --app-border-strong: #D97706;
+  --app-font: 'DM Sans', 'Outfit', ui-sans-serif, sans-serif;
+  --app-font-display: 'Playfair Display', 'Georgia', ui-serif, serif;
   --app-shadow-sm: 0 1px 4px rgba(41, 37, 36, 0.08);
   --app-shadow-md: 0 4px 16px rgba(41, 37, 36, 0.1);
   --app-shadow-lg: 0 12px 40px rgba(41, 37, 36, 0.14);
-  --app-backdrop:      blur(8px);
+  --app-backdrop: blur(8px);
   --app-backdrop-soft: blur(3px);
-  --app-sidebar-bg:      #FFFBEB;
+  --app-sidebar-bg: #FFFBEB;
   --app-sidebar-surface: rgba(217, 119, 6, 0.06);
-  --app-sidebar-text:    #44403C;
-  --app-sidebar-muted:   #A8A29E;
-  --app-sidebar-active:  rgba(217, 119, 6, 0.12);
-  --app-sidebar-border:  #FDE68A;
-  --app-success:     #16A34A; --app-success-bg: #F0FDF4;
-  --app-warning:     #D97706; --app-warning-bg: #FFFBEB;
-  --app-error:       #DC2626; --app-error-bg:   #FEF2F2;
-  --app-info:        #0369A1; --app-info-bg:    #F0F9FF;
+  --app-sidebar-text: #44403C;
+  --app-sidebar-muted: #A8A29E;
+  --app-sidebar-active: rgba(217, 119, 6, 0.12);
+  --app-sidebar-border: #FDE68A;
+  --app-success: #16A34A;
+  --app-success-bg: #F0FDF4;
+  --app-warning: #D97706;
+  --app-warning-bg: #FFFBEB;
+  --app-error: #DC2626;
+  --app-error-bg: #FEF2F2;
+  --app-info: #0369A1;
+  --app-info-bg: #F0F9FF;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -239,38 +257,131 @@
    Overrides: all colors + max blur glass
 ══════════════════════════════════════════════════════════════ */
 .theme-arctic-glass {
-  --app-bg:             #EFF6FF;
-  --app-surface:        rgba(255, 255, 255, 0.75);
-  --app-surface-2:      rgba(241, 250, 255, 0.6);
-  --app-surface-hover:  rgba(255, 255, 255, 0.9);
-  --app-primary:        #0EA5E9;
-  --app-primary-dark:   #0284C7;
-  --app-primary-light:  rgba(14, 165, 233, 0.1);
-  --app-primary-glow:   rgba(14, 165, 233, 0.3);
-  --app-text:           #0C1A2E;
-  --app-text-muted:     #64748B;
-  --app-text-faint:     #BAD2E8;
-  --app-border:         rgba(14, 165, 233, 0.15);
-  --app-border-strong:  #0EA5E9;
-  --app-radius:         1.125rem;
-  --app-font:           'Sora', 'Outfit', ui-sans-serif, sans-serif;
-  --app-font-display:   'Sora', 'Outfit', ui-sans-serif, sans-serif;
-  --app-shadow-sm: 0 1px 4px rgba(14, 165, 233, 0.08), 0 0 0 1px rgba(255,255,255,0.7);
-  --app-shadow-md: 0 4px 20px rgba(14, 165, 233, 0.12), 0 0 0 1px rgba(255,255,255,0.5);
-  --app-shadow-lg: 0 12px 40px rgba(14, 165, 233, 0.18), 0 0 0 1px rgba(255,255,255,0.6);
-  --app-backdrop:      blur(24px) saturate(200%) brightness(1.05);
+  --app-bg: #EFF6FF;
+  --app-surface: rgba(255, 255, 255, 0.75);
+  --app-surface-2: rgba(241, 250, 255, 0.6);
+  --app-surface-hover: rgba(255, 255, 255, 0.9);
+  --app-primary: #0EA5E9;
+  --app-primary-dark: #0284C7;
+  --app-primary-light: rgba(14, 165, 233, 0.1);
+  --app-primary-glow: rgba(14, 165, 233, 0.3);
+  --app-text: #0C1A2E;
+  --app-text-muted: #64748B;
+  --app-text-faint: #BAD2E8;
+  --app-border: rgba(14, 165, 233, 0.15);
+  --app-border-strong: #0EA5E9;
+  --app-radius: 1.125rem;
+  --app-font: 'Sora', 'Outfit', ui-sans-serif, sans-serif;
+  --app-font-display: 'Sora', 'Outfit', ui-sans-serif, sans-serif;
+  --app-shadow-sm: 0 1px 4px rgba(14, 165, 233, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.7);
+  --app-shadow-md: 0 4px 20px rgba(14, 165, 233, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --app-shadow-lg: 0 12px 40px rgba(14, 165, 233, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.6);
+  --app-backdrop: blur(24px) saturate(200%) brightness(1.05);
   --app-backdrop-soft: blur(10px) saturate(160%);
-  --app-sidebar-bg:      rgba(240, 249, 255, 0.85);
+  --app-sidebar-bg: rgba(240, 249, 255, 0.85);
   --app-sidebar-surface: rgba(255, 255, 255, 0.5);
-  --app-sidebar-text:    #1E3A5F;
-  --app-sidebar-muted:   #7AAFCC;
-  --app-sidebar-active:  rgba(14, 165, 233, 0.12);
-  --app-sidebar-border:  rgba(14, 165, 233, 0.12);
-  --app-success:     #10B981; --app-success-bg: rgba(16, 185, 129, 0.08);
-  --app-warning:     #F59E0B; --app-warning-bg: rgba(245, 158, 11, 0.08);
-  --app-error:       #EF4444; --app-error-bg:   rgba(239, 68, 68, 0.08);
-  --app-info:        #0EA5E9; --app-info-bg:    rgba(14, 165, 233, 0.08);
+  --app-sidebar-text: #1E3A5F;
+  --app-sidebar-muted: #7AAFCC;
+  --app-sidebar-active: rgba(14, 165, 233, 0.12);
+  --app-sidebar-border: rgba(14, 165, 233, 0.12);
+  --app-success: #10B981;
+  --app-success-bg: rgba(16, 185, 129, 0.08);
+  --app-warning: #F59E0B;
+  --app-warning-bg: rgba(245, 158, 11, 0.08);
+  --app-error: #EF4444;
+  --app-error-bg: rgba(239, 68, 68, 0.08);
+  --app-info: #0EA5E9;
+  --app-info-bg: rgba(14, 165, 233, 0.08);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   6. LUMINA SKY — Crisp professional SaaS dashboard
+   Primary: Sky #0EA5E9 on pure White | Font: SF Pro / Inter
+   Inspired by: theme extraction guide with sky-blue instead of purple
+   Distinct from Arctic Glass: no frosted glass, clean flat surfaces
+══════════════════════════════════════════════════════════════ */
+.theme-lumina-sky {
+  --app-bg: #FFFFFF;
+  --app-surface: #F8FAFC;
+  --app-surface-2: #F1F5F9;
+  --app-surface-hover: #E2E8F0;
+  --app-primary: #0EA5E9;
+  --app-primary-dark: #0284C7;
+  --app-primary-light: rgba(14, 165, 233, 0.12);
+  --app-primary-glow: rgba(14, 165, 233, 0.2);
+  --app-text: #0F172A;
+  --app-text-muted: #64748B;
+  --app-text-faint: #94A3B8;
+  --app-border: #E2E8F0;
+  --app-border-strong: #0EA5E9;
+  --app-radius: 0.5rem;
+  --app-font: 'SF Pro Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --app-font-display: 'SF Pro Display', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --app-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --app-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.10), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --app-backdrop: blur(0px);
+  --app-backdrop-soft: blur(0px);
+  --app-sidebar-bg: #0F172A;
+  --app-sidebar-surface: rgba(255, 255, 255, 0.06);
+  --app-sidebar-text: #E2E8F0;
+  --app-sidebar-muted: #64748B;
+  --app-sidebar-active: rgba(14, 165, 233, 0.15);
+  --app-sidebar-border: rgba(255, 255, 255, 0.06);
+  --app-success: #10B981;
+  --app-success-bg: #F0FDF4;
+  --app-warning: #F59E0B;
+  --app-warning-bg: #FFFBEB;
+  --app-error: #EF4444;
+  --app-error-bg: #FEF2F2;
+  --app-info: #0EA5E9;
+  --app-info-bg: #F0F9FF;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. WARM ENTERPRISE — Clean corporate dashboard style
+   Primary: Orange #F97316 on pure White | Font: Inter / system-ui
+   Inspired by: POS/ERP reference screenshot — white cards, orange accent,
+   dark text, crisp borders, minimal shadows. No glassmorphism.
+══════════════════════════════════════════════════════════════ */
+.theme-warm-enterprise {
+  --app-bg: #F9FAFB;
+  --app-surface: #FFFFFF;
+  --app-surface-2: #F3F4F6;
+  --app-surface-hover: #E5E7EB;
+  --app-primary: #F97316;
+  --app-primary-dark: #EA580C;
+  --app-primary-light: rgba(249, 115, 22, 0.12);
+  --app-primary-glow: rgba(249, 115, 22, 0.2);
+  --app-text: #111827;
+  --app-text-muted: #374151;
+  --app-text-faint: #9CA3AF;
+  --app-border: #E5E7EB;
+  --app-border-strong: #F97316;
+  --app-radius: 0.5rem;
+  --app-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --app-font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --app-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.05);
+  --app-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.05);
+  --app-backdrop: blur(0px);
+  --app-backdrop-soft: blur(0px);
+  --app-sidebar-bg: #1F2937;
+  --app-sidebar-surface: rgba(255, 255, 255, 0.06);
+  --app-sidebar-text: #F9FAFB;
+  --app-sidebar-muted: #9CA3AF;
+  --app-sidebar-active: rgba(249, 115, 22, 0.15);
+  --app-sidebar-border: rgba(255, 255, 255, 0.06);
+  --app-success: #10B981;
+  --app-success-bg: #ECFDF5;
+  --app-warning: #F59E0B;
+  --app-warning-bg: #FFFBEB;
+  --app-error: #EF4444;
+  --app-error-bg: #FEF2F2;
+  --app-info: #3B82F6;
+  --app-info-bg: #EFF6FF;
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    UTILITY CLASSES — use in all components instead of inline styles
@@ -296,6 +407,7 @@
 .app-card-hover {
   transition: box-shadow var(--app-transition-normal), transform var(--app-transition-normal);
 }
+
 .app-card-hover:hover {
   box-shadow: var(--app-shadow-md);
   transform: translateY(-2px);
@@ -331,12 +443,16 @@
   box-shadow: 0 2px 8px var(--app-primary-glow);
   transition: background var(--app-transition-fast), box-shadow var(--app-transition-fast), transform var(--app-transition-fast);
 }
+
 .app-btn-primary:hover {
   background: var(--app-primary-dark);
   box-shadow: 0 4px 16px var(--app-primary-glow);
   transform: translateY(-1px);
 }
-.app-btn-primary:active { transform: translateY(0); }
+
+.app-btn-primary:active {
+  transform: translateY(0);
+}
 
 /* Ghost / secondary */
 .app-btn-ghost {
@@ -348,6 +464,7 @@
   font-weight: 600;
   transition: background var(--app-transition-fast), color var(--app-transition-fast), border-color var(--app-transition-fast);
 }
+
 .app-btn-ghost:hover {
   background: var(--app-primary-light);
   color: var(--app-primary);
@@ -363,13 +480,17 @@
   font-family: var(--app-font);
   transition: border-color var(--app-transition-fast), box-shadow var(--app-transition-fast), background var(--app-transition-fast);
 }
+
 .app-input:focus {
   outline: none;
   border-color: var(--app-border-strong);
   box-shadow: 0 0 0 3px var(--app-primary-light);
   background: var(--app-surface);
 }
-.app-input::placeholder { color: var(--app-text-faint); }
+
+.app-input::placeholder {
+  color: var(--app-text-faint);
+}
 
 /* Icon badge (page headers) */
 .app-icon-badge {
@@ -397,20 +518,46 @@
   align-items: center;
   gap: 0.25rem;
 }
-.app-badge-success { background: var(--app-success-bg); color: var(--app-success); border-color: var(--app-success); }
-.app-badge-warning { background: var(--app-warning-bg); color: var(--app-warning); border-color: var(--app-warning); }
-.app-badge-error   { background: var(--app-error-bg);   color: var(--app-error);   border-color: var(--app-error); }
-.app-badge-info    { background: var(--app-info-bg);    color: var(--app-info);    border-color: var(--app-info); }
+
+.app-badge-success {
+  background: var(--app-success-bg);
+  color: var(--app-success);
+  border-color: var(--app-success);
+}
+
+.app-badge-warning {
+  background: var(--app-warning-bg);
+  color: var(--app-warning);
+  border-color: var(--app-warning);
+}
+
+.app-badge-error {
+  background: var(--app-error-bg);
+  color: var(--app-error);
+  border-color: var(--app-error);
+}
+
+.app-badge-info {
+  background: var(--app-info-bg);
+  color: var(--app-info);
+  border-color: var(--app-info);
+}
 
 /* Table row */
 .app-table-row {
   border-bottom: 1px solid var(--app-border);
   transition: background var(--app-transition-fast);
 }
-.app-table-row:hover { background: var(--app-primary-light); }
+
+.app-table-row:hover {
+  background: var(--app-primary-light);
+}
 
 /* Divider */
-.app-divider { height: 1px; background: var(--app-border); }
+.app-divider {
+  height: 1px;
+  background: var(--app-border);
+}
 
 /* KPI card */
 .app-kpi-card {
@@ -423,19 +570,27 @@
   position: relative;
   transition: box-shadow var(--app-transition-normal), transform var(--app-transition-normal);
 }
+
 .app-kpi-card:hover {
   box-shadow: var(--app-shadow-md);
   transform: translateY(-2px);
 }
 
 /* Smooth theme transition — only visual properties, NOT layout */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   transition-property: background-color, border-color, color, box-shadow, opacity;
   transition-duration: 0.25s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Restore fast transitions for interactive elements */
-button, a, input, select, textarea, [role='button'] {
+button,
+a,
+input,
+select,
+textarea,
+[role='button'] {
   transition-duration: 0.15s;
 }

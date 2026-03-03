@@ -100,35 +100,35 @@ export default function AgentDashboard() {
 
  const getStatusColor = (status: string) => {
  switch (status) {
- case 'running': return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
- case 'error': return 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
- case 'paused': return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
- default: return 'bg-blue-500/50'
+ case 'running': return 'bg-app-primary shadow-[0_0_10px_var(--app-success)]'
+ case 'error': return 'bg-app-error shadow-[0_0_10px_color-mix(in srgb, var(--app-error) 50%, transparent)]'
+ case 'paused': return 'bg-app-warning shadow-[0_0_10px_var(--app-warning)]'
+ default: return 'bg-app-info/50'
  }
  }
 
  const getLogLevelColor = (level: string) => {
  switch (level) {
- case 'error': return 'text-red-400'
+ case 'error': return 'text-app-error'
  case 'thought': return 'text-purple-400'
- case 'action': return 'text-amber-400'
- case 'decision': return 'text-emerald-400 font-bold'
- default: return 'text-app-text/60'
+ case 'action': return 'text-app-warning'
+ case 'decision': return 'text-app-primary font-bold'
+ default: return 'text-app-foreground/60'
  }
  }
 
  return (
- <div className="flex flex-col gap-8 p-1 sm:p-2 animate-in fade-in duration-500">
+ <div className="app-page flex flex-col gap-8 p-1 sm:p-2 animate-in fade-in duration-500">
  {/* --- Header Section --- */}
  <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
  <div className="space-y-1">
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
- <Sparkles className="w-6 h-6 text-app-text animate-pulse" />
+ <Sparkles className="w-6 h-6 text-app-foreground animate-pulse" />
  </div>
  <h1 className="page-header-title tracking-tight">Virtual Employees</h1>
  </div>
- <p className="text-app-text-muted font-medium ml-[60px]">Autonomous AI Agents managing your business data.</p>
+ <p className="text-app-muted-foreground font-medium ml-[60px]">Autonomous AI Agents managing your business data.</p>
  </div>
 
  <div className="flex items-center gap-3">
@@ -136,7 +136,7 @@ export default function AgentDashboard() {
  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
  Refresh Status
  </Button>
- <Button className="bg-gray-900 text-app-text hover:bg-black font-bold px-6">
+ <Button className="bg-app-surface text-app-foreground hover:bg-app-background font-bold px-6">
  <Cpu className="w-4 h-4 mr-2" />
  Hire New Agent
  </Button>
@@ -162,22 +162,22 @@ export default function AgentDashboard() {
 
  <CardHeader className="pb-2">
  <div className="flex items-start gap-4">
- <div className="w-12 h-12 rounded-2xl bg-app-bg group-hover:bg-purple-50 flex items-center justify-center transition-colors">
- <Icon className="w-6 h-6 text-app-text-faint group-hover:text-purple-600" />
+ <div className="w-12 h-12 rounded-2xl bg-app-background group-hover:bg-purple-50 flex items-center justify-center transition-colors">
+ <Icon className="w-6 h-6 text-app-muted-foreground group-hover:text-purple-600" />
  </div>
  <div>
- <CardTitle className="text-lg font-black text-app-text">{agent.name}</CardTitle>
- <Badge variant="secondary" className="bg-app-surface-2 text-app-text-muted font-bold text-[10px] uppercase tracking-wider">{agent.role_display}</Badge>
+ <CardTitle className="text-lg font-black text-app-foreground">{agent.name}</CardTitle>
+ <Badge variant="secondary" className="bg-app-surface-2 text-app-muted-foreground font-bold text-[10px] uppercase tracking-wider">{agent.role_display}</Badge>
  </div>
  </div>
  </CardHeader>
 
  <CardContent className="space-y-4">
- <p className="text-sm text-app-text-muted line-clamp-2 leading-relaxed italic">
+ <p className="text-sm text-app-muted-foreground line-clamp-2 leading-relaxed italic">
  &quot;{agent.persona}&quot;
  </p>
 
- <div className="flex items-center gap-4 text-xs font-bold text-app-text-faint">
+ <div className="flex items-center gap-4 text-xs font-bold text-app-muted-foreground">
  <span className="flex items-center gap-1.5">
  <Clock className="w-3.5 h-3.5" />
  {agent.frequency_minutes}m frequency
@@ -192,7 +192,7 @@ export default function AgentDashboard() {
  <CardFooter className="pt-2 flex gap-2">
  <Button
  variant={agent.is_active ? "outline" : "default"}
- className={`flex-1 font-bold ${!agent.is_active ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+ className={`flex-1 font-bold ${!agent.is_active ? 'bg-app-primary hover:bg-app-success' : ''}`}
  onClick={() => toggleAgent(agent)}
  >
  {agent.is_active ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
@@ -215,24 +215,24 @@ export default function AgentDashboard() {
 
  {/* Agent Capability Grid */}
  <Card className="rounded-3xl border-2 border-app-border shadow-sm overflow-hidden">
- <CardHeader className="bg-gray-50/50">
- <CardTitle className="text-sm font-black uppercase tracking-wider text-app-text-faint flex items-center gap-2">
+ <CardHeader className="bg-app-surface-2/50">
+ <CardTitle className="text-sm font-black uppercase tracking-wider text-app-muted-foreground flex items-center gap-2">
  <ShieldCheck className="w-4 h-4" />
  Agent Permission Scopes
  </CardTitle>
  </CardHeader>
  <CardContent className="p-0">
- <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y divide-gray-100">
+ <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y divide-app-border">
  {[
- { label: 'Read Context', icon: Search, color: 'text-blue-500' },
- { label: 'Tool Execution', icon: Zap, color: 'text-amber-500' },
+ { label: 'Read Context', icon: Search, color: 'text-app-info' },
+ { label: 'Tool Execution', icon: Zap, color: 'text-app-warning' },
  { label: 'Write Access', icon: Sparkles, color: 'text-purple-500' },
- { label: 'Self Improv.', icon: Brain, color: 'text-emerald-500' },
+ { label: 'Self Improv.', icon: Brain, color: 'text-app-primary' },
  ].map(item => (
- <div key={item.label} className="p-6 flex flex-col items-center gap-2 hover:bg-app-bg transition-colors">
+ <div key={item.label} className="p-6 flex flex-col items-center gap-2 hover:bg-app-background transition-colors">
  <item.icon className={`w-6 h-6 ${item.color}`} />
- <span className="text-xs font-black text-app-text-muted uppercase">{item.label}</span>
- <Badge variant="outline" className="text-[9px] border-emerald-500/20 text-emerald-600 bg-emerald-50">Authorized</Badge>
+ <span className="text-xs font-black text-app-muted-foreground uppercase">{item.label}</span>
+ <Badge variant="outline" className="text-[9px] border-app-primary/20 text-app-primary bg-app-primary-light">Authorized</Badge>
  </div>
  ))}
  </div>
@@ -242,17 +242,17 @@ export default function AgentDashboard() {
 
  {/* --- Right Column: Live Console --- */}
  <div className="space-y-6">
- <Card className="rounded-3xl border-2 border-gray-900 bg-[#0d0d1a] shadow-2xl h-[700px] flex flex-col overflow-hidden">
- <CardHeader className="bg-gray-900 border-b border-app-text/5 py-4">
+ <Card className="rounded-3xl border-2 border-app-border bg-[#0d0d1a] shadow-2xl h-[700px] flex flex-col overflow-hidden">
+ <CardHeader className="bg-app-surface border-b border-app-text/5 py-4">
  <div className="flex items-center justify-between">
- <CardTitle className="text-sm font-black text-app-text flex items-center gap-2 uppercase tracking-widest">
+ <CardTitle className="text-sm font-black text-app-foreground flex items-center gap-2 uppercase tracking-widest">
  <Terminal className="w-4 h-4 text-purple-400" />
  Live Agent Intelligence
  </CardTitle>
  <div className="flex gap-1.5">
- <div className="w-2 h-2 rounded-full bg-red-400" />
- <div className="w-2 h-2 rounded-full bg-amber-400" />
- <div className="w-2 h-2 rounded-full bg-emerald-400" />
+ <div className="w-2 h-2 rounded-full bg-app-error/10" />
+ <div className="w-2 h-2 rounded-full bg-app-warning/10" />
+ <div className="w-2 h-2 rounded-full bg-app-success/10" />
  </div>
  </div>
  </CardHeader>
@@ -260,24 +260,24 @@ export default function AgentDashboard() {
  <CardContent className="flex-1 overflow-auto p-4 font-mono text-[11px] space-y-3 custom-scrollbar">
  {logs.length === 0 ? (
  <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
- <Brain className="w-12 h-12 text-app-text/10 animate-pulse" />
- <p className="text-app-text/30 text-center">Waiting for agent activity...</p>
+ <Brain className="w-12 h-12 text-app-foreground/10 animate-pulse" />
+ <p className="text-app-foreground/30 text-center">Waiting for agent activity...</p>
  </div>
  ) : (
  logs.map(log => (
  <div key={log.id} className="group animate-in slide-in-from-right duration-300">
  <div className="flex items-start gap-2">
- <span className="text-app-text/20 shrink-0">[{new Date(log.created_at).toLocaleTimeString()}]</span>
+ <span className="text-app-foreground/20 shrink-0">[{new Date(log.created_at).toLocaleTimeString()}]</span>
  <span className="text-purple-400 shrink-0 font-bold">{log.agent_name} »</span>
  <div className="space-y-1 min-w-0 flex-1">
  <p className={getLogLevelColor(log.level)}>{log.message}</p>
  {log.level === 'thought' && (
- <div className="bg-app-text/5 p-2 rounded-lg border border-app-text/5 text-purple-200/50 leading-relaxed italic">
+ <div className="bg-app-foreground/5 p-2 rounded-lg border border-app-text/5 text-purple-200/50 leading-relaxed italic">
  {log.message}
  </div>
  )}
  {log.level === 'decision' && (
- <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-emerald-400 shadow-inner">
+ <div className="bg-app-primary/10 p-3 rounded-xl border border-app-primary/20 text-app-primary shadow-inner">
  <div className="flex items-center gap-2 mb-1">
  <CheckCircle2 className="w-4 h-4" />
  <span className="font-black uppercase tracking-widest text-[9px]">Decision Logged</span>
@@ -292,11 +292,11 @@ export default function AgentDashboard() {
  )}
  </CardContent>
 
- <CardFooter className="bg-black/50 border-t border-app-text/5 p-3">
- <div className="w-full flex items-center gap-4 bg-app-text/5 rounded-2xl px-4 py-2 border border-app-text/10 group focus-within:border-purple-500/50 transition-all">
- <Search className="w-4 h-4 text-app-text/20 group-focus-within:text-purple-400" />
+ <CardFooter className="bg-app-background/50 border-t border-app-text/5 p-3">
+ <div className="w-full flex items-center gap-4 bg-app-foreground/5 rounded-2xl px-4 py-2 border border-app-text/10 group focus-within:border-purple-500/50 transition-all">
+ <Search className="w-4 h-4 text-app-foreground/20 group-focus-within:text-purple-400" />
  <input
- className="bg-transparent border-none text-app-text text-xs w-full focus:outline-none placeholder:text-app-text/10"
+ className="bg-transparent border-none text-app-foreground text-xs w-full focus:outline-none placeholder:text-app-foreground/10"
  placeholder="Filter system logs or ask agent for status..."
  />
  </div>
@@ -304,13 +304,13 @@ export default function AgentDashboard() {
  </Card>
 
  {/* Agent Security Banner */}
- <div className="p-6 rounded-3xl bg-amber-50 border-2 border-amber-100 flex items-start gap-4">
- <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
- <ShieldAlert className="w-5 h-5 text-amber-600" />
+ <div className="p-6 rounded-3xl bg-app-warning-bg border-2 border-app-warning/30 flex items-start gap-4">
+ <div className="w-10 h-10 rounded-2xl bg-app-warning-bg flex items-center justify-center shrink-0">
+ <ShieldAlert className="w-5 h-5 text-app-warning" />
  </div>
  <div>
- <h4 className="font-black text-amber-900 text-sm uppercase tracking-tight">Agent Safeguards Active</h4>
- <p className="text-amber-700/70 text-xs mt-1 leading-relaxed">
+ <h4 className="font-black text-app-warning text-sm uppercase tracking-tight">Agent Safeguards Active</h4>
+ <p className="text-app-warning/70 text-xs mt-1 leading-relaxed">
  All virtual employees are sandboxed. Data modifications require audit logs and role-based permissions check.
  </p>
  </div>

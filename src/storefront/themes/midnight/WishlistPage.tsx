@@ -58,13 +58,13 @@ export default function MidnightWishlistPage() {
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
-                    <Link href={path('/account')} className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                    <Link href={path('/account')} className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
                     </Link>
                     <div className="flex items-end justify-between flex-wrap gap-4">
                         <div>
                             <h1 className="text-5xl font-black text-white italic tracking-tighter">Curated <span className="text-rose-400">Vault</span></h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{wishlistCount} saved entities</p>
+                            <p className="text-app-text-faint text-xs font-bold uppercase tracking-widest mt-2">{wishlistCount} saved entities</p>
                         </div>
                         {products.length > 0 && (
                             <Link href={path('/')}
@@ -81,11 +81,11 @@ export default function MidnightWishlistPage() {
                     </div>
                 ) : products.length === 0 ? (
                     <div className="py-24 text-center space-y-8 bg-slate-900/20 border border-white/5 rounded-[3.5rem]">
-                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-slate-700">
+                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-app-text-muted">
                             <Heart size={48} />
                         </div>
                         <h2 className="text-2xl font-black text-white italic">Vault is Empty</h2>
-                        <p className="text-slate-500 text-sm">Browse products and tap the heart icon to save them here.</p>
+                        <p className="text-app-text-faint text-sm">Browse products and tap the heart icon to save them here.</p>
                         <Link href={path('/')} className="inline-flex items-center gap-3 px-10 py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-rose-500 transition-all">
                             Explore Products <ChevronRight size={16} />
                         </Link>
@@ -98,7 +98,7 @@ export default function MidnightWishlistPage() {
                                     {product.image_url ? (
                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-800"><Package size={64} /></div>
+                                        <div className="w-full h-full flex items-center justify-center text-app-text"><Package size={64} /></div>
                                     )}
                                     <div className="absolute top-4 right-4 flex gap-2">
                                         <button onClick={() => toggleWishlist(product.id)}
@@ -113,7 +113,7 @@ export default function MidnightWishlistPage() {
                                 </div>
                                 <div className="p-6 space-y-4">
                                     {product.category_name && (
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-app-text-muted flex items-center gap-1.5">
                                             <Tag size={10} /> {product.category_name}
                                         </span>
                                     )}

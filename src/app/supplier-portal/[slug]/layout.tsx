@@ -47,7 +47,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  // No session and not on login page → redirect to login
  if (!session && !isLoginPage) {
  return (
- <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+ <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 bg-app-bg">
  <div className="text-center space-y-6">
  <Building2 size={48} className="mx-auto text-app-text-muted" />
  <h2 className="text-xl font-bold text-app-text">Session Expired</h2>
@@ -82,7 +82,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  const isActive = (href: string) => pathname === href
 
  return (
- <div className="min-h-screen bg-[#020617] flex">
+ <div className="min-h-screen bg-[#020617] flex bg-app-bg">
  {/* Mobile Overlay */}
  {sidebarOpen && (
  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
@@ -90,7 +90,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  )}
 
  {/* Sidebar */}
- <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-slate-950/80 backdrop-blur-3xl border-r border-app-text/5 flex flex-col z-50 transition-transform duration-300
+ <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-app-bg/80 backdrop-blur-3xl border-r border-app-text/5 flex flex-col z-50 transition-transform duration-300
  ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
  {/* Brand */}
  <div className="p-6 border-b border-app-text/5">
@@ -139,7 +139,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  </div>
  </div>
  <button onClick={handleLogout}
- className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-xl text-red-400 text-sm font-medium hover:bg-red-500/10 transition-all">
+ className="w-full flex items-center gap-2 justify-center px-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-xl text-app-error text-sm font-medium hover:bg-app-error-bg transition-all">
  <LogOut size={14} /> Sign Out
  </button>
  </div>
@@ -148,7 +148,7 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
  {/* Main */}
  <div className="flex-1 min-w-0">
  {/* Mobile Top Bar */}
- <div className="lg:hidden sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-app-text/5 p-4 flex items-center justify-between">
+ <div className="lg:hidden sticky top-0 z-30 bg-app-bg/80 backdrop-blur-xl border-b border-app-text/5 p-4 flex items-center justify-between">
  <button onClick={() => setSidebarOpen(true)}
  className="w-10 h-10 bg-app-text/5 border border-app-text/10 rounded-xl flex items-center justify-center text-app-text">
  <Menu size={18} />

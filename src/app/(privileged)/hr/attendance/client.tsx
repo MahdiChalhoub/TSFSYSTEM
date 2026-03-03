@@ -67,35 +67,35 @@ export default function TimeAttendanceLedger({
  const renderers: Record<string, (r: AttendanceRecord) => React.ReactNode> = {
  employee: r => (
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+ <div className="w-8 h-8 rounded-lg bg-app-primary-light text-app-primary flex items-center justify-center">
  <Fingerprint size={16} />
  </div>
- <span className="font-bold text-app-text uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
+ <span className="font-bold text-app-foreground uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
  </div>
  ),
  date: r => (
- <div className="flex items-center gap-1.5 text-xs font-mono text-app-text-muted bg-app-bg px-2 py-1 rounded-lg border border-app-border">
- <Calendar size={12} className="text-app-text-faint" />
+ <div className="flex items-center gap-1.5 text-xs font-mono text-app-muted-foreground bg-app-background px-2 py-1 rounded-lg border border-app-border">
+ <Calendar size={12} className="text-app-muted-foreground" />
  {r.date || r.created_at?.split('T')[0]}
  </div>
  ),
  check_in: r => r.check_in ? (
- <span className="text-xs font-black text-gray-700 font-mono italic">
+ <span className="text-xs font-black text-app-muted-foreground font-mono italic">
  {new Date(r.check_in).toLocaleTimeString()}
  </span>
- ) : <span className="text-gray-300 font-mono">—</span>,
+ ) : <span className="text-app-muted-foreground font-mono">—</span>,
  check_out: r => r.check_out ? (
- <span className="text-xs font-black text-gray-700 font-mono italic">
+ <span className="text-xs font-black text-app-muted-foreground font-mono italic">
  {new Date(r.check_out).toLocaleTimeString()}
  </span>
- ) : <span className="text-gray-300 font-mono">—</span>,
+ ) : <span className="text-app-muted-foreground font-mono">—</span>,
  duration: r => {
- if (!r.check_in || !r.check_out) return <span className="text-gray-300">—</span>;
+ if (!r.check_in || !r.check_out) return <span className="text-app-muted-foreground">—</span>;
  const diff = new Date(r.check_out).getTime() - new Date(r.check_in).getTime();
  const hours = Math.floor(diff / (1000 * 60 * 60));
  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
  return (
- <div className="flex items-center justify-end gap-1.5 text-xs font-black text-emerald-600">
+ <div className="flex items-center justify-end gap-1.5 text-xs font-black text-app-primary">
  <Timer size={14} />
  {hours}h {mins}m
  </div>
@@ -139,44 +139,44 @@ export default function TimeAttendanceLedger({
  headerExtra={
  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
  <DialogTrigger asChild>
- <Button className="h-10 px-6 bg-emerald-600 text-app-text hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all">
+ <Button className="h-10 px-6 bg-app-primary text-app-foreground hover:bg-app-success rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all">
  <Plus size={18} className="mr-2" /> Add Record
  </Button>
  </DialogTrigger>
  <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-lg">
- <div className="bg-emerald-600 p-8 text-app-text relative">
+ <div className="bg-app-primary p-8 text-app-foreground relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <Fingerprint size={80} />
  </div>
  <h2 className="text-3xl font-black tracking-tighter">New <span className="opacity-60">Record</span></h2>
- <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Record Attendance</p>
+ <p className="text-app-success text-[10px] font-black uppercase tracking-[0.2em] mt-1">Record Attendance</p>
  </div>
  <form onSubmit={handleCreate} className="p-8 space-y-6 bg-app-surface">
  <div className="space-y-4">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Employee</label>
- <select name="employee" required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none appearance-none">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Employee</label>
+ <select name="employee" required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none appearance-none">
  <option value="">Select Employee...</option>
  {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
  </select>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Assigned Shift</label>
- <select name="shift" className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none appearance-none">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Assigned Shift</label>
+ <select name="shift" className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none appearance-none">
  <option value="">None</option>
  {shifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Date</label>
- <input name="date" type="date" defaultValue={today} required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Date</label>
+ <input name="date" type="date" defaultValue={today} required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none" />
  </div>
  </div>
  </div>
  <div className="flex gap-3 pt-4">
  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-app-border">Cancel</Button>
- <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-emerald-600 text-app-text hover:bg-emerald-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
+ <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-app-primary text-app-foreground hover:bg-app-success rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
  {isPending ? 'Saving...' : 'Submit'}
  </Button>
  </div>
@@ -200,17 +200,17 @@ export default function TimeAttendanceLedger({
  return (
  <div className="flex gap-2">
  {!hasIn && (
- <Button onClick={() => handleCheckIn(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleCheckIn(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-app-primary-light text-app-success hover:bg-app-primary hover:text-app-foreground rounded-lg text-[10px] font-black uppercase tracking-widest">
  <LogIn size={12} className="mr-1.5" /> Start
  </Button>
  )}
  {hasIn && !hasOut && (
- <Button onClick={() => handleCheckOut(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleCheckOut(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-app-warning-bg text-app-warning hover:bg-app-warning hover:text-app-foreground rounded-lg text-[10px] font-black uppercase tracking-widest">
  <LogOut size={12} className="mr-1.5" /> Clock Out
  </Button>
  )}
  {hasIn && hasOut && (
- <div className="h-8 px-3 bg-app-bg text-app-text-faint rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center">
+ <div className="h-8 px-3 bg-app-background text-app-muted-foreground rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center">
  Verified
  </div>
  )}

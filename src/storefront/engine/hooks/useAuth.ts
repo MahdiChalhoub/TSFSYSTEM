@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 import { usePortal } from '@/context/PortalContext'

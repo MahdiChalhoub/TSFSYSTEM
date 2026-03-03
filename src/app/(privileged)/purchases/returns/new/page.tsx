@@ -103,19 +103,19 @@ function CreatePurchaseReturnForm() {
  }
  }
 
- if (loading) return <div className="p-10 space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>
- if (!order) return <div className="p-20 text-center"><AlertCircle className="mx-auto mb-4 text-gray-300" size={48} /><p>Purchase Order not found</p></div>
+ if (loading) return <div className="app-page p-10 space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>
+ if (!order) return <div className="p-20 text-center"><AlertCircle className="mx-auto mb-4 text-app-muted-foreground" size={48} /><p>Purchase Order not found</p></div>
 
  return (
  <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
  <header className="flex items-center justify-between">
  <div>
- <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-text-faint hover:text-blue-500 mb-4 transition-all">
+ <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-info mb-4 transition-all">
  <ArrowLeft size={14} /> Back to Purchase Detail
  </Link>
  <h1 className="page-header-title tracking-tighter flex items-center gap-3">
- <Truck size={32} className="text-blue-500" />
- Supplier Return for <span className="text-blue-500">{order.ref_code || `#${orderId}`}</span>
+ <Truck size={32} className="text-app-info" />
+ Supplier Return for <span className="text-app-info">{order.ref_code || `#${orderId}`}</span>
  </h1>
  </div>
  </header>
@@ -123,7 +123,7 @@ function CreatePurchaseReturnForm() {
  <div className="grid lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-6">
  <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden">
- <div className="p-6 bg-app-bg border-b border-app-border font-bold text-[10px] uppercase tracking-widest text-app-text-faint">
+ <div className="p-6 bg-app-background border-b border-app-border font-bold text-[10px] uppercase tracking-widest text-app-muted-foreground">
  Select Items to Ship Back
  </div>
  <Table>
@@ -139,10 +139,10 @@ function CreatePurchaseReturnForm() {
  {order?.lines?.map((line: Record<string, any>) => (
  <TableRow key={line.id}>
  <TableCell>
- <div className="font-bold text-app-text">{line.product_name}</div>
- <div className="text-[10px] text-app-text-faint uppercase font-mono">Line ID: {line.id}</div>
+ <div className="font-bold text-app-foreground">{line.product_name}</div>
+ <div className="text-[10px] text-app-muted-foreground uppercase font-mono">Line ID: {line.id}</div>
  </TableCell>
- <TableCell className="text-center font-bold text-app-text-muted">{line.qty_received}</TableCell>
+ <TableCell className="text-center font-bold text-app-muted-foreground">{line.qty_received}</TableCell>
  <TableCell>
  <Input
  type="number"
@@ -153,7 +153,7 @@ function CreatePurchaseReturnForm() {
  onChange={(e) => handleQtyChange(line.id, parseFloat(e.target.value), parseFloat(line.qty_received))}
  />
  </TableCell>
- <TableCell className="text-right font-medium text-app-text">{fmt(parseFloat(line.unit_price))}</TableCell>
+ <TableCell className="text-right font-medium text-app-foreground">{fmt(parseFloat(line.unit_price))}</TableCell>
  </TableRow>
  ))}
  </TableBody>
@@ -161,9 +161,9 @@ function CreatePurchaseReturnForm() {
  </Card>
 
  <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
- <h3 className="font-bold text-xs uppercase tracking-widest text-app-text-faint">Return Instructions / Reason</h3>
+ <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Instructions / Reason</h3>
  <textarea
- className="w-full h-32 p-4 rounded-2xl border border-app-border bg-gray-50/50 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all outline-none text-sm"
+ className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface-2/50 focus:ring-2 focus:ring-blue-200 focus:border-app-info/30 transition-all outline-none text-sm"
  placeholder="Reason for return, RMN number, or special instructions for the supplier..."
  value={reason}
  onChange={(e) => setReason(e.target.value)}
@@ -172,29 +172,29 @@ function CreatePurchaseReturnForm() {
  </div>
 
  <div className="space-y-6">
- <Card className="bg-gray-900 text-app-text p-8 rounded-[2.5rem] shadow-2xl border-none">
+ <Card className="bg-app-surface text-app-foreground p-8 rounded-[2.5rem] shadow-2xl border-none">
  <div className="space-y-6">
  <div>
- <div className="text-[10px] font-black text-app-text-muted uppercase tracking-widest mb-4">Debit Summary</div>
- <div className="flex justify-between items-center py-2 border-b border-gray-800">
- <span className="text-sm text-app-text-faint">Items to Return</span>
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Debit Summary</div>
+ <div className="flex justify-between items-center py-2 border-b border-app-border">
+ <span className="text-sm text-app-muted-foreground">Items to Return</span>
  <span className="font-bold">{Object.values(returnItems).filter(q => q > 0).length} Lines</span>
  </div>
- <div className="flex justify-between items-center py-2 border-b border-gray-800">
- <span className="text-sm text-app-text-faint">Debit Value</span>
+ <div className="flex justify-between items-center py-2 border-b border-app-border">
+ <span className="text-sm text-app-muted-foreground">Debit Value</span>
  <span className="font-mono text-xs">{fmt(calculateTotals())}</span>
  </div>
  </div>
 
  <div className="pt-4">
- <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
- <div className="text-5xl font-black text-app-text text-right tracking-tighter">
+ <div className="text-[10px] font-black text-app-info uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
+ <div className="text-5xl font-black text-app-foreground text-right tracking-tighter">
  {fmt(calculateTotals())}
  </div>
  </div>
 
  <Button
- className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-app-text font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
+ className="w-full h-16 rounded-2xl bg-app-info hover:bg-app-info text-app-foreground font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
  onClick={handleSubmit}
  disabled={submitting || calculateTotals() === 0}
  >
@@ -208,11 +208,11 @@ function CreatePurchaseReturnForm() {
  </div>
  </Card>
 
- <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
- <div className="flex items-center gap-2 text-blue-600 mb-2 font-black text-[10px] uppercase tracking-widest">
+ <div className="p-6 bg-app-info-bg rounded-[2rem] border border-app-info/30">
+ <div className="flex items-center gap-2 text-app-info mb-2 font-black text-[10px] uppercase tracking-widest">
  <AlertCircle size={16} /> Destination
  </div>
- <p className="text-xs text-blue-700 leading-relaxed font-medium">
+ <p className="text-xs text-app-info leading-relaxed font-medium">
  Starting a return will mark items as **Pending Ship-out**. Stock will be removed from your warehouse once you click **Complete** in the Return Registry.
  </p>
  </div>

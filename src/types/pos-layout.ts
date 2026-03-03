@@ -1,6 +1,7 @@
 import { CartItem } from './pos';
 
-export type POSLayoutVariant = 'classic' | 'modern' | 'compact' | 'original' | 'intelligence';
+export type POSLayoutVariant = 'classic' | 'modern' | 'compact' | 'original' | 'intelligence' | 'arctic-glass';
+
 
 export interface POSClient {
     id: number;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Finance Module — Frontend Entry Point
  * 

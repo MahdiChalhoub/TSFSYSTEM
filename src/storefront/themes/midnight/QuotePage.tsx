@@ -62,7 +62,7 @@ export default function MidnightQuotePage() {
                     </div>
                     <div className="space-y-4">
                         <h1 className="text-4xl font-black text-white italic tracking-tighter">Quote <span className="text-emerald-500">Submitted</span></h1>
-                        <p className="text-slate-500 text-sm leading-relaxed">Our team will review your request and respond shortly.</p>
+                        <p className="text-app-text-faint text-sm leading-relaxed">Our team will review your request and respond shortly.</p>
                     </div>
                     <Link href={path('/')}
                         className="inline-flex items-center gap-3 px-10 py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-500 shadow-xl shadow-emerald-900/30 transition-all">
@@ -79,11 +79,11 @@ export default function MidnightQuotePage() {
 
             <div className="max-w-4xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
-                    <Link href={path('/')} className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                    <Link href={path('/')} className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Storefront
                     </Link>
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Request a <span className="text-blue-400">Quote</span></h1>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Build your quote request below</p>
+                    <p className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Build your quote request below</p>
                 </div>
 
                 {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
@@ -102,16 +102,16 @@ export default function MidnightQuotePage() {
                                 <div key={i} className="flex gap-3 items-start">
                                     <div className="flex-1 space-y-3">
                                         <input type="text" placeholder="Product name or description" value={line.product_name} onChange={e => updateLine(i, 'product_name', e.target.value)}
-                                            className="w-full bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-slate-800 font-medium" />
+                                            className="w-full bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-app-text font-medium" />
                                         <div className="flex gap-3">
                                             <input type="number" min={1} value={line.quantity} onChange={e => updateLine(i, 'quantity', parseInt(e.target.value) || 1)}
                                                 className="w-32 bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all font-medium" />
                                             <input type="text" placeholder="Notes (optional)" value={line.notes} onChange={e => updateLine(i, 'notes', e.target.value)}
-                                                className="flex-1 bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-slate-800 font-medium" />
+                                                className="flex-1 bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-app-text font-medium" />
                                         </div>
                                     </div>
                                     {lineItems.length > 1 && (
-                                        <button type="button" onClick={() => removeLine(i)} className="p-4 text-slate-600 hover:text-rose-400 transition-colors"><Trash2 size={18} /></button>
+                                        <button type="button" onClick={() => removeLine(i)} className="p-4 text-app-text-muted hover:text-rose-400 transition-colors"><Trash2 size={18} /></button>
                                     )}
                                 </div>
                             ))}
@@ -121,7 +121,7 @@ export default function MidnightQuotePage() {
                     <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3rem] space-y-6">
                         <h2 className="text-lg font-black text-white italic flex items-center gap-3"><FileQuestion size={20} className="text-blue-400" /> Additional Info</h2>
                         <textarea placeholder="Any additional requirements or notes..." value={message} onChange={e => setMessage(e.target.value)} rows={4}
-                            className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-slate-800 resize-none font-medium" />
+                            className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-blue-500 transition-all placeholder:text-app-text resize-none font-medium" />
                     </div>
 
                     <button type="submit" disabled={submitting}

@@ -22,6 +22,15 @@ class FinanceRulesTests(TestCase):
             start_date=datetime.date(2026, 1, 1),
             end_date=datetime.date(2026, 1, 31)
         )
+        # Add a full-year period to cover any timezone.now() calls during tests
+        self.fp_full = FiscalPeriod.objects.create(
+            organization=self.org,
+            fiscal_year=self.fy,
+            name="FY2026-ALL",
+            start_date=datetime.date(2026, 1, 1),
+            end_date=datetime.date(2026, 12, 31)
+        )
+
         
         # Regular Asset Account
         self.cash = ChartOfAccount.objects.create(
@@ -173,3 +182,176 @@ class FinanceRulesTests(TestCase):
         self.assertEqual(report['type'], 'STANDARD_RECLASSIFIED')
         self.assertEqual(report['purchases_ht'], Decimal('1000.00')) # 10 * 100
         self.assertEqual(report['vat_recoverable'], Decimal('100.00')) # 10% of 1000
+
+    def test_vat_settlement_refund_receivable(self):
+        """
+        VAT REFUND RECEIVABLE: when TVA Récupérable > TVA Collectée,
+        settlement must post to VAT Refund Receivable account (not Bank).
+        """
+        from apps.finance.services.vat_settlement_service import VATSettlementService
+        from erp.services import ConfigurationService
+        import datetime
+
+        # Create sales tax (TVA Collectée) account and purchases tax (TVA Récupérable)
+        vat_collected_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='4000', name='TVA Collectée', type='LIABILITY'
+        )
+        vat_recoverable_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='1200', name='TVA Récupérable', type='ASSET'
+        )
+        refund_receivable_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='1201', name='VAT Refund Receivable', type='ASSET'
+        )
+        bank_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='5000', name='Bank', type='ASSET'
+        )
+
+        # Configure posting rules with new standardized key names
+        rules = ConfigurationService.get_posting_rules(self.org)
+        if 'sales' not in rules:
+            rules['sales'] = {}
+        if 'purchases' not in rules:
+            rules['purchases'] = {}
+        if 'tax' not in rules:
+            rules['tax'] = {}
+        rules['sales']['vat_collected'] = vat_collected_acc.id
+        rules['purchases']['vat_recoverable'] = vat_recoverable_acc.id
+        rules['tax']['vat_refund_receivable'] = refund_receivable_acc.id
+        rules['tax']['vat_payable'] = bank_acc.id  # re-use bank_acc as dummy vat_payable for setup
+        ConfigurationService.save_posting_rules(self.org, rules)
+
+        period_start = datetime.date(2026, 1, 1)
+        period_end = datetime.date(2026, 1, 31)
+
+        # Post some TVA Récupérable (purchases): 500 debit on vat_recoverable_acc
+        LedgerService.create_journal_entry(
+            organization=self.org,
+            transaction_date=datetime.date(2026, 1, 15),
+            description='Input VAT on purchases',
+            lines=[
+                {'account_id': vat_recoverable_acc.id, 'debit': Decimal('500.00'), 'credit': Decimal('0')},
+                {'account_id': self.cash.id, 'debit': Decimal('0'), 'credit': Decimal('500.00')},
+            ],
+            status='POSTED',
+            internal_bypass=True,
+        )
+
+        # Post a smaller TVA Collectée (sales): 200 credit on vat_collected_acc
+        LedgerService.create_journal_entry(
+            organization=self.org,
+            transaction_date=datetime.date(2026, 1, 20),
+            description='Output VAT on sales',
+            lines=[
+                {'account_id': self.cash.id, 'debit': Decimal('200.00'), 'credit': Decimal('0')},
+                {'account_id': vat_collected_acc.id, 'debit': Decimal('0'), 'credit': Decimal('200.00')},
+            ],
+            status='POSTED',
+            internal_bypass=True,
+        )
+
+        # Preview: net_due should be < 0 (DGI owes us 300)
+        report = VATSettlementService.calculate_settlement(self.org, period_start, period_end)
+        self.assertEqual(report['vat_collected'], Decimal('200.00'))
+        self.assertEqual(report['vat_recoverable'], Decimal('500.00'))
+        self.assertEqual(report['net_due'], Decimal('-300.00'))
+
+        # Post netting entry (Step 1) — no bank_account_id needed
+        result = VATSettlementService.post_settlement(
+            organization=self.org,
+            period_start=period_start,
+            period_end=period_end,
+            user=None,
+        )
+
+        je_id = result['journal_entry_id']
+        from apps.finance.models import JournalEntry
+        je = JournalEntry.objects.get(id=je_id)
+        je_lines = je.lines.all()
+
+        # There should be a debit on refund_receivable_acc for 300
+        rr_line = je_lines.filter(account_id=refund_receivable_acc.id).first()
+        self.assertIsNotNone(rr_line, "VAT Refund Receivable line must be posted")
+        self.assertEqual(rr_line.debit, Decimal('300.00'))
+
+        # Bank account must NOT appear in netting entry (Step 2 only)
+        bank_line = je_lines.filter(account_id=bank_acc.id, debit__gt=0).first()
+        self.assertIsNone(bank_line, "Bank must not appear in netting entry (that's Step 2)")
+
+        print("[OK] VAT settlement refund: netting posts to VAT Refund Receivable, not Bank.")
+
+    def test_vat_settlement_payable(self):
+        """
+        VAT PAYABLE: when TVA Collectée > TVA Récupérable, netting entry
+        must post net_due to tax.vat_payable (not Bank directly).
+        """
+        from apps.finance.services.vat_settlement_service import VATSettlementService
+        from erp.services import ConfigurationService
+        import datetime
+
+        vat_collected_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='4001', name='TVA Collectée B', type='LIABILITY'
+        )
+        vat_recoverable_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='1202', name='TVA Récupérable B', type='ASSET'
+        )
+        vat_payable_acc = ChartOfAccount.objects.create(
+            organization=self.org, code='2300', name='VAT Payable', type='LIABILITY'
+        )
+
+        rules = ConfigurationService.get_posting_rules(self.org)
+        if 'sales' not in rules:
+            rules['sales'] = {}
+        if 'purchases' not in rules:
+            rules['purchases'] = {}
+        if 'tax' not in rules:
+            rules['tax'] = {}
+        rules['sales']['vat_collected'] = vat_collected_acc.id
+        rules['purchases']['vat_recoverable'] = vat_recoverable_acc.id
+        rules['tax']['vat_payable'] = vat_payable_acc.id
+        ConfigurationService.save_posting_rules(self.org, rules)
+
+        period_start = datetime.date(2026, 1, 1)
+        period_end = datetime.date(2026, 1, 31)
+
+        # Post TVA Collectée 800, TVA Récupérable 300 → net_due = +500
+        LedgerService.create_journal_entry(
+            organization=self.org,
+            transaction_date=datetime.date(2026, 1, 10),
+            description='Output VAT',
+            lines=[
+                {'account_id': self.cash.id, 'debit': Decimal('800'), 'credit': Decimal('0')},
+                {'account_id': vat_collected_acc.id, 'debit': Decimal('0'), 'credit': Decimal('800')},
+            ],
+            status='POSTED', internal_bypass=True,
+        )
+        LedgerService.create_journal_entry(
+            organization=self.org,
+            transaction_date=datetime.date(2026, 1, 12),
+            description='Input VAT',
+            lines=[
+                {'account_id': vat_recoverable_acc.id, 'debit': Decimal('300'), 'credit': Decimal('0')},
+                {'account_id': self.cash.id, 'debit': Decimal('0'), 'credit': Decimal('300')},
+            ],
+            status='POSTED', internal_bypass=True,
+        )
+
+        report = VATSettlementService.calculate_settlement(self.org, period_start, period_end)
+        self.assertEqual(report['net_due'], Decimal('500.00'))
+
+        result = VATSettlementService.post_settlement(
+            organization=self.org,
+            period_start=period_start,
+            period_end=period_end,
+            user=None,
+        )
+
+        from apps.finance.models import JournalEntry
+        je = JournalEntry.objects.get(id=result['journal_entry_id'])
+        je_lines = je.lines.all()
+
+        # net_due > 0 → CR VAT Payable
+        vp_line = je_lines.filter(account_id=vat_payable_acc.id).first()
+        self.assertIsNotNone(vp_line, "VAT Payable line must be posted for net_due > 0")
+        self.assertEqual(vp_line.credit, Decimal('500.00'))
+
+        print("[OK] VAT settlement payable: netting posts to VAT Payable control account.")

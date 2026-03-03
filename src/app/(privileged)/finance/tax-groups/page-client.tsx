@@ -121,20 +121,20 @@ export default function TaxGroupsPage() {
  sortable: true,
  render: (tg) => (
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-app-bg border border-app-border shrink-0 shadow-inner">
- <span className="text-sm font-black text-amber-600">{Number(tg.rate).toFixed(0)}</span>
- <span className="text-[10px] text-app-text-faint font-bold">%</span>
+ <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-app-background border border-app-border shrink-0 shadow-inner">
+ <span className="text-sm font-black text-app-warning">{Number(tg.rate).toFixed(0)}</span>
+ <span className="text-[10px] text-app-muted-foreground font-bold">%</span>
  </div>
  <div className="flex flex-col">
  <div className="flex items-center gap-2">
- <span className="font-bold text-app-text text-sm">{tg.name}</span>
+ <span className="font-bold text-app-foreground text-sm">{tg.name}</span>
  {tg.is_default && (
- <Badge className="bg-amber-50 text-amber-600 border-amber-200 text-[9px] font-black uppercase px-2 h-4 rounded-lg flex items-center gap-1">
+ <Badge className="bg-app-warning-bg text-app-warning border-app-warning text-[9px] font-black uppercase px-2 h-4 rounded-lg flex items-center gap-1">
  <Star size={8} fill="currentColor" /> Default
  </Badge>
  )}
  </div>
- <span className="text-[10px] text-app-text-faint font-black uppercase tracking-widest">{tg.tax_type?.replace('_', ' ') || 'STANDARD'}</span>
+ <span className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">{tg.tax_type?.replace('_', ' ') || 'STANDARD'}</span>
  </div>
  </div>
  )
@@ -144,12 +144,12 @@ export default function TaxGroupsPage() {
  label: 'Rate (%)',
  align: 'right',
  sortable: true,
- render: (tg) => <span className="font-mono text-sm font-black text-amber-600">{Number(tg.rate).toFixed(2)}%</span>
+ render: (tg) => <span className="font-mono text-sm font-black text-app-warning">{Number(tg.rate).toFixed(2)}%</span>
  },
  {
  key: 'description',
  label: 'Applicability',
- render: (tg) => <span className="text-xs text-app-text-faint font-medium truncate max-w-[200px] inline-block">{tg.description || 'No description'}</span>
+ render: (tg) => <span className="text-xs text-app-muted-foreground font-medium truncate max-w-[200px] inline-block">{tg.description || 'No description'}</span>
  },
  {
  key: 'actions',
@@ -163,7 +163,7 @@ export default function TaxGroupsPage() {
  variant="ghost"
  onClick={() => handleSetDefault(tg.id)}
  disabled={settingDefault === tg.id}
- className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-all"
+ className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-app-warning hover:bg-app-warning-bg hover:text-app-warning transition-all"
  >
  {settingDefault === tg.id ? '...' : 'Set Default'}
  </Button>
@@ -172,7 +172,7 @@ export default function TaxGroupsPage() {
  size="sm"
  variant="ghost"
  onClick={() => startEdit(tg)}
- className="rounded-xl h-8 w-8 p-0 text-app-text-faint hover:text-indigo-600"
+ className="rounded-xl h-8 w-8 p-0 text-app-muted-foreground hover:text-app-primary"
  >
  <Edit2 size={14} />
  </Button>
@@ -181,7 +181,7 @@ export default function TaxGroupsPage() {
  variant="ghost"
  onClick={() => handleDelete(tg.id)}
  disabled={deleting === tg.id || tg.is_default}
- className="rounded-xl h-8 w-8 p-0 text-stone-300 hover:text-red-600 disabled:opacity-30"
+ className="rounded-xl h-8 w-8 p-0 text-app-muted-foreground hover:text-app-error disabled:opacity-30"
  >
  {deleting === tg.id ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
  </Button>
@@ -209,70 +209,70 @@ export default function TaxGroupsPage() {
  <header className="flex justify-between items-end">
  <div>
  <div className="flex items-center gap-3 mb-4">
- <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+ <Badge variant="outline" className="bg-app-primary-light text-app-primary border-app-success/30 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
  Financial Configuration
  </Badge>
- <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
- <TrendingUp size={14} className="text-emerald-400" /> Regulatory Compliance
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+ <TrendingUp size={14} className="text-app-primary" /> Regulatory Compliance
  </span>
  </div>
  <h1 className="page-header-title flex items-center gap-6">
- <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Percent size={40} className="text-app-text fill-white/20" />
+ <div className="w-20 h-20 rounded-[2rem] bg-app-success flex items-center justify-center shadow-2xl shadow-app-primary/20 group hover:rotate-12 transition-transform duration-500">
+ <Percent size={40} className="text-app-foreground fill-white/20" />
  </div>
- Tax <span className="text-emerald-700">Policies</span>
+ Tax <span className="text-app-success">Policies</span>
  </h1>
  <p className="page-header-subtitle">
  Create and manage tax groups, set rates, and enforce fiscal standards across your organization.
  </p>
  </div>
  <div className="flex items-center gap-3">
- <Button onClick={load} variant="outline" className="h-14 w-14 rounded-2xl border-app-border bg-app-surface shadow-xl shadow-slate-200/50 p-0 text-app-text-faint hover:text-emerald-600 transition-all">
+ <Button onClick={load} variant="outline" className="h-14 w-14 rounded-2xl border-app-border bg-app-surface shadow-xl shadow-app-border/20 p-0 text-app-muted-foreground hover:text-app-primary transition-all">
  <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
  </Button>
- <Button onClick={startCreate} className="h-14 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-app-text font-black uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-700/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-b-emerald-800">
+ <Button onClick={startCreate} className="h-14 px-8 rounded-2xl bg-app-primary hover:bg-app-success text-app-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-app-primary/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] border-b-4 border-b-emerald-800">
  <Plus size={18} /> Register Policy
  </Button>
  </div>
  </header>
  {/* KPI Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
- <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+ <Card className="rounded-[2rem] border-0 shadow-xl shadow-app-border/20 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
  <CardContent className="p-8 flex items-center gap-6">
- <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-emerald-100">
+ <div className="w-16 h-16 rounded-2xl bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-emerald-100">
  <LayoutGrid size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-faint">Configured Protocols</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.total}</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">Configured Protocols</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.total}</p>
  <div className="flex items-center gap-2 mt-1">
- <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
- <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Active Rules</p>
+ <div className="w-1.5 h-1.5 rounded-full bg-app-primary animate-pulse" />
+ <p className="text-[10px] text-app-primary font-bold uppercase tracking-widest">Active Rules</p>
  </div>
  </div>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+ <Card className="rounded-[2rem] border-0 shadow-xl shadow-app-border/20 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
  <CardContent className="p-8 flex items-center gap-6">
- <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-blue-100">
+ <div className="w-16 h-16 rounded-2xl bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ring-1 ring-blue-100">
  <TrendingUp size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-faint">Mean Tax Pressure</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.avg.toFixed(1)}%</p>
- <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1 italic">Weighted Average</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">Mean Tax Pressure</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.avg.toFixed(1)}%</p>
+ <p className="text-[10px] text-app-info font-bold uppercase tracking-widest mt-1 italic">Weighted Average</p>
  </div>
  </CardContent>
  </Card>
- <Card className="rounded-[2rem] border-0 shadow-xl shadow-slate-200/50 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+ <Card className="rounded-[2rem] border-0 shadow-xl shadow-app-border/20 bg-app-surface overflow-hidden group hover:-translate-y-1 transition-all duration-500">
  <CardContent className="p-8 flex items-center gap-6">
- <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-app-text flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-lg shadow-emerald-200">
+ <div className="w-16 h-16 rounded-2xl bg-app-primary text-app-foreground flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 shadow-lg shadow-emerald-200">
  <Star size={32} className="fill-white" />
  </div>
  <div className="flex-1 min-w-0">
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-faint">Authoritative Node</p>
- <p className="text-xl font-black mt-1 tracking-tight text-app-text truncate">{stats.def}</p>
- <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-1">Primary Assignment</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">Authoritative Node</p>
+ <p className="text-xl font-black mt-1 tracking-tight text-app-foreground truncate">{stats.def}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase tracking-widest mt-1">Primary Assignment</p>
  </div>
  </CardContent>
  </Card>
@@ -280,47 +280,47 @@ export default function TaxGroupsPage() {
  {/* Create/Edit Form */}
  {showForm && (
  <div className="animate-in slide-in-from-top-8 duration-700">
- <Card className="card-premium overflow-hidden border-2 border-emerald-100 shadow-2xl shadow-emerald-200/20">
- <div className="px-8 py-6 border-b border-app-border bg-emerald-50/30 flex items-center justify-between">
+ <Card className="card-premium overflow-hidden border-2 border-app-success/30 shadow-2xl shadow-app-primary/20">
+ <div className="px-8 py-6 border-b border-app-border bg-app-primary-light/30 flex items-center justify-between">
  <div>
- <h3 className="text-xl font-black tracking-tight text-app-text flex items-center gap-3">
+ <h3 className="text-xl font-black tracking-tight text-app-foreground flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-app-surface flex items-center justify-center shadow-sm">
- <Edit2 size={20} className="text-emerald-600" />
+ <Edit2 size={20} className="text-app-primary" />
  </div>
  {editing ? 'Edit Tax Group' : 'Create Tax Group'}
  </h3>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mt-1 ml-13">Settings</p>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mt-1 ml-13">Settings</p>
  </div>
- <Button variant="ghost" onClick={cancelForm} className="h-12 w-12 rounded-2xl p-0 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
+ <Button variant="ghost" onClick={cancelForm} className="h-12 w-12 rounded-2xl p-0 text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg transition-all">
  <X size={20} />
  </Button>
  </div>
  <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Name</label>
- <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl h-12 bg-app-bg border-app-border focus:bg-app-surface focus:ring-emerald-500/10" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Name</label>
+ <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl h-12 bg-app-background border-app-border focus:bg-app-surface focus:ring-app-primary/10" />
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Percentage Rate</label>
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Percentage Rate</label>
  <div className="relative">
- <Input type="number" step="0.01" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="20.0" className="rounded-xl h-12 bg-app-bg border-app-border focus:bg-app-surface pr-10" />
- <Percent size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Input type="number" step="0.01" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="20.0" className="rounded-xl h-12 bg-app-background border-app-border focus:bg-app-surface pr-10" />
+ <Percent size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  </div>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Logic Type</label>
- <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="w-full h-12 px-4 border border-app-border rounded-xl bg-app-bg text-sm font-bold shadow-sm outline-none focus:bg-app-surface focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Logic Type</label>
+ <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="w-full h-12 px-4 border border-app-border rounded-xl bg-app-background text-sm font-bold shadow-sm outline-none focus:bg-app-surface focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary transition-all">
  {TAX_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
  </select>
  </div>
  <div className="space-y-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1">Applicability Logic</label>
- <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." className="rounded-xl h-12 bg-app-bg border-app-border focus:bg-app-surface" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Applicability Logic</label>
+ <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." className="rounded-xl h-12 bg-app-background border-app-border focus:bg-app-surface" />
  </div>
  </div>
- <div className="px-8 py-6 border-t border-app-border flex justify-end gap-4 bg-slate-50/30">
+ <div className="px-8 py-6 border-t border-app-border flex justify-end gap-4 bg-app-surface-2/30">
  <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[11px] uppercase tracking-widest h-12 px-6">Discard</Button>
- <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-slate-900 hover:bg-black text-app-text font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-slate-900/30 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+ <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-app-surface hover:bg-app-background text-app-foreground font-black text-[11px] uppercase tracking-widest h-12 px-10 shadow-2xl shadow-app-border/20 border-b-4 border-b-black transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
  {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
  {editing ? 'Save Changes' : 'Create'}
  </Button>
@@ -334,7 +334,7 @@ export default function TaxGroupsPage() {
  loading={loading}
  getRowId={(tg) => tg.id}
  columns={columns}
- className="card-premium overflow-hidden border-0 shadow-2xl shadow-slate-200/50"
+ className="card-premium overflow-hidden border-0 shadow-2xl shadow-app-border/20"
  visibleColumns={settings.visibleColumns}
  onToggleColumn={settings.toggleColumn}
  pageSize={settings.pageSize}

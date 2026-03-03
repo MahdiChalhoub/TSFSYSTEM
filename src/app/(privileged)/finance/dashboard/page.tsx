@@ -11,8 +11,8 @@ export default async function FinanceDashboardPage() {
 
  return (
  <div
- className="min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+ className="app-page min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto bg-app-background"
+ style={{ color: 'var(--app-foreground)' }}
  >
  {/* ── Header ────────────────────────────── */}
  <header className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 fade-in-up">
@@ -28,7 +28,7 @@ export default async function FinanceDashboardPage() {
  <span
  className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
  style={{
- background: 'var(--app-primary-light)',
+ background: 'var(--app-primary)/10',
  color: 'var(--app-primary)',
  border: '1px solid var(--app-primary-glow)',
  }}
@@ -37,7 +37,7 @@ export default async function FinanceDashboardPage() {
  </span>
  <span
  className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5"
- style={{ color: 'var(--app-text-muted)' }}
+ style={{ color: 'var(--app-muted-foreground)' }}
  >
  <RefreshCw size={12} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
  Ledger Sync: Real-time
@@ -45,11 +45,11 @@ export default async function FinanceDashboardPage() {
  </div>
  <h1
  className="text-3xl font-black tracking-tight"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
+ style={{ color: 'var(--app-foreground)' }}
  >
  Financial <span style={{ color: 'var(--app-primary)' }}>Intelligence</span>
  </h1>
- <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+ <p className="text-sm mt-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
  Comprehensive monetary oversight and multi-ledger forensic analytics.
  </p>
  </div>
@@ -59,7 +59,7 @@ export default async function FinanceDashboardPage() {
  style={{
  background: 'var(--app-surface)',
  border: '1px solid var(--app-border)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  }}
  >
  <span style={{ color: 'var(--app-primary)' }}>⬤</span>

@@ -115,7 +115,7 @@ export default function PostingRulesForm({
  description?: string
  }) => (
  <div className="space-y-1.5">
- <label className="text-xs font-bold text-app-text-muted uppercase tracking-widest block">{label}</label>
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest block">{label}</label>
  <select
  value={value || ''}
  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
@@ -128,34 +128,34 @@ export default function PostingRulesForm({
  </option>
  ))}
  </select>
- {description && <p className="text-[10px] text-app-text-faint font-medium italic">{description}</p>}
+ {description && <p className="text-[10px] text-app-muted-foreground font-medium italic">{description}</p>}
  </div>
  )
 
  return (
  <div className="max-w-5xl mx-auto space-y-8 pb-20">
  {/* Header */}
- <div className="bg-stone-900 rounded-3xl p-8 text-app-text flex justify-between items-center shadow-2xl">
+ <div className="bg-app-surface rounded-3xl p-8 text-app-foreground flex justify-between items-center shadow-2xl">
  <div className="flex items-center gap-4">
- <div className="bg-emerald-500/20 p-3 rounded-2xl">
- <Target className="text-emerald-400" size={32} />
+ <div className="bg-app-primary/20 p-3 rounded-2xl">
+ <Target className="text-app-primary" size={32} />
  </div>
  <div>
  <h2 className="text-2xl font-bold font-serif italic">Transaction Auto-Mapping</h2>
- <p className="text-app-text-faint text-xs font-bold uppercase tracking-widest mt-1">Configure your financial automation engine</p>
+ <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure your financial automation engine</p>
  </div>
  </div>
  <div className="flex items-center gap-3">
  <button
  onClick={autoDetect}
- className="bg-amber-500/10 border border-amber-500/50 text-amber-400 px-6 py-3 rounded-xl font-bold text-sm hover:bg-amber-500/20 transition-all flex items-center gap-2"
+ className="bg-app-warning-bg border border-app-warning/50 text-app-warning px-6 py-3 rounded-xl font-bold text-sm hover:bg-app-warning/20 transition-all flex items-center gap-2"
  >
  <Zap size={18} /> Auto-Detect Mappings
  </button>
  <button
  onClick={handleSave}
  disabled={isPending}
- className="bg-emerald-600 px-8 py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/40"
+ className="bg-app-primary px-8 py-3 rounded-xl font-bold text-sm hover:bg-app-success transition-all flex items-center gap-2 shadow-lg shadow-app-primary/20"
  >
  <Save size={18} /> {isPending ? 'Saving...' : 'Save Configuration'}
  </button>
@@ -165,9 +165,9 @@ export default function PostingRulesForm({
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  {/* Sales Section */}
  <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
- <div className="p-6 bg-app-bg border-b border-app-border flex items-center gap-3">
- <ShoppingCart className="text-app-text-faint" size={20} />
- <h3 className="font-bold text-app-text uppercase text-xs tracking-widest">Sales & Revenue</h3>
+ <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
+ <ShoppingCart className="text-app-muted-foreground" size={20} />
+ <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Sales & Revenue</h3>
  </div>
  <div className="p-8 space-y-6">
  <AccountSelect
@@ -196,9 +196,9 @@ export default function PostingRulesForm({
 
  {/* Purchase Section */}
  <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
- <div className="p-6 bg-app-bg border-b border-app-border flex items-center gap-3">
- <CreditCard className="text-app-text-faint" size={20} />
- <h3 className="font-bold text-app-text uppercase text-xs tracking-widest">Purchases & Suppliers</h3>
+ <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
+ <CreditCard className="text-app-muted-foreground" size={20} />
+ <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Purchases & Suppliers</h3>
  </div>
  <div className="p-8 space-y-6">
  <AccountSelect
@@ -220,9 +220,9 @@ export default function PostingRulesForm({
  </section>
 
  {/* Automation & Partner Sub-Accounts */}
- <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden border-2 border-emerald-100/50">
- <div className="p-6 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3 font-bold text-emerald-900">
- <Users className="text-emerald-500" size={20} />
+ <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden border-2 border-app-success/30/50">
+ <div className="p-6 bg-app-primary-light border-b border-app-success/30 flex items-center gap-3 font-bold text-app-success">
+ <Users className="text-app-primary" size={20} />
  <h3 className="uppercase text-xs tracking-widest">Partner Automation</h3>
  <Zap size={14} className="ml-auto" />
  </div>
@@ -250,9 +250,9 @@ export default function PostingRulesForm({
 
  {/* Inventory & Adjustments */}
  <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
- <div className="p-6 bg-app-bg border-b border-app-border flex items-center gap-3">
- <Package className="text-app-text-faint" size={20} />
- <h3 className="font-bold text-app-text uppercase text-xs tracking-widest">Inventory Operations</h3>
+ <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
+ <Package className="text-app-muted-foreground" size={20} />
+ <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Inventory Operations</h3>
  </div>
  <div className="p-8 space-y-6">
  <AccountSelect
@@ -271,9 +271,9 @@ export default function PostingRulesForm({
 
  {/* Fixed Assets */}
  <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden md:col-span-2">
- <div className="p-6 bg-app-bg border-b border-app-border flex items-center gap-3">
- <BarChart3 className="text-app-text-faint" size={20} />
- <h3 className="font-bold text-app-text uppercase text-xs tracking-widest">Fixed Assets & Depreciation</h3>
+ <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
+ <BarChart3 className="text-app-muted-foreground" size={20} />
+ <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Fixed Assets & Depreciation</h3>
  </div>
  <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
  <AccountSelect
@@ -291,11 +291,11 @@ export default function PostingRulesForm({
  </div>
 
  {/* Info Message */}
- <div className="bg-app-bg p-6 rounded-3xl border border-app-border flex items-start gap-4">
- <Info size={24} className="text-app-text-faint flex-shrink-0" />
+ <div className="bg-app-background p-6 rounded-3xl border border-app-border flex items-start gap-4">
+ <Info size={24} className="text-app-muted-foreground flex-shrink-0" />
  <div>
- <h4 className="font-bold text-sm text-app-text">How this works</h4>
- <p className="text-xs text-app-text-muted mt-1 leading-relaxed">
+ <h4 className="font-bold text-sm text-app-foreground">How this works</h4>
+ <p className="text-xs text-app-muted-foreground mt-1 leading-relaxed">
  These mappings are used by the <strong>TSF Financial Engine</strong> to automatically generate double-entry journal records.
  For example, when you complete a Purchase Order, the system will automatically Credit the <em>Accounts Payable</em>
  and Debit the <em>Inventory Purchase</em> account selected here.

@@ -71,7 +71,7 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
  // 3. Delegation to Django
  // NOTE: The endpoint needs to be able to handle this massive complex payload.
  // If 'products/create_complex/' doesn't exist yet, it will need to be built to accept this structure!
- const response = await erpFetch('products/create_complex/', {
+ const response = await erpFetch('inventory/products/create_complex/', {
  method: 'POST',
  body: JSON.stringify(payload),
  headers: { 'Content-Type': 'application/json' }

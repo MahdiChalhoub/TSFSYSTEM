@@ -36,16 +36,16 @@ export default function PeriodEditor({ period, onClose }: Props) {
  }
 
  return (
- <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+ <div className="fixed inset-0 bg-app-background/50 flex items-center justify-center z-50 p-4">
  <div className="bg-app-surface rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
- <div className="p-4 border-b border-app-border flex justify-between items-center bg-app-bg">
- <h3 className="font-bold text-app-text">Edit Period</h3>
- <button onClick={onClose} className="text-app-text-faint hover:text-app-text-muted"><X size={18} /></button>
+ <div className="p-4 border-b border-app-border flex justify-between items-center bg-app-background">
+ <h3 className="font-bold text-app-foreground">Edit Period</h3>
+ <button onClick={onClose} className="text-app-muted-foreground hover:text-app-muted-foreground"><X size={18} /></button>
  </div>
 
  <form onSubmit={handleSubmit} className="p-4 space-y-4">
  <div>
- <label className="block text-xs font-bold uppercase text-app-text-muted mb-1">Period Name</label>
+ <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Period Name</label>
  <input
  value={formData.name}
  onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -55,7 +55,7 @@ export default function PeriodEditor({ period, onClose }: Props) {
 
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="block text-xs font-bold uppercase text-app-text-muted mb-1">Start</label>
+ <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Start</label>
  <input
  type="date"
  value={formData.startDate}
@@ -64,7 +64,7 @@ export default function PeriodEditor({ period, onClose }: Props) {
  />
  </div>
  <div>
- <label className="block text-xs font-bold uppercase text-app-text-muted mb-1">End</label>
+ <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">End</label>
  <input
  type="date"
  value={formData.endDate}
@@ -75,13 +75,13 @@ export default function PeriodEditor({ period, onClose }: Props) {
  </div>
 
  <div className="flex gap-2 pt-2">
- <button type="button" onClick={onClose} className="flex-1 py-2 text-app-text-muted font-medium text-sm hover:bg-app-bg rounded">
+ <button type="button" onClick={onClose} className="flex-1 py-2 text-app-muted-foreground font-medium text-sm hover:bg-app-background rounded">
  Cancel
  </button>
  <button
  type="submit"
  disabled={isPending}
- className="flex-1 py-2 bg-black text-app-text font-medium text-sm rounded hover:bg-stone-800 disabled:opacity-50"
+ className="flex-1 py-2 bg-app-background text-app-foreground font-medium text-sm rounded hover:bg-app-surface-2 disabled:opacity-50"
  >
  {isPending ? 'Saving...' : 'Save Changes'}
  </button>

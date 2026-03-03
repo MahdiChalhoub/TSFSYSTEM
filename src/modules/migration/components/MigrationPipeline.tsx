@@ -54,10 +54,10 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
     }
 
     if (loading) return (
-        <Card className="bg-white border-slate-200 backdrop-blur-xl">
+        <Card className="bg-app-surface border-app-border backdrop-blur-xl">
             <CardContent className="py-4 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
-                <span className="text-gray-400 font-bold text-xs">Loading pipeline...</span>
+                <span className="text-app-text-faint font-bold text-xs">Loading pipeline...</span>
             </CardContent>
         </Card>
     )
@@ -65,7 +65,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
     // No pipeline yet (job hasn't started) — show a subtle placeholder, not an error
     if (!pipeline || !pipeline.pipeline?.length) {
         if (jobStatus === 'PENDING') return (
-            <Card className="bg-white border-slate-200">
+            <Card className="bg-app-surface border-app-border">
                 <CardContent className="py-4 flex items-center justify-center gap-2">
                     <Play className="w-4 h-4 text-gray-300" />
                     <span className="text-gray-300 font-medium text-xs">Start the migration to track progress</span>
@@ -74,13 +74,13 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
         )
         // For non-PENDING states with no data, show a subtle retry indicator
         return (
-            <Card className="bg-white border-slate-200">
+            <Card className="bg-app-surface border-app-border">
                 <CardContent className="py-3 flex items-center justify-between gap-2 px-5">
                     <div className="flex items-center gap-2">
                         <Loader2 className="w-3.5 h-3.5 text-gray-300 animate-spin" />
                         <span className="text-gray-300 font-medium text-xs">Waiting for pipeline data...</span>
                     </div>
-                    <button onClick={fetchPipeline} className="text-[10px] text-gray-400 hover:text-gray-600 font-bold uppercase tracking-wider">
+                    <button onClick={fetchPipeline} className="text-[10px] text-app-text-faint hover:text-app-text-muted font-bold uppercase tracking-wider">
                         Retry
                     </button>
                 </CardContent>
@@ -93,10 +93,10 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
     const pipelinePct = Math.round((completedCount / totalSteps) * 100)
 
     return (
-        <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
-            <CardHeader className="pb-2 bg-gray-50 border-b border-gray-100">
+        <Card className="bg-app-surface border-app-border shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 bg-app-bg border-b border-app-border">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                    <CardTitle className="text-xs font-bold uppercase tracking-widest text-app-text-faint flex items-center gap-2">
                         <Database className="w-3.5 h-3.5" />
                         Import Pipeline — {completedCount}/{totalSteps} steps
                     </CardTitle>
@@ -113,7 +113,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                     </span>
                 </div>
                 {/* Pipeline progress bar */}
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div className="w-full bg-app-border rounded-full h-1.5 mt-2 overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-700 ${completedCount === totalSteps ? 'bg-emerald-500'
                             : jobStatus === 'FAILED' || jobStatus === 'STALLED' ? 'bg-red-500'
@@ -131,7 +131,7 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                             {/* Step indicator */}
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${step.status === 'completed' ? 'bg-emerald-100'
                                 : step.status === 'running' ? 'bg-blue-200 animate-pulse border border-blue-300'
-                                    : 'bg-gray-100'
+                                    : 'bg-app-surface-2'
                                 }`}>
                                 {step.status === 'completed' ? (
                                     <CheckCircle2 className="w-3 h-3 text-emerald-600" />
@@ -143,14 +143,14 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
                             </div>
                             {/* Step label + sub-progress */}
                             <div className="flex flex-col min-w-0">
-                                <span className={`text-[11px] font-bold truncate ${step.status === 'completed' ? 'text-gray-400'
+                                <span className={`text-[11px] font-bold truncate ${step.status === 'completed' ? 'text-app-text-faint'
                                     : step.status === 'running' ? 'text-blue-700 font-black'
                                         : 'text-gray-300'
                                     }`}>
                                     {step.label.replace('Importing ', '').replace('Linking ', '')}
                                 </span>
                                 {step.status === 'running' && pipeline.current_step_detail && (
-                                    <span className="text-[9px] text-gray-400 font-mono truncate">
+                                    <span className="text-[9px] text-app-text-faint font-mono truncate">
                                         {pipeline.current_step_detail}
                                     </span>
                                 )}
@@ -161,12 +161,12 @@ export function MigrationPipeline({ jobId, jobStatus, onResume }: {
 
                 {/* Resume button for failed/stalled */}
                 {pipeline.can_resume && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4">
+                    <div className="mt-4 pt-4 border-t border-app-border flex items-center gap-4">
                         <div className="flex-1">
                             <p className="text-amber-600 text-xs font-black uppercase tracking-wider">
                                 Import stopped at step {completedCount + 1}/{totalSteps}
                             </p>
-                            <p className="text-gray-400 text-[10px] mt-0.5 font-bold">
+                            <p className="text-app-text-faint text-[10px] mt-0.5 font-bold">
                                 {completedCount} steps completed. You can resume from where it stopped.
                             </p>
                         </div>

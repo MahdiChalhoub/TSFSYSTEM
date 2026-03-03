@@ -71,7 +71,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
  >
  <div className="flex items-center gap-2">
  {isOfficial ? (
- <Eye size={16} className="text-emerald-600" />
+ <Eye size={16} className="text-app-primary" />
  ) : (
  <Layers size={16} className="text-sky-600" />
  )}
@@ -98,12 +98,11 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
  autoFocus
  className="w-full px-4 py-3 text-center text-lg tracking-[0.3em] font-mono
  border-2 border-app-border rounded-lg
- focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
- placeholder:tracking-normal placeholder:text-sm placeholder:font-sans"
+ focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:tracking-normal placeholder:text-sm placeholder:font-sans"
  />
  {/* Error */}
  {error && (
- <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 px-3 py-2 rounded-lg">
+ <div className="flex items-center gap-2 text-app-error text-xs bg-app-error-bg px-3 py-2 rounded-lg">
  <ShieldAlert size={14} />
  {error}
  </div>
@@ -119,7 +118,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
  <div className="flex gap-2">
  <button
  onClick={onCancel}
- className="flex-1 px-4 py-2.5 text-sm font-medium text-app-text-muted bg-app-surface-2 rounded-lg hover:bg-stone-200 transition-colors"
+ className="flex-1 px-4 py-2.5 text-sm font-medium text-app-text-muted bg-app-surface-2 rounded-lg hover:bg-app-border transition-colors"
  >
  Cancel
  </button>

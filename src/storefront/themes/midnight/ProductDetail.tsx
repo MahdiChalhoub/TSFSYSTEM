@@ -87,7 +87,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     return (
         <div className="min-h-screen bg-slate-950 py-8">
             <div className="max-w-5xl mx-auto px-4">
-                <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors">
+                <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-app-text-faint hover:text-white mb-8 transition-colors">
                     <ArrowLeft size={16} /> Back
                 </button>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -97,7 +97,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             <img src={currentImage} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                                <Package size={64} className="text-slate-800" />
+                                <Package size={64} className="text-app-text" />
                             </div>
                         )}
                     </div>
@@ -115,23 +115,23 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                     <Star key={i} size={14} fill={i <= ((product as any).rating || 5) ? "currentColor" : "none"} />
                                 ))}
                             </div>
-                            <span className="text-xs text-slate-500">{reviews.length} Reviews</span>
+                            <span className="text-xs text-app-text-faint">{reviews.length} Reviews</span>
                         </div>
-                        <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">SKU: {currentSKU}</p>
-                        {product.description && <p className="text-slate-400 leading-relaxed text-sm">{product.description}</p>}
+                        <p className="text-[10px] text-app-text-muted font-mono tracking-widest uppercase">SKU: {currentSKU}</p>
+                        {product.description && <p className="text-app-text-faint leading-relaxed text-sm">{product.description}</p>}
                         {/* Variant Options */}
                         {options.length > 0 && (
                             <div className="space-y-6 pt-2">
                                 {options.map(opt => (
                                     <div key={opt.id} className="space-y-3">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{opt.name}</p>
+                                        <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">{opt.name}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {opt.values.map(val => (
                                                 <button key={val} onClick={() => setSelections(prev => ({ ...prev, [opt.name]: val }))}
                                                     className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all
                                                         ${selections[opt.name] === val
                                                             ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                                                            : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/20 hover:text-white'
+                                                            : 'bg-white/5 text-app-text-faint border-white/5 hover:border-white/20 hover:text-white'
                                                         }`}>
                                                     {val}
                                                 </button>
@@ -148,7 +148,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                     <span className="text-emerald-500 mr-1">$</span>{currentPrice}
                                 </div>
                                 {currentPriceHT && currentPriceHT !== currentPrice && (
-                                    <p className="text-xs text-slate-600">Before tax: ${currentPriceHT}</p>
+                                    <p className="text-xs text-app-text-muted">Before tax: ${currentPriceHT}</p>
                                 )}
                             </div>
                         ) : (
@@ -169,7 +169,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                         {!isQuoteMode && (
                             <div className="space-y-4 pt-4">
                                 <div className="flex items-center gap-4">
-                                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Qty</span>
+                                    <span className="text-xs text-app-text-faint font-bold uppercase tracking-wider">Qty</span>
                                     <div className="flex items-center bg-white/5 border border-white/10 rounded-xl">
                                         <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                             className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/5 rounded-l-xl transition-colors">
@@ -194,7 +194,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
                                             ${isInWishlist(product.id)
                                                 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                                : 'bg-white/5 text-slate-400 border-white/10 hover:text-rose-400'
+                                                : 'bg-white/5 text-app-text-faint border-white/10 hover:text-rose-400'
                                             }`}>
                                         <Heart size={20} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
                                     </button>
@@ -215,7 +215,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                     <div className="flex items-center justify-between mb-12">
                         <div>
                             <h2 className="text-3xl font-black text-white italic tracking-tight">Customer <span className="text-emerald-500">Feedback</span></h2>
-                            <p className="text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest">Verified Experiences</p>
+                            <p className="text-xs text-app-text-faint mt-2 font-bold uppercase tracking-widest">Verified Experiences</p>
                         </div>
                         {isAuthenticated && (
                             <button onClick={() => setShowReviewForm(!showReviewForm)}
@@ -229,21 +229,21 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             <form onSubmit={handleReviewSubmit} className="bg-slate-900/60 border border-emerald-500/20 p-8 rounded-[2.5rem] space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Rate this product</p>
+                                        <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Rate this product</p>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(star => (
                                                 <button key={star} type="button" onClick={() => setNewReview(prev => ({ ...prev, rating: star }))} className="transition-transform hover:scale-110">
-                                                    <Star size={32} className={star <= newReview.rating ? 'text-emerald-500' : 'text-slate-700'} fill={star <= newReview.rating ? 'currentColor' : 'none'} />
+                                                    <Star size={32} className={star <= newReview.rating ? 'text-emerald-500' : 'text-app-text-muted'} fill={star <= newReview.rating ? 'currentColor' : 'none'} />
                                                 </button>
                                             ))}
                                         </div>
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Review Headline</p>
+                                        <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Review Headline</p>
                                         <input required type="text" placeholder="Example: Absolutely amazing!" value={newReview.title}
                                             onChange={e => setNewReview(prev => ({ ...prev, title: e.target.value }))}
                                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
                                     </div>
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Detailed Feedback</p>
+                                        <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Detailed Feedback</p>
                                         <textarea required rows={4} placeholder="What did you like or dislike?" value={newReview.content}
                                             onChange={e => setNewReview(prev => ({ ...prev, content: e.target.value }))}
                                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 resize-none" />
@@ -287,8 +287,8 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         )}
                                     </div>
                                     {review.title && <h3 className="font-bold text-white uppercase tracking-tight">{review.title}</h3>}
-                                    <p className="text-sm text-slate-400 leading-relaxed font-medium line-clamp-3">{review.content}</p>
-                                    <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest pt-2">
+                                    <p className="text-sm text-app-text-faint leading-relaxed font-medium line-clamp-3">{review.content}</p>
+                                    <p className="text-[10px] text-app-text-muted font-bold uppercase tracking-widest pt-2">
                                         {new Date(review.created_at).toLocaleDateString()}
                                     </p>
                                 </div>
@@ -296,9 +296,9 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                         </div>
                     ) : (
                         <div className="bg-slate-900/20 border-2 border-dashed border-white/5 rounded-[2.5rem] py-20 flex flex-col items-center text-center px-6">
-                            <Star size={40} className="text-slate-800 mb-4" />
-                            <h3 className="text-lg font-black text-slate-500 uppercase italic">No reviews yet</h3>
-                            <p className="text-sm text-slate-600 mt-2 max-w-xs font-medium">Be the first to share your experience with this product.</p>
+                            <Star size={40} className="text-app-text mb-4" />
+                            <h3 className="text-lg font-black text-app-text-faint uppercase italic">No reviews yet</h3>
+                            <p className="text-sm text-app-text-muted mt-2 max-w-xs font-medium">Be the first to share your experience with this product.</p>
                         </div>
                     )}
                 </div>

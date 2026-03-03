@@ -56,19 +56,19 @@ export default function NewLoanPage() {
  }
 
  return (
- <div className="max-w-3xl mx-auto space-y-6">
+ <div className="app-page max-w-3xl mx-auto space-y-6">
  <div className="flex items-center gap-4">
  <Link href="/finance/loans">
  <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
  </Link>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Landmark size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-violet-200">
+ <Landmark size={28} className="text-app-foreground" />
  </div>
- New <span className="text-violet-600">Loan</span>
+ New <span className="text-app-primary">Loan</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Create Loan</p>
- <div className="ml-auto text-xs font-mono text-app-text-faint">
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Create Loan</p>
+ <div className="ml-auto text-xs font-mono text-app-muted-foreground">
  Draft Contract Numbering Active
  </div>
  </div>

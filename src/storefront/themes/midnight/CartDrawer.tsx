@@ -34,14 +34,14 @@ export default function MidnightCartDrawer() {
                         <ShoppingBag className="text-emerald-500" size={24} />
                         <div>
                             <h2 className="text-xl font-black text-white tracking-tight">Your Cart</h2>
-                            <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+                            <p className="text-[10px] text-app-text-faint uppercase font-black tracking-widest">
                                 {cart.length} item{cart.length !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={() => setCartOpen(false)}
-                        className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400 hover:text-white"
+                        className="p-2 hover:bg-white/5 rounded-full transition-colors text-app-text-faint hover:text-white"
                     >
                         <X size={24} />
                     </button>
@@ -52,9 +52,9 @@ export default function MidnightCartDrawer() {
                     {cart.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center">
                             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/5">
-                                <ShoppingBag size={24} className="text-slate-700" />
+                                <ShoppingBag size={24} className="text-app-text-muted" />
                             </div>
-                            <p className="text-slate-500 text-sm font-bold">Your cart is empty</p>
+                            <p className="text-app-text-faint text-sm font-bold">Your cart is empty</p>
                             <button
                                 onClick={() => setCartOpen(false)}
                                 className="mt-4 text-xs text-emerald-400 font-black uppercase tracking-widest"
@@ -72,7 +72,7 @@ export default function MidnightCartDrawer() {
                                             <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
-                                                <Package size={20} className="text-slate-800" />
+                                                <Package size={20} className="text-app-text" />
                                             </div>
                                         )}
                                     </div>
@@ -81,7 +81,7 @@ export default function MidnightCartDrawer() {
                                             <h3 className="text-xs font-black text-white truncate group-hover:text-emerald-400 transition-colors">
                                                 {item.product_name}
                                             </h3>
-                                            <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-wider">
+                                            <p className="text-[10px] text-app-text-faint font-bold mt-1 uppercase tracking-wider">
                                                 {formatPrice(item.unit_price)}
                                             </p>
                                         </div>
@@ -90,21 +90,21 @@ export default function MidnightCartDrawer() {
                                             <div className="flex items-center bg-white/5 rounded-lg border border-white/5">
                                                 <button
                                                     onClick={() => updateCartQuantity(item.product_id, Math.max(1, item.quantity - 1), item.variant_id)}
-                                                    className="p-1.5 text-slate-500 hover:text-white transition-colors"
+                                                    className="p-1.5 text-app-text-faint hover:text-white transition-colors"
                                                 >
                                                     <Minus size={12} />
                                                 </button>
                                                 <span className="w-8 text-center text-[10px] font-black text-white">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateCartQuantity(item.product_id, item.quantity + 1, item.variant_id)}
-                                                    className="p-1.5 text-slate-500 hover:text-white transition-colors"
+                                                    className="p-1.5 text-app-text-faint hover:text-white transition-colors"
                                                 >
                                                     <Plus size={12} />
                                                 </button>
                                             </div>
                                             <button
                                                 onClick={() => removeFromCart(item.product_id, item.variant_id)}
-                                                className="text-slate-600 hover:text-red-400 transition-colors"
+                                                className="text-app-text-muted hover:text-red-400 transition-colors"
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -121,7 +121,7 @@ export default function MidnightCartDrawer() {
                     <div className="p-6 border-t border-white/5 bg-slate-900/40 backdrop-blur-xl">
                         <div className="flex justify-between items-end mb-6">
                             <div>
-                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Subtotal</p>
+                                <p className="text-[10px] text-app-text-faint font-black uppercase tracking-widest mb-1">Subtotal</p>
                                 <p className="text-2xl font-black text-white">{formatPrice(cartTotal)}</p>
                             </div>
                             <p className="text-[10px] text-emerald-400 font-bold">Tax & shipping calculated at checkout</p>
@@ -140,7 +140,7 @@ export default function MidnightCartDrawer() {
                             <Link
                                 href={path('/cart')}
                                 onClick={() => setCartOpen(false)}
-                                className="block w-full py-4 border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-center transition-all"
+                                className="block w-full py-4 border border-white/5 hover:bg-white/5 text-app-text-faint hover:text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-center transition-all"
                             >
                                 View Detailed Cart
                             </Link>

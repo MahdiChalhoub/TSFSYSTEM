@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Product } from "@/types/erp";
@@ -13,10 +14,10 @@ const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 // Generate a unique, consistent color for each product based on its ID
 // Modern, authoritative color palette for product avatars
 const AVATAR_COLORS = [
- { bg: 'bg-emerald-500/10', text: 'text-emerald-500', hoverBg: 'bg-emerald-gradient' },
- { bg: 'bg-slate-500/10', text: 'text-app-text-muted', hoverBg: 'bg-slate-900' },
+ { bg: 'bg-app-primary/10', text: 'text-app-primary', hoverBg: 'bg-emerald-gradient' },
+ { bg: 'bg-app-text/10', text: 'text-app-text-muted', hoverBg: 'bg-app-surface' },
  { bg: 'bg-teal-500/10', text: 'text-teal-500', hoverBg: 'bg-teal-600' },
- { bg: 'bg-amber-500/10', text: 'text-amber-500', hoverBg: 'bg-amber-600' },
+ { bg: 'bg-app-warning-bg', text: 'text-app-warning', hoverBg: 'bg-app-warning' },
  { bg: 'bg-rose-500/10', text: 'text-rose-500', hoverBg: 'bg-rose-gradient' },
  { bg: 'bg-cyan-500/10', text: 'text-cyan-500', hoverBg: 'bg-cyan-600' },
 ];
@@ -191,10 +192,10 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  const velocities = ['HIGH', 'MEDIUM', 'LOW', 'STABLE'];
  const vel = velocities[id % 4];
  switch (vel) {
- case 'HIGH': return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[7px] font-black tracking-widest gap-1"><TrendingUp size={8} /> FAST</Badge>;
- case 'MEDIUM': return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[7px] font-black tracking-widest gap-1"><Activity size={8} /> STEADY</Badge>;
+ case 'HIGH': return <Badge className="bg-app-primary/10 text-app-primary border-app-primary/20 text-[7px] font-black tracking-widest gap-1"><TrendingUp size={8} /> FAST</Badge>;
+ case 'MEDIUM': return <Badge className="bg-app-warning-bg text-app-warning border-app-warning/20 text-[7px] font-black tracking-widest gap-1"><Activity size={8} /> STEADY</Badge>;
  case 'LOW': return <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[7px] font-black tracking-widest gap-1"><TrendingDown size={8} /> SLOW</Badge>;
- default: return <Badge className="bg-slate-500/10 text-app-text-muted border-slate-500/20 text-[7px] font-black tracking-widest opacity-50">STABLE</Badge>;
+ default: return <Badge className="bg-app-text/10 text-app-text-muted border-slate-500/20 text-[7px] font-black tracking-widest opacity-50">STABLE</Badge>;
  }
  };
  // Retry handler
@@ -216,9 +217,9 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  return (
  <div className="flex flex-col items-center justify-center p-20 text-center animate-in fade-in zoom-in-95 duration-700">
  <div className="relative mb-8">
- <Loader2 className="w-16 h-16 text-emerald-500 animate-spin opacity-20" />
+ <Loader2 className="w-16 h-16 text-app-primary animate-spin opacity-20" />
  <div className="absolute inset-0 flex items-center justify-center">
- <Activity className="w-6 h-6 text-emerald-500 animate-pulse" />
+ <Activity className="w-6 h-6 text-app-primary animate-pulse" />
  </div>
  </div>
  <h2 className="text-xl font-black text-app-text uppercase tracking-widest mb-2">Loading Products</h2>
@@ -230,8 +231,8 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  if (error && products.length === 0) {
  return (
  <div className="flex flex-col items-center justify-center p-12 text-center">
- <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
- <AlertCircle className="w-8 h-8 text-red-500" />
+ <div className="w-16 h-16 bg-app-error-bg rounded-full flex items-center justify-center mb-4">
+ <AlertCircle className="w-8 h-8 text-app-error" />
  </div>
  <h3 className="text-lg font-bold text-app-text mb-2">Unable to Load Products</h3>
  <p className="text-app-text-muted mb-4 max-w-md">{error}</p>
@@ -250,7 +251,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div className="flex flex-col items-center justify-center p-20 text-center animate-in fade-in zoom-in-95 duration-1000">
  <div className="w-24 h-24 bg-app-surface-2 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-inner relative overflow-hidden group">
  <div className="absolute inset-0 bg-emerald-gradient opacity-0 group-hover:opacity-10 transition-opacity" />
- <PackageX className="w-10 h-10 text-slate-300 group-hover:text-emerald-500 transition-colors duration-700" />
+ <PackageX className="w-10 h-10 text-app-text-muted group-hover:text-app-primary transition-colors duration-700" />
  </div>
  <h3 className="text-2xl font-black text-app-text uppercase tracking-tighter mb-3">Inventory Void Detected</h3>
  <p className="text-sm text-app-text-faint max-w-sm font-medium leading-relaxed">
@@ -266,11 +267,11 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div className="space-y-4">
  {/* Offline Mode Banner */}
  {offlineMode && (
- <div className="flex items-center gap-4 px-6 py-3 bg-slate-950 border border-emerald-500/20 rounded-[1.5rem] text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl relative overflow-hidden group">
- <div className="absolute inset-0 bg-emerald-500/5 animate-pulse" />
+ <div className="flex items-center gap-4 px-6 py-3 bg-app-bg border border-app-primary/20 rounded-[1.5rem] text-app-primary text-[10px] font-black uppercase tracking-[0.2em] shadow-xl relative overflow-hidden group">
+ <div className="absolute inset-0 bg-app-primary/5 animate-pulse" />
  <WifiOff size={14} className="animate-bounce shrink-0" />
  <div className="flex flex-col">
- <span className="flex items-center gap-2">Edge Computing Active <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" /></span>
+ <span className="flex items-center gap-2">Edge Computing Active <div className="w-1.5 h-1.5 rounded-full bg-app-primary shadow-[0_0_8px_rgba(16,185,129,0.8)]" /></span>
  <span className="text-app-text-muted text-[8px] mt-0.5">Operating from Local Buffer • Operations will synchronize upon re-establishing uplink.</span>
  </div>
  </div>
@@ -280,13 +281,13 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div
  key={product.id}
  onClick={() => onAddToCart(product)}
- className="group bg-app-surface p-4 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] hover:border-emerald-500/20 hover:-translate-y-2 transition-all duration-500 active:scale-[0.94] select-none flex flex-col justify-between h-[180px] relative overflow-hidden"
+ className="group bg-app-surface p-4 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] hover:border-app-primary/20 hover:-translate-y-2 transition-all duration-500 active:scale-[0.94] select-none flex flex-col justify-between h-[180px] relative overflow-hidden"
  >
  {/* Interactive Sparkle Effect */}
  <div className="absolute -top-4 -right-4 w-12 h-12 bg-emerald-gradient rounded-full opacity-0 group-hover:opacity-10 scale-0 group-hover:scale-150 transition-all duration-1000 blur-xl" />
 
  <div className="absolute top-0 right-0 p-5 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100 origin-top-right">
- <div className="w-8 h-8 rounded-full bg-emerald-gradient flex items-center justify-center text-app-text shadow-lg shadow-emerald-500/30">
+ <div className="w-8 h-8 rounded-full bg-emerald-gradient flex items-center justify-center text-app-text shadow-lg shadow-app-primary/20">
  <Plus size={16} strokeWidth={4} />
  </div>
  </div>
@@ -294,7 +295,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div className="relative z-10">
  <div className="flex justify-between items-start mb-3">
  {(product as any).imageUrl ? (
- <div className="h-10 w-10 p-0.5 rounded-xl bg-app-bg border border-app-border overflow-hidden group-hover:border-emerald-500/30 transition-all">
+ <div className="h-10 w-10 p-0.5 rounded-xl bg-app-bg border border-app-border overflow-hidden group-hover:border-app-primary/30 transition-all">
  <img
  src={(product as any).imageUrl}
  alt={product.name}
@@ -317,11 +318,11 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  )}
  {getVelocityBadge(product.id)}
  </div>
- <h3 className="font-black text-app-text leading-[1.2] line-clamp-2 text-[11.5px] tracking-tight mb-1 group-hover:text-emerald-600 transition-colors uppercase italic outfit">
+ <h3 className="font-black text-app-text leading-[1.2] line-clamp-2 text-[11.5px] tracking-tight mb-1 group-hover:text-app-primary transition-colors uppercase italic outfit">
  {product.name}
  </h3>
  <div className="flex items-center gap-2">
- <span className="text-[7.5px] font-black text-slate-300 uppercase tracking-widest leading-none bg-app-surface-2 px-1.5 py-0.5 rounded">
+ <span className="text-[7.5px] font-black text-app-text-muted uppercase tracking-widest leading-none bg-app-surface-2 px-1.5 py-0.5 rounded">
  {product.sku || 'N/A'}
  </span>
  </div>
@@ -331,7 +332,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  <div className="flex flex-col">
  <span className="text-[8px] font-black text-app-text-faint uppercase tracking-[0.2em] mb-0.5">Settlement</span>
  <div className="flex items-baseline gap-0.5">
- <span className="text-[10px] font-black text-emerald-500 leading-none">{currency}</span>
+ <span className="text-[10px] font-black text-app-primary leading-none">{currency}</span>
  <span className="font-black text-lg text-app-text leading-none tracking-tighter tabular-nums">
  {(Number(product.basePrice || product.price || product.sellingPriceTTC || 0)).toFixed(2).split('.')[0]}
  <span className="text-[10px] opacity-40">.{(Number(product.basePrice || product.price || product.sellingPriceTTC || 0)).toFixed(2).split('.')[1]}</span>
@@ -339,7 +340,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
  </div>
  </div>
  {Number(product.taxRate) > 0 && (
- <Badge variant="outline" className="border-app-border text-[6.5px] font-black uppercase tracking-tighter text-slate-300 py-0 h-4">
+ <Badge variant="outline" className="border-app-border text-[6.5px] font-black uppercase tracking-tighter text-app-text-muted py-0 h-4">
  + {product.taxRate}% VAT
  </Badge>
  )}

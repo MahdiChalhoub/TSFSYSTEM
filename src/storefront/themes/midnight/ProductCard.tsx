@@ -38,7 +38,7 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                        <ShoppingBag size={40} className="text-slate-800" />
+                        <ShoppingBag size={40} className="text-app-text" />
                     </div>
                 )}
                 <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
@@ -68,7 +68,7 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
                             <span className="text-[10px] font-black">4.9</span>
                         </div>
                     </div>
-                    <p className="text-[10px] text-slate-500 font-mono tracking-widest">{product.sku}</p>
+                    <p className="text-[10px] text-app-text-faint font-mono tracking-widest">{product.sku}</p>
                 </div>
                 <div className="flex items-center justify-between pt-2">
                     {showPrice ? (

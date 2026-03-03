@@ -58,7 +58,7 @@ export default function ManagerOverrideModal({
  <div className="bg-app-surface rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
  <div className="p-6">
  <div className="flex justify-between items-start mb-4">
- <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+ <div className="w-12 h-12 rounded-full bg-app-warning-bg flex items-center justify-center text-app-warning">
  <ShieldAlert size={24} />
  </div>
  <button
@@ -82,19 +82,19 @@ export default function ManagerOverrideModal({
  value={pin}
  onChange={handlePinChange}
  placeholder="••••"
- className={`w-full text-center text-3xl tracking-[1em] py-4 bg-app-bg border-2 rounded-xl focus:outline-none transition-all ${error ? 'border-red-300 bg-red-50 text-red-600' : 'border-app-border focus:border-amber-400 focus:bg-app-surface'
+ className={`w-full text-center text-3xl tracking-[1em] py-4 bg-app-bg border-2 rounded-xl focus:outline-none transition-all ${error ? 'border-red-300 bg-app-error-bg text-app-error' : 'border-app-border focus:border-amber-400 focus:bg-app-surface'
  }`}
  autoFocus
  />
  {error && (
- <p className="text-xs text-red-600 mt-2 text-center font-medium animate-bounce">{error}</p>
+ <p className="text-xs text-app-error mt-2 text-center font-medium animate-bounce">{error}</p>
  )}
  </div>
  <button
  type="submit"
  disabled={loading || pin.length < 4}
  className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-lg transition-all ${pin.length >= 4
- ? 'bg-gray-900 text-app-text hover:bg-black'
+ ? 'bg-app-surface text-app-text hover:bg-black'
  : 'bg-app-surface-2 text-app-text-faint cursor-not-allowed'
  }`}
  >

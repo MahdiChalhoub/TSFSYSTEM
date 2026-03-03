@@ -126,8 +126,8 @@ export function CommandPalette() {
  onClick={() => navigate(item.path)}
  onMouseEnter={() => setSelectedIndex(i)}
  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${i === selectedIndex
- ? 'bg-emerald-50 text-emerald-800'
- : 'text-gray-700 hover:bg-app-bg'
+ ? 'bg-app-primary-light text-app-success'
+ : 'text-app-text-muted hover:bg-app-bg'
  }`}
  >
  <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export function CommandPalette() {
  {item.section} → {item.path}
  </div>
  </div>
- {i === selectedIndex && <ArrowRight size={14} className="text-emerald-500 shrink-0" />}
+ {i === selectedIndex && <ArrowRight size={14} className="text-app-primary shrink-0" />}
  </button>
  ))
  )}

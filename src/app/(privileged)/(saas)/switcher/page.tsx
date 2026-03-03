@@ -43,34 +43,34 @@ export default function SwitcherPage() {
  }
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  <div>
- <h2 className="text-3xl font-black text-app-text tracking-tight">Instance Switcher</h2>
- <p className="text-app-text-muted mt-2 font-medium">Switch between your authorized organization workspaces</p>
+ <h2 className="text-3xl font-black text-app-foreground tracking-tight">Instance Switcher</h2>
+ <p className="text-app-muted-foreground mt-2 font-medium">Switch between your authorized organization workspaces</p>
  </div>
 
  {loading ? (
- <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-emerald-500" /></div>
+ <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-app-primary" /></div>
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {orgs.map((org) => (
  <Card
  key={org.id}
- className="hover:border-emerald-500/30 transition-all cursor-pointer group"
+ className="hover:border-app-primary/30 transition-all cursor-pointer group"
  onClick={() => handleSwitch(org.slug ?? '')}
  >
  <CardHeader>
  <div className="flex justify-between items-start">
- <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-app-text transition-colors">
+ <div className="p-3 bg-app-primary-light rounded-xl text-app-primary group-hover:bg-app-primary group-hover:text-app-foreground transition-colors">
  <Building size={20} />
  </div>
- <Badge className={org.isActive ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-text-muted"}>
+ <Badge className={org.isActive ? "bg-app-primary-light text-app-primary" : "bg-app-surface-2 text-app-muted-foreground"}>
  {org.isActive ? 'Active' : 'Suspended'}
  </Badge>
  </div>
  <CardTitle className="mt-4 flex items-center justify-between">
  {org.name}
- <ArrowRight className="text-gray-300 group-hover:text-emerald-500 transition-colors" size={20} />
+ <ArrowRight className="text-app-muted-foreground group-hover:text-app-primary transition-colors" size={20} />
  </CardTitle>
  <CardDescription className="font-mono text-xs">{org.slug}</CardDescription>
  </CardHeader>

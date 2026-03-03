@@ -17,13 +17,13 @@ import {
  Tag, Star, BarChart3, Percent, Hash
 , UserCircle } from "lucide-react"
 const STATUS_COLORS: Record<string, string> = {
- DRAFT: 'bg-app-surface-2 text-gray-700',
- PENDING: 'bg-yellow-100 text-yellow-700',
- AUTHORIZED: 'bg-blue-100 text-blue-700',
- COMPLETED: 'bg-emerald-100 text-emerald-700',
+ DRAFT: 'bg-app-surface-2 text-app-muted-foreground',
+ PENDING: 'bg-app-warning-bg text-app-warning',
+ AUTHORIZED: 'bg-app-info-bg text-app-info',
+ COMPLETED: 'bg-app-primary-light text-app-success',
  INVOICED: 'bg-purple-100 text-purple-700',
- CANCELLED: 'bg-red-100 text-red-700',
- POSTED: 'bg-emerald-100 text-emerald-700',
+ CANCELLED: 'bg-app-error-bg text-app-error',
+ POSTED: 'bg-app-primary-light text-app-success',
 }
 export default function ContactDetailPage() {
  const { fmt } = useCurrency()
@@ -58,9 +58,9 @@ export default function ContactDetailPage() {
  }
  if (!data?.contact) {
  return (
- <div className="p-6 text-center py-20">
- <AlertCircle size={48} className="mx-auto mb-4 text-gray-300" />
- <p className="text-app-text-muted">Contact not found</p>
+ <div className="app-page p-6 text-center py-20">
+ <AlertCircle size={48} className="mx-auto mb-4 text-app-muted-foreground" />
+ <p className="text-app-muted-foreground">Contact not found</p>
  <Button variant="outline" className="mt-4" onClick={() => router.push('/crm/contacts')}>
  <ArrowLeft size={16} className="mr-2" /> Back to Contacts
  </Button>
@@ -79,20 +79,20 @@ export default function ContactDetailPage() {
  </Button>
  <div>
  <div className="flex items-center gap-3">
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-app-text shadow-lg ${isCustomer ? 'bg-emerald-600 shadow-emerald-100' : 'bg-blue-600 shadow-blue-100'
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-app-foreground shadow-lg ${isCustomer ? 'bg-app-primary shadow-emerald-100' : 'bg-app-info shadow-blue-100'
  }`}>
  <User size={24} />
  </div>
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <UserCircle size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-indigo-200">
+ <UserCircle size={28} className="text-app-foreground" />
  </div>
- Contact <span className="text-indigo-600">Profile</span>
+ Contact <span className="text-app-primary">Profile</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Customer Details</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Customer Details</p>
  <div className="flex items-center gap-2 mt-1">
- <Badge className={isCustomer ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}>
+ <Badge className={isCustomer ? 'bg-app-primary-light text-app-success' : 'bg-app-info-bg text-app-info'}>
  {contact.type}
  </Badge>
  {contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
@@ -101,12 +101,12 @@ export default function ContactDetailPage() {
  </Badge>
  )}
  {contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
- <Badge className={contact.customer_tier === 'VIP' ? 'bg-yellow-100 text-yellow-700' : 'bg-cyan-100 text-cyan-700'}>
+ <Badge className={contact.customer_tier === 'VIP' ? 'bg-app-warning-bg text-app-warning' : 'bg-cyan-100 text-cyan-700'}>
  {contact.customer_tier === 'VIP' && '⭐ '}{contact.customer_tier}
  </Badge>
  )}
  {contact.vat_id && (
- <span className="text-xs text-app-text-faint">VAT: {contact.vat_id}</span>
+ <span className="text-xs text-app-muted-foreground">VAT: {contact.vat_id}</span>
  )}
  </div>
  </div>
@@ -119,41 +119,41 @@ export default function ContactDetailPage() {
  {/* Contact Info */}
  <Card>
  <CardContent className="py-4 space-y-3">
- <h3 className="text-sm font-semibold text-app-text-muted uppercase tracking-wide">Contact Info</h3>
+ <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wide">Contact Info</h3>
  {contact.email && (
  <div className="flex items-center gap-2 text-sm">
- <Mail size={14} className="text-app-text-faint" />
+ <Mail size={14} className="text-app-muted-foreground" />
  <span>{contact.email}</span>
  </div>
  )}
  {contact.phone && (
  <div className="flex items-center gap-2 text-sm">
- <Phone size={14} className="text-app-text-faint" />
+ <Phone size={14} className="text-app-muted-foreground" />
  <span>{contact.phone}</span>
  </div>
  )}
  {contact.address && (
  <div className="flex items-center gap-2 text-sm">
- <MapPin size={14} className="text-app-text-faint" />
+ <MapPin size={14} className="text-app-muted-foreground" />
  <span className="line-clamp-2">{contact.address}</span>
  </div>
  )}
  {(contact.credit_limit ?? 0) > 0 && (
  <div className="flex items-center gap-2 text-sm">
- <CreditCard size={14} className="text-app-text-faint" />
+ <CreditCard size={14} className="text-app-muted-foreground" />
  <span>Credit Limit: {fmt(contact.credit_limit ?? 0)}</span>
  </div>
  )}
  {(contact.payment_terms_days ?? 0) > 0 && (
  <div className="flex items-center gap-2 text-sm">
- <Clock size={14} className="text-app-text-faint" />
+ <Clock size={14} className="text-app-muted-foreground" />
  <span>Payment Terms: {contact.payment_terms_days} days</span>
  </div>
  )}
  {(contact.loyalty_points ?? 0) > 0 && (
  <div className="flex items-center gap-2 text-sm">
- <Star size={14} className="text-yellow-500" />
- <span className="font-semibold text-yellow-600">{contact.loyalty_points} loyalty points</span>
+ <Star size={14} className="text-app-warning" />
+ <span className="font-semibold text-app-warning">{contact.loyalty_points} loyalty points</span>
  </div>
  )}
  </CardContent>
@@ -161,14 +161,14 @@ export default function ContactDetailPage() {
  {/* Balance */}
  <Card className={`border-l-4 ${balance.current_balance > 0 ? 'border-l-red-500' : 'border-l-emerald-500'}`}>
  <CardContent className="py-4">
- <h3 className="text-sm font-semibold text-app-text-muted uppercase tracking-wide mb-2">
+ <h3 className="text-sm font-semibold text-app-muted-foreground uppercase tracking-wide mb-2">
  {isCustomer ? 'Amount Owed to You' : 'Amount You Owe'}
  </h3>
- <p className={`text-3xl font-bold ${balance.current_balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+ <p className={`text-3xl font-bold ${balance.current_balance > 0 ? 'text-app-error' : 'text-app-primary'}`}>
  {fmt(Math.abs(balance.current_balance))}
  </p>
  {balance.last_payment_date && (
- <p className="text-xs text-app-text-faint mt-2">
+ <p className="text-xs text-app-muted-foreground mt-2">
  Last payment: {balance.last_payment_date}
  </p>
  )}
@@ -178,22 +178,22 @@ export default function ContactDetailPage() {
  <Card>
  <CardContent className="py-4 grid grid-cols-2 gap-4">
  <div>
- <p className="text-xs text-app-text-faint uppercase">Total Orders</p>
- <p className="text-2xl font-bold text-app-text">{orders.stats.total_count}</p>
- <p className="text-xs text-app-text-muted">{fmt(orders.stats.total_amount)}</p>
+ <p className="text-xs text-app-muted-foreground uppercase">Total Orders</p>
+ <p className="text-2xl font-bold text-app-foreground">{orders.stats.total_count}</p>
+ <p className="text-xs text-app-muted-foreground">{fmt(orders.stats.total_amount)}</p>
  </div>
  <div>
- <p className="text-xs text-app-text-faint uppercase">Total Paid</p>
- <p className="text-2xl font-bold text-app-text">{payments.stats.payment_count}</p>
- <p className="text-xs text-app-text-muted">{fmt(payments.stats.total_paid)}</p>
+ <p className="text-xs text-app-muted-foreground uppercase">Total Paid</p>
+ <p className="text-2xl font-bold text-app-foreground">{payments.stats.payment_count}</p>
+ <p className="text-xs text-app-muted-foreground">{fmt(payments.stats.total_paid)}</p>
  </div>
  <div>
- <p className="text-xs text-app-text-faint uppercase">Completed</p>
- <p className="text-lg font-semibold text-emerald-600">{orders.stats.completed}</p>
+ <p className="text-xs text-app-muted-foreground uppercase">Completed</p>
+ <p className="text-lg font-semibold text-app-primary">{orders.stats.completed}</p>
  </div>
  <div>
- <p className="text-xs text-app-text-faint uppercase">Draft</p>
- <p className="text-lg font-semibold text-yellow-600">{orders.stats.draft}</p>
+ <p className="text-xs text-app-muted-foreground uppercase">Draft</p>
+ <p className="text-lg font-semibold text-app-warning">{orders.stats.draft}</p>
  </div>
  </CardContent>
  </Card>
@@ -211,8 +211,8 @@ export default function ContactDetailPage() {
  key={key}
  onClick={() => setActiveTab(key)}
  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === key
- ? 'border-blue-600 text-blue-600'
- : 'border-transparent text-app-text-muted hover:text-gray-700'
+ ? 'border-app-info/30 text-app-info'
+ : 'border-transparent text-app-muted-foreground hover:text-app-muted-foreground'
  }`}
  >
  <Icon size={16} />
@@ -225,14 +225,14 @@ export default function ContactDetailPage() {
  <CardContent className="p-0">
  {activeTab === 'orders' && (
  orders.recent.length === 0 ? (
- <div className="text-center py-12 text-app-text-faint">
+ <div className="text-center py-12 text-app-muted-foreground">
  <ShoppingCart size={48} className="mx-auto mb-3 opacity-30" />
  <p>No orders found</p>
  </div>
  ) : (
  <Table>
  <TableHeader>
- <TableRow className="bg-gray-50/50">
+ <TableRow className="bg-app-surface-2/50">
  <TableHead>Order</TableHead>
  <TableHead>Invoice #</TableHead>
  <TableHead>Status</TableHead>
@@ -244,11 +244,11 @@ export default function ContactDetailPage() {
  </TableHeader>
  <TableBody>
  {orders.recent.map((o: Record<string, any>) => (
- <TableRow key={o.id} className="hover:bg-gray-50/50">
+ <TableRow key={o.id} className="hover:bg-app-surface-2/50">
  <TableCell className="font-mono text-sm">
  {o.ref_code || `ORD-${o.id}`}
  </TableCell>
- <TableCell className="text-sm text-app-text-muted">
+ <TableCell className="text-sm text-app-muted-foreground">
  {o.invoice_number || '—'}
  </TableCell>
  <TableCell>
@@ -259,11 +259,11 @@ export default function ContactDetailPage() {
  <TableCell className="text-right font-semibold">
  {fmt(o.total_amount)}
  </TableCell>
- <TableCell className="text-right text-sm text-app-text-muted">
+ <TableCell className="text-right text-sm text-app-muted-foreground">
  {fmt(o.tax_amount)}
  </TableCell>
  <TableCell className="text-sm">{o.payment_method}</TableCell>
- <TableCell className="text-sm text-app-text-muted">
+ <TableCell className="text-sm text-app-muted-foreground">
  {o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : '—'}
  </TableCell>
  </TableRow>
@@ -274,14 +274,14 @@ export default function ContactDetailPage() {
  )}
  {activeTab === 'payments' && (
  payments.recent.length === 0 ? (
- <div className="text-center py-12 text-app-text-faint">
+ <div className="text-center py-12 text-app-muted-foreground">
  <CreditCard size={48} className="mx-auto mb-3 opacity-30" />
  <p>No payments recorded</p>
  </div>
  ) : (
  <Table>
  <TableHeader>
- <TableRow className="bg-gray-50/50">
+ <TableRow className="bg-app-surface-2/50">
  <TableHead>Reference</TableHead>
  <TableHead className="text-right">Amount</TableHead>
  <TableHead>Method</TableHead>
@@ -292,7 +292,7 @@ export default function ContactDetailPage() {
  </TableHeader>
  <TableBody>
  {payments.recent.map((p: Record<string, any>) => (
- <TableRow key={p.id} className="hover:bg-gray-50/50">
+ <TableRow key={p.id} className="hover:bg-app-surface-2/50">
  <TableCell className="font-mono text-sm">
  {p.reference || `PAY-${p.id}`}
  </TableCell>
@@ -305,10 +305,10 @@ export default function ContactDetailPage() {
  {p.status}
  </Badge>
  </TableCell>
- <TableCell className="text-sm text-app-text-muted max-w-[200px] truncate">
+ <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">
  {p.description || '—'}
  </TableCell>
- <TableCell className="text-sm text-app-text-muted">
+ <TableCell className="text-sm text-app-muted-foreground">
  {p.payment_date ? new Date(p.payment_date).toLocaleDateString('fr-FR') : '—'}
  </TableCell>
  </TableRow>
@@ -319,14 +319,14 @@ export default function ContactDetailPage() {
  )}
  {activeTab === 'journal' && (
  journal_entries.length === 0 ? (
- <div className="text-center py-12 text-app-text-faint">
+ <div className="text-center py-12 text-app-muted-foreground">
  <BookOpen size={48} className="mx-auto mb-3 opacity-30" />
  <p>No journal entries</p>
  </div>
  ) : (
  <Table>
  <TableHeader>
- <TableRow className="bg-gray-50/50">
+ <TableRow className="bg-app-surface-2/50">
  <TableHead>Reference</TableHead>
  <TableHead>Account</TableHead>
  <TableHead>Description</TableHead>
@@ -337,21 +337,21 @@ export default function ContactDetailPage() {
  </TableHeader>
  <TableBody>
  {journal_entries.map((j: Record<string, any>, idx: number) => (
- <TableRow key={idx} className="hover:bg-gray-50/50">
+ <TableRow key={idx} className="hover:bg-app-surface-2/50">
  <TableCell className="font-mono text-sm">
  {j.reference || `JE-${j.id}`}
  </TableCell>
  <TableCell className="text-sm">{j.account || '—'}</TableCell>
- <TableCell className="text-sm text-app-text-muted max-w-[200px] truncate">
+ <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">
  {j.description || '—'}
  </TableCell>
- <TableCell className="text-right font-semibold text-red-600">
+ <TableCell className="text-right font-semibold text-app-error">
  {j.debit > 0 ? fmt(j.debit) : '—'}
  </TableCell>
- <TableCell className="text-right font-semibold text-emerald-600">
+ <TableCell className="text-right font-semibold text-app-primary">
  {j.credit > 0 ? fmt(j.credit) : '—'}
  </TableCell>
- <TableCell className="text-sm text-app-text-muted">{j.date || '—'}</TableCell>
+ <TableCell className="text-sm text-app-muted-foreground">{j.date || '—'}</TableCell>
  </TableRow>
  ))}
  </TableBody>
@@ -362,13 +362,13 @@ export default function ContactDetailPage() {
  {activeTab === 'analytics' && (
  <div className="page-container">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <div className="bg-blue-50 rounded-xl p-4">
- <p className="text-xs font-bold text-blue-600 uppercase">Avg Order Value</p>
- <p className="text-2xl font-bold text-blue-900">{fmt(analytics?.avg_order_value || 0)}</p>
+ <div className="bg-app-info-bg rounded-xl p-4">
+ <p className="text-xs font-bold text-app-info uppercase">Avg Order Value</p>
+ <p className="text-2xl font-bold text-app-info">{fmt(analytics?.avg_order_value || 0)}</p>
  </div>
- <div className="bg-emerald-50 rounded-xl p-4">
- <p className="text-xs font-bold text-emerald-600 uppercase">Monthly Frequency</p>
- <p className="text-2xl font-bold text-emerald-900">{analytics?.monthly_frequency || 0} orders/mo</p>
+ <div className="bg-app-primary-light rounded-xl p-4">
+ <p className="text-xs font-bold text-app-primary uppercase">Monthly Frequency</p>
+ <p className="text-2xl font-bold text-app-success">{analytics?.monthly_frequency || 0} orders/mo</p>
  </div>
  <div className="bg-purple-50 rounded-xl p-4">
  <p className="text-xs font-bold text-purple-600 uppercase">Total Revenue</p>
@@ -376,16 +376,16 @@ export default function ContactDetailPage() {
  </div>
  </div>
  <div>
- <h3 className="text-sm font-semibold text-app-text-muted uppercase mb-3">Top Products</h3>
+ <h3 className="text-sm font-semibold text-app-muted-foreground uppercase mb-3">Top Products</h3>
  {(analytics?.top_products || []).length === 0 ? (
- <p className="text-app-text-faint text-sm">No product data available yet.</p>
+ <p className="text-app-muted-foreground text-sm">No product data available yet.</p>
  ) : (
  <div className="space-y-2">
  {analytics?.top_products?.map((p: Record<string, any>, i: number) => (
- <div key={i} className="flex items-center gap-3 bg-app-bg rounded-xl p-3">
- <span className="text-xs font-bold text-app-text-faint w-6">#{i + 1}</span>
- <span className="flex-1 font-medium text-sm text-app-text">{p.product_name}</span>
- <span className="text-xs text-app-text-muted">Qty: {p.total_qty}</span>
+ <div key={i} className="flex items-center gap-3 bg-app-background rounded-xl p-3">
+ <span className="text-xs font-bold text-app-muted-foreground w-6">#{i + 1}</span>
+ <span className="flex-1 font-medium text-sm text-app-foreground">{p.product_name}</span>
+ <span className="text-xs text-app-muted-foreground">Qty: {p.total_qty}</span>
  <span className="font-semibold text-sm">{fmt(p.total_revenue)}</span>
  </div>
  ))}
@@ -398,7 +398,7 @@ export default function ContactDetailPage() {
  {activeTab === 'pricing' && (
  <div className="p-6">
  {(pricing_rules || []).length === 0 ? (
- <div className="text-center py-12 text-app-text-faint">
+ <div className="text-center py-12 text-app-muted-foreground">
  <Tag size={48} className="mx-auto mb-3 opacity-30" />
  <p>No pricing rules for this contact</p>
  <p className="text-xs mt-1">Create rules from the Client Pricing page</p>
@@ -406,9 +406,9 @@ export default function ContactDetailPage() {
  ) : (
  <div className="space-y-3">
  {(pricing_rules ?? []).map((rule: Record<string, any>) => (
- <div key={rule.id} className="flex items-center gap-4 bg-app-bg rounded-xl p-4">
- <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-600' :
- rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
+ <div key={rule.id} className="flex items-center gap-4 bg-app-background rounded-xl p-4">
+ <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-app-primary-light text-app-primary' :
+ rule.discount_type === 'PERCENTAGE' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'
  }`}>
  {rule.discount_type === 'PERCENTAGE' ? <Percent size={18} /> :
  rule.discount_type === 'AMOUNT_OFF' ? <Hash size={18} /> : <DollarSign size={18} />}
@@ -416,8 +416,8 @@ export default function ContactDetailPage() {
  <div className="flex-1">
  <div className="flex items-center gap-2">
  <Badge className={
- rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-700' :
- rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+ rule.discount_type === 'FIXED_PRICE' ? 'bg-app-primary-light text-app-success' :
+ rule.discount_type === 'PERCENTAGE' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'
  }>
  {rule.discount_type === 'FIXED_PRICE' ? 'Fixed Price' :
  rule.discount_type === 'PERCENTAGE' ? '% Discount' : 'Amount Off'}
@@ -426,7 +426,7 @@ export default function ContactDetailPage() {
  {rule.discount_type === 'PERCENTAGE' ? `${rule.value}%` : fmt(parseFloat(rule.value))}
  </span>
  </div>
- <p className="text-xs text-app-text-muted mt-1">
+ <p className="text-xs text-app-muted-foreground mt-1">
  {rule.product_name || rule.category_name || 'All products'}
  {rule.group_name && ` · via ${rule.group_name}`}
  {rule.min_quantity > 1 && ` · min qty: ${rule.min_quantity}`}

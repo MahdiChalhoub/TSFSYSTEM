@@ -88,11 +88,11 @@ export function CategorySelector({ categories, onChange, initialCategoryId, comp
  }
 
  const selectClass = compact
- ? "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all text-gray-700 appearance-none"
- : "w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all bg-app-surface";
+ ? "w-full bg-app-surface border border-app-border rounded-lg px-3 py-[9px] text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all text-app-text-muted appearance-none"
+ : "w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary focus:ring-4 focus:ring-app-primary/10 outline-none transition-all bg-app-surface";
 
  const labelNames = [
- <>Category <span className="text-red-400">*</span></>,
+ <>Category <span className="text-app-error">*</span></>,
  'Sub-Category',
  'Sub-Sub-Category'
  ];

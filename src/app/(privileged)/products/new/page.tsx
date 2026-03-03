@@ -27,7 +27,7 @@ async function getUnits() {
 
 async function getBrands() {
  try {
- return await erpFetch('brands/');
+ return await erpFetch('inventory/brands/');
  } catch (e) {
  console.warn("Error fetching brands:", e);
  return [];
@@ -76,14 +76,14 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
  return (
  <div>
  <div className="mb-6">
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <PackagePlus size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <PackagePlus size={28} className="text-app-foreground" />
  </div>
- New <span className="text-emerald-600">Product</span>
+ New <span className="text-app-primary">Product</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Create Product</p>
- <p className="text-app-text-muted">
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Create Product</p>
+ <p className="text-app-muted-foreground">
  {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Create a new item in the TSF Catalog.'}
  </p>
  </div>

@@ -24,6 +24,24 @@ from django.utils import timezone
 from .middleware import get_current_tenant_id
 from .mixins import AuditLogMixin, TenantFilterMixin, UDLEViewSetMixin
 from .throttles import TenantResolveRateThrottle
+from rest_framework.pagination import CursorPagination
+
+
+# ─── Gap 10: Performance-Aware Pagination ─────────────────────────────────────
+
+class TenantCursorPagination(CursorPagination):
+    """
+    Cursor-based pagination for all TenantModelViewSet queries.
+    Uses opaque cursors tied to `created_at` so queries O(1) regardless
+    of how far down the user pages — no OFFSET scanning.
+    Default: 50 rows per page. Max: 500.
+    Override via ?page_size=N in the query string.
+    """
+    page_size = 50
+    max_page_size = 500
+    page_size_query_param = 'page_size'
+    ordering = '-id'  # Safe default — all models have id. Override per-ViewSet if needed.
+
 
 # --- Kernel Models ---
 from .models import (
@@ -81,6 +99,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
     - Rule 6: APIs automatically inject organization_id; manual override forbidden.
     """
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = TenantCursorPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -88,20 +107,14 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
         model = self.queryset.model
 
         # 1. Resolve Organization ID
-        print(f"🔍 DEBUG: get_queryset user={user} user.org_id={user.organization_id if user else 'None'} header_tenant_id={tenant_id}")
         if user.is_staff or user.is_superuser:
             org_id = tenant_id or user.organization_id
         else:
             org_id = user.organization_id
 
-        if str(model._meta.model_name) == 'product':
-             from erp.models import Product
-             print(f"📦 DEBUG: Product Total Count: {Product.objects.count()}")
-             print(f"🏢 DEBUG: Product Org Count ({org_id}): {Product.objects.filter(organization_id=org_id).count()}")
-
         if not org_id:
             return self.queryset.none()
-            
+
         filters = {}
         # Many models use 'organization' (ForeignKey), some might use 'organization_id'
         if hasattr(model, 'organization'):

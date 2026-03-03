@@ -135,7 +135,7 @@ export default function DebugOverlay() {
  className="w-14 h-14 bg-indigo-600 text-app-text rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform active:scale-95 group"
  >
  <Activity size={24} className="group-hover:animate-pulse" />
- <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></div>
+ <div className="absolute -top-1 -right-1 w-4 h-4 bg-app-error border-2 border-white rounded-full"></div>
  </button>
  ) : (
  <div className="w-[450px] bg-app-surface rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
@@ -152,7 +152,7 @@ export default function DebugOverlay() {
  </div>
  <div className="flex gap-4">
  <div className="flex-1 flex items-center gap-3 bg-app-text/10 p-3 rounded-2xl backdrop-blur-md">
- <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+ <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-app-warning' : 'bg-app-primary'}`}>
  <ShieldCheck size={16} />
  </div>
  <div>
@@ -215,7 +215,7 @@ export default function DebugOverlay() {
  {logic.linkage.map((item, i) => (
  <div key={i} className="flex items-start gap-2 bg-app-bg p-2.5 rounded-xl border border-app-border">
  <ChevronRight size={12} className="text-indigo-400 mt-0.5 shrink-0" />
- <span className="text-[11px] font-bold text-gray-700">{item}</span>
+ <span className="text-[11px] font-bold text-app-text-muted">{item}</span>
  </div>
  ))}
  </div>
@@ -227,8 +227,8 @@ export default function DebugOverlay() {
  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Integration Status</span>
  </div>
  <div className="flex items-center gap-2">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
- <span className="text-xs font-black text-emerald-700">Linkage Verified</span>
+ <div className="w-2 h-2 bg-app-primary rounded-full animate-pulse"></div>
+ <span className="text-xs font-black text-app-success">Linkage Verified</span>
  </div>
  </div>
  </div>
@@ -265,7 +265,7 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Page Inspector</span>
  </div>
  <div className="flex items-center gap-2">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+ <div className="w-2 h-2 bg-app-primary rounded-full animate-pulse"></div>
  <span className="text-[9px] font-bold text-app-text-faint uppercase">Interactive</span>
  </div>
  </div>
@@ -273,11 +273,11 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
  {/* READ Section */}
  <div className="bg-app-bg rounded-2xl border border-app-border overflow-hidden">
  <div className="p-3 bg-app-surface border-b border-app-border flex items-center gap-2">
- <ArrowDownCircle size={14} className="text-blue-500" />
- <span className="text-[10px] font-black text-blue-600 uppercase">Input / Data Reading</span>
+ <ArrowDownCircle size={14} className="text-app-info" />
+ <span className="text-[10px] font-black text-app-info uppercase">Input / Data Reading</span>
  </div>
  <div className="p-4">
- <p className="text-[11px] font-bold text-gray-700 leading-relaxed">
+ <p className="text-[11px] font-bold text-app-text-muted leading-relaxed">
  On page mount, he is reading:
  </p>
  <div className="mt-2 space-y-1">
@@ -292,11 +292,11 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
  {/* WRITE Section */}
  <div className="bg-app-bg rounded-2xl border border-app-border overflow-hidden">
  <div className="p-3 bg-app-surface border-b border-app-border flex items-center gap-2">
- <ArrowUpCircle size={14} className="text-emerald-500" />
- <span className="text-[10px] font-black text-emerald-600 uppercase">Output / Data Saving</span>
+ <ArrowUpCircle size={14} className="text-app-primary" />
+ <span className="text-[10px] font-black text-app-primary uppercase">Output / Data Saving</span>
  </div>
  <div className="p-4">
- <p className="text-[11px] font-bold text-gray-700 leading-relaxed">
+ <p className="text-[11px] font-bold text-app-text-muted leading-relaxed">
  On save, he will execute:
  </p>
  <div className="mt-2 space-y-1">
@@ -310,10 +310,10 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
  </div>
  {/* LAST RESULT */}
  {lastOperation && (
- <div className={`rounded-2xl border p-4 animate-in fade-in slide-in-from-top-2 duration-500 ${lastOperation.status === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+ <div className={`rounded-2xl border p-4 animate-in fade-in slide-in-from-top-2 duration-500 ${lastOperation.status === 'SUCCESS' ? 'bg-app-primary-light border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
  <div className="flex items-center gap-2 mb-2">
- <div className={`w-2 h-2 rounded-full ${lastOperation.status === 'SUCCESS' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
- <span className={`text-[10px] font-black uppercase ${lastOperation.status === 'SUCCESS' ? 'text-emerald-700' : 'text-rose-700'}`}>Last Transaction Result</span>
+ <div className={`w-2 h-2 rounded-full ${lastOperation.status === 'SUCCESS' ? 'bg-app-primary' : 'bg-rose-500'}`}></div>
+ <span className={`text-[10px] font-black uppercase ${lastOperation.status === 'SUCCESS' ? 'text-app-success' : 'text-rose-700'}`}>Last Transaction Result</span>
  </div>
  <p className="text-[11px] font-black text-app-text">{lastOperation.details}</p>
  <p className="text-[9px] font-bold text-app-text-faint mt-2 uppercase">{new Date(lastOperation.timestamp).toLocaleTimeString()}</p>
@@ -346,12 +346,12 @@ function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tight">{entry.reference}</span>
  <span className="text-[9px] text-app-text-faint font-bold">{new Date(entry.transactionDate).toLocaleString()}</span>
  </div>
- <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${entry.status === 'POSTED' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+ <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase ${entry.status === 'POSTED' ? 'bg-app-primary-light text-app-primary' : 'bg-app-warning-bg text-app-warning'}`}>
  {entry.status}
  </span>
  </div>
  <div className="p-3">
- <p className="text-[11px] font-bold text-gray-700 mb-2 truncate">{entry.description}</p>
+ <p className="text-[11px] font-bold text-app-text-muted mb-2 truncate">{entry.description}</p>
  <div className="space-y-1.5 font-mono">
  {entry.lines.map((line: Record<string, any>) => (
  <div key={line.id} className="flex justify-between items-center text-[9px] leading-none py-1 border-b border-gray-50 last:border-0">
@@ -360,7 +360,7 @@ function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
  <span className="text-app-text-muted truncate max-w-[150px]">{line.account?.name}</span>
  </div>
  <div className="flex gap-4">
- <span className={line.debit > 0 ? 'text-emerald-600 font-black' : 'text-transparent'}>
+ <span className={line.debit > 0 ? 'text-app-primary font-black' : 'text-transparent'}>
  {Number(line.debit).toFixed(2)}
  </span>
  <span className={line.credit > 0 ? 'text-rose-600 font-black' : 'text-transparent'}>

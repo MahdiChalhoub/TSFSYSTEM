@@ -48,15 +48,15 @@ export default function MidnightHeader() {
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-6">
-                    <Link href={path('/')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Products</Link>
-                    <Link href={path('/categories')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Categories</Link>
+                    <Link href={path('/')} className="text-sm text-app-text-faint hover:text-white font-medium transition-colors">Products</Link>
+                    <Link href={path('/categories')} className="text-sm text-app-text-faint hover:text-white font-medium transition-colors">Categories</Link>
                     {storeMode === 'CATALOG_QUOTE' && (
-                        <Link href={path('/quote')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+                        <Link href={path('/quote')} className="text-sm text-app-text-faint hover:text-white font-medium transition-colors flex items-center gap-1.5">
                             <FileQuestion size={14} />Quote
                         </Link>
                     )}
                     {isAuthenticated && (
-                        <Link href={path('/account')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+                        <Link href={path('/account')} className="text-sm text-app-text-faint hover:text-white font-medium transition-colors flex items-center gap-1.5">
                             <LayoutDashboard size={14} />Dashboard
                         </Link>
                     )}
@@ -64,18 +64,18 @@ export default function MidnightHeader() {
 
                 {/* Right Items */}
                 <div className="flex items-center gap-2">
-                    <Link href={path('/search')} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                    <Link href={path('/search')} className="w-10 h-10 flex items-center justify-center text-app-text-faint hover:text-white transition-colors">
                         <Search size={20} />
                     </Link>
                     {isAuthenticated && (
                         <>
-                            <Link href={path('/account/wishlist')} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors">
+                            <Link href={path('/account/wishlist')} className="relative w-10 h-10 flex items-center justify-center text-app-text-faint hover:text-rose-400 transition-colors">
                                 <Heart size={20} />
                                 {wishlistCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-[10px] font-black text-white rounded-full flex items-center justify-center px-1">{wishlistCount}</span>
                                 )}
                             </Link>
-                            <Link href={path('/account/notifications')} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors">
+                            <Link href={path('/account/notifications')} className="relative w-10 h-10 flex items-center justify-center text-app-text-faint hover:text-cyan-400 transition-colors">
                                 <Bell size={20} />
                             </Link>
                         </>
@@ -83,7 +83,7 @@ export default function MidnightHeader() {
                     {storeMode !== 'CATALOG_QUOTE' && (
                         <button
                             onClick={() => setCartOpen(true)}
-                            className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                            className="relative w-10 h-10 flex items-center justify-center text-app-text-faint hover:text-white transition-colors"
                         >
                             <ShoppingCart size={20} />
                             {cartCount > 0 && (
@@ -103,7 +103,7 @@ export default function MidnightHeader() {
                         </Link>
                     )}
                     <button onClick={() => setMenuOpen(!menuOpen)}
-                        className="md:hidden w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white">
+                        className="md:hidden w-10 h-10 flex items-center justify-center text-app-text-faint hover:text-white">
                         {menuOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>

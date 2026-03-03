@@ -25,40 +25,21 @@ export default async function AttendancePage() {
  const checkedIn = todayRecords.filter((a: any) => a.check_in && !a.check_out).length;
 
  return (
- <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+ <div className="app-page p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
  {/* Header */}
- <header className="flex flex-col md:flex-row justify-between items-center gap-6">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-app-text">
- <Fingerprint size={28} />
- </div>
- Atten<span className="text-emerald-600">dance</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Real-time Pulse: Workforce Presence Tracking</p>
- </div>
- {/* KPI Pulse */}
- <div className="flex gap-4">
- <div className="bg-app-surface p-6 rounded-[2rem] shadow-sm border border-app-border flex items-center gap-5 min-w-[200px]">
- <div className="w-12 h-12 rounded-2xl bg-app-bg text-app-text-faint flex items-center justify-center">
- <Clock size={24} />
- </div>
- <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mt-1 leading-none mb-1">Total Logs</p>
- <h2 className="text-2xl font-black text-app-text tracking-tighter">{attendance.length}</h2>
- </div>
- </div>
- <div className="bg-app-surface p-6 rounded-[2rem] shadow-sm border border-emerald-100 flex items-center gap-5 min-w-[200px]">
- <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
- <UserCheck size={24} />
- </div>
- <div>
- <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1 leading-none mb-1">On-Site Now</p>
- <h2 className="text-2xl font-black text-emerald-600 tracking-tighter">{checkedIn}</h2>
- </div>
- </div>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Clock size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Human Resources</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Attendance <span className="text-app-primary">Tracker</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  <AttendanceClient attendance={attendance} employees={employees} shifts={shifts} />
  </div>

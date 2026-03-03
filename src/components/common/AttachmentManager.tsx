@@ -105,8 +105,8 @@ export default function AttachmentManager({
 
  if (loading && files.length === 0) {
  return (
- <div className="flex items-center justify-center p-8 bg-gray-50/50 rounded-[2rem] border border-dashed border-app-border">
- <RefreshCcw className="animate-spin text-emerald-500" size={24} />
+ <div className="flex items-center justify-center p-8 bg-app-surface-2 rounded-[2rem] border border-dashed border-app-border">
+ <RefreshCcw className="animate-spin text-app-primary" size={24} />
  </div>
  );
  }
@@ -115,7 +115,7 @@ export default function AttachmentManager({
  <div className={`space-y-4 animate-in fade-in duration-300 ${compact ? '' : 'mt-6'}`}>
  <div className="flex items-center justify-between">
  <h3 className="text-lg font-black text-app-text flex items-center gap-2">
- <Cloud size={20} className="text-blue-500" />
+ <Cloud size={20} className="text-app-info" />
  {title}
  <span className="ml-2 px-2 py-0.5 rounded-full bg-app-surface-2 text-app-text-muted text-[10px] font-bold">
  {files.length}
@@ -133,15 +133,15 @@ export default function AttachmentManager({
 
  {/* Upload Progress */}
  {chunked.uploading && (
- <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+ <div className="bg-app-info-bg border border-app-info rounded-2xl p-4">
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-2">
- <Loader2 size={16} className="animate-spin text-blue-500" />
+ <Loader2 size={16} className="animate-spin text-app-info" />
  <span className="text-xs font-bold text-app-text">Uploading...</span>
  </div>
- <span className="text-xs font-mono font-bold text-blue-600">{chunked.progress}%</span>
+ <span className="text-xs font-mono font-bold text-app-info">{chunked.progress}%</span>
  </div>
- <div className="w-full bg-blue-100 rounded-full h-1.5 overflow-hidden">
+ <div className="w-full bg-app-info-bg rounded-full h-1.5 overflow-hidden">
  <div
  className="bg-blue-500 h-full rounded-full transition-all duration-300"
  style={{ width: `${chunked.progress}%` }}
@@ -152,10 +152,10 @@ export default function AttachmentManager({
  )}
 
  {chunked.error && (
- <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold flex items-center gap-2">
+ <div className="p-3 bg-app-error-bg border border-app-error rounded-xl text-app-error text-xs font-bold flex items-center gap-2">
  <AlertTriangle size={14} />
  {chunked.error}
- <button onClick={() => chunked.abort()} className="ml-auto text-red-400 hover:text-red-700">
+ <button onClick={() => chunked.abort()} className="ml-auto text-app-error hover:text-app-error">
  <X size={14} />
  </button>
  </div>
@@ -168,7 +168,7 @@ export default function AttachmentManager({
  onDragLeave={onDragLeave}
  onDrop={onDrop}
  onClick={() => fileInputRef.current?.click()}
- className={`p-10 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-app-border bg-gray-50/30 hover:bg-app-bg hover:border-app-border'
+ className={`p-10 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:bg-app-bg hover:border-app-border'
  }`}
  >
  <div className="w-16 h-16 rounded-2xl bg-app-surface shadow-sm flex items-center justify-center mx-auto mb-4 border border-app-border">
@@ -189,8 +189,8 @@ export default function AttachmentManager({
  key={file.uuid}
  className="group relative bg-app-surface border border-app-border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all flex items-center gap-3"
  >
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isImage ? 'bg-purple-50' : 'bg-blue-50'}`}>
- <Icon size={20} className={isImage ? 'text-purple-500' : 'text-blue-500'} />
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isImage ? 'bg-purple-50' : 'bg-app-info-bg'}`}>
+ <Icon size={20} className={isImage ? 'text-purple-500' : 'text-app-info'} />
  </div>
  <div className="min-w-0 flex-1">
  <p className="text-sm font-bold text-app-text truncate" title={file.original_filename}>
@@ -206,14 +206,14 @@ export default function AttachmentManager({
  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
  <button
  onClick={() => handleDownload(file)}
- className="p-1.5 rounded-lg text-app-text-faint hover:text-blue-500 hover:bg-blue-50 transition-all"
+ className="p-1.5 rounded-lg text-app-text-faint hover:text-app-info hover:bg-app-info-bg transition-all"
  title="Download"
  >
  <Download size={14} />
  </button>
  <button
  onClick={() => handleDelete(file)}
- className="p-1.5 rounded-lg text-app-text-faint hover:text-red-500 hover:bg-red-50 transition-all"
+ className="p-1.5 rounded-lg text-app-text-faint hover:text-app-error hover:bg-app-error-bg transition-all"
  title="Delete"
  >
  <Trash2 size={14} />
@@ -230,7 +230,7 @@ export default function AttachmentManager({
  onDragLeave={onDragLeave}
  onDrop={onDrop}
  onClick={() => fileInputRef.current?.click()}
- className={`flex items-center justify-center border-2 border-dashed rounded-2xl p-3 transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-app-border bg-gray-50/20 hover:border-app-border'
+ className={`flex items-center justify-center border-2 border-dashed rounded-2xl p-3 transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:border-app-border'
  }`}
  >
  <Plus size={16} className="text-gray-300 mr-2" />

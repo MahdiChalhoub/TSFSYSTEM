@@ -111,13 +111,18 @@ class RegisterLobbyMixin:
 
     @action(detail=False, methods=['post'], url_path='create-register')
     def create_register(self, request):
-        """Create a new POS register."""
+        """Create a new POS register.
+        When POSSettings.restrict_unique_cash_account is True:
+          - Validates no other register uses the same cash_account_id
+          - Auto-creates a child cash account under 'RegisterCash' if no account is provided
+        """
         org_id = get_current_tenant_id()
         if not org_id:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
         organization = Organization.objects.get(id=org_id)
 
         from apps.inventory.models import Warehouse
+        from apps.pos.models.register_models import POSSettings
         name = request.data.get('name')
         site_id = request.data.get('site_id')
         warehouse_id = request.data.get('warehouse_id')
@@ -133,6 +138,58 @@ class RegisterLobbyMixin:
         except Warehouse.DoesNotExist:
             return Response({"error": "Branch/site not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # ── Cash account isolation logic ──
+        settings_obj, _ = POSSettings.objects.get_or_create(organization=organization)
+        if settings_obj.restrict_unique_cash_account:
+            if cash_account_id:
+                # Validate that no other register already uses this cash account
+                conflict = POSRegister.objects.filter(
+                    organization=organization, cash_account_id=cash_account_id
+                ).exclude(id=None).first()
+                if conflict:
+                    return Response({
+                        "error": f'Cash account is already used by register "{conflict.name}". '
+                                  'Enable shared accounts in POS Settings → Security if needed.',
+                        "error_code": "CASH_ACCOUNT_IN_USE",
+                        "conflicting_register": conflict.name,
+                    }, status=status.HTTP_409_CONFLICT)
+            else:
+                # Auto-create a dedicated cash account under RegisterCash parent
+                try:
+                    from apps.finance.models import FinancialAccount
+                    # Find or create the RegisterCash parent account
+                    parent = FinancialAccount.objects.filter(
+                        organization=organization, name__iexact='RegisterCash'
+                    ).first()
+                    if not parent:
+                        parent = FinancialAccount.objects.filter(
+                            organization=organization, name__icontains='Register Cash'
+                        ).first()
+                    # Build the new account
+                    acct_name = f'{name} Cash'
+                    new_account = FinancialAccount.objects.create(
+                        organization=organization,
+                        name=acct_name,
+                        type='CASH',
+                        parent=parent,
+                        currency=organization.currency or 'USD',
+                        is_active=True,
+                    )
+                    cash_account_id = new_account.id
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warning(f'Auto-create cash account failed: {e}')
+                    # Non-fatal — register is still created without auto-account
+
+        payment_methods = request.data.get('payment_methods', [])
+
+        # If we auto-created (or have a) cash account, wire it to the CASH payment method entry
+        if cash_account_id:
+            for pm in payment_methods:
+                if pm.get('key') == 'CASH' and not pm.get('accountId'):
+                    pm['accountId'] = cash_account_id
+                    break
+
         register = POSRegister.objects.create(
             organization=organization,
             name=name,
@@ -141,7 +198,7 @@ class RegisterLobbyMixin:
             cash_account_id=cash_account_id,
             opening_mode=request.data.get('opening_mode', 'STANDARD').upper(),
             cashier_can_see_software=request.data.get('cashier_can_see_software', False),
-            payment_methods=request.data.get('payment_methods', []),
+            payment_methods=payment_methods,
         )
 
         if allowed_account_ids:
@@ -152,6 +209,8 @@ class RegisterLobbyMixin:
         return Response({
             'message': f'Register "{name}" created at {branch.name}',
             'id': register.id,
+            'cashAccountId': register.cash_account_id,
+            'cashAccountAutoCreated': cash_account_id is not None and not request.data.get('cash_account_id'),
         }, status=status.HTTP_201_CREATED)
 
 
@@ -190,7 +249,140 @@ class RegisterLobbyMixin:
         if 'authorized_user_ids' in request.data:
             register.authorized_users.set(request.data['authorized_user_ids'])
 
+        if 'cash_account_id' in request.data and request.data['cash_account_id']:
+            # Validate uniqueness on update too
+            from apps.pos.models.register_models import POSSettings
+            settings_obj, _ = POSSettings.objects.get_or_create(organization_id=org_id)
+            if settings_obj.restrict_unique_cash_account:
+                conflict = POSRegister.objects.filter(
+                    organization_id=org_id, cash_account_id=register.cash_account_id
+                ).exclude(id=register_id).first()
+                if conflict:
+                    return Response({
+                        "error": f'Cash account already used by "{conflict.name}". Disable isolation in POS Settings to share.',
+                        "error_code": "CASH_ACCOUNT_IN_USE",
+                    }, status=status.HTTP_409_CONFLICT)
+
         return Response({'message': f'Register "{register.name}" updated', 'id': register.id})
+
+
+    @action(detail=False, methods=['get'], url_path='account-book-balance')
+    def account_book_balance(self, request):
+        """Get the live Account Book (Cashier Daily Ledger) balance for a register.
+        Returns the net balance of all CashierAddressBook entries for the register's
+        current open session (or the most recent session of today).
+        Query params: register_id (required)
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        register_id = request.query_params.get('register_id')
+        if not register_id:
+            return Response({"error": "register_id required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
+        except POSRegister.DoesNotExist:
+            return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Find the current open session (or last closed today)
+        session = register.sessions.filter(status='OPEN').first()
+        if not session:
+            today = timezone.now().date()
+            session = register.sessions.filter(opened_at__date=today).order_by('-opened_at').first()
+
+        if not session:
+            return Response({
+                'balance': 0.0,
+                'entryCount': 0,
+                'pendingCount': 0,
+                'approvedBalance': 0.0,
+                'sessionId': None,
+                'hasSession': False,
+            })
+
+        entries = CashierAddressBook.objects.filter(
+            organization_id=org_id, session=session, is_deleted=False
+        )
+
+        from decimal import Decimal
+        total_in = sum(e.amount_in for e in entries)
+        total_out = sum(e.amount_out for e in entries)
+        approved = entries.filter(status='APPROVED')
+        approved_in = sum(e.amount_in for e in approved)
+        approved_out = sum(e.amount_out for e in approved)
+
+        return Response({
+            'balance': float(total_in - total_out),
+            'entryCount': entries.count(),
+            'pendingCount': entries.filter(status__in=['PENDING', 'MODIFIED']).count(),
+            'approvedBalance': float(approved_in - approved_out),
+            'sessionId': session.id,
+            'hasSession': True,
+        })
+
+
+    @action(detail=False, methods=['get'], url_path='account-balances')
+    def account_balances(self, request):
+        """Get ledger balances for all payment accounts linked to a register.
+        Returns software balance from the financial ledger for each account.
+        Query params: register_id (required)
+        """
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        register_id = request.query_params.get('register_id')
+        if not register_id:
+            return Response({"error": "register_id required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            register = POSRegister.objects.select_related('cash_account').prefetch_related('allowed_accounts').get(
+                id=register_id, organization_id=org_id
+            )
+        except POSRegister.DoesNotExist:
+            return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Collect all accounts: cash account + all allowed accounts
+        accounts_seen = set()
+        result = []
+
+        def add_account(acc, is_cash_account=False):
+            if acc is None or acc.id in accounts_seen:
+                return
+            accounts_seen.add(acc.id)
+            # Try to get current balance from the financial ledger
+            try:
+                from apps.finance.models import JournalLine
+                from django.db.models import Sum
+                agg = JournalLine.objects.filter(
+                    organization_id=org_id, account=acc
+                ).aggregate(
+                    total_debit=Sum('debit_amount'),
+                    total_credit=Sum('credit_amount'),
+                )
+                debit = float(agg['total_debit'] or 0)
+                credit = float(agg['total_credit'] or 0)
+                # For ASSET-type accounts (CASH, BANK): balance = debit - credit
+                software_balance = debit - credit
+            except Exception:
+                software_balance = 0.0
+
+            result.append({
+                'accountId': acc.id,
+                'name': acc.name,
+                'type': acc.type,
+                'softwareBalance': software_balance,
+                'isCashAccount': is_cash_account,
+                'currency': getattr(acc, 'currency', ''),
+            })
+
+        add_account(register.cash_account, is_cash_account=True)
+        for acc in register.allowed_accounts.all():
+            add_account(acc)
+
+        return Response(result)
 
 
     @action(detail=False, methods=['post'], url_path='verify-pin')

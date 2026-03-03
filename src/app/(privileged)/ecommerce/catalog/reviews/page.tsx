@@ -56,9 +56,9 @@ export default function ReviewManagementPage() {
  key: 'product',
  label: 'Product',
  render: (r) => (
- <div className="flex flex-col">
- <span className="font-bold text-app-text line-clamp-1">{r.product_name || `Product #${r.product}`}</span>
- <span className="text-[10px] text-app-text-faint font-mono">ID: {r.product}</span>
+ <div className="app-page flex flex-col">
+ <span className="font-bold text-app-foreground line-clamp-1">{r.product_name || `Product #${r.product}`}</span>
+ <span className="text-[10px] text-app-muted-foreground font-mono">ID: {r.product}</span>
  </div>
  )
  },
@@ -67,13 +67,13 @@ export default function ReviewManagementPage() {
  label: 'Customer',
  render: (r) => (
  <div className="flex items-center gap-2">
- <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 font-black text-[10px]">
+ <div className="w-7 h-7 rounded-full bg-app-primary/5 flex items-center justify-center text-app-primary font-black text-[10px]">
  {r.name?.substring(0, 2).toUpperCase()}
  </div>
  <div className="flex flex-col">
- <span className="font-medium text-gray-700">{r.name}</span>
+ <span className="font-medium text-app-muted-foreground">{r.name}</span>
  {r.is_verified_purchase && (
- <span className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold uppercase tracking-widest">
+ <span className="flex items-center gap-1 text-[9px] text-app-primary font-bold uppercase tracking-widest">
  <CheckCircle2 size={10} /> Verified
  </span>
  )}
@@ -85,9 +85,9 @@ export default function ReviewManagementPage() {
  key: 'rating',
  label: 'Rating',
  render: (r) => (
- <div className="flex items-center gap-0.5 text-amber-400">
+ <div className="flex items-center gap-0.5 text-app-warning">
  {[1, 2, 3, 4, 5].map(s => (
- <Star key={s} size={12} fill={s <= r.rating ? 'currentColor' : 'none'} className={s > r.rating ? 'text-gray-200' : ''} />
+ <Star key={s} size={12} fill={s <= r.rating ? 'currentColor' : 'none'} className={s > r.rating ? 'text-app-foreground' : ''} />
  ))}
  </div>
  )
@@ -97,8 +97,8 @@ export default function ReviewManagementPage() {
  label: 'Content',
  render: (r) => (
  <div className="max-w-md">
- <p className="font-bold text-app-text text-xs truncate">{r.title}</p>
- <p className="text-app-text-muted text-[11px] line-clamp-1 italic">"{r.content}"</p>
+ <p className="font-bold text-app-foreground text-xs truncate">{r.title}</p>
+ <p className="text-app-muted-foreground text-[11px] line-clamp-1 italic">"{r.content}"</p>
  </div>
  )
  },
@@ -106,7 +106,7 @@ export default function ReviewManagementPage() {
  key: 'status',
  label: 'Status',
  render: (r) => (
- <Badge variant={r.is_visible ? 'default' : 'secondary'} className={`h-5 text-[9px] font-black uppercase px-2 ${r.is_visible ? 'bg-emerald-500 hover:bg-emerald-600 border-none' : ''}`}>
+ <Badge variant={r.is_visible ? 'default' : 'secondary'} className={`h-5 text-[9px] font-black uppercase px-2 ${r.is_visible ? 'bg-app-primary hover:bg-app-primary border-none' : ''}`}>
  {r.is_visible ? 'Published' : 'Hidden'}
  </Badge>
  )
@@ -114,7 +114,7 @@ export default function ReviewManagementPage() {
  {
  key: 'date',
  label: 'Date',
- render: (r) => <span className="text-app-text-faint text-[11px]">{new Date(r.created_at).toLocaleDateString()}</span>
+ render: (r) => <span className="text-app-muted-foreground text-[11px]">{new Date(r.created_at).toLocaleDateString()}</span>
  },
  {
  key: 'actions',
@@ -123,7 +123,7 @@ export default function ReviewManagementPage() {
  render: (r) => (
  <div className="flex items-center justify-end gap-1">
  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => toggleVisibility(r)}>
- {r.is_visible ? <EyeOff size={14} className="text-app-text-faint" /> : <Eye size={14} className="text-indigo-500" />}
+ {r.is_visible ? <EyeOff size={14} className="text-app-muted-foreground" /> : <Eye size={14} className="text-app-primary" />}
  </Button>
  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50" onClick={() => deleteReview(r.id)}>
  <Trash2 size={14} />
@@ -136,26 +136,26 @@ export default function ReviewManagementPage() {
  <div className="p-6 space-y-6 max-w-7xl mx-auto">
  <header className="flex justify-between items-end">
  <div className="space-y-2">
- <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
+ <Badge className="bg-app-primary-light text-app-primary border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
  Social Proof Engine
  </Badge>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-200 text-app-text">
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-16 h-16 rounded-[1.8rem] bg-app-primary flex items-center justify-center shadow-2xl shadow-indigo-200 text-app-foreground">
  <MessageSquare size={32} />
  </div>
- Customer <span className="text-indigo-600">Reviews</span>
+ Customer <span className="text-app-primary">Reviews</span>
  </h1>
  </div>
  </header>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden">
  <CardContent className="p-4">
  <div className="relative">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-text-faint" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-muted-foreground" />
  <Input
  placeholder="Search reviews by content, title, or customer name..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="pl-9 h-11 rounded-2xl bg-app-bg border-0 focus-visible:ring-indigo-500/30"
+ className="pl-9 h-11 rounded-2xl bg-app-background border-0 focus-visible:ring-app-primary"
  />
  </div>
  </CardContent>

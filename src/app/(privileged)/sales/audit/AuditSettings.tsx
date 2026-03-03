@@ -61,32 +61,32 @@ export default function AuditSettings() {
 
  return (
  <div className="bg-app-surface rounded-xl shadow-sm border border-app-border overflow-hidden max-w-4xl">
- <div className="px-6 py-5 border-b bg-gray-50/50">
- <h3 className="text-lg font-bold text-app-text">Audit Alert Configuration</h3>
- <p className="text-sm text-app-text-muted mt-1">Configure which POS events should notify managers or create immediate follow-up tasks.</p>
+ <div className="px-6 py-5 border-b bg-app-surface-2/50">
+ <h3 className="text-lg font-bold text-app-foreground">Audit Alert Configuration</h3>
+ <p className="text-sm text-app-muted-foreground mt-1">Configure which POS events should notify managers or create immediate follow-up tasks.</p>
  </div>
  <div className="p-0">
  <table className="w-full text-left text-sm">
- <thead className="bg-app-bg text-app-text-muted uppercase text-[10px] font-bold tracking-wider">
+ <thead className="bg-app-background text-app-muted-foreground uppercase text-[10px] font-bold tracking-wider">
  <tr>
  <th className="px-6 py-3">Event Trigger</th>
  <th className="px-6 py-3 text-center w-32">Notify Managers</th>
  <th className="px-6 py-3 text-center w-32">Create Task</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100">
+ <tbody className="divide-y divide-app-border">
  {EVENT_TYPES.map(ev => {
  const rule = rules.find(r => r.event_type === ev.id) || { send_notification: false, create_task: false };
  return (
- <tr key={ev.id} className="hover:bg-app-bg transition-colors">
+ <tr key={ev.id} className="hover:bg-app-background transition-colors">
  <td className="px-6 py-4">
- <div className="font-semibold text-app-text">{ev.label}</div>
- <div className="text-xs text-app-text-muted mt-1">{ev.desc}</div>
+ <div className="font-semibold text-app-foreground">{ev.label}</div>
+ <div className="text-xs text-app-muted-foreground mt-1">{ev.desc}</div>
  </td>
  <td className="px-6 py-4 text-center">
  <button
  onClick={() => toggleRule(ev.id, 'send_notification')}
- className={`w-10 h-6 rounded-full transition-colors relative ${rule.send_notification ? 'bg-emerald-500' : 'bg-gray-200'}`}
+ className={`w-10 h-6 rounded-full transition-colors relative ${rule.send_notification ? 'bg-app-primary' : 'bg-app-border'}`}
  >
  <span className={`absolute top-1 w-4 h-4 bg-app-surface rounded-full transition-all ${rule.send_notification ? 'left-5' : 'left-1'}`} />
  </button>
@@ -94,7 +94,7 @@ export default function AuditSettings() {
  <td className="px-6 py-4 text-center">
  <button
  onClick={() => toggleRule(ev.id, 'create_task')}
- className={`w-10 h-6 rounded-full transition-colors relative ${rule.create_task ? 'bg-blue-500' : 'bg-gray-200'}`}
+ className={`w-10 h-6 rounded-full transition-colors relative ${rule.create_task ? 'bg-app-info' : 'bg-app-border'}`}
  >
  <span className={`absolute top-1 w-4 h-4 bg-app-surface rounded-full transition-all ${rule.create_task ? 'left-5' : 'left-1'}`} />
  </button>

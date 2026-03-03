@@ -21,7 +21,7 @@ export default function BoutiqueCartPage() {
                     style={{ fontFamily: "'Playfair Display', serif" }}>
                     Your bag is empty
                 </h2>
-                <p className="text-gray-400 text-sm mb-6">Discover our curated collection and find something special.</p>
+                <p className="text-app-text-faint text-sm mb-6">Discover our curated collection and find something special.</p>
                 <Link href={base}
                     className="px-6 py-3 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 transition shadow-lg shadow-violet-200">
                     Continue Shopping
@@ -36,7 +36,7 @@ export default function BoutiqueCartPage() {
                 <h1 className="text-3xl font-bold text-indigo-950" style={{ fontFamily: "'Playfair Display', serif" }}>
                     Shopping Bag
                 </h1>
-                <span className="text-sm text-gray-400">{cart.length} {cart.length === 1 ? 'item' : 'items'}</span>
+                <span className="text-sm text-app-text-faint">{cart.length} {cart.length === 1 ? 'item' : 'items'}</span>
             </div>
 
             <div className="space-y-4">
@@ -47,7 +47,7 @@ export default function BoutiqueCartPage() {
 
                     return (
                         <div key={item.product_id}
-                            className="flex gap-5 p-5 bg-white rounded-2xl border border-violet-100 shadow-sm">
+                            className="flex gap-5 p-5 bg-app-surface rounded-2xl border border-violet-100 shadow-sm">
                             {/* Image */}
                             <div className="w-24 h-24 rounded-xl bg-violet-50 overflow-hidden flex-shrink-0">
                                 {item.image_url ? (
@@ -67,12 +67,12 @@ export default function BoutiqueCartPage() {
                                 <div className="flex items-center justify-between mt-3">
                                     <div className="flex items-center border border-violet-200 rounded-lg overflow-hidden">
                                         <button onClick={() => updateQuantity(item.product_id, Math.max(1, item.quantity - 1))}
-                                            className="px-2.5 py-1.5 text-gray-500 hover:bg-violet-50 transition">
+                                            className="px-2.5 py-1.5 text-app-text-faint hover:bg-violet-50 transition">
                                             <Minus size={14} />
                                         </button>
                                         <span className="px-3 text-sm font-bold text-indigo-950">{item.quantity}</span>
                                         <button onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                            className="px-2.5 py-1.5 text-gray-500 hover:bg-violet-50 transition">
+                                            className="px-2.5 py-1.5 text-app-text-faint hover:bg-violet-50 transition">
                                             <Plus size={14} />
                                         </button>
                                     </div>
@@ -82,7 +82,7 @@ export default function BoutiqueCartPage() {
                                             ${(item.unit_price * item.quantity).toFixed(2)}
                                         </span>
                                         <button onClick={() => removeFromCart(item.product_id)}
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
+                                            className="p-2 text-app-text-faint hover:text-red-500 hover:bg-red-50 rounded-lg transition">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -94,12 +94,12 @@ export default function BoutiqueCartPage() {
             </div>
 
             {/* Summary */}
-            <div className="mt-8 p-6 bg-white rounded-2xl border border-violet-100 shadow-sm">
+            <div className="mt-8 p-6 bg-app-surface rounded-2xl border border-violet-100 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
-                    <span className="text-gray-500 text-sm">Subtotal</span>
+                    <span className="text-app-text-faint text-sm">Subtotal</span>
                     <span className="text-xl font-bold text-indigo-950">${cartTotal.toFixed(2)}</span>
                 </div>
-                <p className="text-xs text-gray-400 mb-6">Shipping and taxes calculated at checkout</p>
+                <p className="text-xs text-app-text-faint mb-6">Shipping and taxes calculated at checkout</p>
 
                 <div className="flex gap-3">
                     <Link href={`${base}/checkout`}
@@ -107,7 +107,7 @@ export default function BoutiqueCartPage() {
                         Checkout <ArrowRight size={16} />
                     </Link>
                     <button onClick={clearCart}
-                        className="px-5 py-4 border border-violet-200 text-gray-500 rounded-2xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition">
+                        className="px-5 py-4 border border-violet-200 text-app-text-faint rounded-2xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition">
                         Clear
                     </button>
                 </div>

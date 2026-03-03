@@ -12,7 +12,7 @@ const STOCK_MODES = [
  label: 'Strict Guard',
  desc: 'Maximum safety. Prevents orders if items are not physically in stock. ZERO overselling.',
  icon: ShieldCheck,
- color: '#10b981',
+ color: 'var(--app-success)',
  gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
  },
  {
@@ -20,7 +20,7 @@ const STOCK_MODES = [
  label: 'Over-sale Mode',
  desc: 'Accept orders even if stock is low. Inventory goes negative, tracking what you owe.',
  icon: AlertTriangle,
- color: '#f59e0b',
+ color: 'var(--app-warning)',
  gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
  },
  {
@@ -28,7 +28,7 @@ const STOCK_MODES = [
  label: 'Flex-Order (No Check)',
  desc: 'Ignore stock levels at checkout. Perfect for back-ordering or stock not yet entered.',
  icon: FastForward,
- color: '#3b82f6',
+ color: 'var(--app-info)',
  gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
  },
 ]
@@ -65,7 +65,7 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  <div style={{
  background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)',
  borderRadius: 24,
- border: '1px solid rgba(255,255,255,0.06)',
+ border: '1px solid var(--app-surface)',
  padding: '2rem',
  position: 'relative',
  overflow: 'hidden'
@@ -74,7 +74,7 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  <div style={{
  position: 'absolute', top: -100, right: -100,
  width: 300, height: 300, borderRadius: '50%',
- background: 'radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)',
+ background: 'radial-gradient(circle, color-mix(in srgb, var(--app-primary) 8%, transparent) 0%, transparent 70%)',
  pointerEvents: 'none'
  }} />
 
@@ -82,16 +82,16 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
  <div style={{
  width: 40, height: 40, borderRadius: 12,
- background: 'rgba(59, 130, 246, 0.1)',
+ background: 'var(--app-info)',
  display: 'flex', alignItems: 'center', justifyContent: 'center'
  }}>
  <PackageSearch size={22} color="#3b82f6" />
  </div>
  <div>
- <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: '#f8fafc', margin: 0, letterSpacing: '-0.02em' }}>
+ <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--app-foreground)', margin: 0, letterSpacing: '-0.02em' }}>
  Inventory Guard
  </h3>
- <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0, fontWeight: 500 }}>
+ <p style={{ color: 'var(--app-muted-foreground)', fontSize: '0.85rem', margin: 0, fontWeight: 500 }}>
  Configure how checkout interacts with your warehouse physical stock.
  </p>
  </div>
@@ -100,9 +100,9 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  <span style={{
  display: 'inline-flex', alignItems: 'center', gap: 6,
  padding: '6px 16px', borderRadius: 20,
- background: 'rgba(34,197,94,0.1)', color: '#4ade80',
+ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)',
  fontSize: '0.75rem', fontWeight: 700,
- border: '1px solid rgba(34,197,94,0.15)',
+ border: '1px solid color-mix(in srgb, var(--app-success) 15%, transparent)',
  animation: 'in 0.3s ease-out'
  }}>
  <Check size={14} /> UPDATED
@@ -128,8 +128,8 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  display: 'flex', gap: '1rem',
  padding: '1.5rem', cursor: saving ? 'wait' : 'pointer',
  borderRadius: 20, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
- border: isSelected ? `1px solid ${mode.color}` : '1px solid rgba(255,255,255,0.05)',
- background: isSelected ? `${mode.color}08` : 'rgba(255,255,255,0.02)',
+ border: isSelected ? `1px solid ${mode.color}` : '1px solid var(--app-surface)',
+ background: isSelected ? `${mode.color}08` : 'var(--app-surface)',
  opacity: saving && !isSelected ? 0.5 : 1,
  boxShadow: isSelected ? `0 10px 40px -10px ${mode.color}20` : 'none',
  textAlign: 'left',
@@ -161,13 +161,13 @@ export default function StockModePicker({ configId, currentMode }: StockModePick
  <div>
  <div style={{
  fontWeight: 700, fontSize: '1rem',
- color: isSelected ? '#f8fafc' : '#94a3b8',
+ color: isSelected ? 'var(--app-foreground)' : 'var(--app-muted-foreground)',
  marginBottom: '0.25rem',
  }}>
  {mode.label}
  </div>
  <div style={{
- fontSize: '0.8rem', color: isSelected ? '#94a3b8' : '#64748b',
+ fontSize: '0.8rem', color: isSelected ? 'var(--app-muted-foreground)' : 'var(--app-muted-foreground)',
  lineHeight: 1.5,
  fontWeight: 400
  }}>

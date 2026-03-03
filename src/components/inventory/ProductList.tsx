@@ -32,7 +32,7 @@ export function ProductList({ categoryId, unitId }: { categoryId?: number, unitI
 
  if (loading) return (
  <div className="p-12 text-center">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 inline-block"></div>
+ <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-app-primary inline-block"></div>
  <p className="text-xs text-app-text-faint mt-2 font-medium animate-pulse">Scanning Warehouse...</p>
  </div>
  )
@@ -44,7 +44,7 @@ export function ProductList({ categoryId, unitId }: { categoryId?: number, unitI
  )
 
  return (
- <div className="p-8 space-y-4 bg-gray-50/50">
+ <div className="p-8 space-y-4 bg-app-surface-2/50">
  <div className="flex items-center gap-2 mb-2">
  <Package size={16} className="text-app-text-faint" />
  <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Assigned SKU Assets</span>
@@ -53,7 +53,7 @@ export function ProductList({ categoryId, unitId }: { categoryId?: number, unitI
  {products.map(p => (
  <div key={p.id} className="p-5 bg-app-surface rounded-[1.5rem] border border-app-border shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all flex justify-between items-center group cursor-default">
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-xl bg-app-bg text-app-text-faint flex items-center justify-center group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors border border-transparent group-hover:border-emerald-100">
+ <div className="w-10 h-10 rounded-xl bg-app-bg text-app-text-faint flex items-center justify-center group-hover:bg-app-primary-light group-hover:text-app-primary transition-colors border border-transparent group-hover:border-emerald-100">
  <Package size={20} />
  </div>
  <div className="min-w-0">

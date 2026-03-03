@@ -18,9 +18,9 @@ import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
- ACTIVE: { icon: Timer, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
- PAID: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
- DRAFT: { icon: FileText, color: "text-stone-700", bg: "bg-app-bg border-app-border" },
+ ACTIVE: { icon: Timer, color: "text-app-success", bg: "bg-app-primary-light border-app-success" },
+ PAID: { icon: CheckCircle2, color: "text-app-info", bg: "bg-app-info-bg border-app-info" },
+ DRAFT: { icon: FileText, color: "text-app-muted-foreground", bg: "bg-app-background border-app-border" },
 }
 
 export default function LoansPage() {
@@ -61,11 +61,11 @@ export default function LoansPage() {
  label: 'Contract Date',
  sortable: true,
  render: (loan) => (
- <div className="flex flex-col">
- <span className="font-bold text-app-text text-sm">
+ <div className="app-page flex flex-col">
+ <span className="font-bold text-app-foreground text-sm">
  {loan.startDate ? format(new Date(loan.startDate), "MMM dd, yyyy") : '—'}
  </span>
- <span className="text-[10px] text-app-text-faint font-black uppercase tracking-widest">Effective Date</span>
+ <span className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">Effective Date</span>
  </div>
  )
  },
@@ -76,11 +76,11 @@ export default function LoansPage() {
  render: (loan) => (
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-full bg-app-surface-2 flex items-center justify-center">
- <Users size={14} className="text-app-text-faint" />
+ <Users size={14} className="text-app-muted-foreground" />
  </div>
  <div className="flex flex-col">
- <span className="font-bold text-app-text text-sm">{loan.contact?.name || 'Unknown Partner'}</span>
- <span className="text-[10px] text-app-text-faint font-black uppercase tracking-widest">ID: #{loan.id}</span>
+ <span className="font-bold text-app-foreground text-sm">{loan.contact?.name || 'Unknown Partner'}</span>
+ <span className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">ID: #{loan.id}</span>
  </div>
  </div>
  )
@@ -92,8 +92,8 @@ export default function LoansPage() {
  sortable: true,
  render: (loan) => (
  <div className="flex flex-col items-end">
- <span className="font-mono text-sm font-black text-app-text">{fmt(Number(loan.principalAmount))}</span>
- <span className="text-[10px] text-app-text-faint font-bold uppercase tracking-tighter">{Number(loan.interestRate)}% Int. Rate</span>
+ <span className="font-mono text-sm font-black text-app-foreground">{fmt(Number(loan.principalAmount))}</span>
+ <span className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-tighter">{Number(loan.interestRate)}% Int. Rate</span>
  </div>
  )
  },
@@ -103,7 +103,7 @@ export default function LoansPage() {
  align: 'center',
  sortable: true,
  render: (loan) => (
- <Badge variant="outline" className="rounded-xl px-3 py-1 bg-app-bg border-app-border text-app-text-muted font-bold text-[11px]">
+ <Badge variant="outline" className="rounded-xl px-3 py-1 bg-app-background border-app-border text-app-muted-foreground font-bold text-[11px]">
  {loan.termMonths} Months
  </Badge>
  )
@@ -132,7 +132,7 @@ export default function LoansPage() {
  <Button
  size="sm"
  variant="ghost"
- className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all group"
+ className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-app-primary hover:bg-app-primary/5 hover:text-app-primary transition-all group"
  >
  View Details <ArrowRight size={12} className="ml-1 group-hover:translate-x-0.5 transition-transform" />
  </Button>
@@ -157,46 +157,43 @@ export default function LoansPage() {
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
  {/* Standard Header */}
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
- <HandCoins size={28} className="text-app-text" />
- </div>
- Partner <span className="text-app-text-muted">Loans</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Financial Contracts & Agreements</p>
- </div>
- <Link href="/finance/loans/new">
- <Button className="h-12 px-6 rounded-2xl bg-stone-900 hover:bg-black text-app-text font-black uppercase tracking-widest text-xs shadow-lg shadow-stone-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
- <Plus size={18} /> New Loan Contract
- </Button>
- </Link>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Landmark size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Loan <span className="text-app-primary">Registry</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* KPI Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <ShieldCheck size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Active Facilities</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.active}</p>
- <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">Live Contracts</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Active Facilities</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.active}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase mt-1">Live Contracts</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <DollarSign size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Portfolio</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{fmt(stats.totalPrincipal)}</p>
- <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Lending Volume</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Portfolio</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{fmt(stats.totalPrincipal)}</p>
+ <p className="text-[10px] text-app-info font-bold uppercase mt-1">Lending Volume</p>
  </div>
  </CardContent>
  </Card>
@@ -206,9 +203,9 @@ export default function LoansPage() {
  <RefreshCw size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Average Yield</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Average Yield</p>
  <p className="text-3xl font-black mt-1 tracking-tighter text-purple-600">{stats.avgInterest.toFixed(2)}%</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">Avg. Return Rate</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">Avg. Return Rate</p>
  </div>
  </CardContent>
  </Card>
@@ -229,7 +226,7 @@ export default function LoansPage() {
  sortDir={settings.sortDir}
  onSort={settings.setSort}
  headerExtra={
- <button onClick={loadData} className="p-2 hover:bg-app-bg rounded-xl transition-colors text-app-text-faint hover:text-app-text">
+ <button onClick={loadData} className="p-2 hover:bg-app-background rounded-xl transition-colors text-app-muted-foreground hover:text-app-foreground">
  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
  </button>
  }

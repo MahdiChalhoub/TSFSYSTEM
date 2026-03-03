@@ -102,7 +102,7 @@ export default function MCPSettingsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
+                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
                         <ArrowLeft size={16} />
                         Back to MCP Dashboard
                     </Link>
@@ -110,12 +110,12 @@ export default function MCPSettingsPage() {
                         <div className="p-3 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 text-white shadow-lg">
                             <Settings size={28} />
                         </div>
-                        <Badge className="bg-gray-100 text-gray-700 border-gray-200 px-3 py-1 font-black uppercase text-[10px]">
+                        <Badge className="bg-app-surface-2 text-app-text-muted border-app-border px-3 py-1 font-black uppercase text-[10px]">
                             Configuration
                         </Badge>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">MCP Settings</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <h2 className="text-3xl md:text-4xl font-black text-app-text tracking-tight">MCP Settings</h2>
+                    <p className="text-app-text-faint mt-2 font-medium">
                         Fine-tune your AI integration parameters and policies
                     </p>
                 </div>
@@ -123,7 +123,7 @@ export default function MCPSettingsPage() {
                     <Button
                         onClick={handleReset}
                         variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold text-gray-500"
+                        className="rounded-2xl px-6 py-5 font-bold text-app-text-faint"
                     >
                         <RefreshCw size={18} />
                         Reset
@@ -150,7 +150,7 @@ export default function MCPSettingsPage() {
             )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Rate Limiting */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
+                <Card className="rounded-3xl shadow-xl border-app-border overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
                         <CardTitle className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-blue-500 text-white">
@@ -162,28 +162,28 @@ export default function MCPSettingsPage() {
                     </CardHeader>
                     <CardContent className="p-6 space-y-5">
                         <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">Max Requests / Minute</Label>
+                            <Label className="text-sm font-bold text-app-text-muted">Max Requests / Minute</Label>
                             <Input
                                 type="number"
                                 value={settings.max_requests_per_minute}
                                 onChange={(e) => updateSetting('max_requests_per_minute', parseInt(e.target.value) || 60)}
                                 className="rounded-xl"
                             />
-                            <p className="text-xs text-gray-400">Maximum API calls allowed per minute per user</p>
+                            <p className="text-xs text-app-text-faint">Maximum API calls allowed per minute per user</p>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">Max Tokens / Request</Label>
+                            <Label className="text-sm font-bold text-app-text-muted">Max Tokens / Request</Label>
                             <Input
                                 type="number"
                                 value={settings.max_tokens_per_request}
                                 onChange={(e) => updateSetting('max_tokens_per_request', parseInt(e.target.value) || 8192)}
                                 className="rounded-xl"
                             />
-                            <p className="text-xs text-gray-400">Token ceiling for a single AI request</p>
+                            <p className="text-xs text-app-text-faint">Token ceiling for a single AI request</p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Concurrent Limit</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Concurrent Limit</Label>
                                 <Input
                                     type="number"
                                     value={settings.max_concurrent_requests}
@@ -192,7 +192,7 @@ export default function MCPSettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Burst Limit</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Burst Limit</Label>
                                 <Input
                                     type="number"
                                     value={settings.burst_limit}
@@ -204,7 +204,7 @@ export default function MCPSettingsPage() {
                     </CardContent>
                 </Card>
                 {/* Timeouts & Performance */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
+                <Card className="rounded-3xl shadow-xl border-app-border overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
                         <CardTitle className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-amber-500 text-white">
@@ -217,7 +217,7 @@ export default function MCPSettingsPage() {
                     <CardContent className="p-6 space-y-5">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Default Timeout</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Default Timeout</Label>
                                 <div className="relative">
                                     <Input
                                         type="number"
@@ -225,11 +225,11 @@ export default function MCPSettingsPage() {
                                         onChange={(e) => updateSetting('default_timeout', parseInt(e.target.value) || 30)}
                                         className="rounded-xl pr-8"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">sec</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-app-text-faint">sec</span>
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Stream Timeout</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Stream Timeout</Label>
                                 <div className="relative">
                                     <Input
                                         type="number"
@@ -237,13 +237,13 @@ export default function MCPSettingsPage() {
                                         onChange={(e) => updateSetting('streaming_timeout', parseInt(e.target.value) || 120)}
                                         className="rounded-xl pr-8"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">sec</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-app-text-faint">sec</span>
                                 </div>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retry Attempts</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Retry Attempts</Label>
                                 <Select
                                     value={String(settings.retry_attempts)}
                                     onValueChange={(v) => updateSetting('retry_attempts', parseInt(v))}
@@ -261,7 +261,7 @@ export default function MCPSettingsPage() {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retry Delay</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Retry Delay</Label>
                                 <div className="relative">
                                     <Input
                                         type="number"
@@ -269,7 +269,7 @@ export default function MCPSettingsPage() {
                                         onChange={(e) => updateSetting('retry_delay', parseInt(e.target.value) || 1000)}
                                         className="rounded-xl pr-8"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">ms</span>
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-app-text-faint">ms</span>
                                 </div>
                             </div>
                         </div>
@@ -285,7 +285,7 @@ export default function MCPSettingsPage() {
                     </CardContent>
                 </Card>
                 {/* Security */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
+                <Card className="rounded-3xl shadow-xl border-app-border overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100">
                         <CardTitle className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-red-500 text-white">
@@ -324,19 +324,19 @@ export default function MCPSettingsPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-sm font-bold text-gray-700">IP Whitelist</Label>
+                            <Label className="text-sm font-bold text-app-text-muted">IP Whitelist</Label>
                             <Input
                                 value={settings.ip_whitelist}
                                 onChange={(e) => updateSetting('ip_whitelist', e.target.value)}
                                 placeholder="e.g. 192.168.1.0/24, 10.0.0.1"
                                 className="rounded-xl"
                             />
-                            <p className="text-xs text-gray-400">Comma-separated IPs or CIDR ranges. Leave empty for no restriction.</p>
+                            <p className="text-xs text-app-text-faint">Comma-separated IPs or CIDR ranges. Leave empty for no restriction.</p>
                         </div>
                     </CardContent>
                 </Card>
                 {/* Data Retention & Notifications */}
-                <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
+                <Card className="rounded-3xl shadow-xl border-app-border overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 border-b border-purple-100">
                         <CardTitle className="flex items-center gap-3">
                             <div className="p-2 rounded-xl bg-purple-500 text-white">
@@ -349,7 +349,7 @@ export default function MCPSettingsPage() {
                     <CardContent className="p-6 space-y-5">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Retention Period</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Retention Period</Label>
                                 <Select
                                     value={String(settings.retention_days)}
                                     onValueChange={(v) => updateSetting('retention_days', parseInt(v))}
@@ -367,7 +367,7 @@ export default function MCPSettingsPage() {
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-bold text-gray-700">Max Conversations</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Max Conversations</Label>
                                 <Input
                                     type="number"
                                     value={settings.max_conversations_per_user}
@@ -404,7 +404,7 @@ export default function MCPSettingsPage() {
                         </div>
                         {settings.alert_on_quota && (
                             <div className="space-y-2 animate-in slide-in-from-top duration-200">
-                                <Label className="text-sm font-bold text-gray-700">Quota Threshold (%)</Label>
+                                <Label className="text-sm font-bold text-app-text-muted">Quota Threshold (%)</Label>
                                 <Input
                                     type="number"
                                     min={50}
@@ -419,13 +419,13 @@ export default function MCPSettingsPage() {
                 </Card>
             </div>
             {/* System Info Footer */}
-            <Card className="rounded-3xl shadow-lg border-gray-100">
+            <Card className="rounded-3xl shadow-lg border-app-border">
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-8 text-sm text-gray-500">
+                        <div className="flex items-center gap-8 text-sm text-app-text-faint">
                             <span className="flex items-center gap-2">
                                 <Brain size={16} className="text-purple-400" />
-                                <span className="font-bold text-gray-700">MCP Engine</span>
+                                <span className="font-bold text-app-text-muted">MCP Engine</span>
                                 <Badge variant="outline" className="text-[10px]">v1.0.0</Badge>
                             </span>
                             <span className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export default function MCPSettingsPage() {
                                 <span>Connected to platform backend</span>
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="flex items-center gap-2 text-xs text-app-text-faint">
                             <CheckCircle size={14} className="text-green-500" />
                             All systems operational
                         </div>
@@ -458,21 +458,21 @@ function ToggleCard({
         <div
             className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${enabled
                     ? `bg-${color}-50/50 border-${color}-200`
-                    : 'bg-gray-50/50 border-gray-200 hover:border-gray-300'
+                    : 'bg-gray-50/50 border-app-border hover:border-app-border'
                 }`}
             onClick={() => onChange(!enabled)}
         >
             <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${enabled ? `bg-${color}-100 text-${color}-600` : 'bg-gray-100 text-gray-400'} transition-colors`}>
+                <div className={`p-2 rounded-lg ${enabled ? `bg-${color}-100 text-${color}-600` : 'bg-app-surface-2 text-app-text-faint'} transition-colors`}>
                     {icon}
                 </div>
                 <div>
-                    <div className="text-sm font-bold text-gray-800">{title}</div>
-                    <div className="text-xs text-gray-400">{description}</div>
+                    <div className="text-sm font-bold text-app-text">{title}</div>
+                    <div className="text-xs text-app-text-faint">{description}</div>
                 </div>
             </div>
             <div className={`w-11 h-6 rounded-full relative transition-colors ${enabled ? `bg-${color}-500` : 'bg-gray-300'}`}>
-                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${enabled ? 'left-6' : 'left-1'}`} />
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-app-surface shadow transition-all ${enabled ? 'left-6' : 'left-1'}`} />
             </div>
         </div>
     )

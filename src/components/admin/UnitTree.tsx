@@ -73,8 +73,8 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  className={clsx(
  "group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
  level === 0
- ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-emerald-200"
- : "bg-gray-50/40 border-gray-100/50 ml-10 mt-2 hover:bg-app-surface hover:border-blue-200 hover:shadow-lg hover:shadow-blue-500/5",
+ ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-app-success"
+ : "bg-app-surface-2/40 border-app-border ml-10 mt-2 hover:bg-app-surface hover:border-app-info hover:shadow-lg hover:shadow-blue-500/5",
  "hover:-translate-y-0.5"
  )}
  >
@@ -89,7 +89,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  onClick={() => setIsExpanded(!isExpanded)}
  className={clsx(
  "p-1.5 rounded-xl transition-all duration-300",
- isExpanded ? "bg-emerald-50 text-emerald-600 rotate-0" : "bg-app-bg text-app-text-faint -rotate-90",
+ isExpanded ? "bg-app-primary-light text-app-primary rotate-0" : "bg-app-bg text-app-text-faint -rotate-90",
  !hasChildren && 'invisible opacity-0'
  )}
  >
@@ -100,8 +100,8 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  <div className={clsx(
  "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-300",
  level === 0
- ? "bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50"
- : "bg-blue-50 text-blue-500 ring-4 ring-blue-50/50"
+ ? "bg-app-primary-light text-app-primary ring-4 ring-emerald-50/50"
+ : "bg-app-info-bg text-app-info ring-4 ring-blue-50/50"
  )}>
  {level === 0 ? <Layers size={22} strokeWidth={2.5} /> : <Package size={20} strokeWidth={2} />}
  </div>
@@ -110,17 +110,17 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  <div>
  <div className="flex items-center gap-2">
  <h4 className="font-extrabold text-app-text text-lg tracking-tight">{unit.name}</h4>
- <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-100/80 text-app-text-muted border border-app-border shadow-sm">
+ <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-app-surface-2 text-app-text-muted border border-app-border shadow-sm">
  {unit.code}
  </span>
  {level === 0 && (
- <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 animate-pulse">
+ <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-app-primary-light text-app-primary border border-emerald-100 animate-pulse">
  Base
  </span>
  )}
  {unit.needs_balance && (
- <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg border border-amber-100 font-bold flex items-center gap-1 shadow-sm">
- <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
+ <span className="text-[10px] bg-app-warning-bg text-app-warning px-2 py-0.5 rounded-lg border border-amber-100 font-bold flex items-center gap-1 shadow-sm">
+ <div className="w-1.5 h-1.5 bg-app-warning rounded-full animate-ping" />
  Scale
  </span>
  )}
@@ -136,7 +136,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  <div className="h-1 w-1 bg-gray-300 rounded-full" />
  )}
  {unit.product_count != null && unit.product_count > 0 && (
- <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
+ <span className="flex items-center gap-1.5 text-app-primary font-bold bg-app-primary-light/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
  {unit.product_count} Products
  </span>
  )}
@@ -148,14 +148,14 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  <div className="flex items-center gap-1 relative z-10">
  <button
  onClick={() => setIsEditOpen(true)}
- className="p-2.5 text-app-text-faint hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all hover:shadow-lg active:scale-90"
+ className="p-2.5 text-app-text-faint hover:text-app-primary hover:bg-app-primary-light rounded-xl transition-all hover:shadow-lg active:scale-90"
  title="Edit"
  >
  <Edit2 size={18} />
  </button>
  <button
  onClick={() => setIsAddChildOpen(true)}
- className="p-2.5 text-app-text-faint hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:shadow-lg active:scale-90"
+ className="p-2.5 text-app-text-faint hover:text-app-info hover:bg-app-info-bg rounded-xl transition-all hover:shadow-lg active:scale-90"
  title="Add Multiplier"
  >
  <Plus size={18} />
@@ -163,7 +163,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
  {!hasChildren && (
  <button
  onClick={handleDelete}
- className="p-2.5 text-app-text-faint hover:text-red-500 hover:bg-red-50 rounded-xl transition-all hover:shadow-lg active:scale-90"
+ className="p-2.5 text-app-text-faint hover:text-app-error hover:bg-app-error-bg rounded-xl transition-all hover:shadow-lg active:scale-90"
  title="Delete"
  >
  <Trash2 size={18} />
@@ -177,7 +177,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
 
  {/* Children Recursive Render with Animation */}
  {isExpanded && hasChildren && (
- <div className="border-l-2 border-gray-100/80 ml-6 pl-1 animate-in slide-in-from-top-2 duration-300">
+ <div className="border-l-2 border-app-border/80 ml-6 pl-1 animate-in slide-in-from-top-2 duration-300">
  {unit.children!.map((child, cidx) => (
  <UnitTreeNode key={child.id} unit={child} level={level + 1} potentialParents={potentialParents} />
  ))}

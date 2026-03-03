@@ -115,7 +115,7 @@ export function UnitCalculator({ units = [] }: { units?: Unit[] }) {
  if (units.length === 0) return null;
 
  return (
- <div className="card-premium p-6 bg-blue-50/30 border-blue-100">
+ <div className="card-premium p-6 bg-app-info-bg/30 border-blue-100">
  <h3 className="font-bold text-app-text mb-4">Unit Conversion Calculator</h3>
  <div className="flex flex-col md:flex-row items-end gap-4">
  <div className="flex-1 w-full">
@@ -145,7 +145,7 @@ export function UnitCalculator({ units = [] }: { units?: Unit[] }) {
 
  <button
  onClick={handleSwap}
- className="mb-1 p-3 rounded-xl bg-app-surface border border-app-border text-app-text-muted hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-all"
+ className="mb-1 p-3 rounded-xl bg-app-surface border border-app-border text-app-text-muted hover:text-app-primary hover:border-app-success shadow-sm transition-all"
  title="Swap Units"
  >
  <ArrowRightLeft size={20} />
@@ -167,7 +167,7 @@ export function UnitCalculator({ units = [] }: { units?: Unit[] }) {
 
  <div className="flex-1 w-full">
  <label className="block text-xs font-semibold text-app-text-muted mb-1 uppercase tracking-wider">Result</label>
- <input type="text" className="input-field bg-emerald-50 font-bold text-emerald-800 border-emerald-100" value={result} readOnly disabled />
+ <input type="text" className="input-field bg-app-primary-light font-bold text-app-success border-emerald-100" value={result} readOnly disabled />
  </div>
  </div>
  </div>

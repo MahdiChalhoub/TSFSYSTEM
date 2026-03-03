@@ -13,7 +13,10 @@ from erp.views import TenantModelViewSet
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
     ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest, QuoteItem,
-    ProductReview, WishlistItem
+    ProductReview, WishlistItem,
+    Coupon, CouponUsage,
+    CartPromotion, CartPromotionUsage,
+    ShippingRate,
 )
 from .services import IntegratedCheckoutService
 from .serializers import (
@@ -87,8 +90,29 @@ class ClientPortalAccessViewSet(TenantModelViewSet):
 # ADMIN-SIDE: Order management
 # =============================================================================
 
+# Valid transitions mirror (backend source of truth is ecommerce/views.py ALLOWED_TRANSITIONS)
+_CLIENT_ORDER_TRANSITIONS = {
+    'PLACED':     ['CONFIRMED', 'CANCELLED'],
+    'CONFIRMED':  ['PROCESSING', 'CANCELLED'],
+    'PROCESSING': ['SHIPPED', 'CANCELLED'],
+    'SHIPPED':    ['DELIVERED', 'RETURNED'],
+    'DELIVERED':  ['RETURNED'],
+    'CANCELLED':  [],
+    'RETURNED':   [],
+}
+
+
 class ClientOrderAdminViewSet(TenantModelViewSet):
-    """Admin review/management of client eCommerce orders."""
+    """
+    Unified admin management of ClientOrders.
+    Source of truth for the admin UI — all status transitions go through here.
+
+    Endpoints:
+        GET    /api/client-portal/admin-orders/
+        GET    /api/client-portal/admin-orders/{id}/
+        POST   /api/client-portal/admin-orders/{id}/transition/
+        POST   /api/client-portal/admin-orders/{id}/confirm-payment/
+    """
     queryset = ClientOrder.objects.select_related('contact').prefetch_related('lines').all()
     serializer_class = ClientOrderSerializer
 
@@ -97,62 +121,142 @@ class ClientOrderAdminViewSet(TenantModelViewSet):
             return ClientOrderListSerializer
         return ClientOrderSerializer
 
-    @action(detail=True, methods=['post'])
-    def confirm(self, request, pk=None):
-        order = self.get_object()
-        if order.status != 'PLACED':
-            return Response({'error': 'Only PLACED orders can be confirmed'}, status=400)
-        order.status = 'CONFIRMED'
-        order.save(update_fields=['status', 'updated_at'])
-        return Response({'status': 'confirmed'})
+    @action(detail=True, methods=['post'], url_path='transition')
+    def transition_status(self, request, pk=None):
+        """
+        Unified order status transition with guard rules and domain event emission.
 
-    @action(detail=True, methods=['post'])
-    def process(self, request, pk=None):
-        order = self.get_object()
-        if order.status != 'CONFIRMED':
-            return Response({'error': 'Only CONFIRMED orders can be processed'}, status=400)
-        order.status = 'PROCESSING'
-        order.save(update_fields=['status', 'updated_at'])
-        return Response({'status': 'processing'})
+        Body: { "status": "CONFIRMED", "note": "optional reason" }
 
-    @action(detail=True, methods=['post'])
-    def ship(self, request, pk=None):
+        State machine:
+            PLACED      → CONFIRMED | CANCELLED
+            CONFIRMED   → PROCESSING | CANCELLED
+            PROCESSING  → SHIPPED | CANCELLED
+            SHIPPED     → DELIVERED | RETURNED
+            DELIVERED   → RETURNED
+        """
         order = self.get_object()
-        if order.status != 'PROCESSING':
-            return Response({'error': 'Only PROCESSING orders can be shipped'}, status=400)
-        order.status = 'SHIPPED'
-        est = request.data.get('estimated_delivery')
-        if est:
-            order.estimated_delivery = est
-        order.save(update_fields=['status', 'estimated_delivery', 'updated_at'])
-        return Response({'status': 'shipped'})
+        new_status = request.data.get('status', '').upper()
+        note = request.data.get('note', '')
 
-    @action(detail=True, methods=['post'])
-    def deliver(self, request, pk=None):
-        order = self.get_object()
-        if order.status != 'SHIPPED':
-            return Response({'error': 'Only SHIPPED orders can be marked delivered'}, status=400)
-        order.status = 'DELIVERED'
-        order.delivered_at = timezone.now()
-        order.save(update_fields=['status', 'delivered_at', 'updated_at'])
-        return Response({'status': 'delivered'})
+        if not new_status:
+            return Response({'error': 'status is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
-    def cancel(self, request, pk=None):
-        order = self.get_object()
-        if order.status in ('DELIVERED', 'CANCELLED'):
-            return Response({'error': f'Cannot cancel {order.status} orders'}, status=400)
-        order.status = 'CANCELLED'
-        order.save(update_fields=['status', 'updated_at'])
-        # Refund wallet if paid
-        if order.wallet_amount > 0:
+        allowed = _CLIENT_ORDER_TRANSITIONS.get(order.status, [])
+        if new_status not in allowed:
+            return Response({
+                'error': f"Cannot transition from '{order.status}' to '{new_status}'.",
+                'current_status': order.status,
+                'allowed_transitions': allowed,
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        old_status = order.status
+        order.status = new_status
+
+        # Append timestamped audit note
+        if note:
+            ts = timezone.now().strftime('%Y-%m-%d %H:%M')
+            order.notes = (order.notes or '') + f"\n[{ts}] {old_status}→{new_status}: {note}"
+
+        # On SHIPPED: record estimated delivery if provided
+        if new_status == 'SHIPPED':
+            est = request.data.get('estimated_delivery')
+            if est:
+                order.estimated_delivery = est
+
+        # On DELIVERED: timestamp + loyalty points
+        if new_status == 'DELIVERED':
+            order.delivered_at = timezone.now()
+            if order.contact:
+                try:
+                    from apps.client_portal.models import ClientPortalConfig
+                    config = ClientPortalConfig.get_config(order.organization)
+                    if config.loyalty_enabled:
+                        points = config.get_points_for_amount(order.total_amount)
+                        if points > 0:
+                            order.contact.wallet.add_loyalty_points(points)
+                            logger.info(f"[AdminOrders] +{points} pts for order {order.order_number}")
+                except Exception as exc:
+                    logger.warning(f"[AdminOrders] Loyalty post failed: {exc}")
+
+        # On CANCELLED: refund wallet amount
+        if new_status == 'CANCELLED' and order.wallet_amount > 0:
             try:
-                wallet = order.contact.wallet
-                wallet.credit(order.wallet_amount, reason=f'Refund for {order.order_number}',
-                             reference_type='ClientOrder', reference_id=order.id)
+                order.contact.wallet.credit(
+                    order.wallet_amount,
+                    reason=f'Refund for order {order.order_number}',
+                    reference_type='ClientOrder',
+                    reference_id=order.id,
+                )
             except Exception as e:
-                logger.error(f"Wallet refund failed: {e}")
-        return Response({'status': 'cancelled'})
+                logger.error(f"[AdminOrders] Wallet refund failed: {e}")
+
+        # On CANCELLED: release stock reservations (non-blocking)
+        if new_status == 'CANCELLED':
+            try:
+                from apps.inventory.services.reservation_service import StockReservationService
+                from apps.client_portal.warehouse_router import WarehouseRouter
+                for line in order.lines.select_related('product').all():
+                    if not line.product:
+                        continue
+                    try:
+                        wh = WarehouseRouter.select_warehouse(
+                            organization=order.organization,
+                            product=line.product,
+                            quantity=line.quantity,
+                            contact=order.contact,
+                            check_mode='ALLOW_OVERSALE',  # don't fail on release
+                        )
+                        StockReservationService.release(order, wh, user=request.user)
+                    except Exception:
+                        pass  # release is best-effort
+            except Exception as res_err:
+                logger.warning(f"[AdminOrders] Reservation release failed: {res_err}")
+
+        order.save(update_fields=['status', 'notes', 'estimated_delivery', 'delivered_at', 'updated_at'])
+        logger.info(f"[AdminOrders] {order.order_number}: {old_status} → {new_status} by {request.user}")
+
+        # Emit domain event (non-blocking)
+        try:
+            from apps.integrations.event_service import DomainEventService
+            DomainEventService.emit_for_status_change(order, new_status)
+        except Exception as evt_err:
+            logger.warning(f"[AdminOrders] Domain event failed: {evt_err}")
+
+        return Response({
+            'order_number': order.order_number,
+            'previous_status': old_status,
+            'new_status': new_status,
+            'allowed_next': _CLIENT_ORDER_TRANSITIONS.get(new_status, []),
+        })
+
+    @action(detail=True, methods=['post'], url_path='confirm-payment')
+    def confirm_payment(self, request, pk=None):
+        """
+        Admin confirms a manual payment (COD or bank transfer).
+        Marks payment_status=PAID and emits payment.confirmed event.
+        """
+        order = self.get_object()
+        if order.payment_status == 'PAID':
+            return Response({'error': 'Order is already marked as paid.'}, status=400)
+
+        from apps.finance.payment_gateway import PaymentGatewayService
+        success = PaymentGatewayService.confirm_manual_payment(order, confirmed_by_user=request.user)
+        if not success:
+            return Response({'error': 'Failed to confirm payment.'}, status=500)
+
+        # Domain event
+        try:
+            from apps.integrations.event_service import DomainEventService
+            DomainEventService.emit_payment_confirmed(order)
+        except Exception as evt_err:
+            logger.warning(f"[AdminOrders] payment.confirmed event failed: {evt_err}")
+
+        return Response({
+            'order_number': order.order_number,
+            'payment_status': 'PAID',
+            'message': 'Payment confirmed successfully.',
+        })
 
 
 # =============================================================================
@@ -192,7 +296,111 @@ class ClientTicketAdminViewSet(TenantModelViewSet):
     @action(detail=True, methods=['post'])
     def reopen(self, request, pk=None):
         ticket = self.get_object()
-        ticket.status = 'OPEN'
+        ticket.status = 'REOPENED' if hasattr(ticket, 'REOPENED') else 'OPEN'
         ticket.resolved_at = None
         ticket.save(update_fields=['status', 'resolved_at', 'updated_at'])
         return Response({'status': 'reopened'})
+
+
+# =============================================================================
+# ADMIN: Coupon Management
+# =============================================================================
+
+class CouponAdminViewSet(TenantModelViewSet):
+    """
+    Admin management of discount coupons.
+    Endpoint: /api/client-portal/coupons/
+    """
+    from rest_framework import serializers as drf_serializers
+
+    class CouponSerializer(drf_serializers.ModelSerializer):
+        class Meta:
+            from apps.client_portal.models import Coupon as _Coupon
+            model = _Coupon
+            fields = '__all__'
+            read_only_fields = ['used_count', 'created_at', 'updated_at']
+
+    def get_queryset(self):
+        from .models import Coupon as _Coupon
+        org = getattr(self.request, 'organization', None)
+        qs = _Coupon.objects.all()
+        if org:
+            qs = qs.filter(organization=org)
+        return qs.order_by('-created_at')
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as drf_serializers
+        class CouponSerializer(drf_serializers.ModelSerializer):
+            class Meta:
+                model = Coupon
+                fields = '__all__'
+                read_only_fields = ['used_count', 'created_at', 'updated_at']
+        return CouponSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(organization=self.request.organization)
+
+
+# =============================================================================
+# ADMIN: Cart Promotion Management
+# =============================================================================
+
+class CartPromotionViewSet(TenantModelViewSet):
+    """
+    Admin management of automatic cart-level promotions.
+    Endpoint: /api/client-portal/cart-promotions/
+    """
+    def get_queryset(self):
+        org = getattr(self.request, 'organization', None)
+        qs = CartPromotion.objects.all()
+        if org:
+            qs = qs.filter(organization=org)
+        return qs.order_by('-priority', '-created_at')
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as drf_serializers
+        class CartPromotionSerializer(drf_serializers.ModelSerializer):
+            class Meta:
+                model = CartPromotion
+                fields = '__all__'
+                read_only_fields = ['used_count', 'created_at', 'updated_at']
+        return CartPromotionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(organization=self.request.organization)
+
+
+# =============================================================================
+# ADMIN: Shipping Rate Management
+# =============================================================================
+
+class ShippingRateViewSet(TenantModelViewSet):
+    """
+    Admin management of ShippingRate tiers per DeliveryZone.
+    Endpoint: /api/client-portal/shipping-rates/
+
+    Query params:
+      ?zone_id=3   — filter by specific zone
+    """
+    def get_queryset(self):
+        org = getattr(self.request, 'organization', None)
+        qs = ShippingRate.objects.select_related('zone').all()
+        if org:
+            qs = qs.filter(organization=org)
+        zone_id = self.request.query_params.get('zone_id')
+        if zone_id:
+            qs = qs.filter(zone_id=zone_id)
+        return qs.order_by('zone__name', 'sort_order', 'min_order_value')
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as drf_serializers
+        class ShippingRateSerializer(drf_serializers.ModelSerializer):
+            zone_name = drf_serializers.CharField(source='zone.name', read_only=True)
+            class Meta:
+                model = ShippingRate
+                fields = '__all__'
+                read_only_fields = ['created_at', 'updated_at']
+        return ShippingRateSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(organization=self.request.organization)

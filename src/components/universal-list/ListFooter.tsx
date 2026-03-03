@@ -37,12 +37,12 @@ export default function ListFooter({
  <div className="flex flex-wrap items-center justify-between gap-4 px-1 py-2">
  {/* Left: Count + Total */}
  <div className="flex items-center gap-4 text-xs text-app-text-muted">
- <span className="font-semibold text-gray-700">
+ <span className="font-semibold text-app-text-muted">
  {totalLabel || 'Items'} ({totalCount})
  </span>
  {totalValue && (
  <span>
- Total Value: <span className="font-semibold text-gray-700">{totalValue}</span>
+ Total Value: <span className="font-semibold text-app-text-muted">{totalValue}</span>
  </span>
  )}
  </div>

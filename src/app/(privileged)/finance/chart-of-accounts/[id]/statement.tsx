@@ -28,37 +28,37 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  {/* Header */}
  <div className="p-8 border-b border-app-border flex justify-between items-start">
  <div>
- <h1 className="text-2xl font-bold text-app-text font-serif mb-1">{data.account.name}</h1>
- <div className="text-app-text-muted font-mono text-sm">Account Code: {data.account.code}</div>
- <div className="mt-2 text-xs uppercase font-bold tracking-wider text-app-text-faint">{data.account.type}</div>
+ <h1 className="text-2xl font-bold text-app-foreground font-serif mb-1">{data.account.name}</h1>
+ <div className="text-app-muted-foreground font-mono text-sm">Account Code: {data.account.code}</div>
+ <div className="mt-2 text-xs uppercase font-bold tracking-wider text-app-muted-foreground">{data.account.type}</div>
  </div>
 
  <div className="text-right">
- <h2 className="text-xs font-bold uppercase text-app-text-faint mb-1">Statement Period</h2>
- <div className="font-medium text-app-text">
+ <h2 className="text-xs font-bold uppercase text-app-muted-foreground mb-1">Statement Period</h2>
+ <div className="font-medium text-app-foreground">
  {currentRange.start ? new Date(currentRange.start).toLocaleDateString() : '—'} — {currentRange.end ? new Date(currentRange.end).toLocaleDateString() : '—'}
  </div>
  </div>
  </div>
 
  {/* Filter Bar (Simplified) */}
- <div className="p-4 bg-app-bg border-b border-app-border flex gap-4 items-center">
+ <div className="p-4 bg-app-background border-b border-app-border flex gap-4 items-center">
  <form className="flex gap-2 items-center text-sm">
- <span className="font-medium text-app-text-muted">Period:</span>
+ <span className="font-medium text-app-muted-foreground">Period:</span>
  <input
  type="date"
  name="start"
  defaultValue={currentRange.start}
  className="border border-app-border rounded p-1"
  />
- <span className="text-app-text-faint">-</span>
+ <span className="text-app-muted-foreground">-</span>
  <input
  type="date"
  name="end"
  defaultValue={currentRange.end}
  className="border border-app-border rounded p-1"
  />
- <button type="submit" className="bg-black text-app-text px-3 py-1 rounded hover:bg-stone-800">
+ <button type="submit" className="bg-app-background text-app-foreground px-3 py-1 rounded hover:bg-app-surface-2">
  Filter
  </button>
  </form>
@@ -67,7 +67,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
 
  <button
  onClick={() => window.print()}
- className="flex items-center gap-2 text-app-text-muted hover:text-black"
+ className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground"
  >
  <Printer size={16} /> Print
  </button>
@@ -77,7 +77,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  <div className="overflow-x-auto">
  <table className="w-full text-sm">
  <thead>
- <tr className="bg-app-surface border-b border-app-border text-app-text-muted font-bold uppercase text-xs tracking-wider">
+ <tr className="bg-app-surface border-b border-app-border text-app-muted-foreground font-bold uppercase text-xs tracking-wider">
  <th className="px-6 py-3 text-left w-32">Date</th>
  <th className="px-6 py-3 text-left w-24">Ref</th>
  <th className="px-6 py-3 text-left">Description</th>
@@ -86,9 +86,9 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  <th className="px-6 py-3 text-right w-40">Balance</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-stone-100">
+ <tbody className="divide-y divide-app-border">
  {/* Opening Balance Row */}
- <tr className="bg-stone-50/50 italic text-app-text-muted">
+ <tr className="bg-app-surface/50 italic text-app-muted-foreground">
  <td className="px-6 py-3">{currentRange.start ? new Date(currentRange.start).toLocaleDateString() : '—'}</td>
  <td className="px-6 py-3">-</td>
  <td className="px-6 py-3 font-medium">Opening Balance</td>
@@ -100,7 +100,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  </td>
  <td className="px-6 py-3 text-right font-mono font-bold">
  {Math.abs(data.openingBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
- <span className="ml-1 text-xs text-app-text-faint">{data.openingBalance >= 0 ? 'Dr' : 'Cr'}</span>
+ <span className="ml-1 text-xs text-app-muted-foreground">{data.openingBalance >= 0 ? 'Dr' : 'Cr'}</span>
  </td>
  </tr>
 
@@ -109,32 +109,32 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  runningBalance += (line.debit - line.credit)
 
  return (
- <tr key={line.id} className="hover:bg-blue-50/30 transition-colors group">
- <td className="px-6 py-3 text-app-text-muted">
+ <tr key={line.id} className="hover:bg-app-info-bg/30 transition-colors group">
+ <td className="px-6 py-3 text-app-muted-foreground">
  {line.journalEntry?.transactionDate ? new Date(line.journalEntry.transactionDate).toLocaleDateString() : '—'}
  </td>
- <td className="px-6 py-3 text-app-text-muted font-mono text-xs">
- <Link href={`/finance/ledger?id=${line.journalEntry.id}`} className="hover:underline hover:text-blue-600">
+ <td className="px-6 py-3 text-app-muted-foreground font-mono text-xs">
+ <Link href={`/finance/ledger?id=${line.journalEntry.id}`} className="hover:underline hover:text-app-info">
  #{line.journalEntry.id}
  </Link>
  </td>
- <td className="px-6 py-3 text-app-text font-medium">
+ <td className="px-6 py-3 text-app-foreground font-medium">
  {line.description || line.journalEntry.description}
  {line.journalEntry.reference && (
- <span className="ml-2 bg-app-surface-2 text-app-text-muted px-1.5 py-0.5 rounded text-[10px] font-mono">
+ <span className="ml-2 bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded text-[10px] font-mono">
  {line.journalEntry.reference}
  </span>
  )}
  </td>
- <td className="px-6 py-3 text-right font-mono text-stone-700">
+ <td className="px-6 py-3 text-right font-mono text-app-muted-foreground">
  {line.debit > 0 ? line.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
  </td>
- <td className="px-6 py-3 text-right font-mono text-stone-700">
+ <td className="px-6 py-3 text-right font-mono text-app-muted-foreground">
  {line.credit > 0 ? line.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
  </td>
- <td className="px-6 py-3 text-right font-mono font-bold text-app-text group-hover:text-blue-700">
+ <td className="px-6 py-3 text-right font-mono font-bold text-app-foreground group-hover:text-app-info">
  {Math.abs(runningBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
- <span className="ml-1 text-xs text-app-text-faint">{runningBalance >= 0 ? 'Dr' : 'Cr'}</span>
+ <span className="ml-1 text-xs text-app-muted-foreground">{runningBalance >= 0 ? 'Dr' : 'Cr'}</span>
  </td>
  </tr>
  )
@@ -142,15 +142,15 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
 
  {data.lines.length === 0 && (
  <tr>
- <td colSpan={6} className="px-6 py-12 text-center text-app-text-faint italic">
+ <td colSpan={6} className="px-6 py-12 text-center text-app-muted-foreground italic">
  No transactions in this period.
  </td>
  </tr>
  )}
  </tbody>
- <tfoot className="bg-app-bg font-bold border-t border-app-border">
+ <tfoot className="bg-app-background font-bold border-t border-app-border">
  <tr>
- <td colSpan={3} className="px-6 py-4 text-right uppercase text-xs tracking-wider text-app-text-muted">
+ <td colSpan={3} className="px-6 py-4 text-right uppercase text-xs tracking-wider text-app-muted-foreground">
  Closing Balance
  </td>
  <td className="px-6 py-4 text-right">
@@ -163,7 +163,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
  </td>
  <td className="px-6 py-4 text-right bg-app-surface-2">
  {Math.abs(runningBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
- <span className="ml-1 text-xs text-app-text-faint">{runningBalance >= 0 ? 'Dr' : 'Cr'}</span>
+ <span className="ml-1 text-xs text-app-muted-foreground">{runningBalance >= 0 ? 'Dr' : 'Cr'}</span>
  </td>
  </tr>
  </tfoot>

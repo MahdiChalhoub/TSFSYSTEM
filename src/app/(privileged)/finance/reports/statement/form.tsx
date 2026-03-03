@@ -52,19 +52,19 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
 
  return (
  <div className="max-w-xl mx-auto bg-app-surface rounded-lg shadow-sm border border-app-border overflow-hidden">
- <div className="p-6 border-b border-app-border bg-app-bg">
- <h2 className="text-lg font-bold text-app-text flex items-center gap-2">
- <FileText className="text-app-text-faint" size={20} />
+ <div className="p-6 border-b border-app-border bg-app-background">
+ <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+ <FileText className="text-app-muted-foreground" size={20} />
  Account Statement
  </h2>
- <p className="text-sm text-app-text-muted mt-1">Select an account and period to generate a detailed ledger.</p>
+ <p className="text-sm text-app-muted-foreground mt-1">Select an account and period to generate a detailed ledger.</p>
  </div>
 
  <form onSubmit={handleGenerate} className="p-6 space-y-6">
 
  {/* 1. Account Selection */}
  <div>
- <label className="block text-sm font-bold text-stone-700 mb-2">Select Account</label>
+ <label className="block text-sm font-bold text-app-muted-foreground mb-2">Select Account</label>
  <select
  value={selectedAccountId}
  onChange={e => setSelectedAccountId(e.target.value)}
@@ -80,8 +80,8 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
  </div>
 
  {/* 2. Period Selection */}
- <div className="bg-app-bg p-4 rounded-lg border border-app-border">
- <label className="block text-sm font-bold text-stone-700 mb-2">Time Period</label>
+ <div className="bg-app-background p-4 rounded-lg border border-app-border">
+ <label className="block text-sm font-bold text-app-muted-foreground mb-2">Time Period</label>
 
  <div className="flex gap-4 mb-4 text-sm">
  <label className="flex items-center gap-2 cursor-pointer">
@@ -90,7 +90,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
  name="mode"
  checked={dateMode === 'FISCAL'}
  onChange={() => setDateMode('FISCAL')}
- className="text-black focus:ring-black"
+ className="text-app-foreground focus:ring-black"
  />
  Fiscal Year
  </label>
@@ -100,7 +100,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
  name="mode"
  checked={dateMode === 'CUSTOM'}
  onChange={() => setDateMode('CUSTOM')}
- className="text-black focus:ring-black"
+ className="text-app-foreground focus:ring-black"
  />
  Custom Date Range
  </label>
@@ -121,7 +121,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
  ) : (
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-xs uppercase text-app-text-muted font-bold mb-1">Start Date</label>
+ <label className="block text-xs uppercase text-app-muted-foreground font-bold mb-1">Start Date</label>
  <input
  type="date"
  value={customStart}
@@ -130,7 +130,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
  />
  </div>
  <div>
- <label className="block text-xs uppercase text-app-text-muted font-bold mb-1">End Date</label>
+ <label className="block text-xs uppercase text-app-muted-foreground font-bold mb-1">End Date</label>
  <input
  type="date"
  value={customEnd}
@@ -144,7 +144,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
 
  <button
  type="submit"
- className="w-full bg-black text-app-text font-bold py-3 rounded-md hover:bg-stone-800 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+ className="w-full bg-app-background text-app-foreground font-bold py-3 rounded-md hover:bg-app-surface-2 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
  >
  <Search size={18} />
  Generate Statement

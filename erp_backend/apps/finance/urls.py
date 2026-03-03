@@ -16,7 +16,7 @@ from apps.finance.views import (
     InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
     GatewayConfigViewSet, ReportViewSet,
     EInvoiceViewSet,
-    OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet,
+    OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet, CustomTaxRuleViewSet,
     VATSettlementViewSet,
     PeriodicTaxViewSet,
     VATReturnReportViewSet,
@@ -51,10 +51,14 @@ router.register(r'reports', ReportViewSet, basename='report')
 router.register(r'einvoice', EInvoiceViewSet, basename='einvoice')
 router.register(r'org-tax-policies', OrgTaxPolicyViewSet, basename='org-tax-policy')
 router.register(r'counterparty-tax-profiles', CounterpartyTaxProfileViewSet, basename='counterparty-tax-profile')
+router.register(r'custom-tax-rules', CustomTaxRuleViewSet, basename='custom-tax-rule')
 router.register(r'vat-settlement', VATSettlementViewSet, basename='vat-settlement')
 router.register(r'periodic-tax', PeriodicTaxViewSet, basename='periodic-tax')
 router.register(r'vat-return', VATReturnReportViewSet, basename='vat-return')
 
+from apps.finance.views.payment_views import FlutterwaveWebhookView
+
 urlpatterns = [
     path('', include(router.urls)),
+    path('webhooks/flutterwave/', FlutterwaveWebhookView.as_view(), name='flutterwave-webhook'),
 ]

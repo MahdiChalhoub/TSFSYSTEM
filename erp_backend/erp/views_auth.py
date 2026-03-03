@@ -476,3 +476,75 @@ def disable_2fa_view(request):
         return Response({"message": "2FA has been disabled."})
     else:
         return Response({"error": "Invalid token. Security check failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ── Staff User Registration (Authenticated Admin) ─────────────────────────────
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([RegisterRateThrottle])
+def register_user_view(request):
+    """
+    Create a new user within the current organization.
+    Only available to staff/admin users.
+    Endpoint: POST /api/auth/register/user/
+
+    Expected body:
+        username, email, first_name, last_name, password,
+        role_id (optional), is_driver (optional, bool)
+    """
+    if not (request.user.is_staff or request.user.is_superuser):
+        return Response(
+            {"error": "Only administrators can create new users."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    org = request.user.organization
+    if not org:
+        return Response({"error": "No organization context."}, status=status.HTTP_400_BAD_REQUEST)
+
+    username   = request.data.get('username', '').strip()
+    email      = request.data.get('email', '').strip()
+    first_name = request.data.get('first_name', '').strip()
+    last_name  = request.data.get('last_name', '').strip()
+    password   = request.data.get('password', '')
+    role_id    = request.data.get('role_id')
+    is_driver  = request.data.get('is_driver', False)
+
+    if not username or not email or not password:
+        return Response(
+            {"error": "username, email, and password are required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if User.objects.filter(username=username, organization=org).exists():
+        return Response(
+            {"error": "Username already taken in this organization."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        role = None
+        if role_id:
+            from erp.models import Role
+            role = Role.objects.filter(pk=role_id, organization=org).first()
+
+        user = User(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            organization=org,
+            role=role,
+            is_driver=bool(is_driver),
+            is_active=True,
+            registration_status='APPROVED',
+        )
+        user.set_password(password)
+        user.save()
+
+        logger.info(f"[AUTH] New user '{username}' created in org '{org.slug}' by {request.user.username}")
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        logger.error(f"[AUTH] register_user_view failed: {e}")
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

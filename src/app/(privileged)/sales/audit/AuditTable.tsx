@@ -31,40 +31,40 @@ const EVENT_CONFIG: Record<string, {
  },
  CLEAR_CART: {
  label: 'Clear Cart',
- icon: <Archive size={15} className="text-amber-500" />,
- badge: 'bg-amber-50 text-amber-700 border-amber-200',
+ icon: <Archive size={15} className="text-app-warning" />,
+ badge: 'bg-app-warning-bg text-app-warning border-app-warning',
  row: 'border-l-2 border-l-amber-400',
  },
  REMOVE_ITEM: {
  label: 'Remove Item',
- icon: <Archive size={15} className="text-amber-500" />,
- badge: 'bg-amber-50 text-amber-700 border-amber-200',
+ icon: <Archive size={15} className="text-app-warning" />,
+ badge: 'bg-app-warning-bg text-app-warning border-app-warning',
  row: 'border-l-2 border-l-amber-400',
  },
  DECREASE_QTY: {
  label: 'Decrease Qty',
- icon: <PenTool size={15} className="text-blue-500" />,
- badge: 'bg-blue-50 text-blue-700 border-blue-200',
+ icon: <PenTool size={15} className="text-app-info" />,
+ badge: 'bg-app-info-bg text-app-info border-app-info',
  row: 'border-l-2 border-l-blue-400',
  },
  CREDIT_SALE: {
  label: 'Credit Sale',
- icon: <CreditCard size={15} className="text-amber-600" />,
- badge: 'bg-amber-50 text-amber-800 border-amber-300',
- row: 'border-l-2 border-l-amber-500 bg-amber-50/30',
+ icon: <CreditCard size={15} className="text-app-warning" />,
+ badge: 'bg-app-warning-bg text-app-warning border-app-warning/30',
+ row: 'border-l-2 border-l-amber-500 bg-app-warning-bg/30',
  },
  NEGATIVE_STOCK_OVERRIDE: {
  label: 'Negative Stock',
- icon: <PackageX size={15} className="text-red-500" />,
- badge: 'bg-red-50 text-red-700 border-red-200',
- row: 'border-l-2 border-l-red-500 bg-red-50/30',
+ icon: <PackageX size={15} className="text-app-error" />,
+ badge: 'bg-app-error-bg text-app-error border-app-error',
+ row: 'border-l-2 border-l-red-500 bg-app-error-bg/30',
  },
 };
 
 const getConfig = (type: string) => EVENT_CONFIG[type] || {
  label: type,
- icon: <Search size={15} className="text-app-text-faint" />,
- badge: 'bg-app-surface-2 text-app-text-muted border-app-border',
+ icon: <Search size={15} className="text-app-muted-foreground" />,
+ badge: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
  row: 'border-l-2 border-l-gray-300',
 };
 
@@ -93,16 +93,16 @@ function DetailsCell({ details, type }: { details: any; type: string }) {
  <div className="flex items-start gap-1">
  <button
  onClick={() => setExpanded(e => !e)}
- className="mt-0.5 text-app-text-faint hover:text-app-text-muted transition-colors shrink-0"
+ className="mt-0.5 text-app-muted-foreground hover:text-app-muted-foreground transition-colors shrink-0"
  >
  {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
  </button>
  <div>
  {summary && (
- <div className="text-xs text-gray-700 font-medium leading-tight">{summary}</div>
+ <div className="text-xs text-app-muted-foreground font-medium leading-tight">{summary}</div>
  )}
  {expanded && (
- <pre className="mt-1 text-[10px] bg-app-surface-2 px-2 py-1 rounded text-app-text-muted whitespace-pre-wrap break-all">
+ <pre className="mt-1 text-[10px] bg-app-surface-2 px-2 py-1 rounded text-app-muted-foreground whitespace-pre-wrap break-all">
  {JSON.stringify(details, null, 2)}
  </pre>
  )}
@@ -152,7 +152,7 @@ export default function AuditTable() {
  return (
  <div className="bg-app-surface rounded-xl shadow-sm border border-app-border overflow-hidden flex flex-col h-full">
  {/* Header */}
- <div className="px-4 py-3 border-b bg-gray-50/50 flex items-center justify-between gap-4 flex-wrap">
+ <div className="px-4 py-3 border-b bg-app-surface-2/50 flex items-center justify-between gap-4 flex-wrap">
  {/* Review Status Tabs */}
  <div className="flex bg-app-surface-2 p-1 rounded-lg">
  {(['UNREVIEWED', 'REVIEWED', 'ALL'] as const).map(t => (
@@ -161,12 +161,12 @@ export default function AuditTable() {
  onClick={() => setTab(t)}
  className={clsx(
  'px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5',
- tab === t ? 'bg-app-surface text-app-text shadow-sm' : 'text-app-text-muted hover:text-gray-700'
+ tab === t ? 'bg-app-surface text-app-foreground shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'
  )}
  >
  {t}
  {t === 'UNREVIEWED' && unreviewed > 0 && (
- <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-rose-500 text-app-text text-[9px] font-black">
+ <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-app-error text-app-foreground text-[9px] font-black">
  {unreviewed}
  </span>
  )}
@@ -176,11 +176,11 @@ export default function AuditTable() {
 
  {/* Event Type Filter */}
  <div className="flex items-center gap-2">
- <Filter size={13} className="text-app-text-faint" />
+ <Filter size={13} className="text-app-muted-foreground" />
  <select
  value={typeFilter}
  onChange={e => setTypeFilter(e.target.value)}
- className="text-xs font-bold text-gray-700 bg-app-surface-2 border-0 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+ className="text-xs font-bold text-app-muted-foreground bg-app-surface-2 border-0 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-app-primary cursor-pointer"
  >
  <option value="ALL">All Event Types</option>
  {ALL_EVENT_TYPES.map(t => (
@@ -190,7 +190,7 @@ export default function AuditTable() {
  <button
  onClick={loadEvents}
  disabled={loading}
- className="p-1.5 rounded-lg bg-app-surface-2 text-app-text-muted hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+ className="p-1.5 rounded-lg bg-app-surface-2 text-app-muted-foreground hover:bg-app-primary/5 hover:text-app-primary transition-all"
  title="Refresh"
  >
  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -201,7 +201,7 @@ export default function AuditTable() {
  {/* Table */}
  <div className="flex-1 overflow-auto">
  <table className="w-full text-left text-sm whitespace-nowrap">
- <thead className="bg-app-bg text-app-text-muted sticky top-0 uppercase text-[10px] font-bold tracking-wider border-b border-app-border">
+ <thead className="bg-app-background text-app-muted-foreground sticky top-0 uppercase text-[10px] font-bold tracking-wider border-b border-app-border">
  <tr>
  <th className="p-3 w-8"></th>
  <th className="p-3 w-32">Time</th>
@@ -211,24 +211,24 @@ export default function AuditTable() {
  <th className="p-3 w-24 text-center">Status</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100">
+ <tbody className="divide-y divide-app-border">
  {loading ? (
- <tr><td colSpan={6} className="p-8 text-center text-app-text-faint">Loading events...</td></tr>
+ <tr><td colSpan={6} className="p-8 text-center text-app-muted-foreground">Loading events...</td></tr>
  ) : events.length === 0 ? (
- <tr><td colSpan={6} className="p-8 text-center text-app-text-faint">No events found</td></tr>
+ <tr><td colSpan={6} className="p-8 text-center text-app-muted-foreground">No events found</td></tr>
  ) : events.map(ev => {
  const cfg = getConfig(ev.event_type);
  return (
  <tr
  key={ev.id}
  className={clsx(
- 'hover:bg-gray-50/80 transition-colors',
+ 'hover:bg-app-surface-2/80 transition-colors',
  cfg.row,
  ev.is_reviewed && 'opacity-50'
  )}
  >
  <td className="p-3 text-center">{cfg.icon}</td>
- <td className="p-3 font-mono text-[10px] text-app-text-muted tabular-nums">
+ <td className="p-3 font-mono text-[10px] text-app-muted-foreground tabular-nums">
  {format(new Date(ev.created_at), 'dd MMM HH:mm')}
  </td>
  <td className="p-3">
@@ -240,19 +240,19 @@ export default function AuditTable() {
  </span>
  </td>
  <DetailsCell details={ev.details || {}} type={ev.event_type} />
- <td className="p-3 text-xs text-app-text-muted font-medium">
+ <td className="p-3 text-xs text-app-muted-foreground font-medium">
  {ev.user_name || 'System'}
  </td>
  <td className="p-3 text-center">
  {!ev.is_reviewed ? (
  <button
  onClick={() => markReviewed(ev.id)}
- className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-emerald-100 transition-all"
+ className="px-2.5 py-1 bg-app-primary-light text-app-success border border-app-success rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-app-primary-light transition-all"
  >
  Review
  </button>
  ) : (
- <div className="flex items-center justify-center gap-1 text-[10px] text-app-text-faint">
+ <div className="flex items-center justify-center gap-1 text-[10px] text-app-muted-foreground">
  <CheckCircle size={11} /> {ev.reviewed_by_name || '✓'}
  </div>
  )}

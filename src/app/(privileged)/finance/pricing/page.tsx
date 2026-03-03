@@ -9,13 +9,13 @@ export default async function PricingPage() {
  return (
  <div className="page-container">
  <header>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <DollarSign size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-indigo-200">
+ <DollarSign size={28} className="text-app-foreground" />
  </div>
- Pricing <span className="text-indigo-600">Engine</span>
+ Pricing <span className="text-app-primary">Engine</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Price Lists & Rules</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Price Lists & Rules</p>
  </header>
  <PriceListManager priceLists={priceLists} />
  </div>

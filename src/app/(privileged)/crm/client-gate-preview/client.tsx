@@ -25,7 +25,7 @@ const CLIENT_TYPES = [
 // ─── Server action wrappers ─────────────────────────────────
 async function fetchProducts(): Promise<Product[]> {
  const { erpFetch } = await import('@/lib/erp-api')
- return await erpFetch('products/?is_active=true')
+ return await erpFetch('inventory/products/?is_active=true')
 }
 
 async function fetchOrg() {
@@ -77,7 +77,7 @@ export default function ClientGatePreviewClient() {
  if (loading) {
  return (
  <div className="flex items-center justify-center min-h-[60vh]">
- <div className="flex items-center gap-3 text-app-text-faint">
+ <div className="flex items-center gap-3 text-app-muted-foreground">
  <div className="w-6 h-6 border-2 border-app-border border-t-gray-600 rounded-full animate-spin" />
  Loading preview...
  </div>
@@ -90,12 +90,12 @@ export default function ClientGatePreviewClient() {
  {/* Header */}
  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
  <div className="flex items-center gap-3">
- <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
- <Eye size={22} className="text-emerald-600" />
+ <div className="w-12 h-12 rounded-2xl bg-app-primary-light border border-app-success flex items-center justify-center">
+ <Eye size={22} className="text-app-primary" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tight">Client Gate Preview</h1>
- <p className="text-sm text-app-text-muted">
+ <p className="text-sm text-app-muted-foreground">
  Previewing <strong>{org?.name || 'Your Store'}</strong> as a customer sees it
  </p>
  </div>
@@ -105,8 +105,8 @@ export default function ClientGatePreviewClient() {
  {/* Client Type Selector */}
  <div className="bg-app-surface rounded-xl border border-app-border p-4 shadow-sm">
  <div className="flex items-center gap-2 mb-3">
- <Tag size={14} className="text-app-text-faint" />
- <span className="text-xs font-bold text-app-text-muted uppercase tracking-wider">Viewing as</span>
+ <Tag size={14} className="text-app-muted-foreground" />
+ <span className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Viewing as</span>
  </div>
  <div className="flex flex-wrap gap-2">
  {CLIENT_TYPES.map(type => (
@@ -114,34 +114,34 @@ export default function ClientGatePreviewClient() {
  key={type.key}
  onClick={() => setClientType(type.key)}
  className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${clientType === type.key
- ? type.color === 'stone' ? 'bg-stone-900 text-app-text shadow-lg'
- : type.color === 'amber' ? 'bg-amber-500 text-app-text shadow-lg'
- : 'bg-purple-600 text-app-text shadow-lg'
- : 'bg-app-surface-2 text-app-text-muted hover:bg-gray-200'
+ ? type.color === 'stone' ? 'bg-app-surface text-app-foreground shadow-lg'
+ : type.color === 'amber' ? 'bg-app-warning text-app-foreground shadow-lg'
+ : 'bg-purple-600 text-app-foreground shadow-lg'
+ : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-border'
  }`}
  >
  {type.label}
  </button>
  ))}
  </div>
- <p className="text-xs text-app-text-faint mt-2">{currentType.desc}</p>
+ <p className="text-xs text-app-muted-foreground mt-2">{currentType.desc}</p>
  </div>
 
  {/* Preview Frame */}
- <div className="bg-[#020617] rounded-2xl border border-gray-800 overflow-hidden shadow-2xl">
+ <div className="bg-app-background rounded-2xl border border-app-border overflow-hidden shadow-2xl">
  {/* Storefront Header */}
  <div className="p-8 pb-4">
  <div className="max-w-6xl mx-auto">
  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
- <ShoppingBag size={18} className="text-emerald-400" />
+ <div className="w-10 h-10 rounded-xl bg-app-primary/20 border border-app-primary/30 flex items-center justify-center">
+ <ShoppingBag size={18} className="text-app-primary" />
  </div>
  <div>
- <h2 className="text-xl font-black text-app-text">{org?.name || 'Store'}</h2>
+ <h2 className="text-xl font-black text-app-foreground">{org?.name || 'Store'}</h2>
  <div className="flex items-center gap-2">
- <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clientType === 'RETAIL' ? 'bg-stone-700 text-stone-300'
- : clientType === 'WHOLESALE' ? 'bg-amber-900/50 text-amber-400'
+ <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clientType === 'RETAIL' ? 'bg-app-surface-2 text-app-muted-foreground'
+ : clientType === 'WHOLESALE' ? 'bg-app-warning/50 text-app-warning'
  : 'bg-purple-900/50 text-purple-400'
  }`}>
  {currentType.label}
@@ -151,29 +151,29 @@ export default function ClientGatePreviewClient() {
  </div>
  {/* Search */}
  <div className="relative w-72">
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted" />
+ <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="Search products..."
- className="w-full pl-9 pr-4 py-2.5 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm placeholder:text-app-text-muted focus:outline-none focus:border-emerald-500/30"
+ className="w-full pl-9 pr-4 py-2.5 bg-app-foreground/5 border border-app-text/10 rounded-xl text-app-foreground text-sm placeholder:text-app-muted-foreground focus:outline-none focus:border-app-primary/30"
  />
  </div>
  </div>
 
  {/* Stats */}
  <div className="flex gap-4 mb-6">
- <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
- <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">Products</span>
- <div className="text-xl font-black text-app-text flex items-center gap-2">
- <Sparkles size={14} className="text-emerald-400" />
+ <div className="px-5 py-3 bg-app-foreground/5 border border-app-text/5 rounded-2xl">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Products</span>
+ <div className="text-xl font-black text-app-foreground flex items-center gap-2">
+ <Sparkles size={14} className="text-app-primary" />
  {filtered.length}
  </div>
  </div>
- <div className="px-5 py-3 bg-app-text/5 border border-app-text/5 rounded-2xl">
- <span className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">{getPriceLabel()}</span>
- <div className="text-xl font-black text-app-text flex items-center gap-2">
- <Tag size={14} className={clientType === 'WHOLESALE' ? 'text-amber-400' : clientType === 'CONSIGNEE' ? 'text-purple-400' : 'text-app-text-faint'} />
+ <div className="px-5 py-3 bg-app-foreground/5 border border-app-text/5 rounded-2xl">
+ <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">{getPriceLabel()}</span>
+ <div className="text-xl font-black text-app-foreground flex items-center gap-2">
+ <Tag size={14} className={clientType === 'WHOLESALE' ? 'text-app-warning' : clientType === 'CONSIGNEE' ? 'text-purple-400' : 'text-app-muted-foreground'} />
  Active
  </div>
  </div>
@@ -186,45 +186,45 @@ export default function ClientGatePreviewClient() {
  <div className="max-w-6xl mx-auto">
  {filtered.length === 0 ? (
  <div className="text-center py-16">
- <Package size={40} className="text-gray-700 mx-auto mb-3" />
- <p className="text-app-text-muted font-medium">No products found</p>
+ <Package size={40} className="text-app-muted-foreground mx-auto mb-3" />
+ <p className="text-app-muted-foreground font-medium">No products found</p>
  </div>
  ) : (
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
  {filtered.slice(0, 20).map(product => (
  <div
  key={product.id}
- className="bg-app-text/5 border border-app-text/5 rounded-2xl p-4 hover:border-emerald-500/20 transition-all group"
+ className="bg-app-foreground/5 border border-app-text/5 rounded-2xl p-4 hover:border-app-primary/20 transition-all group"
  >
  {/* Product Image Placeholder */}
- <div className="aspect-square bg-app-text/5 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
+ <div className="aspect-square bg-app-foreground/5 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
  {product.image_url ? (
  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
  ) : (
- <Package size={28} className="text-gray-700" />
+ <Package size={28} className="text-app-muted-foreground" />
  )}
  </div>
  {/* Product Info */}
- <h3 className="text-sm font-bold text-app-text truncate group-hover:text-emerald-400 transition-colors">
+ <h3 className="text-sm font-bold text-app-foreground truncate group-hover:text-app-primary transition-colors">
  {product.name}
  </h3>
- <p className="text-[10px] text-app-text-muted font-mono mt-0.5">{product.sku}</p>
+ <p className="text-[10px] text-app-muted-foreground font-mono mt-0.5">{product.sku}</p>
  {product.category_name && (
  <div className="flex items-center gap-1 mt-1">
- <Grid3X3 size={10} className="text-app-text-muted" />
- <span className="text-[10px] text-app-text-muted">{product.category_name}</span>
+ <Grid3X3 size={10} className="text-app-muted-foreground" />
+ <span className="text-[10px] text-app-muted-foreground">{product.category_name}</span>
  </div>
  )}
  {/* Price */}
  <div className="mt-3 flex items-baseline gap-2">
- <span className={`text-lg font-black ${clientType === 'WHOLESALE' ? 'text-amber-400'
+ <span className={`text-lg font-black ${clientType === 'WHOLESALE' ? 'text-app-warning'
  : clientType === 'CONSIGNEE' ? 'text-purple-400'
- : 'text-emerald-400'
+ : 'text-app-primary'
  }`}>
  ${getPrice(product)}
  </span>
  {clientType !== 'RETAIL' && (
- <span className="text-[10px] text-app-text-muted line-through">
+ <span className="text-[10px] text-app-muted-foreground line-through">
  ${Number(product.selling_price || 0).toFixed(2)}
  </span>
  )}
@@ -232,8 +232,8 @@ export default function ClientGatePreviewClient() {
  {/* Stock */}
  {product.stock_quantity !== undefined && (
  <div className="flex items-center gap-1 mt-2">
- <div className={`w-1.5 h-1.5 rounded-full ${(product.stock_quantity || 0) > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
- <span className="text-[10px] text-app-text-muted">
+ <div className={`w-1.5 h-1.5 rounded-full ${(product.stock_quantity || 0) > 0 ? 'bg-app-primary' : 'bg-app-error'}`} />
+ <span className="text-[10px] text-app-muted-foreground">
  {(product.stock_quantity || 0) > 0 ? `${product.stock_quantity} in stock` : 'Out of stock'}
  </span>
  </div>
@@ -243,7 +243,7 @@ export default function ClientGatePreviewClient() {
  </div>
  )}
  {filtered.length > 20 && (
- <p className="text-center text-xs text-app-text-muted mt-6">
+ <p className="text-center text-xs text-app-muted-foreground mt-6">
  Showing 20 of {filtered.length} products
  </p>
  )}

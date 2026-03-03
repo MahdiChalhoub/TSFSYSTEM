@@ -196,23 +196,50 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         if order.status != 'CART':
             return Response({'error': 'Order is not in CART status'}, status=400)
-        line_data = request.data
+        line_data = request.data.copy()
         line_data['order'] = order.id
         line_data['organization'] = order.organization_id
+
+        pricing_breakdown = None
         if 'product' in line_data and not line_data.get('product_name'):
             try:
                 from apps.inventory.models import Product
+                from apps.crm.services.pricing_service import PricingService
                 product = Product.objects.get(id=line_data['product'])
+                quantity = Decimal(str(line_data.get('quantity', '1')))
+
+                # Resolve tier-aware price for this contact
+                breakdown = PricingService.get_price_breakdown(
+                    product=product,
+                    contact=order.contact,
+                    quantity=quantity,
+                    organization=order.organization,
+                )
                 line_data['product_name'] = product.name
-                line_data['unit_price'] = str(product.selling_price_ttc)
+                line_data['unit_price'] = str(breakdown['effective_price'])
                 line_data['tax_rate'] = str(product.tva_rate)
+                pricing_breakdown = breakdown
             except Exception:
                 pass
+
         serializer = ClientOrderLineSerializer(data=line_data)
         serializer.is_valid(raise_exception=True)
         serializer.save(organization=order.organization)
         order.recalculate_totals()
-        return Response(serializer.data, status=201)
+
+        response_data = serializer.data
+        if pricing_breakdown:
+            response_data = dict(response_data)
+            response_data['pricing'] = {
+                'effective_price': str(pricing_breakdown['effective_price']),
+                'base_price': str(pricing_breakdown['base_price']),
+                'discount_applied': pricing_breakdown['discount_applied'],
+                'discount_source': pricing_breakdown['discount_source'],
+                'discount_amount': str(pricing_breakdown['discount_amount']),
+                'discount_percent': str(pricing_breakdown['discount_percent']),
+                'price_group_name': pricing_breakdown['price_group_name'],
+            }
+        return Response(response_data, status=201)
 
     @action(detail=True, methods=['post'])
     def place_order(self, request, pk=None):
@@ -235,9 +262,30 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
                 'error': f'Minimum order amount is {config.min_order_amount}'
             }, status=400)
 
-        # Apply org delivery fee
-        order.delivery_fee = config.get_delivery_fee(order.subtotal)
+        # Shipping fee — zone-aware if zone_id is provided, else use org default
+        shipping_zone_id = request.data.get('shipping_zone_id')
+        if shipping_zone_id:
+            try:
+                from apps.client_portal.shipping_service import ShippingService
+                weight = ShippingService.get_cart_weight(order)
+                order.delivery_fee = ShippingService.calculate_rate(
+                    zone_id=int(shipping_zone_id),
+                    organization=order.organization,
+                    order_subtotal=order.subtotal,
+                    total_weight_kg=weight,
+                )
+            except (ValueError, Exception) as e:
+                return Response({'error': f'Shipping zone error: {e}'}, status=400)
+        else:
+            order.delivery_fee = config.get_delivery_fee(order.subtotal)
         order.recalculate_totals()
+
+        # Auto-apply cart promotions (BOGO, bundle, spend threshold)
+        try:
+            from apps.client_portal.promotion_service import PromotionService
+            PromotionService.apply_promotions(order)
+        except Exception as promo_err:
+            logger.warning(f"[place_order] Promotion evaluation failed: {promo_err}")
 
         # Handle wallet payment
         wallet_amount = Decimal(str(request.data.get('wallet_amount', 0)))
@@ -259,6 +307,40 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         order.delivery_phone = request.data.get('delivery_phone', order.delivery_phone)
         order.delivery_notes = request.data.get('delivery_notes', order.delivery_notes)
         order.save()
+
+        # ── Stock Reservation ────────────────────────────────────────────
+        # Soft-lock inventory for each line immediately on PLACED,
+        # preventing concurrent orders from overselling during the
+        # PLACED → CONFIRMED window. Released automatically on CANCEL.
+        config = ClientPortalConfig.get_config(order.organization)
+        if getattr(config, 'inventory_check_mode', 'STRICT') != 'DISABLED':
+            try:
+                from apps.inventory.services.reservation_service import StockReservationService, StockReservationError
+                from apps.client_portal.warehouse_router import WarehouseRouter
+
+                for line in order.lines.select_related('product').all():
+                    if not line.product:
+                        continue
+                    try:
+                        wh = WarehouseRouter.select_warehouse(
+                            organization=order.organization,
+                            product=line.product,
+                            quantity=line.quantity,
+                            contact=order.contact,
+                            check_mode='STRICT',
+                        )
+                    except ValueError:
+                        wh = None
+                    if wh:
+                        StockReservationService.reserve(order, wh, user=request.user)
+            except StockReservationError as sre:
+                # Roll back order status — can't place if out of stock
+                order.status = 'CART'
+                order.placed_at = None
+                order.save(update_fields=['status', 'placed_at'])
+                return Response({'error': str(sre)}, status=400)
+            except Exception as res_err:
+                logger.warning(f"[place_order] Stock reservation failed (non-blocking): {res_err}")
 
         response_data = {'status': 'placed', 'order_number': order.order_number}
 
@@ -290,7 +372,8 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
                 logger.error(f"Stripe error in place_order: {e}")
 
         # ── 3. Integrated Checkout Execution ────────────────────────────
-        # Trigger Inventory reduction, Commercial Invoice, and CRM Analytics
+        # ── 3. Integrated Checkout Execution ────────────────────────────
+        # Trigger Inventory reduction, Commercial Invoice, CRM Analytics, Domain Events
         try:
             IntegratedCheckoutService.process_checkout(order.id, user=request.user)
             response_data['status'] = 'confirmed'
@@ -303,6 +386,29 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
 
         return Response(response_data)
 
+    @action(detail=True, methods=['get'], url_path='shipping-rates')
+    def shipping_rates(self, request, pk=None):
+        """
+        Returns available shipping zones with computed fees for this cart.
+        Call from the checkout UI before the customer selects a shipping method.
+
+        GET /api/client-portal/my-orders/{id}/shipping-rates/
+        Response: { shipping_rates: [{zone_id, zone_name, fee, estimated_days, is_free}], cart_weight_kg }
+        """
+        order = self.get_object()
+        if order.status != 'CART':
+            return Response({'error': 'Order must be in CART status'}, status=400)
+
+        from apps.client_portal.shipping_service import ShippingService
+        weight = ShippingService.get_cart_weight(order)
+        rates = ShippingService.get_available_methods(
+            organization=order.organization,
+            order_subtotal=order.subtotal,
+            total_weight_kg=weight,
+            contact=order.contact,
+        )
+        return Response({'shipping_rates': rates, 'cart_weight_kg': str(weight)})
+
     @action(detail=True, methods=['post'])
     def rate_delivery(self, request, pk=None):
         order = self.get_object()
@@ -312,6 +418,234 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         order.delivery_feedback = request.data.get('feedback', '')
         order.save(update_fields=['delivery_rating', 'delivery_feedback', 'updated_at'])
         return Response({'status': 'rated'})
+
+    @action(detail=True, methods=['post'], url_path='apply-coupon')
+    def apply_coupon(self, request, pk=None):
+        """
+        Apply a discount coupon to an order that is still in CART status.
+
+        Body:
+            { "code": "SUMMER25" }
+
+        Returns updated order totals on success.
+        """
+        order = self.get_object()
+
+        if order.status != 'CART':
+            return Response(
+                {'error': 'Coupons can only be applied to orders in CART status.'},
+                status=400,
+            )
+
+        code = request.data.get('code', '').strip().upper()
+        if not code:
+            return Response({'error': 'Coupon code is required.'}, status=400)
+
+        from apps.client_portal.models import Coupon, CouponUsage
+        from django.db import transaction as db_transaction
+
+        try:
+            coupon = Coupon.objects.get(
+                organization=order.organization,
+                code=code,
+            )
+        except Coupon.DoesNotExist:
+            return Response({'error': f"Coupon '{code}' not found."}, status=404)
+
+        # Validate coupon against this order
+        is_valid, reason = coupon.is_valid(
+            order_subtotal=order.subtotal,
+            contact=order.contact,
+        )
+        if not is_valid:
+            return Response({'error': reason}, status=400)
+
+        # Remove any previously applied coupon for this order (replace logic)
+        CouponUsage.objects.filter(order=order).select_related('coupon').update()  # just for clarity
+        existing = CouponUsage.objects.filter(order=order).first()
+        if existing:
+            # Reverse old discount before applying new one
+            old_discount = existing.discount_applied
+            order.discount_amount -= old_discount
+            existing.coupon.used_count -= 1
+            existing.coupon.save(update_fields=['used_count'])
+            existing.delete()
+
+        # Calculate and apply discount
+        with db_transaction.atomic():
+            discount = coupon.calculate_discount(order.subtotal)
+            order.discount_amount = discount
+            order.recalculate_totals()
+
+            # Record usage
+            CouponUsage.objects.create(
+                organization=order.organization,
+                coupon=coupon,
+                contact=order.contact,
+                order=order,
+                discount_applied=discount,
+            )
+
+            # Increment usage counter
+            coupon.used_count += 1
+            coupon.save(update_fields=['used_count', 'updated_at'])
+
+        return Response({
+            'status': 'applied',
+            'coupon_code': code,
+            'discount_type': coupon.discount_type,
+            'discount_value': str(coupon.value),
+            'discount_applied': str(discount),
+            'new_total': str(order.total_amount),
+            'new_subtotal': str(order.subtotal),
+        })
+
+
+    @action(detail=False, methods=['get'], url_path='account-summary')
+    def account_summary(self, request):
+        """
+        Returns a summary of the customer's account for the storefront dashboard.
+
+        GET /api/client-portal/my-orders/account-summary/
+        Response: {
+          orders_count, total_spent, pending_count,
+          loyalty_points, wallet_balance, currency
+        }
+        """
+        if not hasattr(request.user, 'client_access'):
+            return Response({'error': 'No client access'}, status=403)
+
+        contact = request.user.client_access.contact
+        org = contact.organization
+        from django.db.models import Sum, Count
+
+        orders_qs = ClientOrder.objects.filter(organization=org, contact=contact)
+        agg = orders_qs.aggregate(
+            total_spent=Sum('total_amount'),
+            orders_count=Count('id'),
+        )
+        pending_count = orders_qs.filter(
+            status__in=['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED']
+        ).count()
+
+        # Loyalty + wallet
+        loyalty_points = 0
+        wallet_balance = 0
+        currency = 'USD'
+        try:
+            wallet = contact.wallet
+            loyalty_points = wallet.loyalty_points
+            wallet_balance = float(wallet.balance)
+            config = ClientPortalConfig.get_config(org)
+            currency = config.wallet_currency
+        except Exception:
+            pass
+
+        return Response({
+            'orders_count': agg['orders_count'] or 0,
+            'total_spent': str(agg['total_spent'] or '0.00'),
+            'pending_count': pending_count,
+            'loyalty_points': loyalty_points,
+            'wallet_balance': str(wallet_balance),
+            'currency': currency,
+        })
+
+    @action(detail=True, methods=['get'], url_path='track')
+    def track(self, request, pk=None):
+        """
+        Returns the order status timeline for live customer tracking.
+
+        GET /api/client-portal/my-orders/{id}/track/
+        Response: { status, estimated_delivery, delivered_at, timeline: [{status, label, date, note}] }
+        """
+        order = self.get_object()
+
+        STATUS_LABELS = {
+            'CART': 'In Cart', 'PLACED': 'Order Placed', 'CONFIRMED': 'Confirmed',
+            'PROCESSING': 'Processing', 'SHIPPED': 'Shipped', 'DELIVERED': 'Delivered',
+            'CANCELLED': 'Cancelled', 'RETURNED': 'Returned',
+        }
+        STATUS_ORDER = ['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+
+        # Build timeline from order notes (each transition appends a note)
+        timeline = []
+        if order.placed_at:
+            timeline.append({
+                'status': 'PLACED',
+                'label': 'Order Placed',
+                'date': order.placed_at.isoformat(),
+                'note': '',
+            })
+
+        # Parse notes for transition records: [YYYY-MM-DD HH:MM] OLD→NEW: note
+        import re
+        note_pattern = re.compile(r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\] \w+→(\w+)(?:: (.*))?')
+        for match in note_pattern.finditer(order.notes or ''):
+            ts, status_code, note_text = match.groups()
+            timeline.append({
+                'status': status_code,
+                'label': STATUS_LABELS.get(status_code, status_code),
+                'date': ts,
+                'note': (note_text or '').strip(),
+            })
+
+        if order.delivered_at:
+            # Ensure DELIVERED is always in timeline with exact timestamp
+            if not any(e['status'] == 'DELIVERED' for e in timeline):
+                timeline.append({
+                    'status': 'DELIVERED',
+                    'label': 'Delivered',
+                    'date': order.delivered_at.isoformat(),
+                    'note': '',
+                })
+
+        return Response({
+            'order_number': order.order_number,
+            'status': order.status,
+            'status_label': STATUS_LABELS.get(order.status, order.status),
+            'estimated_delivery': order.estimated_delivery.isoformat() if order.estimated_delivery else None,
+            'delivered_at': order.delivered_at.isoformat() if order.delivered_at else None,
+            'timeline': sorted(timeline, key=lambda e: e['date']),
+        })
+
+    @action(detail=True, methods=['post'], url_path='request-return')
+    def request_return(self, request, pk=None):
+        """
+        Customer raises a return/refund request for a delivered order.
+
+        POST /api/client-portal/my-orders/{id}/request-return/
+        Body: { "reason": "Wrong item received", "items": [{"line_id": 3, "qty": 1}] }
+        """
+        order = self.get_object()
+        if order.status not in ('DELIVERED',):
+            return Response({'error': 'Only delivered orders can be returned.'}, status=400)
+
+        reason = request.data.get('reason', '').strip()
+        items = request.data.get('items', [])
+        if not reason:
+            return Response({'error': 'A return reason is required.'}, status=400)
+
+        # Build item summary for ticket description
+        item_lines = '\n'.join(
+            f"  - Line #{i.get('line_id')} × {i.get('qty', 1)}" for i in items
+        ) or '  (All items)'
+
+        from apps.client_portal.models import ClientTicket
+        ticket = ClientTicket.objects.create(
+            organization=order.organization,
+            contact=order.contact,
+            subject=f"Return Request — Order #{order.order_number}",
+            message=f"Reason: {reason}\n\nItems:\n{item_lines}",
+            ticket_type='RETURN',
+            status='OPEN',
+            related_order=order,
+        )
+        logger.info(f"[Return] Ticket #{ticket.id} created for order {order.order_number}")
+        return Response({
+            'status': 'submitted',
+            'ticket_id': ticket.id,
+            'message': 'Your return request has been submitted. Our team will contact you shortly.',
+        }, status=201)
 
 
 # =============================================================================
@@ -612,3 +946,39 @@ class QuoteRequestViewSet(TenantModelViewSet):
         else:
             # If organization cannot be determined, let it fail with validation error or use default logic
             super().perform_create(serializer)
+
+    @action(detail=True, methods=['post'])
+    def respond(self, request, pk=None):
+        """
+        Admin: respond to a quote request with a price and notes.
+        Transitions status → QUOTED.
+        """
+        quote = self.get_object()
+        quoted_price = request.data.get('quoted_price')
+        quoted_notes = request.data.get('quoted_notes', '')
+
+        if not quoted_price:
+            return Response({'error': 'quoted_price is required'}, status=400)
+
+        quote.quoted_price = quoted_price
+        quote.quoted_notes = quoted_notes
+        quote.status = 'QUOTED'
+        quote.save(update_fields=['quoted_price', 'quoted_notes', 'status', 'updated_at'])
+
+        logger.info(
+            f"[QuoteRequest] #{quote.id} → QUOTED by {request.user} "
+            f"at price={quoted_price}"
+        )
+        return Response({
+            'status': 'quoted',
+            'id': quote.id,
+            'quoted_price': str(quoted_price),
+        })
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Admin: reject a quote request."""
+        quote = self.get_object()
+        quote.status = 'REJECTED'
+        quote.save(update_fields=['status', 'updated_at'])
+        return Response({'status': 'rejected'})

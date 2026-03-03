@@ -58,11 +58,11 @@ export default function BoutiqueSearchPage() {
                             placeholder="Search products..."
                             value={query}
                             onChange={e => setQuery(e.target.value)}
-                            className="w-full pl-12 pr-10 py-3.5 rounded-xl border border-violet-200 bg-white text-indigo-950 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 shadow-sm text-sm"
+                            className="w-full pl-12 pr-10 py-3.5 rounded-xl border border-violet-200 bg-app-surface text-indigo-950 placeholder:text-app-text-faint focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 shadow-sm text-sm"
                         />
                         {query && (
                             <button onClick={() => setQuery('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-violet-600">
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-app-text-faint hover:text-violet-600">
                                 <X size={16} />
                             </button>
                         )}
@@ -71,7 +71,7 @@ export default function BoutiqueSearchPage() {
                     <select
                         value={sortBy}
                         onChange={e => setSortBy(e.target.value as any)}
-                        className="px-4 py-3.5 rounded-xl border border-violet-200 bg-white text-sm text-indigo-950 focus:outline-none focus:ring-2 focus:ring-violet-300 shadow-sm">
+                        className="px-4 py-3.5 rounded-xl border border-violet-200 bg-app-surface text-sm text-indigo-950 focus:outline-none focus:ring-2 focus:ring-violet-300 shadow-sm">
                         <option value="name">Sort by Name</option>
                         <option value="price-asc">Price: Low → High</option>
                         <option value="price-desc">Price: High → Low</option>
@@ -84,7 +84,7 @@ export default function BoutiqueSearchPage() {
                         <button onClick={() => setSelectedCat(null)}
                             className={`px-4 py-2 rounded-full text-xs font-semibold transition border ${!selectedCat
                                     ? 'bg-violet-600 text-white border-violet-600'
-                                    : 'bg-white text-gray-600 border-violet-200 hover:border-violet-400'
+                                    : 'bg-app-surface text-app-text-muted border-violet-200 hover:border-violet-400'
                                 }`}>
                             All ({products.length})
                         </button>
@@ -93,7 +93,7 @@ export default function BoutiqueSearchPage() {
                                 onClick={() => setSelectedCat(cat.id === selectedCat ? null : cat.id)}
                                 className={`px-4 py-2 rounded-full text-xs font-semibold transition border ${selectedCat === cat.id
                                         ? 'bg-violet-600 text-white border-violet-600'
-                                        : 'bg-white text-gray-600 border-violet-200 hover:border-violet-400'
+                                        : 'bg-app-surface text-app-text-muted border-violet-200 hover:border-violet-400'
                                     }`}>
                                 {cat.name} ({cat.product_count || 0})
                             </button>
@@ -108,7 +108,7 @@ export default function BoutiqueSearchPage() {
                     </div>
                 ) : results.length === 0 ? (
                     <div className="text-center py-20">
-                        <p className="text-gray-400 text-lg">No products found</p>
+                        <p className="text-app-text-faint text-lg">No products found</p>
                         {query && (
                             <button onClick={() => setQuery('')}
                                 className="mt-3 text-violet-600 text-sm font-semibold hover:underline">
@@ -118,7 +118,7 @@ export default function BoutiqueSearchPage() {
                     </div>
                 ) : (
                     <>
-                        <p className="text-sm text-gray-400 mb-6">{results.length} {results.length === 1 ? 'result' : 'results'}</p>
+                        <p className="text-sm text-app-text-faint mb-6">{results.length} {results.length === 1 ? 'result' : 'results'}</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
                             {results.map(product => (
                                 <BoutiqueProductCard key={product.id} product={product} />

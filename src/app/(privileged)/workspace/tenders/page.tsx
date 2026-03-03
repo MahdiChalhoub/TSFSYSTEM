@@ -15,11 +15,11 @@ import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
- OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
- SUBMITTED: { label: 'Submitted', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: FileText },
- AWARDED: { label: 'Awarded', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
- CLOSED: { label: 'Closed', color: 'text-gray-700', bg: 'bg-app-bg border-app-border', icon: XCircle },
- CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
+ OPEN: { label: 'Open', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info', icon: Clock },
+ SUBMITTED: { label: 'Submitted', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning', icon: FileText },
+ AWARDED: { label: 'Awarded', color: 'text-app-success', bg: 'bg-app-primary-light border-app-success', icon: CheckCircle2 },
+ CLOSED: { label: 'Closed', color: 'text-app-muted-foreground', bg: 'bg-app-background border-app-border', icon: XCircle },
+ CANCELLED: { label: 'Cancelled', color: 'text-app-error', bg: 'bg-app-error-bg border-app-error', icon: XCircle },
 }
 
 export default function TenderInboxPage() {
@@ -57,9 +57,9 @@ export default function TenderInboxPage() {
  label: 'Reference',
  sortable: true,
  render: (t) => (
- <div className="flex flex-col">
- <span className="font-mono text-sm font-black text-app-text">{t.reference || t.ref_code || `#${t.id}`}</span>
- <span className="text-[10px] text-app-text-faint font-medium truncate max-w-[200px]">{t.title || t.subject || 'Untitled tender'}</span>
+ <div className="app-page flex flex-col">
+ <span className="font-mono text-sm font-black text-app-foreground">{t.reference || t.ref_code || `#${t.id}`}</span>
+ <span className="text-[10px] text-app-muted-foreground font-medium truncate max-w-[200px]">{t.title || t.subject || 'Untitled tender'}</span>
  </div>
  )
  },
@@ -70,9 +70,9 @@ export default function TenderInboxPage() {
  render: (t) => (
  <div className="flex items-center gap-2">
  <div className="w-7 h-7 rounded-lg bg-app-surface-2 flex items-center justify-center">
- <Users size={12} className="text-app-text-faint" />
+ <Users size={12} className="text-app-muted-foreground" />
  </div>
- <span className="font-bold text-app-text text-sm">{t.client_name || t.contact_name || 'N/A'}</span>
+ <span className="font-bold text-app-foreground text-sm">{t.client_name || t.contact_name || 'N/A'}</span>
  </div>
  )
  },
@@ -82,10 +82,10 @@ export default function TenderInboxPage() {
  sortable: true,
  render: (t) => {
  const deadline = t.deadline || t.due_date
- if (!deadline) return <span className="text-app-text-faint text-sm">—</span>
+ if (!deadline) return <span className="text-app-muted-foreground text-sm">—</span>
  const isOverdue = new Date(deadline) < new Date()
  return (
- <span className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-app-text-muted'}`}>
+ <span className={`text-sm font-medium ${isOverdue ? 'text-app-error' : 'text-app-muted-foreground'}`}>
  {new Date(deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
  </span>
  )
@@ -96,7 +96,7 @@ export default function TenderInboxPage() {
  label: 'Est. Value',
  align: 'right' as const,
  sortable: true,
- render: (t) => <span className="font-mono text-sm font-black text-emerald-600">{fmt(Number(t.estimated_value || t.value || 0))}</span>
+ render: (t) => <span className="font-mono text-sm font-black text-app-primary">{fmt(Number(t.estimated_value || t.value || 0))}</span>
  },
  {
  key: 'status',
@@ -126,57 +126,51 @@ export default function TenderInboxPage() {
 
  return (
  <div className="p-6 space-y-6 animate-in fade-in duration-500 pb-20">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-200">
- <FileText size={28} className="text-app-text" />
- </div>
- Tender <span className="text-amber-600">Inbox</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
- Request for Proposals & Bidding
- </p>
- </div>
- <button
- onClick={loadData}
- className="h-12 w-12 rounded-2xl border border-app-border flex items-center justify-center text-app-text-faint hover:text-app-text hover:bg-app-bg transition-all"
- >
- <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
- </button>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Briefcase size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Workspace</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Tender <span className="text-app-primary">Hub</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-warning-bg text-app-warning flex items-center justify-center group-hover:scale-110 transition-transform">
  <FileText size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Tenders</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.total}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Tenders</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.total}</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <CalendarDays size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Open</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{stats.open}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Open</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{stats.open}</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <DollarSign size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Pipeline Value</p>
- <p className="text-xl font-black mt-1 tracking-tight text-emerald-600 truncate">{fmt(stats.totalValue)}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Pipeline Value</p>
+ <p className="text-xl font-black mt-1 tracking-tight text-app-primary truncate">{fmt(stats.totalValue)}</p>
  </div>
  </CardContent>
  </Card>
