@@ -63,13 +63,13 @@ function StepProgress({ current }: { current: LobbyStep }) {
                 return (
                     <div key={s.key} className="flex items-center gap-1.5">
                         {i > 0 && (
-                            <div className={clsx('h-px w-5 transition-all duration-500', done ? 'bg-cyan-400' : 'bg-white/10')} />
+                            <div className={clsx('h-px w-5 transition-all duration-500', done ? 'bg-[var(--app-primary)]' : 'bg-[var(--app-surface-hover)]')} />
                         )}
                         <div className={clsx(
                             'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black transition-all duration-300',
-                            active && 'bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400/50 shadow-lg shadow-cyan-400/20',
-                            done && 'bg-emerald-400/15 text-emerald-400',
-                            !active && !done && 'text-white/20',
+                            active && 'bg-[var(--app-primary-light)] text-[var(--app-primary)] ring-1 ring-[var(--app-primary-strong)]/50 shadow-lg shadow-[var(--app-primary-glow)]',
+                            done && 'bg-[var(--app-success-bg)] text-[var(--app-success)]',
+                            !active && !done && 'text-[var(--app-text-faint)]',
                         )}>
                             {done ? <CheckCircle2 size={10} /> : <span className="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9px]">{i + 1}</span>}
                             <span className={clsx(!active && !done && 'hidden sm:inline')}>{s.label}</span>
@@ -86,12 +86,12 @@ const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Site[]; on
     return (
         <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-400">
             <div className="text-center mb-7">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-400/10 border border-cyan-400/20 mb-4">
-                    <MapPin size={12} className="text-cyan-400" />
-                    <span className="text-[11px] font-black text-cyan-400 uppercase tracking-widest">Select Location</span>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/20 mb-4">
+                    <MapPin size={12} className="text-[var(--app-primary)]" />
+                    <span className="text-[11px] font-black text-[var(--app-primary)] uppercase tracking-widest">Select Location</span>
                 </div>
-                <h2 className="text-3xl font-black text-white mb-1">Where are you working?</h2>
-                <p className="text-white/30 text-sm">Choose the site for this session</p>
+                <h2 className="text-3xl font-black text-[var(--app-text)] mb-1">Where are you working?</h2>
+                <p className="text-[var(--app-text-muted)] text-sm">Choose the site for this session</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -105,35 +105,35 @@ const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Site[]; on
                             className={clsx(
                                 'group relative p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.97]',
                                 hasRegs
-                                    ? 'bg-white/[0.04] border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/8'
-                                    : 'bg-white/[0.02] border-white/5 opacity-50 cursor-default'
+                                    ? 'bg-[var(--app-surface)] border-[var(--app-border)] hover:border-[var(--app-primary-strong)]/50 hover:bg-[var(--app-primary-light)]'
+                                    : 'bg-[var(--app-surface-2)] border-[var(--app-border)]/50 opacity-50 cursor-default'
                             )}
                         >
-                            {hasRegs && <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/0 to-indigo-500/0 group-hover:from-cyan-400/8 group-hover:to-indigo-500/8 transition-all duration-300" />}
+                            {hasRegs && <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--app-primary)]/0 to-[var(--app-primary-glow)]/0 group-hover:from-[var(--app-primary)]/10 group-hover:to-[var(--app-primary-glow)]/10 transition-all duration-300" />}
                             <div className="relative">
                                 <div className={clsx(
                                     'w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-all',
-                                    hasRegs ? 'bg-cyan-400/15 text-cyan-400 group-hover:bg-cyan-400 group-hover:text-slate-900' : 'bg-white/5 text-white/20'
+                                    hasRegs ? 'bg-[var(--app-primary-light)] text-[var(--app-primary)] group-hover:bg-[var(--app-primary)] group-hover:text-white' : 'bg-[var(--app-surface-hover)] text-[var(--app-text-faint)]'
                                 )}>
                                     <Building2 size={20} />
                                 </div>
-                                <h3 className="font-black text-white text-base leading-tight">{site.name}</h3>
-                                {site.code && <p className="text-white/25 text-xs font-mono mt-0.5">{site.code}</p>}
-                                {site.address && <p className="text-white/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
+                                <h3 className="font-black text-[var(--app-text)] text-base leading-tight">{site.name}</h3>
+                                {site.code && <p className="text-[var(--app-text-faint)] text-xs font-mono mt-0.5">{site.code}</p>}
+                                {site.address && <p className="text-[var(--app-text-faint)] text-xs mt-1 line-clamp-1">{site.address}</p>}
                                 <div className="flex items-center gap-2 mt-3">
                                     {hasRegs ? (
                                         <>
-                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-white/40 text-[10px] font-bold">
+                                            <span className="px-2 py-0.5 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] text-[10px] font-bold">
                                                 {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
                                             </span>
                                             {hasActive && (
-                                                <span className="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-400 text-[10px] font-black animate-pulse">
+                                                <span className="px-2 py-0.5 rounded-full bg-[var(--app-success-bg)] text-[var(--app-success)] text-[10px] font-black animate-pulse">
                                                     ● Live
                                                 </span>
                                             )}
                                         </>
                                     ) : (
-                                        <span className="px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400/60 text-[10px] font-bold">No registers</span>
+                                        <span className="px-2 py-0.5 rounded-full bg-[var(--app-warning-bg)] text-[var(--app-warning)]/60 text-[10px] font-bold">No registers</span>
                                     )}
                                 </div>
                             </div>
@@ -143,10 +143,10 @@ const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Site[]; on
             </div>
 
             {sites.length === 0 && (
-                <div className="text-center py-16 border border-white/5 rounded-2xl bg-white/[0.02]">
-                    <AlertCircle size={40} className="text-white/10 mx-auto mb-3" />
-                    <p className="text-white/30 font-bold">No sites configured</p>
-                    <p className="text-white/15 text-sm mt-1">Create sites in POS Settings</p>
+                <div className="text-center py-16 border border-[var(--app-border)]/50 rounded-2xl bg-[var(--app-surface-2)]">
+                    <AlertCircle size={40} className="text-[var(--app-text-faint)]/50 mx-auto mb-3" />
+                    <p className="text-[var(--app-text-muted)] font-bold">No sites configured</p>
+                    <p className="text-[var(--app-text-faint)] text-sm mt-1">Create sites in POS Settings</p>
                 </div>
             )}
         </div>
@@ -158,12 +158,12 @@ const RegisterStep = memo(function RegisterStep({ site, onSelect }: { site: Site
     return (
         <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-400">
             <div className="text-center mb-7">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-400/10 border border-indigo-400/20 mb-4">
-                    <Monitor size={12} className="text-indigo-400" />
-                    <span className="text-[11px] font-black text-indigo-400 uppercase tracking-widest">{site.name}</span>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/20 mb-4">
+                    <Monitor size={12} className="text-[var(--app-primary)]" />
+                    <span className="text-[11px] font-black text-[var(--app-primary)] uppercase tracking-widest">{site.name}</span>
                 </div>
-                <h2 className="text-3xl font-black text-white mb-1">Select Register</h2>
-                <p className="text-white/30 text-sm">Choose your workstation</p>
+                <h2 className="text-3xl font-black text-[var(--app-text)] mb-1">Select Register</h2>
+                <p className="text-[var(--app-text-muted)] text-sm">Choose your workstation</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -174,35 +174,35 @@ const RegisterStep = memo(function RegisterStep({ site, onSelect }: { site: Site
                         className={clsx(
                             'group relative p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.97]',
                             reg.isOpen
-                                ? 'bg-emerald-400/8 border-emerald-400/30 hover:border-emerald-400/60'
-                                : 'bg-white/[0.04] border-white/10 hover:border-indigo-400/50 hover:bg-indigo-400/8'
+                                ? 'bg-[var(--app-success-bg)] border-[var(--app-success)]/30 hover:border-[var(--app-success)]/60'
+                                : 'bg-[var(--app-surface)] border-[var(--app-border)] hover:border-[var(--app-primary-strong)]/50 hover:bg-[var(--app-primary-light)]'
                         )}
                     >
                         <div className="flex items-start justify-between mb-3">
                             <div className={clsx(
                                 'w-11 h-11 rounded-xl flex items-center justify-center transition-all',
-                                reg.isOpen ? 'bg-emerald-400/20 text-emerald-400' : 'bg-white/8 text-white/40 group-hover:bg-indigo-400 group-hover:text-white'
+                                reg.isOpen ? 'bg-[var(--app-success-bg)] text-[var(--app-success)]' : 'bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] group-hover:bg-indigo-400 group-hover:text-[var(--app-text)]'
                             )}>
                                 <Monitor size={20} />
                             </div>
                             {reg.isOpen
-                                ? <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-400/20 text-emerald-400 text-[10px] font-black"><Unlock size={9} /> OPEN</span>
-                                : <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 text-white/25 text-[10px] font-black"><Lock size={9} /> CLOSED</span>
+                                ? <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--app-success-bg)] text-[var(--app-success)] text-[10px] font-black"><Unlock size={9} /> OPEN</span>
+                                : <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] text-[10px] font-black"><Lock size={9} /> CLOSED</span>
                             }
                         </div>
-                        <h3 className="font-black text-white text-base">{reg.name}</h3>
+                        <h3 className="font-black text-[var(--app-text)] text-base">{reg.name}</h3>
                         {reg.isOpen && reg.currentSession && (
                             <div className="mt-2 space-y-0.5">
-                                <p className="text-emerald-400/80 text-xs font-bold flex items-center gap-1"><User size={10} />{reg.currentSession.cashierName}</p>
-                                <p className="text-white/20 text-[10px] flex items-center gap-1"><Clock size={10} />Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}</p>
+                                <p className="text-[var(--app-success)]/80 text-xs font-bold flex items-center gap-1"><User size={10} />{reg.currentSession.cashierName}</p>
+                                <p className="text-[var(--app-text-faint)] text-[10px] flex items-center gap-1"><Clock size={10} />Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}</p>
                             </div>
                         )}
                         {reg.allowedAccounts.length > 0 && (
                             <div className="mt-3 flex flex-wrap gap-1">
                                 {reg.allowedAccounts.slice(0, 3).map(a => (
-                                    <span key={a.id} className="px-1.5 py-0.5 rounded bg-white/5 text-white/25 text-[9px] font-bold">{a.name}</span>
+                                    <span key={a.id} className="px-1.5 py-0.5 rounded bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] text-[9px] font-bold">{a.name}</span>
                                 ))}
-                                {reg.allowedAccounts.length > 3 && <span className="px-1.5 py-0.5 rounded bg-white/5 text-white/20 text-[9px]">+{reg.allowedAccounts.length - 3}</span>}
+                                {reg.allowedAccounts.length > 3 && <span className="px-1.5 py-0.5 rounded bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] text-[9px]">+{reg.allowedAccounts.length - 3}</span>}
                             </div>
                         )}
                     </button>
@@ -210,9 +210,9 @@ const RegisterStep = memo(function RegisterStep({ site, onSelect }: { site: Site
             </div>
 
             {site.registers.length === 0 && (
-                <div className="text-center py-16 border border-white/5 rounded-2xl bg-white/[0.02]">
-                    <Monitor size={40} className="text-white/10 mx-auto mb-3" />
-                    <p className="text-white/30 font-bold">No registers at this site</p>
+                <div className="text-center py-16 border border-[var(--app-border)]/50 rounded-2xl bg-[var(--app-surface-2)]">
+                    <Monitor size={40} className="text-[var(--app-text-faint)]/50 mx-auto mb-3" />
+                    <p className="text-[var(--app-text-muted)] font-bold">No registers at this site</p>
                 </div>
             )}
         </div>
@@ -224,11 +224,11 @@ const UserStep = memo(function UserStep({ register, onSelect }: { register: Regi
     return (
         <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-400">
             <div className="text-center mb-8">
-                <div className="w-20 h-20 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-400 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-violet-500/20">
+                <div className="w-20 h-20 rounded-full bg-[var(--app-info-bg)] border border-[var(--app-info)]/30 text-[var(--app-info)] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-sm shadow-[var(--app-info)]/20">
                     <User size={36} />
                 </div>
-                <h2 className="text-3xl font-black text-white mb-1">Who&apos;s working?</h2>
-                <p className="text-white/30 text-sm">{register.name} — tap your name to continue</p>
+                <h2 className="text-3xl font-black text-[var(--app-text)] mb-1">Who&apos;s working?</h2>
+                <p className="text-[var(--app-text-muted)] text-sm">{register.name} — tap your name to continue</p>
             </div>
 
             {register.authorizedUsers.length > 0 ? (
@@ -237,14 +237,14 @@ const UserStep = memo(function UserStep({ register, onSelect }: { register: Regi
                         <button
                             key={u.id}
                             onClick={() => onSelect(u)}
-                            className="group p-5 rounded-2xl border border-white/10 bg-white/[0.04] hover:border-violet-400/50 hover:bg-violet-500/10 transition-all duration-200 text-center active:scale-[0.97]"
+                            className="group p-5 rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface)] hover:border-[var(--app-info)]/50 hover:bg-[var(--app-info-bg)] transition-all duration-200 text-center active:scale-[0.97]"
                         >
-                            <div className="w-16 h-16 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-violet-500 group-hover:text-white transition-all shadow-lg">
+                            <div className="w-16 h-16 rounded-full bg-[var(--app-info-bg)] text-[var(--app-info)] flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-[var(--app-info)] group-hover:text-[var(--app-text)] transition-all shadow-lg">
                                 {u.name?.substring(0, 2).toUpperCase()}
                             </div>
-                            <p className="text-sm font-black text-white">{u.name}</p>
+                            <p className="text-sm font-black text-[var(--app-text)]">{u.name}</p>
                             {!u.hasPin && (
-                                <p className="text-[10px] text-amber-400 mt-1.5 flex items-center justify-center gap-1">
+                                <p className="text-[10px] text-[var(--app-warning)] mt-1.5 flex items-center justify-center gap-1">
                                     <AlertCircle size={9} /> No PIN set
                                 </p>
                             )}
@@ -252,10 +252,10 @@ const UserStep = memo(function UserStep({ register, onSelect }: { register: Regi
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
-                    <AlertCircle size={36} className="text-white/15 mx-auto mb-3" />
-                    <p className="text-white/30 font-bold">No cashiers assigned</p>
-                    <p className="text-white/15 text-sm mt-1">Assign users in POS Configuration</p>
+                <div className="text-center py-12 border border-[var(--app-border)]/50 rounded-2xl bg-[var(--app-surface-2)]">
+                    <AlertCircle size={36} className="text-[var(--app-text-faint)] mx-auto mb-3" />
+                    <p className="text-[var(--app-text-muted)] font-bold">No cashiers assigned</p>
+                    <p className="text-[var(--app-text-faint)] text-sm mt-1">Assign users in POS Configuration</p>
                 </div>
             )}
         </div>
@@ -311,11 +311,11 @@ const PinStep = memo(function PinStep({ register, cashier, onVerified }: {
         <div className={clsx('w-full max-w-sm animate-in fade-in zoom-in-95 duration-400', shake && 'animate-shake')}>
             {/* Avatar */}
             <div className="text-center mb-7">
-                <div className="w-20 h-20 rounded-full bg-cyan-400/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center mx-auto mb-3 font-black text-2xl shadow-xl shadow-cyan-400/20">
+                <div className="w-20 h-20 rounded-full bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/30 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-3 font-black text-2xl shadow-xl shadow-[var(--app-primary-glow)]">
                     {cashier.name.substring(0, 2).toUpperCase()}
                 </div>
-                <h2 className="text-2xl font-black text-white">{cashier.name}</h2>
-                <p className="text-white/30 text-sm mt-0.5">{register.name}</p>
+                <h2 className="text-2xl font-black text-[var(--app-text)]">{cashier.name}</h2>
+                <p className="text-[var(--app-text-muted)] text-sm mt-0.5">{register.name}</p>
             </div>
 
             {/* PIN dots */}
@@ -323,13 +323,13 @@ const PinStep = memo(function PinStep({ register, cashier, onVerified }: {
                 {[0, 1, 2, 3, 4, 5].map(i => (
                     <div key={i} className={clsx(
                         'w-4 h-4 rounded-full border-2 transition-all duration-150',
-                        i < pin.length ? 'bg-cyan-400 border-cyan-400 shadow-lg shadow-cyan-400/50 scale-110' : 'border-white/20 bg-transparent'
+                        i < pin.length ? 'bg-[var(--app-primary)] border-[var(--app-primary-strong)] shadow-lg shadow-[var(--app-primary-glow)] scale-110' : 'border-[var(--app-border)]/80 bg-transparent'
                     )} />
                 ))}
             </div>
 
             {error && (
-                <div className="flex items-center justify-center gap-2 text-rose-400 text-xs font-bold mb-4">
+                <div className="flex items-center justify-center gap-2 text-[var(--app-error)] text-xs font-bold mb-4">
                     <AlertCircle size={13} /> {error}
                 </div>
             )}
@@ -351,11 +351,11 @@ const PinStep = memo(function PinStep({ register, cashier, onVerified }: {
                             'h-14 rounded-2xl font-black text-lg transition-all duration-100 active:scale-90 select-none',
                             key === '✓'
                                 ? pin.length >= 4
-                                    ? 'bg-gradient-to-br from-cyan-400 to-teal-500 text-slate-900 shadow-xl shadow-cyan-400/30 hover:shadow-cyan-400/50'
-                                    : 'bg-white/5 text-white/15 cursor-not-allowed'
+                                    ? 'bg-gradient-to-br from-[var(--app-primary)] to-teal-500 text-white shadow-xl shadow-[var(--app-primary-glow)] hover:shadow-[var(--app-primary-glow)]'
+                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] cursor-not-allowed'
                                 : key === 'DEL'
-                                    ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
-                                    : 'bg-white/8 text-white hover:bg-white/15 border border-white/5'
+                                    ? 'bg-[var(--app-error-bg)] text-[var(--app-error)] hover:bg-[var(--app-error-bg)]'
+                                    : 'bg-[var(--app-surface-hover)] text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] border border-[var(--app-border)]/50'
                         )}
                     >
                         {loading && key === '✓' ? <Loader2 size={18} className="animate-spin mx-auto" /> : key === 'DEL' ? <Delete size={18} className="mx-auto" /> : key}
@@ -478,20 +478,20 @@ const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, cu
         <div className={clsx('w-full animate-in fade-in slide-in-from-bottom-4 duration-400', openingMode === 'advanced' ? 'max-w-2xl' : 'max-w-md')}>
             {/* Session conflict banner */}
             {sessionConflict && (
-                <div className="mb-5 bg-amber-400/10 border border-amber-400/30 rounded-2xl p-5 space-y-4">
+                <div className="mb-5 bg-[var(--app-warning-bg)] border border-[var(--app-warning)]/30 rounded-2xl p-5 space-y-4">
                     <div className="flex items-start gap-3">
-                        <AlertCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+                        <AlertCircle size={20} className="text-[var(--app-warning)] shrink-0 mt-0.5" />
                         <div>
-                            <p className="text-amber-300 font-black text-sm">Register In Use</p>
+                            <p className="text-[var(--app-warning)] font-black text-sm">Register In Use</p>
                             <p className="text-amber-200/60 text-xs mt-1">Opened by <span className="font-bold text-amber-200">{sessionConflict.cashierName}</span>. Use manager override to force close.</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         <input type="password" inputMode="numeric" value={forceClosePin} onChange={e => setForceClosePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                             placeholder="Manager PIN" maxLength={6}
-                            className="flex-1 px-4 py-2.5 bg-black/30 border border-amber-400/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/30 tracking-[0.3em] text-center" />
+                            className="flex-1 px-4 py-2.5 bg-black/30 border border-[var(--app-warning)]/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/30 tracking-[0.3em] text-center" />
                         <button onClick={handleForceClose} disabled={forceCloseLoading || forceClosePin.length < 4}
-                            className="px-4 py-2.5 bg-amber-400 text-slate-900 rounded-xl font-bold text-sm disabled:opacity-40 flex items-center gap-2">
+                            className="px-4 py-2.5 bg-[var(--app-warning)] text-white rounded-xl font-bold text-sm disabled:opacity-40 flex items-center gap-2">
                             {forceCloseLoading ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />} Force Close
                         </button>
                     </div>
@@ -499,20 +499,20 @@ const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, cu
             )}
 
             <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-emerald-400/15 border border-emerald-400/30 text-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-emerald-400/20">
+                <div className="w-16 h-16 rounded-full bg-[var(--app-success-bg)] border border-[var(--app-success)]/30 text-[var(--app-success)] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-sm shadow-[var(--app-success)]/20">
                     <CheckCircle2 size={30} />
                 </div>
-                <h2 className="text-2xl font-black text-white">Open Register</h2>
-                <p className="text-white/30 text-sm mt-0.5">{register.name} · {verifiedUser.name}</p>
+                <h2 className="text-2xl font-black text-[var(--app-text)]">Open Register</h2>
+                <p className="text-[var(--app-text-muted)] text-sm mt-0.5">{register.name} · {verifiedUser.name}</p>
             </div>
 
             {/* Already open by this user */}
             {register.isOpen && register.currentSession && (
-                <div className="bg-amber-400/10 border border-amber-400/25 rounded-2xl p-4 mb-4 text-center">
-                    <p className="text-amber-300 text-sm font-bold">⚠ Register currently open</p>
+                <div className="bg-[var(--app-warning-bg)] border border-amber-400/25 rounded-2xl p-4 mb-4 text-center">
+                    <p className="text-[var(--app-warning)] text-sm font-bold">⚠ Register currently open</p>
                     <p className="text-amber-200/50 text-xs mt-1">By {register.currentSession.cashierName}</p>
                     <button onClick={() => onEnterPOS({ registerId: register.id, registerName: register.name, sessionId: register.currentSession!.id, cashierId: verifiedUser.id, cashierName: verifiedUser.name, warehouseId: register.warehouseId, cashAccountId: register.cashAccountId, allowedAccounts: register.allowedAccounts, siteName: site.name, paymentMethods: register.paymentMethods || [] })}
-                        className="mt-3 px-6 py-2 rounded-xl bg-amber-400 text-slate-900 font-bold text-sm">
+                        className="mt-3 px-6 py-2 rounded-xl bg-[var(--app-warning)] text-white font-bold text-sm">
                         Enter Existing Session →
                     </button>
                 </div>
@@ -521,42 +521,42 @@ const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, cu
             {!register.isOpen && (
                 <>
                     {openingMode === 'standard' ? (
-                        <div className="bg-white/[0.04] rounded-2xl p-6 border border-white/8 space-y-4">
+                        <div className="bg-[var(--app-surface)] rounded-2xl p-6 border border-white/8 space-y-4">
                             <div>
                                 <label className="text-[10px] text-white/35 uppercase tracking-widest font-black block mb-1.5">Opening Cash ({currency})</label>
                                 <div className="relative">
-                                    <Banknote size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25" />
+                                    <Banknote size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--app-text-faint)]" />
                                     <input type="number" value={openingBalance} onChange={e => setOpeningBalance(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-2xl font-black outline-none focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10 transition-all" placeholder="0.00" />
+                                        className="w-full pl-10 pr-4 py-3.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-xl text-[var(--app-text)] text-2xl font-black outline-none focus:border-[var(--app-primary-strong)]/50 focus:ring-4 focus:ring-cyan-400/10 transition-all" placeholder="0.00" />
                                 </div>
                             </div>
                             <div>
                                 <label className="text-[10px] text-white/35 uppercase tracking-widest font-black block mb-1.5">Shift Notes</label>
                                 <textarea value={notes} onChange={e => setNotes(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-cyan-400/50 resize-none h-16" placeholder="Optional notes..." />
+                                    className="w-full px-4 py-2.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-xl text-[var(--app-text)] text-sm outline-none focus:border-[var(--app-primary-strong)]/50 resize-none h-16" placeholder="Optional notes..." />
                             </div>
                             <button onClick={handleOpen} disabled={loading}
-                                className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-500 text-slate-900 font-black text-lg shadow-2xl shadow-cyan-400/25 hover:shadow-cyan-400/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                                className="w-full py-4 rounded-xl bg-gradient-to-r from-[var(--app-primary)] via-teal-400 to-emerald-500 text-white font-black text-lg shadow-2xl shadow-cyan-400/25 hover:shadow-cyan-400/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                                 {loading ? <Loader2 size={22} className="animate-spin" /> : <><Unlock size={22} /> Open & Start Selling</>}
                             </button>
                         </div>
                     ) : (
                         /* Advanced reconciliation — keep existing layout, just update styles */
-                        <div className="bg-white/[0.04] rounded-2xl p-6 border border-violet-500/20 space-y-4">
+                        <div className="bg-[var(--app-surface)] rounded-2xl p-6 border border-violet-500/20 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <BarChart3 size={14} className="text-violet-400" />
-                                    <span className="text-[10px] text-violet-400 uppercase tracking-widest font-black">Advanced Reconciliation</span>
+                                    <BarChart3 size={14} className="text-[var(--app-info)]" />
+                                    <span className="text-[10px] text-[var(--app-info)] uppercase tracking-widest font-black">Advanced Reconciliation</span>
                                 </div>
                                 {!managerUnlocked && (
-                                    <button onClick={() => setManagerUnlocked(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-white/40 hover:text-amber-400 hover:border-amber-400/30 transition-all">
+                                    <button onClick={() => setManagerUnlocked(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-surface-hover)] border border-[var(--app-border)] text-xs font-bold text-[var(--app-text-muted)] hover:text-[var(--app-warning)] hover:border-[var(--app-warning)]/30 transition-all">
                                         <Lock size={11} /> Show Details
                                     </button>
                                 )}
-                                {managerUnlocked && <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20 text-xs font-bold text-emerald-400"><Unlock size={11} /> Full View</span>}
+                                {managerUnlocked && <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-success)]/10 border border-emerald-400/20 text-xs font-bold text-[var(--app-success)]"><Unlock size={11} /> Full View</span>}
                             </div>
 
-                            <div className={clsx('grid gap-2 text-[9px] text-white/25 uppercase tracking-wider font-bold px-1', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                            <div className={clsx('grid gap-2 text-[9px] text-[var(--app-text-faint)] uppercase tracking-wider font-bold px-1', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
                                 <span>Method</span>
                                 {managerUnlocked && <span className="text-center">Software</span>}
                                 <span className="text-center">{managerUnlocked ? 'Real' : 'Balance'}</span>
@@ -565,57 +565,57 @@ const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, cu
                             </div>
 
                             {/* ── CASH row FIRST ── */}
-                            <div className={clsx('grid gap-2 items-center p-1.5 rounded-xl', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px] bg-emerald-400/5 border border-emerald-400/15' : 'grid-cols-[1fr_110px]')}>
+                            <div className={clsx('grid gap-2 items-center p-1.5 rounded-xl', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px] bg-[var(--app-success)]/5 border border-emerald-400/15' : 'grid-cols-[1fr_110px]')}>
                                 <div className="flex items-center gap-2">
-                                    <span className="w-6 h-6 rounded-lg bg-emerald-400/20 text-emerald-400 flex items-center justify-center"><Banknote size={11} /></span>
-                                    <span className="text-xs font-black text-emerald-400">CASH</span>
+                                    <span className="w-6 h-6 rounded-lg bg-[var(--app-success-bg)] text-[var(--app-success)] flex items-center justify-center"><Banknote size={11} /></span>
+                                    <span className="text-xs font-black text-[var(--app-success)]">CASH</span>
                                 </div>
-                                {managerUnlocked && <input type="number" value={cashSoftware} onChange={e => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-emerald-400" />}
-                                <input type="number" value={cashReal} onChange={e => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-emerald-400/10 border border-emerald-400/20 rounded-lg text-emerald-300 text-xs font-bold text-center outline-none" />
+                                {managerUnlocked && <input type="number" value={cashSoftware} onChange={e => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text)] text-xs font-bold text-center outline-none focus:border-emerald-400" />}
+                                <input type="number" value={cashReal} onChange={e => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-[var(--app-success)]/10 border border-emerald-400/20 rounded-lg text-emerald-300 text-xs font-bold text-center outline-none" />
                                 {managerUnlocked && (() => {
                                     const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
-                                    return <span className={clsx('text-xs font-black text-center', diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-white/20')}>{diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) : '—'}</span>;
+                                    return <span className={clsx('text-xs font-black text-center', diff > 0 ? 'text-[var(--app-success)]' : diff < 0 ? 'text-[var(--app-error)]' : 'text-[var(--app-text-faint)]')}>{diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) : '—'}</span>;
                                 })()}
                                 {managerUnlocked && (() => {
                                     const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
                                     return diff !== 0 ? (
                                         <button onClick={() => setCashSoftware(cashReal)}
-                                            className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[10px] font-bold hover:bg-amber-400/25 transition-all">
+                                            className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-amber-400/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
                                             ⇄ Calibrate
                                         </button>
-                                    ) : <span className="text-[10px] text-emerald-400/50 text-center font-bold">✓ OK</span>;
+                                    ) : <span className="text-[10px] text-[var(--app-success)]/50 text-center font-bold">✓ OK</span>;
                                 })()}
                             </div>
 
                             {/* ── Account Book row — read-only, sourced from CashierAddressBook ledger ── */}
-                            <div className={clsx('grid gap-2 items-center rounded-xl px-1.5 py-1 bg-amber-400/5 border border-amber-400/10', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                            <div className={clsx('grid gap-2 items-center rounded-xl px-1.5 py-1 bg-[var(--app-warning)]/5 border border-amber-400/10', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
                                 <div className="flex items-center gap-2">
-                                    <span className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center"><DollarSign size={11} /></span>
+                                    <span className="w-6 h-6 rounded-lg bg-[var(--app-warning)]/20 text-[var(--app-warning)] flex items-center justify-center"><DollarSign size={11} /></span>
                                     <div>
-                                        <span className="text-xs font-black text-amber-400">Account Book</span>
+                                        <span className="text-xs font-black text-[var(--app-warning)]">Account Book</span>
                                         {accountBookLive !== null
-                                            ? <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-400 font-bold">↻ Live</span>
-                                            : <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/25 font-bold">No session</span>
+                                            ? <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--app-success-bg)] text-[var(--app-success)] font-bold">↻ Live</span>
+                                            : <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] font-bold">No session</span>
                                         }
                                     </div>
                                 </div>
-                                {managerUnlocked && <span className="text-white/20 text-xs text-center">—</span>}
+                                {managerUnlocked && <span className="text-[var(--app-text-faint)] text-xs text-center">—</span>}
                                 {/* Read-only display — value comes from CashierAddressBook API */}
-                                <div className="w-full px-2 py-1.5 bg-amber-400/10 border border-amber-400/20 rounded-lg text-amber-300 text-xs font-bold text-center select-all">
+                                <div className="w-full px-2 py-1.5 bg-[var(--app-warning-bg)] border border-[var(--app-warning)]/20 rounded-lg text-[var(--app-warning)] text-xs font-bold text-center select-all">
                                     {parseFloat(accountBookBalance) !== 0
                                         ? parseFloat(accountBookBalance).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
                                         : '0'}
                                 </div>
-                                {managerUnlocked && <span className="text-white/20 text-xs text-center">—</span>}
+                                {managerUnlocked && <span className="text-[var(--app-text-faint)] text-xs text-center">—</span>}
                                 {managerUnlocked && <span />}
                             </div>
 
                             {/* ── Divider before non-cash payment accounts ── */}
                             {reconEntries.length > 0 && (
                                 <div className="flex items-center gap-2 pt-1">
-                                    <div className="flex-1 h-px bg-white/8" />
-                                    <span className="text-[9px] text-white/20 uppercase tracking-widest font-bold">Payment Accounts</span>
-                                    <div className="flex-1 h-px bg-white/8" />
+                                    <div className="flex-1 h-px bg-[var(--app-surface-hover)]" />
+                                    <span className="text-[9px] text-[var(--app-text-faint)] uppercase tracking-widest font-bold">Payment Accounts</span>
+                                    <div className="flex-1 h-px bg-[var(--app-surface-hover)]" />
                                 </div>
                             )}
 
@@ -628,47 +628,47 @@ const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, cu
                                 return (
                                     <div key={entry.account_id} className={clsx('grid gap-2 items-center', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                                            <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-[var(--app-primary)] flex items-center justify-center shrink-0">
                                                 {entry.type === 'BANK' ? <CreditCard size={11} /> : <Smartphone size={11} />}
                                             </span>
-                                            <span className="text-xs font-bold text-white truncate">{entry.name}</span>
+                                            <span className="text-xs font-bold text-[var(--app-text)] truncate">{entry.name}</span>
                                         </div>
                                         {/* Software: hidden from non-managers */}
-                                        {managerUnlocked && <input type="number" value={entry.software} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-indigo-400" />}
+                                        {managerUnlocked && <input type="number" value={entry.software} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-lg text-[var(--app-text)] text-xs font-bold text-center outline-none focus:border-[var(--app-primary-strong)]" />}
                                         {/* Real balance — always visible */}
-                                        <input type="number" value={entry.real} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], real: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-300 text-xs font-bold text-center outline-none focus:border-violet-400" />
+                                        <input type="number" value={entry.real} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], real: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-[var(--app-info-bg)] border border-violet-500/20 rounded-lg text-[var(--app-info)] text-xs font-bold text-center outline-none focus:border-violet-400" />
                                         {/* Calibration delta — hidden from cashier */}
-                                        {managerUnlocked && <span className={clsx('text-xs font-black text-center', cal > 0 ? 'text-emerald-400' : cal < 0 ? 'text-rose-400' : 'text-white/20')}>{cal !== 0 ? (cal > 0 ? '+' : '') + cal.toFixed(0) : '—'}</span>}
+                                        {managerUnlocked && <span className={clsx('text-xs font-black text-center', cal > 0 ? 'text-[var(--app-success)]' : cal < 0 ? 'text-[var(--app-error)]' : 'text-[var(--app-text-faint)]')}>{cal !== 0 ? (cal > 0 ? '+' : '') + cal.toFixed(0) : '—'}</span>}
                                         {/* Calibrate button — only when diff exists and manager is unlocked */}
                                         {managerUnlocked && (diff !== 0 ? (
                                             <button
                                                 onClick={() => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: entry.real }; setReconEntries(c); }}
-                                                className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[10px] font-bold hover:bg-amber-400/25 transition-all">
+                                                className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[var(--app-warning)]/15 border border-amber-400/25 text-[var(--app-warning)] text-[10px] font-bold hover:bg-[var(--app-warning)]/25 transition-all">
                                                 ⇄ Calibrate
                                             </button>
-                                        ) : <span className="text-[10px] text-emerald-400/50 text-center font-bold">✓ OK</span>)}
+                                        ) : <span className="text-[10px] text-[var(--app-success)]/50 text-center font-bold">✓ OK</span>)}
                                     </div>
                                 );
                             })}
 
                             {managerUnlocked ? (
-                                <div className="bg-white/[0.03] rounded-xl p-4 space-y-1.5 border border-white/5">
-                                    <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
-                                    {[['Cash (software)', `${currency}${cashSW.toFixed(0)}`, ''], ['Calibration', `${totalCalibration > 0 ? '+' : ''}${(-totalCalibration).toFixed(0)}`, totalCalibration > 0 ? 'text-rose-400' : totalCalibration < 0 ? 'text-emerald-400' : 'text-white/20'], ['Cash expected', `${currency}${cashExpected.toFixed(0)}`, 'text-white font-black'], ['Counted (real)', `${currency}${cashRL.toFixed(0)}`, ''], ['FINAL GAP', `${finalGap > 0 ? '+' : ''}${currency}${finalGap.toFixed(0)}${finalGap > 0 ? ' EXCESS' : finalGap < 0 ? ' SHORT' : ''}`, finalGap > 0 ? 'text-emerald-400 font-black text-sm' : finalGap < 0 ? 'text-rose-400 font-black text-sm' : 'text-white/20']].map(([l, v, c]) => (
-                                        <div key={l} className="flex justify-between text-xs"><span className="text-white/40">{l}</span><span className={c || 'text-white font-bold'}>{v}</span></div>
+                                <div className="bg-[var(--app-surface-2)] rounded-xl p-4 space-y-1.5 border border-[var(--app-border)]/50">
+                                    <p className="text-[10px] text-[var(--app-text-faint)] uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
+                                    {[['Cash (software)', `${currency}${cashSW.toFixed(0)}`, ''], ['Calibration', `${totalCalibration > 0 ? '+' : ''}${(-totalCalibration).toFixed(0)}`, totalCalibration > 0 ? 'text-[var(--app-error)]' : totalCalibration < 0 ? 'text-[var(--app-success)]' : 'text-[var(--app-text-faint)]'], ['Cash expected', `${currency}${cashExpected.toFixed(0)}`, 'text-[var(--app-text)] font-black'], ['Counted (real)', `${currency}${cashRL.toFixed(0)}`, ''], ['FINAL GAP', `${finalGap > 0 ? '+' : ''}${currency}${finalGap.toFixed(0)}${finalGap > 0 ? ' EXCESS' : finalGap < 0 ? ' SHORT' : ''}`, finalGap > 0 ? 'text-[var(--app-success)] font-black text-sm' : finalGap < 0 ? 'text-[var(--app-error)] font-black text-sm' : 'text-[var(--app-text-faint)]']].map(([l, v, c]) => (
+                                        <div key={l} className="flex justify-between text-xs"><span className="text-[var(--app-text-muted)]">{l}</span><span className={c || 'text-[var(--app-text)] font-bold'}>{v}</span></div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="bg-white/[0.03] rounded-xl p-4 text-center border border-white/5">
-                                    <div className={clsx('text-xl font-black flex items-center justify-center gap-2', finalGap === 0 ? 'text-emerald-400' : 'text-amber-400')}>
+                                <div className="bg-[var(--app-surface-2)] rounded-xl p-4 text-center border border-[var(--app-border)]/50">
+                                    <div className={clsx('text-xl font-black flex items-center justify-center gap-2', finalGap === 0 ? 'text-[var(--app-success)]' : 'text-[var(--app-warning)]')}>
                                         {finalGap === 0 ? <><CheckCircle2 size={24} /> Balanced</> : <><AlertCircle size={24} /> Discrepancy</>}
                                     </div>
-                                    {finalGap !== 0 && <p className="text-xs text-white/25 mt-2">Manager has been notified</p>}
+                                    {finalGap !== 0 && <p className="text-xs text-[var(--app-text-faint)] mt-2">Manager has been notified</p>}
                                 </div>
                             )}
 
-                            <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-violet-400 resize-none h-14" placeholder="Reconciliation notes..." />
-                            <button onClick={handleOpen} disabled={loading} className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-white font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                            <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2.5 bg-[var(--app-surface-hover)] border border-[var(--app-border)] rounded-xl text-[var(--app-text)] text-sm outline-none focus:border-violet-400 resize-none h-14" placeholder="Reconciliation notes..." />
+                            <button onClick={handleOpen} disabled={loading} className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-[var(--app-text)] font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
                                 {loading ? <Loader2 size={22} className="animate-spin" /> : <><ArrowRightLeft size={22} /> Open with Reconciliation</>}
                             </button>
                         </div>
@@ -691,7 +691,7 @@ function BrandPanel() {
     }, []);
 
     useEffect(() => {
-        erpFetch('erp/me/')
+        erpFetch('auth/me/')
             .then(async res => {
                 if (res.ok) {
                     const data = await res.json();
@@ -711,39 +711,39 @@ function BrandPanel() {
         <div className="flex flex-col items-center justify-center h-full p-10 relative">
             {/* Glow rings */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-64 h-64 rounded-full border border-cyan-400/8 animate-pulse" />
-                <div className="absolute w-48 h-48 rounded-full border border-cyan-400/12" />
+                <div className="w-64 h-64 rounded-full border border-[var(--app-primary-strong)]/10 animate-pulse" />
+                <div className="absolute w-48 h-48 rounded-full border border-[var(--app-primary-strong)]/10" />
             </div>
 
             <div className="relative z-10 text-center">
                 {/* Logo / icon */}
                 {orgLogo ? (
-                    <img src={orgLogo} alt={orgName} className="w-20 h-20 rounded-2xl object-contain mx-auto mb-6 shadow-2xl shadow-cyan-400/20" />
+                    <img src={orgLogo} alt={orgName} className="w-20 h-20 rounded-2xl object-contain mx-auto mb-6 shadow-2xl shadow-[var(--app-primary-glow)]" />
                 ) : (
-                    <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-cyan-400/30"
+                    <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-[var(--app-primary-glow)]"
                         style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.25) 0%, rgba(99,102,241,0.25) 100%)', border: '1px solid rgba(0,212,255,0.3)' }}>
-                        <Zap size={36} style={{ color: '#00D4FF' }} />
+                        <Zap size={36} className="text-[var(--app-primary)]" />
                     </div>
                 )}
 
                 {/* Org name */}
                 {orgName && (
-                    <h1 className="text-2xl font-black text-white mb-1 tracking-tight">{orgName}</h1>
+                    <h1 className="text-2xl font-black text-[var(--app-text)] mb-1 tracking-tight">{orgName}</h1>
                 )}
-                <p className="text-xs font-bold uppercase tracking-[0.3em]" style={{ color: 'rgba(0,212,255,0.6)' }}>POS Terminal</p>
+                <p className="text-xs font-bold uppercase tracking-[0.3em]" className="text-[var(--app-primary)]/60">POS Terminal</p>
 
                 {/* Live Clock */}
                 <div className="mt-10">
-                    <div className="font-black text-5xl tracking-tight text-white tabular-nums" style={{ textShadow: '0 0 40px rgba(0,212,255,0.4)' }}>
-                        {hh}<span className="text-cyan-400 animate-pulse">:</span>{mm}<span className="text-white/30 text-3xl">.{ss}</span>
+                    <div className="font-black text-5xl tracking-tight text-[var(--app-text)] tabular-nums" >
+                        {hh}<span className="text-[var(--app-primary)] animate-pulse">:</span>{mm}<span className="text-[var(--app-text-muted)] text-3xl">.{ss}</span>
                     </div>
-                    <p className="text-white/30 text-sm font-medium mt-2">{dateStr}</p>
+                    <p className="text-[var(--app-text-muted)] text-sm font-medium mt-2">{dateStr}</p>
                 </div>
 
                 {/* Bottom badge */}
                 <div className="mt-12 flex items-center justify-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400" />
-                    <span className="text-[11px] font-bold text-white/25 uppercase tracking-widest">System Online</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--app-success)] animate-pulse shadow-sm shadow-sm shadow-[var(--app-success)]" />
+                    <span className="text-[11px] font-bold text-[var(--app-text-faint)] uppercase tracking-widest">System Online</span>
                 </div>
             </div>
         </div>
@@ -793,29 +793,29 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
     /* ── Loading screen ── */
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f1e' }}>
+        <div className="min-h-screen flex items-center justify-center" className="bg-app-bg">
             <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'linear-gradient(135deg,rgba(0,212,255,.2),rgba(99,102,241,.2))', border: '1px solid rgba(0,212,255,.3)' }}>
-                    <Loader2 size={28} className="animate-spin" style={{ color: '#00D4FF' }} />
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" className="bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/30">
+                    <Loader2 size={28} className="animate-spin" className="text-[var(--app-primary)]" />
                 </div>
-                <p className="text-sm font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(0,212,255,0.5)' }}>Loading Registers...</p>
+                <p className="text-sm font-black uppercase tracking-[0.3em]" className="text-[var(--app-primary)]/50">Loading Registers...</p>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen flex overflow-hidden" style={{ background: '#0a0f1e', backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,212,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.04) 0%, transparent 50%)' }}>
+        <div className="min-h-screen flex overflow-hidden" className="bg-app-bg">
             {/* Dot grid overlay */}
-            <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div className="fixed inset-0 pointer-events-none" className="opacity-10 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
             {/* ── LEFT: Brand Panel ── */}
-            <div className="hidden lg:flex w-[35%] shrink-0 flex-col relative border-r" style={{ borderColor: 'rgba(0,212,255,0.1)', background: 'linear-gradient(160deg, rgba(0,212,255,0.05) 0%, rgba(99,102,241,0.04) 100%)' }}>
+            <div className="hidden lg:flex w-[35%] shrink-0 flex-col relative border-r" className="border-r border-[var(--app-primary-strong)]/10 bg-[var(--app-surface-2)]">
                 <BrandPanel />
                 {/* Settings link at bottom */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                    <a href="/sales/pos-settings" className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ color: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(0,212,255,0.8)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.2)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}>
+                    <a href="/sales/pos-settings" className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all" className="text-[var(--app-text-muted)] bg-[var(--app-surface-hover)] border border-[var(--app-border)]"
+                        onMouseEnter={e => {   }}
+                        onMouseLeave={e => {   }}>
                         <Settings2 size={13} /> POS Settings
                     </a>
                 </div>
@@ -827,11 +827,11 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 <header className="px-6 pt-8 pb-0 flex items-center justify-between">
                     <button
                         onClick={goBack}
-                        className={clsx('flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all', step !== 'site' ? 'text-white/50 hover:text-white hover:bg-white/8' : 'invisible')}
+                        className={clsx('flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all', step !== 'site' ? 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]' : 'invisible')}
                     >
                         <ArrowLeft size={16} /> Back
                     </button>
-                    <div className="lg:hidden flex items-center gap-2 text-xs font-bold" style={{ color: 'rgba(0,212,255,0.7)' }}>
+                    <div className="lg:hidden flex items-center gap-2 text-xs font-bold" className="text-[var(--app-primary)]/70">
                         <Zap size={14} /> POS Terminal
                     </div>
                     <div className="w-20" /> {/* spacer */}
@@ -854,16 +854,16 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                 </main>
 
                 {/* Footer */}
-                <footer className="px-6 py-3 flex items-center justify-between border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-                    <p className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.1)' }}>POS v3.1</p>
+                <footer className="px-6 py-3 flex items-center justify-between border-t" className="border-[var(--app-border)]">
+                    <p className="text-[10px] font-mono" className="text-[var(--app-text-faint)]">POS v3.1</p>
                     <a href="/sales/pos-settings"
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
-                        style={{ color: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(0,212,255,0.8)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.2)'; }}>
+                        className="text-[var(--app-text-muted)] bg-[var(--app-surface-hover)] border border-[var(--app-border)]"
+                        
+                        >
                         <Settings2 size={10} /> POS Settings
                     </a>
-                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.1)' }}>{new Date().toLocaleDateString()}</p>
+                    <p className="text-[10px]" className="text-[var(--app-text-faint)]">{new Date().toLocaleDateString()}</p>
                 </footer>
             </div>
         </div>
