@@ -280,22 +280,22 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
  if (loading) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center bg-app-bg">
+ <div className="min-h-screen  flex items-center justify-center bg-app-bg">
  <div className="text-center">
- <Loader2 size={48} className="text-indigo-400 animate-spin mx-auto mb-4" />
- <p className="text-app-text/60 text-sm font-medium tracking-widest uppercase">Loading Registers...</p>
+ <Loader2 size={48} className="text-[var(--app-primary)] animate-spin mx-auto mb-4" />
+ <p className="text-[var(--app-text)]/80 text-sm font-medium tracking-widest uppercase">Loading Registers...</p>
  </div>
  </div>
  );
  }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex flex-col bg-app-bg">
+ <div className="min-h-screen  flex flex-col bg-app-bg">
  {/* Header */}
- <header className="px-8 py-5 flex items-center justify-between border-b border-app-text/5 bg-black/20 backdrop-blur-sm">
+ <header className="px-8 py-5 flex items-center justify-between border-b border-[var(--app-border)]/50 bg-black/20 backdrop-blur-sm">
  <div className="flex items-center gap-4">
  {step !== 'site' && (
- <button onClick={goBack} className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text flex items-center justify-center transition-all active:scale-95">
+ <button onClick={goBack} className="w-10 h-10 rounded-xl bg-[var(--app-surface-2)] hover:bg-[var(--app-surface-hover)] text-app-text flex items-center justify-center transition-all active:scale-95">
  <ArrowLeft size={18} />
  </button>
  )}
@@ -303,25 +303,25 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <h1 className="text-xl font-black text-app-text tracking-tight">
  POS Terminal
  </h1>
- <div className="flex items-center gap-2 text-[10px] text-app-text/40 font-bold uppercase tracking-[0.3em]">
- <span className={step === 'site' ? 'text-indigo-400' : 'text-app-text/20'}>Site</span>
+ <div className="flex items-center gap-2 text-[10px] text-[var(--app-text-muted)] font-bold uppercase tracking-[0.3em]">
+ <span className={step === 'site' ? 'text-[var(--app-primary)]' : 'text-[var(--app-text-faint)]'}>Site</span>
  <ChevronRight size={10} />
- <span className={step === 'register' ? 'text-indigo-400' : 'text-app-text/20'}>Register</span>
+ <span className={step === 'register' ? 'text-[var(--app-primary)]' : 'text-[var(--app-text-faint)]'}>Register</span>
  <ChevronRight size={10} />
- <span className={step === 'user' ? 'text-indigo-400' : 'text-app-text/20'}>Who's working?</span>
+ <span className={step === 'user' ? 'text-[var(--app-primary)]' : 'text-[var(--app-text-faint)]'}>Who's working?</span>
  <ChevronRight size={10} />
- <span className={step === 'pin' ? 'text-indigo-400' : 'text-app-text/20'}>PIN</span>
+ <span className={step === 'pin' ? 'text-[var(--app-primary)]' : 'text-[var(--app-text-faint)]'}>PIN</span>
  <ChevronRight size={10} />
- <span className={step === 'opening' ? 'text-app-primary' : 'text-app-text/20'}>Open</span>
+ <span className={step === 'opening' ? 'text-app-primary' : 'text-[var(--app-text-faint)]'}>Open</span>
  </div>
  </div>
  </div>
  <div className="flex items-center gap-3">
  {selectedSite && (
  <div className="text-right mr-2">
- <p className="text-app-text/80 font-bold text-sm">{selectedSite.name}</p>
+ <p className="text-[var(--app-text)]/90 font-bold text-sm">{selectedSite.name}</p>
  {selectedRegister && (
- <p className="text-indigo-400 text-xs font-bold">{selectedRegister.name}</p>
+ <p className="text-[var(--app-primary)] text-xs font-bold">{selectedRegister.name}</p>
  )}
  </div>
  )}
@@ -330,7 +330,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <>
  <a
  href="/sales/pos-settings"
- className="flex items-center gap-2 px-3 py-2 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text text-xs font-bold transition-all border border-app-text/5 hover:border-app-text/20"
+ className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--app-surface-2)] hover:bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] hover:text-app-text text-xs font-bold transition-all border border-[var(--app-border)]/50 hover:border-[var(--app-border-strong)]/30"
  title="POS Configuration"
  >
  <Settings2 size={14} />
@@ -352,9 +352,9 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  return (
  <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
  <div className="text-center mb-6">
- <Building2 size={40} className="text-indigo-400 mx-auto mb-3" />
+ <Building2 size={40} className="text-[var(--app-primary)] mx-auto mb-3" />
  <h2 className="text-2xl font-black text-app-text mb-1">Select Your Site</h2>
- <p className="text-app-text/40 text-sm">Choose the location where you&apos;re working today</p>
+ <p className="text-[var(--app-text-muted)] text-sm">Choose the location where you&apos;re working today</p>
  </div>
 
  {/* Tabs */}
@@ -364,15 +364,15 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  className={clsx(
  "px-5 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2",
  siteTab === 'with'
- ? "bg-indigo-500 text-app-text shadow-lg shadow-indigo-500/30"
- : "bg-app-text/5 text-app-text/50 hover:bg-app-text/10 hover:text-app-text/80"
+ ? "bg-[var(--app-primary)] text-app-text shadow-lg shadow-[var(--app-primary-glow)]"
+ : "bg-[var(--app-surface-2)] text-[var(--app-text-muted)] hover:bg-[var(--app-surface-hover)] hover:text-[var(--app-text)]/90"
  )}
  >
  <Monitor size={14} />
  With Registers
  <span className={clsx(
  "w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
- siteTab === 'with' ? "bg-app-text/25" : "bg-app-text/10"
+ siteTab === 'with' ? "bg-[var(--app-surface-hover)]" : "bg-[var(--app-surface-hover)]"
  )}>{sitesWithRegisters.length}</span>
  </button>
  <button
@@ -381,14 +381,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  "px-5 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2",
  siteTab === 'without'
  ? "bg-app-warning text-app-text shadow-lg shadow-amber-500/30"
- : "bg-app-text/5 text-app-text/50 hover:bg-app-text/10 hover:text-app-text/80"
+ : "bg-[var(--app-surface-2)] text-[var(--app-text-muted)] hover:bg-[var(--app-surface-hover)] hover:text-[var(--app-text)]/90"
  )}
  >
  <Building2 size={14} />
  Without Registers
  <span className={clsx(
  "w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center",
- siteTab === 'without' ? "bg-app-text/25" : "bg-app-text/10"
+ siteTab === 'without' ? "bg-[var(--app-surface-hover)]" : "bg-[var(--app-surface-hover)]"
  )}>{sitesWithoutRegisters.length}</span>
  </button>
  </div>
@@ -409,27 +409,27 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  className={clsx(
  "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
  site.registers.length > 0
- ? "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
- : "bg-app-surface/[0.02] border-app-text/5 hover:border-app-warning/30 hover:bg-app-warning/5 opacity-70"
+ ? "bg-[var(--app-surface-2)] border-[var(--app-border)] hover:border-[var(--app-primary-strong)] hover:bg-[var(--app-primary)]/10"
+ : "bg-app-surface/[0.02] border-[var(--app-border)]/50 hover:border-app-warning/30 hover:bg-app-warning/5 opacity-70"
  )}
  >
- <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-all" />
+ <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--app-primary)]/0 to-[var(--app-primary-glow)]/0 group-hover:from-[var(--app-primary)]/10 group-hover:to-[var(--app-primary-glow)]/10 transition-all" />
  <div className="relative">
  <div className={clsx(
  "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all",
  site.registers.length > 0
- ? "bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-app-text"
+ ? "bg-[var(--app-primary)]/20 text-[var(--app-primary)] group-hover:bg-[var(--app-primary)] group-hover:text-app-text"
  : "bg-app-warning-bg text-app-warning/60"
  )}>
  <Building2 size={24} />
  </div>
  <h3 className="font-black text-app-text text-lg">{site.name}</h3>
- {site.code && <p className="text-app-text/30 text-xs font-mono">{site.code}</p>}
- {site.address && <p className="text-app-text/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
+ {site.code && <p className="text-[var(--app-text-faint)] text-xs font-mono">{site.code}</p>}
+ {site.address && <p className="text-[var(--app-text-faint)] text-xs mt-1 line-clamp-1">{site.address}</p>}
  <div className="mt-3 flex items-center gap-2">
  {site.registers.length > 0 ? (
  <>
- <span className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/50 text-[10px] font-bold">
+ <span className="px-2 py-0.5 rounded-full bg-[var(--app-surface-2)] text-[var(--app-text-muted)] text-[10px] font-bold">
  {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
  </span>
  {site.registers.some(r => r.isOpen) && (
@@ -452,10 +452,10 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {displayedSites.length === 0 && (
  <div className="text-center py-16">
  <AlertCircle size={48} className="text-app-text/10 mx-auto mb-4" />
- <p className="text-app-text/30 font-bold">
+ <p className="text-[var(--app-text-faint)] font-bold">
  {siteTab === 'with' ? 'No sites with registers' : 'All sites have registers'}
  </p>
- <p className="text-app-text/15 text-sm mt-1">
+ <p className="text-[var(--app-text-faint)] text-sm mt-1">
  {siteTab === 'with' ? 'Create registers in POS Settings' : 'Nothing to configure here'}
  </p>
  </div>
@@ -468,9 +468,9 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {step === 'register' && selectedSite && (
  <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
  <div className="text-center mb-8">
- <Monitor size={40} className="text-indigo-400 mx-auto mb-3" />
+ <Monitor size={40} className="text-[var(--app-primary)] mx-auto mb-3" />
  <h2 className="text-2xl font-black text-app-text mb-1">Select Register</h2>
- <p className="text-app-text/40 text-sm">{selectedSite.name} — Choose your workstation</p>
+ <p className="text-[var(--app-text-muted)] text-sm">{selectedSite.name} — Choose your workstation</p>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
  {selectedSite.registers.map(reg => (
@@ -481,7 +481,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
  reg.isOpen
  ? "bg-app-primary/10 border-app-primary/30 hover:border-emerald-400"
- : "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
+ : "bg-[var(--app-surface-2)] border-[var(--app-border)] hover:border-[var(--app-primary-strong)] hover:bg-[var(--app-primary)]/10"
  )}
  >
  <div className="relative">
@@ -490,7 +490,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
  reg.isOpen
  ? "bg-app-primary/20 text-app-primary"
- : "bg-app-text/10 text-app-text/50 group-hover:bg-indigo-500 group-hover:text-app-text"
+ : "bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] group-hover:bg-[var(--app-primary)] group-hover:text-app-text"
  )}>
  <Monitor size={24} />
  </div>
@@ -499,7 +499,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <Unlock size={10} /> Open
  </span>
  ) : (
- <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-black uppercase">
+ <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--app-surface-2)] text-[var(--app-text-faint)] text-[10px] font-black uppercase">
  <Lock size={10} /> Closed
  </span>
  )}
@@ -510,19 +510,19 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <p className="text-app-primary/80 text-xs font-bold flex items-center gap-1">
  <User size={10} /> {reg.currentSession.cashierName}
  </p>
- <p className="text-app-text/20 text-[10px] flex items-center gap-1">
+ <p className="text-[var(--app-text-faint)] text-[10px] flex items-center gap-1">
  <Clock size={10} /> Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}
  </p>
  </div>
  )}
  <div className="mt-3 flex flex-wrap gap-1">
  {reg.allowedAccounts.slice(0, 4).map(acc => (
- <span key={acc.id} className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/30 text-[9px] font-bold">
+ <span key={acc.id} className="px-1.5 py-0.5 rounded bg-[var(--app-surface-2)] text-[var(--app-text-faint)] text-[9px] font-bold">
  {acc.name}
  </span>
  ))}
  {reg.allowedAccounts.length > 4 && (
- <span className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/20 text-[9px]">
+ <span className="px-1.5 py-0.5 rounded bg-[var(--app-surface-2)] text-[var(--app-text-faint)] text-[9px]">
  +{reg.allowedAccounts.length - 4}
  </span>
  )}
@@ -534,8 +534,8 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {selectedSite.registers.length === 0 && (
  <div className="text-center py-16">
  <Monitor size={48} className="text-app-text/10 mx-auto mb-4" />
- <p className="text-app-text/30 font-bold">No registers at this site</p>
- <p className="text-app-text/15 text-sm mt-1">Create registers in Settings → POS</p>
+ <p className="text-[var(--app-text-faint)] font-bold">No registers at this site</p>
+ <p className="text-[var(--app-text-faint)] text-sm mt-1">Create registers in Settings → POS</p>
  </div>
  )}
  </div>
@@ -545,11 +545,11 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {step === 'user' && selectedRegister && (
  <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
  <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
+ <div className="w-20 h-20 rounded-full bg-[var(--app-primary)]/20 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-4 ring-4 ring-[var(--app-primary-light)]">
  <User size={36} />
  </div>
  <h2 className="text-2xl font-black text-app-text mb-1">Who's working?</h2>
- <p className="text-app-text/40 text-sm">{selectedRegister.name} — tap your name to continue</p>
+ <p className="text-[var(--app-text-muted)] text-sm">{selectedRegister.name} — tap your name to continue</p>
  </div>
  {selectedRegister.authorizedUsers.length > 0 ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -557,9 +557,9 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <button
  key={u.id}
  onClick={() => { setSelectedCashier(u); setStep('pin'); }}
- className="group relative p-5 rounded-2xl border transition-all text-center active:scale-[0.97] bg-app-text/5 border-app-text/10 hover:border-indigo-400 hover:bg-indigo-500/10"
+ className="group relative p-5 rounded-2xl border transition-all text-center active:scale-[0.97] bg-[var(--app-surface-2)] border-[var(--app-border)] hover:border-[var(--app-primary)]/50 hover:bg-[var(--app-primary)]/10"
  >
- <div className="w-14 h-14 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-indigo-500 group-hover:text-app-text transition-all">
+ <div className="w-14 h-14 rounded-full bg-[var(--app-primary)]/20 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-[var(--app-primary)] group-hover:text-app-text transition-all">
  {u.name?.substring(0, 2).toUpperCase()}
  </div>
  <p className="text-sm font-black text-app-text">{u.name}</p>
@@ -573,9 +573,9 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  </div>
  ) : (
  <div className="text-center py-12">
- <AlertCircle size={40} className="text-app-text/20 mx-auto mb-3" />
- <p className="text-app-text/30 font-bold">No cashiers assigned to this register</p>
- <p className="text-app-text/15 text-sm mt-1">Assign users in POS Configuration → Registers</p>
+ <AlertCircle size={40} className="text-[var(--app-text-faint)] mx-auto mb-3" />
+ <p className="text-[var(--app-text-faint)] font-bold">No cashiers assigned to this register</p>
+ <p className="text-[var(--app-text-faint)] text-sm mt-1">Assign users in POS Configuration → Registers</p>
  </div>
  )}
  </div>
@@ -585,14 +585,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {step === 'pin' && selectedRegister && selectedCashier && (
  <div className="w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
  <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
+ <div className="w-20 h-20 rounded-full bg-[var(--app-primary)]/20 text-[var(--app-primary)] flex items-center justify-center mx-auto mb-4 ring-4 ring-[var(--app-primary-light)]">
  <Shield size={36} />
  </div>
  <h2 className="text-2xl font-black text-app-text mb-1">Enter your PIN</h2>
- <p className="text-app-text/40 text-sm">{selectedRegister.name} — {selectedCashier.name}</p>
+ <p className="text-[var(--app-text-muted)] text-sm">{selectedRegister.name} — {selectedCashier.name}</p>
  </div>
 
- <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 backdrop-blur-sm">
+ <div className="bg-[var(--app-surface-2)] rounded-3xl p-6 border border-[var(--app-border)] backdrop-blur-sm">
  {/* PIN display */}
  <div className="flex justify-center gap-3 mb-6">
  {[0, 1, 2, 3, 4, 5].map(i => (
@@ -601,8 +601,8 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  className={clsx(
  "w-10 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
  i < pin.length
- ? "border-indigo-500 bg-indigo-500/20"
- : "border-app-text/10 bg-app-text/5"
+ ? "border-[var(--app-primary-strong)] bg-[var(--app-primary)]/20"
+ : "border-[var(--app-border)] bg-[var(--app-surface-2)]"
  )}
  >
  {i < pin.length && (
@@ -632,7 +632,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  />
 
  {pinError && (
- <div className="flex items-center justify-center gap-2 text-rose-400 text-xs font-bold mb-4 animate-in shake-x">
+ <div className="flex items-center justify-center gap-2 text-[var(--app-error)] text-xs font-bold mb-4 animate-in shake-x">
  <AlertCircle size={14} />
  {pinError}
  </div>
@@ -654,10 +654,10 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  key === '✓'
  ? pin.length >= 4
  ? "bg-app-primary text-app-text hover:bg-emerald-400 shadow-lg shadow-app-primary/20"
- : "bg-app-text/5 text-app-text/20 cursor-not-allowed"
+ : "bg-[var(--app-surface-2)] text-[var(--app-text-faint)] cursor-not-allowed"
  : key === 'C'
- ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30"
- : "bg-app-text/10 text-app-text hover:bg-app-text/20"
+ ? "bg-rose-500/20 text-[var(--app-error)] hover:bg-rose-500/30"
+ : "bg-[var(--app-surface-hover)] text-app-text hover:bg-[var(--app-surface-hover)]"
  )}
  >
  {pinLoading && key === '✓' ? <Loader2 size={20} className="animate-spin mx-auto" /> : key}
@@ -666,11 +666,11 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  </div>
 
  {/* Authorized users hint */}
- <div className="mt-4 pt-4 border-t border-app-text/5">
- <p className="text-[10px] text-app-text/20 uppercase tracking-widest font-bold mb-2 text-center">Authorized Cashiers</p>
+ <div className="mt-4 pt-4 border-t border-[var(--app-border)]/50">
+ <p className="text-[10px] text-[var(--app-text-faint)] uppercase tracking-widest font-bold mb-2 text-center">Authorized Cashiers</p>
  <div className="flex flex-wrap justify-center gap-1.5">
  {selectedRegister.authorizedUsers.map(u => (
- <span key={u.id} className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-bold flex items-center gap-1">
+ <span key={u.id} className="px-2 py-0.5 rounded-full bg-[var(--app-surface-2)] text-[var(--app-text-faint)] text-[10px] font-bold flex items-center gap-1">
  <User size={8} />
  {u.name}
  {!u.hasPin && <span className="text-app-warning/50" title="No PIN set">⚠</span>}
@@ -701,11 +701,11 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
  {/* ── Session Conflict Banner ── */}
  {sessionConflict && (
- <div className="mb-6 bg-app-warning-bg border border-amber-400/30 rounded-2xl p-6 space-y-4">
+ <div className="mb-6 bg-app-warning-bg border border-[var(--app-warning)]/30 rounded-2xl p-6 space-y-4">
  <div className="flex items-start gap-3">
  <AlertCircle size={22} className="text-app-warning shrink-0 mt-0.5" />
  <div>
- <p className="text-amber-300 font-black text-sm">Register In Use</p>
+ <p className="text-[var(--app-warning)] font-black text-sm">Register In Use</p>
  <p className="text-amber-200/70 text-xs mt-1">
  This register is currently open by <span className="font-bold text-amber-200">{sessionConflict.cashierName}</span>.
  Ask them to close their session first, or use a manager override PIN to force-close it.
@@ -721,7 +721,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  onChange={e => setForceClosePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
  placeholder="Manager override PIN"
  maxLength={6}
- className="w-full px-4 py-2.5 bg-black/30 border border-amber-300/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/40 tracking-[0.3em] text-center"
+ className="w-full px-4 py-2.5 bg-black/10 border border-amber-300/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/40 tracking-[0.3em] text-center"
  />
  </div>
  <button
@@ -767,7 +767,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <CheckCircle2 size={32} />
  </div>
  <h2 className="text-2xl font-black text-app-text mb-1">Open Register</h2>
- <p className="text-app-text/40 text-sm">
+ <p className="text-[var(--app-text-muted)] text-sm">
  {selectedRegister.name} — {verifiedUser.name}
  </p>
  </div>
@@ -805,14 +805,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  {/* Mode Badge (auto-set from register config) */}
  {openingMode === 'advanced' && (
  <div className="flex items-center justify-center gap-3 mb-5">
- <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/30">
- <BarChart3 size={14} className="text-violet-400" />
- <span className="text-xs font-black text-violet-400 uppercase tracking-wider">Advanced Reconciliation</span>
+ <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--app-info-bg)] border border-violet-500/30">
+ <BarChart3 size={14} className="text-[var(--app-info)]" />
+ <span className="text-xs font-black text-[var(--app-info)] uppercase tracking-wider">Advanced Reconciliation</span>
  </div>
  {!managerUnlocked && (
  <button
  onClick={() => setShowManagerPin(!showManagerPin)}
- className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-app-text/5 border border-app-text/10 hover:border-app-warning/30 hover:bg-app-warning/5 transition-all text-xs font-bold text-app-text/40 hover:text-app-warning"
+ className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--app-surface-2)] border border-[var(--app-border)] hover:border-app-warning/30 hover:bg-app-warning/5 transition-all text-xs font-bold text-[var(--app-text-muted)] hover:text-app-warning"
  >
  <Lock size={12} />
  Show Details
@@ -837,7 +837,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  onChange={(e) => setManagerPinInput(e.target.value.replace(/\D/g, ''))}
  placeholder="Manager PIN"
  maxLength={6}
- className="w-32 px-3 py-2 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-sm font-bold text-center outline-none focus:border-app-warning"
+ className="w-32 px-3 py-2 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-lg text-app-text text-sm font-bold text-center outline-none focus:border-app-warning"
  onKeyDown={async (e) => {
  if (e.key === 'Enter' && managerPinInput.length >= 4) {
  const { verifyPosPin } = await import('./register-actions');
@@ -865,28 +865,28 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
  {openingMode === 'standard' ? (
  /* ═══ STANDARD MODE ═══ */
- <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 space-y-4">
+ <div className="bg-[var(--app-surface-2)] rounded-3xl p-6 border border-[var(--app-border)] space-y-4">
  <div>
- <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">
+ <label className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-widest font-bold block mb-1.5">
  Opening Cash Balance ({currency})
  </label>
  <div className="relative">
- <Banknote size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text/30" />
+ <Banknote size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--app-text-faint)]" />
  <input
  type="number"
  value={openingBalance}
  onChange={(e) => setOpeningBalance(e.target.value)}
- className="w-full pl-10 pr-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-xl font-black outline-none focus:border-app-primary focus:ring-4 focus:ring-app-primary/20 transition-all"
+ className="w-full pl-10 pr-4 py-3 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-xl text-app-text text-xl font-black outline-none focus:border-app-primary focus:ring-4 focus:ring-app-primary/20 transition-all"
  placeholder="0.00"
  />
  </div>
  </div>
  <div>
- <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">Notes (optional)</label>
+ <label className="text-[10px] text-[var(--app-text-muted)] uppercase tracking-widest font-bold block mb-1.5">Notes (optional)</label>
  <textarea
  value={openingNotes}
  onChange={(e) => setOpeningNotes(e.target.value)}
- className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-app-primary resize-none h-16"
+ className="w-full px-4 py-2 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-xl text-app-text text-sm outline-none focus:border-app-primary resize-none h-16"
  placeholder="Shift notes..."
  />
  </div>
@@ -900,14 +900,14 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  </div>
  ) : (
  /* ═══ ADVANCED MODE — Reconciliation Table ═══ */
- <div className="bg-app-text/5 rounded-3xl p-6 border border-violet-500/20 space-y-4">
+ <div className="bg-[var(--app-surface-2)] rounded-3xl p-6 border border-[var(--app-info)]/20 space-y-4">
  <div className="flex items-center gap-2 mb-2">
- <ArrowRightLeft size={14} className="text-violet-400" />
- <span className="text-[10px] text-violet-400 uppercase tracking-widest font-black">Account Reconciliation</span>
+ <ArrowRightLeft size={14} className="text-[var(--app-info)]" />
+ <span className="text-[10px] text-[var(--app-info)] uppercase tracking-widest font-black">Account Reconciliation</span>
  </div>
 
  {/* Table header — dynamic columns */}
- <div className={clsx("grid gap-2 text-[9px] text-app-text/30 uppercase tracking-wider font-bold px-1",
+ <div className={clsx("grid gap-2 text-[9px] text-[var(--app-text-faint)] uppercase tracking-wider font-bold px-1",
  managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
  )}>
  <span>Payment Method</span>
@@ -927,7 +927,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
  )}>
  <div className="flex items-center gap-2">
- <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+ <span className="w-6 h-6 rounded-lg bg-[var(--app-primary)]/20 text-[var(--app-primary)] flex items-center justify-center shrink-0">
  {entry.type === 'BANK' ? <CreditCard size={12} /> : <Smartphone size={12} />}
  </span>
  <span className="text-xs font-bold text-app-text truncate">{entry.name}</span>
@@ -941,7 +941,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  copy[idx] = { ...copy[idx], software: e.target.value };
  setReconEntries(copy);
  }}
- className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-indigo-500"
+ className="w-full px-2 py-1.5 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-[var(--app-primary-strong)]"
  />
  )}
  <input
@@ -952,12 +952,12 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  copy[idx] = { ...copy[idx], real: e.target.value };
  setReconEntries(copy);
  }}
- className="w-full px-2 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-300 text-xs font-bold text-center outline-none focus:border-violet-500"
+ className="w-full px-2 py-1.5 bg-[var(--app-info-bg)] border border-[var(--app-info)]/20 rounded-lg text-[var(--app-info)] text-xs font-bold text-center outline-none focus:border-violet-500"
  />
  {managerUnlocked && (
  <span className={clsx(
  "text-xs font-black text-center",
- calibration > 0 ? "text-app-primary" : calibration < 0 ? "text-rose-400" : "text-app-text/20"
+ calibration > 0 ? "text-app-primary" : calibration < 0 ? "text-[var(--app-error)]" : "text-[var(--app-text-faint)]"
  )}>
  {calibration > 0 ? '+' : ''}{calibration.toFixed(0)}
  </span>
@@ -967,7 +967,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  })}
 
  {/* Cash row */}
- <div className="border-t border-app-text/10 pt-3">
+ <div className="border-t border-[var(--app-border)] pt-3">
  <div className={clsx("grid gap-2 items-center",
  managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
  )}>
@@ -982,7 +982,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  type="number"
  value={cashSoftware}
  onChange={(e) => setCashSoftware(e.target.value)}
- className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-app-primary"
+ className="w-full px-2 py-1.5 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-app-primary"
  />
  )}
  <input
@@ -991,12 +991,12 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  onChange={(e) => setCashReal(e.target.value)}
  className="w-full px-2 py-1.5 bg-app-primary/10 border border-app-primary/20 rounded-lg text-app-success text-xs font-bold text-center outline-none focus:border-app-primary"
  />
- <span className="text-xs font-black text-app-text/20 text-center">—</span>
+ <span className="text-xs font-black text-[var(--app-text-faint)] text-center">—</span>
  </div>
  </div>
 
  {/* Address Book Balance */}
- <div className="border-t border-app-text/10 pt-3">
+ <div className="border-t border-[var(--app-border)] pt-3">
  <div className={clsx("grid gap-2 items-center",
  managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
  )}>
@@ -1006,43 +1006,43 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  </span>
  <span className="text-xs font-bold text-app-warning">Address Book</span>
  </div>
- {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
+ {managerUnlocked && <span className="text-xs text-[var(--app-text-faint)] text-center">—</span>}
  <input
  type="number"
  value={accountBookBalance}
  onChange={(e) => setAccountBookBalance(e.target.value)}
- className="w-full px-2 py-1.5 bg-app-warning-bg border border-app-warning/20 rounded-lg text-amber-300 text-xs font-bold text-center outline-none focus:border-app-warning"
+ className="w-full px-2 py-1.5 bg-app-warning-bg border border-app-warning/20 rounded-lg text-[var(--app-warning)] text-xs font-bold text-center outline-none focus:border-app-warning"
  />
- {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
+ {managerUnlocked && <span className="text-xs text-[var(--app-text-faint)] text-center">—</span>}
  </div>
  </div>
 
  {/* Summary — different views for cashier vs manager */}
  {managerUnlocked ? (
  /* Manager: Full Calibration Summary */
- <div className="bg-app-surface/50 rounded-2xl p-4 border border-app-text/5 space-y-2">
- <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
+ <div className="bg-app-surface/50 rounded-2xl p-4 border border-[var(--app-border)]/50 space-y-2">
+ <p className="text-[10px] text-[var(--app-text-faint)] uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
  <div className="flex justify-between text-xs">
- <span className="text-app-text/50">Cash (software)</span>
+ <span className="text-[var(--app-text-muted)]">Cash (software)</span>
  <span className="text-app-text font-bold">{currency}{cashSW.toFixed(0)}</span>
  </div>
  <div className="flex justify-between text-xs">
- <span className="text-app-text/50">Calibration adjustment</span>
- <span className={clsx("font-bold", totalCalibration > 0 ? "text-rose-400" : totalCalibration < 0 ? "text-app-primary" : "text-app-text/30")}>
+ <span className="text-[var(--app-text-muted)]">Calibration adjustment</span>
+ <span className={clsx("font-bold", totalCalibration > 0 ? "text-[var(--app-error)]" : totalCalibration < 0 ? "text-app-primary" : "text-[var(--app-text-faint)]")}>
  {totalCalibration > 0 ? '+' : ''}{(-totalCalibration).toFixed(0)}
  </span>
  </div>
- <div className="flex justify-between text-xs border-t border-app-text/5 pt-2">
+ <div className="flex justify-between text-xs border-t border-[var(--app-border)]/50 pt-2">
  <span className="text-app-text/70 font-bold">Cash expected</span>
  <span className="text-app-text font-black">{currency}{cashExpected.toFixed(0)}</span>
  </div>
  <div className="flex justify-between text-xs">
- <span className="text-app-text/50">Cash counted (real)</span>
+ <span className="text-[var(--app-text-muted)]">Cash counted (real)</span>
  <span className="text-app-text font-bold">{currency}{cashRL.toFixed(0)}</span>
  </div>
- <div className="flex justify-between text-xs border-t border-app-text/5 pt-2">
+ <div className="flex justify-between text-xs border-t border-[var(--app-border)]/50 pt-2">
  <span className="text-app-text/70 font-bold">Cash gap</span>
- <span className={clsx("font-black", cashGap > 0 ? "text-app-primary" : cashGap < 0 ? "text-rose-400" : "text-app-text/30")}>
+ <span className={clsx("font-black", cashGap > 0 ? "text-app-primary" : cashGap < 0 ? "text-[var(--app-error)]" : "text-[var(--app-text-faint)]")}>
  {cashGap > 0 ? '+' : ''}{currency}{cashGap.toFixed(0)}
  </span>
  </div>
@@ -1052,23 +1052,23 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <span className="text-app-warning font-bold">{abBal > 0 ? '-' : '+'}{currency}{Math.abs(abBal).toFixed(0)}</span>
  </div>
  )}
- <div className="flex justify-between text-sm border-t border-app-text/10 pt-2">
+ <div className="flex justify-between text-sm border-t border-[var(--app-border)] pt-2">
  <span className="text-app-text font-black">FINAL GAP</span>
  <span className={clsx(
  "font-black text-lg",
- finalGap > 0 ? "text-app-primary" : finalGap < 0 ? "text-rose-400" : "text-app-text/50"
+ finalGap > 0 ? "text-app-primary" : finalGap < 0 ? "text-[var(--app-error)]" : "text-[var(--app-text-muted)]"
  )}>
  {finalGap > 0 ? '+' : ''}{currency}{finalGap.toFixed(0)}
  {finalGap > 0 && <span className="text-[9px] ml-1 text-app-primary/60">EXCESS</span>}
- {finalGap < 0 && <span className="text-[9px] ml-1 text-rose-400/60">SHORTAGE</span>}
- {finalGap === 0 && <span className="text-[9px] ml-1 text-app-text/30">BALANCED</span>}
+ {finalGap < 0 && <span className="text-[9px] ml-1 text-[var(--app-error)]/60">SHORTAGE</span>}
+ {finalGap === 0 && <span className="text-[9px] ml-1 text-[var(--app-text-faint)]">BALANCED</span>}
  </span>
  </div>
  </div>
  ) : (
  /* Cashier: Simple status result */
- <div className="bg-app-surface/50 rounded-2xl p-5 border border-app-text/5 text-center">
- <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-3">Reconciliation Status</p>
+ <div className="bg-app-surface/50 rounded-2xl p-5 border border-[var(--app-border)]/50 text-center">
+ <p className="text-[10px] text-[var(--app-text-faint)] uppercase tracking-widest font-bold mb-3">Reconciliation Status</p>
  <div className={clsx(
  "text-2xl font-black",
  finalGap === 0 ? "text-app-primary" : "text-app-warning"
@@ -1084,7 +1084,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  )}
  </div>
  {finalGap !== 0 && (
- <p className="text-xs text-app-text/30 mt-2">
+ <p className="text-xs text-[var(--app-text-faint)] mt-2">
  Manager has been notified for review
  </p>
  )}
@@ -1095,7 +1095,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  <textarea
  value={openingNotes}
  onChange={(e) => setOpeningNotes(e.target.value)}
- className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-violet-500 resize-none h-14"
+ className="w-full px-4 py-2 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-xl text-app-text text-sm outline-none focus:border-violet-500 resize-none h-14"
  placeholder="Reconciliation notes..."
  />
 
@@ -1117,10 +1117,10 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
  </main>
 
  {/* Footer */}
- <footer className="px-8 py-3 border-t border-app-text/5 bg-black/20 flex items-center justify-between">
- <p className="text-[10px] text-app-text/15 font-mono">POS Terminal v2.9</p>
+ <footer className="px-8 py-3 border-t border-[var(--app-border)]/50 bg-black/20 flex items-center justify-between">
+ <p className="text-[10px] text-[var(--app-text-faint)] font-mono">POS Terminal v2.9</p>
  <div className="flex items-center gap-4">
- <p className="text-[10px] text-app-text/15">{new Date().toLocaleString()}</p>
+ <p className="text-[10px] text-[var(--app-text-faint)]">{new Date().toLocaleString()}</p>
  </div>
  </footer>
  </div>
