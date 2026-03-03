@@ -7,7 +7,7 @@
  *   - Navigation:    Network-first with offline fallback page
  */
 
-const CACHE_NAME = 'pos-cache-v1';
+const CACHE_NAME = 'pos-cache-v2';
 const STATIC_ASSETS = [
     '/sales',
     '/manifest.json',
@@ -57,7 +57,13 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets: cache-first
+    // Next.js static chunks: network-first (content-hashed, never stale)
+    if (url.pathname.startsWith('/_next/static/')) {
+        event.respondWith(networkFirst(event.request));
+        return;
+    }
+
+    // Other static assets (images, fonts): cache-first
     if (isStaticAsset(url.pathname)) {
         event.respondWith(cacheFirst(event.request));
         return;
@@ -131,8 +137,8 @@ async function networkFirst(request) {
 }
 
 function isStaticAsset(pathname) {
-    return /\.(js|css|png|jpg|jpeg|webp|svg|woff2?|ttf|ico)$/.test(pathname) ||
-        pathname.startsWith('/_next/static/');
+    // Exclude /_next/static/ — handled separately with network-first above
+    return /\.(css|png|jpg|jpeg|webp|svg|woff2?|ttf|ico)$/.test(pathname);
 }
 
 // ── Sync Logic ──────────────────────────────────────────────────
