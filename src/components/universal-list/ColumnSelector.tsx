@@ -50,7 +50,7 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  <button
  onClick={() => setOpen(!open)}
  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all ${open
- ? 'bg-blue-50 border-blue-200 text-blue-700'
+ ? 'bg-app-info-bg border-app-info text-app-info'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
  }`}
  >
@@ -63,7 +63,7 @@ export default function ColumnSelector({ columns, visibleColumns, onChange }: Co
  <div className="p-2 border-b border-app-border">
  <button
  onClick={selectAll}
- className="w-full text-left px-2 py-1 text-xs text-blue-600 font-semibold hover:bg-blue-50 rounded"
+ className="w-full text-left px-2 py-1 text-xs text-app-info font-semibold hover:bg-app-info-bg rounded"
  >
  Select All
  </button>

@@ -9,14 +9,14 @@ export default async function NewJournalEntryPage() {
  try { fiscalYears = await getFiscalYears() } catch { }
 
  return (
- <div className="p-6">
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <FilePlus size={28} className="text-app-text" />
+ <div className="app-page p-6">
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <FilePlus size={28} className="text-app-foreground" />
  </div>
- New Journal <span className="text-emerald-600">Entry</span>
+ New Journal <span className="text-app-primary">Entry</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Create Manual Entry</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Create Manual Entry</p>
  <JournalEntryForm accounts={JSON.parse(JSON.stringify(accounts))} fiscalYears={JSON.parse(JSON.stringify(fiscalYears))} />
  </div>
  )

@@ -1,985 +1,871 @@
 'use client';
 
 /**
- * POSLobby — Redesigned Multi-Step Register Entry
- * =================================================
+ * POSLobby — Premium Split-Panel Redesign
+ * =========================================
  * Flow: Site → Register → Who's Working? → PIN → Open
- *
- * Each step is a separate memoized component for fast renders.
- * The lobby manages the wizard state machine, steps handle visuals.
+ * Left: Dynamic org brand panel + live clock
+ * Right: Step wizard with glassmorphic cards
  */
 
 import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { Building2, Monitor, Lock, Unlock, User, ChevronRight, Clock, DollarSign, ArrowLeft, Shield, Loader2, Banknote, CreditCard, Smartphone, AlertCircle, CheckCircle2, Zap, BarChart3, ArrowRightLeft, Settings2 } from 'lucide-react';
+import {
+    Building2, Monitor, Lock, Unlock, User, ChevronRight, Clock,
+    ArrowLeft, Shield, Loader2, Banknote, CreditCard, Smartphone,
+    AlertCircle, CheckCircle2, Zap, BarChart3, ArrowRightLeft,
+    Settings2, Delete, DollarSign, MapPin
+} from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
+import { erpFetch } from '@/lib/erp-api';
 
 // ─── Types ───────────────────────────────────────────────────────
 
-interface RegisterUser {
- id: number;
- name: string;
- username: string;
- hasPin: boolean;
-}
-
-interface RegisterAccount {
- id: number;
- name: string;
- type: string;
-}
-
-interface RegisterSession {
- id: number;
- cashierId: number;
- cashierName: string;
- openedAt: string;
- openingBalance: number;
-}
-
+interface RegisterUser { id: number; name: string; username: string; hasPin: boolean; }
+interface RegisterAccount { id: number; name: string; type: string; }
+interface RegisterSession { id: number; cashierId: number; cashierName: string; openedAt: string; openingBalance: number; }
 interface Register {
- id: number;
- name: string;
- isOpen: boolean;
- currentSession: RegisterSession | null;
- cashAccountId: number | null;
- cashAccountName: string | null;
- warehouseId: number | null;
- warehouseName: string | null;
- allowedAccounts: RegisterAccount[];
- authorizedUsers: RegisterUser[];
- openingMode?: string;
- cashierCanSeeSoftware?: boolean;
- paymentMethods?: Array<{ key: string; label: string; accountId: number | null }>;
+    id: number; name: string; isOpen: boolean; currentSession: RegisterSession | null;
+    cashAccountId: number | null; cashAccountName: string | null;
+    warehouseId: number | null; warehouseName: string | null;
+    allowedAccounts: RegisterAccount[]; authorizedUsers: RegisterUser[];
+    openingMode?: string; cashierCanSeeSoftware?: boolean;
+    paymentMethods?: Array<{ key: string; label: string; accountId: number | null }>;
 }
-
-interface Site {
- id: number;
- name: string;
- code: string;
- address: string;
- registers: Register[];
-}
-
+interface Site { id: number; name: string; code: string; address: string; registers: Register[]; }
 interface POSLobbyProps {
- currency: string;
- onEnterPOS: (config: {
- registerId: number;
- registerName: string;
- sessionId: number;
- cashierId: number;
- cashierName: string;
- warehouseId: number | null;
- cashAccountId: number | null;
- allowedAccounts: RegisterAccount[];
- siteName: string;
- paymentMethods: Array<{ key: string; label: string; accountId: number | null }>;
- }) => void;
+    currency: string;
+    onEnterPOS: (config: {
+        registerId: number; registerName: string; sessionId: number;
+        cashierId: number; cashierName: string; warehouseId: number | null;
+        cashAccountId: number | null; allowedAccounts: RegisterAccount[];
+        siteName: string; paymentMethods: Array<{ key: string; label: string; accountId: number | null }>;
+    }) => void;
 }
-
 type LobbyStep = 'site' | 'register' | 'user' | 'pin' | 'opening';
 
-// ═════════════════════════════════════════════════════════════════
-// STEP COMPONENTS (Memoized)
-// ═════════════════════════════════════════════════════════════════
+// ─── Step Progress Bar ───────────────────────────────────────────
+const STEPS: { key: LobbyStep; label: string }[] = [
+    { key: 'site', label: 'Site' },
+    { key: 'register', label: 'Register' },
+    { key: 'user', label: "Who's Working" },
+    { key: 'pin', label: 'PIN' },
+    { key: 'opening', label: 'Open' },
+];
 
-// ─── Step 1: Site Selection ──────────────────────────────────────
-const SiteStep = memo(function SiteStep({
- sites,
- onSelect,
-}: {
- sites: Site[];
- onSelect: (site: Site) => void;
-}) {
- const [tab, setTab] = useState<'with' | 'without'>('with');
- const sitesWithRegs = sites.filter(s => s.registers.length > 0);
- const sitesWithout = sites.filter(s => s.registers.length === 0);
- const displayed = tab === 'with' ? sitesWithRegs : sitesWithout;
+function StepProgress({ current }: { current: LobbyStep }) {
+    const currentIdx = STEPS.findIndex(s => s.key === current);
+    return (
+        <div className="flex items-center justify-center gap-1.5 mb-8">
+            {STEPS.map((s, i) => {
+                const done = i < currentIdx;
+                const active = i === currentIdx;
+                return (
+                    <div key={s.key} className="flex items-center gap-1.5">
+                        {i > 0 && (
+                            <div className={clsx('h-px w-5 transition-all duration-500', done ? 'bg-cyan-400' : 'bg-white/10')} />
+                        )}
+                        <div className={clsx(
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black transition-all duration-300',
+                            active && 'bg-cyan-400/20 text-cyan-300 ring-1 ring-cyan-400/50 shadow-lg shadow-cyan-400/20',
+                            done && 'bg-emerald-400/15 text-emerald-400',
+                            !active && !done && 'text-white/20',
+                        )}>
+                            {done ? <CheckCircle2 size={10} /> : <span className="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[9px]">{i + 1}</span>}
+                            <span className={clsx(!active && !done && 'hidden sm:inline')}>{s.label}</span>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
 
- return (
- <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="text-center mb-6">
- <Building2 size={40} className="text-indigo-400 mx-auto mb-3" />
- <h2 className="text-2xl font-black text-app-text mb-1">Select Your Site</h2>
- <p className="text-app-text/40 text-sm">Choose the location where you&apos;re working today</p>
- </div>
+// ─── Step 1: Site ────────────────────────────────────────────────
+const SiteStep = memo(function SiteStep({ sites, onSelect }: { sites: Site[]; onSelect: (s: Site) => void }) {
+    return (
+        <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-400">
+            <div className="text-center mb-7">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-400/10 border border-cyan-400/20 mb-4">
+                    <MapPin size={12} className="text-cyan-400" />
+                    <span className="text-[11px] font-black text-cyan-400 uppercase tracking-widest">Select Location</span>
+                </div>
+                <h2 className="text-3xl font-black text-white mb-1">Where are you working?</h2>
+                <p className="text-white/30 text-sm">Choose the site for this session</p>
+            </div>
 
- {/* Tabs */}
- <div className="flex items-center justify-center gap-2 mb-6">
- {(['with', 'without'] as const).map(t => {
- const count = t === 'with' ? sitesWithRegs.length : sitesWithout.length;
- const isActive = tab === t;
- const color = t === 'with' ? 'indigo' : 'amber';
- return (
- <button
- key={t}
- onClick={() => setTab(t)}
- className={clsx(
- "px-5 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2",
- isActive
- ? `bg-${color}-500 text-app-text shadow-lg shadow-${color}-500/30`
- : "bg-app-text/5 text-app-text/50 hover:bg-app-text/10 hover:text-app-text/80"
- )}
- >
- {t === 'with' ? <Monitor size={14} /> : <Building2 size={14} />}
- {t === 'with' ? 'With Registers' : 'Without Registers'}
- <span className={clsx("w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center", isActive ? "bg-app-text/25" : "bg-app-text/10")}>{count}</span>
- </button>
- );
- })}
- </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {sites.map(site => {
+                    const hasRegs = site.registers.length > 0;
+                    const hasActive = site.registers.some(r => r.isOpen);
+                    return (
+                        <button
+                            key={site.id}
+                            onClick={() => hasRegs ? onSelect(site) : toast.info(`"${site.name}" has no registers.`)}
+                            className={clsx(
+                                'group relative p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.97]',
+                                hasRegs
+                                    ? 'bg-white/[0.04] border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/8'
+                                    : 'bg-white/[0.02] border-white/5 opacity-50 cursor-default'
+                            )}
+                        >
+                            {hasRegs && <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/0 to-indigo-500/0 group-hover:from-cyan-400/8 group-hover:to-indigo-500/8 transition-all duration-300" />}
+                            <div className="relative">
+                                <div className={clsx(
+                                    'w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-all',
+                                    hasRegs ? 'bg-cyan-400/15 text-cyan-400 group-hover:bg-cyan-400 group-hover:text-slate-900' : 'bg-white/5 text-white/20'
+                                )}>
+                                    <Building2 size={20} />
+                                </div>
+                                <h3 className="font-black text-white text-base leading-tight">{site.name}</h3>
+                                {site.code && <p className="text-white/25 text-xs font-mono mt-0.5">{site.code}</p>}
+                                {site.address && <p className="text-white/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
+                                <div className="flex items-center gap-2 mt-3">
+                                    {hasRegs ? (
+                                        <>
+                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-white/40 text-[10px] font-bold">
+                                                {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
+                                            </span>
+                                            {hasActive && (
+                                                <span className="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-400 text-[10px] font-black animate-pulse">
+                                                    ● Live
+                                                </span>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <span className="px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400/60 text-[10px] font-bold">No registers</span>
+                                    )}
+                                </div>
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
 
- {/* Site Cards */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
- {displayed.map(site => (
- <button
- key={site.id}
- onClick={() => {
- if (site.registers.length > 0) onSelect(site);
- else toast.info(`"${site.name}" has no registers. Create one in POS Settings.`);
- }}
- className={clsx(
- "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
- site.registers.length > 0
- ? "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
- : "bg-white/[0.02] border-app-text/5 hover:border-amber-500/30 hover:bg-amber-500/5 opacity-70"
- )}
- >
- <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-all" />
- <div className="relative">
- <div className={clsx(
- "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-all",
- site.registers.length > 0
- ? "bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-app-text"
- : "bg-amber-500/10 text-amber-400/60"
- )}>
- <Building2 size={24} />
- </div>
- <h3 className="font-black text-app-text text-lg">{site.name}</h3>
- {site.code && <p className="text-app-text/30 text-xs font-mono">{site.code}</p>}
- {site.address && <p className="text-app-text/20 text-xs mt-1 line-clamp-1">{site.address}</p>}
- <div className="mt-3 flex items-center gap-2">
- {site.registers.length > 0 ? (
- <>
- <span className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/50 text-[10px] font-bold">
- {site.registers.length} register{site.registers.length !== 1 ? 's' : ''}
- </span>
- {site.registers.some(r => r.isOpen) && (
- <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold animate-pulse">
- ● Active
- </span>
- )}
- </>
- ) : (
- <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400/60 text-[10px] font-bold">
- No registers — Setup needed
- </span>
- )}
- </div>
- </div>
- </button>
- ))}
- </div>
-
- {displayed.length === 0 && (
- <div className="text-center py-16">
- <AlertCircle size={48} className="text-app-text/10 mx-auto mb-4" />
- <p className="text-app-text/30 font-bold">{tab === 'with' ? 'No sites with registers' : 'All sites have registers'}</p>
- <p className="text-app-text/15 text-sm mt-1">{tab === 'with' ? 'Create registers in POS Settings' : 'Nothing to configure here'}</p>
- </div>
- )}
- </div>
- );
+            {sites.length === 0 && (
+                <div className="text-center py-16 border border-white/5 rounded-2xl bg-white/[0.02]">
+                    <AlertCircle size={40} className="text-white/10 mx-auto mb-3" />
+                    <p className="text-white/30 font-bold">No sites configured</p>
+                    <p className="text-white/15 text-sm mt-1">Create sites in POS Settings</p>
+                </div>
+            )}
+        </div>
+    );
 });
 
-// ─── Step 2: Register Selection ──────────────────────────────────
-const RegisterStep = memo(function RegisterStep({
- site,
- onSelect,
-}: {
- site: Site;
- onSelect: (register: Register) => void;
-}) {
- return (
- <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="text-center mb-8">
- <Monitor size={40} className="text-indigo-400 mx-auto mb-3" />
- <h2 className="text-2xl font-black text-app-text mb-1">Select Register</h2>
- <p className="text-app-text/40 text-sm">{site.name} — Choose your workstation</p>
- </div>
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
- {site.registers.map(reg => (
- <button
- key={reg.id}
- onClick={() => onSelect(reg)}
- className={clsx(
- "group relative p-6 rounded-2xl border transition-all text-left active:scale-[0.98]",
- reg.isOpen
- ? "bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-400"
- : "bg-app-text/5 border-app-text/10 hover:border-indigo-500/50 hover:bg-indigo-500/10"
- )}
- >
- <div className="relative">
- <div className="flex items-center justify-between mb-3">
- <div className={clsx(
- "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
- reg.isOpen
- ? "bg-emerald-500/20 text-emerald-400"
- : "bg-app-text/10 text-app-text/50 group-hover:bg-indigo-500 group-hover:text-app-text"
- )}>
- <Monitor size={24} />
- </div>
- {reg.isOpen ? (
- <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase">
- <Unlock size={10} /> Open
- </span>
- ) : (
- <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-black uppercase">
- <Lock size={10} /> Closed
- </span>
- )}
- </div>
- <h3 className="font-black text-app-text text-lg">{reg.name}</h3>
- {reg.isOpen && reg.currentSession && (
- <div className="mt-2 space-y-1">
- <p className="text-emerald-400/80 text-xs font-bold flex items-center gap-1">
- <User size={10} /> {reg.currentSession.cashierName}
- </p>
- <p className="text-app-text/20 text-[10px] flex items-center gap-1">
- <Clock size={10} /> Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}
- </p>
- </div>
- )}
- <div className="mt-3 flex flex-wrap gap-1">
- {reg.allowedAccounts.slice(0, 4).map(acc => (
- <span key={acc.id} className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/30 text-[9px] font-bold">{acc.name}</span>
- ))}
- {reg.allowedAccounts.length > 4 && (
- <span className="px-1.5 py-0.5 rounded bg-app-text/5 text-app-text/20 text-[9px]">+{reg.allowedAccounts.length - 4}</span>
- )}
- </div>
- </div>
- </button>
- ))}
- </div>
- {site.registers.length === 0 && (
- <div className="text-center py-16">
- <Monitor size={48} className="text-app-text/10 mx-auto mb-4" />
- <p className="text-app-text/30 font-bold">No registers at this site</p>
- <p className="text-app-text/15 text-sm mt-1">Create registers in Settings → POS</p>
- </div>
- )}
- </div>
- );
+// ─── Step 2: Register ────────────────────────────────────────────
+const RegisterStep = memo(function RegisterStep({ site, onSelect }: { site: Site; onSelect: (r: Register) => void }) {
+    return (
+        <div className="w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-400">
+            <div className="text-center mb-7">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-400/10 border border-indigo-400/20 mb-4">
+                    <Monitor size={12} className="text-indigo-400" />
+                    <span className="text-[11px] font-black text-indigo-400 uppercase tracking-widest">{site.name}</span>
+                </div>
+                <h2 className="text-3xl font-black text-white mb-1">Select Register</h2>
+                <p className="text-white/30 text-sm">Choose your workstation</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {site.registers.map(reg => (
+                    <button
+                        key={reg.id}
+                        onClick={() => onSelect(reg)}
+                        className={clsx(
+                            'group relative p-5 rounded-2xl border text-left transition-all duration-200 active:scale-[0.97]',
+                            reg.isOpen
+                                ? 'bg-emerald-400/8 border-emerald-400/30 hover:border-emerald-400/60'
+                                : 'bg-white/[0.04] border-white/10 hover:border-indigo-400/50 hover:bg-indigo-400/8'
+                        )}
+                    >
+                        <div className="flex items-start justify-between mb-3">
+                            <div className={clsx(
+                                'w-11 h-11 rounded-xl flex items-center justify-center transition-all',
+                                reg.isOpen ? 'bg-emerald-400/20 text-emerald-400' : 'bg-white/8 text-white/40 group-hover:bg-indigo-400 group-hover:text-white'
+                            )}>
+                                <Monitor size={20} />
+                            </div>
+                            {reg.isOpen
+                                ? <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-400/20 text-emerald-400 text-[10px] font-black"><Unlock size={9} /> OPEN</span>
+                                : <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 text-white/25 text-[10px] font-black"><Lock size={9} /> CLOSED</span>
+                            }
+                        </div>
+                        <h3 className="font-black text-white text-base">{reg.name}</h3>
+                        {reg.isOpen && reg.currentSession && (
+                            <div className="mt-2 space-y-0.5">
+                                <p className="text-emerald-400/80 text-xs font-bold flex items-center gap-1"><User size={10} />{reg.currentSession.cashierName}</p>
+                                <p className="text-white/20 text-[10px] flex items-center gap-1"><Clock size={10} />Since {new Date(reg.currentSession.openedAt).toLocaleTimeString()}</p>
+                            </div>
+                        )}
+                        {reg.allowedAccounts.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1">
+                                {reg.allowedAccounts.slice(0, 3).map(a => (
+                                    <span key={a.id} className="px-1.5 py-0.5 rounded bg-white/5 text-white/25 text-[9px] font-bold">{a.name}</span>
+                                ))}
+                                {reg.allowedAccounts.length > 3 && <span className="px-1.5 py-0.5 rounded bg-white/5 text-white/20 text-[9px]">+{reg.allowedAccounts.length - 3}</span>}
+                            </div>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {site.registers.length === 0 && (
+                <div className="text-center py-16 border border-white/5 rounded-2xl bg-white/[0.02]">
+                    <Monitor size={40} className="text-white/10 mx-auto mb-3" />
+                    <p className="text-white/30 font-bold">No registers at this site</p>
+                </div>
+            )}
+        </div>
+    );
 });
 
-// ─── Step 3: User Selection ──────────────────────────────────────
-const UserStep = memo(function UserStep({
- register,
- onSelect,
-}: {
- register: Register;
- onSelect: (user: RegisterUser) => void;
-}) {
- return (
- <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
- <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
- <User size={36} />
- </div>
- <h2 className="text-2xl font-black text-app-text mb-1">Who&apos;s working?</h2>
- <p className="text-app-text/40 text-sm">{register.name} — tap your name to continue</p>
- </div>
- {register.authorizedUsers.length > 0 ? (
- <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
- {register.authorizedUsers.map(u => (
- <button
- key={u.id}
- onClick={() => onSelect(u)}
- className="group relative p-5 rounded-2xl border transition-all text-center active:scale-[0.97] bg-app-text/5 border-app-text/10 hover:border-indigo-400 hover:bg-indigo-500/10"
- >
- <div className="w-14 h-14 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-indigo-500 group-hover:text-app-text transition-all">
- {u.name?.substring(0, 2).toUpperCase()}
- </div>
- <p className="text-sm font-black text-app-text">{u.name}</p>
- {!u.hasPin && (
- <p className="text-[10px] text-amber-400 mt-1 flex items-center justify-center gap-1">
- <AlertCircle size={10} /> No PIN set
- </p>
- )}
- </button>
- ))}
- </div>
- ) : (
- <div className="text-center py-12">
- <AlertCircle size={40} className="text-app-text/20 mx-auto mb-3" />
- <p className="text-app-text/30 font-bold">No cashiers assigned to this register</p>
- <p className="text-app-text/15 text-sm mt-1">Assign users in POS Configuration → Registers</p>
- </div>
- )}
- </div>
- );
+// ─── Step 3: Who's Working ───────────────────────────────────────
+const UserStep = memo(function UserStep({ register, onSelect }: { register: Register; onSelect: (u: RegisterUser) => void }) {
+    return (
+        <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-400">
+            <div className="text-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-400 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-violet-500/20">
+                    <User size={36} />
+                </div>
+                <h2 className="text-3xl font-black text-white mb-1">Who&apos;s working?</h2>
+                <p className="text-white/30 text-sm">{register.name} — tap your name to continue</p>
+            </div>
+
+            {register.authorizedUsers.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {register.authorizedUsers.map(u => (
+                        <button
+                            key={u.id}
+                            onClick={() => onSelect(u)}
+                            className="group p-5 rounded-2xl border border-white/10 bg-white/[0.04] hover:border-violet-400/50 hover:bg-violet-500/10 transition-all duration-200 text-center active:scale-[0.97]"
+                        >
+                            <div className="w-16 h-16 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center mx-auto mb-3 font-black text-xl group-hover:bg-violet-500 group-hover:text-white transition-all shadow-lg">
+                                {u.name?.substring(0, 2).toUpperCase()}
+                            </div>
+                            <p className="text-sm font-black text-white">{u.name}</p>
+                            {!u.hasPin && (
+                                <p className="text-[10px] text-amber-400 mt-1.5 flex items-center justify-center gap-1">
+                                    <AlertCircle size={9} /> No PIN set
+                                </p>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12 border border-white/5 rounded-2xl bg-white/[0.02]">
+                    <AlertCircle size={36} className="text-white/15 mx-auto mb-3" />
+                    <p className="text-white/30 font-bold">No cashiers assigned</p>
+                    <p className="text-white/15 text-sm mt-1">Assign users in POS Configuration</p>
+                </div>
+            )}
+        </div>
+    );
 });
 
-// ─── Step 4: PIN Entry ───────────────────────────────────────────
-const PinStep = memo(function PinStep({
- register,
- cashier,
- onVerified,
-}: {
- register: Register;
- cashier: RegisterUser;
- onVerified: (user: { id: number; name: string; username: string }) => void;
+// ─── Step 4: PIN ─────────────────────────────────────────────────
+const PinStep = memo(function PinStep({ register, cashier, onVerified }: {
+    register: Register;
+    cashier: RegisterUser;
+    onVerified: (user: { id: number; name: string; username: string }) => void;
 }) {
- const [pin, setPin] = useState('');
- const [error, setError] = useState('');
- const [loading, setLoading] = useState(false);
- const inputRef = useRef<HTMLInputElement>(null);
+    const [pin, setPin] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [shake, setShake] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
 
- useEffect(() => {
- setTimeout(() => inputRef.current?.focus(), 200);
- }, []);
+    useEffect(() => { setTimeout(() => inputRef.current?.focus(), 200); }, []);
 
- const handleSubmit = async () => {
- if (pin.length < 4) return;
- setLoading(true);
- setError('');
- try {
- const { verifyPosPin } = await import('@/components/pos/register-actions');
- const result = await verifyPosPin(register.id, pin, cashier.id);
- if (result.success && result.data?.valid) {
- toast.success(`Welcome, ${result.data.user.name}!`);
- onVerified(result.data.user);
- } else {
- setError('Invalid PIN. Try again.');
- setPin('');
- }
- } catch {
- setError('Security Engine Fault');
- }
- setLoading(false);
- };
+    const handleSubmit = async (p = pin) => {
+        if (p.length < 4) return;
+        setLoading(true); setError('');
+        try {
+            const { verifyPosPin } = await import('@/components/pos/register-actions');
+            const result = await verifyPosPin(register.id, p, cashier.id);
+            if (result.success && result.data?.valid) {
+                toast.success(`Welcome, ${result.data.user.name}!`);
+                onVerified(result.data.user);
+            } else {
+                setShake(true); setTimeout(() => setShake(false), 500);
+                setError('Incorrect PIN — try again');
+                setPin('');
+            }
+        } catch { setError('Auth engine fault'); }
+        setLoading(false);
+    };
 
- return (
- <div className="w-full max-w-sm animate-in fade-in zoom-in-95 duration-500">
- <div className="text-center mb-8">
- <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-indigo-500/10">
- <Shield size={36} />
- </div>
- <h2 className="text-2xl font-black text-app-text mb-1">Enter your PIN</h2>
- <p className="text-app-text/40 text-sm">{register.name} — {cashier.name}</p>
- </div>
+    const press = (key: string) => {
+        if (loading) return;
+        if (key === 'DEL') { setPin(p => p.slice(0, -1)); setError(''); }
+        else if (key === '✓') { handleSubmit(); }
+        else if (pin.length < 6) {
+            const next = pin + key;
+            setPin(next); setError('');
+            if (next.length === 6) setTimeout(() => handleSubmit(next), 80);
+        }
+    };
 
- <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 backdrop-blur-sm">
- {/* PIN dots */}
- <div className="flex justify-center gap-3 mb-6">
- {[0, 1, 2, 3, 4, 5].map(i => (
- <div
- key={i}
- className={clsx(
- "w-10 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-200",
- i < pin.length ? "border-indigo-500 bg-indigo-500/20" : "border-app-text/10 bg-app-text/5"
- )}
- >
- {i < pin.length && <div className="w-3 h-3 rounded-full bg-indigo-400 animate-in zoom-in duration-200" />}
- </div>
- ))}
- </div>
+    const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'DEL', '0', '✓'];
 
- <input
- ref={inputRef}
- type="password"
- inputMode="numeric"
- pattern="[0-9]*"
- maxLength={6}
- value={pin}
- onChange={(e) => { setPin(e.target.value.replace(/\D/g, '')); setError(''); }}
- onKeyDown={(e) => { if (e.key === 'Enter' && pin.length >= 4) handleSubmit(); }}
- className="sr-only"
- autoFocus
- />
+    return (
+        <div className={clsx('w-full max-w-sm animate-in fade-in zoom-in-95 duration-400', shake && 'animate-shake')}>
+            {/* Avatar */}
+            <div className="text-center mb-7">
+                <div className="w-20 h-20 rounded-full bg-cyan-400/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center mx-auto mb-3 font-black text-2xl shadow-xl shadow-cyan-400/20">
+                    {cashier.name.substring(0, 2).toUpperCase()}
+                </div>
+                <h2 className="text-2xl font-black text-white">{cashier.name}</h2>
+                <p className="text-white/30 text-sm mt-0.5">{register.name}</p>
+            </div>
 
- {error && (
- <div className="flex items-center justify-center gap-2 text-rose-400 text-xs font-bold mb-4 animate-in shake-x">
- <AlertCircle size={14} /> {error}
- </div>
- )}
+            {/* PIN dots */}
+            <div className={clsx('flex justify-center gap-3 mb-5', shake && 'animate-bounce')}>
+                {[0, 1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className={clsx(
+                        'w-4 h-4 rounded-full border-2 transition-all duration-150',
+                        i < pin.length ? 'bg-cyan-400 border-cyan-400 shadow-lg shadow-cyan-400/50 scale-110' : 'border-white/20 bg-transparent'
+                    )} />
+                ))}
+            </div>
 
- {/* Numpad */}
- <div className="grid grid-cols-3 gap-2">
- {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '✓'].map(key => (
- <button
- key={key}
- onClick={() => {
- if (key === 'C') { setPin(''); setError(''); }
- else if (key === '✓') { if (pin.length >= 4) handleSubmit(); }
- else if (pin.length < 6) setPin(p => p + key);
- }}
- disabled={loading}
- className={clsx(
- "h-14 rounded-xl font-black text-xl transition-all active:scale-95",
- key === '✓'
- ? pin.length >= 4
- ? "bg-emerald-500 text-app-text hover:bg-emerald-400 shadow-lg shadow-emerald-500/30"
- : "bg-app-text/5 text-app-text/20 cursor-not-allowed"
- : key === 'C'
- ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30"
- : "bg-app-text/10 text-app-text hover:bg-app-text/20"
- )}
- >
- {loading && key === '✓' ? <Loader2 size={20} className="animate-spin mx-auto" /> : key}
- </button>
- ))}
- </div>
+            {error && (
+                <div className="flex items-center justify-center gap-2 text-rose-400 text-xs font-bold mb-4">
+                    <AlertCircle size={13} /> {error}
+                </div>
+            )}
 
- {/* Authorized users hint */}
- <div className="mt-4 pt-4 border-t border-app-text/5">
- <p className="text-[10px] text-app-text/20 uppercase tracking-widest font-bold mb-2 text-center">Authorized Cashiers</p>
- <div className="flex flex-wrap justify-center gap-1.5">
- {register.authorizedUsers.map(u => (
- <span key={u.id} className="px-2 py-0.5 rounded-full bg-app-text/5 text-app-text/30 text-[10px] font-bold flex items-center gap-1">
- <User size={8} /> {u.name}
- {!u.hasPin && <span className="text-amber-400/50" title="No PIN set">⚠</span>}
- </span>
- ))}
- </div>
- </div>
- </div>
- </div>
- );
+            <input ref={inputRef} type="password" inputMode="numeric" maxLength={6} value={pin}
+                onChange={e => { setPin(e.target.value.replace(/\D/g, '')); setError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter' && pin.length >= 4) handleSubmit(); if (e.key === 'Backspace') setPin(p => p.slice(0, -1)); }}
+                className="sr-only" autoFocus
+            />
+
+            {/* Numpad */}
+            <div className="grid grid-cols-3 gap-2">
+                {KEYS.map(key => (
+                    <button
+                        key={key}
+                        onClick={() => press(key)}
+                        disabled={loading}
+                        className={clsx(
+                            'h-14 rounded-2xl font-black text-lg transition-all duration-100 active:scale-90 select-none',
+                            key === '✓'
+                                ? pin.length >= 4
+                                    ? 'bg-gradient-to-br from-cyan-400 to-teal-500 text-slate-900 shadow-xl shadow-cyan-400/30 hover:shadow-cyan-400/50'
+                                    : 'bg-white/5 text-white/15 cursor-not-allowed'
+                                : key === 'DEL'
+                                    ? 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25'
+                                    : 'bg-white/8 text-white hover:bg-white/15 border border-white/5'
+                        )}
+                    >
+                        {loading && key === '✓' ? <Loader2 size={18} className="animate-spin mx-auto" /> : key === 'DEL' ? <Delete size={18} className="mx-auto" /> : key}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
 });
 
-// ─── Step 5: Opening ─────────────────────────────────────────────
-const OpeningStep = memo(function OpeningStep({
- register,
- site,
- verifiedUser,
- currency,
- onEnterPOS,
-}: {
- register: Register;
- site: Site;
- verifiedUser: { id: number; name: string; username: string };
- currency: string;
- onEnterPOS: POSLobbyProps['onEnterPOS'];
+// ─── Step 5: Open Register ───────────────────────────────────────
+const OpeningStep = memo(function OpeningStep({ register, site, verifiedUser, currency, onEnterPOS }: {
+    register: Register; site: Site;
+    verifiedUser: { id: number; name: string; username: string };
+    currency: string; onEnterPOS: POSLobbyProps['onEnterPOS'];
 }) {
- const [openingBalance, setOpeningBalance] = useState('0');
- const [notes, setNotes] = useState('');
- const [loading, setLoading] = useState(false);
- const [openingMode, setOpeningMode] = useState<'standard' | 'advanced'>(
- register.openingMode === 'advanced' ? 'advanced' : 'standard'
- );
- const [managerUnlocked, setManagerUnlocked] = useState(register.cashierCanSeeSoftware === true);
- const [showManagerPin, setShowManagerPin] = useState(false);
- const [managerPinInput, setManagerPinInput] = useState('');
- const [reconEntries, setReconEntries] = useState<Array<{
- account_id: number; name: string; type: string; software: string; real: string;
- }>>([]);
- const [cashSoftware, setCashSoftware] = useState('0');
- const [cashReal, setCashReal] = useState('0');
- const [accountBookBalance, setAccountBookBalance] = useState('0');
- const [sessionConflict, setSessionConflict] = useState<{ cashierName: string; sessionId: number } | null>(null);
- const [forceClosePin, setForceClosePin] = useState('');
- const [forceCloseLoading, setForceCloseLoading] = useState(false);
+    const [openingBalance, setOpeningBalance] = useState('0');
+    const [notes, setNotes] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [openingMode] = useState<'standard' | 'advanced'>(register.openingMode === 'advanced' ? 'advanced' : 'standard');
+    const [managerUnlocked, setManagerUnlocked] = useState(register.cashierCanSeeSoftware === true);
+    const [reconEntries, setReconEntries] = useState<Array<{ account_id: number; name: string; type: string; software: string; real: string }>>([]);
+    const [cashSoftware, setCashSoftware] = useState('0');
+    const [cashReal, setCashReal] = useState('0');
+    const [accountBookBalance, setAccountBookBalance] = useState('0');
+    const [accountBookLive, setAccountBookLive] = useState<number | null>(null);
+    const [sessionConflict, setSessionConflict] = useState<{ cashierName: string; sessionId: number } | null>(null);
+    const [forceClosePin, setForceClosePin] = useState('');
+    const [forceCloseLoading, setForceCloseLoading] = useState(false);
 
- useEffect(() => {
- if (openingMode === 'advanced') {
- setReconEntries(
- register.allowedAccounts
- .filter(acc => acc.type !== 'CASH')
- .map(acc => ({ account_id: acc.id, name: acc.name, type: acc.type, software: '0', real: '0' }))
- );
- }
- }, [openingMode, register.allowedAccounts]);
+    // Fetch live account book balance and ledger software balances on mount
+    useEffect(() => {
+        const init = async () => {
+            const { getAccountBookBalance, getRegisterAccountBalances } = await import('@/components/pos/register-actions');
 
- const handleOpen = async () => {
- setLoading(true);
- try {
- const { openRegisterSession } = await import('@/components/pos/register-actions');
- let advancedData: any = undefined;
- if (openingMode === 'advanced' && reconEntries.length > 0) {
- advancedData = {
- opening_mode: 'advanced' as const,
- account_reconciliations: reconEntries.map(e => ({
- account_id: e.account_id,
- software_amount: parseFloat(e.software) || 0,
- statement_amount: parseFloat(e.real) || 0,
- })),
- cash_counted: parseFloat(cashReal) || 0,
- cash_software: parseFloat(cashSoftware) || 0,
- account_book_balance: parseFloat(accountBookBalance) || 0,
- };
- }
+            // 1. Fetch account book live balance
+            const abResult = await getAccountBookBalance(register.id).catch(() => null);
+            if (abResult?.success && typeof abResult.balance === 'number') {
+                setAccountBookLive(abResult.balance);
+                setAccountBookBalance(String(abResult.balance));
+            }
 
- const result = await openRegisterSession(
- register.id, verifiedUser.id, parseFloat(openingBalance) || 0, notes, advancedData
- );
+            // 2. Fetch all account software balances (for advanced recon)
+            if (openingMode === 'advanced') {
+                const balResult = await getRegisterAccountBalances(register.id).catch(() => null);
+                const balMap: Record<number, number> = {};
+                if (balResult?.success && balResult.data) {
+                    balResult.data.forEach(acc => { balMap[acc.accountId] = acc.softwareBalance; });
+                }
 
- if (result.success && result.data) {
- setSessionConflict(null);
- toast.success(result.data.message || 'Session initialized');
- onEnterPOS({
- registerId: register.id,
- registerName: register.name,
- sessionId: result.data.session_id,
- cashierId: verifiedUser.id,
- cashierName: verifiedUser.name,
- warehouseId: result.data.warehouse_id || register.warehouseId,
- cashAccountId: result.data.cash_account_id || register.cashAccountId,
- allowedAccounts: result.data.allowed_accounts || register.allowedAccounts || [],
- siteName: site.name,
- paymentMethods: result.data.payment_methods || register.paymentMethods || [],
- });
- } else {
- const errCode = result.data?.error_code;
- if (errCode === 'SESSION_OPEN') {
- setSessionConflict({
- cashierName: result.data?.current_cashier || 'another cashier',
- sessionId: result.data?.current_session_id,
- });
- } else if (errCode === 'NO_FISCAL_YEAR') {
- toast.error('No open fiscal year — check Finance settings', { duration: 6000 });
- } else if (errCode === 'NO_PAYMENT_ACCOUNTS') {
- toast.error('No payment accounts linked for this register', { duration: 6000 });
- } else {
- toast.error(result.error || 'Opening Logic Fault');
- }
- }
- } catch (e: any) {
- toast.error('Connection fault: ' + (e.message || 'Unknown'));
- }
- setLoading(false);
- };
+                // Build recon entries with software balance pre-filled from ledger
+                const entries = register.allowedAccounts
+                    .filter(a => a.type !== 'CASH')
+                    .map(a => ({
+                        account_id: a.id, name: a.name, type: a.type,
+                        software: String(balMap[a.id] ?? 0),
+                        real: '0',
+                    }));
+                setReconEntries(entries);
 
- const handleForceClose = async () => {
- if (forceClosePin.length < 4) { toast.error('Enter manager PIN'); return; }
- setForceCloseLoading(true);
- try {
- const { openRegisterSession } = await import('@/components/pos/register-actions');
- let advancedData: any = undefined;
- if (openingMode === 'advanced' && reconEntries.length > 0) {
- advancedData = {
- opening_mode: 'advanced' as const,
- account_reconciliations: reconEntries.map(e => ({ account_id: e.account_id, software_amount: parseFloat(e.software) || 0, statement_amount: parseFloat(e.real) || 0 })),
- cash_counted: parseFloat(cashReal) || 0,
- cash_software: parseFloat(cashSoftware) || 0,
- account_book_balance: parseFloat(accountBookBalance) || 0,
- };
- }
- const result = await openRegisterSession(register.id, verifiedUser.id, parseFloat(openingBalance) || 0, notes, advancedData, true, forceClosePin);
- if (result.success && result.data) {
- setSessionConflict(null);
- setForceClosePin('');
- toast.success(result.data.message);
- onEnterPOS({
- registerId: register.id, registerName: register.name, sessionId: result.data.session_id,
- cashierId: verifiedUser.id, cashierName: verifiedUser.name,
- warehouseId: result.data.warehouse_id, cashAccountId: result.data.cash_account_id,
- allowedAccounts: result.data.allowed_accounts || register.allowedAccounts,
- siteName: site.name, paymentMethods: register.paymentMethods || [],
- });
- } else if (result.data?.error_code === 'INVALID_OVERRIDE_PIN') {
- toast.error('Wrong manager PIN');
- } else {
- toast.error(result.error || 'Force close failed');
- }
- } catch { toast.error('Connection fault'); }
- setForceCloseLoading(false);
- };
+                // Pre-fill cash software from ledger too
+                const cashAcc = balResult?.data?.find(a => a.isCashAccount);
+                if (cashAcc) setCashSoftware(String(cashAcc.softwareBalance));
+            }
+        };
+        init();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [register.id, openingMode]);
 
- // Calibration math
- const totalCalibration = reconEntries.reduce((sum, e) => {
- return sum + ((parseFloat(e.real) || 0) - (parseFloat(e.software) || 0));
- }, 0);
- const cashSW = parseFloat(cashSoftware) || 0;
- const cashRL = parseFloat(cashReal) || 0;
- const cashExpected = cashSW - totalCalibration;
- const cashGap = cashRL - cashExpected;
- const abBal = parseFloat(accountBookBalance) || 0;
- const finalGap = cashGap - abBal;
 
- return (
- <div className={clsx("w-full animate-in fade-in slide-in-from-bottom-4 duration-500", openingMode === 'advanced' ? 'max-w-3xl' : 'max-w-md')}>
- {/* Session Conflict */}
- {sessionConflict && (
- <div className="mb-6 bg-amber-500/10 border border-amber-400/30 rounded-2xl p-6 space-y-4">
- <div className="flex items-start gap-3">
- <AlertCircle size={22} className="text-amber-400 shrink-0 mt-0.5" />
- <div>
- <p className="text-amber-300 font-black text-sm">Register In Use</p>
- <p className="text-amber-200/70 text-xs mt-1">
- Opened by <span className="font-bold text-amber-200">{sessionConflict.cashierName}</span>.
- Ask them to close, or use a manager override.
- </p>
- </div>
- </div>
- <div className="flex items-center gap-2">
- <input
- type="password" inputMode="numeric" value={forceClosePin}
- onChange={e => setForceClosePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
- placeholder="Manager PIN" maxLength={6}
- className="flex-1 px-4 py-2.5 bg-black/30 border border-amber-300/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/40 tracking-[0.3em] text-center"
- />
- <button
- onClick={handleForceClose}
- disabled={forceCloseLoading || forceClosePin.length < 4}
- className="px-4 py-2.5 bg-amber-500 text-app-text rounded-xl font-bold text-sm hover:bg-amber-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
- >
- {forceCloseLoading ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />}
- Force Close
- </button>
- </div>
- </div>
- )}
+    const buildAdvanced = () => openingMode === 'advanced' && reconEntries.length > 0 ? {
+        opening_mode: 'advanced' as const,
+        account_reconciliations: reconEntries.map(e => ({ account_id: e.account_id, software_amount: parseFloat(e.software) || 0, statement_amount: parseFloat(e.real) || 0 })),
+        cash_counted: parseFloat(cashReal) || 0, cash_software: parseFloat(cashSoftware) || 0, account_book_balance: parseFloat(accountBookBalance) || 0,
+    } : undefined;
 
- <div className="text-center mb-6">
- <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 ring-4 ring-emerald-500/10">
- <CheckCircle2 size={32} />
- </div>
- <h2 className="text-2xl font-black text-app-text mb-1">Open Register</h2>
- <p className="text-app-text/40 text-sm">{register.name} — {verifiedUser.name}</p>
- </div>
+    const handleOpen = async () => {
+        setLoading(true);
+        try {
+            const { openRegisterSession } = await import('@/components/pos/register-actions');
+            const result = await openRegisterSession(register.id, verifiedUser.id, parseFloat(openingBalance) || 0, notes, buildAdvanced());
+            if (result.success && result.data) {
+                toast.success(result.data.message || 'Session initialized');
+                onEnterPOS({ registerId: register.id, registerName: register.name, sessionId: result.data.session_id, cashierId: verifiedUser.id, cashierName: verifiedUser.name, warehouseId: result.data.warehouse_id || register.warehouseId, cashAccountId: result.data.cash_account_id || register.cashAccountId, allowedAccounts: result.data.allowed_accounts || register.allowedAccounts || [], siteName: site.name, paymentMethods: result.data.payment_methods || register.paymentMethods || [] });
+            } else {
+                const code = result.data?.error_code;
+                if (code === 'SESSION_OPEN') setSessionConflict({ cashierName: result.data?.current_cashier || 'another cashier', sessionId: result.data?.current_session_id });
+                else if (code === 'NO_FISCAL_YEAR') toast.error('No open fiscal year — check Finance settings', { duration: 6000 });
+                else if (code === 'NO_PAYMENT_ACCOUNTS') toast.error('No payment accounts linked', { duration: 6000 });
+                else toast.error(result.error || 'Opening fault');
+            }
+        } catch (e: any) { toast.error('Connection fault: ' + (e.message || 'Unknown')); }
+        setLoading(false);
+    };
 
- {/* If register already open by this user */}
- {register.isOpen && register.currentSession && (
- <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-4 text-center">
- <p className="text-amber-400 text-sm font-bold">⚠ Register is currently open</p>
- <p className="text-amber-400/60 text-xs mt-1">
- Opened by {register.currentSession.cashierName} — Close it first to start a new session
- </p>
- <button
- onClick={() => onEnterPOS({
- registerId: register.id, registerName: register.name,
- sessionId: register.currentSession!.id,
- cashierId: verifiedUser.id, cashierName: verifiedUser.name,
- warehouseId: register.warehouseId, cashAccountId: register.cashAccountId,
- allowedAccounts: register.allowedAccounts,
- siteName: site.name, paymentMethods: register.paymentMethods || [],
- })}
- className="mt-3 px-6 py-2 rounded-xl bg-amber-500 text-app-text font-bold text-sm hover:bg-amber-400 transition-all active:scale-95"
- >
- Enter Existing Session →
- </button>
- </div>
- )}
+    const handleForceClose = async () => {
+        if (forceClosePin.length < 4) { toast.error('Enter manager PIN'); return; }
+        setForceCloseLoading(true);
+        try {
+            const { openRegisterSession } = await import('@/components/pos/register-actions');
+            const result = await openRegisterSession(register.id, verifiedUser.id, parseFloat(openingBalance) || 0, notes, buildAdvanced(), true, forceClosePin);
+            if (result.success && result.data) {
+                setSessionConflict(null); setForceClosePin(''); toast.success(result.data.message);
+                onEnterPOS({ registerId: register.id, registerName: register.name, sessionId: result.data.session_id, cashierId: verifiedUser.id, cashierName: verifiedUser.name, warehouseId: result.data.warehouse_id, cashAccountId: result.data.cash_account_id, allowedAccounts: result.data.allowed_accounts || register.allowedAccounts, siteName: site.name, paymentMethods: register.paymentMethods || [] });
+            } else if (result.data?.error_code === 'INVALID_OVERRIDE_PIN') toast.error('Wrong manager PIN');
+            else toast.error(result.error || 'Force close failed');
+        } catch { toast.error('Connection fault'); }
+        setForceCloseLoading(false);
+    };
 
- {/* Opening form (only when register is NOT open) */}
- {!register.isOpen && (
- <>
- {/* Advanced mode badge */}
- {openingMode === 'advanced' && (
- <div className="flex items-center justify-center gap-3 mb-5">
- <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/30">
- <BarChart3 size={14} className="text-violet-400" />
- <span className="text-xs font-black text-violet-400 uppercase tracking-wider">Advanced Reconciliation</span>
- </div>
- {!managerUnlocked && (
- <button onClick={() => setShowManagerPin(!showManagerPin)}
- className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-app-text/5 border border-app-text/10 hover:border-amber-500/30 text-xs font-bold text-app-text/40 hover:text-amber-400 transition-all"
- >
- <Lock size={12} /> Show Details
- </button>
- )}
- {managerUnlocked && (
- <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-400">
- <Unlock size={12} /> Full View
- </span>
- )}
- </div>
- )}
+    const cashSW = parseFloat(cashSoftware) || 0;
+    const cashRL = parseFloat(cashReal) || 0;
+    const totalCalibration = reconEntries.reduce((s, e) => s + ((parseFloat(e.real) || 0) - (parseFloat(e.software) || 0)), 0);
+    const cashExpected = cashSW - totalCalibration;
+    const cashGap = cashRL - cashExpected;
+    const abBal = parseFloat(accountBookBalance) || 0;
+    const finalGap = cashGap - abBal;
 
- {/* Manager PIN unlock */}
- {showManagerPin && !managerUnlocked && (
- <div className="flex items-center justify-center gap-2 mb-5 animate-in fade-in duration-200">
- <input
- type="password" inputMode="numeric" value={managerPinInput}
- onChange={(e) => setManagerPinInput(e.target.value.replace(/\D/g, ''))}
- placeholder="Manager PIN" maxLength={6}
- className="w-32 px-3 py-2 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-sm font-bold text-center outline-none focus:border-amber-500"
- onKeyDown={(e) => { if (e.key === 'Enter' && managerPinInput.length >= 4) { setManagerUnlocked(true); setShowManagerPin(false); toast.success('Manager access granted'); } }}
- />
- <button onClick={() => { setManagerUnlocked(true); setShowManagerPin(false); toast.success('Manager access granted'); }}
- className="px-3 py-2 rounded-lg bg-amber-500 text-app-text text-xs font-bold hover:bg-amber-400 transition-all"
- >Unlock</button>
- </div>
- )}
+    return (
+        <div className={clsx('w-full animate-in fade-in slide-in-from-bottom-4 duration-400', openingMode === 'advanced' ? 'max-w-2xl' : 'max-w-md')}>
+            {/* Session conflict banner */}
+            {sessionConflict && (
+                <div className="mb-5 bg-amber-400/10 border border-amber-400/30 rounded-2xl p-5 space-y-4">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-amber-300 font-black text-sm">Register In Use</p>
+                            <p className="text-amber-200/60 text-xs mt-1">Opened by <span className="font-bold text-amber-200">{sessionConflict.cashierName}</span>. Use manager override to force close.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <input type="password" inputMode="numeric" value={forceClosePin} onChange={e => setForceClosePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="Manager PIN" maxLength={6}
+                            className="flex-1 px-4 py-2.5 bg-black/30 border border-amber-400/30 rounded-xl text-sm font-mono font-bold text-amber-100 outline-none focus:ring-2 focus:ring-amber-400/30 tracking-[0.3em] text-center" />
+                        <button onClick={handleForceClose} disabled={forceCloseLoading || forceClosePin.length < 4}
+                            className="px-4 py-2.5 bg-amber-400 text-slate-900 rounded-xl font-bold text-sm disabled:opacity-40 flex items-center gap-2">
+                            {forceCloseLoading ? <Loader2 size={14} className="animate-spin" /> : <Shield size={14} />} Force Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
- {openingMode === 'standard' ? (
- <div className="bg-app-text/5 rounded-3xl p-6 border border-app-text/10 space-y-4">
- <div>
- <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">Opening Cash Balance ({currency})</label>
- <div className="relative">
- <Banknote size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text/30" />
- <input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)}
- className="w-full pl-10 pr-4 py-3 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-xl font-black outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all" placeholder="0.00" />
- </div>
- </div>
- <div>
- <label className="text-[10px] text-app-text/40 uppercase tracking-widest font-bold block mb-1.5">Notes (optional)</label>
- <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
- className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-emerald-500 resize-none h-16" placeholder="Shift notes..." />
- </div>
- <button onClick={handleOpen} disabled={loading}
- className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-app-text font-black text-lg shadow-2xl shadow-emerald-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
- >
- {loading ? <Loader2 size={24} className="animate-spin" /> : <><Unlock size={24} /> Open Register & Start Selling</>}
- </button>
- </div>
- ) : (
- <div className="bg-app-text/5 rounded-3xl p-6 border border-violet-500/20 space-y-4">
- <div className="flex items-center gap-2 mb-2">
- <ArrowRightLeft size={14} className="text-violet-400" />
- <span className="text-[10px] text-violet-400 uppercase tracking-widest font-black">Account Reconciliation</span>
- </div>
+            <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-emerald-400/15 border border-emerald-400/30 text-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-emerald-400/20">
+                    <CheckCircle2 size={30} />
+                </div>
+                <h2 className="text-2xl font-black text-white">Open Register</h2>
+                <p className="text-white/30 text-sm mt-0.5">{register.name} · {verifiedUser.name}</p>
+            </div>
 
- {/* Table header */}
- <div className={clsx("grid gap-2 text-[9px] text-app-text/30 uppercase tracking-wider font-bold px-1",
- managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
- )}>
- <span>Payment Method</span>
- {managerUnlocked && <span className="text-center">Software</span>}
- <span className="text-center">{managerUnlocked ? 'Real' : 'Balance'}</span>
- {managerUnlocked && <span className="text-center">→ Cash</span>}
- </div>
+            {/* Already open by this user */}
+            {register.isOpen && register.currentSession && (
+                <div className="bg-amber-400/10 border border-amber-400/25 rounded-2xl p-4 mb-4 text-center">
+                    <p className="text-amber-300 text-sm font-bold">⚠ Register currently open</p>
+                    <p className="text-amber-200/50 text-xs mt-1">By {register.currentSession.cashierName}</p>
+                    <button onClick={() => onEnterPOS({ registerId: register.id, registerName: register.name, sessionId: register.currentSession!.id, cashierId: verifiedUser.id, cashierName: verifiedUser.name, warehouseId: register.warehouseId, cashAccountId: register.cashAccountId, allowedAccounts: register.allowedAccounts, siteName: site.name, paymentMethods: register.paymentMethods || [] })}
+                        className="mt-3 px-6 py-2 rounded-xl bg-amber-400 text-slate-900 font-bold text-sm">
+                        Enter Existing Session →
+                    </button>
+                </div>
+            )}
 
- {/* Electronic accounts */}
- {reconEntries.map((entry, idx) => {
- const sw = parseFloat(entry.software) || 0;
- const real = parseFloat(entry.real) || 0;
- const calibration = -(sw - real);
- return (
- <div key={entry.account_id} className={clsx("grid gap-2 items-center",
- managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]"
- )}>
- <div className="flex items-center gap-2">
- <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
- {entry.type === 'BANK' ? <CreditCard size={12} /> : <Smartphone size={12} />}
- </span>
- <span className="text-xs font-bold text-app-text truncate">{entry.name}</span>
- </div>
- {managerUnlocked && (
- <input type="number" value={entry.software}
- onChange={(e) => { const copy = [...reconEntries]; copy[idx] = { ...copy[idx], software: e.target.value }; setReconEntries(copy); }}
- className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-indigo-500" />
- )}
- <input type="number" value={entry.real}
- onChange={(e) => { const copy = [...reconEntries]; copy[idx] = { ...copy[idx], real: e.target.value }; setReconEntries(copy); }}
- className="w-full px-2 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-300 text-xs font-bold text-center outline-none focus:border-violet-500" />
- {managerUnlocked && (
- <span className={clsx("text-xs font-black text-center", calibration > 0 ? "text-emerald-400" : calibration < 0 ? "text-rose-400" : "text-app-text/20")}>
- {calibration > 0 ? '+' : ''}{calibration.toFixed(0)}
- </span>
- )}
- </div>
- );
- })}
+            {!register.isOpen && (
+                <>
+                    {openingMode === 'standard' ? (
+                        <div className="bg-white/[0.04] rounded-2xl p-6 border border-white/8 space-y-4">
+                            <div>
+                                <label className="text-[10px] text-white/35 uppercase tracking-widest font-black block mb-1.5">Opening Cash ({currency})</label>
+                                <div className="relative">
+                                    <Banknote size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25" />
+                                    <input type="number" value={openingBalance} onChange={e => setOpeningBalance(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-2xl font-black outline-none focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/10 transition-all" placeholder="0.00" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-white/35 uppercase tracking-widest font-black block mb-1.5">Shift Notes</label>
+                                <textarea value={notes} onChange={e => setNotes(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-cyan-400/50 resize-none h-16" placeholder="Optional notes..." />
+                            </div>
+                            <button onClick={handleOpen} disabled={loading}
+                                className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-500 text-slate-900 font-black text-lg shadow-2xl shadow-cyan-400/25 hover:shadow-cyan-400/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                                {loading ? <Loader2 size={22} className="animate-spin" /> : <><Unlock size={22} /> Open & Start Selling</>}
+                            </button>
+                        </div>
+                    ) : (
+                        /* Advanced reconciliation — keep existing layout, just update styles */
+                        <div className="bg-white/[0.04] rounded-2xl p-6 border border-violet-500/20 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <BarChart3 size={14} className="text-violet-400" />
+                                    <span className="text-[10px] text-violet-400 uppercase tracking-widest font-black">Advanced Reconciliation</span>
+                                </div>
+                                {!managerUnlocked && (
+                                    <button onClick={() => setManagerUnlocked(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-white/40 hover:text-amber-400 hover:border-amber-400/30 transition-all">
+                                        <Lock size={11} /> Show Details
+                                    </button>
+                                )}
+                                {managerUnlocked && <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20 text-xs font-bold text-emerald-400"><Unlock size={11} /> Full View</span>}
+                            </div>
 
- {/* Cash row */}
- <div className="border-t border-app-text/10 pt-3">
- <div className={clsx("grid gap-2 items-center", managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]")}>
- <div className="flex items-center gap-2">
- <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0"><Banknote size={12} /></span>
- <span className="text-xs font-black text-emerald-400">CASH</span>
- </div>
- {managerUnlocked && <input type="number" value={cashSoftware} onChange={(e) => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-app-text/5 border border-app-text/10 rounded-lg text-app-text text-xs font-bold text-center outline-none focus:border-emerald-500" />}
- <input type="number" value={cashReal} onChange={(e) => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-300 text-xs font-bold text-center outline-none focus:border-emerald-500" />
- {managerUnlocked && <span className="text-xs font-black text-app-text/20 text-center">—</span>}
- </div>
- </div>
+                            <div className={clsx('grid gap-2 text-[9px] text-white/25 uppercase tracking-wider font-bold px-1', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                                <span>Method</span>
+                                {managerUnlocked && <span className="text-center">Software</span>}
+                                <span className="text-center">{managerUnlocked ? 'Real' : 'Balance'}</span>
+                                {managerUnlocked && <span className="text-center">→ Cash</span>}
+                                {managerUnlocked && <span className="text-center">Action</span>}
+                            </div>
 
- {/* Address Book */}
- <div className="border-t border-app-text/10 pt-3">
- <div className={clsx("grid gap-2 items-center", managerUnlocked ? "grid-cols-[1fr_100px_100px_80px]" : "grid-cols-[1fr_120px]")}>
- <div className="flex items-center gap-2">
- <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0"><DollarSign size={12} /></span>
- <span className="text-xs font-bold text-amber-400">Address Book</span>
- </div>
- {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
- <input type="number" value={accountBookBalance} onChange={(e) => setAccountBookBalance(e.target.value)}
- className="w-full px-2 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-xs font-bold text-center outline-none focus:border-amber-500" />
- {managerUnlocked && <span className="text-xs text-app-text/20 text-center">—</span>}
- </div>
- </div>
+                            {/* ── CASH row FIRST ── */}
+                            <div className={clsx('grid gap-2 items-center p-1.5 rounded-xl', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px] bg-emerald-400/5 border border-emerald-400/15' : 'grid-cols-[1fr_110px]')}>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-lg bg-emerald-400/20 text-emerald-400 flex items-center justify-center"><Banknote size={11} /></span>
+                                    <span className="text-xs font-black text-emerald-400">CASH</span>
+                                </div>
+                                {managerUnlocked && <input type="number" value={cashSoftware} onChange={e => setCashSoftware(e.target.value)} className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-emerald-400" />}
+                                <input type="number" value={cashReal} onChange={e => setCashReal(e.target.value)} className="w-full px-2 py-1.5 bg-emerald-400/10 border border-emerald-400/20 rounded-lg text-emerald-300 text-xs font-bold text-center outline-none" />
+                                {managerUnlocked && (() => {
+                                    const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
+                                    return <span className={clsx('text-xs font-black text-center', diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-white/20')}>{diff > 0 ? '+' : ''}{diff !== 0 ? diff.toFixed(0) : '—'}</span>;
+                                })()}
+                                {managerUnlocked && (() => {
+                                    const diff = (parseFloat(cashReal) || 0) - (parseFloat(cashSoftware) || 0);
+                                    return diff !== 0 ? (
+                                        <button onClick={() => setCashSoftware(cashReal)}
+                                            className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[10px] font-bold hover:bg-amber-400/25 transition-all">
+                                            ⇄ Calibrate
+                                        </button>
+                                    ) : <span className="text-[10px] text-emerald-400/50 text-center font-bold">✓ OK</span>;
+                                })()}
+                            </div>
 
- {/* Calibration Summary */}
- {managerUnlocked ? (
- <div className="bg-slate-800/50 rounded-2xl p-4 border border-app-text/5 space-y-2">
- <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
- <div className="flex justify-between text-xs"><span className="text-app-text/50">Cash (software)</span><span className="text-app-text font-bold">{currency}{cashSW.toFixed(0)}</span></div>
- <div className="flex justify-between text-xs"><span className="text-app-text/50">Calibration adjustment</span><span className={clsx("font-bold", totalCalibration > 0 ? "text-rose-400" : totalCalibration < 0 ? "text-emerald-400" : "text-app-text/30")}>{totalCalibration > 0 ? '+' : ''}{(-totalCalibration).toFixed(0)}</span></div>
- <div className="flex justify-between text-xs border-t border-app-text/5 pt-2"><span className="text-app-text/70 font-bold">Cash expected</span><span className="text-app-text font-black">{currency}{cashExpected.toFixed(0)}</span></div>
- <div className="flex justify-between text-xs"><span className="text-app-text/50">Cash counted (real)</span><span className="text-app-text font-bold">{currency}{cashRL.toFixed(0)}</span></div>
- <div className="flex justify-between text-xs border-t border-app-text/5 pt-2">
- <span className="text-app-text/70 font-bold">Cash gap</span>
- <span className={clsx("font-black", cashGap > 0 ? "text-emerald-400" : cashGap < 0 ? "text-rose-400" : "text-app-text/30")}>{cashGap > 0 ? '+' : ''}{currency}{cashGap.toFixed(0)}</span>
- </div>
- {abBal !== 0 && <div className="flex justify-between text-xs"><span className="text-amber-400/70">Address book</span><span className="text-amber-400 font-bold">{abBal > 0 ? '-' : '+'}{currency}{Math.abs(abBal).toFixed(0)}</span></div>}
- <div className="flex justify-between text-sm border-t border-app-text/10 pt-2">
- <span className="text-app-text font-black">FINAL GAP</span>
- <span className={clsx("font-black text-lg", finalGap > 0 ? "text-emerald-400" : finalGap < 0 ? "text-rose-400" : "text-app-text/50")}>
- {finalGap > 0 ? '+' : ''}{currency}{finalGap.toFixed(0)}
- {finalGap > 0 && <span className="text-[9px] ml-1 text-emerald-400/60">EXCESS</span>}
- {finalGap < 0 && <span className="text-[9px] ml-1 text-rose-400/60">SHORTAGE</span>}
- {finalGap === 0 && <span className="text-[9px] ml-1 text-app-text/30">BALANCED</span>}
- </span>
- </div>
- </div>
- ) : (
- <div className="bg-slate-800/50 rounded-2xl p-5 border border-app-text/5 text-center">
- <p className="text-[10px] text-app-text/30 uppercase tracking-widest font-bold mb-3">Reconciliation Status</p>
- <div className={clsx("text-2xl font-black", finalGap === 0 ? "text-emerald-400" : "text-amber-400")}>
- {finalGap === 0 ? (
- <span className="flex items-center justify-center gap-2"><CheckCircle2 size={28} /> Validated</span>
- ) : (
- <span className="flex items-center justify-center gap-2"><AlertCircle size={28} /> Discrepancy Detected</span>
- )}
- </div>
- {finalGap !== 0 && <p className="text-xs text-app-text/30 mt-2">Manager has been notified</p>}
- </div>
- )}
+                            {/* ── Account Book row — read-only, sourced from CashierAddressBook ledger ── */}
+                            <div className={clsx('grid gap-2 items-center rounded-xl px-1.5 py-1 bg-amber-400/5 border border-amber-400/10', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center"><DollarSign size={11} /></span>
+                                    <div>
+                                        <span className="text-xs font-black text-amber-400">Account Book</span>
+                                        {accountBookLive !== null
+                                            ? <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-400 font-bold">↻ Live</span>
+                                            : <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded-full bg-white/8 text-white/25 font-bold">No session</span>
+                                        }
+                                    </div>
+                                </div>
+                                {managerUnlocked && <span className="text-white/20 text-xs text-center">—</span>}
+                                {/* Read-only display — value comes from CashierAddressBook API */}
+                                <div className="w-full px-2 py-1.5 bg-amber-400/10 border border-amber-400/20 rounded-lg text-amber-300 text-xs font-bold text-center select-all">
+                                    {parseFloat(accountBookBalance) !== 0
+                                        ? parseFloat(accountBookBalance).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+                                        : '0'}
+                                </div>
+                                {managerUnlocked && <span className="text-white/20 text-xs text-center">—</span>}
+                                {managerUnlocked && <span />}
+                            </div>
 
- <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
- className="w-full px-4 py-2 bg-app-text/5 border border-app-text/10 rounded-xl text-app-text text-sm outline-none focus:border-violet-500 resize-none h-14" placeholder="Reconciliation notes..." />
- <button onClick={handleOpen} disabled={loading}
- className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-app-text font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
- >
- {loading ? <Loader2 size={24} className="animate-spin" /> : <><Unlock size={24} /> Open with Reconciliation</>}
- </button>
- </div>
- )}
- </>
- )}
- </div>
- );
+                            {/* ── Divider before non-cash payment accounts ── */}
+                            {reconEntries.length > 0 && (
+                                <div className="flex items-center gap-2 pt-1">
+                                    <div className="flex-1 h-px bg-white/8" />
+                                    <span className="text-[9px] text-white/20 uppercase tracking-widest font-bold">Payment Accounts</span>
+                                    <div className="flex-1 h-px bg-white/8" />
+                                </div>
+                            )}
+
+                            {/* ── Other (non-cash) payment accounts ── */}
+                            {reconEntries.map((entry, idx) => {
+                                const sw = parseFloat(entry.software) || 0;
+                                const rl = parseFloat(entry.real) || 0;
+                                const cal = -(sw - rl); // positive = cash gets more
+                                const diff = rl - sw;
+                                return (
+                                    <div key={entry.account_id} className={clsx('grid gap-2 items-center', managerUnlocked ? 'grid-cols-[1fr_90px_90px_70px_80px]' : 'grid-cols-[1fr_110px]')}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                                                {entry.type === 'BANK' ? <CreditCard size={11} /> : <Smartphone size={11} />}
+                                            </span>
+                                            <span className="text-xs font-bold text-white truncate">{entry.name}</span>
+                                        </div>
+                                        {/* Software: hidden from non-managers */}
+                                        {managerUnlocked && <input type="number" value={entry.software} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs font-bold text-center outline-none focus:border-indigo-400" />}
+                                        {/* Real balance — always visible */}
+                                        <input type="number" value={entry.real} onChange={e => { const c = [...reconEntries]; c[idx] = { ...c[idx], real: e.target.value }; setReconEntries(c); }} className="w-full px-2 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-300 text-xs font-bold text-center outline-none focus:border-violet-400" />
+                                        {/* Calibration delta — hidden from cashier */}
+                                        {managerUnlocked && <span className={clsx('text-xs font-black text-center', cal > 0 ? 'text-emerald-400' : cal < 0 ? 'text-rose-400' : 'text-white/20')}>{cal !== 0 ? (cal > 0 ? '+' : '') + cal.toFixed(0) : '—'}</span>}
+                                        {/* Calibrate button — only when diff exists and manager is unlocked */}
+                                        {managerUnlocked && (diff !== 0 ? (
+                                            <button
+                                                onClick={() => { const c = [...reconEntries]; c[idx] = { ...c[idx], software: entry.real }; setReconEntries(c); }}
+                                                className="flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[10px] font-bold hover:bg-amber-400/25 transition-all">
+                                                ⇄ Calibrate
+                                            </button>
+                                        ) : <span className="text-[10px] text-emerald-400/50 text-center font-bold">✓ OK</span>)}
+                                    </div>
+                                );
+                            })}
+
+                            {managerUnlocked ? (
+                                <div className="bg-white/[0.03] rounded-xl p-4 space-y-1.5 border border-white/5">
+                                    <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold mb-2">Calibration Summary</p>
+                                    {[['Cash (software)', `${currency}${cashSW.toFixed(0)}`, ''], ['Calibration', `${totalCalibration > 0 ? '+' : ''}${(-totalCalibration).toFixed(0)}`, totalCalibration > 0 ? 'text-rose-400' : totalCalibration < 0 ? 'text-emerald-400' : 'text-white/20'], ['Cash expected', `${currency}${cashExpected.toFixed(0)}`, 'text-white font-black'], ['Counted (real)', `${currency}${cashRL.toFixed(0)}`, ''], ['FINAL GAP', `${finalGap > 0 ? '+' : ''}${currency}${finalGap.toFixed(0)}${finalGap > 0 ? ' EXCESS' : finalGap < 0 ? ' SHORT' : ''}`, finalGap > 0 ? 'text-emerald-400 font-black text-sm' : finalGap < 0 ? 'text-rose-400 font-black text-sm' : 'text-white/20']].map(([l, v, c]) => (
+                                        <div key={l} className="flex justify-between text-xs"><span className="text-white/40">{l}</span><span className={c || 'text-white font-bold'}>{v}</span></div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-white/[0.03] rounded-xl p-4 text-center border border-white/5">
+                                    <div className={clsx('text-xl font-black flex items-center justify-center gap-2', finalGap === 0 ? 'text-emerald-400' : 'text-amber-400')}>
+                                        {finalGap === 0 ? <><CheckCircle2 size={24} /> Balanced</> : <><AlertCircle size={24} /> Discrepancy</>}
+                                    </div>
+                                    {finalGap !== 0 && <p className="text-xs text-white/25 mt-2">Manager has been notified</p>}
+                                </div>
+                            )}
+
+                            <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm outline-none focus:border-violet-400 resize-none h-14" placeholder="Reconciliation notes..." />
+                            <button onClick={handleOpen} disabled={loading} className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-600 text-white font-black text-lg shadow-2xl shadow-violet-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                                {loading ? <Loader2 size={22} className="animate-spin" /> : <><ArrowRightLeft size={22} /> Open with Reconciliation</>}
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
 });
+
+// ─── Brand Panel (Dynamic) ───────────────────────────────────────
+function BrandPanel() {
+    const [orgName, setOrgName] = useState('');
+    const [orgLogo, setOrgLogo] = useState('');
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const tick = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(tick);
+    }, []);
+
+    useEffect(() => {
+        erpFetch('erp/me/')
+            .then(async res => {
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrgName(data.organization?.name || data.org_name || data.name || '');
+                    setOrgLogo(data.organization?.logo || data.logo || '');
+                }
+            })
+            .catch(() => { });
+    }, []);
+
+    const hh = time.getHours().toString().padStart(2, '0');
+    const mm = time.getMinutes().toString().padStart(2, '0');
+    const ss = time.getSeconds().toString().padStart(2, '0');
+    const dateStr = time.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+    return (
+        <div className="flex flex-col items-center justify-center h-full p-10 relative">
+            {/* Glow rings */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-64 h-64 rounded-full border border-cyan-400/8 animate-pulse" />
+                <div className="absolute w-48 h-48 rounded-full border border-cyan-400/12" />
+            </div>
+
+            <div className="relative z-10 text-center">
+                {/* Logo / icon */}
+                {orgLogo ? (
+                    <img src={orgLogo} alt={orgName} className="w-20 h-20 rounded-2xl object-contain mx-auto mb-6 shadow-2xl shadow-cyan-400/20" />
+                ) : (
+                    <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-cyan-400/30"
+                        style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.25) 0%, rgba(99,102,241,0.25) 100%)', border: '1px solid rgba(0,212,255,0.3)' }}>
+                        <Zap size={36} style={{ color: '#00D4FF' }} />
+                    </div>
+                )}
+
+                {/* Org name */}
+                {orgName && (
+                    <h1 className="text-2xl font-black text-white mb-1 tracking-tight">{orgName}</h1>
+                )}
+                <p className="text-xs font-bold uppercase tracking-[0.3em]" style={{ color: 'rgba(0,212,255,0.6)' }}>POS Terminal</p>
+
+                {/* Live Clock */}
+                <div className="mt-10">
+                    <div className="font-black text-5xl tracking-tight text-white tabular-nums" style={{ textShadow: '0 0 40px rgba(0,212,255,0.4)' }}>
+                        {hh}<span className="text-cyan-400 animate-pulse">:</span>{mm}<span className="text-white/30 text-3xl">.{ss}</span>
+                    </div>
+                    <p className="text-white/30 text-sm font-medium mt-2">{dateStr}</p>
+                </div>
+
+                {/* Bottom badge */}
+                <div className="mt-12 flex items-center justify-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400" />
+                    <span className="text-[11px] font-bold text-white/25 uppercase tracking-widest">System Online</span>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // ═════════════════════════════════════════════════════════════════
 // MAIN LOBBY — State Machine
 // ═════════════════════════════════════════════════════════════════
 export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
- const [sites, setSites] = useState<Site[]>([]);
- const [loading, setLoading] = useState(true);
- const [step, setStep] = useState<LobbyStep>('site');
+    const [sites, setSites] = useState<Site[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [step, setStep] = useState<LobbyStep>('site');
+    const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+    const [selectedRegister, setSelectedRegister] = useState<Register | null>(null);
+    const [selectedCashier, setSelectedCashier] = useState<RegisterUser | null>(null);
+    const [verifiedUser, setVerifiedUser] = useState<{ id: number; name: string; username: string } | null>(null);
 
- const [selectedSite, setSelectedSite] = useState<Site | null>(null);
- const [selectedRegister, setSelectedRegister] = useState<Register | null>(null);
- const [selectedCashier, setSelectedCashier] = useState<RegisterUser | null>(null);
- const [verifiedUser, setVerifiedUser] = useState<{ id: number; name: string; username: string } | null>(null);
+    const loadLobby = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { getPosLobby } = await import('@/components/pos/register-actions');
+            const result = await getPosLobby();
+            if (result.success && result.data) {
+                setSites(result.data);
+                if (result.data.length === 1) { setSelectedSite(result.data[0]); setStep('register'); }
+            } else { toast.error(result.error || 'Failed to load lobby'); }
+        } catch { toast.error('Failed to connect'); }
+        setLoading(false);
+    }, []);
 
- const loadLobby = useCallback(async () => {
- setLoading(true);
- try {
- const { getPosLobby } = await import('@/components/pos/register-actions');
- const result = await getPosLobby();
- if (result.success && result.data) {
- setSites(result.data);
- if (result.data.length === 1) {
- setSelectedSite(result.data[0]);
- setStep('register');
- }
- } else {
- toast.error(result.error || 'Failed to load lobby');
- }
- } catch { toast.error('Failed to connect'); }
- setLoading(false);
- }, []);
+    useEffect(() => { loadLobby(); }, [loadLobby]);
 
- useEffect(() => { loadLobby(); }, [loadLobby]);
+    const goBack = useCallback(() => {
+        if (step === 'opening') { setStep('pin'); setVerifiedUser(null); }
+        else if (step === 'pin') { setStep('user'); setSelectedCashier(null); }
+        else if (step === 'user') { setStep('register'); setSelectedRegister(null); }
+        else if (step === 'register') { setStep('site'); setSelectedSite(null); }
+    }, [step]);
 
- const goBack = useCallback(() => {
- if (step === 'opening') { setStep('pin'); setVerifiedUser(null); }
- else if (step === 'pin') { setStep('user'); setSelectedCashier(null); }
- else if (step === 'user') { setStep('register'); setSelectedRegister(null); }
- else if (step === 'register') { setStep('site'); setSelectedSite(null); }
- }, [step]);
+    const handlePinVerified = useCallback((user: { id: number; name: string; username: string }) => {
+        setVerifiedUser(user);
+        if (selectedRegister?.isOpen && selectedRegister.currentSession?.cashierId === user.id) {
+            onEnterPOS({ registerId: selectedRegister.id, registerName: selectedRegister.name, sessionId: selectedRegister.currentSession!.id, cashierId: user.id, cashierName: user.name, warehouseId: selectedRegister.warehouseId, cashAccountId: selectedRegister.cashAccountId, allowedAccounts: selectedRegister.allowedAccounts || [], siteName: selectedSite?.name || '', paymentMethods: selectedRegister.paymentMethods || [] });
+        } else { setStep('opening'); }
+    }, [selectedRegister, selectedSite, onEnterPOS]);
 
- const handlePinVerified = useCallback((user: { id: number; name: string; username: string }) => {
- setVerifiedUser(user);
- if (selectedRegister?.isOpen && selectedRegister.currentSession?.cashierId === user.id) {
- onEnterPOS({
- registerId: selectedRegister.id, registerName: selectedRegister.name,
- sessionId: selectedRegister.currentSession!.id,
- cashierId: user.id, cashierName: user.name,
- warehouseId: selectedRegister.warehouseId, cashAccountId: selectedRegister.cashAccountId,
- allowedAccounts: selectedRegister.allowedAccounts || [],
- siteName: selectedSite?.name || 'Central Site',
- paymentMethods: selectedRegister.paymentMethods || [],
- });
- } else {
- setStep('opening');
- }
- }, [selectedRegister, selectedSite, onEnterPOS]);
+    /* ── Loading screen ── */
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f1e' }}>
+            <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'linear-gradient(135deg,rgba(0,212,255,.2),rgba(99,102,241,.2))', border: '1px solid rgba(0,212,255,.3)' }}>
+                    <Loader2 size={28} className="animate-spin" style={{ color: '#00D4FF' }} />
+                </div>
+                <p className="text-sm font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(0,212,255,0.5)' }}>Loading Registers...</p>
+            </div>
+        </div>
+    );
 
- if (loading) {
- return (
- <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--app-bg)' }}>
- <div className="text-center">
- <Loader2 size={48} className="animate-spin mx-auto mb-4" style={{ color: 'var(--app-primary)' }} />
- <p className="text-sm font-medium tracking-widest uppercase" style={{ color: 'var(--app-text-muted)' }}>Loading Registers...</p>
- </div>
- </div>
- );
- }
+    return (
+        <div className="min-h-screen flex overflow-hidden" style={{ background: '#0a0f1e', backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0,212,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.04) 0%, transparent 50%)' }}>
+            {/* Dot grid overlay */}
+            <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
- return (
- <div className="min-h-screen flex flex-col" style={{ background: 'var(--app-bg)' }}>
- {/* Header */}
- <header
- className="px-8 py-5 flex items-center justify-between backdrop-blur-sm"
- style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface)' }}
- >
- <div className="flex items-center gap-4">
- {step !== 'site' && (
- <button onClick={goBack} className="w-10 h-10 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text flex items-center justify-center transition-all active:scale-95">
- <ArrowLeft size={18} />
- </button>
- )}
- <div>
- <h1 className="text-xl font-black text-app-text tracking-tight">POS Terminal</h1>
- <div className="flex items-center gap-2 text-[10px] text-app-text/40 font-bold uppercase tracking-[0.3em]">
- {(['site', 'register', 'user', 'pin', 'opening'] as const).map((s, i) => (
- <span key={s} className="flex items-center gap-2">
- {i > 0 && <ChevronRight size={10} />}
- <span className={step === s ? (s === 'opening' ? 'text-emerald-400' : 'text-indigo-400') : 'text-app-text/20'}>
- {s === 'user' ? "Who's working?" : s === 'opening' ? 'Open' : s.charAt(0).toUpperCase() + s.slice(1)}
- </span>
- </span>
- ))}
- </div>
- </div>
- </div>
- <div className="flex items-center gap-3">
- {selectedSite && (
- <div className="text-right mr-2">
- <p className="text-app-text/80 font-bold text-sm">{selectedSite.name}</p>
- {selectedRegister && <p className="text-indigo-400 text-xs font-bold">{selectedRegister.name}</p>}
- </div>
- )}
- {step === 'site' && (
- <a href="/sales/pos-settings" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-app-text/5 hover:bg-app-text/10 text-app-text/40 hover:text-app-text text-xs font-bold transition-all border border-app-text/5 hover:border-app-text/20" title="POS Configuration">
- <Settings2 size={14} />
- <span className="hidden sm:inline">Settings</span>
- </a>
- )}
- </div>
- </header>
+            {/* ── LEFT: Brand Panel ── */}
+            <div className="hidden lg:flex w-[35%] shrink-0 flex-col relative border-r" style={{ borderColor: 'rgba(0,212,255,0.1)', background: 'linear-gradient(160deg, rgba(0,212,255,0.05) 0%, rgba(99,102,241,0.04) 100%)' }}>
+                <BrandPanel />
+                {/* Settings link at bottom */}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+                    <a href="/sales/pos-settings" className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all" style={{ color: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(0,212,255,0.8)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.2)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}>
+                        <Settings2 size={13} /> POS Settings
+                    </a>
+                </div>
+            </div>
 
- {/* Content */}
- <main className="flex-1 flex items-center justify-center p-8">
- {step === 'site' && <SiteStep sites={sites} onSelect={(s) => { setSelectedSite(s); setStep('register'); }} />}
- {step === 'register' && selectedSite && <RegisterStep site={selectedSite} onSelect={(r) => { setSelectedRegister(r); setStep('user'); }} />}
- {step === 'user' && selectedRegister && <UserStep register={selectedRegister} onSelect={(u) => { setSelectedCashier(u); setStep('pin'); }} />}
- {step === 'pin' && selectedRegister && selectedCashier && <PinStep register={selectedRegister} cashier={selectedCashier} onVerified={handlePinVerified} />}
- {step === 'opening' && selectedRegister && selectedSite && verifiedUser && (
- <OpeningStep register={selectedRegister} site={selectedSite} verifiedUser={verifiedUser} currency={currency} onEnterPOS={onEnterPOS} />
- )}
- </main>
+            {/* ── RIGHT: Step Wizard ── */}
+            <div className="flex-1 flex flex-col min-h-screen">
+                {/* Step header */}
+                <header className="px-6 pt-8 pb-0 flex items-center justify-between">
+                    <button
+                        onClick={goBack}
+                        className={clsx('flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all', step !== 'site' ? 'text-white/50 hover:text-white hover:bg-white/8' : 'invisible')}
+                    >
+                        <ArrowLeft size={16} /> Back
+                    </button>
+                    <div className="lg:hidden flex items-center gap-2 text-xs font-bold" style={{ color: 'rgba(0,212,255,0.7)' }}>
+                        <Zap size={14} /> POS Terminal
+                    </div>
+                    <div className="w-20" /> {/* spacer */}
+                </header>
 
- {/* Footer */}
- <footer className="px-8 py-3 border-t border-app-text/5 bg-black/20 flex items-center justify-between">
- <p className="text-[10px] text-app-text/15 font-mono">POS Terminal v3.0</p>
- <p className="text-[10px] text-app-text/15">{new Date().toLocaleString()}</p>
- </footer>
- </div>
- );
+                {/* Step progress */}
+                <div className="px-6 pt-6">
+                    <StepProgress current={step} />
+                </div>
+
+                {/* Step content */}
+                <main className="flex-1 flex items-start justify-center px-6 pb-10 overflow-y-auto">
+                    {step === 'site' && <SiteStep sites={sites} onSelect={s => { setSelectedSite(s); setStep('register'); }} />}
+                    {step === 'register' && selectedSite && <RegisterStep site={selectedSite} onSelect={r => { setSelectedRegister(r); setStep('user'); }} />}
+                    {step === 'user' && selectedRegister && <UserStep register={selectedRegister} onSelect={u => { setSelectedCashier(u); setStep('pin'); }} />}
+                    {step === 'pin' && selectedRegister && selectedCashier && <PinStep register={selectedRegister} cashier={selectedCashier} onVerified={handlePinVerified} />}
+                    {step === 'opening' && selectedRegister && selectedSite && verifiedUser && (
+                        <OpeningStep register={selectedRegister} site={selectedSite} verifiedUser={verifiedUser} currency={currency} onEnterPOS={onEnterPOS} />
+                    )}
+                </main>
+
+                {/* Footer */}
+                <footer className="px-6 py-3 flex items-center justify-between border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+                    <p className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.1)' }}>POS v3.1</p>
+                    <a href="/sales/pos-settings"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all"
+                        style={{ color: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(0,212,255,0.8)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.2)'; }}>
+                        <Settings2 size={10} /> POS Settings
+                    </a>
+                    <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.1)' }}>{new Date().toLocaleDateString()}</p>
+                </footer>
+            </div>
+        </div>
+    );
 }

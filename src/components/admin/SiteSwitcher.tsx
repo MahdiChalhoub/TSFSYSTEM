@@ -30,7 +30,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  <div className="relative">
  <button
  onClick={() => setIsOpen(!isOpen)}
- className="flex items-center gap-2 px-2 py-1 rounded-xl bg-gray-800/40 border border-gray-700 hover:bg-gray-800 transition-all group"
+ className="flex items-center gap-2 px-2 py-1 rounded-xl bg-app-surface-2/40 border border-gray-700 hover:bg-app-surface-2 transition-all group"
  suppressHydrationWarning
  >
  <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-app-text shadow-lg shadow-indigo-900/20">
@@ -49,7 +49,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  <>
  <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
  <div className="absolute top-full left-0 mt-3 w-72 bg-[#1E293B] border border-gray-700 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
- <div className="p-4 border-b border-gray-700 bg-gray-800/50">
+ <div className="p-4 border-b border-gray-700 bg-app-surface-2/50">
  <h4 className="text-xs font-black text-app-text-muted uppercase tracking-widest">Select Branch</h4>
  </div>
  <div className="p-2 max-h-80 overflow-y-auto">
@@ -64,7 +64,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  )}
  >
  <div className="flex items-center gap-3 text-left">
- <div className={clsx("w-2 h-2 rounded-full", site.isActive ? "bg-emerald-500" : "bg-gray-500")}></div>
+ <div className={clsx("w-2 h-2 rounded-full", site.isActive ? "bg-app-primary" : "bg-gray-500")}></div>
  <div>
  <div className="text-sm font-bold">{site.name}</div>
  <div className={clsx("text-[10px] font-mono", site.id === currentId ? "text-indigo-200" : "text-app-text-muted")}>
@@ -76,7 +76,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
  </button>
  ))}
  </div>
- <div className="p-3 bg-gray-900/50 border-t border-gray-700">
+ <div className="p-3 bg-app-surface/50 border-t border-gray-700">
  <button
  onClick={() => handleSwitch(-1)}
  className={clsx(

@@ -24,9 +24,9 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
  }
  if ((org as any).error === "ACCOUNT_SUSPENDED") {
  return (
- <div className="min-h-screen bg-black flex items-center justify-center p-6">
+ <div className="min-h-screen bg-black flex items-center justify-center p-6 bg-app-bg">
  <div className="max-w-md w-full text-center space-y-6">
- <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-500">
+ <div className="w-20 h-20 bg-app-error-bg border border-app-error/20 rounded-full flex items-center justify-center mx-auto text-app-error">
  <ShieldCheck size={40} />
  </div>
  <h1 className="text-3xl font-black text-app-text">Instance Suspended</h1>

@@ -12,6 +12,8 @@ class DeliveryZoneViewSet(TenantModelViewSet):
     """CRUD for delivery zones."""
     queryset = DeliveryZone.objects.all()
     serializer_class = DeliveryZoneSerializer
+    ordering_fields = ['name']
+    ordering = ['name']  # DeliveryZone has no created_at
 
 
 class DeliveryOrderViewSet(TenantModelViewSet):
@@ -66,10 +68,10 @@ class DeliveryOrderViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        session_id = self.request.query_params.get('session')
+        session_id = self.request.query_params.get('session', '').strip().strip('/')
         if session_id:
             qs = qs.filter(session_id=session_id)
-        status = self.request.query_params.get('status')
+        status = self.request.query_params.get('status', '').strip().strip('/')
         if status:
             qs = qs.filter(status=status)
         return qs
@@ -167,7 +169,7 @@ class DeliveryOrderViewSet(TenantModelViewSet):
         Returns pending HOLD deliveries for the current session.
         Used by POS toolbar badge.
         """
-        session_id = request.query_params.get('session')
+        session_id = request.query_params.get('session', '').strip().strip('/')
         if not session_id:
             return Response([])
         qs = self.get_queryset().filter(

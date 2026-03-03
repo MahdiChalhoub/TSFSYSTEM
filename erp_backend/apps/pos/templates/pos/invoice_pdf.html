@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 12px;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 3px solid #4f46e5;
+  }
+  .org-name {
+    font-size: 24px;
+    font-weight: 900;
+    color: #4f46e5;
+    letter-spacing: -0.5px;
+  }
+  .org-address { font-size: 11px; color: #6b7280; margin-top: 4px; }
+
+  .doc-meta { text-align: right; }
+  .doc-type {
+    font-size: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #111827;
+  }
+  .doc-ref  { font-size: 11px; color: #6b7280; margin-top: 4px; }
+  .doc-date { font-size: 11px; color: #6b7280; }
+
+  /* ── Client section ── */
+  .bill-to {
+    margin-bottom: 32px;
+  }
+  .bill-to h3 {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+  .client-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  /* ── Table ── */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  thead tr {
+    background: #f8f7ff;
+    border-bottom: 2px solid #e0e7ff;
+  }
+  thead th {
+    padding: 10px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4f46e5;
+    text-align: left;
+  }
+  thead th.right { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; }
+  tbody tr:hover { background: #fafafa; }
+  td { padding: 10px 12px; font-size: 12px; color: #374151; }
+  td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  td.product-name { font-weight: 600; color: #111827; }
+
+  /* Tax sub-lines */
+  .tax-line { font-size: 10px; color: #6b7280; margin-top: 2px; }
+
+  /* ── Totals ── */
+  .totals-block {
+    margin-left: auto;
+    width: 280px;
+    margin-bottom: 40px;
+  }
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 12px;
+    color: #6b7280;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .totals-row.grand {
+    font-size: 15px;
+    font-weight: 900;
+    color: #111827;
+    border-bottom: none;
+    border-top: 2px solid #4f46e5;
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+  .totals-row span:last-child { font-variant-numeric: tabular-nums; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+    font-size: 10px;
+    color: #9ca3af;
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    background: #ede9fe;
+    color: #4f46e5;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="org-name">{{ org_name }}</div>
+    {% if org_address %}<div class="org-address">{{ org_address }}</div>{% endif %}
+  </div>
+  <div class="doc-meta">
+    <div class="doc-type">
+      {% if doc_type == 'RECEIPT' %}Receipt{% else %}Invoice{% endif %}
+      <span class="badge">{{ order.scope }}</span>
+    </div>
+    <div class="doc-ref"># {{ order.order_number|default:order.id }}</div>
+    <div class="doc-date">{{ order.created_at|date:"d M Y" }}</div>
+  </div>
+</div>
+
+<!-- Bill To -->
+{% if order.contact %}
+<div class="bill-to">
+  <h3>Bill To</h3>
+  <div class="client-name">
+    {{ order.contact.first_name }} {{ order.contact.last_name }}
+  </div>
+  {% if order.contact.email %}<div>{{ order.contact.email }}</div>{% endif %}
+</div>
+{% endif %}
+
+<!-- Line Items -->
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th class="right">Qty</th>
+      <th class="right">Unit Price</th>
+      <th class="right">Total HT</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for line in lines %}
+    <tr>
+      <td class="product-name">
+        {{ line.product_name }}
+        {% for tax in line.taxes %}
+        <div class="tax-line">{{ tax.tax_type }} {{ tax.tax_rate|floatformat:1 }}% → {{ tax.tax_amount }}</div>
+        {% endfor %}
+      </td>
+      <td class="right">{{ line.quantity }}</td>
+      <td class="right">{{ line.unit_price }}</td>
+      <td class="right">{{ line.total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Totals -->
+<div class="totals-block">
+  <div class="totals-row">
+    <span>Subtotal HT</span>
+    <span>{{ order.total_ht|default:"—" }}</span>
+  </div>
+  {% if order.total_vat %}
+  <div class="totals-row">
+    <span>TVA</span>
+    <span>{{ order.total_vat }}</span>
+  </div>
+  {% endif %}
+  {% if order.airsi_withheld %}
+  <div class="totals-row">
+    <span>AIRSI Withheld</span>
+    <span>- {{ order.airsi_withheld }}</span>
+  </div>
+  {% endif %}
+  <div class="totals-row grand">
+    <span>Total TTC</span>
+    <span>{{ order.total_ttc|default:"—" }}</span>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  Generated {{ generated_at|date:"d M Y à H:i" }} · {{ org_name }} ERP System
+</div>
+
+</body>
+</html>

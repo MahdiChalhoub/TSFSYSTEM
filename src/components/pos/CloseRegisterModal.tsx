@@ -106,7 +106,7 @@ export default function CloseRegisterModal({
 
  return (
  <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && step === 'form' && onCancel()}>
- <div className="w-full max-w-lg bg-slate-900 rounded-3xl border border-app-text/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+ <div className="w-full max-w-lg bg-app-surface rounded-3xl border border-app-text/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
 
  {/* Header */}
  <div className="bg-gradient-to-r from-rose-600/20 to-orange-600/10 px-6 py-5 border-b border-app-text/5 flex items-center justify-between">
@@ -216,7 +216,7 @@ export default function CloseRegisterModal({
  </div>
  <div className="flex items-center justify-between py-2 border-t border-app-text/10 mt-2">
  <span className="text-app-text font-black text-sm">TOTAL SALES</span>
- <span className="font-black text-emerald-400 text-base">{fmt(report.totalSales, currency)}</span>
+ <span className="font-black text-app-primary text-base">{fmt(report.totalSales, currency)}</span>
  </div>
  <div className="text-app-text/30 text-xs text-right">{report.totalTransactions} transaction{report.totalTransactions !== 1 ? 's' : ''}</div>
 
@@ -233,8 +233,8 @@ export default function CloseRegisterModal({
  <div className="flex justify-between text-app-text/50"><span>Counted in drawer</span><span className="font-bold text-app-text">{fmt(report.closingBalance, currency)}</span></div>
  <div className={clsx(
  "flex justify-between font-black text-sm border-t border-app-text/10 pt-2 mt-1",
- Math.abs(report.difference) < 0.01 ? "text-emerald-400" :
- report.difference > 0 ? "text-blue-400" : "text-rose-400"
+ Math.abs(report.difference) < 0.01 ? "text-app-primary" :
+ report.difference > 0 ? "text-app-info" : "text-rose-400"
  )}>
  <span>{Math.abs(report.difference) < 0.01 ? "✓ Balanced" : report.difference > 0 ? "▲ Surplus" : "▼ Shortage"}</span>
  <span>{report.difference > 0 ? '+' : ''}{fmt(report.difference, currency)}</span>
@@ -259,7 +259,7 @@ export default function CloseRegisterModal({
  </button>
  <button
  onClick={onClose}
- className="flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-app-text font-black text-sm transition-all flex items-center justify-center gap-2"
+ className="flex-1 py-3 rounded-2xl bg-app-primary hover:bg-app-primary text-app-text font-black text-sm transition-all flex items-center justify-center gap-2"
  >
  <ArrowRight size={16} /> Back to Lobby
  </button>

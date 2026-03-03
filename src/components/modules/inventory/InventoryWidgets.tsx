@@ -18,7 +18,7 @@ export const InventoryStatsWidget = ({ data }: { data: Record<string, any> }) =>
  <Package size={24} />
  </div>
  </div>
- <div className="mt-4 flex items-center text-sm text-emerald-600 font-medium z-10">
+ <div className="mt-4 flex items-center text-sm text-app-primary font-medium z-10">
  <TrendingUp size={16} className="mr-1.5" />
  <span>Active SKU count</span>
  </div>

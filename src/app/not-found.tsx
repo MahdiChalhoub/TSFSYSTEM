@@ -2,12 +2,11 @@ import Link from "next/link"
 
 export default function GlobalNotFound() {
  return (
- <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6">
+ <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 bg-app-bg">
  <div className="max-w-md w-full text-center space-y-6">
  {/* Icon */}
  <div className="mx-auto w-20 h-20 rounded-[2rem] bg-gradient-to-br from-rose-50 to-orange-50 
- border border-rose-100 flex items-center justify-center
- shadow-lg shadow-rose-100/50">
+ border border-rose-100 flex items-center justify-center shadow-lg shadow-rose-100/50">
  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
@@ -31,8 +30,7 @@ export default function GlobalNotFound() {
  <Link
  href="/dashboard"
  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
- bg-gray-900 text-app-text text-sm font-bold
- hover:bg-gray-800 transition-all shadow-md shadow-gray-900/20"
+ bg-app-surface text-app-text text-sm font-bold hover:bg-app-surface-2 transition-all shadow-md shadow-gray-900/20"
  >
  ← Dashboard
  </Link>
@@ -40,8 +38,7 @@ export default function GlobalNotFound() {
  href="/"
  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
  bg-app-surface text-app-text-muted text-sm font-bold
- border border-app-border hover:border-app-border 
- hover:bg-app-bg transition-all"
+ border border-app-border hover:border-app-border  hover:bg-app-bg transition-all"
  >
  Home
  </Link>

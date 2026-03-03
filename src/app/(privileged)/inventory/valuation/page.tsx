@@ -22,10 +22,10 @@ function fmtQty(n: number) {
 }
 
 const METHOD_BADGES: Record<string, string> = {
- WEIGHTED_AVG: 'bg-blue-100 text-blue-700 border-blue-200',
- FIFO: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+ WEIGHTED_AVG: 'bg-app-info-bg text-app-info border-app-info',
+ FIFO: 'bg-app-primary-light text-app-success border-app-success',
  LIFO: 'bg-purple-100 text-purple-700 border-purple-200',
- COST_PRICE: 'bg-app-surface-2 text-stone-700 border-app-border',
+ COST_PRICE: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
 }
 
 export default function AssetValuationEnginePage() {
@@ -67,11 +67,11 @@ export default function AssetValuationEnginePage() {
  }
 
  const columns: ColumnDef<any>[] = [
- { key: 'product_name', label: 'Product', sortable: true, alwaysVisible: true, render: r => <span className="font-bold text-app-text">{r.product_name}</span> },
- { key: 'sku', label: 'SKU/Code', render: r => <span className="font-mono text-[10px] text-app-text-faint font-black tracking-tighter uppercase">{r.product_sku || '—'}</span> },
- { key: 'quantity', label: 'Qty', align: 'right', sortable: true, render: r => <span className="font-black text-app-text">{fmtQty(r.quantity)} <span className="text-[10px] text-gray-300">U</span></span> },
- { key: 'avg_cost', label: 'Avg. Cost', align: 'right', sortable: true, render: r => <span className="text-app-text-muted font-medium">{fmt(r.avg_cost)}</span> },
- { key: 'total_value', label: 'Total Value', align: 'right', sortable: true, render: r => <span className="font-black text-emerald-600">{fmt(r.total_value)}</span> },
+ { key: 'product_name', label: 'Product', sortable: true, alwaysVisible: true, render: r => <span className="font-bold text-app-foreground">{r.product_name}</span> },
+ { key: 'sku', label: 'SKU/Code', render: r => <span className="font-mono text-[10px] text-app-muted-foreground font-black tracking-tighter uppercase">{r.product_sku || '—'}</span> },
+ { key: 'quantity', label: 'Qty', align: 'right', sortable: true, render: r => <span className="font-black text-app-foreground">{fmtQty(r.quantity)} <span className="text-[10px] text-app-muted-foreground">U</span></span> },
+ { key: 'avg_cost', label: 'Avg. Cost', align: 'right', sortable: true, render: r => <span className="text-app-muted-foreground font-medium">{fmt(r.avg_cost)}</span> },
+ { key: 'total_value', label: 'Total Value', align: 'right', sortable: true, render: r => <span className="font-black text-app-primary">{fmt(r.total_value)}</span> },
  {
  key: 'method', label: 'Valuation Method', render: r => (
  <Badge variant="outline" className={`${METHOD_BADGES[r.method] || 'bg-app-surface-2'} text-[9px] font-black uppercase tracking-tighter py-0.5`}>
@@ -97,7 +97,7 @@ export default function AssetValuationEnginePage() {
 
  if (loading && !data) {
  return (
- <div className="p-6 space-y-6 max-w-7xl mx-auto">
+ <div className="app-page p-6 space-y-6 max-w-7xl mx-auto">
  <Skeleton className="h-20 w-1/2 rounded-2xl" />
  <div className="grid grid-cols-3 gap-6">
  {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-[2rem]" />)}
@@ -109,44 +109,42 @@ export default function AssetValuationEnginePage() {
 
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Landmark size={28} className="text-app-text" />
- </div>
- Asset <span className="text-emerald-600">Valuation</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Global Asset Equity & Inventory Exposure</p>
- </div>
- <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
- <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Valuation Engine Synced</span>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <TrendingUp size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Inventory <span className="text-app-primary">Valuation</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Global Equity Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <DollarSign size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">Total Equity Exposure</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{fmt(data?.summary?.total_value || 0)}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Total Equity Exposure</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{fmt(data?.summary?.total_value || 0)}</h2>
  </div>
  </CardContent>
  </Card>
 
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Package size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">Asset Diversity</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{data?.summary?.total_products || 0} <span className="text-sm text-gray-300">SKUs</span></h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Asset Diversity</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{data?.summary?.total_products || 0} <span className="text-sm text-app-muted-foreground">SKUs</span></h2>
  </div>
  </CardContent>
  </Card>
@@ -157,8 +155,8 @@ export default function AssetValuationEnginePage() {
  <Boxes size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">Aggregate Units</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{fmtQty(data?.summary?.total_quantity || 0)}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Aggregate Units</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{fmtQty(data?.summary?.total_quantity || 0)}</h2>
  </div>
  </CardContent>
  </Card>
@@ -182,7 +180,7 @@ export default function AssetValuationEnginePage() {
  onSort={settings.setSort}
  headerExtra={
  <div className="flex items-center gap-2">
- <Button onClick={() => loadData()} variant="ghost" className="h-8 w-8 p-0 text-app-text-faint hover:text-emerald-600">
+ <Button onClick={() => loadData()} variant="ghost" className="h-8 w-8 p-0 text-app-muted-foreground hover:text-app-primary">
  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
  </Button>
  </div>
@@ -203,8 +201,8 @@ export default function AssetValuationEnginePage() {
  {/* Top Concentrations Bar Chart */}
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden h-full">
  <CardHeader className="p-6 pb-2">
- <CardTitle className="text-base font-black flex items-center gap-2 text-app-text-faint uppercase tracking-tighter">
- <TrendingUp size={18} className="text-emerald-500" />
+ <CardTitle className="text-base font-black flex items-center gap-2 text-app-muted-foreground uppercase tracking-tighter">
+ <TrendingUp size={18} className="text-app-primary" />
  Asset Concentration
  </CardTitle>
  </CardHeader>
@@ -215,12 +213,12 @@ export default function AssetValuationEnginePage() {
  return (
  <div key={p.product_id} className="space-y-2">
  <div className="flex justify-between items-end">
- <span className="text-[10px] font-black text-app-text uppercase tracking-tight truncate w-32">{p.product_name}</span>
- <span className="text-[10px] font-black text-emerald-600 font-mono">{fmt(p.total_value)}</span>
+ <span className="text-[10px] font-black text-app-foreground uppercase tracking-tight truncate w-32">{p.product_name}</span>
+ <span className="text-[10px] font-black text-app-primary font-mono">{fmt(p.total_value)}</span>
  </div>
- <div className="h-2 bg-app-bg rounded-full overflow-hidden">
+ <div className="h-2 bg-app-background rounded-full overflow-hidden">
  <div
- className="h-full bg-emerald-500 rounded-full shadow-lg shadow-emerald-100 transition-all duration-1000"
+ className="h-full bg-app-primary rounded-full shadow-lg shadow-emerald-100 transition-all duration-1000"
  style={{ width: `${Math.max(pct, 2)}%` }}
  />
  </div>
@@ -229,14 +227,14 @@ export default function AssetValuationEnginePage() {
  })}
  </div>
 
- <div className="mt-12 p-5 bg-app-bg rounded-[1.5rem] border border-app-border flex items-center justify-between">
+ <div className="mt-12 p-5 bg-app-background rounded-[1.5rem] border border-app-border flex items-center justify-between">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 bg-app-surface rounded-xl shadow-sm flex items-center justify-center text-emerald-600 transition-transform hover:rotate-12">
+ <div className="w-10 h-10 bg-app-surface rounded-xl shadow-sm flex items-center justify-center text-app-primary transition-transform hover:rotate-12">
  <BarChart3 size={20} />
  </div>
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Equity Pareto Analysis</span>
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Equity Pareto Analysis</span>
  </div>
- <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/50 px-2 py-1 rounded-lg">CALCULATED</span>
+ <span className="text-[10px] font-black text-app-success bg-app-primary-light/50 px-2 py-1 rounded-lg">CALCULATED</span>
  </div>
  </CardContent>
  </Card>

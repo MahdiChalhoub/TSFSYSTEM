@@ -75,6 +75,8 @@ from .views_base import TenantModelViewSet
 class UserViewSet(TenantModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = None  # User model uses date_joined, not created_at — skip cursor pagination
+
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -165,6 +167,86 @@ class UserViewSet(TenantModelViewSet):
             return Response({"permissions": perms, "role": role.name, "is_superuser": False})
 
         return Response({"permissions": [], "role": None, "is_superuser": False})
+
+    @action(detail=False, methods=['get'], url_path='permissions-matrix')
+    def permissions_matrix(self, request):
+        """
+        Return a matrix of all users and their assigned permissions in the current org.
+        Also returns the available SALES_PERMISSION_CODES for generating the UI headers.
+        """
+        from apps.pos.services.permission_service import SALES_PERMISSION_CODES
+        
+        users = self.get_queryset().select_related('role').prefetch_related('role__permissions')
+        
+        user_list = []
+        for u in users:
+            # Superusers implicitly have all permissions
+            if u.is_superuser:
+                codes = list(SALES_PERMISSION_CODES.keys())
+            elif u.role:
+                codes = list(u.role.permissions.values_list('code', flat=True))
+            else:
+                codes = []
+                
+            user_list.append({
+                'id': u.id,
+                'username': u.username,
+                'is_superuser': u.is_superuser,
+                'role_name': u.role.name if u.role else None,
+                'permissions': codes
+            })
+            
+        return Response({
+            'available_permissions': SALES_PERMISSION_CODES,
+            'users': user_list
+        })
+
+    @action(detail=False, methods=['post'], url_path='update-permissions')
+    def update_permissions(self, request):
+        """
+        Admin action to update a user's permissions.
+        Because TSFSYSTEM relies on Roles, we create/assign a custom role for the user 
+        if their permissions deviate from standard roles.
+        Body: { "user_id": 5, "permissions": ["sales.confirm_order", ...] }
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+            
+        user_id = request.data.get('user_id')
+        perm_codes = request.data.get('permissions', [])
+        
+        try:
+            target_user = self.get_queryset().get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        if target_user.is_superuser:
+            return Response({"error": "Cannot modify permissions of a superuser"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from erp.models import Role, Permission
+        
+        # 1. Fetch requested permission objects
+        new_perms = Permission.objects.filter(code__in=perm_codes)
+        
+        # 2. Check if a role already exists with EXACTLY these permissions
+        # (For simplicity and to avoid thousands of roles, we'll create a "Custom: {user}" role if needed)
+        custom_role_name = f"Custom Role - {target_user.username}"
+        
+        with transaction.atomic():
+            role, created = Role.objects.get_or_create(
+                organization=target_user.organization,
+                name=custom_role_name,
+                defaults={'description': f'Custom role specific to {target_user.username}'}
+            )
+            
+            # Sync permissions
+            role.permissions.set(new_perms)
+            
+            # Assign role to user
+            target_user.role = role
+            target_user.save(update_fields=['role'])
+            
+        return Response({"message": f"Permissions updated for {target_user.username}", "role": role.name})
 
     @action(detail=True, methods=['post'], url_path='set-override-pin')
     def set_override_pin(self, request, pk=None):

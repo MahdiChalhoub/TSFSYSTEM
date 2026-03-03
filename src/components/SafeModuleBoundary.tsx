@@ -32,12 +32,12 @@ export class SafeModuleBoundary extends Component<Props, State> {
  if (this.props.fallback) return this.props.fallback;
 
  return (
- <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center gap-3">
- <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
+ <div className="p-4 rounded-xl border border-app-error/20 bg-app-error/5 flex items-center gap-3">
+ <div className="p-2 bg-app-error-bg rounded-lg text-app-error">
  <AlertCircle size={20} />
  </div>
  <div>
- <h4 className="text-sm font-bold text-red-400">Module Error</h4>
+ <h4 className="text-sm font-bold text-app-error">Module Error</h4>
  <p className="text-xs text-red-300/70">
  {this.props.moduleName || 'Component'} failed to load.
  <span className="block mt-1 font-mono text-[10px] opacity-50">{this.state.error?.message}</span>

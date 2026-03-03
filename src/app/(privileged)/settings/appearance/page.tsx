@@ -12,22 +12,19 @@ export default async function AppearancePage() {
  return (
  <div className="page-container">
  {/* Header */}
- <header className="flex items-center gap-4 mb-8">
- <div
- className="w-14 h-14 rounded-[1.5rem] flex items-center justify-center shadow-lg flex-shrink-0"
- style={{ background: 'var(--app-primary)', boxShadow: 'var(--app-glow)' }}
- >
- <Paintbrush size={26} className="text-app-text" />
- </div>
- <div>
- <h1 className="page-header-title flex items-center gap-3">
- Appearance &amp; <span style={{ color: 'var(--app-primary)' }}>Theme</span>
- </h1>
- <p className="page-header-subtitle mt-1">
- Customise the visual identity of your workspace for all users.
- </p>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Palette size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Settings</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Appearance <span className="text-app-primary">& Themes</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Org default theme panel */}
  <OrgThemeSettings currentOrgDefault={orgDefaultTheme} />

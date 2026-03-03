@@ -102,7 +102,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
  <div className="center">THANK YOU</div>
  </div>
 
- <div className="bg-emerald-600 p-8 text-center text-app-text relative">
+ <div className="bg-app-primary p-8 text-center text-app-text relative">
  <div className="absolute top-4 right-4 cursor-pointer hover:bg-app-text/20 p-2 rounded-full" onClick={onClose}>
  <X size={20} />
  </div>
@@ -121,12 +121,12 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
  <div className="grid grid-cols-2 gap-3">
  <button
  onClick={handlePrint}
- className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-app-border hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+ className="flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-app-border hover:border-app-primary hover:bg-app-primary-light transition-all group"
  >
- <div className="w-12 h-12 rounded-xl bg-app-bg group-hover:bg-emerald-100 flex items-center justify-center text-app-text-faint group-hover:text-emerald-600 transition-colors">
+ <div className="w-12 h-12 rounded-xl bg-app-bg group-hover:bg-app-primary-light flex items-center justify-center text-app-text-faint group-hover:text-app-primary transition-colors">
  <Printer size={24} />
  </div>
- <span className="text-xs font-bold uppercase tracking-wider text-app-text-muted group-hover:text-emerald-700">Print Receipt</span>
+ <span className="text-xs font-bold uppercase tracking-wider text-app-text-muted group-hover:text-app-success">Print Receipt</span>
  </button>
 
  <button
@@ -143,7 +143,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
 
  <button
  onClick={onClose}
- className="w-full py-4 mt-4 bg-gray-900 text-app-text rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg active:scale-95"
+ className="w-full py-4 mt-4 bg-app-surface text-app-text rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-lg active:scale-95"
  >
  New Transaction
  </button>

@@ -7,18 +7,18 @@ export default async function OpeningBalancesListPage() {
  try { entries = await getOpeningEntries() } catch { /* empty fallback */ }
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  <div className="flex justify-between items-center mb-8">
  <div>
- <Link href="/finance/ledger" className="flex items-center gap-2 text-app-text-muted hover:text-app-text transition-colors text-xs font-bold uppercase tracking-wider mb-2">
+ <Link href="/finance/ledger" className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground transition-colors text-xs font-bold uppercase tracking-wider mb-2">
  <ArrowLeft size={14} /> Back to Ledger
  </Link>
- <h1 className="page-header-title text-app-text font-serif">Opening Balances</h1>
- <p className="text-sm text-app-text-muted">View and manage initial account balances</p>
+ <h1 className="page-header-title text-app-foreground font-serif">Opening Balances</h1>
+ <p className="text-sm text-app-muted-foreground">View and manage initial account balances</p>
  </div>
  <Link
  href="/finance/ledger/opening"
- className="bg-black text-app-text px-6 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-md transition-all flex items-center gap-2"
+ className="bg-app-background text-app-foreground px-6 py-2.5 rounded-lg hover:bg-app-surface-2 font-bold text-sm shadow-md transition-all flex items-center gap-2"
  >
  <Plus size={18} /> Add Opening Balance
  </Link>
@@ -30,34 +30,34 @@ export default async function OpeningBalancesListPage() {
 
  return (
  <div key={entry.id} className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
- <div className="p-5 flex justify-between items-center bg-stone-50/50">
+ <div className="p-5 flex justify-between items-center bg-app-surface/50">
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 bg-app-surface border border-app-border rounded-lg flex items-center justify-center text-app-text-faint group-hover:text-black transition-colors">
+ <div className="w-10 h-10 bg-app-surface border border-app-border rounded-lg flex items-center justify-center text-app-muted-foreground group-hover:text-app-foreground transition-colors">
  <Table size={20} />
  </div>
  <div>
  <div className="flex items-center gap-2">
- <h3 className="font-bold text-app-text">Opening Balance #{entry.id}</h3>
- <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Locked</span>
+ <h3 className="font-bold text-app-foreground">Opening Balance #{entry.id}</h3>
+ <span className="bg-app-primary-light text-app-success text-[10px] px-2 py-0.5 rounded font-bold uppercase">Locked</span>
  </div>
- <p className="text-xs text-app-text-muted flex items-center gap-1 mt-0.5">
+ <p className="text-xs text-app-muted-foreground flex items-center gap-1 mt-0.5">
  <Calendar size={12} /> {entry.transactionDate.toLocaleDateString('en-GB')}
  </p>
  </div>
  </div>
  <div className="text-right">
- <div className="text-[10px] font-bold uppercase text-app-text-faint tracking-widest mb-1">Total Value</div>
- <div className="font-mono font-bold text-app-text text-lg">
+ <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-1">Total Value</div>
+ <div className="font-mono font-bold text-app-foreground text-lg">
  {totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
  </div>
  </div>
  </div>
 
  <div className="px-5 py-3 border-t border-app-border flex justify-between items-center text-sm">
- <span className="text-app-text-muted italic truncate max-w-md">{entry.description || 'Opening state of accounts'}</span>
+ <span className="text-app-muted-foreground italic truncate max-w-md">{entry.description || 'Opening state of accounts'}</span>
  <Link
  href={`/finance/ledger/${entry.id}`}
- className="text-app-text font-bold hover:underline flex items-center gap-1"
+ className="text-app-foreground font-bold hover:underline flex items-center gap-1"
  >
  View Voucher <ArrowUpRight size={14} />
  </Link>
@@ -67,15 +67,15 @@ export default async function OpeningBalancesListPage() {
  })}
 
  {entries.length === 0 && (
- <div className="text-center py-20 bg-app-bg border-2 border-dashed border-app-border rounded-2xl">
+ <div className="text-center py-20 bg-app-background border-2 border-dashed border-app-border rounded-2xl">
  <div className="w-16 h-16 bg-app-surface rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
- <Table size={32} className="text-stone-300" />
+ <Table size={32} className="text-app-muted-foreground" />
  </div>
- <h3 className="text-app-text font-bold text-lg mb-2">No Opening Balances Found</h3>
- <p className="text-app-text-muted max-w-xs mx-auto mb-6">You haven't recorded any opening balances yet. These are typically done at the start of a fiscal year.</p>
+ <h3 className="text-app-foreground font-bold text-lg mb-2">No Opening Balances Found</h3>
+ <p className="text-app-muted-foreground max-w-xs mx-auto mb-6">You haven't recorded any opening balances yet. These are typically done at the start of a fiscal year.</p>
  <Link
  href="/finance/ledger/opening"
- className="inline-flex items-center gap-2 text-black font-bold hover:underline"
+ className="inline-flex items-center gap-2 text-app-foreground font-bold hover:underline"
  >
  Record Initial Balance <ArrowUpRight size={18} />
  </Link>

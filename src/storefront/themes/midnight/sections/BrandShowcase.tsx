@@ -21,7 +21,7 @@ export default function BrandShowcase({ brands }: SectionProps) {
                             <h2 className="text-4xl md:text-5xl font-black text-white leading-[0.9] mb-6 tracking-tighter">
                                 OUR TRUSTED <span className="text-indigo-400">BRANDS</span>
                             </h2>
-                            <p className="text-slate-500 text-lg font-medium leading-relaxed">
+                            <p className="text-app-text-faint text-lg font-medium leading-relaxed">
                                 Curating the world's most innovative technologies. Integrated directly with our supply chain.
                             </p>
                         </div>
@@ -31,7 +31,7 @@ export default function BrandShowcase({ brands }: SectionProps) {
                                     {brand.logo ? (
                                         <img src={brand.logo} alt={brand.name} className="max-h-12 w-auto object-contain transition-all duration-500 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110" />
                                     ) : (
-                                        <span className="text-sm font-black text-slate-700 group-hover:text-indigo-400 transition-colors uppercase tracking-[0.2em]">{brand.name}</span>
+                                        <span className="text-sm font-black text-app-text-muted group-hover:text-indigo-400 transition-colors uppercase tracking-[0.2em]">{brand.name}</span>
                                     )}
                                 </div>
                             ))}

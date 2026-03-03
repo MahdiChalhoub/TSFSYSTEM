@@ -47,10 +47,12 @@ class TaxEngineContext:
         purchase_tax_mode: str = 'CAPITALIZE',
         internal_cost_mode: str = 'TTC_ALWAYS',
         is_export: bool = False,
+        custom_rules: list = None,
     ):
         self.scope = scope
         self.is_export = is_export
         self.internal_cost_mode = internal_cost_mode
+        self.custom_rules = custom_rules or []
 
         # ── SCOPE GUARD (evaluated once at construction) ──────────────
         # VAT is only active when: scope is OFFICIAL AND org charges VAT on official sales
@@ -71,7 +73,7 @@ class TaxEngineContext:
         Falls back to safe defaults if no policy is configured.
         """
         try:
-            from apps.finance.models import OrgTaxPolicy
+            from apps.finance.models import OrgTaxPolicy, CustomTaxRule
             from erp.services import ConfigurationService
 
             policy = OrgTaxPolicy.objects.filter(
@@ -88,6 +90,9 @@ class TaxEngineContext:
                     purchase_tax_rate=policy.purchase_tax_rate,
                     purchase_tax_mode=policy.purchase_tax_mode,
                     internal_cost_mode=policy.internal_cost_mode,
+                    custom_rules=list(CustomTaxRule.objects.filter(
+                        organization=organization, is_active=True
+                    )),
                 )
         except Exception as e:
             logger.warning(f'TaxEngineContext: could not load OrgTaxPolicy — {e}')
@@ -436,8 +441,38 @@ class TaxCalculator:
         else:
             pt_amount = Decimal('0')
 
+        # ── Custom Dynamic Taxes ──────────────────────────────────────
+        custom_cost_impact = Decimal('0')
+        custom_withheld = Decimal('0')
+        custom_added_ttc = Decimal('0')
+
+        for rule in ctx.custom_rules:
+            if rule.transaction_type in ('PURCHASE', 'BOTH'):
+                c_amount = (base_ht * rule.rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+                if c_amount <= 0:
+                    continue
+
+                if rule.math_behavior == 'ADDED_TO_TTC':
+                    custom_added_ttc += c_amount
+                elif rule.math_behavior == 'WITHHELD_FROM_AP':
+                    custom_withheld += c_amount
+                
+                c_impact_ratio = 1.0 if rule.purchase_cost_treatment == 'CAPITALIZE' else 0.0
+                if c_impact_ratio > 0:
+                    custom_cost_impact += c_amount
+
+                tax_lines.append({
+                    'type': 'CUSTOM',
+                    'rate': float(rule.rate),
+                    'amount': float(c_amount),
+                    'cost_impact_ratio': c_impact_ratio,
+                    'custom_tax_rule_id': rule.id,
+                })
+
+        ttc += custom_added_ttc
+
         # ── Cost Views ────────────────────────────────────────────────
-        cost_official = base_ht + vat_cost_impact + airsi_cost_impact + pt_cost_impact
+        cost_official = base_ht + vat_cost_impact + airsi_cost_impact + pt_cost_impact + custom_cost_impact
 
         # Internal scope: TTC_ALWAYS means we always use TTC as cost
         if not ctx.vat_active and ctx.internal_cost_mode == 'TTC_ALWAYS':
@@ -449,6 +484,7 @@ class TaxCalculator:
 
         # AP = TTC owed to supplier (net of AIRSI if withheld)
         ap_amount   = ttc - airsi_amount if supplier_airsi_subject else ttc
+        ap_amount  -= custom_withheld
         # cost_cash = actual cash at invoice time = ap_amount (may be 0 if fully on credit)
         cost_cash   = ap_amount
 

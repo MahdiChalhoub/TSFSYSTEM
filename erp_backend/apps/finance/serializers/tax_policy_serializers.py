@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile
+from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile, CustomTaxRule
 
 
 class OrgTaxPolicySerializer(serializers.ModelSerializer):
@@ -45,3 +45,14 @@ class CounterpartyTaxProfileSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'is_system_preset', 'created_at', 'updated_at']
+
+
+class CustomTaxRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomTaxRule
+        fields = [
+            'id', 'name', 'rate', 'transaction_type', 'math_behavior', 
+            'purchase_cost_treatment', 'liability_account', 'expense_account', 
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

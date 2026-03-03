@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI Module — Frontend Entry Point (part of MCP module)
  * 

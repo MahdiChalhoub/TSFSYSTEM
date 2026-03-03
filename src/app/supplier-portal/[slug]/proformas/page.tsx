@@ -18,10 +18,10 @@ interface Proforma {
 
 const STATUS_COLORS: Record<string, string> = {
  DRAFT: 'text-app-text-faint',
- SUBMITTED: 'text-blue-400',
- UNDER_REVIEW: 'text-amber-400',
+ SUBMITTED: 'text-app-info',
+ UNDER_REVIEW: 'text-app-warning',
  APPROVED: 'text-emerald-400',
- REJECTED: 'text-red-400',
+ REJECTED: 'text-app-error',
  EXPIRED: 'text-app-text-muted',
 }
 
@@ -94,8 +94,8 @@ export default function ProformasPage() {
  }
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
- <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
+ <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-success-bg blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-4xl mx-auto relative z-10 space-y-8">
  <div className="flex items-start justify-between">
@@ -115,7 +115,7 @@ export default function ProformasPage() {
 
  {/* Create Form */}
  {showCreate && (
- <div className="p-8 bg-slate-900/80 border border-emerald-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
+ <div className="p-8 bg-app-surface/80 border border-emerald-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
  <div className="flex justify-between items-center">
  <h2 className="text-xl font-bold text-app-text flex items-center gap-3">
  <FileText size={22} className="text-emerald-400" /> New Proforma
@@ -123,15 +123,15 @@ export default function ProformasPage() {
  <button onClick={() => setShowCreate(false)} className="text-app-text-muted hover:text-app-text"><X size={20} /></button>
  </div>
  {error && (
- <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-error-bg border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
  <AlertCircle size={16} /> {error}
  </div>
  )}
  <form onSubmit={handleCreate} className="space-y-4">
  <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all" />
  <textarea placeholder="Notes / description" value={notes} onChange={e => setNotes(e.target.value)} rows={3}
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700 resize-none" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-emerald-500 transition-all placeholder:text-app-text-muted resize-none" />
  <p className="text-[11px] text-app-text-muted">You can add line items after creating the proforma</p>
  <button type="submit" disabled={creating}
  className="w-full bg-emerald-600 hover:bg-emerald-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
@@ -144,7 +144,7 @@ export default function ProformasPage() {
  {/* List */}
  {loading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-24 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  ) : proformas.length === 0 ? (
  <div className="py-24 text-center space-y-4">
@@ -156,7 +156,7 @@ export default function ProformasPage() {
  <div className="space-y-3">
  {proformas.map(p => (
  <div key={p.id}
- className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 transition-all">
+ className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 transition-all">
  <div className={`w-12 h-12 bg-app-text/5 rounded-xl flex items-center justify-center ${STATUS_COLORS[p.status] || 'text-app-text-faint'}`}>
  <FileText size={22} />
  </div>

@@ -57,9 +57,9 @@ export function SessionPopulator({ sessionId, sessionRef, onComplete }: SessionP
  }
 
  return (
- <Card className="bg-gradient-to-br from-indigo-50/50 to-white border-indigo-100 shadow-sm">
+ <Card className="bg-gradient-to-br from-indigo-50/50 to-white border-app-primary/30 shadow-sm">
  <CardHeader className="pb-3 text-center sm:text-left">
- <CardTitle className="text-lg font-bold text-indigo-900 flex items-center justify-center sm:justify-start gap-2">
+ <CardTitle className="text-lg font-bold text-app-primary flex items-center justify-center sm:justify-start gap-2">
  <Sparkles className={populating ? "animate-pulse" : ""} size={20} />
  High-Performance Populator
  </CardTitle>
@@ -83,7 +83,7 @@ export function SessionPopulator({ sessionId, sessionRef, onComplete }: SessionP
  </>
  ) : done ? (
  <>
- <CheckCircle2 className="text-emerald-500" size={20} />
+ <CheckCircle2 className="text-app-primary" size={20} />
  Repopulate Session
  </>
  ) : (
@@ -96,22 +96,22 @@ export function SessionPopulator({ sessionId, sessionRef, onComplete }: SessionP
 
  {populating && (
  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
- <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-app-text-muted">
+ <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">
  <span>Indexing Local Catalog...</span>
  <span>{progress.current} Indexed</span>
  </div>
- <Progress value={undefined} className="h-1.5 bg-indigo-100" />
- <p className="text-[10px] text-app-text-faint italic text-center">Batch processing ensures zero-timeout for large inventories.</p>
+ <Progress value={undefined} className="h-1.5 bg-app-primary/10" />
+ <p className="text-[10px] text-app-muted-foreground italic text-center">Batch processing ensures zero-timeout for large inventories.</p>
  </div>
  )}
 
  {done && !populating && (
- <div className="p-3 bg-app-text/60 rounded-xl border border-indigo-50 flex items-center justify-center gap-3 shadow-inner">
+ <div className="p-3 bg-app-foreground/60 rounded-xl border border-indigo-50 flex items-center justify-center gap-3 shadow-inner">
  <div className="text-center">
- <p className="text-[10px] uppercase font-black text-app-text-faint text-center">Batch Result</p>
- <p className="text-lg font-black text-indigo-600 leading-none mt-1">+{progress.current} Lines</p>
+ <p className="text-[10px] uppercase font-black text-app-muted-foreground text-center">Batch Result</p>
+ <p className="text-lg font-black text-app-primary leading-none mt-1">+{progress.current} Lines</p>
  </div>
- <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-600">
+ <div className="bg-app-primary-light p-1.5 rounded-full text-app-primary">
  <CheckCircle2 size={18} />
  </div>
  </div>

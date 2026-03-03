@@ -47,8 +47,8 @@ export function ModuleGuard({ moduleCode, moduleName, children }: ModuleGuardPro
  return (
  <div className="flex items-center justify-center min-h-[60vh] p-8">
  <div className="max-w-md text-center space-y-6">
- <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-50 border-2 border-amber-200">
- <Lock className="w-10 h-10 text-amber-500" />
+ <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-app-warning-bg border-2 border-app-warning">
+ <Lock className="w-10 h-10 text-app-warning" />
  </div>
 
  <div className="space-y-2">
@@ -63,10 +63,10 @@ export function ModuleGuard({ moduleCode, moduleName, children }: ModuleGuardPro
 
  <div className="bg-app-bg rounded-xl p-4 border border-app-border">
  <div className="flex items-center gap-3 text-sm text-app-text-muted">
- <ArrowUpCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+ <ArrowUpCircle className="w-5 h-5 text-app-primary shrink-0" />
  <span>
  Contact your administrator or go to
- <a href="/saas/modules" className="text-emerald-600 font-medium hover:underline ml-1">
+ <a href="/saas/modules" className="text-app-primary font-medium hover:underline ml-1">
  Module Management
  </a> to install this module.
  </span>

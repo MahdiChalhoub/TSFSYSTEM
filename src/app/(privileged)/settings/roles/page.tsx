@@ -1,28 +1,36 @@
-import React from 'react';
-import { RoleManager } from './RoleManager';
-import { getRoles, getPermissions } from '@/app/actions/roles';
-import { Shield } from 'lucide-react';
+import { getPermissionsMatrix } from "@/app/actions/settings/roles"
+import { RolesMatrixClient } from "./RolesMatrixClient"
+import { ShieldCheck } from "lucide-react"
 
-export default async function RolesPage() {
- let roles: any = [], permissions: any = [];
- try { roles = await getRoles(); } catch { }
- try { permissions = await getPermissions(); } catch { }
+export const dynamic = 'force-dynamic'
 
- return (
- <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header>
- <h1 className="page-header-title uppercase tracking-tighter flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Shield className="text-app-text" size={28} />
- </div>
- Access <span className="text-emerald-600">Control</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
- Granular Roles & Permission Architecture
- </p>
- </header>
+export default async function RolesSettingsPage() {
+    const matrixData = await getPermissionsMatrix()
 
- <RoleManager initialRoles={roles} allPermissions={permissions} />
- </div>
- );
+    return (
+        <div className="app-page min-h-screen p-5 md:p-6 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Shield size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Settings · Security</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Roles <span className="text-app-primary">& Permissions</span>
+          </h1>
+        </div>
+      </div>
+    </header>
+
+            {!matrixData || !!matrixData.error ? (
+                <div className="bg-app-error/10 border border-rose-500/20 text-rose-500 p-6 rounded-[2rem] text-center font-bold">
+                    Failed to load permissions matrix. Are you an Administrator?
+                </div>
+            ) : (
+                <RolesMatrixClient data={matrixData} />
+            )}
+        </div>
+    )
 }

@@ -31,7 +31,20 @@ class POSViewSet(viewsets.ViewSet):
             if user.is_anonymous:
                 from erp.models import User
                 user = User.objects.filter(organization=organization, is_staff=True).first()
-            warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
+            warehouse = None
+            if warehouse_id:
+                try:
+                    # Do NOT filter by organization — warehouse may belong to a parent/sibling org
+                    warehouse = Warehouse.objects.get(id=warehouse_id)
+                except Warehouse.DoesNotExist:
+                    return Response({"error": f"Warehouse {warehouse_id} does not exist. Check register configuration."}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Fall back to the first active warehouse accessible to this organisation
+                warehouse = Warehouse.objects.filter(is_active=True).first()
+                if not warehouse:
+                    return Response({"error": "No warehouse found. Please create a warehouse first."}, status=status.HTTP_400_BAD_REQUEST)
+
+
             order = POSService.checkout(
                 organization=organization, user=user, warehouse=warehouse,
                 payment_account_id=payment_account_id, items=items, scope=scope,
@@ -66,7 +79,11 @@ class POSViewSet(viewsets.ViewSet):
 
         # Date range: default today, support ?date=YYYY-MM-DD and ?days=7
         date_str = request.query_params.get('date')
-        days = int(request.query_params.get('days', '1'))
+        try:
+            days = int(request.query_params.get('days', '1').strip().strip('/'))
+        except (ValueError, TypeError):
+            days = 1
+
 
         if date_str:
             from datetime import datetime
@@ -209,7 +226,11 @@ class POSViewSet(viewsets.ViewSet):
         from datetime import timedelta
         from apps.pos.models import OrderLine
 
-        days = int(request.query_params.get('days', '30'))
+        try:
+            days = int(request.query_params.get('days', '30').strip().strip('/'))
+        except (ValueError, TypeError):
+            days = 30
+
         end = timezone.now()
         start = end - timedelta(days=days)
 
@@ -353,20 +374,29 @@ class PosTicketViewSet(viewsets.ModelViewSet):
 
         results = []
         for data in tickets_data:
-            ticket_id = data.get('id')
-            if ticket_id:
-                try:
-                    ticket = PosTicket.objects.get(id=ticket_id, organization=organization)
-                    serializer = PosTicketSerializer(ticket, data=data, partial=True)
-                except PosTicket.DoesNotExist:
-                    serializer = PosTicketSerializer(data=data)
-            else:
-                serializer = PosTicketSerializer(data=data)
+            ticket_id_str = str(data.get('id') or data.get('ticket_id') or '').strip()
+            if not ticket_id_str:
+                results.append({"error": "ticket missing id", "data": data})
+                continue
 
-            if serializer.is_valid():
-                serializer.save(organization=organization, user=request.user)
-                results.append(serializer.data)
-            else:
-                results.append({"error": serializer.errors, "data": data})
+            # Build the payload for the ticket fields
+            payload = {
+                'name': data.get('name', 'Ticket'),
+                'ticket_id': ticket_id_str,
+                'data': data.get('cart_data', data.get('data', {})),
+                'is_synced': True,
+            }
+
+            try:
+                ticket, created = PosTicket.objects.update_or_create(
+                    organization=organization,
+                    user=request.user,
+                    ticket_id=ticket_id_str,
+                    defaults=payload
+                )
+                results.append({'ticket_id': ticket_id_str, 'saved': True, 'created': created})
+            except Exception as e:
+                results.append({'ticket_id': ticket_id_str, 'error': str(e)})
 
         return Response({"synced": len(results), "details": results})
+

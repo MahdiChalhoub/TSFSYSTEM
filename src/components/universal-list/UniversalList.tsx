@@ -185,8 +185,8 @@ export default function UniversalList<T = any>({
 
  {/* ── Bulk Actions ── */}
  {selectable && selectedRows.size > 0 && bulkActions && bulkActions.length > 0 && (
- <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-100 rounded-xl">
- <span className="text-xs font-semibold text-blue-700">
+ <div className="flex items-center gap-3 px-4 py-2 bg-app-info-bg border border-blue-100 rounded-xl">
+ <span className="text-xs font-semibold text-app-info">
  {selectedRows.size} selected
  </span>
  {bulkActions.map((ba, i) => (

@@ -47,58 +47,35 @@ export default async function ProductsPage({
  return (
  <div className="page-container">
  {/* 1. Header Section */}
- <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
- <div className="flex items-center gap-4">
- <div className="page-header-icon bg-emerald-600 text-app-text">
- <Database size={22} strokeWidth={2.5} />
- </div>
- <div>
- <div className="flex items-center gap-3">
- <h1 className="page-header-title">
- Product <span className="text-emerald-600">Registry</span>
- </h1>
- <span className="badge-status badge-emerald">V2.5</span>
- </div>
- <p className="page-header-subtitle mt-1 flex items-center gap-2">
- <ShieldCheck size={14} className="text-emerald-500" />
- Master product data management
- </p>
- </div>
- </div>
-
- <div className="flex items-center gap-3">
- <Link
- href="/products/new"
- className="bg-app-surface border border-emerald-100 text-emerald-700 px-6 h-12 rounded-2xl font-bold shadow-sm hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-2 active:scale-95 text-sm"
- >
- <Plus size={18} className="group-hover:rotate-90 transition-transform" />
- <span>New Product</span>
- </Link>
- <Link
- href="/products/create-group"
- className="bg-emerald-600 text-app-text px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 text-sm"
- >
- <Layers size={18} />
- <span>Variant Group</span>
- </Link>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Archive size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Products</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Legacy <span className="text-app-primary">Registry</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* 2. Intelligence Section */}
  {stats && <ProductDashboardStats stats={stats} />}
 
  {/* 3. Toolbar Section */}
- <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-app-surface p-6 rounded-[2.5rem] border border-app-border shadow-2xl shadow-gray-200/10">
- <div className="flex p-2 bg-app-bg rounded-2xl border border-app-border">
+ <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-app-surface p-6 rounded-[2.5rem] border border-app-border shadow-2xl shadow-app-border/20">
+ <div className="flex p-2 bg-app-background rounded-2xl border border-app-border">
  <Link
  href={`/products?view=flat&search=${search}`}
- className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${!isGrouped ? 'bg-app-surface shadow-xl shadow-gray-200/50 text-app-text border border-app-border' : 'text-app-text-faint hover:text-app-text-muted'}`}
+ className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${!isGrouped ? 'bg-app-surface shadow-xl shadow-app-border/20 text-app-foreground border border-app-border' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  <Search size={14} /> Detailed (SKUs)
  </Link>
  <Link
  href={`/products?view=grouped&search=${search}`}
- className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${isGrouped ? 'bg-app-surface shadow-xl shadow-gray-200/50 text-app-text border border-app-border' : 'text-app-text-faint hover:text-app-text-muted'}`}
+ className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${isGrouped ? 'bg-app-surface shadow-xl shadow-app-border/20 text-app-foreground border border-app-border' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  <Layers size={14} /> Grouped (Master)
  </Link>
@@ -107,27 +84,27 @@ export default async function ProductsPage({
  <div className="flex gap-4 w-full max-w-2xl">
  <form action="/products" className="relative flex-1 group">
  <input type="hidden" name="view" value={isGrouped ? 'grouped' : 'flat'} />
- <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none group-focus-within:text-emerald-500 transition-colors" size={22} />
+ <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none group-focus-within:text-app-primary transition-colors" size={22} />
  <input
  type="text"
  name="search"
  defaultValue={search}
  placeholder="Find product by name, SKU or barcode..."
- className="w-full pl-14 pr-6 h-16 bg-gray-50/50 rounded-3xl border-2 border-transparent focus:border-emerald-500/20 focus:bg-app-surface focus:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-bold text-app-text placeholder:text-gray-300 placeholder:font-medium text-lg"
+ className="w-full pl-14 pr-6 h-16 bg-app-surface-2/50 rounded-3xl border-2 border-transparent focus:border-app-primary/20 focus:bg-app-surface focus:ring-8 focus:ring-app-primary/5 outline-none transition-all font-bold text-app-foreground placeholder:text-app-muted-foreground placeholder:font-medium text-lg"
  />
  </form>
- <button className="h-16 w-16 bg-app-surface border-2 border-gray-50 rounded-3xl flex items-center justify-center text-app-text-faint hover:text-emerald-600 hover:border-emerald-100 shadow-sm transition-all hover:rotate-12">
+ <button className="h-16 w-16 bg-app-surface border-2 border-app-border rounded-3xl flex items-center justify-center text-app-muted-foreground hover:text-app-primary hover:border-app-success/30 shadow-sm transition-all hover:rotate-12">
  <Filter size={24} />
  </button>
  </div>
  </div>
 
  {/* 4. Table Section */}
- <div className="bg-app-surface rounded-[3rem] overflow-hidden shadow-2xl shadow-gray-200/20 border border-app-border">
+ <div className="bg-app-surface rounded-[3rem] overflow-hidden shadow-2xl shadow-app-border/20 border border-app-border">
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
- <tr className="bg-gray-50/30 border-b border-app-border text-[10px] uppercase tracking-[0.2em] text-app-text-faint font-black">
+ <tr className="bg-app-surface-2/30 border-b border-app-border text-[10px] uppercase tracking-[0.2em] text-app-muted-foreground font-black">
  <th className="py-8 px-10">Entity Identity</th>
  <th className="py-8 px-10">Origin & Attributes</th>
  <th className="py-8 px-10">Logistics Codes</th>
@@ -140,10 +117,10 @@ export default async function ProductsPage({
  <tr>
  <td colSpan={5} className="py-32 text-center">
  <div className="flex flex-col items-center gap-4 opacity-20">
- <div className="w-20 h-20 rounded-full border-4 border-emerald-600 flex items-center justify-center">
- <Search size={40} className="text-emerald-600" />
+ <div className="w-20 h-20 rounded-full border-4 border-app-primary flex items-center justify-center">
+ <Search size={40} className="text-app-primary" />
  </div>
- <p className="text-xl font-black uppercase tracking-widest text-emerald-900">No results found</p>
+ <p className="text-xl font-black uppercase tracking-widest text-app-success">No results found</p>
  </div>
  </td>
  </tr>
@@ -155,16 +132,16 @@ export default async function ProductsPage({
  </div>
 
  {/* 5. Pagination Layer */}
- <div className="bg-gray-50/30 px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50">
+ <div className="bg-app-surface-2/30 px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-app-border">
  <div className="flex items-center gap-4 bg-app-surface px-6 py-3 rounded-2xl border border-app-border shadow-sm">
  <div className="flex flex-col">
- <span className="text-2xl font-black text-app-text leading-none">{total.toLocaleString()}</span>
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mt-1">Total Artifacts</span>
+ <span className="text-2xl font-black text-app-foreground leading-none">{total.toLocaleString()}</span>
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mt-1">Total Artifacts</span>
  </div>
  <div className="w-px h-8 bg-app-surface-2 mx-2" />
  <div className="flex flex-col">
- <span className="text-2xl font-black text-emerald-600 leading-none">{totalPages}</span>
- <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mt-1">Master Pages</span>
+ <span className="text-2xl font-black text-app-primary leading-none">{totalPages}</span>
+ <span className="text-[10px] font-black text-app-primary uppercase tracking-widest mt-1">Master Pages</span>
  </div>
  </div>
 
@@ -172,21 +149,21 @@ export default async function ProductsPage({
  <nav className="flex items-center gap-3">
  <Link
  href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page > 1 ? page - 1 : 1}&search=${search}`}
- className={`h-14 px-6 flex items-center gap-3 bg-app-surface border border-app-border rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-bg hover:border-app-border transition-all shadow-sm active:translate-y-1 ${page <= 1 ? 'opacity-30 pointer-events-none' : ''}`}
+ className={`h-14 px-6 flex items-center gap-3 bg-app-surface border border-app-border rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-background hover:border-app-border transition-all shadow-sm active:translate-y-1 ${page <= 1 ? 'opacity-30 pointer-events-none' : ''}`}
  >
  <ChevronLeft size={18} /> Prev
  </Link>
 
  <div className="flex h-14 items-center bg-app-surface px-6 rounded-2xl border border-app-border shadow-sm font-black text-sm tabular-nums">
- <span className="text-app-text-faint">PAGE</span>
- <span className="mx-2 text-app-text">{page}</span>
- <span className="text-gray-200 mx-1">/</span>
- <span className="text-app-text-faint">{totalPages}</span>
+ <span className="text-app-muted-foreground">PAGE</span>
+ <span className="mx-2 text-app-foreground">{page}</span>
+ <span className="text-app-foreground mx-1">/</span>
+ <span className="text-app-muted-foreground">{totalPages}</span>
  </div>
 
  <Link
  href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page < totalPages ? page + 1 : totalPages}&search=${search}`}
- className={`h-14 px-6 flex items-center gap-3 bg-emerald-600 text-app-text rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20 active:translate-y-1 ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
+ className={`h-14 px-6 flex items-center gap-3 bg-app-primary text-app-foreground rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-app-success transition-all shadow-xl shadow-app-primary/20 active:translate-y-1 ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
  >
  Next <ChevronRight size={18} />
  </Link>

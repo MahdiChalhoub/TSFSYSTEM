@@ -162,7 +162,7 @@ export default function VerifyPage() {
  }
  }
  if (loading) {
- return <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+ return <div className="app-page flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
  }
  const isReadOnly = session?.status === 'ADJUSTED'
  return (
@@ -184,7 +184,7 @@ export default function VerifyPage() {
  </div>
  <div className="flex gap-2">
  {!isReadOnly && session?.status === 'WAITING_VERIFICATION' && (
- <Button onClick={handleVerifyAll} disabled={isPending} className="bg-green-600 hover:bg-green-700">
+ <Button onClick={handleVerifyAll} disabled={isPending} className="bg-app-success hover:bg-app-success">
  <ShieldCheck className="w-4 h-4 mr-2" /> Verify All
  </Button>
  )}
@@ -199,19 +199,19 @@ export default function VerifyPage() {
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
  <Card>
  <CardContent className="flex items-center gap-3 p-4">
- <Package className="w-5 h-5 text-blue-500" />
+ <Package className="w-5 h-5 text-app-info" />
  <div><p className="text-xs text-muted-foreground">Total Lines</p><p className="text-xl font-bold">{totalLines}</p></div>
  </CardContent>
  </Card>
  <Card>
  <CardContent className="flex items-center gap-3 p-4">
- <CheckCircle2 className="w-5 h-5 text-green-500" />
+ <CheckCircle2 className="w-5 h-5 text-app-success" />
  <div><p className="text-xs text-muted-foreground">Verified</p><p className="text-xl font-bold">{verifiedCount}</p></div>
  </CardContent>
  </Card>
  <Card>
  <CardContent className="flex items-center gap-3 p-4">
- <AlertTriangle className="w-5 h-5 text-yellow-500" />
+ <AlertTriangle className="w-5 h-5 text-app-warning" />
  <div><p className="text-xs text-muted-foreground">Differences</p><p className="text-xl font-bold">{diffCount}</p></div>
  </CardContent>
  </Card>
@@ -270,7 +270,7 @@ export default function VerifyPage() {
  ) : filtered.map(line => {
  const hasDiff = line.needs_adjustment
  return (
- <TableRow key={line.id} className={hasDiff ? "bg-yellow-50/50 dark:bg-yellow-950/10" : ""}>
+ <TableRow key={line.id} className={hasDiff ? "bg-app-warning-bg/50 dark:bg-yellow-950/10" : ""}>
  {!isReadOnly && (
  <TableCell><Checkbox checked={selected.has(line.id)} onCheckedChange={() => toggleSelect(line.id)} /></TableCell>
  )}
@@ -281,30 +281,30 @@ export default function VerifyPage() {
  <TableCell className="text-center font-mono">{line.physical_qty_person2 !== null ? Number(line.physical_qty_person2) : '—'}</TableCell>
  <TableCell className="text-center">
  {line.difference_person1 !== null ? (
- <Badge className={Number(line.difference_person1) === 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+ <Badge className={Number(line.difference_person1) === 0 ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error"}>
  {Number(line.difference_person1) > 0 ? '+' : ''}{Number(line.difference_person1)}
  </Badge>
  ) : '—'}
  </TableCell>
  <TableCell className="text-center">
  {line.difference_person2 !== null ? (
- <Badge className={Number(line.difference_person2) === 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+ <Badge className={Number(line.difference_person2) === 0 ? "bg-app-success-bg text-app-success" : "bg-app-error-bg text-app-error"}>
  {Number(line.difference_person2) > 0 ? '+' : ''}{Number(line.difference_person2)}
  </Badge>
  ) : '—'}
  </TableCell>
  <TableCell className="text-center">
  {line.is_same_difference ? (
- <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+ <CheckCircle2 className="w-4 h-4 text-app-success mx-auto" />
  ) : line.physical_qty_person1 !== null && line.physical_qty_person2 !== null ? (
- <XCircle className="w-4 h-4 text-red-500 mx-auto" />
+ <XCircle className="w-4 h-4 text-app-error mx-auto" />
  ) : '—'}
  </TableCell>
  <TableCell className="text-center">
  {line.is_adjusted ? (
  <Badge className="bg-purple-100 text-purple-700"><Sparkles className="w-3 h-3 mr-1" />Adjusted</Badge>
  ) : line.is_verified ? (
- <Badge className="bg-green-100 text-green-700"><CheckCircle2 className="w-3 h-3 mr-1" />Verified</Badge>
+ <Badge className="bg-app-success-bg text-app-success"><CheckCircle2 className="w-3 h-3 mr-1" />Verified</Badge>
  ) : (
  <Badge variant="outline">Pending</Badge>
  )}

@@ -120,31 +120,31 @@ export function MigrationAuditPage() {
     const resolvedMap = summary?.resolved_map || {};
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 bg-app-bg">
             {/* ═══════ STICKY HEADER ═══════ */}
-            <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+            <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-app-border shadow-sm">
                 <div className="max-w-[1600px] mx-auto px-6 py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/migration')} className="h-10 w-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all active:scale-95">
-                                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                            <button onClick={() => router.push('/migration')} className="h-10 w-10 rounded-xl bg-app-surface-2 hover:bg-app-border flex items-center justify-center transition-all active:scale-95">
+                                <ArrowLeft className="w-5 h-5 text-app-text-muted" />
                             </button>
                             <div className="flex items-center gap-3">
                                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center border border-emerald-200/50">
                                     <Icon className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg font-black text-gray-900 tracking-tight">Migration Audit: {entityLabel}</h1>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{totalCount.toLocaleString()} records · Job #{jobId}</p>
+                                    <h1 className="text-lg font-black text-app-text tracking-tight">Migration Audit: {entityLabel}</h1>
+                                    <p className="text-[10px] text-app-text-faint font-bold uppercase tracking-widest">{totalCount.toLocaleString()} records · Job #{jobId}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint w-4 h-4" />
                                 <input type="text" placeholder="Filter..." value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)}
-                                    className="pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 outline-none focus:border-emerald-400 w-48 transition-all placeholder:text-gray-300" />
-                                {searchFilter && <button onClick={() => setSearchFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"><X className="w-4 h-4" /></button>}
+                                    className="pl-9 pr-8 py-2 bg-app-bg border border-app-border rounded-xl text-sm font-medium text-app-text-muted outline-none focus:border-emerald-400 w-48 transition-all placeholder:text-gray-300" />
+                                {searchFilter && <button onClick={() => setSearchFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-app-text-faint"><X className="w-4 h-4" /></button>}
                             </div>
                         </div>
                     </div>
@@ -154,12 +154,12 @@ export function MigrationAuditPage() {
             <div className="max-w-[1600px] mx-auto px-6 py-5 space-y-5">
                 {/* ═══════ STRATEGY DASHBOARD ═══════ */}
                 {loadingSummary ? (
-                    <div className="flex items-center gap-3 p-6 bg-white rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3 p-6 bg-app-surface rounded-2xl border border-app-border">
                         <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
-                        <span className="text-sm text-gray-400 font-bold">Loading diagnostics...</span>
+                        <span className="text-sm text-app-text-faint font-bold">Loading diagnostics...</span>
                     </div>
                 ) : summary && (
-                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="bg-app-surface rounded-2xl border border-app-border overflow-hidden shadow-sm">
                         <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white">
                             <div className="flex items-center gap-3 mb-3">
                                 <Shield className="w-5 h-5 text-emerald-400" />
@@ -178,10 +178,10 @@ export function MigrationAuditPage() {
                                         { label: 'Suppliers', value: diag.suppliers || 0, color: 'text-purple-600', bg: 'bg-purple-50' },
                                         { label: 'Both', value: diag.both || 0, color: 'text-amber-600', bg: 'bg-amber-50' },
                                         { label: 'Linked to Ledger', value: diag.linked_to_ledger || 0, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                        { label: 'NOT Linked', value: diag.not_linked || 0, color: diag.not_linked > 0 ? 'text-red-600' : 'text-gray-400', bg: diag.not_linked > 0 ? 'bg-red-50' : 'bg-gray-50' },
+                                        { label: 'NOT Linked', value: diag.not_linked || 0, color: diag.not_linked > 0 ? 'text-red-600' : 'text-app-text-faint', bg: diag.not_linked > 0 ? 'bg-red-50' : 'bg-app-bg' },
                                     ].map(s => (
-                                        <div key={s.label} className={`${s.bg} p-3 rounded-xl border border-gray-100`}>
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
+                                        <div key={s.label} className={`${s.bg} p-3 rounded-xl border border-app-border`}>
+                                            <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">{s.label}</p>
                                             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
                                         </div>
                                     ))}
@@ -189,19 +189,19 @@ export function MigrationAuditPage() {
 
                                 {/* RESOLVED MAP — shows the auto-resolved posting rules */}
                                 {resolvedMap?.customer_root && (
-                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="bg-app-bg border border-app-border rounded-xl p-4 space-y-2">
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
                                             <Zap className="w-3 h-3" /> Auto-Resolved from Posting Rules
                                         </p>
                                         <div className="grid grid-cols-2 gap-3 text-xs">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-gray-400 font-bold">Customers →</span>
+                                                <span className="text-app-text-faint font-bold">Customers →</span>
                                                 <span className="font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                                                     {resolvedMap.customer_root?.code} – {resolvedMap.customer_root?.name}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-gray-400 font-bold">Suppliers →</span>
+                                                <span className="text-app-text-faint font-bold">Suppliers →</span>
                                                 <span className="font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
                                                     {resolvedMap.supplier_root?.code} – {resolvedMap.supplier_root?.name}
                                                 </span>
@@ -255,12 +255,12 @@ export function MigrationAuditPage() {
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[
                                         { label: 'Completed', value: diag.completed || 0, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                        { label: 'Draft', value: diag.draft || 0, color: diag.draft > 0 ? 'text-amber-600' : 'text-gray-400', bg: diag.draft > 0 ? 'bg-amber-50' : 'bg-gray-50' },
+                                        { label: 'Draft', value: diag.draft || 0, color: diag.draft > 0 ? 'text-amber-600' : 'text-app-text-faint', bg: diag.draft > 0 ? 'bg-amber-50' : 'bg-app-bg' },
                                         { label: 'Migration JEs', value: (diag.migration_journal_entries || 0).toLocaleString(), color: 'text-blue-600', bg: 'bg-blue-50' },
                                         { label: 'Using Suspense?', value: diag.uses_suspense_accounts ? 'YES ⚠️' : 'No', color: diag.uses_suspense_accounts ? 'text-red-600' : 'text-emerald-600', bg: diag.uses_suspense_accounts ? 'bg-red-50' : 'bg-emerald-50' },
                                     ].map(s => (
-                                        <div key={s.label} className={`${s.bg} p-3 rounded-xl border border-gray-100`}>
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
+                                        <div key={s.label} className={`${s.bg} p-3 rounded-xl border border-app-border`}>
+                                            <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">{s.label}</p>
                                             <p className={`text-2xl font-black ${s.color}`}>{typeof s.value === 'number' ? s.value.toLocaleString() : s.value}</p>
                                         </div>
                                     ))}
@@ -268,8 +268,8 @@ export function MigrationAuditPage() {
 
                                 {/* Resolved posting rules for transactions */}
                                 {resolvedMap?.revenue && (
-                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="bg-app-bg border border-app-border rounded-xl p-4 space-y-2">
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2">
                                             <Zap className="w-3 h-3" /> Transaction Posting Rules Map
                                         </p>
                                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
@@ -281,7 +281,7 @@ export function MigrationAuditPage() {
                                                 { label: 'Payable (AP)', data: resolvedMap.payable, color: 'text-purple-700 bg-purple-50' },
                                             ].map(r => r.data && (
                                                 <div key={r.label} className="flex items-center gap-1.5">
-                                                    <span className="text-gray-400 font-bold shrink-0">{r.label} →</span>
+                                                    <span className="text-app-text-faint font-bold shrink-0">{r.label} →</span>
                                                     <span className={`font-black px-1.5 py-0.5 rounded truncate ${r.color}`}>
                                                         {r.data.code} {r.data.name}
                                                     </span>
@@ -323,16 +323,16 @@ export function MigrationAuditPage() {
                         {entityType === 'ACCOUNT' && (
                             <div className="p-5 space-y-4">
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-emerald-50 p-3 rounded-xl border border-gray-100">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Linked to COA</p>
+                                    <div className="bg-emerald-50 p-3 rounded-xl border border-app-border">
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">Linked to COA</p>
                                         <p className="text-2xl font-black text-emerald-600">{diag.linked_to_coa || 0}</p>
                                     </div>
-                                    <div className={`${(diag.not_linked || 0) > 0 ? 'bg-red-50' : 'bg-gray-50'} p-3 rounded-xl border border-gray-100`}>
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Not Linked</p>
-                                        <p className={`text-2xl font-black ${(diag.not_linked || 0) > 0 ? 'text-red-600' : 'text-gray-400'}`}>{diag.not_linked || 0}</p>
+                                    <div className={`${(diag.not_linked || 0) > 0 ? 'bg-red-50' : 'bg-app-bg'} p-3 rounded-xl border border-app-border`}>
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">Not Linked</p>
+                                        <p className={`text-2xl font-black ${(diag.not_linked || 0) > 0 ? 'text-red-600' : 'text-app-text-faint'}`}>{diag.not_linked || 0}</p>
                                     </div>
-                                    <div className="bg-blue-50 p-3 rounded-xl border border-gray-100">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Link Rate</p>
+                                    <div className="bg-blue-50 p-3 rounded-xl border border-app-border">
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">Link Rate</p>
                                         <p className="text-2xl font-black text-blue-600">{diag.link_rate || 0}%</p>
                                     </div>
                                 </div>
@@ -343,15 +343,15 @@ export function MigrationAuditPage() {
                         {(entityType === 'PRODUCT' || entityType === 'EXPENSE') && (
                             <div className="p-5 space-y-4">
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className={`${(diag.draft || 0) > 0 ? 'bg-amber-50' : 'bg-gray-50'} p-3 rounded-xl border border-gray-100`}>
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Draft</p>
-                                        <p className={`text-2xl font-black ${(diag.draft || 0) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>{diag.draft || 0}</p>
+                                    <div className={`${(diag.draft || 0) > 0 ? 'bg-amber-50' : 'bg-app-bg'} p-3 rounded-xl border border-app-border`}>
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">Draft</p>
+                                        <p className={`text-2xl font-black ${(diag.draft || 0) > 0 ? 'text-amber-600' : 'text-app-text-faint'}`}>{diag.draft || 0}</p>
                                     </div>
-                                    <div className="bg-emerald-50 p-3 rounded-xl border border-gray-100">
-                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{entityType === 'PRODUCT' ? 'Active' : 'Posted'}</p>
+                                    <div className="bg-emerald-50 p-3 rounded-xl border border-app-border">
+                                        <p className="text-[9px] font-black text-app-text-faint uppercase tracking-widest">{entityType === 'PRODUCT' ? 'Active' : 'Posted'}</p>
                                         <p className="text-2xl font-black text-emerald-600">{diag.active || diag.posted || 0}</p>
                                     </div>
-                                    <div className="p-3 rounded-xl border border-gray-100">
+                                    <div className="p-3 rounded-xl border border-app-border">
                                         {(diag.draft || 0) > 0 && (
                                             <button onClick={handleBulkApprove} disabled={processing}
                                                 className="w-full h-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all disabled:opacity-50">
@@ -370,12 +370,12 @@ export function MigrationAuditPage() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-                        <p className="text-gray-400 font-bold text-sm">Loading {entityLabel}...</p>
+                        <p className="text-app-text-faint font-bold text-sm">Loading {entityLabel}...</p>
                     </div>
                 ) : filteredRecords.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <Database className="w-12 h-12 text-gray-200" />
-                        <p className="text-gray-400 font-bold">No records found</p>
+                        <p className="text-app-text-faint font-bold">No records found</p>
                     </div>
                 ) : (
                     <>
@@ -403,12 +403,12 @@ export function MigrationAuditPage() {
 
                                 return (
                                     <div key={record.mapping_id || idx}
-                                        className={`grid grid-cols-[50px_1fr_40px_1fr] border rounded-2xl transition-all hover:shadow-md cursor-pointer group ${hasError ? 'bg-red-50/50 border-red-200' : 'bg-white border-gray-100 hover:border-emerald-200'}`}
+                                        className={`grid grid-cols-[50px_1fr_40px_1fr] border rounded-2xl transition-all hover:shadow-md cursor-pointer group ${hasError ? 'bg-red-50/50 border-red-200' : 'bg-app-surface border-app-border hover:border-emerald-200'}`}
                                         onClick={() => setExpandedRow(isExpanded ? null : idx)}>
 
                                         {/* Row # */}
                                         <div className="flex flex-col items-center justify-center py-3 border-r border-gray-100/50 text-center">
-                                            <span className="text-sm font-black text-gray-200 group-hover:text-gray-400">{rowNum}</span>
+                                            <span className="text-sm font-black text-gray-200 group-hover:text-app-text-faint">{rowNum}</span>
                                         </div>
 
                                         {/* SOURCE */}
@@ -437,17 +437,17 @@ export function MigrationAuditPage() {
 
                         {/* PAGINATION */}
                         <div className="flex items-center justify-between mt-6 px-2">
-                            <p className="text-xs font-bold text-gray-400">
+                            <p className="text-xs font-bold text-app-text-faint">
                                 {(page - 1) * 30 + 1} – {Math.min(page * 30, totalCount)} of {totalCount.toLocaleString()}
                             </p>
                             <div className="flex items-center gap-2">
                                 <button onClick={() => fetchRecords(page - 1)} disabled={page <= 1}
-                                    className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30 transition-all">
+                                    className="h-9 w-9 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-app-text-faint hover:bg-app-bg disabled:opacity-30 transition-all">
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
-                                <span className="text-xs font-bold text-gray-500 px-2">Page {page}/{totalPages}</span>
+                                <span className="text-xs font-bold text-app-text-faint px-2">Page {page}/{totalPages}</span>
                                 <button onClick={() => fetchRecords(page + 1)} disabled={page >= totalPages}
-                                    className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30 transition-all">
+                                    className="h-9 w-9 rounded-xl bg-app-surface border border-app-border flex items-center justify-center text-app-text-faint hover:bg-app-bg disabled:opacity-30 transition-all">
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -473,7 +473,7 @@ function renderSourcePanel(entityType: string, source: any, expanded: boolean) {
                 {displayKeys.map(key => (
                     <div key={key} className="min-w-0">
                         <p className="text-[8px] font-bold text-amber-500/60 uppercase tracking-tight truncate">{key.replace(/_/g, ' ')}</p>
-                        <p className="text-[11px] font-bold text-gray-700 truncate">{renderVal(source[key])}</p>
+                        <p className="text-[11px] font-bold text-app-text-muted truncate">{renderVal(source[key])}</p>
                     </div>
                 ))}
             </div>
@@ -496,7 +496,7 @@ function ContactTargetPanel({ target, expanded }: { target: any; expanded: boole
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black text-gray-900">{target.name}</span>
+                <span className="text-sm font-black text-app-text">{target.name}</span>
                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${target.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' : target.type === 'SUPPLIER' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}`}>
                     {target.type}
                 </span>
@@ -526,7 +526,7 @@ function TransactionTargetPanel({ target, expanded }: { target: any; expanded: b
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black text-gray-900">{target.ref || `#${target.id}`}</span>
+                <span className="text-sm font-black text-app-text">{target.ref || `#${target.id}`}</span>
                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${target.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {target.status}
                 </span>
@@ -572,7 +572,7 @@ function AccountTargetPanel({ target, expanded }: { target: any; expanded: boole
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black text-gray-900">{target.name}</span>
+                <span className="text-sm font-black text-app-text">{target.name}</span>
                 {target.is_linked_to_coa ? (
                     <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
                         <Link2 className="w-3 h-3" /> {target.coa_code} {target.coa_name}
@@ -596,7 +596,7 @@ function ExpenseTargetPanel({ target, expanded }: { target: any; expanded: boole
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black text-gray-900">{target.reference || `#${target.id}`}</span>
+                <span className="text-sm font-black text-app-text">{target.reference || `#${target.id}`}</span>
                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${target.status === 'POSTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {target.status}
                 </span>
@@ -619,11 +619,11 @@ function ProductTargetPanel({ target, expanded }: { target: any; expanded: boole
     return (
         <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black text-gray-900">{target.name}</span>
+                <span className="text-sm font-black text-app-text">{target.name}</span>
                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${target.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {target.status}
                 </span>
-                {target.product_type && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{target.product_type}</span>}
+                {target.product_type && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-app-surface-2 text-app-text-muted">{target.product_type}</span>}
             </div>
             <div className="grid grid-cols-3 gap-x-4 gap-y-1">
                 <Field label="Selling Price" value={Number(target.selling_price || 0).toLocaleString()} color="text-blue-600" />
@@ -649,7 +649,7 @@ function Field({ label, value, color }: { label: string; value: string; color?: 
     return (
         <div className="min-w-0">
             <p className="text-[8px] font-bold text-emerald-500/50 uppercase tracking-tight truncate">{label}</p>
-            <p className={`text-[11px] font-bold truncate ${color || 'text-gray-800'}`} title={value}>{value || '—'}</p>
+            <p className={`text-[11px] font-bold truncate ${color || 'text-app-text'}`} title={value}>{value || '—'}</p>
         </div>
     );
 }

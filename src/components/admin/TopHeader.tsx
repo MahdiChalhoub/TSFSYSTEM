@@ -13,14 +13,14 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
     const [profileOpen, setProfileOpen] = useState(false);
 
     return (
-        <header className="h-11 glass sticky top-0 z-40 flex items-center justify-between px-3 md:px-5 shrink-0 transition-all border-b border-app-border">
+        <header className="h-16 sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 transition-all border-b" style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)' }}>
             <div className="flex items-center gap-1.5 md:gap-4 flex-1">
                 <button
                     onClick={toggleSidebar}
                     suppressHydrationWarning={true}
-                    className="p-1 px-1.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-lg text-app-text-muted transition-all duration-200"
+                    className="p-2 rounded-lg text-app-text-muted hover:bg-app-surface-2 active:scale-95 transition-all duration-200"
                 >
-                    <Menu size={18} className="text-gray-700" />
+                    <Menu size={18} className="text-app-text-muted" />
                 </button>
 
                 {/* Switchers - Handle visibility based on screen size */}
@@ -29,7 +29,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
 
                     {/* Currency & Industry Display */}
                     {currentSlug !== 'saas' && (
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100/50 rounded-xl border border-gray-200/50">
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md border" style={{ background: 'var(--app-surface-2)', borderColor: 'var(--app-border)' }}>
                             {(() => {
                                 const orgList = Array.isArray(organizations) ? organizations : [];
                                 const activeOrg = orgList.find((o: Record<string, any>) => o.slug === currentSlug);
@@ -38,7 +38,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                                         {activeOrg?.currency_code && (
                                             <div className="flex items-center gap-1.5 pr-2 border-r border-app-border">
                                                 <span className="text-[10px] font-black text-app-text-faint uppercase tracking-tighter">Currency</span>
-                                                <span className="text-xs font-bold text-emerald-600">{activeOrg.currency_code} ({activeOrg.currency_symbol})</span>
+                                                <span className="text-xs font-bold text-app-primary">{activeOrg.currency_code} ({activeOrg.currency_symbol})</span>
                                             </div>
                                         )}
                                         {activeOrg?.business_type_name && (
@@ -53,7 +53,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                         </div>
                     )}
 
-                    <div className="h-8 w-px bg-gray-200/60 hidden xl:block mx-1"></div>
+                    <div className="h-6 w-px hidden xl:block mx-1" style={{ background: 'var(--app-border)' }}></div>
                     <div className="hidden md:block">
                         <SiteSwitcher sites={sites} />
                     </div>
@@ -64,9 +64,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                     <button
                         type="button"
                         onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                        className="w-full flex items-center gap-3 pl-3 pr-3 py-1.5 bg-gray-100/30 border border-transparent hover:bg-app-surface hover:border-app-border rounded-xl text-xs transition-all group cursor-text"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md border text-sm transition-all group cursor-text" style={{ background: 'var(--app-surface-2)', borderColor: 'var(--app-border)', color: 'var(--app-text-faint)' } as React.CSSProperties}
                     >
-                        <Search size={16} className="text-app-text-faint group-hover:text-emerald-500 transition-colors" />
+                        <Search size={16} className="text-app-text-faint group-hover:text-app-primary transition-colors" />
                         <span className="flex-1 text-left text-app-text-faint">Search pages, settings, reports...</span>
                         <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-mono font-bold text-app-text-faint bg-app-surface-2 rounded-lg border border-app-border">
                             Ctrl+K
@@ -85,23 +85,23 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
 
                 <NotificationBell />
 
-                <div className="h-8 w-px bg-gray-200/60 hidden sm:block"></div>
+                <div className="h-6 w-px hidden sm:block" style={{ background: 'var(--app-border)' }}></div>
 
                 {/* User Profile with Dropdown */}
                 <div className="relative">
                     <div
                         onClick={() => setProfileOpen(!profileOpen)}
-                        className="flex items-center gap-2 pl-1 cursor-pointer group p-1 hover:bg-app-text/50 rounded-xl border border-transparent hover:border-gray-200/50 transition-all"
+                        className="flex items-center gap-2 px-2 py-1.5 cursor-pointer rounded-md border border-transparent hover:border-app-border transition-all" style={{ ['--tw-bg-opacity' as string]: '1' } as React.CSSProperties} onMouseEnter={e => (e.currentTarget.style.background = 'var(--app-surface-2)')} onMouseLeave={e => (e.currentTarget.style.background = '')}
                     >
                         <div className="text-right hidden sm:block">
-                            <div className="text-xs font-bold text-app-text group-hover:text-emerald-800 transition-colors truncate max-w-[100px]">
+                            <div className="text-xs font-bold text-app-text group-hover:text-app-success transition-colors truncate max-w-[100px]">
                                 {user?.first_name ? `${user.first_name}` : (user?.username || 'User')}
                             </div>
                             <div className="text-[9px] text-app-text-faint font-bold uppercase tracking-tighter">
                                 {user?.is_superuser ? 'Admin' : 'Member'}
                             </div>
                         </div>
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 text-emerald-700 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-all shrink-0">
+                        <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-all" style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}>
                             <User size={16} />
                         </div>
                     </div>
@@ -133,7 +133,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                                     <form action={logoutAction}>
                                         <button
                                             type="submit"
-                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm rounded-md transition-colors" style={{ color: 'var(--app-error)' }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--app-error-bg)')} onMouseLeave={e => (e.currentTarget.style.background = '')}
                                         >
                                             <LogOut size={16} /> Log Out
                                         </button>

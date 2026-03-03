@@ -158,3 +158,119 @@ class StorefrontPublicConfigView(APIView):
             organization=org, gateway_type='STRIPE', is_active=True
         ).first()
         return stripe_cfg.publishable_key if stripe_cfg else None
+
+
+# =============================================================================
+# PORTAL SELF-REGISTRATION: Customer creates own storefront account
+# =============================================================================
+
+logger = logging.getLogger(__name__)
+
+
+class ClientPortalRegisterView(APIView):
+    """
+    Public self-registration endpoint.
+    Creates a Django User + Contact + ClientPortalAccess for the given org slug.
+    Also creates a ClientWallet with zero balance.
+
+    POST /api/client-portal/portal-auth/register/
+    {
+        "slug": "my-org",
+        "name": "Jane Doe",
+        "email": "jane@example.com",
+        "password": "secure_pass",
+        "phone": "+1 555 000 0000"   // optional
+    }
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        from erp.models import Organization, User
+        from apps.crm.models import Contact
+
+        name     = request.data.get('name', '').strip()
+        email    = request.data.get('email', '').strip().lower()
+        password = request.data.get('password', '')
+        phone    = request.data.get('phone', '').strip()
+        slug     = request.data.get('slug', '').strip()
+
+        # Validation
+        errors = {}
+        if not name:    errors['name']     = 'Name is required.'
+        if not email:   errors['email']    = 'Email is required.'
+        if not password: errors['password'] = 'Password is required.'
+        if len(password) < 8:
+            errors['password'] = 'Password must be at least 8 characters.'
+
+        if errors:
+            return Response(errors, status=400)
+
+        # Resolve the organization
+        if not slug:
+            # Try to resolve from X-Tenant-Id header (subdomain)
+            slug = request.headers.get('X-Tenant-Id', '')
+        try:
+            org = Organization.objects.get(slug=slug)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found.'}, status=404)
+
+        # Check if self-registration is allowed
+        config = ClientPortalConfig.get_config(org)
+        if not getattr(config, 'allow_self_registration', True):
+            return Response({'error': 'Self-registration is disabled for this store.'}, status=403)
+
+        # Check email uniqueness
+        if User.objects.filter(email=email).exists():
+            return Response({'email': 'An account with this email already exists.'}, status=400)
+
+        from django.db import transaction
+        try:
+            with transaction.atomic():
+                # Create Django User
+                first, *rest = name.split(' ', 1)
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                    first_name=first,
+                    last_name=rest[0] if rest else '',
+                    organization=org,
+                    is_active=True,
+                )
+
+                # Create or get Contact
+                contact, _ = Contact.objects.get_or_create(
+                    organization=org, email=email,
+                    defaults={
+                        'name': name,
+                        'phone': phone,
+                        'contact_type': 'CUSTOMER',
+                        'is_active': True,
+                    }
+                )
+                if not contact.phone and phone:
+                    contact.phone = phone
+                    contact.save(update_fields=['phone'])
+
+                # Create ClientPortalAccess
+                access = ClientPortalAccess.objects.create(
+                    user=user,
+                    contact=contact,
+                    status='ACTIVE',
+                    permissions=[],
+                )
+
+                # Create Wallet
+                ClientWallet.objects.get_or_create(
+                    contact=contact,
+                    defaults={'balance': 0, 'currency': org.currency or 'USD'}
+                )
+
+                logger.info(f"[Register] New storefront account created: {email} @ {org.slug}")
+
+        except Exception as exc:
+            logger.exception(f"[Register] Error creating account for {email}: {exc}")
+            return Response({'error': 'Registration failed. Please try again.'}, status=500)
+
+        return Response({'message': 'Account created successfully. You can now sign in.'}, status=201)

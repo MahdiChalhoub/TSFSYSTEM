@@ -4,7 +4,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'
 
  return (
- <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
+ <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden bg-app-bg">
  {/* Ambient glow effects */}
  <div className="absolute inset-0 overflow-hidden pointer-events-none">
  <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" />
@@ -37,7 +37,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  </svg>
  </div>
  {/* Status badge */}
- <div className="absolute -top-2 -right-2 w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/40 rotate-12">
+ <div className="absolute -top-2 -right-2 w-9 h-9 bg-app-warning rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/40 rotate-12">
  <span className="text-app-text text-lg font-black">?</span>
  </div>
  </div>
@@ -54,29 +54,29 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  </div>
 
  {/* Slug Display Card */}
- <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-5 backdrop-blur-sm mx-auto max-w-sm">
+ <div className="bg-app-surface-2/50 border border-slate-700/40 rounded-2xl p-5 backdrop-blur-sm mx-auto max-w-sm">
  <p className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em] mb-2">Requested Address</p>
  <p className="text-slate-300 font-mono font-bold text-lg">
  <span className="text-app-text-muted">https://</span>
- <span className="text-amber-400">{slug}</span>
+ <span className="text-app-warning">{slug}</span>
  <span className="text-app-text-muted">.{rootDomain}</span>
  </p>
  </div>
 
  {/* Possible reasons */}
- <div className="bg-slate-800/30 border border-slate-700/30 rounded-2xl p-5 text-left space-y-3 max-w-sm mx-auto">
+ <div className="bg-app-surface-2/30 border border-slate-700/30 rounded-2xl p-5 text-left space-y-3 max-w-sm mx-auto">
  <p className="text-[10px] font-black text-app-text-muted uppercase tracking-[0.2em]">This could mean</p>
  <div className="space-y-2">
  <div className="flex items-start gap-3">
- <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+ <div className="w-1.5 h-1.5 rounded-full bg-app-warning mt-2 shrink-0" />
  <p className="text-sm text-app-text-faint">The workspace name is misspelled</p>
  </div>
  <div className="flex items-start gap-3">
- <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+ <div className="w-1.5 h-1.5 rounded-full bg-app-warning mt-2 shrink-0" />
  <p className="text-sm text-app-text-faint">The organization hasn&apos;t been created yet</p>
  </div>
  <div className="flex items-start gap-3">
- <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+ <div className="w-1.5 h-1.5 rounded-full bg-app-warning mt-2 shrink-0" />
  <p className="text-sm text-app-text-faint">The workspace was removed by its owner</p>
  </div>
  </div>
@@ -93,13 +93,13 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  <div className="flex gap-3">
  <Link
  href={`https://${rootDomain}`}
- className="flex-1 py-3.5 px-6 bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
+ className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
  >
  Home
  </Link>
  <Link
  href={`https://${rootDomain}/login`}
- className="flex-1 py-3.5 px-6 bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
+ className="flex-1 py-3.5 px-6 bg-app-surface-2/80 hover:bg-slate-700 text-slate-300 font-bold text-sm rounded-xl border border-slate-700/50 transition-all duration-200"
  >
  Sign In
  </Link>
@@ -114,7 +114,7 @@ export function OrgNotFoundPage({ slug }: { slug: string }) {
  Sign in from the main page
  </Link>
  </p>
- <p className="text-[10px] text-slate-700 font-mono uppercase tracking-widest">
+ <p className="text-[10px] text-app-text-muted font-mono uppercase tracking-widest">
  Powered by TSF Platform
  </p>
  </div>

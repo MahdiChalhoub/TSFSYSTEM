@@ -90,15 +90,15 @@ export default function StockCountPage() {
  const pendingReview = sessions.filter(s => s.status === 'WAITING_VERIFICATION').length
  const auditCompletion = sessions.length > 0 ? (sessions.filter(s => s.status === 'VERIFIED' || s.status === 'ADJUSTED').length / sessions.length * 100).toFixed(1) : '0.0'
  const columns: ColumnDef<Session>[] = [
- { key: 'reference', label: 'Reference', sortable: true, alwaysVisible: true, render: r => <span className="font-mono font-bold text-app-text">COUNT-{r.reference || r.id}</span> },
- { key: 'location', label: 'Warehouse', render: r => <Badge variant="outline" className="bg-app-bg text-gray-700 border-app-border uppercase text-[9px] font-black">{r.warehouse_name || r.location}</Badge> },
- { key: 'section', label: 'Category', render: r => <span className="text-xs font-medium text-app-text-faint italic">{r.section}</span> },
- { key: 'date', label: 'Count Date', render: r => <span className="text-app-text-muted font-medium">{r.session_date}</span> },
+ { key: 'reference', label: 'Reference', sortable: true, alwaysVisible: true, render: r => <span className="font-mono font-bold text-app-foreground">COUNT-{r.reference || r.id}</span> },
+ { key: 'location', label: 'Warehouse', render: r => <Badge variant="outline" className="bg-app-background text-app-muted-foreground border-app-border uppercase text-[9px] font-black">{r.warehouse_name || r.location}</Badge> },
+ { key: 'section', label: 'Category', render: r => <span className="text-xs font-medium text-app-muted-foreground italic">{r.section}</span> },
+ { key: 'date', label: 'Count Date', render: r => <span className="text-app-muted-foreground font-medium">{r.session_date}</span> },
  {
  key: 'progress', label: 'Progress', align: 'center', render: r => (
- <div className="flex flex-col items-center gap-1">
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-tighter">Verified</span>
- <span className={`text-sm font-black ${r.verified_count === r.products_count ? 'text-emerald-600' : 'text-orange-500'}`}>{r.verified_count}/{r.products_count}</span>
+ <div className="app-page flex flex-col items-center gap-1">
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-tighter">Verified</span>
+ <span className={`text-sm font-black ${r.verified_count === r.products_count ? 'text-app-primary' : 'text-orange-500'}`}>{r.verified_count}/{r.products_count}</span>
  </div>
  )
  },
@@ -131,33 +131,31 @@ export default function StockCountPage() {
  }
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <ClipboardList size={28} className="text-app-text" />
- </div>
- Stock <span className="text-indigo-600">Count</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Inventory Verification & Adjustment</p>
- </div>
- <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
- <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
- <span className="text-[10px] font-black uppercase text-indigo-700 tracking-widest">Count System Active</span>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <ClipboardList size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Stock <span className="text-app-primary">Count</span>
+          </h1>
+        </div>
+      </div>
+    </header>
  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
  <div className="lg:col-span-3 space-y-6">
  {/* Count Session Stats */}
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Clock size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">In Progress</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{inProgress}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">In Progress</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{inProgress}</h2>
  </div>
  </CardContent>
  </Card>
@@ -167,19 +165,19 @@ export default function StockCountPage() {
  <AlertTriangle size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">Pending Review</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{pendingReview}</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Pending Review</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{pendingReview}</h2>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-[2rem] border-0 shadow-sm bg-app-surface overflow-hidden group hover:shadow-md transition-all">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Sparkles size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider">Completion Rate</p>
- <h2 className="text-3xl font-black text-app-text mt-0.5">{auditCompletion}%</h2>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">Completion Rate</p>
+ <h2 className="text-3xl font-black text-app-foreground mt-0.5">{auditCompletion}%</h2>
  </div>
  </CardContent>
  </Card>
@@ -210,7 +208,7 @@ export default function StockCountPage() {
  </Button>
  }
  headerExtra={
- <Button onClick={fetchSessions} variant="ghost" className="h-8 w-8 p-0 text-app-text-faint hover:text-indigo-600">
+ <Button onClick={fetchSessions} variant="ghost" className="h-8 w-8 p-0 text-app-muted-foreground hover:text-app-primary">
  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
  </Button>
  }
@@ -232,17 +230,17 @@ export default function StockCountPage() {
  extra: (s: Session) => (
  <div className="flex items-center gap-1">
  {s.status === 'IN_PROGRESS' && (
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-primary/30 text-app-primary hover:bg-app-primary/5 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
  <ClipboardList size={14} className="mr-1" /> COUNT
  </Button>
  )}
  {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-success/30 text-app-primary hover:bg-app-primary-light font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
  <ShieldCheck size={14} className="mr-1" /> VERIFY
  </Button>
  )}
  {s.status === 'ADJUSTED' && (
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-border text-app-text-muted hover:bg-app-bg font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-border text-app-muted-foreground hover:bg-app-background font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
  <Eye size={14} className="mr-1" /> VIEW RESULTS
  </Button>
  )}
@@ -364,12 +362,12 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  <DialogContent className="max-w-xl rounded-[2rem] border-0 shadow-2xl overflow-y-auto max-h-[85vh]">
  <DialogHeader>
  <DialogTitle className="text-2xl font-black">New Stock Count Session</DialogTitle>
- <DialogDescription className="text-app-text-faint font-medium pt-1">Configure the scope and assign counters for this inventory count.</DialogDescription>
+ <DialogDescription className="text-app-muted-foreground font-medium pt-1">Configure the scope and assign counters for this inventory count.</DialogDescription>
  </DialogHeader>
  <div className="space-y-4 py-4">
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Warehouse</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Warehouse</Label>
  <Select value={form.warehouse_id} onValueChange={v => setForm(f => ({ ...f, warehouse_id: v }))}>
  <SelectTrigger className="rounded-xl border-app-border h-11"><SelectValue placeholder="Select warehouse" /></SelectTrigger>
  <SelectContent className="rounded-xl border-app-border">
@@ -380,7 +378,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  </Select>
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Category</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Category</Label>
  <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
  <SelectTrigger className="rounded-xl border-app-border h-11"><SelectValue placeholder="All categories" /></SelectTrigger>
  <SelectContent className="rounded-xl border-app-border">
@@ -393,7 +391,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  </div>
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Supplier</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Supplier</Label>
  <Select value={form.supplier_id} onValueChange={v => setForm(f => ({ ...f, supplier_id: v }))}>
  <SelectTrigger className="rounded-xl border-app-border h-11"><SelectValue placeholder="All suppliers" /></SelectTrigger>
  <SelectContent className="rounded-xl border-app-border">
@@ -406,7 +404,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Quantity Filter</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Quantity Filter</Label>
  <Select value={form.qty_filter} onValueChange={v => setForm(f => ({ ...f, qty_filter: v }))}>
  <SelectTrigger className="rounded-xl border-app-border h-11"><SelectValue placeholder="All Volumes" /></SelectTrigger>
  <SelectContent className="rounded-xl border-app-border">
@@ -423,34 +421,34 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
  <div className="flex-1"><Input type="number" className="rounded-xl border-app-border h-11 text-xs" value={form.qty_max} onChange={e => setForm(f => ({ ...f, qty_max: e.target.value }))} placeholder="MAX" /></div>
  </div>
  ) : (
- <div className="border border-dashed border-app-border rounded-xl flex items-center justify-center bg-gray-50/50">
- <span className="text-[10px] font-bold text-gray-300">ALL QUANTITIES</span>
+ <div className="border border-dashed border-app-border rounded-xl flex items-center justify-center bg-app-surface-2/50">
+ <span className="text-[10px] font-bold text-app-muted-foreground">ALL QUANTITIES</span>
  </div>
  )}
  </div>
  {productPreview !== null && (
- <div className="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-[1.5rem] border border-indigo-100">
- <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-app-text" /></div>
+ <div className="flex items-center gap-4 p-5 bg-app-primary/5/50 rounded-[1.5rem] border border-app-primary/30">
+ <div className="w-12 h-12 bg-app-primary rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-app-foreground" /></div>
  <div>
- <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Products to Count</p>
- <p className="text-2xl font-black text-indigo-900 leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">products matched</span></p>
+ <p className="text-[10px] font-black text-app-primary uppercase tracking-widest">Products to Count</p>
+ <p className="text-2xl font-black text-app-primary leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">products matched</span></p>
  </div>
  </div>
  )}
  <div className="grid grid-cols-2 gap-4 pt-2">
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Counter 1</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Counter 1</Label>
  <Input className="rounded-xl border-app-border h-11" value={form.person1_name} onChange={e => setForm(f => ({ ...f, person1_name: e.target.value }))} placeholder="Name of first counter" />
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint tracking-wider">Counter 2</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-wider">Counter 2</Label>
  <Input className="rounded-xl border-app-border h-11" value={form.person2_name} onChange={e => setForm(f => ({ ...f, person2_name: e.target.value }))} placeholder="Name of second counter" />
  </div>
  </div>
  </div>
  <DialogFooter className="pt-6">
  <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold">Cancel</Button>
- <Button onClick={handleSubmit} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
+ <Button onClick={handleSubmit} disabled={isPending} className="bg-app-primary hover:bg-app-primary text-app-foreground rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
  {isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <ClipboardList size={16} className="mr-2" />}
  Start Count Session
  </Button>

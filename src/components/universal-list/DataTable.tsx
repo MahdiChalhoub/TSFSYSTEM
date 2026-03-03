@@ -85,14 +85,14 @@ export default function DataTable<T = any>({
  <div className="overflow-x-auto">
  <table className="w-full text-sm">
  <thead>
- <tr className="bg-gray-50/80 border-b border-app-border">
+ <tr className="bg-app-surface-2/80 border-b border-app-border">
  {selectable && (
  <th className="w-10 px-3 py-2.5">
  <input
  type="checkbox"
  checked={allSelected}
  onChange={onToggleSelectAll}
- className="w-3.5 h-3.5 rounded border-app-border text-blue-600"
+ className="w-3.5 h-3.5 rounded border-app-border text-app-info"
  />
  </th>
  )}
@@ -100,7 +100,7 @@ export default function DataTable<T = any>({
  {activeColumns.map(col => (
  <th
  key={col.key}
- className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-text-muted whitespace-nowrap ${col.sortable ? 'cursor-pointer select-none hover:text-gray-700' : ''
+ className={`px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-app-text-muted whitespace-nowrap ${col.sortable ? 'cursor-pointer select-none hover:text-app-text-muted' : ''
  } text-${col.align || 'left'}`}
  style={col.minWidth ? { minWidth: col.minWidth } : undefined}
  onClick={() => col.sortable && onSort(col.key)}
@@ -147,8 +147,8 @@ export default function DataTable<T = any>({
  <>
  <tr
  key={`row-${key}`}
- className={`transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50/50'
- } ${isExpanded ? 'bg-gray-50/30' : ''}`}
+ className={`transition-colors ${isSelected ? 'bg-app-info-bg/50' : 'hover:bg-app-surface-2/50'
+ } ${isExpanded ? 'bg-app-surface-2/30' : ''}`}
  >
  {selectable && (
  <td className="w-10 px-3 py-2.5">
@@ -156,7 +156,7 @@ export default function DataTable<T = any>({
  type="checkbox"
  checked={isSelected}
  onChange={() => onToggleSelect(key)}
- className="w-3.5 h-3.5 rounded border-app-border text-blue-600"
+ className="w-3.5 h-3.5 rounded border-app-border text-app-info"
  />
  </td>
  )}
@@ -193,11 +193,11 @@ export default function DataTable<T = any>({
  const Icon = action.icon;
  const variantClass =
  action.variant === 'danger'
- ? 'text-red-500 hover:bg-red-50'
+ ? 'text-app-error hover:bg-app-error-bg'
  : action.variant === 'success'
- ? 'text-emerald-600 hover:bg-emerald-50'
+ ? 'text-app-primary hover:bg-app-primary-light'
  : action.variant === 'warning'
- ? 'text-amber-600 hover:bg-amber-50'
+ ? 'text-app-warning hover:bg-app-warning-bg'
  : 'text-app-text-muted hover:bg-app-surface-2';
  return (
  <button
@@ -224,7 +224,7 @@ export default function DataTable<T = any>({
  1 +
  (actions?.length ? 1 : 0)
  }
- className="px-4 py-3 bg-emerald-50/30 border-l-4 border-emerald-400"
+ className="px-4 py-3 bg-app-primary-light/30 border-l-4 border-emerald-400"
  >
  {renderExpanded(row)}
  </td>

@@ -23,9 +23,9 @@ export default function ScopePasswordModal({
  <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
  <div className="bg-app-surface rounded-[32px] shadow-2xl w-full max-w-md p-8 text-center">
  <Shield size={48} className="text-gray-300 mx-auto mb-4" />
- <h3 className="text-lg font-bold text-gray-700 mb-2">No System Login</h3>
+ <h3 className="text-lg font-bold text-app-text-muted mb-2">No System Login</h3>
  <p className="text-sm text-app-text-faint mb-6">This employee doesn&apos;t have a system login. Create one first from the employee form.</p>
- <button onClick={onClose} className="px-6 py-3 bg-app-surface-2 text-app-text-muted rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-all">Close</button>
+ <button onClick={onClose} className="px-6 py-3 bg-app-surface-2 text-app-text-muted rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-app-border transition-all">Close</button>
  </div>
  </div>
  );
@@ -74,13 +74,13 @@ export default function ScopePasswordModal({
  <div className="p-8 space-y-6">
 
  {/* Official Password */}
- <div className="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 space-y-3">
+ <div className="p-5 bg-app-primary-light/50 rounded-2xl border border-emerald-100/50 space-y-3">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <Layers size={16} className="text-emerald-600" />
- <span className="text-xs font-black text-emerald-800 uppercase tracking-widest">Official Password</span>
+ <Layers size={16} className="text-app-primary" />
+ <span className="text-xs font-black text-app-success uppercase tracking-widest">Official Password</span>
  </div>
- <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${hasOfficialPin ? 'bg-emerald-100 text-emerald-700' : 'bg-app-surface-2 text-app-text-faint'}`}>
+ <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${hasOfficialPin ? 'bg-app-primary-light text-app-success' : 'bg-app-surface-2 text-app-text-faint'}`}>
  {hasOfficialPin ? '● Set' : '○ Not set'}
  </span>
  </div>
@@ -91,12 +91,12 @@ export default function ScopePasswordModal({
  value={officialPin}
  onChange={e => setOfficialPin(e.target.value)}
  placeholder="Enter new password..."
- className="flex-1 px-4 py-3 rounded-xl bg-app-surface border border-emerald-200 focus:ring-2 focus:ring-emerald-200 outline-none text-sm font-medium"
+ className="flex-1 px-4 py-3 rounded-xl bg-app-surface border border-app-success focus:ring-2 focus:ring-emerald-200 outline-none text-sm font-medium"
  />
  <button
  onClick={() => handleSetPassword('official', officialPin)}
  disabled={!officialPin || saving === 'official'}
- className="px-4 py-3 bg-emerald-600 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-40"
+ className="px-4 py-3 bg-app-primary text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-40"
  >
  {saving === 'official' ? '...' : 'Set'}
  </button>
@@ -104,7 +104,7 @@ export default function ScopePasswordModal({
  <button
  onClick={() => handleSetPassword('official', null)}
  disabled={saving === 'official'}
- className="px-3 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-all"
+ className="px-3 py-3 bg-app-error-bg text-app-error rounded-xl hover:bg-app-error-bg transition-all"
  title="Clear Official password"
  >
  <Unlock size={14} />
@@ -117,7 +117,7 @@ export default function ScopePasswordModal({
  <div className="p-5 bg-app-bg rounded-2xl border border-app-border space-y-3">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <Eye size={16} className="text-gray-700" />
+ <Eye size={16} className="text-app-text-muted" />
  <span className="text-xs font-black text-app-text uppercase tracking-widest">Internal Password</span>
  </div>
  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${hasInternalPin ? 'bg-sky-100 text-sky-700' : 'bg-app-surface-2 text-app-text-faint'}`}>
@@ -136,7 +136,7 @@ export default function ScopePasswordModal({
  <button
  onClick={() => handleSetPassword('internal', internalPin)}
  disabled={!internalPin || saving === 'internal'}
- className="px-4 py-3 bg-gray-700 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-40"
+ className="px-4 py-3 bg-gray-700 text-app-text rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-app-surface-2 transition-all disabled:opacity-40"
  >
  {saving === 'internal' ? '...' : 'Set'}
  </button>
@@ -144,7 +144,7 @@ export default function ScopePasswordModal({
  <button
  onClick={() => handleSetPassword('internal', null)}
  disabled={saving === 'internal'}
- className="px-3 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-all"
+ className="px-3 py-3 bg-app-error-bg text-app-error rounded-xl hover:bg-app-error-bg transition-all"
  title="Clear Internal password"
  >
  <Unlock size={14} />
@@ -155,7 +155,7 @@ export default function ScopePasswordModal({
 
  {/* Message */}
  {message && (
- <div className={`p-3 rounded-xl text-xs font-bold text-center ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+ <div className={`p-3 rounded-xl text-xs font-bold text-center ${message.type === 'success' ? 'bg-app-primary-light text-app-success' : 'bg-app-error-bg text-app-error'}`}>
  {message.text}
  </div>
  )}

@@ -37,7 +37,7 @@ export function DisburseButton({ loanId, amount }: { loanId: number, amount: num
  return (
  <Dialog open={open} onOpenChange={setOpen}>
  <DialogTrigger asChild>
- <Button className="bg-green-600 hover:bg-green-700">
+ <Button className="bg-app-success hover:bg-app-success">
  <Wallet className="mr-2 h-4 w-4" /> Disburse Funds
  </Button>
  </DialogTrigger>
@@ -60,7 +60,7 @@ export function DisburseButton({ loanId, amount }: { loanId: number, amount: num
 
  <DialogFooter>
  <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
- <Button onClick={handleDisburse} disabled={!accountId || loading} className="bg-green-600">
+ <Button onClick={handleDisburse} disabled={!accountId || loading} className="bg-app-success">
  {loading ? "Processing..." : "Confirm Disbursement"}
  </Button>
  </DialogFooter>

@@ -8,7 +8,7 @@ export function BlogHomePage({ org }: { org: any }) {
  ]
 
  return (
- <div className="min-h-screen bg-[#FAFAFA]">
+ <div className="min-h-screen bg-[#FAFAFA] bg-app-bg">
  {/* Main Content */}
  <main className="max-w-5xl mx-auto px-6 py-16">
  <div className="mb-16">

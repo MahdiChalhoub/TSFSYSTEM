@@ -119,17 +119,24 @@ class PurchaseOrder(TenantModel):
     shipping_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
-    # Approval workflow
+    # Approval & Cancellation workflow
     submitted_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
                                       related_name='submitted_pos')
     submitted_at = models.DateTimeField(null=True, blank=True)
+    
     approved_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='approved_pos')
     approved_at = models.DateTimeField(null=True, blank=True)
+    
     rejected_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='rejected_pos')
     rejected_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(null=True, blank=True)
+
+    cancelled_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='cancelled_pos')
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(null=True, blank=True, help_text="Reason for supplier cancellation")
 
     # Invoice & Payment
     invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
@@ -201,6 +208,10 @@ class PurchaseOrder(TenantModel):
             self.rejected_by = user
             self.rejected_at = timezone.now()
             self.rejection_reason = reason
+        elif new_status == 'CANCELLED':
+            self.cancelled_by = user
+            self.cancelled_at = timezone.now()
+            self.cancellation_reason = reason
         elif new_status == 'ORDERED':
             if not self.order_date:
                 self.order_date = timezone.now().date()
@@ -259,10 +270,15 @@ class PurchaseOrderLine(TenantModel):
     line_total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
-    # Receiving
+    # Receiving & Discrepancies
     warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
                                    help_text='Override receiving warehouse for this line')
     expected_date = models.DateField(null=True, blank=True)
+    
+    qty_missing = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), help_text='Supplier failed to deliver (Out of stock/forgot)')
+    qty_damaged = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), help_text='Arrived damaged or broken')
+    qty_rejected = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), help_text='Rejected by warehouse (e.g. wrong spec, expired)')
+    receipt_notes = models.TextField(null=True, blank=True, help_text='Notes regarding discrepancies during receipt')
 
     sort_order = models.IntegerField(default=0)
 

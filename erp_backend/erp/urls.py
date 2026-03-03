@@ -13,6 +13,7 @@ from .views import (
 )
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
+    register_user_view,
     password_reset_request_view, password_reset_confirm_view,
     setup_2fa_view, verify_2fa_setup_view, disable_2fa_view
 )
@@ -66,6 +67,7 @@ urlpatterns = [
     # Onboarding
     path('auth/config/', PublicConfigView.as_view(), name='auth_config'),
     path('auth/register/business/', register_business_view, name='register_business'),
+    path('auth/register/user/', register_user_view, name='register_user'),
     path('auth/password-reset/', password_reset_request_view, name='password_reset_request'),
     path('auth/password-reset/confirm/', password_reset_confirm_view, name='password_reset_confirm'),
     path('auth/2fa/setup/', setup_2fa_view, name='setup-2fa'),

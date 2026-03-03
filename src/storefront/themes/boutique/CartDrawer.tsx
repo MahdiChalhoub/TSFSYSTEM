@@ -47,7 +47,7 @@ export default function BoutiqueCartDrawer() {
                 <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar font-sans">
                     {cart.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-violet-50">
+                            <div className="w-12 h-12 bg-app-surface rounded-full flex items-center justify-center mb-6 shadow-sm border border-violet-50">
                                 <ShoppingBag size={18} className="text-violet-200" />
                             </div>
                             <h3 className="text-violet-950 font-light text-xl italic">The bag is empty</h3>
@@ -64,7 +64,7 @@ export default function BoutiqueCartDrawer() {
                             const itemKey = `${item.product_id}-${item.variant_id || 'base'}`
                             return (
                                 <div key={itemKey} className="group relative flex gap-6">
-                                    <div className="w-24 h-32 bg-white rounded-2xl overflow-hidden shrink-0 shadow-sm border border-violet-50 p-1 transition-transform group-hover:-translate-y-1">
+                                    <div className="w-24 h-32 bg-app-surface rounded-2xl overflow-hidden shrink-0 shadow-sm border border-violet-50 p-1 transition-transform group-hover:-translate-y-1">
                                         {item.image_url ? (
                                             <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover rounded-xl" />
                                         ) : (
@@ -127,7 +127,7 @@ export default function BoutiqueCartDrawer() {
 
                 {/* Footer */}
                 {cart.length > 0 && (
-                    <div className="p-8 border-t border-violet-100 bg-white shadow-[0_-10px_30px_rgba(139,92,246,0.03)] font-sans">
+                    <div className="p-8 border-t border-violet-100 bg-app-surface shadow-[0_-10px_30px_rgba(139,92,246,0.03)] font-sans">
                         <div className="flex justify-between items-baseline mb-8">
                             <div>
                                 <p className="text-[9px] text-violet-400 font-bold uppercase tracking-[0.2em] mb-2 pl-1">Estimated Total</p>

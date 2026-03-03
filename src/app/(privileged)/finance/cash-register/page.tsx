@@ -23,8 +23,8 @@ const PAYMENT_ICONS: Record<string, string> = {
 }
 
 const TYPE_CONFIG: Record<string, { color: string, bg: string }> = {
- SALE: { color: 'text-emerald-700', bg: 'bg-emerald-50' },
- PURCHASE: { color: 'text-blue-700', bg: 'bg-blue-50' },
+ SALE: { color: 'text-app-success', bg: 'bg-app-primary-light' },
+ PURCHASE: { color: 'text-app-info', bg: 'bg-app-info-bg' },
  RETURN: { color: 'text-orange-700', bg: 'bg-orange-50' },
 }
 
@@ -71,7 +71,7 @@ export default function CashRegisterPage() {
  key: 'ref_code',
  label: 'Reference',
  sortable: true,
- render: (t) => <span className="font-mono text-xs font-bold text-app-text-faint">#{t.ref_code || t.id}</span>
+ render: (t) => <span className="font-mono text-xs font-bold text-app-muted-foreground">#{t.ref_code || t.id}</span>
  },
  {
  key: 'type',
@@ -87,16 +87,16 @@ export default function CashRegisterPage() {
  label: 'Amount',
  align: 'right',
  sortable: true,
- render: (t) => <span className="font-black text-app-text text-sm">{fmt(t.total)}</span>
+ render: (t) => <span className="font-black text-app-foreground text-sm">{fmt(t.total)}</span>
  },
  {
  key: 'payment_method',
  label: 'Payment',
  sortable: true,
  render: (t) => (
- <div className="flex items-center gap-2">
+ <div className="app-page flex items-center gap-2">
  <span className="text-base leading-none">{PAYMENT_ICONS[t.payment_method] || '💰'}</span>
- <span className="text-xs font-medium text-app-text-muted uppercase tracking-tighter">{t.payment_method}</span>
+ <span className="text-xs font-medium text-app-muted-foreground uppercase tracking-tighter">{t.payment_method}</span>
  </div>
  )
  },
@@ -107,9 +107,9 @@ export default function CashRegisterPage() {
  render: (t) => (
  <div className="flex items-center gap-2">
  <div className="w-5 h-5 rounded-full bg-app-surface-2 flex items-center justify-center">
- <Users size={10} className="text-app-text-faint" />
+ <Users size={10} className="text-app-muted-foreground" />
  </div>
- <span className="text-xs font-medium text-app-text-muted">{t.user}</span>
+ <span className="text-xs font-medium text-app-muted-foreground">{t.user}</span>
  </div>
  )
  },
@@ -119,7 +119,7 @@ export default function CashRegisterPage() {
  sortable: true,
  render: (t) => (
  <div className="flex flex-col">
- <span className="text-[10px] font-black text-app-text-faint">
+ <span className="text-[10px] font-black text-app-muted-foreground">
  {t.time ? new Date(t.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
  </span>
  </div>
@@ -143,53 +143,31 @@ export default function CashRegisterPage() {
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
  {/* Standard Header */}
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Banknote size={28} className="text-app-text" />
- </div>
- Cash <span className="text-emerald-600">Register</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Daily Operations & POS Summary</p>
- </div>
- <div className="flex items-center gap-4">
- <div className="flex bg-app-surface-2 p-1 rounded-2xl shadow-inner h-12 items-center px-1">
- {(['today', 'week', 'month'] as const).map(p => (
- <button
- key={p}
- onClick={() => setPeriod(p)}
- className={`px-5 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${period === p
- ? 'bg-app-surface shadow-sm text-app-text'
- : 'text-app-text-faint hover:text-app-text-muted'
- }`}
- >
- {p === 'today' ? 'Today' : p === 'week' ? '7 Days' : '30 Days'}
- </button>
- ))}
- </div>
- {period === 'today' && (
- <input
- type="date"
- value={selectedDate}
- onChange={e => setSelectedDate(e.target.value)}
- className="bg-app-surface-2 border-none rounded-2xl h-12 px-4 text-xs font-bold text-app-text-muted focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
- />
- )}
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Banknote size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Cash <span className="text-app-primary">Register</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* KPI Cards */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <TrendingUp size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Revenue</p>
- <p className="text-2xl font-black mt-1 tracking-tighter text-emerald-600">{fmt(sales.total)}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">{sales.count} Txns</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Revenue</p>
+ <p className="text-2xl font-black mt-1 tracking-tighter text-app-primary">{fmt(sales.total)}</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">{sales.count} Txns</p>
  </div>
  </CardContent>
  </Card>
@@ -199,21 +177,21 @@ export default function CashRegisterPage() {
  <RotateCcw size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Returns</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Returns</p>
  <p className="text-2xl font-black mt-1 tracking-tighter text-orange-600">{fmt(returns.total)}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">{returns.count} Items</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">{returns.count} Items</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-14 h-14 rounded-2xl bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Banknote size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Net Position</p>
- <p className="text-2xl font-black mt-1 tracking-tighter text-blue-600">{fmt(data?.net_revenue || 0)}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">Adjusted Balance</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Net Position</p>
+ <p className="text-2xl font-black mt-1 tracking-tighter text-app-info">{fmt(data?.net_revenue || 0)}</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">Adjusted Balance</p>
  </div>
  </CardContent>
  </Card>
@@ -223,9 +201,9 @@ export default function CashRegisterPage() {
  <DollarSign size={28} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Tax Collected</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Tax Collected</p>
  <p className="text-2xl font-black mt-1 tracking-tighter text-purple-600">{fmt(sales.tax)}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">VAT/Service Tax</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">VAT/Service Tax</p>
  </div>
  </CardContent>
  </Card>
@@ -236,26 +214,26 @@ export default function CashRegisterPage() {
  {/* Payment Methods */}
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface">
  <CardHeader className="pb-2 pt-6 px-6">
- <CardTitle className="text-xs font-black uppercase tracking-widest text-app-text-faint flex items-center gap-2">
- <CreditCard size={14} className="text-stone-300" /> Revenue Split
+ <CardTitle className="text-xs font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
+ <CreditCard size={14} className="text-app-muted-foreground" /> Revenue Split
  </CardTitle>
  </CardHeader>
  <CardContent className="px-6 pb-6 space-y-4">
  {Object.keys(paymentMethods).length === 0 ? (
- <div className="py-8 text-center"><p className="text-xs font-bold text-stone-300 uppercase tracking-widest italic">No Data logged</p></div>
+ <div className="py-8 text-center"><p className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest italic">No Data logged</p></div>
  ) : Object.entries(paymentMethods).map(([method, stats]: [string, any]) => (
  <div key={method} className="flex items-center justify-between group">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-app-bg flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-inner">
+ <div className="w-10 h-10 rounded-xl bg-app-background flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-inner">
  {PAYMENT_ICONS[method] || '💰'}
  </div>
  <div>
- <p className="text-sm font-bold text-app-text">{method}</p>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-tighter">{stats.count} Transactions</p>
+ <p className="text-sm font-bold text-app-foreground">{method}</p>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-tighter">{stats.count} Transactions</p>
  </div>
  </div>
  <div className="text-right">
- <p className="text-sm font-black text-app-text">{fmt(stats.total)}</p>
+ <p className="text-sm font-black text-app-foreground">{fmt(stats.total)}</p>
  </div>
  </div>
  ))}
@@ -265,28 +243,28 @@ export default function CashRegisterPage() {
  {/* User Stats */}
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface">
  <CardHeader className="pb-2 pt-6 px-6">
- <CardTitle className="text-xs font-black uppercase tracking-widest text-app-text-faint flex items-center gap-2">
- <Users size={14} className="text-stone-300" /> Cashier Rank
+ <CardTitle className="text-xs font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
+ <Users size={14} className="text-app-muted-foreground" /> Cashier Rank
  </CardTitle>
  </CardHeader>
  <CardContent className="px-6 pb-6 space-y-4">
  {Object.keys(userStats).length === 0 ? (
- <div className="py-8 text-center"><p className="text-xs font-bold text-stone-300 uppercase tracking-widest italic">No activity</p></div>
+ <div className="py-8 text-center"><p className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest italic">No activity</p></div>
  ) : Object.entries(userStats)
  .sort(([, a]: [string, any], [, b]: [string, any]) => b.total - a.total)
  .map(([name, stats]: [string, any]) => (
  <div key={name} className="flex items-center justify-between group">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-app-bg border border-app-border flex items-center justify-center text-app-text-faint font-black group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all shadow-inner">
+ <div className="w-10 h-10 rounded-xl bg-app-background border border-app-border flex items-center justify-center text-app-muted-foreground font-black group-hover:bg-app-primary/5 group-hover:text-app-primary transition-all shadow-inner">
  {name.charAt(0).toUpperCase()}
  </div>
  <div>
- <p className="text-sm font-bold text-app-text">{name}</p>
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-tighter">{stats.count} Sales</p>
+ <p className="text-sm font-bold text-app-foreground">{name}</p>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-tighter">{stats.count} Sales</p>
  </div>
  </div>
  <div className="text-right">
- <p className="text-sm font-black text-app-text">{fmt(stats.total)}</p>
+ <p className="text-sm font-black text-app-foreground">{fmt(stats.total)}</p>
  </div>
  </div>
  ))}
@@ -296,8 +274,8 @@ export default function CashRegisterPage() {
  {/* Hourly Distribution */}
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden">
  <CardHeader className="pb-4 pt-6 px-6">
- <CardTitle className="text-xs font-black uppercase tracking-widest text-app-text-faint flex items-center gap-2">
- <BarChart3 size={14} className="text-stone-300" /> Hourly Pulse
+ <CardTitle className="text-xs font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-2">
+ <BarChart3 size={14} className="text-app-muted-foreground" /> Hourly Pulse
  </CardTitle>
  </CardHeader>
  <CardContent className="px-6 pb-4">
@@ -312,7 +290,7 @@ export default function CashRegisterPage() {
  title={`${i}:00 — ${fmt(val)}`}
  >
  <div
- className={`w-full rounded-t-sm transition-all duration-500 ease-out ${isActive ? 'bg-emerald-500 hover:bg-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-app-bg'
+ className={`w-full rounded-t-sm transition-all duration-500 ease-out ${isActive ? 'bg-app-primary hover:bg-app-primary shadow-[0_0_10px_var(--app-success)]' : 'bg-app-background'
  }`}
  style={{ height: `${Math.max(pct, 4)}%` }}
  />
@@ -320,7 +298,7 @@ export default function CashRegisterPage() {
  )
  })}
  </div>
- <div className="flex justify-between mt-1 text-[8px] font-black text-stone-300 uppercase tracking-tighter">
+ <div className="flex justify-between mt-1 text-[8px] font-black text-app-muted-foreground uppercase tracking-tighter">
  <span>00h</span><span>08h</span><span>12h</span><span>16h</span><span>23h</span>
  </div>
  </CardContent>
@@ -344,10 +322,10 @@ export default function CashRegisterPage() {
  onSort={settings.setSort}
  headerExtra={
  <div className="flex items-center gap-3">
- <Badge variant="outline" className="rounded-xl px-3 py-1 text-app-text-faint border-app-border">
+ <Badge variant="outline" className="rounded-xl px-3 py-1 text-app-muted-foreground border-app-border">
  {recent.length} Records
  </Badge>
- <button onClick={loadData} className="p-2 hover:bg-app-bg rounded-xl transition-colors text-app-text-faint hover:text-app-text">
+ <button onClick={loadData} className="p-2 hover:bg-app-background rounded-xl transition-colors text-app-muted-foreground hover:text-app-foreground">
  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
  </button>
  </div>

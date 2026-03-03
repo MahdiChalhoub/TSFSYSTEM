@@ -19,38 +19,38 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
  <div className={`flex flex-col border-app-border ${!node.isActive ? 'opacity-50 grayscale-[0.5]' : ''}`}>
  {/* Account Row */}
  <div
- className={`flex items-center group hover:bg-app-bg transition-colors py-2 border-b border-stone-50 ${level === 0 ? 'bg-app-surface' : ''}`}
+ className={`flex items-center group hover:bg-app-background transition-colors py-2 border-b border-stone-50 ${level === 0 ? 'bg-app-surface' : ''}`}
  style={{ paddingLeft: `${level * 24}px` }}
  >
  <div className="flex-1 flex items-center gap-2">
  {/* Expand/Collapse Toggle */}
  <div className="w-6 flex justify-center">
  {isParent ? (
- <button onClick={toggle} className="p-1 hover:bg-stone-200 rounded text-app-text-faint">
+ <button onClick={toggle} className="p-1 hover:bg-app-border rounded text-app-muted-foreground">
  {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
  </button>
  ) : (
  <div className="w-4 h-4 rounded-full border border-app-border flex items-center justify-center opacity-30">
- <div className="w-1 h-1 bg-stone-300 rounded-full" />
+ <div className="w-1 h-1 bg-app-surface-2 rounded-full" />
  </div>
  )}
  </div>
 
  {/* Icon based on status */}
- <div className="text-app-text-faint">
- {isParent ? (isOpen ? <FolderOpen size={16} className="text-amber-400" /> : <Folder size={16} className="text-amber-200" />) : <FileText size={16} />}
+ <div className="text-app-muted-foreground">
+ {isParent ? (isOpen ? <FolderOpen size={16} className="text-app-warning" /> : <Folder size={16} className="text-amber-200" />) : <FileText size={16} />}
  </div>
 
  {/* Account Info */}
  <div className="flex flex-col">
  <div className="flex items-center gap-2">
- <span className="font-mono text-xs font-bold text-app-text-faint w-12">{node.code}</span>
- <span className={`text-sm font-medium ${level === 0 ? 'text-app-text font-bold' : 'text-app-text-muted'}`}>
+ <span className="font-mono text-xs font-bold text-app-muted-foreground w-12">{node.code}</span>
+ <span className={`text-sm font-medium ${level === 0 ? 'text-app-foreground font-bold' : 'text-app-muted-foreground'}`}>
  {node.name}
  </span>
  </div>
  {node.subType && (
- <span className="text-[10px] text-app-text-faint uppercase tracking-tighter">[{node.subType}]</span>
+ <span className="text-[10px] text-app-muted-foreground uppercase tracking-tighter">[{node.subType}]</span>
  )}
  </div>
  </div>
@@ -59,11 +59,11 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
  <div className="w-48 flex flex-col justify-center">
  {node.syscohadaCode && (
  <div className="flex items-center gap-1.5">
- <span className="text-[10px] font-black bg-app-surface-2 text-app-text-muted px-1.5 py-0.5 rounded border border-app-border">
+ <span className="text-[10px] font-black bg-app-surface-2 text-app-muted-foreground px-1.5 py-0.5 rounded border border-app-border">
  {node.syscohadaCode}
  </span>
  {node.syscohadaClass && (
- <span className="text-[9px] text-app-text-faint font-medium truncate max-w-[120px]">
+ <span className="text-[9px] text-app-muted-foreground font-medium truncate max-w-[120px]">
  {node.syscohadaClass}
  </span>
  )}
@@ -73,11 +73,11 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
 
  {/* Type Badge */}
  <div className="w-32 flex items-center">
- <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${node.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border-blue-100' :
- node.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border-red-100' :
- node.type === 'EQUITY' ? 'bg-app-surface-2 text-app-text-muted border-app-border' :
- node.type === 'INCOME' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
- 'bg-amber-100 text-amber-700 border-amber-200'
+ <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${node.type === 'ASSET' ? 'bg-app-info-bg text-app-info border-app-info/30' :
+ node.type === 'LIABILITY' ? 'bg-app-error-bg text-app-error border-app-error/30' :
+ node.type === 'EQUITY' ? 'bg-app-surface-2 text-app-muted-foreground border-app-border' :
+ node.type === 'INCOME' ? 'bg-app-primary-light text-app-success border-app-success' :
+ 'bg-app-warning-bg text-app-warning border-app-warning'
  }`}>
  {node.type}
  </span>
@@ -87,7 +87,7 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
  </div>
 
  {/* Balance */}
- <div className={`w-32 text-right pr-4 font-mono text-sm ${node.balance < 0 ? 'text-red-500' : 'text-app-text'}`}>
+ <div className={`w-32 text-right pr-4 font-mono text-sm ${node.balance < 0 ? 'text-app-error' : 'text-app-foreground'}`}>
  {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
  </div>
 
@@ -96,14 +96,14 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
  <button
  title="Edit / Revise Account"
  onClick={() => (window as any).openEditModal(node)}
- className="p-1.5 hover:bg-stone-200 rounded-md text-app-text-muted"
+ className="p-1.5 hover:bg-app-border rounded-md text-app-muted-foreground"
  >
  <Pencil size={12} />
  </button>
  <button
  title="Add Sub-Account"
  onClick={() => (window as any).openAddModal(node.id)}
- className="p-1.5 hover:bg-stone-200 rounded-md text-app-text-muted"
+ className="p-1.5 hover:bg-app-border rounded-md text-app-muted-foreground"
  >
  <Plus size={14} />
  </button>
@@ -111,7 +111,7 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
  <button
  title="Reactivate Account"
  onClick={() => (window as any).reactivateAccount(node.id)}
- className="p-1.5 hover:bg-emerald-100 rounded-md text-emerald-600"
+ className="p-1.5 hover:bg-app-primary-light rounded-md text-app-primary"
  >
  <Power size={14} />
  </button>
@@ -259,16 +259,16 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  return (
  <div className="bg-app-surface rounded-lg shadow-sm border border-app-border overflow-hidden">
  {/* Toolbar */}
- <div className="p-4 border-b border-app-border bg-app-bg flex justify-between items-center">
+ <div className="p-4 border-b border-app-border bg-app-background flex justify-between items-center">
  <div className="flex items-center gap-3">
- <FolderOpen className="text-app-text-faint" />
- <h2 className="text-lg font-bold text-app-text">Account Hierarchy</h2>
- <span className="bg-stone-200 text-app-text-muted text-xs px-2 py-0.5 rounded-full">{accounts.length} Total</span>
+ <FolderOpen className="text-app-muted-foreground" />
+ <h2 className="text-lg font-bold text-app-foreground">Account Hierarchy</h2>
+ <span className="bg-app-border text-app-muted-foreground text-xs px-2 py-0.5 rounded-full">{accounts.length} Total</span>
 
  {accounts.some(a => !a.isActive) && (
  <button
  onClick={() => setShowInactive(!showInactive)}
- className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full transition-all ${showInactive ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-app-surface-2 text-app-text-faint border border-app-border hover:text-app-text-muted'}`}
+ className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full transition-all ${showInactive ? 'bg-app-warning-bg text-app-warning border border-app-warning' : 'bg-app-surface-2 text-app-muted-foreground border border-app-border hover:text-app-muted-foreground'}`}
  >
  {showInactive ? <Eye size={12} /> : <EyeOff size={12} />}
  {showInactive ? 'Showing Inactive' : 'Show Inactive'}
@@ -278,7 +278,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  <div className="flex items-center gap-3">
  <button
  onClick={() => router.push('/finance/chart-of-accounts/templates')}
- className="flex items-center gap-2 text-xs font-bold text-app-text-muted hover:text-app-text border border-app-border px-3 py-1.5 rounded-md hover:bg-app-surface transition-all shadow-sm"
+ className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-3 py-1.5 rounded-md hover:bg-app-surface transition-all shadow-sm"
  >
  <Library size={14} />
  Templates Library
@@ -294,14 +294,14 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  }}
  disabled={isPending}
  title="Audit & Recalculate System Balances"
- className="flex items-center gap-2 text-xs font-bold text-app-text-muted hover:text-app-text border border-app-border px-3 py-1.5 rounded-md hover:bg-app-surface transition-all disabled:opacity-50"
+ className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-3 py-1.5 rounded-md hover:bg-app-surface transition-all disabled:opacity-50"
  >
  <RefreshCcw size={14} className={isPending ? 'animate-spin' : ''} />
  Audit Integrity
  </button>
  <button
  onClick={() => openAddModal()}
- className="flex items-center gap-2 text-sm bg-black text-app-text px-3 py-1.5 rounded-md hover:bg-stone-800 transition-colors shadow-sm"
+ className="flex items-center gap-2 text-sm bg-app-background text-app-foreground px-3 py-1.5 rounded-md hover:bg-app-surface-2 transition-colors shadow-sm"
  >
  <Plus size={16} /> New Account
  </button>
@@ -310,21 +310,21 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
  {/* Quick Add Form - Main Toolbar Version */}
  {isAdding && (
- <div className="p-4 border-b border-2 border-blue-100 bg-blue-50/50">
- <h3 className="text-sm font-bold text-app-text mb-3">
+ <div className="p-4 border-b border-2 border-app-info/30 bg-app-info-bg/50">
+ <h3 className="text-sm font-bold text-app-foreground mb-3">
  {preselectedParentId ? `Adding Sub-Account` : 'Adding New Root Account'}
  </h3>
  <form action={handleCreate} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
  <div className="md:col-span-1">
- <label className="block text-xs font-medium text-app-text-muted mb-1">Code</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">Code</label>
  <input name="code" placeholder="1010" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black" required />
  </div>
  <div className="md:col-span-2">
- <label className="block text-xs font-medium text-app-text-muted mb-1">Name</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">Name</label>
  <input name="name" placeholder="Account Name" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black" required />
  </div>
  <div className="md:col-span-2">
- <label className="block text-xs font-medium text-app-text-muted mb-1">Type</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">Type</label>
  <select name="type" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black">
  <option value="ASSET">Asset</option>
  <option value="LIABILITY">Liability</option>
@@ -334,7 +334,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  </select>
  </div>
  <div className="md:col-span-2">
- <label className="block text-xs font-medium text-app-text-muted mb-1">Sub-Type</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">Sub-Type</label>
  <select name="subType" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black">
  <option value="">None</option>
  <option value="CASH">Cash</option>
@@ -344,7 +344,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  </select>
  </div>
  <div className="md:col-span-2">
- <label className="block text-xs font-medium text-app-text-muted mb-1">Parent</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">Parent</label>
  <select
  name="parentId"
  defaultValue={preselectedParentId || ''}
@@ -359,17 +359,17 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  </select>
  </div>
  <div className="md:col-span-2">
- <label className="block text-xs font-medium text-app-text-muted mb-1">SYSCOHADA</label>
+ <label className="block text-xs font-medium text-app-muted-foreground mb-1">SYSCOHADA</label>
  <div className="flex gap-1">
  <input name="syscohadaCode" placeholder="Code (57)" className="w-1/3 text-[10px] border p-1.5 rounded" />
  <input name="syscohadaClass" placeholder="Class" className="w-2/3 text-[10px] border p-1.5 rounded" />
  </div>
  </div>
  <div className="md:col-span-1 flex gap-2">
- <button disabled={isPending} type="submit" className="w-full bg-blue-600 text-app-text p-2 rounded text-sm font-medium hover:bg-blue-700">
+ <button disabled={isPending} type="submit" className="w-full bg-app-info text-app-foreground p-2 rounded text-sm font-medium hover:bg-app-info">
  {isPending ? '...' : 'Save'}
  </button>
- <button type="button" onClick={() => setIsAdding(false)} className="bg-app-surface border border-app-border text-app-text-muted p-2 rounded text-sm hover:bg-app-bg">X</button>
+ <button type="button" onClick={() => setIsAdding(false)} className="bg-app-surface border border-app-border text-app-muted-foreground p-2 rounded text-sm hover:bg-app-background">X</button>
  </div>
  </form>
  </div>
@@ -377,9 +377,9 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
  {/* Tree List */}
  <div className="min-w-[800px] overflow-x-auto">
- <div className="bg-app-bg border-b p-2 flex text-xs font-bold text-app-text-faint uppercase">
+ <div className="bg-app-background border-b p-2 flex text-xs font-bold text-app-muted-foreground uppercase">
  <div className="flex-1 pl-8">Account</div>
- <div className="w-48 text-emerald-600">SYSCOHADA Mapping</div>
+ <div className="w-48 text-app-primary">SYSCOHADA Mapping</div>
  <div className="w-32">Type</div>
  <div className="w-32 text-right pr-4">Balance</div>
  <div className="w-16"></div>
@@ -390,7 +390,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
  ))}
 
  {tree.length === 0 && (
- <div className="p-12 text-center text-app-text-faint italic">
+ <div className="p-12 text-center text-app-muted-foreground italic">
  No accounts defined yet. Start building your chart of accounts.
  </div>
  )}
@@ -422,30 +422,30 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
 const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<string, any>) => {
  return (
- <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ <div className="fixed inset-0 bg-app-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
  <div className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
- <div className="p-6 border-b border-app-border flex justify-between items-center bg-app-bg">
+ <div className="p-6 border-b border-app-border flex justify-between items-center bg-app-background">
  <div>
- <h3 className="text-xl font-bold text-app-text">Revise Account Hierarchy</h3>
- <p className="text-xs text-app-text-muted font-bold uppercase tracking-widest mt-1">Modifying: {account.name}</p>
+ <h3 className="text-xl font-bold text-app-foreground">Revise Account Hierarchy</h3>
+ <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest mt-1">Modifying: {account.name}</p>
  </div>
- <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
- <X size={20} className="text-app-text-faint" />
+ <button onClick={onClose} className="p-2 hover:bg-app-border rounded-full transition-colors">
+ <X size={20} className="text-app-muted-foreground" />
  </button>
  </div>
  <form action={onUpdate} className="p-8 space-y-6">
  <div className="grid grid-cols-2 gap-6">
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">Account Code</label>
- <input name="code" defaultValue={account.code} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono font-bold" required />
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Account Code</label>
+ <input name="code" defaultValue={account.code} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono font-bold" required />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">Display Name</label>
- <input name="name" defaultValue={account.name} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold" required />
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Display Name</label>
+ <input name="name" defaultValue={account.name} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold" required />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">Financial Type</label>
- <select name="type" defaultValue={account.type} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Financial Type</label>
+ <select name="type" defaultValue={account.type} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
  <option value="ASSET">Asset</option>
  <option value="LIABILITY">Liability</option>
  <option value="EQUITY">Equity</option>
@@ -454,8 +454,8 @@ const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<s
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">Account Category (Sub-Type)</label>
- <select name="subType" defaultValue={account.subType || ''} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Account Category (Sub-Type)</label>
+ <select name="subType" defaultValue={account.subType || ''} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
  <option value="">Standard Ledger Account</option>
  <option value="CASH">Liquid Cash</option>
  <option value="BANK">Bank Holding</option>
@@ -464,8 +464,8 @@ const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<s
  </select>
  </div>
  <div className="col-span-2 space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">Parent Node (Hierarchy Position)</label>
- <select name="parentId" defaultValue={account.parentId || ''} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono text-sm">
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Parent Node (Hierarchy Position)</label>
+ <select name="parentId" defaultValue={account.parentId || ''} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono text-sm">
  <option value="">[TOP LEVEL ROOT]</option>
  {accounts.filter((a: Record<string, any>) => a.id !== account.id).map((a: Record<string, any>) => (
  <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
@@ -473,22 +473,22 @@ const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<s
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">SYSCOHADA Code</label>
- <input name="syscohadaCode" defaultValue={account.syscohadaCode || ''} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono" />
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">SYSCOHADA Code</label>
+ <input name="syscohadaCode" defaultValue={account.syscohadaCode || ''} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono" />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-black uppercase text-app-text-faint tracking-widest">SYSCOHADA Classification</label>
- <input name="syscohadaClass" defaultValue={account.syscohadaClass || ''} className="w-full p-3 bg-app-bg border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all" />
+ <label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">SYSCOHADA Classification</label>
+ <input name="syscohadaClass" defaultValue={account.syscohadaClass || ''} className="w-full p-3 bg-app-background border border-app-border rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all" />
  </div>
  </div>
 
  <div className="flex gap-4 pt-4">
- <button type="button" onClick={onClose} className="flex-1 p-4 rounded-2xl border border-app-border font-bold hover:bg-app-bg transition-all">
+ <button type="button" onClick={onClose} className="flex-1 p-4 rounded-2xl border border-app-border font-bold hover:bg-app-background transition-all">
  Discard Changes
  </button>
- <button type="submit" disabled={isPending} className="flex-2 bg-stone-900 text-app-text px-12 rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
+ <button type="submit" disabled={isPending} className="flex-2 bg-app-surface text-app-foreground px-12 rounded-2xl font-bold hover:bg-app-background transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
  {isPending ? 'Saving Revisions...' : 'Apply Hierarchy Changes'}
- <RefreshCcw size={18} className={isPending ? 'animate-spin text-amber-400' : 'text-emerald-400'} />
+ <RefreshCcw size={18} className={isPending ? 'animate-spin text-app-warning' : 'text-app-primary'} />
  </button>
  </div>
  </form>

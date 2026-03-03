@@ -7,8 +7,8 @@ import { getInventoryMovementsUDLE, getInventoryMovementsMeta } from '@/app/acti
 export default function InventoryMovementsPage() {
  return (
  <div
- className="min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+ className="app-page min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto bg-app-background"
+ style={{ color: 'var(--app-foreground)' }}
  >
  {/* ── Header ────────────────────────────── */}
  <header className="flex items-center gap-4 fade-in-up">
@@ -21,11 +21,11 @@ export default function InventoryMovementsPage() {
  <div>
  <h1
  className="text-3xl font-black tracking-tight"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
+ style={{ color: 'var(--app-foreground)' }}
  >
  Inventory <span style={{ color: 'var(--app-primary)' }}>Movements</span>
  </h1>
- <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+ <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
  Universal Dynamic List Engine Active
  </p>
  </div>

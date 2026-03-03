@@ -79,11 +79,11 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  if (users.length === 0) {
  return (
  <div className="bg-app-surface rounded-[2rem] border border-app-border p-12 text-center shadow-sm">
- <div className="w-20 h-20 bg-app-bg rounded-full flex items-center justify-center mx-auto mb-6">
- <Check className="text-gray-200" size={40} />
+ <div className="w-20 h-20 bg-app-background rounded-full flex items-center justify-center mx-auto mb-6">
+ <Check className="text-app-foreground" size={40} />
  </div>
- <h2 className="text-xl font-black text-gray-300 uppercase tracking-tighter">Queue Empty</h2>
- <p className="text-sm text-app-text-faint font-bold uppercase tracking-widest mt-1">No pending registrations at the moment</p>
+ <h2 className="text-xl font-black text-app-muted-foreground uppercase tracking-tighter">Queue Empty</h2>
+ <p className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mt-1">No pending registrations at the moment</p>
  </div>
  );
  }
@@ -94,27 +94,27 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <Card key={user.id} className="overflow-hidden border-app-border rounded-[2rem] shadow-sm hover:shadow-md transition-shadow">
  <CardContent className="p-0">
  <div className="flex flex-col lg:flex-row">
- <div className="p-6 lg:w-1/3 bg-gray-50/50 border-r border-app-border">
+ <div className="p-6 lg:w-1/3 bg-app-surface-2/50 border-r border-app-border">
  <div className="flex items-center gap-4 mb-4">
  <div className="w-12 h-12 bg-app-surface rounded-2xl flex items-center justify-center shadow-sm">
- <Building2 className="text-app-text-faint" size={24} />
+ <Building2 className="text-app-muted-foreground" size={24} />
  </div>
  <div>
- <h3 className="text-lg font-black text-app-text uppercase tracking-tighter truncate">
+ <h3 className="text-lg font-black text-app-foreground uppercase tracking-tighter truncate">
  {user.organization?.name || 'New Organization'}
  </h3>
- <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">
+ <p className="text-[10px] font-black uppercase text-app-info tracking-widest">
  {user.organization?.slug || 'pending-slug'}
  </p>
  </div>
  </div>
  <div className="space-y-3">
- <div className="flex items-center gap-2 text-xs text-app-text-muted font-medium">
- <Mail size={14} className="text-app-text-faint" />
+ <div className="flex items-center gap-2 text-xs text-app-muted-foreground font-medium">
+ <Mail size={14} className="text-app-muted-foreground" />
  {user.email}
  </div>
- <div className="flex items-center gap-2 text-xs text-app-text-muted font-medium">
- <Calendar size={14} className="text-app-text-faint" />
+ <div className="flex items-center gap-2 text-xs text-app-muted-foreground font-medium">
+ <Calendar size={14} className="text-app-muted-foreground" />
  Requested {user.date_joined ? format(new Date(user.date_joined), 'PPP') : '—'}
  </div>
  </div>
@@ -123,7 +123,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <div className="flex-1 p-6 flex items-center justify-between">
  <div className="space-y-4">
  <div>
- <span className="text-[10px] font-black uppercase text-app-text-faint tracking-widest block mb-2">Requested Access</span>
+ <span className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest block mb-2">Requested Access</span>
  <div className="flex flex-wrap gap-2">
  <Badge variant="outline" className="bg-app-surface rounded-lg px-3 py-1 text-[10px] font-bold uppercase">
  Industry: {user.organization?.business_type_name || 'Standard'}
@@ -134,10 +134,10 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  </div>
  </div>
  <div>
- <span className="text-[10px] font-black uppercase text-app-text-faint tracking-widest block mb-1">Status</span>
+ <span className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest block mb-1">Status</span>
  <Badge className={cn(
  "rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest border-none",
- user.registration_status === 'PENDING' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+ user.registration_status === 'PENDING' ? "bg-app-warning-bg text-app-warning" : "bg-app-info-bg text-app-info"
  )}>
  {user.registration_status}
  </Badge>
@@ -146,7 +146,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
 
  <div className="flex items-center gap-3">
  {user.organization_id === currentUserOrgId && (
- <Badge className="bg-amber-100 text-amber-700 border-none rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest">
+ <Badge className="bg-app-warning-bg text-app-warning border-none rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest">
  YOUR ORG
  </Badge>
  )}
@@ -155,7 +155,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  onClick={() => setPendingRejectId(user.id)}
  disabled={loadingMap[user.id] || user.organization_id === currentUserOrgId}
  title={user.organization_id === currentUserOrgId ? 'Cannot reject your own organization' : 'Reject'}
- className="h-12 w-12 rounded-2xl border-app-border hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all p-0 disabled:opacity-30"
+ className="h-12 w-12 rounded-2xl border-app-border hover:bg-app-error-bg hover:text-app-error hover:border-app-error/30 transition-all p-0 disabled:opacity-30"
  >
  <X size={20} />
  </Button>
@@ -163,14 +163,14 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  variant="outline"
  onClick={() => setCorrectionModal({ open: true, userId: user.id })}
  disabled={loadingMap[user.id]}
- className="h-12 px-6 rounded-2xl border-app-border text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-all"
+ className="h-12 px-6 rounded-2xl border-app-border text-[10px] font-black uppercase tracking-widest hover:bg-app-info-bg hover:text-app-info hover:border-app-info/30 transition-all"
  >
  Correction
  </Button>
  <Button
  onClick={() => handleApprove(user.id)}
  disabled={loadingMap[user.id]}
- className="h-12 px-8 rounded-2xl bg-gray-900 hover:bg-black text-app-text text-[10px] font-black uppercase tracking-widest shadow-lg shadow-gray-200 transition-all flex items-center gap-2"
+ className="h-12 px-8 rounded-2xl bg-app-surface hover:bg-app-background text-app-foreground text-[10px] font-black uppercase tracking-widest shadow-lg shadow-app-border/20 transition-all flex items-center gap-2"
  >
  {loadingMap[user.id] ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
  Approve
@@ -185,17 +185,17 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <Dialog open={correctionModal.open} onOpenChange={(open) => setCorrectionModal({ open, userId: open ? correctionModal.userId : null })}>
  <DialogContent className="max-w-md bg-app-surface rounded-[2rem] p-8 border-none shadow-2xl">
  <DialogHeader>
- <DialogTitle className="text-2xl font-black text-app-text uppercase tracking-tighter">Request Correction</DialogTitle>
+ <DialogTitle className="text-2xl font-black text-app-foreground uppercase tracking-tighter">Request Correction</DialogTitle>
  </DialogHeader>
 
  <div className="space-y-6 pt-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black uppercase text-app-text-faint px-1 tracking-widest">Correction Notes</Label>
+ <Label className="text-[10px] font-black uppercase text-app-muted-foreground px-1 tracking-widest">Correction Notes</Label>
  <Textarea
  placeholder="Explain what needs to be changed..."
  value={correctionNotes}
  onChange={e => setCorrectionNotes(e.target.value)}
- className="min-h-[120px] rounded-2xl border-app-border bg-app-bg focus:bg-app-surface focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
+ className="min-h-[120px] rounded-2xl border-app-border bg-app-background focus:bg-app-surface focus:border-app-info/50 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
  />
  </div>
 
@@ -210,7 +210,7 @@ export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialU
  <Button
  onClick={handleRequestCorrection}
  disabled={!correctionNotes}
- className="flex-1 h-14 rounded-2xl bg-blue-600 text-app-text text-[10px] font-black uppercase tracking-widest"
+ className="flex-1 h-14 rounded-2xl bg-app-info text-app-foreground text-[10px] font-black uppercase tracking-widest"
  >
  Send Request
  </Button>

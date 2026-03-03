@@ -244,6 +244,7 @@ class PurchaseService:
             total_amount_ht = Decimal('0')
             total_tax = Decimal('0')
             total_airsi = Decimal('0')
+            total_ap_amount = Decimal('0')   # net AP owed to supplier (TTC - AIRSI withheld)
 
             for line in lines:
                 product = Product.objects.get(id=line['productId'], organization=organization)
@@ -278,6 +279,7 @@ class PurchaseService:
                 total_amount_ht += line_total_ht
                 total_tax += line_tax
                 total_airsi += line_airsi
+                total_ap_amount += _costs['ap_amount']   # net AP owed (TTC - AIRSI withheld)
 
                 # cost_official is the correct inventory value (HT + non-recoverable VAT + AIRSI capitalize + purchase_tax)
                 if pricing_cost_basis == 'FORCE_HT':
@@ -391,16 +393,15 @@ class PurchaseService:
 
             ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
             stock_account_id = rules['purchases']['inventory']
-            tax_account_id = rules['purchases']['tax']
+            tax_account_id = rules['purchases']['vat_recoverable']
             airsi_account_id = rules['purchases'].get('airsi')
+            airsi_payable_acc = rules['purchases'].get('airsi_payable')
             discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
 
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
 
             # ── Inventory debit = cost_official (all non-recoverable taxes already included) ──
-            # cost_official = HT + (VAT * non_recov_ratio) + AIRSI_if_capitalize + purchase_tax
-            # We can sum up from the per-line OrderLineTaxEntry, but for simplicity:
             inventory_debit_amount = total_amount_ht
             if not vat_recoverable:
                 inventory_debit_amount += total_tax
@@ -412,12 +413,25 @@ class PurchaseService:
                 if airsi_ledger_treatment == 'CAPITALIZE':
                     inventory_debit_amount += total_airsi
 
-            # Canonical AP credit:
-            # If AIRSI withheld → AP = TTC - AIRSI (net owed to supplier)
+            # Canonical AP credit — depends on AIRSI treatment and account availability:
+            #
+            # AIRSI Payable Configured:
+            #   ap_credit = TTC - AIRSI  (withhold AIRSI, post to AIRSI Payable)
+            #
+            # No AIRSI Payable + CAPITALIZE:
+            #   ap_credit = TTC + AIRSI  (full invoice, AIRSI absorbed in cost)
+            #
+            # No AIRSI Payable + EXPENSE/RECOVER:
+            #   ap_credit = TTC  (AIRSI debit line separate, AP = standard TTC)
             if apply_airsi and total_airsi > 0:
-                ap_credit = order.total_amount  # already has -AIRSI effect after totals
+                if airsi_payable_acc:
+                    ap_credit = total_ap_amount + total_extra_fees - discount_amount
+                elif airsi_ledger_treatment == 'CAPITALIZE':
+                    ap_credit = total_amount_ht + total_tax + total_airsi + total_extra_fees - discount_amount
+                else:
+                    ap_credit = total_amount_ht + total_tax + total_extra_fees - discount_amount
             else:
-                ap_credit = order.total_amount
+                ap_credit = total_amount_ht + total_tax + total_extra_fees - discount_amount
 
             posting_lines = [
                 {"account_id": ap_account_id, "debit": Decimal('0'), "credit": ap_credit,
@@ -457,7 +471,7 @@ class PurchaseService:
             # VAT Reverse Charge (supplier.reverse_charge=True + vat_active)
             if _ctx.vat_active and _supplier_profile.reverse_charge and total_tax > 0:
                 reverse_charge_acc = rules.get('purchases', {}).get('reverse_charge_vat') or tax_account_id
-                sales_tax_acc_rc = rules.get('sales', {}).get('tax')
+                sales_tax_acc_rc = rules.get('sales', {}).get('vat_collected')
                 if reverse_charge_acc and sales_tax_acc_rc:
                     posting_lines.append({
                         "account_id": reverse_charge_acc, "debit": total_tax, "credit": Decimal('0'),
@@ -468,21 +482,27 @@ class PurchaseService:
                         "description": "VAT Reverse Charge — Output"
                     })
 
-            # AIRSI non-capitalize
-            if apply_airsi and total_airsi > 0 and airsi_ledger_treatment != 'CAPITALIZE':
-                target_acc = airsi_account_id or tax_account_id
-                if target_acc:
-                    posting_lines.append({
-                        "account_id": target_acc, "debit": total_airsi, "credit": Decimal('0'),
-                        "description": f"AIRSI ({airsi_ledger_treatment})"
-                    })
-                # Canonical: CR AP net (supplier gets TTC - AIRSI) + CR AIRSI Payable
-                airsi_payable_acc = rules.get('purchases', {}).get('airsi_payable')
-                if airsi_payable_acc:
+            # AIRSI posting
+            if apply_airsi and total_airsi > 0:
+                if airsi_ledger_treatment == 'CAPITALIZE' and airsi_payable_acc:
+                    # AIRSI in inventory cost + CR AIRSI Payable to balance the AP netting
                     posting_lines.append({
                         "account_id": airsi_payable_acc, "debit": Decimal('0'), "credit": total_airsi,
-                        "description": "AIRSI Payable to tax authority"
+                        "description": "AIRSI Payable to DGI (withheld from AP)"
                     })
+                elif airsi_ledger_treatment != 'CAPITALIZE':
+                    # RECOVER or EXPENSE: AIRSI is a separate debit line
+                    target_acc = airsi_account_id or tax_account_id
+                    if target_acc:
+                        posting_lines.append({
+                            "account_id": target_acc, "debit": total_airsi, "credit": Decimal('0'),
+                            "description": f"AIRSI ({airsi_ledger_treatment})"
+                        })
+                    if airsi_payable_acc:
+                        posting_lines.append({
+                            "account_id": airsi_payable_acc, "debit": Decimal('0'), "credit": total_airsi,
+                            "description": "AIRSI Payable to DGI"
+                        })
 
             LedgerService.create_journal_entry(
                 organization=organization,

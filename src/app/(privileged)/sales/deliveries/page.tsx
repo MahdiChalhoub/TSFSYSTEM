@@ -15,12 +15,12 @@ import {
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any; color: string }> = {
- PENDING: { label: 'Pending', bg: 'bg-app-bg', icon: Clock, color: 'text-app-text-muted border-app-border' },
- PREPARING: { label: 'Preparing', bg: 'bg-blue-50', icon: Package, color: 'text-blue-600 border-blue-100' },
- IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-50', icon: Navigation, color: 'text-amber-600 border-amber-100' },
- DELIVERED: { label: 'Delivered', bg: 'bg-emerald-50', icon: CheckCircle2, color: 'text-emerald-600 border-emerald-100' },
+ PENDING: { label: 'Pending', bg: 'bg-app-background', icon: Clock, color: 'text-app-muted-foreground border-app-border' },
+ PREPARING: { label: 'Preparing', bg: 'bg-app-info-bg', icon: Package, color: 'text-app-info border-app-info/30' },
+ IN_TRANSIT: { label: 'In Transit', bg: 'bg-app-warning-bg', icon: Navigation, color: 'text-app-warning border-app-warning/30' },
+ DELIVERED: { label: 'Delivered', bg: 'bg-app-primary-light', icon: CheckCircle2, color: 'text-app-primary border-app-success/30' },
  FAILED: { label: 'Failed', bg: 'bg-rose-50', icon: XCircle, color: 'text-rose-600 border-rose-100' },
- CANCELLED: { label: 'Cancelled', bg: 'bg-app-surface-2', icon: Ban, color: 'text-app-text-faint border-app-border' },
+ CANCELLED: { label: 'Cancelled', bg: 'bg-app-surface-2', icon: Ban, color: 'text-app-muted-foreground border-app-border' },
 }
 export default function DeliveryOrdersPage() {
  const { fmt } = useCurrency()
@@ -67,7 +67,7 @@ export default function DeliveryOrdersPage() {
  key: 'id',
  label: 'Waybill ID',
  width: '120px',
- render: (d) => <span className="font-mono text-[10px] font-black tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">DEL-{d.id}</span>
+ render: (d) => <span className="font-mono text-[10px] font-black tracking-widest text-app-info bg-app-info-bg px-2 py-0.5 rounded-lg border border-app-info/30">DEL-{d.id}</span>
  },
  {
  key: 'status',
@@ -86,16 +86,16 @@ export default function DeliveryOrdersPage() {
  {
  key: 'order_ref',
  label: 'Terminal Order',
- render: (d) => <span className="font-mono text-xs font-bold text-app-text-muted">{d.order_ref || `ORD-${d.order}`}</span>
+ render: (d) => <span className="font-mono text-xs font-bold text-app-muted-foreground">{d.order_ref || `ORD-${d.order}`}</span>
  },
  {
  key: 'recipient_name',
  label: 'Consignee',
  render: (d) => (
- <div className="flex flex-col">
- <span className="text-sm font-semibold text-app-text leading-tight">{d.recipient_name || d.contact_name || '—'}</span>
- <span className="text-[10px] text-app-text-faint flex items-center gap-1 mt-0.5">
- <MapPin size={10} className="text-stone-300" />
+ <div className="app-page flex flex-col">
+ <span className="text-sm font-semibold text-app-foreground leading-tight">{d.recipient_name || d.contact_name || '—'}</span>
+ <span className="text-[10px] text-app-muted-foreground flex items-center gap-1 mt-0.5">
+ <MapPin size={10} className="text-app-muted-foreground" />
  {d.city || 'Standard Zone'}
  </span>
  </div>
@@ -104,30 +104,30 @@ export default function DeliveryOrdersPage() {
  {
  key: 'zone_name',
  label: 'Logistics Zone',
- render: (d) => <span className="text-xs font-medium text-app-text-muted italic">{d.zone_name || 'Global'}</span>
+ render: (d) => <span className="text-xs font-medium text-app-muted-foreground italic">{d.zone_name || 'Global'}</span>
  },
  {
  key: 'driver_name',
  label: 'Fleet Driver',
  render: (d) => (
  <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-lg bg-app-bg border border-app-border flex items-center justify-center text-app-text-faint">
+ <div className="w-6 h-6 rounded-lg bg-app-background border border-app-border flex items-center justify-center text-app-muted-foreground">
  <User size={12} />
  </div>
- <span className="text-xs font-bold text-gray-700">{d.driver_name || 'Unassigned'}</span>
+ <span className="text-xs font-bold text-app-muted-foreground">{d.driver_name || 'Unassigned'}</span>
  </div>
  )
  },
  {
  key: 'tracking_code',
  label: 'Tracking SEQ',
- render: (d) => <span className="font-mono text-[10px] text-indigo-500 font-bold">{d.tracking_code || '—'}</span>
+ render: (d) => <span className="font-mono text-[10px] text-app-primary font-bold">{d.tracking_code || '—'}</span>
  },
  {
  key: 'delivery_fee',
  label: 'Fulfillment Fee',
  align: 'right',
- render: (d) => <span className="font-black text-app-text tracking-tighter">{fmt(parseFloat(d.delivery_fee || 0))}</span>
+ render: (d) => <span className="font-black text-app-foreground tracking-tighter">{fmt(parseFloat(d.delivery_fee || 0))}</span>
  },
  {
  key: 'actions',
@@ -142,7 +142,7 @@ export default function DeliveryOrdersPage() {
  size="sm"
  onClick={() => doAction(d.id, 'dispatch')}
  disabled={isLoading}
- className="h-7 px-3 bg-blue-600 hover:bg-blue-700 text-app-text text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm"
+ className="h-7 px-3 bg-app-info hover:bg-app-info text-app-foreground text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm"
  >
  Dispatch
  </Button>
@@ -152,7 +152,7 @@ export default function DeliveryOrdersPage() {
  size="sm"
  onClick={() => doAction(d.id, 'deliver')}
  disabled={isLoading}
- className="h-7 px-3 bg-emerald-600 hover:bg-emerald-700 text-app-text text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm"
+ className="h-7 px-3 bg-app-primary hover:bg-app-success text-app-foreground text-[9px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm"
  >
  Deliver
  </Button>
@@ -163,7 +163,7 @@ export default function DeliveryOrdersPage() {
  variant="ghost"
  onClick={() => doAction(d.id, 'cancel')}
  disabled={isLoading}
- className="h-7 w-7 p-0 rounded-lg text-stone-300 hover:text-rose-600 hover:bg-rose-50"
+ className="h-7 w-7 p-0 rounded-lg text-app-muted-foreground hover:text-rose-600 hover:bg-rose-50"
  >
  <Ban size={14} />
  </Button>
@@ -190,73 +190,66 @@ export default function DeliveryOrdersPage() {
  }
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
- <Truck size={28} className="text-app-text" />
- </div>
- Logistics <span className="text-blue-600">Excellence</span> Hub
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Shipments & Delivery Tracking</p>
- </div>
- <div className="flex items-center gap-3">
- <Button onClick={loadData} variant="ghost" className="h-12 w-12 p-0 rounded-2xl text-app-text-faint hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all">
- <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
- </Button>
- <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
- <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Active</span>
- </div>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Truck size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Delivery <span className="text-app-primary">Control</span>
+          </h1>
+        </div>
+      </div>
+    </header>
  {/* Tactical KPIs */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary/5 text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Truck size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Shipment Volume</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{deliveries.length}</p>
- <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Total Tracked</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Shipment Volume</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{deliveries.length}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase mt-1">Total Tracked</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-warning-bg text-app-warning flex items-center justify-center group-hover:scale-110 transition-transform">
  <Clock size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Queue & Prep</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-amber-700">{stats.pending}</p>
- <p className="text-[10px] text-amber-600 font-bold uppercase mt-1">Awaiting Dispatch</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Queue & Prep</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-warning">{stats.pending}</p>
+ <p className="text-[10px] text-app-warning font-bold uppercase mt-1">Awaiting Dispatch</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-info-bg text-app-info flex items-center justify-center group-hover:scale-110 transition-transform">
  <Navigation size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">In Transit</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-blue-700">{stats.inTransit}</p>
- <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Live Freight</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">In Transit</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-info">{stats.inTransit}</p>
+ <p className="text-[10px] text-app-info font-bold uppercase mt-1">Live Freight</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <Activity size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Fulfillment Value</p>
- <p className="text-xl font-black mt-1 tracking-tight text-emerald-700">{fmt(stats.totalFees)}</p>
- <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">Aggregate Fees</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Fulfillment Value</p>
+ <p className="text-xl font-black mt-1 tracking-tight text-app-success">{fmt(stats.totalFees)}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase mt-1">Aggregate Fees</p>
  </div>
  </CardContent>
  </Card>
@@ -281,7 +274,7 @@ export default function DeliveryOrdersPage() {
  variant={!statusFilter ? 'secondary' : 'ghost'}
  size="sm"
  onClick={() => setStatusFilter(null)}
- className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!statusFilter ? 'bg-app-surface shadow-sm text-blue-600' : 'text-app-text-faint hover:text-app-text-muted'}`}
+ className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!statusFilter ? 'bg-app-surface shadow-sm text-app-info' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  All Channel
  </Button>
@@ -294,7 +287,7 @@ export default function DeliveryOrdersPage() {
  variant={statusFilter === key ? 'secondary' : 'ghost'}
  size="sm"
  onClick={() => setStatusFilter(key)}
- className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === key ? 'bg-app-surface shadow-sm text-blue-600' : 'text-app-text-faint hover:text-app-text-muted'}`}
+ className={`h-8 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === key ? 'bg-app-surface shadow-sm text-app-info' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  {cfg.label}
  </Button>
@@ -307,11 +300,11 @@ export default function DeliveryOrdersPage() {
  <Card className="rounded-[2.5rem] border-0 shadow-sm bg-app-surface overflow-hidden mt-8">
  <CardHeader className="p-8 border-b border-stone-50 flex flex-row items-center justify-between">
  <div>
- <CardTitle className="text-xl font-black tracking-tight text-app-text flex items-center gap-2">
- <Activity size={20} className="text-blue-600" />
+ <CardTitle className="text-xl font-black tracking-tight text-app-foreground flex items-center gap-2">
+ <Activity size={20} className="text-app-info" />
  Recent Operations Activity
  </CardTitle>
- <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-faint mt-1">Real-time Fulfillment Sequence</p>
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground mt-1">Real-time Fulfillment Sequence</p>
  </div>
  </CardHeader>
  <CardContent className="p-8">
@@ -322,17 +315,17 @@ export default function DeliveryOrdersPage() {
  .slice(0, 8)
  .map(d => (
  <div key={`timeline-${d.id}`} className="flex items-center gap-4 group/item">
- <div className={`w-3 h-3 rounded-full border-2 ${d.status === 'DELIVERED' ? 'bg-emerald-500 border-emerald-100' : 'bg-blue-500 border-blue-100'} animate-pulse`} />
- <span className="font-mono text-[10px] font-black text-app-text-faint w-16">DEL-{d.id}</span>
- <span className="font-bold text-app-text flex-1">{d.recipient_name || d.contact_name || 'Legacy Entity'}</span>
- <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border ${STATUS_CONFIG[d.status ?? '']?.bg || 'bg-app-bg'} ${STATUS_CONFIG[d.status ?? '']?.color || 'text-app-text-faint'}`}>
+ <div className={`w-3 h-3 rounded-full border-2 ${d.status === 'DELIVERED' ? 'bg-app-primary border-app-success/30' : 'bg-app-info border-app-info/30'} animate-pulse`} />
+ <span className="font-mono text-[10px] font-black text-app-muted-foreground w-16">DEL-{d.id}</span>
+ <span className="font-bold text-app-foreground flex-1">{d.recipient_name || d.contact_name || 'Legacy Entity'}</span>
+ <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border ${STATUS_CONFIG[d.status ?? '']?.bg || 'bg-app-background'} ${STATUS_CONFIG[d.status ?? '']?.color || 'text-app-muted-foreground'}`}>
  {STATUS_CONFIG[d.status ?? '']?.label || d.status}
  </Badge>
- <span className="text-[10px] font-bold text-app-text-faint">
+ <span className="text-[10px] font-bold text-app-muted-foreground">
  {new Date(d.delivered_at || d.dispatched_at || '').toLocaleString('fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
  </span>
  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity">
- <ExternalLink size={14} className="text-stone-300" />
+ <ExternalLink size={14} className="text-app-muted-foreground" />
  </Button>
  </div>
  ))}

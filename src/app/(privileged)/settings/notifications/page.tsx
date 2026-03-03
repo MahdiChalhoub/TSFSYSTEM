@@ -15,13 +15,13 @@ const CHANNEL_ICONS: Record<string, { icon: any; label: string }> = {
 }
 
 const TYPE_ICONS: Record<string, { icon: any; color: string }> = {
- invoice_overdue: { icon: AlertTriangle, color: 'text-red-500' },
- invoice_paid: { icon: CheckCircle2, color: 'text-emerald-500' },
+ invoice_overdue: { icon: AlertTriangle, color: 'text-app-error' },
+ invoice_paid: { icon: CheckCircle2, color: 'text-app-primary' },
  stock_alert: { icon: Package, color: 'text-orange-500' },
- po_approved: { icon: FileText, color: 'text-blue-500' },
- po_received: { icon: TrendingUp, color: 'text-indigo-500' },
- payment_received: { icon: CreditCard, color: 'text-emerald-600' },
- system_update: { icon: Settings, color: 'text-app-text-muted' },
+ po_approved: { icon: FileText, color: 'text-app-info' },
+ po_received: { icon: TrendingUp, color: 'text-app-primary' },
+ payment_received: { icon: CreditCard, color: 'text-app-primary' },
+ system_update: { icon: Settings, color: 'text-app-muted-foreground' },
  daily_digest: { icon: Clock, color: 'text-purple-500' },
 }
 
@@ -76,8 +76,8 @@ export default function NotificationPreferencesPage() {
 
  if (loading) {
  return (
- <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
- <div className="h-10 w-64 bg-gray-200 rounded-xl animate-pulse" />
+ <div className="app-page max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+ <div className="h-10 w-64 bg-app-border rounded-xl animate-pulse" />
  <div className="h-96 bg-app-surface-2 rounded-3xl animate-pulse" />
  </div>
  )
@@ -86,26 +86,28 @@ export default function NotificationPreferencesPage() {
  return (
  <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
  {/* Header */}
- <header>
- <h1 className="page-header-title tracking-tighter flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Bell size={28} className="text-app-text" />
- </div>
- Notification <span className="text-violet-500">Preferences</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
- Channel Routing & Delivery Controls
- </p>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Bell size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Settings</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Notification <span className="text-app-primary">Center</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Preferences Grid */}
  <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
  <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
  <div className="flex items-center justify-between">
- <h2 className="text-sm font-black text-app-text-muted uppercase tracking-widest">Channel Settings</h2>
+ <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Channel Settings</h2>
  <div className="flex gap-6">
  {Object.entries(CHANNEL_ICONS).map(([channel, { icon: Icon, label }]) => (
- <div key={channel} className="flex items-center gap-1.5 text-[10px] font-bold text-app-text-faint uppercase tracking-widest">
+ <div key={channel} className="flex items-center gap-1.5 text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
  <Icon size={14} />
  {label}
  </div>
@@ -116,17 +118,17 @@ export default function NotificationPreferencesPage() {
 
  <div className="divide-y divide-gray-50">
  {Object.entries(prefs).map(([ntype, data]: [string, any]) => {
- const typeIcon = TYPE_ICONS[ntype] || { icon: Bell, color: 'text-app-text-faint' }
+ const typeIcon = TYPE_ICONS[ntype] || { icon: Bell, color: 'text-app-muted-foreground' }
  const TypeIcon = typeIcon.icon
  return (
- <div key={ntype} className="p-6 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+ <div key={ntype} className="p-6 flex items-center justify-between hover:bg-app-surface-2/50 transition-colors">
  <div className="flex items-center gap-4">
- <div className={`p-2.5 rounded-xl bg-app-bg ${typeIcon.color}`}>
+ <div className={`p-2.5 rounded-xl bg-app-background ${typeIcon.color}`}>
  <TypeIcon size={18} />
  </div>
  <div>
- <h3 className="font-bold text-app-text text-sm">{data.label || ntype}</h3>
- <p className="text-[10px] text-app-text-faint font-medium uppercase tracking-wider mt-0.5">
+ <h3 className="font-bold text-app-foreground text-sm">{data.label || ntype}</h3>
+ <p className="text-[10px] text-app-muted-foreground font-medium uppercase tracking-wider mt-0.5">
  {ntype.replace(/_/g, ' ')}
  </p>
  </div>
@@ -140,8 +142,8 @@ export default function NotificationPreferencesPage() {
  onClick={() => handleToggle(ntype, channel, isEnabled)}
  disabled={isPending}
  className={`w-12 h-7 rounded-full transition-all relative ${isEnabled
- ? 'bg-violet-500 shadow-inner shadow-violet-600'
- : 'bg-gray-200'
+ ? 'bg-app-primary shadow-inner shadow-violet-600'
+ : 'bg-app-border'
  }`}
  >
  <div className={`absolute top-1 w-5 h-5 rounded-full bg-app-surface shadow transition-all ${isEnabled ? 'left-6' : 'left-1'
@@ -154,7 +156,7 @@ export default function NotificationPreferencesPage() {
  )
  })}
  {Object.keys(prefs).length === 0 && (
- <div className="p-16 text-center text-app-text-faint italic">
+ <div className="p-16 text-center text-app-muted-foreground italic">
  No notification types configured yet.
  </div>
  )}
@@ -164,38 +166,38 @@ export default function NotificationPreferencesPage() {
  {/* Delivery Log */}
  <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
  <div className="p-6 border-b border-app-border bg-[#F8FAFC] flex items-center justify-between">
- <h2 className="text-sm font-black text-app-text-muted uppercase tracking-widest">Recent Deliveries</h2>
- <button onClick={loadData} className="text-app-text-faint hover:text-violet-500 transition-colors">
+ <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Recent Deliveries</h2>
+ <button onClick={loadData} className="text-app-muted-foreground hover:text-app-primary transition-colors">
  <RefreshCw size={16} />
  </button>
  </div>
  <div className="divide-y divide-gray-50">
  {log.length === 0 ? (
- <div className="p-12 text-center text-app-text-faint italic text-sm">
+ <div className="p-12 text-center text-app-muted-foreground italic text-sm">
  No delivery history yet.
  </div>
  ) : (
  log.map((entry: any) => (
- <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+ <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-app-surface-2/50 transition-colors">
  <div className={`p-2 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
- ? 'bg-emerald-50 text-emerald-500'
+ ? 'bg-app-primary-light text-app-primary'
  : entry.status === 'FAILED'
- ? 'bg-red-50 text-red-500'
- : 'bg-app-bg text-app-text-faint'
+ ? 'bg-app-error-bg text-app-error'
+ : 'bg-app-background text-app-muted-foreground'
  }`}>
  {entry.channel === 'EMAIL' ? <Mail size={14} /> : <Bell size={14} />}
  </div>
  <div className="flex-1 min-w-0">
- <p className="text-sm font-medium text-gray-700 truncate">{entry.subject}</p>
- <p className="text-[10px] text-app-text-faint mt-0.5">
+ <p className="text-sm font-medium text-app-muted-foreground truncate">{entry.subject}</p>
+ <p className="text-[10px] text-app-muted-foreground mt-0.5">
  {entry.channel} • {entry.created_at ? new Date(entry.created_at).toLocaleString('fr-FR') : '—'}
  </p>
  </div>
  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
- ? 'bg-emerald-100 text-emerald-700'
+ ? 'bg-app-primary-light text-app-success'
  : entry.status === 'FAILED'
- ? 'bg-red-100 text-red-700'
- : 'bg-app-surface-2 text-app-text-muted'
+ ? 'bg-app-error-bg text-app-error'
+ : 'bg-app-surface-2 text-app-muted-foreground'
  }`}>
  {entry.status}
  </span>

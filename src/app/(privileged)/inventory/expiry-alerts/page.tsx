@@ -9,30 +9,20 @@ export default async function ExpiryAlertsPage() {
  const stats = initialData?.stats || { expired: 0, critical: 0, warning: 0, total_value: 0, total_quantity: 0 };
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
- <header className="flex justify-between items-start">
- <div>
- <div className="flex items-center gap-3 mb-2">
- <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-app-text">
- <Clock size={28} />
- </div>
- <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Batch Management</span>
- </div>
- <h1 className="text-4xl lg:page-header-title tracking-tighter">
- Expiry <span className="text-indigo-600">Timeline</span>
- </h1>
- <p className="mt-2 text-app-text-muted font-medium max-w-xl">
- Monitor product lifecycles and batch integrity. Identify financial risks before expiration events occur.
- </p>
- </div>
-
- <div className="flex gap-3">
- <button className="bg-app-surface border border-app-border text-app-text-muted px-6 py-3 rounded-2xl font-bold hover:text-indigo-600 hover:border-indigo-100 transition-all flex items-center gap-2 shadow-sm">
- <FileText size={18} />
- <span>Export Report</span>
- </button>
- </div>
- </header>
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Clock size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Expiry <span className="text-app-primary">Alerts</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  {/* Premium KPI Bar */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
@@ -42,9 +32,9 @@ export default async function ExpiryAlertsPage() {
  { label: 'Warning (60d)', val: stats.warning, color: 'amber' },
  { label: 'Value at Risk', val: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(stats.total_value), color: 'rose', wide: true }
  ].map((kpi, i) => (
- <div key={i} className={`bg-app-surface p-6 rounded-[2rem] border border-gray-50 shadow-sm relative overflow-hidden group ${kpi.wide ? 'md:col-span-1' : ''}`}>
- {kpi.urgency && <div className="absolute top-0 right-0 p-3"><div className="w-2 h-2 bg-rose-500 rounded-full animate-ping" /></div>}
- <div className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-1">{kpi.label}</div>
+ <div key={i} className={`bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm relative overflow-hidden group ${kpi.wide ? 'md:col-span-1' : ''}`}>
+ {kpi.urgency && <div className="absolute top-0 right-0 p-3"><div className="w-2 h-2 bg-app-error rounded-full animate-ping" /></div>}
+ <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">{kpi.label}</div>
  <div className={`text-3xl font-black text-${kpi.color}-600 tracking-tighter`}>{kpi.val}</div>
  </div>
  ))}

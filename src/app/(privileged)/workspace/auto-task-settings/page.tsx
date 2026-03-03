@@ -13,13 +13,13 @@ import {
 
 // ── Module Config ─────────────────────────────────────────────────────────────
 const MODULE_CONFIG: Record<string, { icon: typeof Package; color: string; bg: string; border: string }> = {
- inventory: { icon: Package, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
- purchasing: { icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
- finance: { icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
- crm: { icon: Users, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
+ inventory: { icon: Package, color: 'text-app-primary', bg: 'bg-app-primary-light', border: 'border-app-success' },
+ purchasing: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-app-info-bg', border: 'border-app-info' },
+ finance: { icon: DollarSign, color: 'text-app-warning', bg: 'bg-app-warning-bg', border: 'border-app-warning' },
+ crm: { icon: Users, color: 'text-app-primary', bg: 'bg-violet-50', border: 'border-violet-200' },
  sales: { icon: Briefcase, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200' },
  hr: { icon: UserCheck, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
- system: { icon: Settings2, color: 'text-app-text-muted', bg: 'bg-app-bg', border: 'border-app-border' },
+ system: { icon: Settings2, color: 'text-app-muted-foreground', bg: 'bg-app-background', border: 'border-app-border' },
 };
 
 interface RuleGroup {
@@ -33,8 +33,8 @@ interface RuleGroup {
 }
 
 const RULE_TYPE_LABELS: Record<string, { label: string; icon: typeof Zap; color: string }> = {
- EVENT: { label: 'Event', icon: Zap, color: 'text-indigo-500' },
- RECURRING: { label: 'Recurring', icon: Repeat, color: 'text-amber-500' },
+ EVENT: { label: 'Event', icon: Zap, color: 'text-app-primary' },
+ RECURRING: { label: 'Recurring', icon: Repeat, color: 'text-app-warning' },
 };
 
 const INTERVAL_LABELS: Record<string, string> = {
@@ -45,10 +45,10 @@ const INTERVAL_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_BADGES: Record<string, { label: string; cls: string }> = {
- URGENT: { label: 'Urgent', cls: 'bg-red-100 text-red-700 border-red-200' },
+ URGENT: { label: 'Urgent', cls: 'bg-app-error-bg text-app-error border-app-error' },
  HIGH: { label: 'High', cls: 'bg-orange-100 text-orange-700 border-orange-200' },
- MEDIUM: { label: 'Medium', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
- LOW: { label: 'Low', cls: 'bg-app-surface-2 text-app-text-muted border-app-border' },
+ MEDIUM: { label: 'Medium', cls: 'bg-app-info-bg text-app-info border-app-info' },
+ LOW: { label: 'Low', cls: 'bg-app-surface-2 text-app-muted-foreground border-app-border' },
 };
 
 export default function AutoTaskSettingsPage() {
@@ -128,20 +128,20 @@ export default function AutoTaskSettingsPage() {
  const totalRecurring = groups.reduce((sum, g) => sum + g.recurring_count, 0);
 
  return (
- <div className="p-4 max-w-7xl mx-auto space-y-4">
+ <div className="app-page p-4 max-w-7xl mx-auto space-y-4">
  {/* ── Header ──────────────────────────────────────────────────────── */}
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl font-black text-app-text flex items-center gap-2">
- <Zap size={20} className="text-amber-500" /> Auto-Task Settings
+ <h1 className="text-xl font-black text-app-foreground flex items-center gap-2">
+ <Zap size={20} className="text-app-warning" /> Auto-Task Settings
  </h1>
- <p className="text-xs text-app-text-muted mt-0.5">
+ <p className="text-xs text-app-muted-foreground mt-0.5">
  Configure automatic task creation for every module and business process
  </p>
  </div>
  <a
  href="/workspace/auto-task-rules"
- className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
+ className="flex items-center gap-2 px-4 py-2 bg-app-primary text-app-foreground rounded-xl text-sm font-bold hover:bg-app-primary transition-all shadow-md shadow-indigo-200"
  >
  <Plus size={14} /> Create Rule
  </a>
@@ -150,14 +150,14 @@ export default function AutoTaskSettingsPage() {
  {/* ── Stats Bar ───────────────────────────────────────────────────── */}
  <div className="grid grid-cols-4 gap-3">
  {[
- { label: 'Total Rules', value: totalRules, color: 'text-app-text', bg: 'bg-app-surface' },
- { label: 'Active', value: totalActive, color: 'text-emerald-600', bg: 'bg-emerald-50' },
- { label: 'Event-Based', value: totalEvent, color: 'text-indigo-600', bg: 'bg-indigo-50' },
- { label: 'Recurring', value: totalRecurring, color: 'text-amber-600', bg: 'bg-amber-50' },
+ { label: 'Total Rules', value: totalRules, color: 'text-app-foreground', bg: 'bg-app-surface' },
+ { label: 'Active', value: totalActive, color: 'text-app-primary', bg: 'bg-app-primary-light' },
+ { label: 'Event-Based', value: totalEvent, color: 'text-app-primary', bg: 'bg-app-primary/5' },
+ { label: 'Recurring', value: totalRecurring, color: 'text-app-warning', bg: 'bg-app-warning-bg' },
  ].map(stat => (
  <div key={stat.label} className={clsx('rounded-xl p-3 border border-app-border shadow-sm', stat.bg)}>
  <div className={clsx('text-2xl font-black', stat.color)}>{stat.value}</div>
- <div className="text-[10px] font-bold text-app-text-muted uppercase tracking-wider">{stat.label}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">{stat.label}</div>
  </div>
  ))}
  </div>
@@ -171,7 +171,7 @@ export default function AutoTaskSettingsPage() {
  onClick={() => setFilterType(t)}
  className={clsx(
  'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
- filterType === t ? 'bg-indigo-600 text-app-text shadow' : 'text-app-text-muted hover:bg-app-bg'
+ filterType === t ? 'bg-app-primary text-app-foreground shadow' : 'text-app-muted-foreground hover:bg-app-background'
  )}
  >
  {t === 'ALL' ? 'All Types' : t === 'EVENT' ? '⚡ Event' : '🔄 Recurring'}
@@ -186,7 +186,7 @@ export default function AutoTaskSettingsPage() {
  onClick={() => setFilterActive(t)}
  className={clsx(
  'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
- filterActive === t ? 'bg-emerald-600 text-app-text shadow' : 'text-app-text-muted hover:bg-app-bg'
+ filterActive === t ? 'bg-app-primary text-app-foreground shadow' : 'text-app-muted-foreground hover:bg-app-background'
  )}
  >
  {t === 'ALL' ? 'All' : t === 'ACTIVE' ? '✅ Active' : '⬜ Inactive'}
@@ -195,24 +195,24 @@ export default function AutoTaskSettingsPage() {
  </div>
 
  <div className="relative flex-1 min-w-[200px]">
- <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input
  value={search}
  onChange={e => setSearch(e.target.value)}
  placeholder="Search rules..."
- className="w-full pl-9 pr-3 py-2 text-sm border border-app-border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+ className="w-full pl-9 pr-3 py-2 text-sm border border-app-border rounded-xl outline-none focus:ring-2 focus:ring-app-primary"
  />
  </div>
  </div>
 
  {/* ── Module Groups ────────────────────────────────────────────────── */}
  {loading ? (
- <div className="p-12 text-center text-app-text-faint">Loading rules...</div>
+ <div className="p-12 text-center text-app-muted-foreground">Loading rules...</div>
  ) : filteredGroups.length === 0 ? (
  <div className="p-12 text-center">
- <Zap size={40} className="text-gray-200 mx-auto mb-3" />
- <p className="text-app-text-faint font-medium">No auto-task rules configured yet.</p>
- <p className="text-app-text-faint text-sm">Create rules to automate task creation across your modules.</p>
+ <Zap size={40} className="text-app-foreground mx-auto mb-3" />
+ <p className="text-app-muted-foreground font-medium">No auto-task rules configured yet.</p>
+ <p className="text-app-muted-foreground text-sm">Create rules to automate task creation across your modules.</p>
  </div>
  ) : (
  <div className="space-y-3">
@@ -232,28 +232,28 @@ export default function AutoTaskSettingsPage() {
  )}
  >
  <div className="flex items-center gap-3">
- <div className={clsx('p-2 rounded-xl bg-app-text/80 shadow-sm', config.color)}>
+ <div className={clsx('p-2 rounded-xl bg-app-foreground/80 shadow-sm', config.color)}>
  <Icon size={18} />
  </div>
  <div className="text-left">
- <div className="font-black text-app-text text-sm">{group.module_display}</div>
- <div className="text-[10px] text-app-text-muted font-medium">
+ <div className="font-black text-app-foreground text-sm">{group.module_display}</div>
+ <div className="text-[10px] text-app-muted-foreground font-medium">
  {group.total} rule{group.total !== 1 ? 's' : ''} · {group.active} active
  </div>
  </div>
  </div>
  <div className="flex items-center gap-3">
  {group.event_count > 0 && (
- <span className="text-[10px] font-bold text-indigo-600 bg-app-text/80 px-2 py-0.5 rounded-full">
+ <span className="text-[10px] font-bold text-app-primary bg-app-foreground/80 px-2 py-0.5 rounded-full">
  ⚡ {group.event_count} event
  </span>
  )}
  {group.recurring_count > 0 && (
- <span className="text-[10px] font-bold text-amber-600 bg-app-text/80 px-2 py-0.5 rounded-full">
+ <span className="text-[10px] font-bold text-app-warning bg-app-foreground/80 px-2 py-0.5 rounded-full">
  🔄 {group.recurring_count} recurring
  </span>
  )}
- {isExpanded ? <ChevronDown size={16} className="text-app-text-faint" /> : <ChevronRight size={16} className="text-app-text-faint" />}
+ {isExpanded ? <ChevronDown size={16} className="text-app-muted-foreground" /> : <ChevronRight size={16} className="text-app-muted-foreground" />}
  </div>
  </button>
 
@@ -264,7 +264,7 @@ export default function AutoTaskSettingsPage() {
  <div
  key={rule.id}
  className={clsx(
- 'flex items-center gap-3 px-4 py-3 transition-all hover:bg-app-bg',
+ 'flex items-center gap-3 px-4 py-3 transition-all hover:bg-app-background',
  !rule.is_active && 'opacity-40'
  )}
  >
@@ -275,24 +275,24 @@ export default function AutoTaskSettingsPage() {
  title={rule.is_active ? 'Click to disable' : 'Click to enable'}
  >
  {rule.is_active ? (
- <ToggleRight size={22} className="text-emerald-500" />
+ <ToggleRight size={22} className="text-app-primary" />
  ) : (
- <ToggleLeft size={22} className="text-gray-300" />
+ <ToggleLeft size={22} className="text-app-muted-foreground" />
  )}
  </button>
 
  {/* Code */}
  {rule.code && (
- <span className="shrink-0 text-[10px] font-black text-app-text-faint bg-app-surface-2 px-2 py-0.5 rounded font-mono w-14 text-center">
+ <span className="shrink-0 text-[10px] font-black text-app-muted-foreground bg-app-surface-2 px-2 py-0.5 rounded font-mono w-14 text-center">
  {rule.code}
  </span>
  )}
 
  {/* Name + Trigger */}
  <div className="flex-1 min-w-0">
- <div className="text-sm font-semibold text-app-text truncate">{rule.name}</div>
+ <div className="text-sm font-semibold text-app-foreground truncate">{rule.name}</div>
  <div className="flex items-center gap-2 mt-0.5">
- <span className="text-[10px] text-app-text-faint">{rule.trigger_display}</span>
+ <span className="text-[10px] text-app-muted-foreground">{rule.trigger_display}</span>
  {rule.chain_parent_name && (
  <span className="text-[10px] text-purple-500 flex items-center gap-0.5">
  <Link2 size={8} /> after: {rule.chain_parent_name}
@@ -305,8 +305,8 @@ export default function AutoTaskSettingsPage() {
  <span className={clsx(
  'shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-full border',
  rule.rule_type === 'EVENT'
- ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
- : 'bg-amber-50 text-amber-600 border-amber-100'
+ ? 'bg-app-primary/5 text-app-primary border-app-primary/30'
+ : 'bg-app-warning-bg text-app-warning border-app-warning/30'
  )}>
  {rule.rule_type === 'EVENT' ? '⚡ Event' : `🔄 ${INTERVAL_LABELS[rule.recurrence_interval] || 'Recurring'}`}
  </span>
@@ -315,20 +315,20 @@ export default function AutoTaskSettingsPage() {
  {(rule.priority || rule.template?.default_priority) && (
  <span className={clsx(
  'shrink-0 text-[9px] font-bold border px-2 py-0.5 rounded-full',
- PRIORITY_BADGES[rule.priority || rule.template?.default_priority]?.cls || 'bg-app-bg text-app-text-muted'
+ PRIORITY_BADGES[rule.priority || rule.template?.default_priority]?.cls || 'bg-app-background text-app-muted-foreground'
  )}>
  {PRIORITY_BADGES[rule.priority || rule.template?.default_priority]?.label || 'Medium'}
  </span>
  )}
 
  {/* Assignee */}
- <span className="shrink-0 text-[10px] text-app-text-faint max-w-[120px] truncate">
+ <span className="shrink-0 text-[10px] text-app-muted-foreground max-w-[120px] truncate">
  {rule.assign_to_user_name || rule.template_name || '—'}
  </span>
 
  {/* System Default Badge */}
  {rule.is_system_default && (
- <span className="shrink-0 text-[8px] font-black text-app-text-faint bg-app-surface-2 px-1.5 py-0.5 rounded uppercase">
+ <span className="shrink-0 text-[8px] font-black text-app-muted-foreground bg-app-surface-2 px-1.5 py-0.5 rounded uppercase">
  Default
  </span>
  )}
@@ -336,7 +336,7 @@ export default function AutoTaskSettingsPage() {
  {/* Edit */}
  <a
  href="/workspace/auto-task-rules"
- className="shrink-0 p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all"
+ className="shrink-0 p-1.5 rounded-lg bg-app-primary/5 text-app-primary hover:bg-app-primary/10 transition-all"
  >
  <Edit3 size={12} />
  </a>
@@ -351,9 +351,9 @@ export default function AutoTaskSettingsPage() {
  )}
 
  {/* ── Legend ───────────────────────────────────────────────────────── */}
- <div className="flex items-center gap-6 text-[10px] text-app-text-faint pt-2 border-t border-app-border">
- <span className="flex items-center gap-1"><Zap size={10} className="text-indigo-500" /> Event: fires on system events</span>
- <span className="flex items-center gap-1"><Repeat size={10} className="text-amber-500" /> Recurring: fires on schedule</span>
+ <div className="flex items-center gap-6 text-[10px] text-app-muted-foreground pt-2 border-t border-app-border">
+ <span className="flex items-center gap-1"><Zap size={10} className="text-app-primary" /> Event: fires on system events</span>
+ <span className="flex items-center gap-1"><Repeat size={10} className="text-app-warning" /> Recurring: fires on schedule</span>
  <span className="flex items-center gap-1"><Link2 size={10} className="text-purple-500" /> Chain: fires after parent task completes</span>
  </div>
  </div>

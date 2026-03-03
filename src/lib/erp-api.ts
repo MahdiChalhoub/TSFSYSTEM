@@ -119,9 +119,12 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     let cleanPath = path.startsWith('/') ? path.slice(1) : path;
     // VERY IMPORTANT: Enforce trailing slash to prevent Django APPEND_SLASH 301 redirects
     // which cause browsers/fetch to drop the body and switch PATCH/POST to GET.
-    if (!cleanPath.endsWith('/')) {
-        cleanPath += '/';
-    }
+    // CRITICAL: Split on '?' FIRST so the slash is only added to the path, not the query string.
+    // Without this, `?days=30` becomes `?days=30/` which crashes int() parsing on the backend.
+    const [pathOnly, queryPart] = cleanPath.split('?');
+    const slashedPath = pathOnly.endsWith('/') ? pathOnly : `${pathOnly}/`;
+    cleanPath = queryPart ? `${slashedPath}?${queryPart}` : slashedPath;
+
 
     let url = isClient
         ? `/api/proxy/${cleanPath}`

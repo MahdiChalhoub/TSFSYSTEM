@@ -60,13 +60,13 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
  <div className="space-y-6">
  {/* Components List */}
  <div className="space-y-3">
- <p className="text-sm font-medium text-gray-700">Naming Components (drag to reorder)</p>
+ <p className="text-sm font-medium text-app-text-muted">Naming Components (drag to reorder)</p>
 
  {rule.components.map((component, index) => (
  <div
  key={component.id}
  className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${component.enabled
- ? 'bg-app-surface border-emerald-200'
+ ? 'bg-app-surface border-app-success'
  : 'bg-app-bg border-app-border opacity-60'
  }`}
  >
@@ -100,7 +100,7 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
  onClick={() => toggleComponent(index, 'useShortName')}
  disabled={!component.enabled}
  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${component.useShortName
- ? 'bg-blue-100 text-blue-700'
+ ? 'bg-app-info-bg text-app-info'
  : 'bg-app-surface-2 text-app-text-muted'
  }`}
  >
@@ -114,7 +114,7 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
  className="p-2 rounded-lg hover:bg-app-surface-2 transition-colors"
  >
  {component.enabled ? (
- <Eye className="w-5 h-5 text-emerald-600" />
+ <Eye className="w-5 h-5 text-app-primary" />
  ) : (
  <EyeOff className="w-5 h-5 text-app-text-faint" />
  )}
@@ -125,7 +125,7 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
 
  {/* Separator */}
  <div>
- <label className="block text-sm font-medium text-gray-700 mb-2">Separator</label>
+ <label className="block text-sm font-medium text-app-text-muted mb-2">Separator</label>
  <input
  type="text"
  value={rule.separator}
@@ -137,8 +137,8 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
  </div>
 
  {/* Preview */}
- <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-lg border border-emerald-200">
- <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+ <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-lg border border-app-success">
+ <p className="text-sm font-medium text-app-text-muted mb-2">Preview:</p>
  <p className="text-2xl font-bold text-app-text">{previewName()}</p>
  <p className="text-xs text-app-text-muted mt-2">Example: Shampoo (H&S Citron 400ml from Lebanon)</p>
  </div>
@@ -148,13 +148,13 @@ export function NamingRuleEditor({ initialRule }: { initialRule: ProductNamingRu
  <button
  onClick={handleSave}
  disabled={isSaving}
- className="px-6 py-2.5 bg-emerald-600 text-app-text rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+ className="px-6 py-2.5 bg-app-primary text-app-text rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
  >
  {isSaving ? 'Saving...' : 'Save Naming Rule'}
  </button>
 
  {message && (
- <p className={`text-sm font-medium ${message.startsWith('Γ£ô') ? 'text-emerald-600' : 'text-red-600'}`}>
+ <p className={`text-sm font-medium ${message.startsWith('Γ£ô') ? 'text-app-primary' : 'text-app-error'}`}>
  {message}
  </p>
  )}

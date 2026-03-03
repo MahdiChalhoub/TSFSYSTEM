@@ -85,10 +85,10 @@ const RECURRENCE_INTERVALS = [
 ];
 
 const PRIORITIES = [
- { value: 'URGENT', label: '🔴 Urgent', color: 'text-red-600' },
+ { value: 'URGENT', label: '🔴 Urgent', color: 'text-app-error' },
  { value: 'HIGH', label: '🟠 High', color: 'text-orange-500' },
- { value: 'MEDIUM', label: '🔵 Medium', color: 'text-blue-500' },
- { value: 'LOW', label: '⚪ Low', color: 'text-app-text-faint' },
+ { value: 'MEDIUM', label: '🔵 Medium', color: 'text-app-info' },
+ { value: 'LOW', label: '⚪ Low', color: 'text-app-muted-foreground' },
 ];
 
 interface AutoTaskRule {
@@ -151,7 +151,7 @@ export default function AutoTaskRulesPage() {
  const [r, tmpl, u, rl] = await Promise.all([
  erpFetch('auto-task-rules/').catch(() => []),
  erpFetch('task-templates/').catch(() => []),
- erpFetch('users/').catch(() => []),
+ erpFetch('erp/users/').catch(() => []),
  erpFetch('roles/').catch(() => []),
  ]);
  setRules(Array.isArray(r) ? r : r?.results || []);
@@ -245,20 +245,20 @@ export default function AutoTaskRulesPage() {
  const getTriggerLabel = (v: string) => TRIGGER_EVENTS.find(t => t.value === v)?.label || v;
 
  return (
- <div className="p-6 max-w-6xl mx-auto space-y-6">
+ <div className="app-page p-6 max-w-6xl mx-auto space-y-6">
  {/* Header */}
  <div className="flex items-center justify-between">
  <div>
  <h1 className="page-header-title flex items-center gap-2">
- <Zap size={22} className="text-amber-500" /> Auto-Task Rules
+ <Zap size={22} className="text-app-warning" /> Auto-Task Rules
  </h1>
- <p className="text-sm text-app-text-muted mt-1">
+ <p className="text-sm text-app-muted-foreground mt-1">
  Automatically create tasks when financial or operational events occur. Filter by amount, site, client, or cashier.
  </p>
  </div>
  <button
  onClick={() => { setEditingRule(emptyRule()); setIsNew(true); }}
- className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
+ className="flex items-center gap-2 px-4 py-2 bg-app-primary text-app-foreground rounded-xl text-sm font-bold hover:bg-app-primary transition-all shadow-md shadow-indigo-200"
  >
  <Plus size={15} /> New Rule
  </button>
@@ -267,16 +267,16 @@ export default function AutoTaskRulesPage() {
  {/* Rule List */}
  <div className="bg-app-surface rounded-2xl border border-app-border shadow-sm overflow-hidden">
  {loading ? (
- <div className="p-8 text-center text-app-text-faint">Loading rules...</div>
+ <div className="p-8 text-center text-app-muted-foreground">Loading rules...</div>
  ) : rules.length === 0 ? (
  <div className="p-10 text-center">
- <Zap size={32} className="text-gray-300 mx-auto mb-3" />
- <p className="text-app-text-faint font-medium">No auto-task rules yet.</p>
- <p className="text-app-text-faint text-sm">Create your first rule to automate task creation based on financial events.</p>
+ <Zap size={32} className="text-app-muted-foreground mx-auto mb-3" />
+ <p className="text-app-muted-foreground font-medium">No auto-task rules yet.</p>
+ <p className="text-app-muted-foreground text-sm">Create your first rule to automate task creation based on financial events.</p>
  </div>
  ) : (
  <table className="w-full text-sm">
- <thead className="bg-app-bg text-app-text-muted uppercase text-[10px] font-bold tracking-wider border-b border-app-border">
+ <thead className="bg-app-background text-app-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-app-border">
  <tr>
  <th className="p-4 text-left">Rule Name</th>
  <th className="p-4 text-left">Trigger Event</th>
@@ -288,39 +288,39 @@ export default function AutoTaskRulesPage() {
  </thead>
  <tbody className="divide-y divide-gray-50">
  {rules.map((rule: any) => (
- <tr key={rule.id} className={clsx('hover:bg-app-bg transition-colors', !rule.is_active && 'opacity-40')}>
- <td className="p-4 font-semibold text-app-text">{rule.name}</td>
+ <tr key={rule.id} className={clsx('hover:bg-app-background transition-colors', !rule.is_active && 'opacity-40')}>
+ <td className="p-4 font-semibold text-app-foreground">{rule.name}</td>
  <td className="p-4">
- <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wide">
+ <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black bg-app-primary/5 text-app-primary border border-app-primary/30 uppercase tracking-wide">
  {getTriggerLabel(rule.trigger_event)}
  </span>
  </td>
- <td className="p-4 text-xs text-app-text-muted space-y-0.5">
+ <td className="p-4 text-xs text-app-muted-foreground space-y-0.5">
  {rule.conditions?.min_amount && <div className="flex items-center gap-1"><DollarSign size={10} /> ≥ {Number(rule.conditions.min_amount).toLocaleString()}</div>}
  {rule.conditions?.site_id && <div className="flex items-center gap-1"><MapPin size={10} /> Site #{rule.conditions.site_id}</div>}
  {rule.conditions?.payment_method && <div className="flex items-center gap-1"><CreditCard size={10} /> {rule.conditions.payment_method}</div>}
- {!Object.keys(rule.conditions || {}).length && <span className="text-gray-300">All events</span>}
+ {!Object.keys(rule.conditions || {}).length && <span className="text-app-muted-foreground">All events</span>}
  </td>
  <td className="p-4">
- <div className="text-xs font-semibold text-gray-700">{rule.template?.name}</div>
- <div className="text-[10px] text-app-text-faint">
+ <div className="text-xs font-semibold text-app-muted-foreground">{rule.template?.name}</div>
+ <div className="text-[10px] text-app-muted-foreground">
  {rule.template?.default_priority} · {rule.assign_to_user ? `→ ${rule.assign_to_user_name || 'Specific User'}` : rule.template?.assign_to_role ? `→ Role` : 'Unassigned'}
  </div>
  </td>
  <td className="p-4 text-center">
  <button
  onClick={() => toggleActive(rule)}
- className={clsx('w-10 h-5 rounded-full relative transition-all', rule.is_active ? 'bg-emerald-500' : 'bg-gray-200')}
+ className={clsx('w-10 h-5 rounded-full relative transition-all', rule.is_active ? 'bg-app-primary' : 'bg-app-border')}
  >
  <span className={clsx('w-3.5 h-3.5 rounded-full bg-app-surface absolute top-0.5 transition-all shadow', rule.is_active ? 'left-5' : 'left-0.5')} />
  </button>
  </td>
  <td className="p-4 text-center">
  <div className="flex items-center justify-center gap-1">
- <button onClick={() => { setEditingRule({ ...rule, template_data: { title: rule.template?.name || '', priority: rule.template?.default_priority || 'HIGH', estimated_minutes: rule.template?.estimated_minutes || 30, default_points: rule.template?.default_points || 1 }, assign_to_role_id: rule.template?.assign_to_role || null }); setIsNew(false); }} className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all">
+ <button onClick={() => { setEditingRule({ ...rule, template_data: { title: rule.template?.name || '', priority: rule.template?.default_priority || 'HIGH', estimated_minutes: rule.template?.estimated_minutes || 30, default_points: rule.template?.default_points || 1 }, assign_to_role_id: rule.template?.assign_to_role || null }); setIsNew(false); }} className="p-1.5 rounded-lg bg-app-primary/5 text-app-primary hover:bg-app-primary/10 transition-all">
  <Edit3 size={12} />
  </button>
- <button onClick={() => deleteRule(rule.id)} className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-all">
+ <button onClick={() => deleteRule(rule.id)} className="p-1.5 rounded-lg bg-app-error-bg text-app-error hover:bg-app-error-bg transition-all">
  <Trash2 size={12} />
  </button>
  </div>
@@ -334,36 +334,36 @@ export default function AutoTaskRulesPage() {
 
  {/* Edit / Create Modal */}
  {editingRule && (
- <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+ <div className="fixed inset-0 bg-app-background/40 flex items-center justify-center z-50 p-4">
  <div className="bg-app-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
  <div className="p-6 border-b flex items-center justify-between sticky top-0 bg-app-surface z-10">
- <h2 className="text-lg font-black text-app-text">{isNew ? 'New Auto-Task Rule' : 'Edit Rule'}</h2>
- <button onClick={() => setEditingRule(null)} className="p-1.5 rounded-lg hover:bg-app-surface-2 text-app-text-muted"><X size={16} /></button>
+ <h2 className="text-lg font-black text-app-foreground">{isNew ? 'New Auto-Task Rule' : 'Edit Rule'}</h2>
+ <button onClick={() => setEditingRule(null)} className="p-1.5 rounded-lg hover:bg-app-surface-2 text-app-muted-foreground"><X size={16} /></button>
  </div>
  <div className="p-6 space-y-5">
  {/* Rule Name + Code */}
  <div className="grid grid-cols-3 gap-3">
  <div className="col-span-2">
- <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Rule Name *</label>
- <input value={editingRule.name} onChange={e => setEditingRule({ ...editingRule, name: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Print price tag on price change" />
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wide">Rule Name *</label>
+ <input value={editingRule.name} onChange={e => setEditingRule({ ...editingRule, name: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-app-primary" placeholder="e.g. Print price tag on price change" />
  </div>
  <div>
- <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Code</label>
- <input value={editingRule.code || ''} onChange={e => setEditingRule({ ...editingRule, code: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium font-mono outline-none focus:ring-2 focus:ring-indigo-500" placeholder="INV-01" />
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wide">Code</label>
+ <input value={editingRule.code || ''} onChange={e => setEditingRule({ ...editingRule, code: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium font-mono outline-none focus:ring-2 focus:ring-app-primary" placeholder="INV-01" />
  </div>
  </div>
 
  {/* Module + Rule Type */}
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Module *</label>
- <select value={editingRule.module} onChange={e => setEditingRule({ ...editingRule, module: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-app-surface">
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wide">Module *</label>
+ <select value={editingRule.module} onChange={e => setEditingRule({ ...editingRule, module: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  {MODULES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
  </select>
  </div>
  <div>
- <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Rule Type *</label>
- <select value={editingRule.rule_type} onChange={e => setEditingRule({ ...editingRule, rule_type: e.target.value, recurrence_interval: e.target.value === 'EVENT' ? null : editingRule.recurrence_interval })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-app-surface">
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wide">Rule Type *</label>
+ <select value={editingRule.rule_type} onChange={e => setEditingRule({ ...editingRule, rule_type: e.target.value, recurrence_interval: e.target.value === 'EVENT' ? null : editingRule.recurrence_interval })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  <option value="EVENT">⚡ Event-Based</option>
  <option value="RECURRING">🔄 Recurring (Scheduled)</option>
  </select>
@@ -372,17 +372,17 @@ export default function AutoTaskRulesPage() {
 
  {/* Recurrence (only if RECURRING) */}
  {editingRule.rule_type === 'RECURRING' && (
- <div className="bg-amber-50 rounded-xl p-4 space-y-3 border border-amber-200">
- <h3 className="text-xs font-black text-amber-700 uppercase tracking-wide">🔄 Recurrence Schedule</h3>
+ <div className="bg-app-warning-bg rounded-xl p-4 space-y-3 border border-app-warning">
+ <h3 className="text-xs font-black text-app-warning uppercase tracking-wide">🔄 Recurrence Schedule</h3>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Interval</label>
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Interval</label>
  <select value={editingRule.recurrence_interval || ''} onChange={e => setEditingRule({ ...editingRule, recurrence_interval: e.target.value || null })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-app-surface">
  {RECURRENCE_INTERVALS.filter(r => r.value).map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Stale Threshold (days)</label>
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Stale Threshold (days)</label>
  <input type="number" value={editingRule.stale_threshold_days || 3} onChange={e => setEditingRule({ ...editingRule, stale_threshold_days: Number(e.target.value) })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-amber-400" />
  </div>
  </div>
@@ -391,8 +391,8 @@ export default function AutoTaskRulesPage() {
 
  {/* Trigger Event */}
  <div>
- <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Trigger Event *</label>
- <select value={editingRule.trigger_event} onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-app-surface">
+ <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wide">Trigger Event *</label>
+ <select value={editingRule.trigger_event} onChange={e => setEditingRule({ ...editingRule, trigger_event: e.target.value })} className="mt-1 w-full border border-app-border rounded-xl px-3 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  {['Inventory', 'Purchasing', 'Finance', 'CRM', 'HR', 'System'].map(group => (
  <optgroup key={group} label={group}>
  {TRIGGER_EVENTS.filter(t => t.group === group).map(t => (
@@ -404,32 +404,32 @@ export default function AutoTaskRulesPage() {
  </div>
 
  {/* Conditions */}
- <div className="bg-app-bg rounded-xl p-4 space-y-3">
+ <div className="bg-app-background rounded-xl p-4 space-y-3">
  <div className="flex items-center gap-2">
- <Filter size={13} className="text-indigo-500" />
- <h3 className="text-xs font-black text-gray-700 uppercase tracking-wide">Conditions (all optional)</h3>
+ <Filter size={13} className="text-app-primary" />
+ <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-wide">Conditions (all optional)</h3>
  </div>
- <p className="text-[10px] text-app-text-faint">Only fire this rule when ALL specified conditions match. Leave blank to match everything.</p>
+ <p className="text-[10px] text-app-muted-foreground">Only fire this rule when ALL specified conditions match. Leave blank to match everything.</p>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Min Amount (XOF)</label>
- <input type="number" value={editingRule.conditions.min_amount || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, min_amount: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="e.g. 500000" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Min Amount (XOF)</label>
+ <input type="number" value={editingRule.conditions.min_amount || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, min_amount: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="e.g. 500000" />
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Max Amount (XOF)</label>
- <input type="number" value={editingRule.conditions.max_amount || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, max_amount: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="optional" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Max Amount (XOF)</label>
+ <input type="number" value={editingRule.conditions.max_amount || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, max_amount: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="optional" />
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Site ID</label>
- <input type="number" value={editingRule.conditions.site_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, site_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="only for this site" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Site ID</label>
+ <input type="number" value={editingRule.conditions.site_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, site_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="only for this site" />
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Client ID</label>
- <input type="number" value={editingRule.conditions.client_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, client_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="only for this client" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Client ID</label>
+ <input type="number" value={editingRule.conditions.client_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, client_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="only for this client" />
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Payment Method</label>
- <select value={editingRule.conditions.payment_method || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, payment_method: e.target.value || undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-app-surface">
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Payment Method</label>
+ <select value={editingRule.conditions.payment_method || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, payment_method: e.target.value || undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  <option value="">Any method</option>
  <option value="CREDIT">CREDIT</option>
  <option value="CASH">CASH</option>
@@ -439,51 +439,51 @@ export default function AutoTaskRulesPage() {
  </select>
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Cashier User ID</label>
- <input type="number" value={editingRule.conditions.cashier_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, cashier_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="only for this cashier" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Cashier User ID</label>
+ <input type="number" value={editingRule.conditions.cashier_id || ''} onChange={e => setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, cashier_id: e.target.value ? Number(e.target.value) : undefined } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="only for this cashier" />
  </div>
  </div>
  </div>
 
  {/* Task Config */}
- <div className="bg-indigo-50/50 rounded-xl p-4 space-y-3 border border-indigo-100">
- <h3 className="text-xs font-black text-indigo-700 uppercase tracking-wide">Task to Create</h3>
+ <div className="bg-app-primary/5/50 rounded-xl p-4 space-y-3 border border-app-primary/30">
+ <h3 className="text-xs font-black text-app-primary uppercase tracking-wide">Task to Create</h3>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Task Title Template *</label>
- <input value={editingRule.template_data.title} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, title: e.target.value } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" placeholder="e.g. Follow up on credit sale — {reference}" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Task Title Template *</label>
+ <input value={editingRule.template_data.title} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, title: e.target.value } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" placeholder="e.g. Follow up on credit sale — {reference}" />
  </div>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Priority</label>
- <select value={editingRule.template_data.priority} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, priority: e.target.value } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-app-surface">
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Priority</label>
+ <select value={editingRule.template_data.priority} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, priority: e.target.value } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  {PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase">Est. Minutes</label>
- <input type="number" value={editingRule.template_data.estimated_minutes} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, estimated_minutes: Number(e.target.value) } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400" />
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase">Est. Minutes</label>
+ <input type="number" value={editingRule.template_data.estimated_minutes} onChange={e => setEditingRule({ ...editingRule, template_data: { ...editingRule.template_data, estimated_minutes: Number(e.target.value) } })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary" />
  </div>
  </div>
  </div>
 
  {/* Assignment */}
- <div className="bg-app-bg rounded-xl p-4 space-y-3">
- <h3 className="text-xs font-black text-gray-700 uppercase tracking-wide">Task Assignment</h3>
+ <div className="bg-app-background rounded-xl p-4 space-y-3">
+ <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-wide">Task Assignment</h3>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase flex items-center gap-1"><User size={10} /> Specific User</label>
- <select value={editingRule.assign_to_user_id || ''} onChange={e => setEditingRule({ ...editingRule, assign_to_user_id: e.target.value ? Number(e.target.value) : null })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-app-surface">
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase flex items-center gap-1"><User size={10} /> Specific User</label>
+ <select value={editingRule.assign_to_user_id || ''} onChange={e => setEditingRule({ ...editingRule, assign_to_user_id: e.target.value ? Number(e.target.value) : null })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  <option value="">— no specific user —</option>
  {users.map((u: any) => <option key={u.id} value={u.id}>{u.first_name} {u.last_name} ({u.username})</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-bold text-app-text-muted uppercase flex items-center gap-1"><Users size={10} /> Role Group</label>
- <select value={editingRule.assign_to_role_id || ''} onChange={e => setEditingRule({ ...editingRule, assign_to_role_id: e.target.value ? Number(e.target.value) : null })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-app-surface">
+ <label className="text-[10px] font-bold text-app-muted-foreground uppercase flex items-center gap-1"><Users size={10} /> Role Group</label>
+ <select value={editingRule.assign_to_role_id || ''} onChange={e => setEditingRule({ ...editingRule, assign_to_role_id: e.target.value ? Number(e.target.value) : null })} className="mt-1 w-full border border-app-border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-app-primary bg-app-surface">
  <option value="">— no role —</option>
  {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
  </select>
- <p className="text-[9px] text-app-text-faint mt-0.5">Specific User overrides Role</p>
+ <p className="text-[9px] text-app-muted-foreground mt-0.5">Specific User overrides Role</p>
  </div>
  </div>
  </div>
@@ -491,18 +491,18 @@ export default function AutoTaskRulesPage() {
  {/* Active toggle */}
  <div className="flex items-center justify-between">
  <div>
- <p className="text-sm font-bold text-app-text">Rule Active</p>
- <p className="text-xs text-app-text-faint">Disable to pause without deleting</p>
+ <p className="text-sm font-bold text-app-foreground">Rule Active</p>
+ <p className="text-xs text-app-muted-foreground">Disable to pause without deleting</p>
  </div>
- <button onClick={() => setEditingRule({ ...editingRule, is_active: !editingRule.is_active })} className={clsx('w-11 h-6 rounded-full relative transition-all', editingRule.is_active ? 'bg-emerald-500' : 'bg-gray-200')}>
+ <button onClick={() => setEditingRule({ ...editingRule, is_active: !editingRule.is_active })} className={clsx('w-11 h-6 rounded-full relative transition-all', editingRule.is_active ? 'bg-app-primary' : 'bg-app-border')}>
  <span className={clsx('w-4 h-4 bg-app-surface rounded-full absolute top-1 transition-all shadow', editingRule.is_active ? 'left-6' : 'left-1')} />
  </button>
  </div>
  </div>
 
  <div className="p-6 border-t flex justify-end gap-3 sticky bottom-0 bg-app-surface">
- <button onClick={() => setEditingRule(null)} className="px-4 py-2 rounded-xl text-sm font-bold text-app-text-muted hover:bg-app-surface-2 transition-all">Cancel</button>
- <button onClick={saveRule} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-app-text rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-50">
+ <button onClick={() => setEditingRule(null)} className="px-4 py-2 rounded-xl text-sm font-bold text-app-muted-foreground hover:bg-app-surface-2 transition-all">Cancel</button>
+ <button onClick={saveRule} disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-app-primary text-app-foreground rounded-xl text-sm font-bold hover:bg-app-primary transition-all disabled:opacity-50">
  {saving ? '...' : <><Check size={14} /> Save Rule</>}
  </button>
  </div>

@@ -16,7 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
     IN_PROGRESS: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     WAITING_CLIENT: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
     RESOLVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    CLOSED: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
+    CLOSED: 'text-app-text-faint bg-slate-500/10 border-slate-500/20',
 }
 const TICKET_TYPES = [
     { value: 'GENERAL', label: 'General Inquiry' },
@@ -85,7 +85,7 @@ export default function MidnightTicketsPage() {
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="flex items-start justify-between flex-wrap gap-6">
                     <div className="space-y-4">
-                        <Link href={path('/account')} className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                        <Link href={path('/account')} className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
                         </Link>
                         <h1 className="text-5xl font-black text-white italic tracking-tighter">Support <span className="text-purple-400">Node</span></h1>
@@ -100,7 +100,7 @@ export default function MidnightTicketsPage() {
                         <div className="absolute top-0 right-0 p-6 text-purple-500/5"><Zap size={120} /></div>
                         <div className="flex justify-between items-center relative z-10">
                             <h2 className="text-xl font-black text-white italic flex items-center gap-3"><MessageSquare size={22} className="text-purple-400" /> Initialize Thread</h2>
-                            <button onClick={() => setShowCreate(false)} className="text-slate-500 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all"><X size={20} /></button>
+                            <button onClick={() => setShowCreate(false)} className="text-app-text-faint hover:text-white p-2 rounded-xl hover:bg-white/5 transition-all"><X size={20} /></button>
                         </div>
                         {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
                         <form onSubmit={handleCreate} className="space-y-5 relative z-10">
@@ -109,9 +109,9 @@ export default function MidnightTicketsPage() {
                                 {TICKET_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
                             <input type="text" placeholder="Subject" value={subject} onChange={e => setSubject(e.target.value)} required
-                                className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-slate-800 font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text font-medium" />
                             <textarea placeholder="Describe your issue..." value={description} onChange={e => setDescription(e.target.value)} required rows={4}
-                                className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-slate-800 resize-none font-medium" />
+                                className="w-full bg-slate-950/60 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-purple-500 transition-all placeholder:text-app-text resize-none font-medium" />
                             <button type="submit" disabled={creating}
                                 className="w-full bg-purple-600 hover:bg-purple-500 text-white p-5 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-xl shadow-purple-900/30">
                                 {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Submit Thread</>}
@@ -123,9 +123,9 @@ export default function MidnightTicketsPage() {
                     <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/40 rounded-[2.5rem] animate-pulse" />)}</div>
                 ) : tickets.length === 0 ? (
                     <div className="py-24 text-center space-y-8 bg-slate-900/20 border border-white/5 rounded-[3.5rem]">
-                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-slate-700"><MessageSquare size={48} /></div>
+                        <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto text-app-text-muted"><MessageSquare size={48} /></div>
                         <h2 className="text-2xl font-black text-white italic">No Active Threads</h2>
-                        <p className="text-slate-500 text-sm">Create a support thread above if you need assistance.</p>
+                        <p className="text-app-text-faint text-sm">Create a support thread above if you need assistance.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -141,8 +141,8 @@ export default function MidnightTicketsPage() {
                                                     {ticket.status.replace('_', ' ')}
                                                 </span>
                                             </div>
-                                            <p className="text-slate-500 text-sm line-clamp-2">{ticket.description}</p>
-                                            <div className="flex items-center gap-6 text-[10px] text-slate-600 font-black uppercase tracking-widest">
+                                            <p className="text-app-text-faint text-sm line-clamp-2">{ticket.description}</p>
+                                            <div className="flex items-center gap-6 text-[10px] text-app-text-muted font-black uppercase tracking-widest">
                                                 <span>{ticket.ticket_number}</span>
                                                 <span>{TICKET_TYPES.find(t => t.value === ticket.ticket_type)?.label}</span>
                                                 <span>{new Date(ticket.created_at).toLocaleDateString()}</span>

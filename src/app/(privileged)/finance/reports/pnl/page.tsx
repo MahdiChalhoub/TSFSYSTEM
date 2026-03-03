@@ -18,10 +18,10 @@ export default async function ProfitAndLossPage() {
  try { fiscalYears = await getFiscalYears() } catch { }
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  <div className="text-center mb-10">
- <h1 className="page-header-title text-app-text font-serif mb-2">Profit & Loss Statement</h1>
- <p className="text-app-text-muted text-sm uppercase tracking-widest font-bold">Income & Expenditure Report</p>
+ <h1 className="page-header-title text-app-foreground font-serif mb-2">Profit & Loss Statement</h1>
+ <p className="text-app-muted-foreground text-sm uppercase tracking-widest font-bold">Income & Expenditure Report</p>
  </div>
 
  <PnlViewer initialData={JSON.parse(JSON.stringify(initialData))} fiscalYears={JSON.parse(JSON.stringify(fiscalYears))} />

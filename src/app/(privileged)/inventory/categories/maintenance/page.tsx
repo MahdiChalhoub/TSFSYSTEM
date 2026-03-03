@@ -33,23 +33,23 @@ export default async function CategoryMaintenancePage(props: {
  const safeProducts = JSON.parse(JSON.stringify(products));
 
  return (
- <div className="flex flex-col h-[calc(100vh-6rem)] bg-app-bg -m-6">
+ <div className="app-page flex flex-col h-[calc(100vh-6rem)] bg-app-background -m-6">
  {/* Header */}
  <header className="bg-app-surface border-b border-app-border px-6 py-4 flex items-center justify-between shrink-0">
  <div className="flex items-center gap-4">
  <Link
  href="/inventory/categories"
- className="p-2 rounded-lg hover:bg-app-surface-2 text-app-text-muted transition-colors"
+ className="p-2 rounded-lg hover:bg-app-surface-2 text-app-muted-foreground transition-colors"
  >
  <ArrowLeft size={20} />
  </Link>
- <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <ArrowLeft size={28} className="text-app-text rotate-180 hidden" />
- <span className="text-app-text font-black text-lg">C</span>
+ <div className="w-14 h-14 rounded-2xl bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <ArrowLeft size={28} className="text-app-foreground rotate-180 hidden" />
+ <span className="text-app-foreground font-black text-lg">C</span>
  </div>
  <div>
- <h1 className="page-header-title tracking-tighter">Category <span className="text-emerald-600">Maintenance</span></h1>
- <p className="text-sm text-app-text-muted">Reorganize products by moving them between categories.</p>
+ <h1 className="page-header-title tracking-tighter">Category <span className="text-app-primary">Maintenance</span></h1>
+ <p className="text-sm text-app-muted-foreground">Reorganize products by moving them between categories.</p>
  </div>
  </div>
  </header>
@@ -63,13 +63,13 @@ export default async function CategoryMaintenancePage(props: {
  />
 
  {/* Main Area */}
- <main className="flex-1 overflow-hidden bg-app-bg relative">
+ <main className="flex-1 overflow-hidden bg-app-background relative">
  {activeCategoryId ? (
  <div className="h-full flex flex-col">
  <div className="p-4 pb-0">
- <h2 className="text-lg font-bold text-app-text">
+ <h2 className="text-lg font-bold text-app-foreground">
  {currentCategoryName}
- <span className="ml-2 text-sm font-normal text-app-text-muted">
+ <span className="ml-2 text-sm font-normal text-app-muted-foreground">
  ({products.length} products)
  </span>
  </h2>
@@ -85,8 +85,8 @@ export default async function CategoryMaintenancePage(props: {
  </div>
  </div>
  ) : (
- <div className="h-full flex flex-col items-center justify-center text-app-text-faint">
- <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+ <div className="h-full flex flex-col items-center justify-center text-app-muted-foreground">
+ <div className="w-16 h-16 bg-app-border rounded-full flex items-center justify-center mb-4">
  <ArrowLeft size={32} />
  </div>
  <p className="font-medium">Select a category from the sidebar to manage its products.</p>

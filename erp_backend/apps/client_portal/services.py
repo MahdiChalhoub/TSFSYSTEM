@@ -46,18 +46,24 @@ class IntegratedCheckoutService:
             check_mode = getattr(config, 'inventory_check_mode', 'STRICT')
 
             if check_mode != 'DISABLED':
-                # We pick the first available warehouse for simplicity, 
-                # or use an org-wide default warehouse.
-                from apps.inventory.models import Warehouse
-                warehouse = Warehouse.objects.filter(organization=order.organization).first()
-                if not warehouse:
-                    raise ValidationError("No warehouse configured for this organization.")
+                from apps.client_portal.warehouse_router import WarehouseRouter
 
                 for line in order.lines.all():
                     if not line.product:
                         continue
-                    
-                    # Deduct stock (STRICT vs ALLOW_OVERSALE)
+
+                    # Select optimal warehouse per line (zone-aware, stock-aware)
+                    try:
+                        warehouse = WarehouseRouter.select_warehouse(
+                            organization=order.organization,
+                            product=line.product,
+                            quantity=line.quantity,
+                            contact=order.contact,
+                            check_mode=check_mode,
+                        )
+                    except ValueError as e:
+                        raise ValidationError(str(e))
+
                     InventoryService.reduce_stock(
                         organization=order.organization,
                         product=line.product,
@@ -68,6 +74,10 @@ class IntegratedCheckoutService:
                         scope='OFFICIAL',
                         allow_negative=(check_mode == 'ALLOW_OVERSALE')
                     )
+
+            else:
+                # DISABLED — still iterate lines to catch any other errors
+                pass
 
             # ── 2. Commercial Interaction (Invoice) ───────────────────────────
             invoice = Invoice.objects.create(
@@ -139,5 +149,14 @@ class IntegratedCheckoutService:
             contact.save(update_fields=['total_orders', 'lifetime_value', 'last_purchase_date', 'first_purchase_date'])
 
             logger.info(f"Integrated Checkout Success: Order {order.order_number} converted to Invoice {invoice.invoice_number}")
+
+            # ── 5. Domain Events ──────────────────────────────────────────────
+            try:
+                from apps.integrations.event_service import DomainEventService
+                DomainEventService.emit_for_status_change(order, 'CONFIRMED')
+                if order.payment_status == 'PAID':
+                    DomainEventService.emit_payment_confirmed(order)
+            except Exception as evt_err:
+                logger.warning(f"[Checkout] Domain event emission failed: {evt_err}")
 
             return order, invoice

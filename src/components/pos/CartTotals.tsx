@@ -49,7 +49,7 @@ export function CartTotals({
  return (
  <div className="space-y-4 font-bold text-xs uppercase tracking-tight text-app-text-muted">
  {/* Totals Summary */}
- <div className="bg-gray-50/50 p-4 rounded-2xl border border-app-border space-y-3">
+ <div className="bg-app-bg/50 p-4 rounded-2xl border border-app-border space-y-3">
  <div className="flex justify-between items-center text-app-text-faint">
  <span className="text-[9px] font-black tracking-widest">Subtotal</span>
  <span className="font-mono text-[10px]">{currency}{subtotal.toFixed(2)}</span>

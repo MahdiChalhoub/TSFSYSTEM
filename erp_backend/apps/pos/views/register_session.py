@@ -223,7 +223,25 @@ class RegisterSessionMixin:
         except RegisterSession.DoesNotExist:
             return Response({"error": "Open session not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Calculate session totals from orders made during this session
+        # ── 🔒 Security Rule: Block close if cashier has pending unsaved tickets ──
+        from apps.pos.models import PosTicket
+        pending_tickets = PosTicket.objects.filter(
+            organization=organization,
+            user=session.cashier,
+        ).exclude(data=[])  # data holds cart_data; empty cart = [] or {}
+
+        # Filter purely in Python for robustness (JSONField empty-check varies by DB)
+        tickets_with_items = [
+            t for t in pending_tickets
+            if isinstance(t.data, list) and len(t.data) > 0
+        ]
+        if tickets_with_items:
+            names = ', '.join([f'Ticket #{t.ticket_id}' for t in tickets_with_items[:3]])
+            return Response({
+                "error": f"Cannot close register: {len(tickets_with_items)} pending ticket(s) with unsaved items ({names}). Complete or clear all tickets first."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
         session_orders = Order.objects.filter(
             organization=organization,
             site=session.register.branch,
@@ -362,7 +380,7 @@ class RegisterSessionMixin:
             'session_id': session.id,
             'report': {
                 'registerName': session.register.name,
-                'siteName': session.register.site.name if session.register.site_id else '',
+                'siteName': session.register.branch.name if session.register.branch_id else '',
                 'cashierName': f"{session.cashier.first_name} {session.cashier.last_name}".strip() if session.cashier else '',
                 'openedAt': session.opened_at.isoformat(),
                 'closedAt': session.closed_at.isoformat(),

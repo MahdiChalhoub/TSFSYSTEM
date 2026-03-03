@@ -249,7 +249,7 @@ export function AppSidebar({ user, tenant, ...props }: AppSidebarProps) {
  <SidebarFooter>
  <div className="p-4">
  <div className="flex items-center gap-2">
- <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-app-text-muted">
+ <div className="h-8 w-8 rounded-full bg-app-border flex items-center justify-center text-xs font-bold text-app-text-muted">
  {userName.charAt(0).toUpperCase()}
  </div>
  <div className="text-sm overflow-hidden">

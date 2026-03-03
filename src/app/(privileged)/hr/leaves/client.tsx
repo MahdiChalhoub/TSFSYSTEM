@@ -76,27 +76,27 @@ export default function LeaveManagementHub({
  <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
  <User size={16} />
  </div>
- <span className="font-bold text-app-text uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
+ <span className="font-bold text-app-foreground uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
  </div>
  ),
  type: r => {
  const typeLabel = LEAVE_TYPES.find(t => t.value === r.leave_type)?.label || r.leave_type;
  return (
- <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 border-0 font-black text-[10px] uppercase tracking-tighter">
+ <Badge variant="secondary" className="bg-app-primary/5 text-app-primary border-0 font-black text-[10px] uppercase tracking-tighter">
  {typeLabel}
  </Badge>
  );
  },
  duration: r => (
- <div className="flex items-center gap-1.5 text-xs font-mono text-app-text-muted bg-app-bg px-2 py-1 rounded-lg border border-app-border italic">
- <Calendar size={12} className="text-app-text-faint" />
+ <div className="flex items-center gap-1.5 text-xs font-mono text-app-muted-foreground bg-app-background px-2 py-1 rounded-lg border border-app-border italic">
+ <Calendar size={12} className="text-app-muted-foreground" />
  {r.start_date} <ChevronRight size={10} /> {r.end_date}
  </div>
  ),
  reason: r => (
  <div className="flex items-center gap-2 max-w-xs">
- <FileText size={12} className="text-app-text-faint shrink-0" />
- <span className="text-xs font-medium text-app-text-muted truncate">{r.reason || 'No justification provided'}</span>
+ <FileText size={12} className="text-app-muted-foreground shrink-0" />
+ <span className="text-xs font-medium text-app-muted-foreground truncate">{r.reason || 'No justification provided'}</span>
  </div>
  )
  };
@@ -139,12 +139,12 @@ export default function LeaveManagementHub({
  headerExtra={
  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
  <DialogTrigger asChild>
- <Button className="h-10 px-6 bg-rose-600 text-app-text hover:bg-rose-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-100 transition-all">
+ <Button className="h-10 px-6 bg-rose-600 text-app-foreground hover:bg-rose-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-rose-100 transition-all">
  <Plus size={18} className="mr-2" /> New Request
  </Button>
  </DialogTrigger>
  <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-xl">
- <div className="bg-rose-600 p-8 text-app-text relative">
+ <div className="bg-rose-600 p-8 text-app-foreground relative">
  <div className="absolute top-0 right-0 p-8 opacity-10">
  <CalendarOff size={80} />
  </div>
@@ -154,36 +154,36 @@ export default function LeaveManagementHub({
  <form onSubmit={handleCreate} className="p-8 space-y-6 bg-app-surface">
  <div className="grid grid-cols-2 gap-6">
  <div className="col-span-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Employee</label>
- <select name="employee" required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Employee</label>
+ <select name="employee" required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
  <option value="">Select Employee...</option>
  {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Leave Type</label>
- <select name="leave_type" required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Leave Type</label>
+ <select name="leave_type" required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none appearance-none">
  {LEAVE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
  </select>
  </div>
  <div className="grid grid-cols-2 gap-3 col-span-2">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Start Date</label>
- <input name="start_date" type="date" required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Start Date</label>
+ <input name="start_date" type="date" required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
  </div>
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">End Date</label>
- <input name="end_date" type="date" required className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">End Date</label>
+ <input name="end_date" type="date" required className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none" />
  </div>
  </div>
  <div className="col-span-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest mb-2 block">Justification / Reason</label>
- <textarea name="reason" rows={2} className="w-full bg-app-bg border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none resize-none" placeholder="Provide operational justification..." />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 block">Justification / Reason</label>
+ <textarea name="reason" rows={2} className="w-full bg-app-background border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-rose-100 outline-none resize-none" placeholder="Provide operational justification..." />
  </div>
  </div>
  <div className="flex gap-3 pt-2">
  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-app-border">Cancel</Button>
- <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-rose-600 text-app-text hover:bg-rose-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100">
+ <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-rose-600 text-app-foreground hover:bg-rose-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-rose-100">
  {isPending ? 'Processing...' : 'Submit Request'}
  </Button>
  </div>
@@ -206,15 +206,15 @@ export default function LeaveManagementHub({
  extra: (r) => (
  r.status === 'PENDING' ? (
  <div className="flex gap-2">
- <Button onClick={() => handleApprove(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleApprove(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-app-primary-light text-app-success hover:bg-app-primary hover:text-app-foreground rounded-lg text-[10px] font-black uppercase tracking-widest">
  <Check size={12} className="mr-1.5" /> Approve
  </Button>
- <Button onClick={() => handleReject(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-app-text rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <Button onClick={() => handleReject(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-app-foreground rounded-lg text-[10px] font-black uppercase tracking-widest">
  <X size={12} className="mr-1.5" /> Reject
  </Button>
  </div>
  ) : (
- <div className="flex items-center gap-1.5 px-4 py-2 bg-app-bg text-app-text-faint rounded-lg text-[10px] font-black uppercase tracking-widest">
+ <div className="flex items-center gap-1.5 px-4 py-2 bg-app-background text-app-muted-foreground rounded-lg text-[10px] font-black uppercase tracking-widest">
  <CheckCircle2 size={12} /> Decision Locked
  </div>
  )

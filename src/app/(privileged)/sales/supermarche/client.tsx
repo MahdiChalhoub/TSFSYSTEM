@@ -89,7 +89,7 @@ function LayoutSwitcher({
  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
  style={{
  background: active === m.id ? 'var(--sm-primary)' : 'transparent',
- color: active === m.id ? '#fff' : 'var(--sm-text-muted)',
+ color: active === m.id ? 'var(--app-surface)' : 'var(--sm-text-muted)',
  fontFamily: 'var(--sm-font)',
  }}
  >

@@ -31,10 +31,10 @@ function OrgThemeCard({
  className="relative flex flex-col gap-2 rounded-xl p-3 border transition-all duration-200 text-left w-full"
  style={{
  background: info.bg,
- borderColor: isOrgDefault ? info.primary : 'rgba(128,128,128,0.2)',
+ borderColor: isOrgDefault ? info.primary : 'color-mix(in srgb, var(--app-muted-foreground) 20%, transparent)',
  boxShadow: isOrgDefault
- ? `0 0 0 2px ${info.primary}44, 0 4px 20px rgba(0,0,0,0.2)`
- : '0 1px 4px rgba(0,0,0,0.1)',
+ ? `0 0 0 2px ${info.primary}44, 0 4px 20px var(--app-border)`
+ : '0 1px 4px var(--app-border)',
  transform: isOrgDefault ? 'scale(1.03)' : 'scale(1)',
  }}
  >
@@ -77,7 +77,7 @@ function OrgThemeCard({
  {isUserTheme && (
  <span
  className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
- style={{ background: 'rgba(128,128,128,0.15)', color: info.primary }}
+ style={{ background: 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)', color: info.primary }}
  >
  Your Theme
  </span>
@@ -85,7 +85,7 @@ function OrgThemeCard({
  <span
  className="absolute top-2 right-2 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
  style={{
- background: info.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
+ background: info.mode === 'dark' ? 'var(--app-border)' : 'var(--app-surface)',
  color: info.primary,
  }}
  >
@@ -140,8 +140,8 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  className="rounded-2xl p-6 flex items-center gap-4"
  style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)' }}
  >
- <AlertCircle size={20} style={{ color: 'var(--app-text-muted)' }} />
- <p className="text-sm" style={{ color: 'var(--app-text-muted)' }}>
+ <AlertCircle size={20} style={{ color: 'var(--app-muted-foreground)' }} />
+ <p className="text-sm" style={{ color: 'var(--app-muted-foreground)' }}>
  You don't have permission to change themes. Contact your admin.
  </p>
  </div>
@@ -158,15 +158,15 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  <div className="flex items-center gap-3">
  <div
  className="w-9 h-9 rounded-xl flex items-center justify-center"
- style={{ background: 'var(--app-primary-light)' }}
+ style={{ background: 'var(--app-primary)/10' }}
  >
  <Building2 size={18} style={{ color: 'var(--app-primary)' }} />
  </div>
  <div>
- <p className="text-sm font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+ <p className="text-sm font-black tracking-tight" style={{ color: 'var(--app-foreground)' }}>
  Organisation Default Theme
  </p>
- <p className="text-[11px]" style={{ color: 'var(--app-text-muted)' }}>
+ <p className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
  New users see this theme on first login. Personal picks always override it.
  </p>
  </div>
@@ -179,7 +179,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
  style={{
  background: 'var(--app-surface-2)',
- color: 'var(--app-text-muted)',
+ color: 'var(--app-muted-foreground)',
  border: '1px solid var(--app-border)',
  }}
  title="Remove org default — users fall back to Midnight Pro"
@@ -193,7 +193,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  {/* Priority chain explanation */}
  <div
  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[11px] font-medium"
- style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}
+ style={{ background: 'var(--app-primary)/10', color: 'var(--app-primary)' }}
  >
  <Palette size={13} />
  <span>Priority: <strong>User pick</strong> → <strong>Org default (below)</strong> → System default (Midnight Pro)</span>
@@ -214,7 +214,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
 
  {/* Feedback */}
  {isPending && (
- <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--app-text-muted)' }}>
+ <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--app-muted-foreground)' }}>
  <Loader2 size={13} className="animate-spin" /> Saving org default...
  </div>
  )}
@@ -222,7 +222,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  <div
  className="flex items-center gap-2 text-xs font-semibold rounded-lg px-3 py-2"
  style={{
- background: feedback.type === 'success' ? 'var(--app-primary-light)' : '#fee2e2',
+ background: feedback.type === 'success' ? 'var(--app-primary)/10' : '#fee2e2',
  color: feedback.type === 'success' ? 'var(--app-primary)' : '#dc2626',
  }}
  >
@@ -232,7 +232,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: App
  )}
 
  {/* Current status */}
- <p className="text-[10px]" style={{ color: 'var(--app-text-faint)' }}>
+ <p className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
  {orgDefault
  ? `Org default: ${themes.find(t => t.name === orgDefault)?.label ?? orgDefault}. Users without a personal pick will see this theme.`
  : 'No org default set — new users see Midnight Pro.'}

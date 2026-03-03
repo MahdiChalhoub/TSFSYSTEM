@@ -179,23 +179,23 @@ export default function OrganizationsPage() {
  return (
  <div className="page-container animate-in fade-in duration-700">
  {/* Header Section: Platform Control Panel */}
- <header className="flex flex-col gap-8 mb-10">
+ <header className="app-page flex flex-col gap-8 mb-10">
  <div className="flex justify-between items-end">
  <div className="flex items-center gap-6">
- <div className="w-20 h-20 rounded-[2rem] bg-emerald-gradient flex items-center justify-center shadow-2xl shadow-emerald-700/20 group hover:rotate-12 transition-transform duration-500">
- <Building size={40} className="text-app-text fill-white/20" />
+ <div className="w-20 h-20 rounded-[2rem] bg-app-success flex items-center justify-center shadow-2xl shadow-app-primary/20 group hover:rotate-12 transition-transform duration-500">
+ <Building size={40} className="text-app-foreground fill-white/20" />
  </div>
  <div>
  <div className="flex items-center gap-3 mb-2">
- <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+ <Badge variant="outline" className="bg-app-primary-light text-app-primary border-app-success/30 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
  Organization Directory
  </Badge>
- <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
- <Activity size={14} className="text-emerald-400" /> Infrastructure Sync: Real-time
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+ <Activity size={14} className="text-app-primary" /> Infrastructure Sync: Real-time
  </span>
  </div>
  <h1 className="page-header-title">
- Tenant <span className="text-emerald-700">Registry</span>
+ Tenant <span className="text-app-success">Registry</span>
  </h1>
  <p className="page-header-subtitle mt-1">
  Create and manage business accounts on the platform.
@@ -205,60 +205,60 @@ export default function OrganizationsPage() {
  <div className="hidden lg:flex items-center gap-4">
  <Dialog open={open} onOpenChange={setOpen}>
  <DialogTrigger asChild>
- <button className="h-14 px-8 rounded-2xl bg-slate-900 text-app-text font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
- Register Instance <Plus size={18} className="text-emerald-400" />
+ <button className="h-14 px-8 rounded-2xl bg-app-surface text-app-foreground font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-app-background transition-all shadow-xl shadow-app-border/20 active:scale-95 border-b-4 border-b-slate-950">
+ Register Instance <Plus size={18} className="text-app-primary" />
  </button>
  </DialogTrigger>
- <DialogContent className="bg-app-text/80 backdrop-blur-2xl border-app-text/20 text-app-text rounded-[3rem] max-w-lg shadow-[0_30px_100px_rgba(0,0,0,0.15)] p-0 overflow-hidden">
- <div className="p-10 bg-emerald-gradient text-app-text relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-app-text/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+ <DialogContent className="bg-app-foreground/80 backdrop-blur-2xl border-app-text/20 text-app-foreground rounded-[3rem] max-w-lg shadow-[0_30px_100px_var(--app-border)] p-0 overflow-hidden">
+ <div className="p-10 bg-app-success text-app-foreground relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-foreground/10 rounded-full -mr-32 -mt-32 blur-3xl" />
  <DialogTitle className="text-3xl font-black tracking-tighter mb-2">Provision Instance</DialogTitle>
- <p className="text-emerald-100 text-xs font-black uppercase tracking-widest opacity-80">Create Organization</p>
+ <p className="text-app-success text-xs font-black uppercase tracking-widest opacity-80">Create Organization</p>
  </div>
  <div className="p-10 space-y-8">
  {/* Required Fields */}
  <div className="space-y-3">
- <Label className="text-[11px] font-black text-app-text-faint uppercase tracking-widest ml-1">Business Legal Name *</Label>
+ <Label className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Business Legal Name *</Label>
  <Input
  placeholder="e.g. Acme Global Industries"
- className="bg-app-bg border-app-border rounded-2xl h-14 px-6 focus:ring-emerald-500 focus:bg-app-surface transition-all text-[15px] font-black placeholder:text-slate-300 placeholder:font-bold"
+ className="bg-app-background border-app-border rounded-2xl h-14 px-6 focus:ring-app-primary focus:bg-app-surface transition-all text-[15px] font-black placeholder:text-app-muted-foreground placeholder:font-bold"
  value={newOrg.name}
  onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
  />
  </div>
  <div className="space-y-3">
- <Label className="text-[11px] font-black text-app-text-faint uppercase tracking-widest ml-1">Unique URL Slug *</Label>
+ <Label className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest ml-1">Unique URL Slug *</Label>
  <div className="flex items-center gap-3">
  <Input
  placeholder="acme-corp"
- className="bg-app-bg border-app-border rounded-2xl h-14 px-6 focus:ring-emerald-500 focus:bg-app-surface transition-all font-black text-emerald-600 tracking-tight text-[15px] placeholder:text-slate-300"
+ className="bg-app-background border-app-border rounded-2xl h-14 px-6 focus:ring-app-primary focus:bg-app-surface transition-all font-black text-app-primary tracking-tight text-[15px] placeholder:text-app-muted-foreground"
  value={newOrg.slug}
  onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
  />
- <div className="h-14 px-4 rounded-2xl bg-app-surface-2 flex items-center justify-center font-black text-app-text-faint text-xs border border-app-border">
+ <div className="h-14 px-4 rounded-2xl bg-app-surface-2 flex items-center justify-center font-black text-app-muted-foreground text-xs border border-app-border">
  {branding.suffix}
  </div>
  </div>
  </div>
  {/* Optional Fields */}
  <div className="pt-6 border-t border-app-border">
- <p className="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em] mb-6">Structural Parameters (Optional)</p>
+ <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Structural Parameters (Optional)</p>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2"><Mail size={12} className="text-emerald-500" /> Admin Email</Label>
+ <Label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2"><Mail size={12} className="text-app-primary" /> Admin Email</Label>
  <Input
  placeholder="billing@acme.com"
  type="email"
- className="bg-app-bg border-app-border rounded-xl h-12 px-4 text-sm font-bold placeholder:font-medium placeholder:text-slate-300"
+ className="bg-app-background border-app-border rounded-xl h-12 px-4 text-sm font-bold placeholder:font-medium placeholder:text-app-muted-foreground"
  value={newOrg.business_email}
  onChange={(e) => setNewOrg({ ...newOrg, business_email: e.target.value })}
  />
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2"><Phone size={12} className="text-emerald-500" /> Dial Vector</Label>
+ <Label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2"><Phone size={12} className="text-app-primary" /> Dial Vector</Label>
  <Input
  placeholder="+1 555-0123"
- className="bg-app-bg border-app-border rounded-xl h-12 px-4 text-sm font-bold"
+ className="bg-app-background border-app-border rounded-xl h-12 px-4 text-sm font-bold"
  value={newOrg.phone}
  onChange={(e) => setNewOrg({ ...newOrg, phone: e.target.value })}
  />
@@ -266,9 +266,9 @@ export default function OrganizationsPage() {
  </div>
  <div className="grid grid-cols-2 gap-4 mt-4">
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2"><Building size={12} className="text-emerald-500" /> Industry Vector</Label>
+ <Label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2"><Building size={12} className="text-app-primary" /> Industry Vector</Label>
  <select
- className="w-full bg-app-bg border border-app-border rounded-xl h-12 px-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+ className="w-full bg-app-background border border-app-border rounded-xl h-12 px-4 text-sm font-bold text-app-muted-foreground focus:outline-none focus:ring-2 focus:ring-app-primary/30"
  value={newOrg.business_type}
  onChange={(e) => setNewOrg({ ...newOrg, business_type: e.target.value })}
  >
@@ -277,9 +277,9 @@ export default function OrganizationsPage() {
  </select>
  </div>
  <div className="space-y-2">
- <Label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest flex items-center gap-2"><Globe size={12} className="text-emerald-500" /> Base Currency</Label>
+ <Label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2"><Globe size={12} className="text-app-primary" /> Base Currency</Label>
  <select
- className="w-full bg-app-bg border border-app-border rounded-xl h-12 px-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+ className="w-full bg-app-background border border-app-border rounded-xl h-12 px-4 text-sm font-bold text-app-muted-foreground focus:outline-none focus:ring-2 focus:ring-app-primary/30"
  value={newOrg.base_currency}
  onChange={(e) => setNewOrg({ ...newOrg, base_currency: e.target.value })}
  >
@@ -289,15 +289,15 @@ export default function OrganizationsPage() {
  </div>
  </div>
  </div>
- <div className="p-6 bg-app-bg rounded-[1.8rem] border border-app-border relative overflow-hidden group">
- <div className="absolute top-0 right-0 p-4 opacity-5 text-emerald-500 group-hover:rotate-12 transition-transform">
+ <div className="p-6 bg-app-background rounded-[1.8rem] border border-app-border relative overflow-hidden group">
+ <div className="absolute top-0 right-0 p-4 opacity-5 text-app-primary group-hover:rotate-12 transition-transform">
  <Zap size={60} />
  </div>
  <div className="flex gap-4 relative z-10">
- <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+ <div className="w-10 h-10 rounded-xl bg-app-primary-light flex items-center justify-center text-app-primary shrink-0">
  <Zap size={20} className="fill-emerald-600" />
  </div>
- <p className="text-[11px] leading-relaxed text-app-text-muted font-bold uppercase tracking-tight">
+ <p className="text-[11px] leading-relaxed text-app-muted-foreground font-bold uppercase tracking-tight">
  Provisioning initializes: Sites, Warehouses, Fiscal Setup, Chart of Accounts, Posting Rules, and Financial Settings.
  </p>
  </div>
@@ -305,7 +305,7 @@ export default function OrganizationsPage() {
  </div>
  <div className="p-10 pt-0">
  <Button
- className="w-full h-16 bg-slate-900 hover:bg-black text-app-text rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/30 active:scale-95 transition-all text-xs border-b-4 border-b-black"
+ className="w-full h-16 bg-app-surface hover:bg-app-background text-app-foreground rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-app-border/20 active:scale-95 transition-all text-xs border-b-4 border-b-black"
  onClick={handleCreate}
  disabled={isCreating}
  >
@@ -321,54 +321,54 @@ export default function OrganizationsPage() {
  </div>
  </div>
  {/* ─── Filters ────────────────────────── */}
- <div className="flex flex-wrap items-center gap-4 p-6 bg-app-text/70 backdrop-blur-xl rounded-[2rem] border border-app-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
+ <div className="flex flex-wrap items-center gap-4 p-6 bg-app-foreground/70 backdrop-blur-xl rounded-[2rem] border border-app-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
  <div className="relative flex-1 min-w-[280px]">
- <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+ <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <input type="text" placeholder="Search by name or domain..." value={search} onChange={e => setSearch(e.target.value)}
- className="w-full pl-11 pr-4 h-12 text-[13px] font-black border border-slate-50 rounded-xl bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:bg-app-surface transition-all placeholder:text-slate-300 placeholder:font-bold" />
+ className="w-full pl-11 pr-4 h-12 text-[13px] font-black border border-app-border rounded-xl bg-app-surface-2/50 focus:outline-none focus:ring-2 focus:ring-app-primary/10 focus:bg-app-surface transition-all placeholder:text-app-muted-foreground placeholder:font-bold" />
  </div>
  <div className="flex flex-wrap items-center gap-3">
  <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
- className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-slate-50 rounded-xl bg-slate-50/50 text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:bg-app-surface cursor-pointer transition-all">
+ className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-app-border rounded-xl bg-app-surface-2/50 text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 focus:bg-app-surface cursor-pointer transition-all">
  <option value="all">Status: All</option>
  <option value="active">Active Nodes</option>
  <option value="suspended">Suspended Nodes</option>
  </select>
  <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
- className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-slate-50 rounded-xl bg-slate-50/50 text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:bg-app-surface cursor-pointer transition-all">
+ className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-app-border rounded-xl bg-app-surface-2/50 text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 focus:bg-app-surface cursor-pointer transition-all">
  <option value="all">Plan: All Tiers</option>
  {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
  </select>
  {businessTypes.length > 0 && (
  <select value={filterType} onChange={e => setFilterType(e.target.value)}
- className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-slate-50 rounded-xl bg-slate-50/50 text-slate-700 focus:ring-2 focus:ring-emerald-500/10 focus:bg-app-surface cursor-pointer transition-all">
+ className="h-12 px-5 text-[11px] font-black uppercase tracking-widest border border-app-border rounded-xl bg-app-surface-2/50 text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 focus:bg-app-surface cursor-pointer transition-all">
  <option value="all">Sector: All</option>
  {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
  </select>
  )}
  {hasFilters && (
  <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
- className="h-12 px-5 text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 rounded-xl border border-rose-50 bg-rose-50/30 hover:bg-rose-500 hover:text-app-text transition-all">
+ className="h-12 px-5 text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 rounded-xl border border-rose-50 bg-rose-50/30 hover:bg-app-error hover:text-app-foreground transition-all">
  <X size={14} /> Clear Filters
  </button>
  )}
  </div>
- <div className="ml-auto flex items-center gap-3 bg-app-bg px-4 h-10 rounded-lg border border-app-border">
- <Activity size={12} className="text-emerald-500 animate-pulse" />
- <span className="text-[10px] font-black text-app-text-faint uppercase tracking-widest leading-none mt-0.5">{filteredOrgs.length} / {orgs.length} Entity Nodes</span>
+ <div className="ml-auto flex items-center gap-3 bg-app-background px-4 h-10 rounded-lg border border-app-border">
+ <Activity size={12} className="text-app-primary animate-pulse" />
+ <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest leading-none mt-0.5">{filteredOrgs.length} / {orgs.length} Entity Nodes</span>
  </div>
  </div>
  </header>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {loading ? (
  <div className="col-span-full py-20 text-center space-y-4">
- <Activity size={40} className="mx-auto text-emerald-500 animate-spin opacity-20" />
- <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em]">Synchronizing Entity Metadata...</p>
+ <Activity size={40} className="mx-auto text-app-primary animate-spin opacity-20" />
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-[0.2em]">Synchronizing Entity Metadata...</p>
  </div>
  ) : filteredOrgs.length === 0 ? (
- <div className="col-span-full py-20 text-center space-y-4 bg-slate-50/50 rounded-[3rem] border border-dashed border-app-border">
- <Search size={40} className="mx-auto text-slate-200" />
- <p className="text-[11px] font-black text-app-text-faint uppercase tracking-[0.2em]">
+ <div className="col-span-full py-20 text-center space-y-4 bg-app-surface-2/50 rounded-[3rem] border border-dashed border-app-border">
+ <Search size={40} className="mx-auto text-app-foreground" />
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-[0.2em]">
  {hasFilters ? 'No entity nodes match current filter vector.' : 'No organizational entities discovered in registry.'}
  </p>
  </div>
@@ -376,60 +376,60 @@ export default function OrganizationsPage() {
  const isSaasOrg = org.slug === 'saas'
  return (
  <Card key={org.id}
- className={`card-premium overflow-hidden group/card hover:shadow-2xl hover:shadow-emerald-700/5 transition-all duration-500 cursor-pointer relative ${isSaasOrg ? 'border-amber-200 bg-amber-50/5' : ''}`}
+ className={`card-premium overflow-hidden group/card hover:shadow-2xl hover:shadow-app-primary/20 transition-all duration-500 cursor-pointer relative ${isSaasOrg ? 'border-app-warning bg-app-warning-bg/5' : ''}`}
  onClick={() => router.push(`/organizations/${org.id}`)}
  >
  {isSaasOrg && (
  <div className="absolute top-0 right-0 p-6">
- <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shadow-lg shadow-amber-200 animate-pulse">
+ <div className="w-10 h-10 rounded-full bg-app-warning-bg text-app-warning flex items-center justify-center shadow-lg shadow-amber-200 animate-pulse">
  <ShieldCheck size={20} />
  </div>
  </div>
  )}
  <CardHeader className="pb-6 p-8">
  <div className="flex justify-between items-start mb-6">
- <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner group-hover/card:rotate-6 transition-transform duration-500 ${isSaasOrg ? 'bg-amber-100 text-amber-600 shadow-amber-200' : 'bg-emerald-gradient text-app-text shadow-emerald-700/10'}`}>
+ <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner group-hover/card:rotate-6 transition-transform duration-500 ${isSaasOrg ? 'bg-app-warning-bg text-app-warning shadow-amber-200' : 'bg-app-success text-app-foreground shadow-app-primary/20'}`}>
  {isSaasOrg ? <ShieldCheck size={32} /> : <Building size={32} />}
  </div>
  <div className="flex flex-col items-end gap-2">
- <Badge variant="outline" className={`px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-full border-0 ${org.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+ <Badge variant="outline" className={`px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-full border-0 ${org.is_active ? 'bg-app-primary-light text-app-primary' : 'bg-rose-50 text-rose-600'}`}>
  {org.is_active ? 'NOMINAL' : 'SUSPENDED'}
  </Badge>
- <Badge variant="outline" className="px-3 py-1 bg-app-bg text-app-text-faint border-0 font-black text-[9px] uppercase tracking-widest rounded-full">
+ <Badge variant="outline" className="px-3 py-1 bg-app-background text-app-muted-foreground border-0 font-black text-[9px] uppercase tracking-widest rounded-full">
  {org.current_plan_name || 'FREE TIER'}
  </Badge>
  </div>
  </div>
- <CardTitle className="text-2xl font-black text-app-text tracking-tight group-hover/card:text-emerald-700 transition-colors uppercase">{org.name}</CardTitle>
- <CardDescription className="text-emerald-600 font-black text-[10px] tracking-widest uppercase mt-1 flex items-center gap-2">
+ <CardTitle className="text-2xl font-black text-app-foreground tracking-tight group-hover/card:text-app-success transition-colors uppercase">{org.name}</CardTitle>
+ <CardDescription className="text-app-primary font-black text-[10px] tracking-widest uppercase mt-1 flex items-center gap-2">
  <Globe size={12} className="opacity-40" /> {org.slug}{branding.suffix}
  </CardDescription>
  </CardHeader>
  <CardContent className="px-8 pb-8 space-y-8">
  <div className="grid grid-cols-3 gap-3">
- <div className="p-4 bg-app-bg rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
- <div className="text-[10px] text-app-text-faint font-black uppercase tracking-widest mb-1">Nodes</div>
- <div className="text-2xl font-black text-app-text tracking-tighter">{org.site_count ?? 0}</div>
+ <div className="p-4 bg-app-background rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
+ <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-1">Nodes</div>
+ <div className="text-2xl font-black text-app-foreground tracking-tighter">{org.site_count ?? 0}</div>
  </div>
- <div className="p-4 bg-app-bg rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
- <div className="text-[10px] text-app-text-faint font-black uppercase tracking-widest mb-1">Agents</div>
- <div className="text-2xl font-black text-app-text tracking-tighter">{org.user_count ?? 0}</div>
+ <div className="p-4 bg-app-background rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
+ <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-1">Agents</div>
+ <div className="text-2xl font-black text-app-foreground tracking-tighter">{org.user_count ?? 0}</div>
  </div>
- <div className="p-4 bg-app-bg rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
- <div className="text-[10px] text-app-text-faint font-black uppercase tracking-widest mb-1">Apps</div>
- <div className="text-2xl font-black text-app-text tracking-tighter">{org.module_count ?? 0}</div>
+ <div className="p-4 bg-app-background rounded-2xl border border-app-border text-center group-hover/card:bg-app-surface transition-colors">
+ <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-1">Apps</div>
+ <div className="text-2xl font-black text-app-foreground tracking-tighter">{org.module_count ?? 0}</div>
  </div>
  </div>
 
  <div className="space-y-3 px-1">
  {org.business_email && (
- <div className="text-[11px] font-bold text-app-text-faint flex items-center gap-3 uppercase tracking-tight">
- <Mail size={14} className="text-emerald-400" /> {org.business_email}
+ <div className="text-[11px] font-bold text-app-muted-foreground flex items-center gap-3 uppercase tracking-tight">
+ <Mail size={14} className="text-app-primary" /> {org.business_email}
  </div>
  )}
  {org.client_name && (
- <div className="text-[11px] font-bold text-app-text-faint flex items-center gap-3 uppercase tracking-tight">
- <Users size={14} className="text-emerald-400" /> <span className="font-black text-app-text-muted">{org.client_name}</span>
+ <div className="text-[11px] font-bold text-app-muted-foreground flex items-center gap-3 uppercase tracking-tight">
+ <Users size={14} className="text-app-primary" /> <span className="font-black text-app-muted-foreground">{org.client_name}</span>
  </div>
  )}
  </div>
@@ -439,10 +439,10 @@ export default function OrganizationsPage() {
  <Button
  variant="outline"
  className={`flex-1 h-14 rounded-2xl border-app-border font-black text-[11px] uppercase tracking-widest shadow-sm transition-all ${isSaasOrg
- ? 'bg-app-bg text-slate-200 cursor-not-allowed border-dashed'
+ ? 'bg-app-background text-app-foreground cursor-not-allowed border-dashed'
  : org.is_active
- ? 'bg-app-bg hover:bg-rose-500 hover:text-app-text hover:border-rose-500'
- : 'bg-emerald-50 hover:bg-emerald-600 hover:text-app-text hover:border-emerald-600'
+ ? 'bg-app-background hover:bg-app-error hover:text-app-foreground hover:border-rose-500'
+ : 'bg-app-primary-light hover:bg-app-primary hover:text-app-foreground hover:border-app-primary'
  }`}
  onClick={() => handleToggle(String(org.id), !!org.is_active, org.slug ?? '')}
  disabled={isSaasOrg}
@@ -453,7 +453,7 @@ export default function OrganizationsPage() {
  {/* Features / Modules */}
  <Button
  variant="outline"
- className="w-14 h-14 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-app-text transition-all shadow-sm"
+ className="w-14 h-14 rounded-2xl border-app-success/30 bg-app-primary-light text-app-primary hover:bg-app-primary hover:text-app-foreground transition-all shadow-sm"
  onClick={() => handleOpenModules(org)}
  >
  <Settings2 size={20} />
@@ -462,7 +462,7 @@ export default function OrganizationsPage() {
  {!isSaasOrg && (
  <Button
  variant="ghost"
- className="w-14 h-14 rounded-2xl transition-all text-slate-300 hover:text-rose-600 hover:bg-rose-50"
+ className="w-14 h-14 rounded-2xl transition-all text-app-muted-foreground hover:text-rose-600 hover:bg-rose-50"
  onClick={() => setPendingDeleteOrg(org)}
  >
  <Trash2 size={20} />
@@ -476,48 +476,48 @@ export default function OrganizationsPage() {
  </div>
  {/* Feature Activation Dialog */}
  <Dialog open={modulesOpen} onOpenChange={setModulesOpen}>
- <DialogContent className="bg-app-text/80 backdrop-blur-2xl border-app-text/20 text-app-text rounded-[3rem] max-w-2xl overflow-hidden p-0 shadow-[0_30px_100px_rgba(0,0,0,0.15)]">
- <div className="p-10 bg-emerald-gradient text-app-text relative overflow-hidden">
- <div className="absolute top-0 right-0 w-64 h-64 bg-app-text/10 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+ <DialogContent className="bg-app-foreground/80 backdrop-blur-2xl border-app-text/20 text-app-foreground rounded-[3rem] max-w-2xl overflow-hidden p-0 shadow-[0_30px_100px_var(--app-border)]">
+ <div className="p-10 bg-app-success text-app-foreground relative overflow-hidden">
+ <div className="absolute top-0 right-0 w-64 h-64 bg-app-foreground/10 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
  <DialogTitle className="text-3xl font-black tracking-tighter flex items-center gap-4 relative z-10">
- <Layers size={32} className="text-emerald-300" /> Features
+ <Layers size={32} className="text-app-success" /> Features
  </DialogTitle>
- <p className="text-emerald-100 text-[11px] font-black uppercase tracking-[0.2em] opacity-80 mt-2 relative z-10">
+ <p className="text-app-success text-[11px] font-black uppercase tracking-[0.2em] opacity-80 mt-2 relative z-10">
  Managing Entitlements for: <span className="underline underline-offset-4">{selectedOrg?.name}</span>
  </p>
  </div>
  <div className="p-10 max-h-[50vh] overflow-y-auto space-y-4">
  {loadingModules ? (
  <div className="py-20 text-center space-y-4">
- <Activity size={40} className="mx-auto text-emerald-500 animate-spin opacity-20" />
- <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Scanning Organizational Entitlements...</p>
+ <Activity size={40} className="mx-auto text-app-primary animate-spin opacity-20" />
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">Scanning Organizational Entitlements...</p>
  </div>
  ) : orgModules.length === 0 ? (
- <div className="py-20 text-center bg-slate-50/50 rounded-3xl border border-dashed border-app-border">
- <p className="text-[11px] font-black text-app-text-faint uppercase tracking-widest">No structural features discovered.</p>
+ <div className="py-20 text-center bg-app-surface-2/50 rounded-3xl border border-dashed border-app-border">
+ <p className="text-[11px] font-black text-app-muted-foreground uppercase tracking-widest">No structural features discovered.</p>
  </div>
  ) : orgModules.map((m) => (
- <div key={m.code} className="p-6 bg-app-surface border border-app-border rounded-[2rem] group/mod hover:shadow-xl hover:shadow-slate-200/20 transition-all">
+ <div key={m.code} className="p-6 bg-app-surface border border-app-border rounded-[2rem] group/mod hover:shadow-xl hover:shadow-app-border/20 transition-all">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-5">
- <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${m.status === 'INSTALLED' ? 'bg-emerald-50 text-emerald-600 shadow-inner' : 'bg-app-bg text-slate-300'}`}>
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${m.status === 'INSTALLED' ? 'bg-app-primary-light text-app-primary shadow-inner' : 'bg-app-background text-app-muted-foreground'}`}>
  <Zap size={20} className={m.status === 'INSTALLED' ? 'fill-emerald-600' : ''} />
  </div>
  <div>
- <h4 className="text-[15px] font-black text-app-text uppercase tracking-tight group-hover/mod:text-emerald-700 transition-colors">{m.name}</h4>
- <p className="text-[9px] font-black text-app-text-faint uppercase tracking-[0.2em] mt-0.5">{m.code}</p>
+ <h4 className="text-[15px] font-black text-app-foreground uppercase tracking-tight group-hover/mod:text-app-success transition-colors">{m.name}</h4>
+ <p className="text-[9px] font-black text-app-muted-foreground uppercase tracking-[0.2em] mt-0.5">{m.code}</p>
  </div>
  </div>
  <div className="flex items-center gap-4">
  {m.is_core ? (
- <div className="px-4 py-1.5 rounded-full bg-slate-900 text-app-text text-[9px] font-black uppercase tracking-widest border-b-2 border-b-black">
+ <div className="px-4 py-1.5 rounded-full bg-app-surface text-app-foreground text-[9px] font-black uppercase tracking-widest border-b-2 border-b-black">
  Core Infrastructure
  </div>
  ) : (
  <Button
  className={`h-11 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${m.status === 'INSTALLED'
- ? "bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-app-text border-0"
- : "bg-emerald-600 text-app-text hover:bg-black border-0 shadow-lg shadow-emerald-700/10"
+ ? "bg-rose-50 text-rose-500 hover:bg-app-error hover:text-app-foreground border-0"
+ : "bg-app-primary text-app-foreground hover:bg-app-background border-0 shadow-lg shadow-app-primary/20"
  }`}
  onClick={() => handleModuleToggle(m.code, m.status ?? '')}
  >
@@ -528,13 +528,13 @@ export default function OrganizationsPage() {
  </div>
  {/* Feature Flags UI */}
  {m.status === 'INSTALLED' && Array.isArray(m.available_features) && m.available_features.length > 0 && (
- <div className="mt-6 pt-5 border-t border-slate-50 pl-2">
- <p className="text-[10px] text-app-text-faint font-black uppercase tracking-widest mb-4 flex items-center gap-2">
- <Settings2 size={12} className="text-emerald-500" /> Extended Features
+ <div className="mt-6 pt-5 border-t border-app-border pl-2">
+ <p className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+ <Settings2 size={12} className="text-app-primary" /> Extended Features
  </p>
  <div className="grid grid-cols-2 gap-3">
  {(m.available_features as Array<Record<string, any>>).map((f: Record<string, any>) => (
- <label key={f.code} className="flex items-center gap-3 p-3 rounded-xl border border-slate-50 hover:bg-emerald-50 hover:border-emerald-100 cursor-pointer transition-all group/flag">
+ <label key={f.code} className="flex items-center gap-3 p-3 rounded-xl border border-app-border hover:bg-app-primary-light hover:border-app-success/30 cursor-pointer transition-all group/flag">
  <div className="relative flex items-center justify-center">
  <input
  type="checkbox"
@@ -554,11 +554,11 @@ export default function OrganizationsPage() {
  }
  }}
  />
- <div className="w-5 h-5 border-2 border-app-border rounded-lg group-hover/flag:border-emerald-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all flex items-center justify-center">
- <Plus size={12} className="text-app-text opacity-0 peer-checked:opacity-100 transition-opacity" />
+ <div className="w-5 h-5 border-2 border-app-border rounded-lg group-hover/flag:border-app-success peer-checked:bg-app-primary peer-checked:border-app-primary transition-all flex items-center justify-center">
+ <Plus size={12} className="text-app-foreground opacity-0 peer-checked:opacity-100 transition-opacity" />
  </div>
  </div>
- <span className={`text-[11px] font-bold uppercase tracking-tight text-app-text-muted group-hover/flag:text-emerald-700 transition-colors ${m.active_features?.includes(f.code) ? "text-emerald-600" : ""}`}>
+ <span className={`text-[11px] font-bold uppercase tracking-tight text-app-muted-foreground group-hover/flag:text-app-success transition-colors ${m.active_features?.includes(f.code) ? "text-app-primary" : ""}`}>
  {f.name}
  </span>
  </label>
@@ -569,8 +569,8 @@ export default function OrganizationsPage() {
  </div>
  ))}
  </div>
- <div className="p-8 bg-app-bg border-t border-app-border flex justify-end">
- <button className="h-12 px-8 rounded-2xl bg-app-surface border border-app-border font-black text-[11px] uppercase tracking-widest text-app-text-muted hover:bg-slate-900 hover:text-app-text hover:border-slate-900 transition-all active:scale-95" onClick={() => setModulesOpen(false)}>
+ <div className="p-8 bg-app-background border-t border-app-border flex justify-end">
+ <button className="h-12 px-8 rounded-2xl bg-app-surface border border-app-border font-black text-[11px] uppercase tracking-widest text-app-muted-foreground hover:bg-app-surface hover:text-app-foreground hover:border-app-border transition-all active:scale-95" onClick={() => setModulesOpen(false)}>
  Close
  </button>
  </div>

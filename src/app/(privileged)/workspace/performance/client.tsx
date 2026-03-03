@@ -26,10 +26,10 @@ interface Props {
  kpiConfig: any;
 }
 const TIER_STYLES: Record<string, { bg: string; text: string; icon: string }> = {
- PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-app-text', icon: '💎' },
- GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-app-text', icon: '🥇' },
- SILVER: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-app-text', icon: '🥈' },
- BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-app-text', icon: '🥉' },
+ PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-app-foreground', icon: '💎' },
+ GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-app-foreground', icon: '🥇' },
+ SILVER: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-app-foreground', icon: '🥈' },
+ BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-app-foreground', icon: '🥉' },
 };
 export default function PerformanceClient({ leaderboard, myPerformance, kpiConfig }: Props) {
  const [tab, setTab] = useState<'leaderboard' | 'my'>('leaderboard');
@@ -38,78 +38,78 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
  <div className="space-y-6">
  {/* My Score Summary */}
  {latest && (
- <div className="bg-app-surface rounded-3xl border border-gray-50 p-8 shadow-lg shadow-gray-100">
+ <div className="bg-app-surface rounded-3xl border border-app-border p-8 shadow-lg shadow-app-border/20">
  <div className="flex items-center gap-3 mb-6">
- <Star size={20} className="text-amber-500" />
- <h2 className="text-lg font-bold text-app-text">Your Performance — {latest.period_label}</h2>
+ <Star size={20} className="text-app-warning" />
+ <h2 className="text-lg font-bold text-app-foreground">Your Performance — {latest.period_label}</h2>
  </div>
  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-app-text">{latest.overall_score}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">Score</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-foreground">{latest.overall_score}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Score</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-indigo-600">{latest.tier ? TIER_STYLES[latest.tier]?.icon : '—'}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">{latest.tier || 'No Tier'}</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-primary">{latest.tier ? TIER_STYLES[latest.tier]?.icon : '—'}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">{latest.tier || 'No Tier'}</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-emerald-600">{latest.tasks_completed}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">Completed</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-primary">{latest.tasks_completed}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Completed</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
+ <div className="bg-app-background rounded-2xl p-4 text-center">
  <div className="text-3xl font-black text-sky-600">{latest.completion_rate}%</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">Completion</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Completion</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-violet-600">{latest.on_time_rate}%</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">On Time</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-primary">{latest.on_time_rate}%</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">On Time</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-amber-500">{latest.task_points}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">Points</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-warning">{latest.task_points}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Points</div>
  </div>
- <div className="bg-app-bg rounded-2xl p-4 text-center">
- <div className="text-3xl font-black text-red-500">{latest.tasks_overdue}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase tracking-wider mt-1">Overdue</div>
+ <div className="bg-app-background rounded-2xl p-4 text-center">
+ <div className="text-3xl font-black text-app-error">{latest.tasks_overdue}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mt-1">Overdue</div>
  </div>
  </div>
  </div>
  )}
  {/* Tab Switch */}
- <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl shadow-lg shadow-gray-100 border border-gray-50 w-fit">
+ <div className="flex gap-2 bg-app-surface p-1.5 rounded-2xl shadow-lg shadow-app-border/20 border border-app-border w-fit">
  <button onClick={() => setTab('leaderboard')}
- className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-amber-500 text-app-text shadow-lg shadow-amber-200' : 'text-app-text-muted hover:text-gray-700'}`}>
+ className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'leaderboard' ? 'bg-app-warning text-app-foreground shadow-lg shadow-amber-200' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>
  🏆 Leaderboard
  </button>
  <button onClick={() => setTab('my')}
- className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-indigo-600 text-app-text shadow-lg shadow-indigo-200' : 'text-app-text-muted hover:text-gray-700'}`}>
+ className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === 'my' ? 'bg-app-primary text-app-foreground shadow-lg shadow-indigo-200' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>
  📊 My History
  </button>
  </div>
  {/* Content */}
  {tab === 'leaderboard' ? (
- <div className="bg-app-surface rounded-3xl border border-gray-50 overflow-hidden shadow-lg shadow-gray-100">
- <div className="p-6 border-b border-gray-50">
- <h2 className="text-lg font-bold text-app-text flex items-center gap-2">
- <Trophy size={20} className="text-amber-500" /> Top Performers
+ <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-app-border/20">
+ <div className="p-6 border-b border-app-border">
+ <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+ <Trophy size={20} className="text-app-warning" /> Top Performers
  </h2>
  </div>
  <div className="divide-y divide-gray-50">
  {leaderboard.length === 0 ? (
  <div className="text-center py-16">
- <Trophy size={48} className="mx-auto text-gray-300 mb-4" />
- <p className="text-app-text-faint font-medium">No performance data yet</p>
+ <Trophy size={48} className="mx-auto text-app-muted-foreground mb-4" />
+ <p className="text-app-muted-foreground font-medium">No performance data yet</p>
  </div>
  ) : leaderboard.map((score, idx) => {
  const tierStyle = score.tier ? TIER_STYLES[score.tier] : null;
  return (
- <div key={score.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors">
- <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center font-black text-app-text-faint">
+ <div key={score.id} className="flex items-center gap-4 px-6 py-4 hover:bg-app-surface-2/50 transition-colors">
+ <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center font-black text-app-muted-foreground">
  {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : `#${idx + 1}`}
  </div>
  <div className="flex-1">
- <div className="font-bold text-app-text">{score.employee_name}</div>
- <div className="text-xs text-app-text-faint">{score.period_label}</div>
+ <div className="font-bold text-app-foreground">{score.employee_name}</div>
+ <div className="text-xs text-app-muted-foreground">{score.period_label}</div>
  </div>
  {tierStyle && (
  <span className={`text-xs font-bold px-3 py-1 rounded-xl ${tierStyle.bg} ${tierStyle.text}`}>
@@ -117,16 +117,16 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
  </span>
  )}
  <div className="text-right">
- <div className="text-lg font-black text-app-text">{score.overall_score}</div>
- <div className="text-[10px] text-app-text-faint uppercase tracking-wider">score</div>
+ <div className="text-lg font-black text-app-foreground">{score.overall_score}</div>
+ <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">score</div>
  </div>
  <div className="text-right">
- <div className="text-sm font-bold text-emerald-600">{score.completion_rate}%</div>
- <div className="text-[10px] text-app-text-faint uppercase tracking-wider">completion</div>
+ <div className="text-sm font-bold text-app-primary">{score.completion_rate}%</div>
+ <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">completion</div>
  </div>
  <div className="text-right">
- <div className="text-sm font-bold text-amber-500">{score.task_points} pts</div>
- <div className="text-[10px] text-app-text-faint uppercase tracking-wider">earned</div>
+ <div className="text-sm font-bold text-app-warning">{score.task_points} pts</div>
+ <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">earned</div>
  </div>
  </div>
  );
@@ -134,31 +134,31 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
  </div>
  </div>
  ) : (
- <div className="bg-app-surface rounded-3xl border border-gray-50 overflow-hidden shadow-lg shadow-gray-100">
- <div className="p-6 border-b border-gray-50">
- <h2 className="text-lg font-bold text-app-text flex items-center gap-2">
- <BarChart3 size={20} className="text-indigo-600" /> Performance History
+ <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden shadow-lg shadow-app-border/20">
+ <div className="p-6 border-b border-app-border">
+ <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+ <BarChart3 size={20} className="text-app-primary" /> Performance History
  </h2>
  </div>
  <div className="divide-y divide-gray-50">
  {myPerformance.length === 0 ? (
  <div className="text-center py-16">
- <BarChart3 size={48} className="mx-auto text-gray-300 mb-4" />
- <p className="text-app-text-faint font-medium">No performance data yet</p>
+ <BarChart3 size={48} className="mx-auto text-app-muted-foreground mb-4" />
+ <p className="text-app-muted-foreground font-medium">No performance data yet</p>
  </div>
  ) : myPerformance.map(score => (
- <div key={score.id} className="flex items-center gap-6 px-6 py-4 hover:bg-gray-50/50 transition-colors">
- <div className="text-sm font-bold text-app-text-muted w-24">{score.period_label}</div>
+ <div key={score.id} className="flex items-center gap-6 px-6 py-4 hover:bg-app-surface-2/50 transition-colors">
+ <div className="text-sm font-bold text-app-muted-foreground w-24">{score.period_label}</div>
  <div className="flex-1 bg-app-surface-2 rounded-full h-3">
  <div className="bg-gradient-to-r from-indigo-500 to-sky-400 h-3 rounded-full transition-all" style={{ width: `${Math.min(score.overall_score, 100)}%` }} />
  </div>
- <span className="text-lg font-black text-app-text w-16 text-right">{score.overall_score}</span>
+ <span className="text-lg font-black text-app-foreground w-16 text-right">{score.overall_score}</span>
  {score.tier && (
  <span className={`text-xs font-bold px-3 py-1 rounded-xl ${TIER_STYLES[score.tier]?.bg} ${TIER_STYLES[score.tier]?.text}`}>
  {TIER_STYLES[score.tier]?.icon}
  </span>
  )}
- <div className="text-xs text-app-text-faint w-24 text-right">
+ <div className="text-xs text-app-muted-foreground w-24 text-right">
  {score.tasks_completed}/{score.tasks_assigned} tasks
  </div>
  </div>
@@ -168,24 +168,24 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
  )}
  {/* KPI Weights */}
  {kpiConfig && (
- <div className="bg-app-surface rounded-3xl border border-gray-50 p-6 shadow-lg shadow-gray-100">
- <h3 className="text-sm font-bold text-app-text-muted mb-4 flex items-center gap-2"><Target size={16} /> KPI Weights</h3>
+ <div className="bg-app-surface rounded-3xl border border-app-border p-6 shadow-lg shadow-app-border/20">
+ <h3 className="text-sm font-bold text-app-muted-foreground mb-4 flex items-center gap-2"><Target size={16} /> KPI Weights</h3>
  <div className="grid grid-cols-4 gap-4">
- <div className="bg-indigo-50 rounded-2xl p-4 text-center">
- <div className="text-2xl font-black text-indigo-600">{kpiConfig.task_completion_weight}%</div>
- <div className="text-[10px] text-app-text-faint font-bold uppercase">Tasks</div>
+ <div className="bg-app-primary/5 rounded-2xl p-4 text-center">
+ <div className="text-2xl font-black text-app-primary">{kpiConfig.task_completion_weight}%</div>
+ <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Tasks</div>
  </div>
  <div className="bg-sky-50 rounded-2xl p-4 text-center">
  <div className="text-2xl font-black text-sky-600">{kpiConfig.on_time_weight}%</div>
- <div className="text-[10px] text-app-text-faint font-bold uppercase">On Time</div>
+ <div className="text-[10px] text-app-muted-foreground font-bold uppercase">On Time</div>
  </div>
- <div className="bg-emerald-50 rounded-2xl p-4 text-center">
- <div className="text-2xl font-black text-emerald-600">{kpiConfig.checklist_weight}%</div>
- <div className="text-[10px] text-app-text-faint font-bold uppercase">Checklists</div>
+ <div className="bg-app-primary-light rounded-2xl p-4 text-center">
+ <div className="text-2xl font-black text-app-primary">{kpiConfig.checklist_weight}%</div>
+ <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Checklists</div>
  </div>
- <div className="bg-amber-50 rounded-2xl p-4 text-center">
- <div className="text-2xl font-black text-amber-600">{kpiConfig.evaluation_weight}%</div>
- <div className="text-[10px] text-app-text-faint font-bold uppercase">Evaluations</div>
+ <div className="bg-app-warning-bg rounded-2xl p-4 text-center">
+ <div className="text-2xl font-black text-app-warning">{kpiConfig.evaluation_weight}%</div>
+ <div className="text-[10px] text-app-muted-foreground font-bold uppercase">Evaluations</div>
  </div>
  </div>
  </div>

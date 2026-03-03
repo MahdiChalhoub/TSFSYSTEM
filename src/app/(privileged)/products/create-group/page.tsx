@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 async function getData() {
  try {
  const [brands, categories, units, countries] = await Promise.all([
- erpFetch('brands/'),
+ erpFetch('inventory/brands/'),
  erpFetch('inventory/categories/'),
  erpFetch('units/'),
  erpFetch('countries/')
@@ -28,10 +28,10 @@ export default async function CreateGroupPage() {
  const data = await getData();
 
  return (
- <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
+ <div className="app-page max-w-7xl mx-auto space-y-6 animate-in fade-in">
  <div>
  <h1 className="page-header-title ">Create Product Group</h1>
- <p className="text-app-text-muted">Define a master product (e.g. Head & Shoulders) and its country-specific variants.</p>
+ <p className="text-app-muted-foreground">Define a master product (e.g. Head & Shoulders) and its country-specific variants.</p>
  </div>
 
  <GroupedProductForm {...data} />

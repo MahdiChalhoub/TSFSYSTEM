@@ -17,9 +17,9 @@ import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Input } from "@/components/ui/input"
 const TAB_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
- orders: { label: 'Orders', icon: ShoppingCart, color: 'text-blue-600' },
+ orders: { label: 'Orders', icon: ShoppingCart, color: 'text-app-info' },
  payments: { label: 'Payments', icon: CreditCard, color: 'text-purple-600' },
- journal: { label: 'Journal', icon: BookOpen, color: 'text-app-text-muted' },
+ journal: { label: 'Journal', icon: BookOpen, color: 'text-app-muted-foreground' },
 }
 export default function StatementsPage() {
  const { fmt } = useCurrency()
@@ -74,13 +74,13 @@ export default function StatementsPage() {
  label: 'Contact Name',
  sortable: true,
  render: (c) => (
- <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs">
+ <div className="app-page flex items-center gap-3">
+ <div className="w-8 h-8 rounded-lg bg-app-primary/5 text-app-primary flex items-center justify-center font-black text-xs">
  {c.name?.charAt(0) || '?'}
  </div>
  <div className="flex flex-col">
- <span className="font-bold text-app-text">{c.name}</span>
- <span className="text-[10px] text-app-text-faint font-bold uppercase tracking-tight">{c.email || 'No email'}</span>
+ <span className="font-bold text-app-foreground">{c.name}</span>
+ <span className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-tight">{c.email || 'No email'}</span>
  </div>
  </div>
  )
@@ -90,7 +90,7 @@ export default function StatementsPage() {
  label: 'Entity Type',
  sortable: true,
  render: (c) => (
- <Badge className={`${c.type === 'CUSTOMER' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'} border-none h-5 text-[10px] font-black uppercase px-2 rounded-lg`}>
+ <Badge className={`${c.type === 'CUSTOMER' ? 'bg-app-info-bg text-app-info' : 'bg-app-warning-bg text-app-warning'} border-none h-5 text-[10px] font-black uppercase px-2 rounded-lg`}>
  {c.type}
  </Badge>
  )
@@ -99,14 +99,14 @@ export default function StatementsPage() {
  key: 'phone',
  label: 'Direct Line',
  hideMobile: true,
- render: (c) => <span className="text-app-text-muted font-medium text-xs">{c.phone || '—'}</span>
+ render: (c) => <span className="text-app-muted-foreground font-medium text-xs">{c.phone || '—'}</span>
  },
  {
  key: 'actions',
  label: '',
  align: 'right',
  render: (c) => (
- <Button variant="ghost" size="sm" onClick={() => viewStatement(c)} className="h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-50 gap-1.5 transition-all">
+ <Button variant="ghost" size="sm" onClick={() => viewStatement(c)} className="h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-app-primary hover:bg-app-primary/5 gap-1.5 transition-all">
  Analyze <ChevronRight size={14} />
  </Button>
  )
@@ -117,12 +117,12 @@ export default function StatementsPage() {
  key: 'date',
  label: 'Order Date',
  sortable: true,
- render: (o) => <span className="text-app-text font-bold text-xs">{o.date || '—'}</span>
+ render: (o) => <span className="text-app-foreground font-bold text-xs">{o.date || '—'}</span>
  },
  {
  key: 'ref_code',
  label: 'Reference',
- render: (o) => <span className="font-mono text-[11px] text-app-text-muted">{o.ref_code || `#${o.id}`}</span>
+ render: (o) => <span className="font-mono text-[11px] text-app-muted-foreground">{o.ref_code || `#${o.id}`}</span>
  },
  {
  key: 'type',
@@ -132,13 +132,13 @@ export default function StatementsPage() {
  {
  key: 'status',
  label: 'State',
- render: (o) => <span className="text-[10px] text-app-text-faint font-black uppercase">{o.status}</span>
+ render: (o) => <span className="text-[10px] text-app-muted-foreground font-black uppercase">{o.status}</span>
  },
  {
  key: 'total',
  label: 'Amount',
  align: 'right',
- render: (o) => <span className="font-black text-app-text text-xs">{fmt(o.total || 0)}</span>
+ render: (o) => <span className="font-black text-app-foreground text-xs">{fmt(o.total || 0)}</span>
  }
  ], [fmt])
  const paymentColumns: ColumnDef<any>[] = useMemo(() => [
@@ -146,12 +146,12 @@ export default function StatementsPage() {
  key: 'date',
  label: 'Settlement Date',
  sortable: true,
- render: (p) => <span className="text-app-text font-bold text-xs">{p.date || '—'}</span>
+ render: (p) => <span className="text-app-foreground font-bold text-xs">{p.date || '—'}</span>
  },
  {
  key: 'reference',
  label: 'Payment Ref',
- render: (p) => <span className="font-mono text-[11px] text-indigo-600">{p.reference || '—'}</span>
+ render: (p) => <span className="font-mono text-[11px] text-app-primary">{p.reference || '—'}</span>
  },
  {
  key: 'type',
@@ -162,7 +162,7 @@ export default function StatementsPage() {
  key: 'amount',
  label: 'Amount',
  align: 'right',
- render: (p) => <span className="font-black text-emerald-600 text-xs">{fmt(p.amount || 0)}</span>
+ render: (p) => <span className="font-black text-app-primary text-xs">{fmt(p.amount || 0)}</span>
  }
  ], [fmt])
  const journalColumns: ColumnDef<any>[] = useMemo(() => [
@@ -170,28 +170,28 @@ export default function StatementsPage() {
  key: 'date',
  label: 'Posting Date',
  sortable: true,
- render: (j) => <span className="text-app-text font-bold text-xs">{j.date || '—'}</span>
+ render: (j) => <span className="text-app-foreground font-bold text-xs">{j.date || '—'}</span>
  },
  {
  key: 'reference',
  label: 'JV Reference',
- render: (j) => <span className="font-mono text-[11px] text-app-text-muted">{j.reference || '—'}</span>
+ render: (j) => <span className="font-mono text-[11px] text-app-muted-foreground">{j.reference || '—'}</span>
  },
  {
  key: 'description',
  label: 'Narrative',
- render: (j) => <span className="text-xs text-app-text-muted font-medium truncate max-w-[150px] inline-block">{j.description}</span>
+ render: (j) => <span className="text-xs text-app-muted-foreground font-medium truncate max-w-[150px] inline-block">{j.description}</span>
  },
  {
  key: 'account',
  label: 'Ledger Post',
- render: (j) => <span className="text-[10px] text-indigo-600 font-black uppercase">{j.account}</span>
+ render: (j) => <span className="text-[10px] text-app-primary font-black uppercase">{j.account}</span>
  },
  {
  key: 'debit',
  label: 'Debit',
  align: 'right',
- render: (j) => <span className="font-black text-emerald-600 font-mono text-xs">{j.debit > 0 ? fmt(j.debit) : ''}</span>
+ render: (j) => <span className="font-black text-app-primary font-mono text-xs">{j.debit > 0 ? fmt(j.debit) : ''}</span>
  },
  {
  key: 'credit',
@@ -213,56 +213,42 @@ export default function StatementsPage() {
  const balance = Number(detail.balance?.amount || 0)
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div className="flex items-center gap-4">
- <Button
- variant="ghost"
- size="icon"
- onClick={() => { setSelectedContact(null); setDetail(null) }}
- className="h-12 w-12 rounded-2xl text-app-text-faint hover:text-app-text transition-all hover:bg-app-bg border border-transparent hover:border-app-border"
- >
- <ArrowLeft size={18} />
- </Button>
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text">{detail.contact?.name || selectedContact.name}</h1>
- <div className="flex items-center gap-3 mt-1">
- <Badge className={`${(detail.contact?.type || selectedContact.type) === 'CUSTOMER' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'} border-none text-[10px] font-black uppercase px-2 h-5 rounded-lg`}>
- {detail.contact?.type || selectedContact.type}
- </Badge>
- <div className="flex items-center gap-4 text-xs font-medium text-app-text-faint">
- <div className="flex items-center gap-1"><Mail size={12} /> {detail.contact?.email || 'No Email'}</div>
- <div className="flex items-center gap-1"><Phone size={12} /> {detail.contact?.phone || 'No Phone'}</div>
- </div>
- </div>
- </div>
- </div>
- <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] font-black uppercase flex items-center gap-1 h-6">
- <ShieldCheck size={12} /> Statement Guard Active
- </Badge>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <FileText size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Financial <span className="text-app-primary">Statements</span>
+          </h1>
+        </div>
+      </div>
+    </header>
  {/* KPI Summary Cards */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary/5 text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <ShoppingCart size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Activity Vol.</p>
- <p className="text-3xl font-black mt-1 tracking-tighter text-app-text">{detail.stats?.order_count || 0}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">Confirmed Orders</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Activity Vol.</p>
+ <p className="text-3xl font-black mt-1 tracking-tighter text-app-foreground">{detail.stats?.order_count || 0}</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">Confirmed Orders</p>
  </div>
  </CardContent>
  </Card>
  <Card className="rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group">
  <CardContent className="p-6 flex items-center gap-5">
- <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+ <div className="w-16 h-16 rounded-[1.5rem] bg-app-primary-light text-app-primary flex items-center justify-center group-hover:scale-110 transition-transform">
  <DollarSign size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Revenue</p>
- <p className="text-xl font-black mt-1 tracking-tight text-emerald-600">{fmt(detail.stats?.total_revenue || 0)}</p>
- <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">Lifetime Value</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Revenue</p>
+ <p className="text-xl font-black mt-1 tracking-tight text-app-primary">{fmt(detail.stats?.total_revenue || 0)}</p>
+ <p className="text-[10px] text-app-primary font-bold uppercase mt-1">Lifetime Value</p>
  </div>
  </CardContent>
  </Card>
@@ -272,7 +258,7 @@ export default function StatementsPage() {
  <CreditCard size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Total Paid</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Total Paid</p>
  <p className="text-xl font-black mt-1 tracking-tight text-purple-600">{fmt(detail.stats?.total_paid || 0)}</p>
  <p className="text-[10px] text-purple-600 font-bold uppercase mt-1">Settled Txs</p>
  </div>
@@ -280,13 +266,13 @@ export default function StatementsPage() {
  </Card>
  <Card className={`rounded-3xl border-0 shadow-sm bg-app-surface overflow-hidden group border-r-4 ${balance > 0 ? 'border-r-rose-400' : 'border-r-emerald-400'}`}>
  <CardContent className="p-6 flex items-center gap-5">
- <div className={`w-16 h-16 rounded-[1.5rem] ${balance > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+ <div className={`w-16 h-16 rounded-[1.5rem] ${balance > 0 ? 'bg-rose-50 text-rose-600' : 'bg-app-primary-light text-app-primary'} flex items-center justify-center group-hover:scale-110 transition-transform`}>
  <Wallet size={32} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest text-app-text-faint">Current Balance</p>
- <p className={`text-xl font-black mt-1 tracking-tight ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{fmt(balance)}</p>
- <p className="text-[10px] text-app-text-faint font-bold uppercase mt-1">{balance > 0 ? 'Receivable' : 'No Overdue'}</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Current Balance</p>
+ <p className={`text-xl font-black mt-1 tracking-tight ${balance > 0 ? 'text-rose-600' : 'text-app-primary'}`}>{fmt(balance)}</p>
+ <p className="text-[10px] text-app-muted-foreground font-bold uppercase mt-1">{balance > 0 ? 'Receivable' : 'No Overdue'}</p>
  </div>
  </CardContent>
  </Card>
@@ -300,7 +286,7 @@ export default function StatementsPage() {
  <button
  key={tab}
  onClick={() => setActiveTab(tab)}
- className={`h-10 px-6 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-app-surface text-app-text shadow-lg' : 'text-app-text-faint hover:text-app-text-muted'}`}
+ className={`h-10 px-6 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-app-surface text-app-foreground shadow-lg' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}
  >
  <Icon size={14} className={activeTab === tab ? tc.color : ''} />
  {tc.label}
@@ -332,25 +318,25 @@ export default function StatementsPage() {
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
  <header className="flex justify-between items-center">
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <FileBarChart size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-indigo-200">
+ <FileBarChart size={28} className="text-app-foreground" />
  </div>
- Constituent <span className="text-indigo-600">Financial Hub</span>
+ Constituent <span className="text-app-primary">Financial Hub</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Global Account Analysis & Statements</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Global Account Analysis & Statements</p>
  </div>
  <div className="flex items-center gap-3">
  <div className="relative w-72">
- <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-text-faint" />
+ <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
  <Input
  placeholder="Find constituent by name or email..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="h-12 pl-11 rounded-2xl bg-app-surface border-app-border shadow-sm focus-visible:ring-indigo-500/30"
+ className="h-12 pl-11 rounded-2xl bg-app-surface border-app-border shadow-sm focus-visible:ring-app-primary"
  />
  </div>
- <Button onClick={loadContacts} variant="ghost" className="h-12 w-12 rounded-2xl text-app-text-faint hover:text-indigo-600 hover:bg-indigo-50">
+ <Button onClick={loadContacts} variant="ghost" className="h-12 w-12 rounded-2xl text-app-muted-foreground hover:text-app-primary hover:bg-app-primary/5">
  <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
  </Button>
  </div>
@@ -371,8 +357,8 @@ export default function StatementsPage() {
  onSort={settings.setSort}
  headerExtra={
  <div className="flex items-center gap-2 px-3 py-1.5 bg-app-surface-2 rounded-xl border border-app-border">
- <UserCheck size={14} className="text-app-text-faint" />
- <span className="text-[10px] font-black uppercase text-app-text-muted">Verified CRM Feed</span>
+ <UserCheck size={14} className="text-app-muted-foreground" />
+ <span className="text-[10px] font-black uppercase text-app-muted-foreground">Verified CRM Feed</span>
  </div>
  }
  />

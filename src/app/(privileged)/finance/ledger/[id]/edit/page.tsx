@@ -15,7 +15,7 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
 
  if (entry.status === 'REVERSED') {
  return (
- <div className="p-8 text-center bg-rose-50 border border-rose-200 rounded-lg max-w-2xl mx-auto mt-12">
+ <div className="app-page p-8 text-center bg-rose-50 border border-rose-200 rounded-lg max-w-2xl mx-auto mt-12">
  <h1 className="text-xl font-bold text-rose-800">Cannot Edit Reversed Entry</h1>
  <p className="text-rose-600 mt-2">Reversed transactions are immutable. To correct this, create a new manual entry.</p>
  <a href="/finance/ledger" className="mt-4 inline-block text-rose-800 font-bold underline">Back to Ledger</a>
@@ -29,7 +29,7 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
 
  return (
  <div className="space-y-6 animate-in fade-in duration-500">
- <h1 className="page-header-title text-app-text font-serif mb-8">Edit Journal Voucher #{entry.id}</h1>
+ <h1 className="page-header-title text-app-foreground font-serif mb-8">Edit Journal Voucher #{entry.id}</h1>
  <JournalEntryForm
  accounts={JSON.parse(JSON.stringify(accounts))}
  fiscalYears={JSON.parse(JSON.stringify(fiscalYears))}

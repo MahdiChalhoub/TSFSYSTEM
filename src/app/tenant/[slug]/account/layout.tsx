@@ -26,13 +26,13 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
  const isActive = (href: string) => pathname === href
 
  return (
- <div className="min-h-screen bg-[#020617] flex flex-col lg:flex-row">
+ <div className="min-h-screen bg-[#020617] flex flex-col lg:flex-row bg-app-bg">
  {/* Sidebar (desktop) / Top Nav (mobile) */}
- <aside className="lg:w-64 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-slate-950/80 border-b lg:border-b-0 lg:border-r border-app-text/5 flex flex-col">
+ <aside className="lg:w-64 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] bg-app-bg/80 border-b lg:border-b-0 lg:border-r border-app-text/5 flex flex-col">
  {/* User card */}
  <div className="p-5 border-b border-app-text/5">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 text-sm font-black">
+ <div className="w-10 h-10 bg-app-success-bg border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 text-sm font-black">
  {user?.name?.charAt(0).toUpperCase() || 'U'}
  </div>
  <div className="flex-1 min-w-0">
@@ -48,7 +48,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
  <Link key={item.href} href={item.href}
  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap
  ${isActive(item.href)
- ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+ ? 'bg-app-success-bg text-emerald-400 border border-emerald-500/20'
  : 'text-app-text-faint hover:text-app-text hover:bg-app-text/5 border border-transparent'
  }`}>
  <item.icon size={18} />
@@ -66,7 +66,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
  <Store size={14} /> Back to Store
  </Link>
  <button onClick={logout}
- className="w-full flex items-center gap-2 px-4 py-2.5 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/10 transition-all">
+ className="w-full flex items-center gap-2 px-4 py-2.5 text-app-error text-sm font-medium rounded-xl hover:bg-app-error-bg transition-all">
  <LogOut size={14} /> Sign Out
  </button>
  </div>

@@ -16,7 +16,7 @@ interface OrderDetail {
     delivery_address: string | null; notes: string | null; lines: OrderLine[]
 }
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    CART: { label: 'Draft', icon: Package, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    CART: { label: 'Draft', icon: Package, color: 'text-app-text-faint', bg: 'bg-slate-500/10' },
     PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     CONFIRMED: { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     PROCESSING: { label: 'In Flow', icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -63,7 +63,7 @@ export default function MidnightOrderDetailPage() {
                         <XCircle size={40} />
                     </div>
                     <h1 className="text-3xl font-black text-white italic tracking-tighter">Null Data Stream</h1>
-                    <p className="text-slate-500 text-sm">The requested order object does not exist in the active ledger.</p>
+                    <p className="text-app-text-faint text-sm">The requested order object does not exist in the active ledger.</p>
                     <Link href={path('/account/orders')}
                         className="inline-flex items-center gap-2 text-emerald-400 font-black uppercase tracking-widest text-[10px] hover:text-emerald-300 transition-colors">
                         <ArrowLeft size={16} /> Return to History
@@ -82,13 +82,13 @@ export default function MidnightOrderDetailPage() {
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="space-y-4">
                     <Link href={path('/account/orders')}
-                        className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                        className="inline-flex items-center gap-2 text-app-text-faint hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Transaction History
                     </Link>
                     <div className="flex items-center justify-between flex-wrap gap-6">
                         <div className="space-y-1">
                             <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">{order.order_number}</h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
+                            <p className="text-app-text-faint text-xs font-bold uppercase tracking-[0.2em]">
                                 {order.placed_at ? `Initialized ${new Date(order.placed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : 'Draft Instance'}
                             </p>
                         </div>
@@ -101,14 +101,14 @@ export default function MidnightOrderDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <SummaryCard label="Settlement Status" value={ps.label} meta={order.payment_method || 'Internal Credit'} icon={<CreditCard size={18} />} color={ps.color} />
                     <SummaryCard label="ETA Forecast" value={order.estimated_delivery ? new Date(order.estimated_delivery).toLocaleDateString() : 'N/A'} meta="Estimated Arrival" icon={<CalendarDays size={18} />} />
-                    <SummaryCard label="Review Score" value={order.delivery_rating ? `${order.delivery_rating}.0` : 'Pending'} meta="Delivery Rating" icon={<Star size={18} />} color={order.delivery_rating ? 'text-amber-400' : 'text-slate-600'} />
+                    <SummaryCard label="Review Score" value={order.delivery_rating ? `${order.delivery_rating}.0` : 'Pending'} meta="Delivery Rating" icon={<Star size={18} />} color={order.delivery_rating ? 'text-amber-400' : 'text-app-text-muted'} />
                 </div>
                 {order.status !== 'CART' && order.status !== 'CANCELLED' && (
                     <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3.5rem] relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-emerald-500/10 transition-colors">
                             <TrendingUp size={120} />
                         </div>
-                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-12">Deployment Lifecycle</h3>
+                        <h3 className="text-[10px] font-black text-app-text-faint uppercase tracking-[0.4em] mb-12">Deployment Lifecycle</h3>
                         <div className="flex items-start justify-between relative">
                             <div className="absolute top-6 left-[10%] right-[10%] h-[1px] bg-slate-800" />
                             <div className="absolute top-6 left-[10%] h-[1px] bg-emerald-500 transition-all duration-1000 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
@@ -132,11 +132,11 @@ export default function MidnightOrderDetailPage() {
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500
                                             ${isCurrent ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-110 rotate-12'
                                                 : isCompleted ? 'bg-emerald-500 border-emerald-500 text-white'
-                                                    : 'bg-slate-950 border-white/5 text-slate-700'}`}>
+                                                    : 'bg-slate-950 border-white/5 text-app-text-muted'}`}>
                                             <StepIcon size={20} />
                                         </div>
                                         <span className={`mt-4 text-[9px] font-black uppercase tracking-widest text-center transition-colors
-                                            ${isCurrent ? 'text-emerald-400' : isCompleted ? 'text-slate-400' : 'text-slate-800'}`}>
+                                            ${isCurrent ? 'text-emerald-400' : isCompleted ? 'text-app-text-faint' : 'text-app-text'}`}>
                                             {step}
                                         </span>
                                     </div>
@@ -149,7 +149,7 @@ export default function MidnightOrderDetailPage() {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center gap-4">
                             <h2 className="text-2xl font-black text-white italic tracking-tight uppercase">Segment Assets</h2>
-                            <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">{order.lines?.length || 0} Entities</div>
+                            <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-black text-app-text-faint uppercase tracking-widest">{order.lines?.length || 0} Entities</div>
                         </div>
                         <div className="space-y-4">
                             {order.lines?.map(line => (
@@ -158,16 +158,16 @@ export default function MidnightOrderDetailPage() {
                                         {line.image_url ? (
                                             <img src={line.image_url} alt={line.product_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-800"><Package size={28} /></div>
+                                            <div className="w-full h-full flex items-center justify-center text-app-text"><Package size={28} /></div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-lg font-black text-white italic truncate">{line.product_name}</h4>
-                                        <p className="text-slate-500 text-xs font-mono tracking-widest uppercase mt-1">REF: {line.product_sku}</p>
+                                        <p className="text-app-text-faint text-xs font-mono tracking-widest uppercase mt-1">REF: {line.product_sku}</p>
                                     </div>
                                     <div className="text-right flex-shrink-0 space-y-1">
                                         <p className="text-xl font-black text-white">${parseFloat(line.total_price).toFixed(2)}</p>
-                                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{line.quantity} Unit @ ${parseFloat(line.unit_price).toFixed(0)}</p>
+                                        <p className="text-app-text-faint text-[10px] font-bold uppercase tracking-widest">{line.quantity} Unit @ ${parseFloat(line.unit_price).toFixed(0)}</p>
                                     </div>
                                 </div>
                             ))}
@@ -177,14 +177,14 @@ export default function MidnightOrderDetailPage() {
                         <div className="p-8 bg-slate-900/60 border border-emerald-500/10 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 text-emerald-500/5"><CreditCard size={80} /></div>
                             <div className="space-y-6">
-                                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Financial Summary</h3>
+                                <h3 className="text-[10px] font-black text-app-text-faint uppercase tracking-widest">Financial Summary</h3>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">Net Value</span>
+                                        <span className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Net Value</span>
                                         <span className="text-white font-black italic tracking-tight">${parseFloat(order.subtotal || '0').toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">Tax Provision</span>
+                                        <span className="text-app-text-faint text-xs font-bold uppercase tracking-widest">Tax Provision</span>
                                         <span className="text-white font-black italic tracking-tight">${parseFloat(order.tax_amount || '0').toFixed(2)}</span>
                                     </div>
                                     {parseFloat(order.discount_amount || '0') > 0 && (
@@ -194,25 +194,25 @@ export default function MidnightOrderDetailPage() {
                                         </div>
                                     )}
                                     <div className="pt-6 border-t border-white/5 flex justify-between items-end">
-                                        <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Total Ledger</span>
+                                        <span className="text-app-text-faint text-[10px] font-black uppercase tracking-[0.3em]">Total Ledger</span>
                                         <span className="text-4xl font-black text-white italic tracking-tighter">${parseFloat(order.total_amount).toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
                             {order.delivery_address && (
                                 <div className="space-y-3 pt-6 border-t border-white/5">
-                                    <div className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 text-app-text-faint text-[10px] font-black uppercase tracking-widest">
                                         <MapPin size={12} className="text-emerald-500" /> Dispatch Endpoint
                                     </div>
-                                    <p className="text-slate-400 text-xs leading-relaxed font-bold uppercase tracking-tight italic">{order.delivery_address}</p>
+                                    <p className="text-app-text-faint text-xs leading-relaxed font-bold uppercase tracking-tight italic">{order.delivery_address}</p>
                                 </div>
                             )}
                             {order.notes && (
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-2">
-                                    <div className="flex items-center gap-2 text-slate-600 text-[9px] font-black uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 text-app-text-muted text-[9px] font-black uppercase tracking-widest">
                                         <FileText size={10} /> Internal Memo
                                     </div>
-                                    <p className="text-slate-400 text-[10px] font-medium leading-relaxed italic line-clamp-3">{order.notes}</p>
+                                    <p className="text-app-text-faint text-[10px] font-medium leading-relaxed italic line-clamp-3">{order.notes}</p>
                                 </div>
                             )}
                         </div>
@@ -231,12 +231,12 @@ function SummaryCard({ label, value, meta, icon, color = 'text-white' }: any) {
     return (
         <div className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] space-y-4 hover:bg-slate-900/60 transition-all group">
             <div className="flex justify-between items-start">
-                <div className="p-3 bg-white/5 rounded-2xl scale-90 group-hover:scale-100 transition-all text-slate-500 group-hover:text-emerald-500">{icon}</div>
-                <div className="text-[10px] text-slate-600 font-black uppercase tracking-widest">{label}</div>
+                <div className="p-3 bg-white/5 rounded-2xl scale-90 group-hover:scale-100 transition-all text-app-text-faint group-hover:text-emerald-500">{icon}</div>
+                <div className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">{label}</div>
             </div>
             <div>
                 <h4 className={`text-xl font-black italic tracking-tight ${color}`}>{value}</h4>
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">{meta}</p>
+                <p className="text-[10px] text-app-text-faint uppercase font-bold tracking-widest mt-1">{meta}</p>
             </div>
         </div>
     )

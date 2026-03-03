@@ -60,12 +60,12 @@ export default function PortalConfigClient({ config: initial }: { config: any })
  const sections = [...new Set(CONFIG_FIELDS.map(f => f.section))];
  const cardStyle: React.CSSProperties = {
  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
- borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', padding: '1.25rem',
+ borderRadius: 12, border: '1px solid var(--app-surface)', padding: '1.25rem',
  };
 
  if (!config?.id) {
  return (
- <div style={{ ...cardStyle, textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+ <div style={{ ...cardStyle, textAlign: 'center', padding: '3rem', color: 'var(--app-muted-foreground)' }}>
  No configuration found. It will be auto-created when the first client action occurs.
  </div>
  );
@@ -76,8 +76,8 @@ export default function PortalConfigClient({ config: initial }: { config: any })
  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: '1.5rem' }}>
  <button onClick={handleSave} disabled={saving} style={{
  display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 1.25rem',
- background: saved ? '#22c55e' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
- border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', fontWeight: 600,
+ background: saved ? 'var(--app-success)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+ border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600,
  opacity: saving ? 0.7 : 1,
  }}>
  <Save size={16} /> {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Configuration'}
@@ -87,21 +87,21 @@ export default function PortalConfigClient({ config: initial }: { config: any })
  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
  {sections.map(section => (
  <div key={section} style={cardStyle}>
- <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem', color: '#f1f5f9' }}>
+ <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--app-foreground)' }}>
  {section}
  </h3>
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
  {CONFIG_FIELDS.filter(f => f.section === section).map(field => (
  <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
- <label style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 500 }}>
+ <label style={{ fontSize: '0.85rem', color: 'var(--app-muted-foreground)', fontWeight: 500 }}>
  {field.label}
  </label>
  {field.type === 'boolean' ? (
  <label style={{
  display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
- padding: '6px 12px', background: config[field.key] ? 'rgba(34,197,94,0.15)' : 'rgba(100,116,139,0.15)',
+ padding: '6px 12px', background: config[field.key] ? 'color-mix(in srgb, var(--app-success) 15%, transparent)' : 'color-mix(in srgb, var(--app-muted-foreground) 15%, transparent)',
  borderRadius: 6, width: 'fit-content',
- color: config[field.key] ? '#22c55e' : '#94a3b8',
+ color: config[field.key] ? 'var(--app-success)' : 'var(--app-muted-foreground)',
  }}>
  <input type="checkbox" checked={!!config[field.key]}
  onChange={e => onChange(field.key, e.target.checked)} />
@@ -111,21 +111,21 @@ export default function PortalConfigClient({ config: initial }: { config: any })
  <input type="number" step="any" value={config[field.key] ?? ''}
  onChange={e => onChange(field.key, e.target.value)}
  style={{
- padding: '6px 10px', background: '#0f172a',
- border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6,
- color: '#e2e8f0', width: '100%',
+ padding: '6px 10px', background: 'var(--app-background)',
+ border: '1px solid var(--app-surface)', borderRadius: 6,
+ color: 'var(--app-border)', width: '100%',
  }} />
  ) : (
  <input type="text" value={config[field.key] ?? ''}
  onChange={e => onChange(field.key, e.target.value)}
  style={{
- padding: '6px 10px', background: '#0f172a',
- border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6,
- color: '#e2e8f0', width: '100%',
+ padding: '6px 10px', background: 'var(--app-background)',
+ border: '1px solid var(--app-surface)', borderRadius: 6,
+ color: 'var(--app-border)', width: '100%',
  }} />
  )}
  {field.hint && (
- <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{field.hint}</span>
+ <span style={{ fontSize: '0.75rem', color: 'var(--app-muted-foreground)' }}>{field.hint}</span>
  )}
  </div>
  ))}

@@ -59,21 +59,21 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  <div key={dept.id}>
  <div className={`flex items-center justify-between p-4 bg-app-surface rounded-2xl border border-app-border hover:shadow-lg hover:border-violet-200 transition-all group ${level > 0 ? 'ml-8' : ''}`}>
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition-colors">
- <Building2 size={18} className="text-violet-600" />
+ <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center group-hover:bg-app-primary/10 transition-colors">
+ <Building2 size={18} className="text-app-primary" />
  </div>
  <div>
- <div className="font-bold text-app-text">{dept.name}</div>
- <div className="text-xs text-app-text-faint font-mono">{dept.code}</div>
+ <div className="font-bold text-app-foreground">{dept.name}</div>
+ <div className="text-xs text-app-muted-foreground font-mono">{dept.code}</div>
  </div>
  {dept.manager_name && (
- <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full">
- <User size={12} className="text-emerald-600" />
- <span className="text-xs font-semibold text-emerald-700">{dept.manager_name}</span>
+ <div className="flex items-center gap-1.5 px-3 py-1 bg-app-primary-light rounded-full">
+ <User size={12} className="text-app-primary" />
+ <span className="text-xs font-semibold text-app-success">{dept.manager_name}</span>
  </div>
  )}
  {dept.parent_name && (
- <div className="flex items-center gap-1.5 text-xs text-app-text-faint">
+ <div className="flex items-center gap-1.5 text-xs text-app-muted-foreground">
  <ChevronRight size={12} />
  <span>under {dept.parent_name}</span>
  </div>
@@ -81,10 +81,10 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  </div>
  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button onClick={() => { setEditing(dept); setShowForm(true) }} className="p-2 hover:bg-violet-50 rounded-xl transition-colors">
- <Edit2 size={14} className="text-violet-600" />
+ <Edit2 size={14} className="text-app-primary" />
  </button>
- <button onClick={() => handleDelete(dept.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
- <Trash2 size={14} className="text-red-500" />
+ <button onClick={() => handleDelete(dept.id)} className="p-2 hover:bg-app-error-bg rounded-xl transition-colors">
+ <Trash2 size={14} className="text-app-error" />
  </button>
  </div>
  </div>
@@ -96,7 +96,7 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  <div className="space-y-4">
  <div className="flex justify-end">
  <button onClick={() => { setEditing(null); setShowForm(!showForm) }}
- className="flex items-center gap-2 px-6 py-3 bg-violet-600 text-app-text rounded-2xl font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-200">
+ className="flex items-center gap-2 px-6 py-3 bg-app-primary text-app-foreground rounded-2xl font-bold hover:bg-app-primary transition-all shadow-lg shadow-violet-200">
  <Plus size={18} /> Add Department
  </button>
  </div>
@@ -105,17 +105,17 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  <form onSubmit={handleSubmit} className="bg-app-surface p-8 rounded-3xl border border-violet-100 shadow-xl space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Name</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Name</label>
  <input name="name" defaultValue={editing?.name} required
  className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition-all" />
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Code</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Code</label>
  <input name="code" defaultValue={editing?.code} required
  className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition-all font-mono" />
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Parent Department</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Parent Department</label>
  <select name="parent" defaultValue={editing?.parent || ''} className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-violet-400 outline-none transition-all">
  <option value="">— Root —</option>
  {departments.filter(d => d.id !== editing?.id).map((d: any) => (
@@ -124,7 +124,7 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  </select>
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Manager</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Manager</label>
  <select name="manager" defaultValue={editing?.manager || ''} className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-violet-400 outline-none transition-all">
  <option value="">— None —</option>
  {employees.map((e: any) => (
@@ -135,11 +135,11 @@ export default function DepartmentsClient({ departments, employees }: Props) {
  </div>
  <div className="flex justify-end gap-3 pt-4">
  <button type="button" onClick={() => { setShowForm(false); setEditing(null) }}
- className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-text-muted hover:bg-app-bg transition-colors">
+ className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-muted-foreground hover:bg-app-background transition-colors">
  Cancel
  </button>
  <button type="submit" disabled={isPending}
- className="px-8 py-3 bg-violet-600 text-app-text rounded-xl font-bold hover:bg-violet-700 transition-all disabled:opacity-50">
+ className="px-8 py-3 bg-app-primary text-app-foreground rounded-xl font-bold hover:bg-app-primary transition-all disabled:opacity-50">
  {isPending ? 'Saving...' : editing ? 'Update' : 'Create'}
  </button>
  </div>
@@ -148,7 +148,7 @@ export default function DepartmentsClient({ departments, employees }: Props) {
 
  <div className="space-y-3">
  {roots.length === 0 && (
- <div className="text-center py-20 text-app-text-faint">
+ <div className="text-center py-20 text-app-muted-foreground">
  <Building2 size={48} className="mx-auto mb-4 opacity-30" />
  <p className="text-lg font-semibold">No departments yet</p>
  <p className="text-sm">Create your first department to organize your workforce</p>

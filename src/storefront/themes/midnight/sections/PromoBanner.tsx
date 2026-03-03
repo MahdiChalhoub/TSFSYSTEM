@@ -26,12 +26,12 @@ export default function MidnightPromoBanner({ settings }: SectionProps) {
                         <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6 leading-[0.9]">
                             {title.toUpperCase()}
                         </h2>
-                        <p className="text-slate-400 font-medium text-lg max-w-xl leading-relaxed">
+                        <p className="text-app-text-faint font-medium text-lg max-w-xl leading-relaxed">
                             {subtitle}
                         </p>
                     </div>
 
-                    <button className="h-20 px-12 bg-white text-slate-950 font-black text-lg rounded-3xl flex items-center gap-4 hover:bg-emerald-400 hover:scale-110 transition-all shadow-2xl shadow-emerald-900/20 active:scale-95 shrink-0 group/btn">
+                    <button className="h-20 px-12 bg-app-surface text-app-text font-black text-lg rounded-3xl flex items-center gap-4 hover:bg-emerald-400 hover:scale-110 transition-all shadow-2xl shadow-emerald-900/20 active:scale-95 shrink-0 group/btn">
                         {buttonText}
                         <ArrowRight size={24} className="group-hover/btn:translate-x-2 transition-transform" />
                     </button>

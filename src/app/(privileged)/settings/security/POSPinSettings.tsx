@@ -66,28 +66,28 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  return (
  <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm space-y-6">
  <div className="flex items-center gap-4">
- <div className="p-3 bg-indigo-50 rounded-2xl">
- <Hash className="text-indigo-600" size={24} />
+ <div className="p-3 bg-app-primary/5 rounded-2xl">
+ <Hash className="text-app-primary" size={24} />
  </div>
  <div>
- <h2 className="text-lg font-black text-app-text uppercase tracking-tighter">POS Access PINs</h2>
- <p className="text-xs text-app-text-faint font-medium tracking-tight">Manage your Point of Sale login and authorization PINs</p>
+ <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">POS Access PINs</h2>
+ <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Manage your Point of Sale login and authorization PINs</p>
  </div>
  </div>
 
  {/* Cashier PIN */}
- <div className="p-5 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-3">
+ <div className="p-5 bg-app-primary/5/60 rounded-2xl border border-app-primary/30 space-y-3">
  <div className="flex items-center justify-between">
  <div>
- <p className="text-sm font-black text-indigo-900">Cashier PIN</p>
- <p className="text-[11px] text-indigo-500">Used to log into a POS register terminal</p>
+ <p className="text-sm font-black text-app-primary">Cashier PIN</p>
+ <p className="text-[11px] text-app-primary">Used to log into a POS register terminal</p>
  </div>
  {(posDone || hasPosPin) ? (
- <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-success bg-app-primary-light px-2 py-1 rounded-full">
  <Check size={10} /> Set
  </span>
  ) : (
- <span className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-warning bg-app-warning-bg px-2 py-1 rounded-full">
  <AlertTriangle size={10} /> Not set
  </span>
  )}
@@ -101,16 +101,16 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  onChange={e => setPosPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
  placeholder={hasPosPin || posDone ? 'Enter new PIN to change' : 'Enter 4–6 digit PIN'}
  maxLength={6}
- className="w-full px-4 py-2.5 bg-app-surface border border-indigo-200 rounded-xl text-sm font-mono font-bold text-app-text outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 tracking-[0.3em] text-center transition-all"
+ className="w-full px-4 py-2.5 bg-app-surface border border-app-primary/30 rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary/30 tracking-[0.3em] text-center transition-all"
  />
- <button onClick={() => setShowPos(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-app-text-muted transition-colors">
+ <button onClick={() => setShowPos(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground transition-colors">
  {showPos ? <EyeOff size={16} /> : <Eye size={16} />}
  </button>
  </div>
  <button
  onClick={handleSetPosPin}
  disabled={savingPos || posPin.length < 4}
- className="px-5 py-2.5 bg-indigo-500 text-app-text rounded-xl font-bold text-sm hover:bg-indigo-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+ className="px-5 py-2.5 bg-app-primary text-app-foreground rounded-xl font-bold text-sm hover:bg-app-primary disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
  >
  {savingPos ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  Save
@@ -132,11 +132,11 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  </p>
  </div>
  {(overrideDone || hasOverridePin) ? (
- <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-success bg-app-primary-light px-2 py-1 rounded-full">
  <Check size={10} /> Active
  </span>
  ) : (
- <span className="flex items-center gap-1 text-[10px] font-bold text-app-text-muted bg-app-surface-2 px-2 py-1 rounded-full">
+ <span className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground bg-app-surface-2 px-2 py-1 rounded-full">
  Not set
  </span>
  )}
@@ -150,16 +150,16 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  onChange={e => setOverridePin(e.target.value.replace(/\D/g, '').slice(0, 6))}
  placeholder={hasOverridePin || overrideDone ? 'Enter new override PIN' : 'Enter 4–6 digit PIN'}
  maxLength={6}
- className="w-full px-4 py-2.5 bg-app-surface border border-rose-200 rounded-xl text-sm font-mono font-bold text-app-text outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 tracking-[0.3em] text-center transition-all"
+ className="w-full px-4 py-2.5 bg-app-surface border border-rose-200 rounded-xl text-sm font-mono font-bold text-app-foreground outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400 tracking-[0.3em] text-center transition-all"
  />
- <button onClick={() => setShowOverride(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-app-text-muted transition-colors">
+ <button onClick={() => setShowOverride(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-muted-foreground transition-colors">
  {showOverride ? <EyeOff size={16} /> : <Eye size={16} />}
  </button>
  </div>
  <button
  onClick={handleSetOverridePin}
  disabled={savingOverride || overridePin.length < 4}
- className="px-5 py-2.5 bg-rose-500 text-app-text rounded-xl font-bold text-sm hover:bg-rose-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
+ className="px-5 py-2.5 bg-app-error text-app-foreground rounded-xl font-bold text-sm hover:bg-rose-600 disabled:opacity-40 transition-all flex items-center gap-2 shrink-0"
  >
  {savingOverride ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
  Save
@@ -168,7 +168,7 @@ export function POSPinSettings({ userId, hasPosPin, hasOverridePin, canSetOverri
  </div>
  )}
 
- <p className="text-[10px] text-app-text-faint font-medium">
+ <p className="text-[10px] text-app-muted-foreground font-medium">
  PINs are 4–6 digits and hashed securely. Existing PINs cannot be viewed — only replaced.
  </p>
  </div>

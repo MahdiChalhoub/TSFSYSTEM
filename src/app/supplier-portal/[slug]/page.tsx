@@ -91,7 +91,7 @@ export default function SupplierPortalPage() {
  // ─── Login Form ─────────────────────────────────────────────────────
 
  return (
- <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative">
+ <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative bg-app-bg">
  {/* Ambient */}
  <div className="fixed top-[-15%] left-[20%] w-[60%] h-[50%] bg-indigo-500/10 blur-[200px] rounded-full pointer-events-none z-0" />
  <div className="fixed bottom-[-10%] right-[10%] w-[40%] h-[40%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
@@ -109,9 +109,9 @@ export default function SupplierPortalPage() {
  </div>
 
  {/* Form */}
- <div className="p-10 bg-slate-900/50 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-6 shadow-2xl">
+ <div className="p-10 bg-app-surface/50 backdrop-blur-3xl border border-app-text/5 rounded-[3rem] space-y-6 shadow-2xl">
  {error && (
- <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+ <div className="p-4 bg-app-error-bg border border-app-error/20 rounded-2xl text-app-error text-sm font-medium flex items-center gap-3">
  <AlertCircle size={18} className="shrink-0" /> {error}
  </div>
  )}
@@ -123,7 +123,7 @@ export default function SupplierPortalPage() {
  value={email}
  onChange={e => setEmail(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-text-muted"
  />
  <input
  type="password"
@@ -131,7 +131,7 @@ export default function SupplierPortalPage() {
  value={password}
  onChange={e => setPassword(e.target.value)}
  required
- className="w-full bg-slate-950/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-slate-700"
+ className="w-full bg-app-bg/50 border border-app-text/5 p-5 rounded-2xl text-app-text outline-none focus:border-indigo-500 transition-all focus:ring-4 focus:ring-indigo-500/5 placeholder:text-app-text-muted"
  />
  <button type="submit" disabled={loading}
  className="w-full bg-indigo-600 hover:bg-indigo-500 text-app-text p-5 rounded-2xl font-black transition-all shadow-xl shadow-indigo-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60">
@@ -185,14 +185,14 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  }, [session.token])
 
  const navItems = [
- { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20 hover:border-blue-500/40' },
- { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40' },
- { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20 hover:border-amber-500/40' },
+ { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info/20 hover:border-app-info/40' },
+ { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-emerald-400', bg: 'bg-app-success-bg border-emerald-500/20 hover:border-emerald-500/40' },
+ { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning/20 hover:border-app-warning/40' },
  { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20 hover:border-sky-500/40' },
  ]
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
  <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
  <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-sky-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
@@ -211,7 +211,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  <p className="text-app-text-muted text-[11px]">{session.user.email}</p>
  </div>
  <button onClick={onLogout}
- className="w-12 h-12 bg-app-text/5 border border-app-text/10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-all">
+ className="w-12 h-12 bg-app-text/5 border border-app-text/10 rounded-xl flex items-center justify-center text-app-error hover:bg-app-error-bg transition-all">
  <LogOut size={18} />
  </button>
  </div>
@@ -220,25 +220,25 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
  {/* Stats */}
  {!loading && stats && (
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in duration-500">
- <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Active POs</p>
  <p className="text-3xl font-black text-app-text flex items-center gap-2">
- <ShoppingCart size={20} className="text-blue-400" /> {stats.active_purchase_orders || 0}
+ <ShoppingCart size={20} className="text-app-info" /> {stats.active_purchase_orders || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Total POs</p>
  <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <Package size={20} className="text-emerald-400" /> {stats.total_purchase_orders || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Pending Proformas</p>
  <p className="text-3xl font-black text-app-text flex items-center gap-2">
- <FileText size={20} className="text-amber-400" /> {stats.pending_proformas || 0}
+ <FileText size={20} className="text-app-warning" /> {stats.pending_proformas || 0}
  </p>
  </div>
- <div className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl space-y-2">
+ <div className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl space-y-2">
  <p className="text-[10px] text-app-text-muted font-black uppercase tracking-widest">Price Requests</p>
  <p className="text-3xl font-black text-app-text flex items-center gap-2">
  <TrendingDown size={20} className="text-purple-400" /> {stats.pending_price_requests || 0}
@@ -249,7 +249,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
 
  {loading && (
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
- {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  )}
 

@@ -114,7 +114,7 @@ export default function POSQuickHold({
  {isOpen && (
  <div className="fixed inset-0 z-[150]" onClick={() => setIsOpen(false)}>
  <div
- className="absolute top-9 right-4 w-72 bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
+ className="absolute top-9 right-4 w-72 bg-app-surface border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
  onClick={e => e.stopPropagation()}
  >
  <div className="flex items-center gap-2 px-4 py-3 border-b border-app-text/5">
@@ -236,7 +236,7 @@ export function QuickHoldButton({ orgKey, currency, cart, totalAmount, selectedC
  {isOpen && (
  <div className="fixed inset-0 z-[150]" onClick={() => setIsOpen(false)}>
  <div
- className="absolute mt-1 w-72 bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
+ className="absolute mt-1 w-72 bg-app-surface border border-app-text/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-200"
  style={{ top: 36, right: 0 }}
  onClick={e => e.stopPropagation()}
  >

@@ -23,15 +23,15 @@ import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
- STOCK_ADJUSTMENT: { label: 'Adjustment Request', icon: ArrowDownUp, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
- STOCK_TRANSFER: { label: 'Logistics Request', icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
- PURCHASE_ORDER: { label: 'Procurement Request', icon: ShoppingCart, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
+ STOCK_ADJUSTMENT: { label: 'Adjustment Request', icon: ArrowDownUp, color: 'text-app-primary', bg: 'bg-app-primary/5 border-app-primary/30' },
+ STOCK_TRANSFER: { label: 'Logistics Request', icon: ArrowLeftRight, color: 'text-app-primary', bg: 'bg-app-primary/5 border-app-primary/30' },
+ PURCHASE_ORDER: { label: 'Procurement Request', icon: ShoppingCart, color: 'text-app-primary', bg: 'bg-app-primary/5 border-app-primary/30' },
 }
 const STATUS_CONFIG: Record<string, { label: string; color: string; variant: any }> = {
- PENDING: { label: 'Awaiting Review', color: 'text-amber-600', variant: 'warning' },
- APPROVED: { label: 'Approved Request', color: 'text-emerald-600', variant: 'success' },
+ PENDING: { label: 'Awaiting Review', color: 'text-app-warning', variant: 'warning' },
+ APPROVED: { label: 'Approved Request', color: 'text-app-primary', variant: 'success' },
  REJECTED: { label: 'Request Rejected', color: 'text-rose-600', variant: 'danger' },
- CONVERTED: { label: 'Promoted to Strategy', color: 'text-indigo-600', variant: 'info' },
+ CONVERTED: { label: 'Promoted to Strategy', color: 'text-app-primary', variant: 'info' },
 }
 export default function OperationalRequestsPage() {
  const settings = useListViewSettings('inv_requests', {
@@ -90,7 +90,7 @@ export default function OperationalRequestsPage() {
  label: 'Request Reference',
  alwaysVisible: true,
  render: r => (
- <div className="flex items-center gap-3">
+ <div className="app-page flex items-center gap-3">
  <div className={`p-2 rounded-xl ${(TYPE_CONFIG[r.request_type] || TYPE_CONFIG.STOCK_TRANSFER).bg} border`}>
  {(() => {
  const Icon = (TYPE_CONFIG[r.request_type] || TYPE_CONFIG.STOCK_TRANSFER).icon
@@ -98,8 +98,8 @@ export default function OperationalRequestsPage() {
  })()}
  </div>
  <div>
- <div className="font-bold text-app-text">{r.reference || `REQ-${r.id}`}</div>
- <div className="text-[10px] text-app-text-faint font-black uppercase tracking-widest leading-none">
+ <div className="font-bold text-app-foreground">{r.reference || `REQ-${r.id}`}</div>
+ <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest leading-none">
  {(TYPE_CONFIG[r.request_type] || TYPE_CONFIG.STOCK_TRANSFER).label}
  </div>
  </div>
@@ -109,14 +109,14 @@ export default function OperationalRequestsPage() {
  {
  key: 'date',
  label: 'Requested Date',
- render: r => <span className="text-app-text-muted font-medium text-xs">{r.date}</span>
+ render: r => <span className="text-app-muted-foreground font-medium text-xs">{r.date}</span>
  },
  {
  key: 'priority',
  label: 'Urgency',
  render: r => (
  <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest ${r.priority === 'URGENT' ? 'text-rose-600 border-rose-100 bg-rose-50' :
- r.priority === 'HIGH' ? 'text-amber-600 border-amber-100 bg-amber-50' : 'text-app-text-faint border-app-border'
+ r.priority === 'HIGH' ? 'text-app-warning border-app-warning/30 bg-app-warning-bg' : 'text-app-muted-foreground border-app-border'
  }`}>
  {r.priority ?? 'NORMAL'}
  </Badge>
@@ -128,42 +128,32 @@ export default function OperationalRequestsPage() {
  align: 'center',
  render: r => (
  <div className="text-center">
- <div className="text-sm font-black text-app-text">{r.lines?.length || 0}</div>
- <div className="text-[9px] text-app-text-faint font-bold uppercase tracking-tighter">Line Items</div>
+ <div className="text-sm font-black text-app-foreground">{r.lines?.length || 0}</div>
+ <div className="text-[9px] text-app-muted-foreground font-bold uppercase tracking-tighter">Line Items</div>
  </div>
  )
  }
  ]
  const detailColumns: ColumnDef<any>[] = [
- { key: 'product_name', label: 'Product', render: d => <div className="flex items-center gap-2 font-bold text-gray-700 text-xs">{d.product_name}</div> },
+ { key: 'product_name', label: 'Product', render: d => <div className="flex items-center gap-2 font-bold text-app-muted-foreground text-xs">{d.product_name}</div> },
  { key: 'quantity', label: 'Requested Qty', align: 'right', render: d => <span className="font-mono font-black text-rose-500 text-xs">{d.quantity}</span> },
- { key: 'warehouse_name', label: 'Destination Terminal', render: d => <Badge variant="outline" className="bg-app-surface text-app-text-faint border-app-border text-[9px] font-black uppercase leading-none">{d.warehouse_name || 'Generic'}</Badge> },
+ { key: 'warehouse_name', label: 'Destination Terminal', render: d => <Badge variant="outline" className="bg-app-surface text-app-muted-foreground border-app-border text-[9px] font-black uppercase leading-none">{d.warehouse_name || 'Generic'}</Badge> },
  ]
  return (
  <div className="space-y-6 animate-in fade-in duration-500">
- <header className="flex justify-between items-start">
- <div>
- <div className="flex items-center gap-3 mb-2">
- <div className="p-2 bg-indigo-600 rounded-lg text-app-text shadow-lg shadow-indigo-100">
- <ClipboardList size={16} />
- </div>
- <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Operational Layer</span>
- </div>
- <h1 className="text-4xl lg:page-header-title tracking-tighter">
- Request <span className="text-indigo-600">Pipeline</span>
- </h1>
- <p className="mt-2 text-app-text-muted font-medium max-w-xl">
- Central queue for logistics, procurement, and adjustment requests. Approved requests are promoted to the Strategy layer for team governance.
- </p>
- </div>
- <div className="bg-indigo-50 px-4 py-3 rounded-2xl border border-indigo-100 flex items-center gap-3">
- <Activity size={20} className="text-indigo-600 animate-pulse" />
- <div className="text-right">
- <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">Queue Status</div>
- <div className="text-lg font-black text-indigo-700 leading-none mt-1">{requests.filter(r => r.status === 'PENDING').length} PENDING</div>
- </div>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Inbox size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Stock <span className="text-app-primary">Requests</span>
+          </h1>
+        </div>
+      </div>
+    </header>
  <TypicalListView<OperationalRequest, any>
  title="Requests Manifest"
  addLabel="INITIATE REQUEST"
@@ -200,10 +190,10 @@ export default function OperationalRequestsPage() {
  <div className="flex items-center gap-2">
  {req.status === 'PENDING' && (
  <>
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-black text-[10px]" onClick={() => { setActiveRequest(req.id); setLineDialogOpen(true) }}>
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-primary/30 text-app-primary hover:bg-app-primary/5 font-black text-[10px]" onClick={() => { setActiveRequest(req.id); setLineDialogOpen(true) }}>
  <Plus size={14} className="mr-1" /> ADD ITEM
  </Button>
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-black text-[10px]" onClick={() => {
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-success/30 text-app-primary hover:bg-app-primary-light font-black text-[10px]" onClick={() => {
  toast.promise(approveRequest(req.id).then(() => loadData()), {
  loading: 'Reviewing request...',
  success: 'Request Approved!',
@@ -215,7 +205,7 @@ export default function OperationalRequestsPage() {
  </>
  )}
  {req.status === 'APPROVED' && (
- <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-black text-[10px]" onClick={() => setConvertDialog(req)} disabled={isPending}>
+ <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-app-primary/30 text-app-primary hover:bg-app-primary/5 font-black text-[10px]" onClick={() => setConvertDialog(req)} disabled={isPending}>
  <ArrowRightCircle size={14} className="mr-1" /> CREATE TRANSFER
  </Button>
  )}
@@ -244,8 +234,8 @@ export default function OperationalRequestsPage() {
  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
  <DialogContent className="sm:max-w-lg rounded-[2.5rem] border-0">
  <DialogHeader>
- <DialogTitle className="text-2xl font-black text-app-text tracking-tighter">Initiate Request</DialogTitle>
- <DialogDescription className="text-xs font-medium text-app-text-faint">Submit a new baseline request for procurement or logistics intervention.</DialogDescription>
+ <DialogTitle className="text-2xl font-black text-app-foreground tracking-tighter">Initiate Request</DialogTitle>
+ <DialogDescription className="text-xs font-medium text-app-muted-foreground">Submit a new baseline request for procurement or logistics intervention.</DialogDescription>
  </DialogHeader>
  <form onSubmit={async (e) => {
  e.preventDefault()
@@ -269,25 +259,25 @@ export default function OperationalRequestsPage() {
  }} className="space-y-4 pt-4">
  <div className="grid grid-cols-2 gap-3">
  <div className="col-span-1">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Request Type</label>
- <select name="request_type" required className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Request Type</label>
+ <select name="request_type" required className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-app-primary transition-all">
  {Object.entries(TYPE_CONFIG).map(([k, v]) => (
  <option key={k} value={k}>{v.label}</option>
  ))}
  </select>
  </div>
  <div className="col-span-1">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Requested Date</label>
- <Input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} className="rounded-2xl bg-app-bg h-12" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Requested Date</label>
+ <Input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} className="rounded-2xl bg-app-background h-12" />
  </div>
  <div className="col-span-2">
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Justification / Analysis Reference</label>
- <Input name="description" placeholder="e.g. Based on Warehouse Analytics #88..." className="rounded-2xl bg-app-bg h-12" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Justification / Analysis Reference</label>
+ <Input name="description" placeholder="e.g. Based on Warehouse Analytics #88..." className="rounded-2xl bg-app-background h-12" />
  </div>
  </div>
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
- <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-app-primary hover:bg-app-primary text-app-foreground rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
  {isPending ? "Syncing..." : "Publish Request"}
  </Button>
  </div>
@@ -298,7 +288,7 @@ export default function OperationalRequestsPage() {
  <Dialog open={lineDialogOpen} onOpenChange={setLineDialogOpen}>
  <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
  <DialogHeader>
- <DialogTitle className="text-2xl font-black text-app-text tracking-tighter">Add Manifest Line</DialogTitle>
+ <DialogTitle className="text-2xl font-black text-app-foreground tracking-tighter">Add Manifest Line</DialogTitle>
  </DialogHeader>
  {/* ... (Implementation remains functionally same, UI refined in similar style) ... */}
  <form onSubmit={async (e) => {
@@ -321,19 +311,19 @@ export default function OperationalRequestsPage() {
  })
  }} className="space-y-4 pt-4">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Selected Product</label>
- <select name="product" required className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Selected Product</label>
+ <select name="product" required className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-app-primary transition-all">
  {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
  </select>
  </div>
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Quantity</label>
- <Input name="quantity" type="number" step="0.01" min="0.01" required className="rounded-2xl bg-app-bg h-12" />
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Quantity</label>
+ <Input name="quantity" type="number" step="0.01" min="0.01" required className="rounded-2xl bg-app-background h-12" />
  </div>
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Target Terminal</label>
- <select name="warehouse" className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Target Terminal</label>
+ <select name="warehouse" className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-app-primary transition-all">
  <option value="">Any Warehouse</option>
  {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
  </select>
@@ -341,7 +331,7 @@ export default function OperationalRequestsPage() {
  </div>
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setLineDialogOpen(false)} className="rounded-xl font-bold">Cancel</Button>
- <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-app-primary hover:bg-app-primary text-app-foreground rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
  {isPending ? "Adding..." : "Confirm Line"}
  </Button>
  </div>
@@ -352,8 +342,8 @@ export default function OperationalRequestsPage() {
  < Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
  <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
  <DialogHeader>
- <DialogTitle className="text-2xl font-black text-app-text tracking-tighter">Create Transfer</DialogTitle>
- <DialogDescription className="text-xs font-medium text-app-text-faint">Convert this approved request into an internal transfer.</DialogDescription>
+ <DialogTitle className="text-2xl font-black text-app-foreground tracking-tighter">Create Transfer</DialogTitle>
+ <DialogDescription className="text-xs font-medium text-app-muted-foreground">Convert this approved request into an internal transfer.</DialogDescription>
  </DialogHeader>
  <form onSubmit={async (e) => {
  e.preventDefault()
@@ -383,15 +373,15 @@ export default function OperationalRequestsPage() {
  {convertDialog?.request_type === 'STOCK_TRANSFER' ? (
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Source Terminal</label>
- <select name="from_warehouse" required className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Source Terminal</label>
+ <select name="from_warehouse" required className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-purple-100 transition-all">
  <option value="">Select Source</option>
  {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
  </select>
  </div>
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Destination Terminal</label>
- <select name="to_warehouse" required className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Destination Terminal</label>
+ <select name="to_warehouse" required className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-purple-100 transition-all">
  <option value="">Select Destination</option>
  {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
  </select>
@@ -399,8 +389,8 @@ export default function OperationalRequestsPage() {
  </div>
  ) : (
  <div>
- <label className="text-[10px] font-black text-app-text-faint uppercase tracking-widest ml-1 mb-1 block">Target Terminal</label>
- <select name="target_warehouse" required className="w-full rounded-2xl border-app-border bg-app-bg px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+ <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest ml-1 mb-1 block">Target Terminal</label>
+ <select name="target_warehouse" required className="w-full rounded-2xl border-app-border bg-app-background px-4 py-3 text-sm font-bold text-app-muted-foreground outline-none focus:ring-2 focus:ring-purple-100 transition-all">
  <option value="">Select Terminal</option>
  {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
  </select>
@@ -408,7 +398,7 @@ export default function OperationalRequestsPage() {
  )}
  <div className="flex justify-end gap-2 pt-4">
  <Button type="button" variant="ghost" onClick={() => setConvertDialog(null)} className="rounded-xl font-bold">Back</Button>
- <Button type="submit" disabled={isPending} className="bg-purple-600 hover:bg-purple-700 text-app-text rounded-2xl font-bold h-12 px-8 shadow-lg shadow-purple-100 transition-all">
+ <Button type="submit" disabled={isPending} className="bg-purple-600 hover:bg-purple-700 text-app-foreground rounded-2xl font-bold h-12 px-8 shadow-lg shadow-purple-100 transition-all">
  {isPending ? "Promoting..." : "Finalize Promotion"}
  </Button>
  </div>

@@ -123,7 +123,7 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </div>
 
  {/* Body */}
- <div className="max-h-[70vh] overflow-y-auto divide-y divide-gray-100">
+ <div className="max-h-[70vh] overflow-y-auto divide-y divide-app-border">
  {loading ? (
  <div className="flex items-center justify-center py-12 text-app-text-faint">
  <RefreshCw className="animate-spin mr-2" size={16} />
@@ -131,10 +131,10 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </div>
  ) : deliveries.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-12 text-center">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-3">
- <CheckCircle className="text-emerald-500" size={24} />
+ <div className="w-14 h-14 rounded-2xl bg-app-primary-light flex items-center justify-center mb-3">
+ <CheckCircle className="text-app-primary" size={24} />
  </div>
- <p className="text-sm font-bold text-gray-700">All clear!</p>
+ <p className="text-sm font-bold text-app-text">All clear!</p>
  <p className="text-xs text-app-text-faint mt-0.5">No pending deliveries for this session</p>
  </div>
  ) : (
@@ -154,9 +154,9 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  </span>
  <span className={clsx(
  'text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest',
- d.status === 'IN_TRANSIT' ? 'bg-blue-100 text-blue-600' :
- d.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-600' :
- 'bg-amber-100 text-amber-600'
+ d.status === 'IN_TRANSIT' ? 'bg-app-info-bg text-app-info' :
+ d.status === 'DELIVERED' ? 'bg-app-primary-light text-app-primary' :
+ 'bg-app-warning-bg text-app-warning'
  )}>
  {d.status}
  </span>
@@ -233,14 +233,14 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <button
  disabled={isConfirming}
  onClick={() => handleDriverPaid(d.id, amountDue)}
- className="w-full py-2 px-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-all text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+ className="w-full py-2 px-3 rounded-xl bg-app-info-bg text-app-info border border-app-info hover:bg-app-info-bg transition-all text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
  >
  <Truck size={12} />
  Driver Returned Cash
  </button>
  ) : !d.confirmed_by_pos ? (
  <div className="space-y-2">
- <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
+ <div className="flex items-center gap-1 text-app-primary text-xs font-bold">
  <CheckCircle size={12} />
  Driver confirmed payment
  </div>
@@ -270,14 +270,14 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
  <button
  disabled={isConfirming || (needsReturnCode && (returnCodes[d.id] || '').length < 4)}
  onClick={() => handlePosConfirm(d)}
- className="w-full py-2 px-3 rounded-xl bg-emerald-500 text-app-text hover:bg-emerald-600 transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
+ className="w-full py-2 px-3 rounded-xl bg-app-primary text-app-text hover:bg-app-primary transition-all text-xs font-black flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-200"
  >
  <DollarSign size={12} />
  I Received the Cash ✓
  </button>
  </div>
  ) : (
- <div className="flex items-center gap-1.5 text-emerald-600 text-sm font-bold">
+ <div className="flex items-center gap-1.5 text-app-primary text-sm font-bold">
  <CheckCircle size={14} />
  Fully resolved
  </div>
@@ -291,9 +291,9 @@ export function POSPendingDeliveriesPanel({ sessionId, onClose, currency = '$' }
 
  {/* Footer warning */}
  {deliveries.length > 0 && (
- <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2">
- <AlertCircle size={12} className="text-amber-500 shrink-0" />
- <p className="text-[11px] text-amber-700 font-medium">
+ <div className="px-5 py-3 bg-app-warning-bg border-t border-amber-100 flex items-center gap-2">
+ <AlertCircle size={12} className="text-app-warning shrink-0" />
+ <p className="text-[11px] text-app-warning font-medium">
  The register cannot be closed while deliveries are pending cash return.
  </p>
  </div>

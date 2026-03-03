@@ -56,6 +56,9 @@ class ProductSerializer(serializers.ModelSerializer):
     on_hand_qty   = serializers.SerializerMethodField()
     reserved_qty  = serializers.SerializerMethodField()
     available_qty = serializers.SerializerMethodField()
+    # ── Gap 6: Transfer Tracking Visibility ──
+    incoming_transfer_qty = serializers.SerializerMethodField()
+    outgoing_transfer_qty = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -75,6 +78,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'organization',
             # Gap 3 stock fields
             'on_hand_qty', 'reserved_qty', 'available_qty',
+            # Gap 6 transfer fields
+            'incoming_transfer_qty', 'outgoing_transfer_qty',
         ]
         read_only_fields = ['organization']
 
@@ -128,6 +133,30 @@ class ProductSerializer(serializers.ModelSerializer):
             return float(summary['available'])
         except Exception:
             return self.get_on_hand_qty(obj)
+
+    def get_incoming_transfer_qty(self, obj):
+        warehouse = self._resolve_warehouse(obj)
+        from apps.inventory.models import StockMoveLine
+        qs = StockMoveLine.objects.filter(
+            product=obj,
+            organization=obj.organization,
+            move__status__in=['PENDING', 'IN_TRANSIT']
+        )
+        if warehouse:
+            qs = qs.filter(move__to_warehouse=warehouse)
+        return float(qs.aggregate(t=Sum('quantity'))['t'] or 0)
+
+    def get_outgoing_transfer_qty(self, obj):
+        warehouse = self._resolve_warehouse(obj)
+        from apps.inventory.models import StockMoveLine
+        qs = StockMoveLine.objects.filter(
+            product=obj,
+            organization=obj.organization,
+            move__status__in=['PENDING', 'IN_TRANSIT']
+        )
+        if warehouse:
+            qs = qs.filter(move__from_warehouse=warehouse)
+        return float(qs.aggregate(t=Sum('quantity'))['t'] or 0)
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):

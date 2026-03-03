@@ -7,7 +7,7 @@ export default function SearchPageRoute() {
 
  if (loading || !components) {
  return (
- <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+ <div className="min-h-screen bg-app-bg flex items-center justify-center">
  <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
  </div>
  )
@@ -15,7 +15,7 @@ export default function SearchPageRoute() {
 
  const SearchPage = components.SearchPage
  if (!SearchPage) {
- return <div className="min-h-screen bg-slate-950 text-app-text p-8">Search not available for this theme</div>
+ return <div className="min-h-screen bg-app-bg text-app-text p-8">Search not available for this theme</div>
  }
  return <SearchPage />
 }

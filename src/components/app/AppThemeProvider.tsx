@@ -26,7 +26,9 @@ export type AppThemeName =
     | 'ivory-market'
     | 'neon-rush'
     | 'savane-earth'
-    | 'arctic-glass';
+    | 'arctic-glass'
+    | 'lumina-sky'
+    | 'warm-enterprise';
 
 export interface AppThemeInfo {
     name: AppThemeName;
@@ -89,6 +91,26 @@ export const APP_THEMES: AppThemeInfo[] = [
         surface: 'rgba(255,255,255,0.75)',
         previewGradient: 'linear-gradient(135deg, #EFF6FF 0%, rgba(255,255,255,0.9) 50%, #0EA5E9 100%)',
         description: 'Cold premium glass',
+    },
+    {
+        name: 'lumina-sky',
+        label: 'Lumina Sky',
+        mode: 'light',
+        primary: '#0EA5E9',
+        bg: '#FFFFFF',
+        surface: '#F8FAFC',
+        previewGradient: 'linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 50%, #0EA5E9 100%)',
+        description: 'Clean professional SaaS',
+    },
+    {
+        name: 'warm-enterprise',
+        label: 'Warm Enterprise',
+        mode: 'light',
+        primary: '#F97316',
+        bg: '#F9FAFB',
+        surface: '#FFFFFF',
+        previewGradient: 'linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 50%, #F97316 100%)',
+        description: 'Corporate orange, white cards',
     },
 ];
 
@@ -190,24 +212,24 @@ export function useAppTheme(): AppThemeContextValue {
 export function ThemeScript() {
     const script = `
 (function(){
-  try {
-    var k = '${LOCAL_STORAGE_KEY}';
-    var valid = ['midnight-pro','ivory-market','neon-rush','savane-earth','arctic-glass'];
-    var stored = localStorage.getItem(k);
-    if (!stored) {
-      // Try to read from cookie if localStorage is empty (e.g. cross-subdomain)
-      var match = document.cookie.match(new RegExp('(^| )' + k + '=([^;]+)'));
-      if (match) stored = match[2];
-    }
-    var theme = (stored && valid.indexOf(stored) !== -1) ? stored : '${DEFAULT_THEME}';
-    var root = document.documentElement;
-    valid.forEach(function(t){ root.classList.remove('theme-' + t); });
-    root.classList.add('theme-' + theme);
-    // Dark mode sync
-    var dark = ['midnight-pro','neon-rush'];
-    if (dark.indexOf(theme) !== -1) root.classList.add('dark');
-    else root.classList.remove('dark');
-  } catch(e) {}
+ try {
+ var k = '${LOCAL_STORAGE_KEY}';
+ var valid = ['midnight-pro','ivory-market','neon-rush','savane-earth','arctic-glass','lumina-sky','warm-enterprise'];
+ var stored = localStorage.getItem(k);
+ if (!stored) {
+ // Try to read from cookie if localStorage is empty (e.g. cross-subdomain)
+ var match = document.cookie.match(new RegExp('(^| )' + k + '=([^;]+)'));
+ if (match) stored = match[2];
+ }
+ var theme = (stored && valid.indexOf(stored) !== -1) ? stored : '${DEFAULT_THEME}';
+ var root = document.documentElement;
+ valid.forEach(function(t){ root.classList.remove('theme-' + t); });
+ root.classList.add('theme-' + theme);
+ // Dark mode sync
+ var dark = ['midnight-pro','neon-rush'];
+ if (dark.indexOf(theme) !== -1) root.classList.add('dark');
+ else root.classList.remove('dark');
+ } catch(e) {}
 })();
 `.trim();
 

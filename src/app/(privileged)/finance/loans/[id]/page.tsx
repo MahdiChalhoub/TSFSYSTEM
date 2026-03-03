@@ -23,19 +23,19 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  const isDisbursed = !!disbursementEvent
 
  return (
- <div className="space-y-6">
+ <div className="app-page space-y-6">
  <div className="flex items-center gap-4">
  <Link href="/finance/loans">
  <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
  </Link>
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
- <Landmark size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-violet-200">
+ <Landmark size={28} className="text-app-foreground" />
  </div>
- Loan <span className="text-violet-600">Details</span>
+ Loan <span className="text-app-primary">Details</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Loan Overview</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Loan Overview</p>
  <p className="text-muted-foreground">{loan.contact.name}</p>
  </div>
  <div className="ml-auto flex gap-2">
@@ -73,7 +73,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  </div>
 
  {isDisbursed && (
- <div className="mt-4 p-3 bg-green-50 text-green-800 rounded-md text-sm">
+ <div className="mt-4 p-3 bg-app-success-bg text-app-success rounded-md text-sm">
  <strong>Disbursed:</strong> {format(disbursementEvent.date, 'PPP')}
  <br />
  <Link href={`/finance/events/${disbursementEvent.id}`} className="underline">View Event</Link>
@@ -105,9 +105,9 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  <TableCell className="text-right text-muted-foreground">{Number(inst.interestAmount).toLocaleString()}</TableCell>
  <TableCell className="text-right font-medium">{Number(inst.totalAmount).toLocaleString()}</TableCell>
  <TableCell>
- <span className={`px-2 py-1 rounded-full text-xs font-semibold ${inst.status === 'PAID' ? 'bg-green-100 text-green-800' :
- inst.status === 'OVERDUE' ? 'bg-red-100 text-red-800' :
- 'bg-app-surface-2 text-app-text'
+ <span className={`px-2 py-1 rounded-full text-xs font-semibold ${inst.status === 'PAID' ? 'bg-app-success-bg text-app-success' :
+ inst.status === 'OVERDUE' ? 'bg-app-error-bg text-app-error' :
+ 'bg-app-surface-2 text-app-foreground'
  }`}>
  {inst.status}
  </span>

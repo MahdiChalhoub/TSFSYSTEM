@@ -94,9 +94,29 @@ class OrganizationMinimalSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)
     organization = OrganizationMinimalSerializer(read_only=True)
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, obj) -> list:
+        """
+        Return the list of RBAC permission codes for the user's role.
+        Superusers return ['*'] as a sentinel — the frontend already
+        short-circuits via `isAdmin` (is_staff || is_superuser), so the
+        wildcard value is a safety net for direct API consumers.
+        Non-superusers with no role return [].
+        """
+        if obj.is_superuser:
+            return ['*']
+        if not obj.role_id:
+            return []
+        return list(obj.role.permissions.values_list('code', flat=True))
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'organization', 'role']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_active', 'is_staff', 'is_superuser',
+            'organization', 'role', 'permissions',
+        ]
 
 class BusinessRegistrationSerializer(serializers.Serializer):
     # Business Details

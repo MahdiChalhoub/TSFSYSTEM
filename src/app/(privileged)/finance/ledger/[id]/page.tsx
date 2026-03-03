@@ -16,20 +16,20 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  const totalCredit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.credit), 0)
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  {/* Breadcrumbs & Actions */}
  <div className="flex justify-between items-center mb-8">
- <Link href="/finance/ledger" className="flex items-center gap-2 text-app-text-muted hover:text-app-text transition-colors text-sm font-medium">
+ <Link href="/finance/ledger" className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground transition-colors text-sm font-medium">
  <ArrowLeft size={16} /> Back to Ledger
  </Link>
  <div className="flex gap-3">
- <button className="flex items-center gap-2 px-4 py-2 border border-app-border rounded-lg text-sm font-bold text-app-text-muted hover:bg-app-bg transition-all">
+ <button className="flex items-center gap-2 px-4 py-2 border border-app-border rounded-lg text-sm font-bold text-app-muted-foreground hover:bg-app-background transition-all">
  <Printer size={16} /> Print Voucher
  </button>
  {entry.status !== 'REVERSED' && (
  <Link
  href={`/finance/ledger/${entry.id}/edit`}
- className="flex items-center gap-2 px-4 py-2 bg-black text-app-text rounded-lg text-sm font-bold hover:bg-stone-800 transition-all shadow-sm"
+ className="flex items-center gap-2 px-4 py-2 bg-app-background text-app-foreground rounded-lg text-sm font-bold hover:bg-app-surface-2 transition-all shadow-sm"
  >
  Edit Entry
  </Link>
@@ -42,29 +42,29 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  <div className="p-8 border-b border-app-border flex justify-between items-start">
  <div>
  <div className="flex items-center gap-3 mb-2">
- <h1 className="page-header-title text-app-text font-serif">Journal Voucher</h1>
+ <h1 className="page-header-title text-app-foreground font-serif">Journal Voucher</h1>
  <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${getStatusStyle(entry.status)}`}>
  {entry.status}
  </span>
  </div>
- <p className="text-app-text-muted text-sm">JV Number: <span className="font-mono font-bold text-app-text">#{entry.id}</span></p>
+ <p className="text-app-muted-foreground text-sm">JV Number: <span className="font-mono font-bold text-app-foreground">#{entry.id}</span></p>
  </div>
  <div className="text-right">
- <div className="text-sm text-app-text-faint font-bold uppercase tracking-widest mb-1">Transaction Date</div>
- <div className="text-xl font-bold text-app-text">{entry.transactionDate instanceof Date ? entry.transactionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : (entry.transactionDate || 'N/A')}</div>
+ <div className="text-sm text-app-muted-foreground font-bold uppercase tracking-widest mb-1">Transaction Date</div>
+ <div className="text-xl font-bold text-app-foreground">{entry.transactionDate instanceof Date ? entry.transactionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : (entry.transactionDate || 'N/A')}</div>
  </div>
  </div>
 
- <div className="grid grid-cols-2 p-8 gap-12 bg-stone-50/50">
+ <div className="grid grid-cols-2 p-8 gap-12 bg-app-surface/50">
  <div>
- <div className="text-[10px] font-bold uppercase text-app-text-faint tracking-widest mb-2 flex items-center gap-1.5">
+ <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-2 flex items-center gap-1.5">
  <FileText size={12} /> Description
  </div>
- <p className="text-app-text font-medium leading-relaxed">{entry.description || 'No description provided'}</p>
+ <p className="text-app-foreground font-medium leading-relaxed">{entry.description || 'No description provided'}</p>
  </div>
  <div>
- <div className="text-[10px] font-bold uppercase text-app-text-faint tracking-widest mb-2">Reference</div>
- <p className="text-app-text font-mono font-bold">{entry.reference || 'N/A'}</p>
+ <div className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest mb-2">Reference</div>
+ <p className="text-app-foreground font-mono font-bold">{entry.reference || 'N/A'}</p>
  </div>
  </div>
 
@@ -78,7 +78,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  </div>
  )}
  {entry.reversedBy && (
- <div className="flex items-center gap-2 text-amber-600 text-xs font-bold bg-amber-50 px-3 py-2 rounded-lg border border-amber-100 w-fit">
+ <div className="flex items-center gap-2 text-app-warning text-xs font-bold bg-app-warning-bg px-3 py-2 rounded-lg border border-app-warning/30 w-fit">
  <AlertCircle size={14} /> This entry was reversed by JV #{entry.reversedBy.id}
  <Link href={`/finance/ledger/${entry.reversedBy.id}`} className="underline ml-2">View Reversal</Link>
  </div>
@@ -91,30 +91,30 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  <div className="card-section border border-app-border overflow-hidden">
  <table className="w-full text-left border-collapse">
  <thead>
- <tr className="bg-app-bg border-b border-app-border">
- <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-text-muted tracking-widest">Account</th>
- <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-text-muted tracking-widest">Description</th>
- <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-text-muted tracking-widest text-right">Debit</th>
- <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-text-muted tracking-widest text-right">Credit</th>
+ <tr className="bg-app-background border-b border-app-border">
+ <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest">Account</th>
+ <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest">Description</th>
+ <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest text-right">Debit</th>
+ <th className="px-6 py-4 text-[10px] font-bold uppercase text-app-muted-foreground tracking-widest text-right">Credit</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-stone-100">
+ <tbody className="divide-y divide-app-border">
  {entry.lines.map((line: Record<string, any>) => (
- <tr key={line.id} className="hover:bg-stone-50/50 transition-colors">
+ <tr key={line.id} className="hover:bg-app-surface/50 transition-colors">
  <td className="px-6 py-4">
- <div className="font-mono text-xs font-bold text-app-text-faint mb-0.5">{line.account.code}</div>
- <div className="font-bold text-app-text text-sm">{line.account.name}</div>
+ <div className="font-mono text-xs font-bold text-app-muted-foreground mb-0.5">{line.account.code}</div>
+ <div className="font-bold text-app-foreground text-sm">{line.account.name}</div>
  </td>
- <td className="px-6 py-4 text-xs text-app-text-muted italic max-w-xs truncate">
+ <td className="px-6 py-4 text-xs text-app-muted-foreground italic max-w-xs truncate">
  {line.description || '—'}
  </td>
  <td className="px-6 py-4 text-right">
- <span className="font-mono font-bold text-app-text h-6 inline-block">
+ <span className="font-mono font-bold text-app-foreground h-6 inline-block">
  {Number(line.debit) > 0 ? Number(line.debit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
  </span>
  </td>
  <td className="px-6 py-4 text-right">
- <span className="font-mono font-bold text-app-text h-6 inline-block">
+ <span className="font-mono font-bold text-app-foreground h-6 inline-block">
  {Number(line.credit) > 0 ? Number(line.credit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
  </span>
  </td>
@@ -122,12 +122,12 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
  ))}
  </tbody>
  <tfoot>
- <tr className="bg-stone-50/80 font-bold border-t-2 border-app-border">
- <td colSpan={2} className="px-6 py-5 text-sm text-app-text">Total Voucher Value</td>
- <td className="px-6 py-5 text-right font-mono text-app-text h-6">
+ <tr className="bg-app-surface/80 font-bold border-t-2 border-app-border">
+ <td colSpan={2} className="px-6 py-5 text-sm text-app-foreground">Total Voucher Value</td>
+ <td className="px-6 py-5 text-right font-mono text-app-foreground h-6">
  {totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
  </td>
- <td className="px-6 py-5 text-right font-mono text-app-text h-6">
+ <td className="px-6 py-5 text-right font-mono text-app-foreground h-6">
  {totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
  </td>
  </tr>
@@ -137,10 +137,10 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
 
  {/* Mathematical Proof Footer */}
  <div className="mt-6 flex flex-col items-center gap-2">
- <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+ <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-app-primary bg-app-primary-light px-3 py-1 rounded-full border border-app-success/30">
  <CheckCircle size={12} /> Double-Entry Balanced: Difference 0.00
  </div>
- <p className="text-app-text-faint text-[10px] italic">Verified by Trial Balance Guard</p>
+ <p className="text-app-muted-foreground text-[10px] italic">Verified by Trial Balance Guard</p>
  </div>
  </div>
  )
@@ -148,9 +148,9 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
 
 function getStatusStyle(status: string) {
  switch (status) {
- case 'POSTED': return 'bg-emerald-50 text-emerald-700 border-emerald-100'
- case 'DRAFT': return 'bg-app-bg text-app-text-muted border-app-border'
+ case 'POSTED': return 'bg-app-primary-light text-app-success border-app-success/30'
+ case 'DRAFT': return 'bg-app-background text-app-muted-foreground border-app-border'
  case 'REVERSED': return 'bg-rose-50 text-rose-700 border-rose-100'
- default: return 'bg-app-bg text-app-text-muted'
+ default: return 'bg-app-background text-app-muted-foreground'
  }
 }

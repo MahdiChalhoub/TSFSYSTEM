@@ -17,10 +17,10 @@ interface PriceRequest {
 }
 
 const STATUS_COLORS: Record<string, string> = {
- PENDING: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
- APPROVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
- REJECTED: 'text-red-400 bg-red-500/10 border-red-500/20',
- COUNTER_OFFER: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+ PENDING: 'text-app-warning bg-app-warning-bg border-app-warning/20',
+ APPROVED: 'text-emerald-400 bg-app-success-bg border-emerald-500/20',
+ REJECTED: 'text-app-error bg-app-error-bg border-app-error/20',
+ COUNTER_OFFER: 'text-app-info bg-app-info-bg border-app-info/20',
 }
 
 function getToken(slug: string): string | null {
@@ -111,8 +111,8 @@ export default function PriceRequestsPage() {
  }
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
- <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
+ <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-warning-bg blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-4xl mx-auto relative z-10 space-y-8">
  <div className="flex items-start justify-between">
@@ -125,38 +125,38 @@ export default function PriceRequestsPage() {
  <p className="text-app-text-muted text-sm">Request price adjustments for your products</p>
  </div>
  <button onClick={() => setShowCreate(true)}
- className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-app-text rounded-xl font-bold hover:bg-amber-500 transition-all">
+ className="flex items-center gap-2 px-6 py-3 bg-app-warning text-app-text rounded-xl font-bold hover:bg-app-warning transition-all">
  <Plus size={18} /> New Request
  </button>
  </div>
 
  {/* Create Form */}
  {showCreate && (
- <div className="p-8 bg-slate-900/80 border border-amber-500/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
+ <div className="p-8 bg-app-surface/80 border border-app-warning/20 rounded-3xl space-y-5 animate-in fade-in duration-300">
  <div className="flex justify-between items-center">
  <h2 className="text-xl font-bold text-app-text flex items-center gap-3">
- <TrendingDown size={22} className="text-amber-400" /> New Price Request
+ <TrendingDown size={22} className="text-app-warning" /> New Price Request
  </h2>
  <button onClick={() => setShowCreate(false)} className="text-app-text-muted hover:text-app-text"><X size={20} /></button>
  </div>
  {error && (
- <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-error-bg border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
  <AlertCircle size={16} /> {error}
  </div>
  )}
  <form onSubmit={handleCreate} className="space-y-4">
  <input type="text" placeholder="Product Name" value={productName} onChange={e => setProductName(e.target.value)} required
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted" />
  <div className="grid grid-cols-2 gap-4">
  <input type="number" step="0.01" placeholder="Current Price" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} required
- className="bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted" />
  <input type="number" step="0.01" placeholder="Proposed Price" value={proposedPrice} onChange={e => setProposedPrice(e.target.value)} required
- className="bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted" />
  </div>
  <textarea placeholder="Reason for price change" value={reason} onChange={e => setReason(e.target.value)} required rows={3}
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 resize-none" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted resize-none" />
  <button type="submit" disabled={creating}
- className="w-full bg-amber-600 hover:bg-amber-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-app-warning hover:bg-app-warning text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
  {creating ? <Loader2 className="animate-spin" size={18} /> : <><Send size={18} /> Submit Request</>}
  </button>
  </form>
@@ -166,7 +166,7 @@ export default function PriceRequestsPage() {
  {/* List */}
  {loading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-28 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  ) : requests.length === 0 ? (
  <div className="py-24 text-center space-y-4">
@@ -180,7 +180,7 @@ export default function PriceRequestsPage() {
  const statusClass = STATUS_COLORS[req.status] || STATUS_COLORS.PENDING
  return (
  <div key={req.id}
- className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl hover:border-app-text/10 transition-all space-y-3">
+ className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl hover:border-app-text/10 transition-all space-y-3">
  <div className="flex items-start justify-between gap-4">
  <div className="flex-1">
  <div className="flex items-center gap-3 flex-wrap">

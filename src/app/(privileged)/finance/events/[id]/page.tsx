@@ -19,7 +19,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
  if (!event) notFound()
 
  return (
- <div className="max-w-4xl mx-auto space-y-6">
+ <div className="app-page max-w-4xl mx-auto space-y-6">
  {/* Header */}
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
@@ -27,13 +27,13 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
  <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
  </Link>
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
- <Calendar size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-indigo-200">
+ <Calendar size={28} className="text-app-foreground" />
  </div>
- Event <span className="text-indigo-600">Details</span>
+ Event <span className="text-app-primary">Details</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Financial Event</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Financial Event</p>
  <p className="text-muted-foreground">{event.eventType.replace(/_/g, " ")}</p>
  </div>
  </div>
@@ -74,7 +74,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
 
  {/* Action Area */}
  {event.status === 'DRAFT' ? (
- <Card className="border-blue-200 bg-blue-50/50">
+ <Card className="border-app-info bg-app-info-bg/50">
  <CardHeader>
  <CardTitle className="text-primary flex items-center gap-2">
  <AlertCircle className="h-5 w-5" />
@@ -89,9 +89,9 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
  </CardContent>
  </Card>
  ) : (
- <Card className="border-green-200 bg-green-50/50">
+ <Card className="border-app-success bg-app-success-bg/50">
  <CardHeader>
- <CardTitle className="text-green-700 flex items-center gap-2">
+ <CardTitle className="text-app-success flex items-center gap-2">
  <CheckCircle2 className="h-5 w-5" />
  Settled
  </CardTitle>
@@ -135,9 +135,9 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
  </span>
  <span className="text-right">
  {line.debit > 0 ? (
- <span className="text-green-600">Dr {Number(line.debit).toFixed(2)}</span>
+ <span className="text-app-success">Dr {Number(line.debit).toFixed(2)}</span>
  ) : (
- <span className="text-red-600">Cr {Number(line.credit).toFixed(2)}</span>
+ <span className="text-app-error">Cr {Number(line.credit).toFixed(2)}</span>
  )}
  </span>
  </div>

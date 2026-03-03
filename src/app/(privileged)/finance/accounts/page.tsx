@@ -59,16 +59,16 @@ export default function FinancialAccountsPage() {
  }
 
  return (
- <div className="space-y-6">
+ <div className="app-page">
  <div className="flex justify-between items-center">
  <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
- <Wallet size={28} className="text-app-text" />
+ <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+ <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
+ <Wallet size={28} className="text-app-foreground" />
  </div>
- Financial <span className="text-emerald-600">Accounts</span>
+ Financial <span className="text-app-primary">Accounts</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Cash Drawers & Bank Accounts</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Cash Drawers & Bank Accounts</p>
  <p className="text-muted-foreground">Manage cash drawers, bank accounts, and their ledger links.</p>
  </div>
  <Link href="/finance/accounts/new">
@@ -136,7 +136,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  <CardHeader className="pb-2">
  <div className="flex justify-between items-start">
  <div className="flex items-center gap-2">
- <div className={`p-2 rounded-lg ${isConfigured ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-600'}`}>
+ <div className={`p-2 rounded-lg ${isConfigured ? 'bg-primary/10 text-primary' : 'bg-app-error-bg text-app-error'}`}>
  <Icon className="h-5 w-5" />
  </div>
  <div>
@@ -146,7 +146,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </div>
  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
  <EditAccountDialog account={account} onUpdate={onRefresh} />
- <Button variant="ghost" size="icon" className="text-red-500" onClick={onDelete}>
+ <Button variant="ghost" size="icon" className="text-app-error" onClick={onDelete}>
  <Trash2 className="h-4 w-4" />
  </Button>
  </div>
@@ -157,13 +157,13 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  {/* Balance Display */}
  <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border">
  <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Balance</p>
- <p className={`text-xl font-bold tabular-nums ${balance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+ <p className={`text-xl font-bold tabular-nums ${balance >= 0 ? 'text-app-success' : 'text-app-error'}`}>
  {account.currency} {formattedBalance}
  </p>
  </div>
 
  {/* Ledger Link Status */}
- <div className={`text-xs p-2 rounded-xl border flex items-center justify-between ${isConfigured ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+ <div className={`text-xs p-2 rounded-xl border flex items-center justify-between ${isConfigured ? 'bg-app-primary-light border-app-success/30 text-app-success' : 'bg-app-error-bg border-app-error/30 text-app-error'}`}>
  <div className="flex items-center gap-2 truncate">
  {isConfigured ? (
  <>
@@ -178,7 +178,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  )}
  </div>
  {isConfigured && (
- <Badge variant="outline" className="text-[10px] bg-app-surface text-emerald-600 border-emerald-200 shrink-0">System Managed</Badge>
+ <Badge variant="outline" className="text-[10px] bg-app-surface text-app-primary border-app-success shrink-0">System Managed</Badge>
  )}
  </div>
 
@@ -200,9 +200,9 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </div>
  )}
  {/* POS Access Toggle */}
- <div className="flex items-center justify-between p-2 rounded-lg bg-app-bg border">
+ <div className="flex items-center justify-between p-2 rounded-lg bg-app-background border">
  <div className="flex items-center gap-2">
- <Monitor className="h-4 w-4 text-app-text-muted" />
+ <Monitor className="h-4 w-4 text-app-muted-foreground" />
  <span className="text-xs font-medium">POS Access</span>
  </div>
  <button
@@ -213,7 +213,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  toast.success(account.is_pos_enabled ? 'POS access disabled' : 'POS access enabled')
  } catch { toast.error('Failed to toggle POS access') }
  }}
- className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${account.is_pos_enabled ? 'bg-emerald-500' : 'bg-slate-300'
+ className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${account.is_pos_enabled ? 'bg-app-primary' : 'bg-app-surface'
  }`}
  >
  <span className={`inline-block h-3.5 w-3.5 rounded-full bg-app-surface transition-transform ${account.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'
@@ -234,7 +234,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  <UserIcon className="h-3 w-3" />
  {u.name}
  <button
- className="ml-1 hover:bg-slate-200 rounded-full p-0.5"
+ className="ml-1 hover:bg-app-border rounded-full p-0.5"
  onClick={() => setUnassignTarget({ userId: u.id, name: u.name })}
  >
  &times;
@@ -242,7 +242,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </Badge>
  ))
  ) : (
- <span className="text-sm text-app-text-faint italic">No active users</span>
+ <span className="text-sm text-app-muted-foreground italic">No active users</span>
  )}
  </div>
  </div>
@@ -340,7 +340,7 @@ function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>
  return (
  <Dialog open={open} onOpenChange={setOpen}>
  <DialogTrigger asChild>
- <Button variant="ghost" size="icon" className="text-app-text-muted">
+ <Button variant="ghost" size="icon" className="text-app-muted-foreground">
  <Edit3 className="h-4 w-4" />
  </Button>
  </DialogTrigger>
@@ -363,7 +363,7 @@ function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>
  <SelectContent className="max-h-[300px]">
  {coaList.map(coa => (
  <SelectItem key={coa.id} value={coa.id.toString()}>
- {coa.code} - {coa.name} <span className="text-app-text-faint text-xs ml-2">({coa.type})</span>
+ {coa.code} - {coa.name} <span className="text-app-muted-foreground text-xs ml-2">({coa.type})</span>
  </SelectItem>
  ))}
  </SelectContent>

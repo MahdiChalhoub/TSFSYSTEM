@@ -121,7 +121,7 @@ export default function POSKeyboardShortcuts({
 
  return (
  <div className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
- <div className="bg-slate-900 border border-app-text/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+ <div className="bg-app-surface border border-app-text/10 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
  <div className="flex items-center gap-3 px-5 py-4 border-b border-app-text/5">
  <Keyboard size={18} className="text-indigo-400" />
  <h2 className="text-app-text font-black text-base flex-1">Keyboard Shortcuts</h2>

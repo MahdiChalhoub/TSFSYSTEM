@@ -85,26 +85,26 @@ export default function ChecklistsClient({ checklists: initial, templates, users
  }
 
  const STATUS_STYLE: Record<string, string> = {
- PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+ PENDING: 'bg-app-warning-bg text-app-warning border-app-warning',
  IN_PROGRESS: 'bg-sky-50 text-sky-700 border-sky-200',
- COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
- MISSED: 'bg-red-50 text-red-700 border-red-200',
+ COMPLETED: 'bg-app-primary-light text-app-success border-app-success',
+ MISSED: 'bg-app-error-bg text-app-error border-app-error',
  };
 
  return (
  <div className="space-y-6">
  {/* Templates Overview + Assign */}
- <div className="flex items-center justify-between bg-app-surface p-4 rounded-3xl shadow-lg shadow-gray-100 border border-gray-50">
+ <div className="flex items-center justify-between bg-app-surface p-4 rounded-3xl shadow-lg shadow-app-border/20 border border-app-border">
  <div className="flex items-center gap-4 overflow-x-auto pb-1">
  {templates.map(t => (
  <div key={t.id} className="bg-gradient-to-br from-gray-50 to-white px-5 py-3 rounded-2xl border border-app-border shrink-0">
- <div className="font-bold text-sm text-app-text">{t.name}</div>
- <div className="text-[10px] text-app-text-faint uppercase tracking-wider">{t.trigger_display} · {t.items?.length || 0} items · {t.points} pts</div>
+ <div className="font-bold text-sm text-app-foreground">{t.name}</div>
+ <div className="text-[10px] text-app-muted-foreground uppercase tracking-wider">{t.trigger_display} · {t.items?.length || 0} items · {t.points} pts</div>
  </div>
  ))}
  </div>
  <button onClick={() => setShowAssign(true)}
- className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-app-text text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2 shrink-0 ml-4">
+ className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-app-foreground text-sm font-bold rounded-2xl hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2 shrink-0 ml-4">
  <Plus size={16} /> Assign Checklist
  </button>
  </div>
@@ -112,25 +112,25 @@ export default function ChecklistsClient({ checklists: initial, templates, users
  {/* Assign Form */}
  {showAssign && (
  <div className="bg-app-surface p-6 rounded-3xl shadow-xl border border-emerald-50 space-y-4 animate-in slide-in-from-top duration-300">
- <h3 className="text-lg font-bold text-app-text">Assign Checklist</h3>
+ <h3 className="text-lg font-bold text-app-foreground">Assign Checklist</h3>
  <div className="grid grid-cols-3 gap-4">
  <select value={assignTemplate} onChange={e => setAssignTemplate(e.target.value)}
- className="px-4 py-3 bg-app-bg rounded-2xl border border-app-border text-sm">
+ className="px-4 py-3 bg-app-background rounded-2xl border border-app-border text-sm">
  <option value="">Select template...</option>
  {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
  </select>
  <select value={assignUser} onChange={e => setAssignUser(e.target.value)}
- className="px-4 py-3 bg-app-bg rounded-2xl border border-app-border text-sm">
+ className="px-4 py-3 bg-app-background rounded-2xl border border-app-border text-sm">
  <option value="">Assign to...</option>
  {users.map((u: any) => <option key={u.id} value={u.id}>{u.email || u.username}</option>)}
  </select>
  <input type="date" value={assignDate} onChange={e => setAssignDate(e.target.value)}
- className="px-4 py-3 bg-app-bg rounded-2xl border border-app-border text-sm" />
+ className="px-4 py-3 bg-app-background rounded-2xl border border-app-border text-sm" />
  </div>
  <div className="flex gap-3 justify-end">
- <button onClick={() => setShowAssign(false)} className="px-6 py-2 text-sm text-app-text-muted font-medium">Cancel</button>
+ <button onClick={() => setShowAssign(false)} className="px-6 py-2 text-sm text-app-muted-foreground font-medium">Cancel</button>
  <button onClick={() => startTransition(handleAssign)}
- className="px-6 py-2 bg-emerald-600 text-app-text text-sm font-bold rounded-2xl hover:bg-emerald-700 transition-all">
+ className="px-6 py-2 bg-app-primary text-app-foreground text-sm font-bold rounded-2xl hover:bg-app-success transition-all">
  {isPending ? 'Assigning...' : 'Assign'}
  </button>
  </div>
@@ -140,9 +140,9 @@ export default function ChecklistsClient({ checklists: initial, templates, users
  {/* Checklists List */}
  <div className="space-y-3">
  {checklists.length === 0 ? (
- <div className="text-center py-20 bg-app-surface rounded-3xl border border-gray-50">
- <CheckCircle size={48} className="mx-auto text-gray-300 mb-4" />
- <p className="text-app-text-faint font-medium text-lg">No checklists assigned</p>
+ <div className="text-center py-20 bg-app-surface rounded-3xl border border-app-border">
+ <CheckCircle size={48} className="mx-auto text-app-muted-foreground mb-4" />
+ <p className="text-app-muted-foreground font-medium text-lg">No checklists assigned</p>
  </div>
  ) : checklists.map(cl => {
  const isExpanded = expandedId === cl.id;
@@ -153,27 +153,27 @@ export default function ChecklistsClient({ checklists: initial, templates, users
  };
 
  return (
- <div key={cl.id} className="bg-app-surface rounded-2xl border border-gray-50 overflow-hidden hover:shadow-lg hover:shadow-gray-100 transition-all">
+ <div key={cl.id} className="bg-app-surface rounded-2xl border border-app-border overflow-hidden hover:shadow-lg hover:shadow-app-border/20 transition-all">
  <button onClick={() => setExpandedId(isExpanded ? null : cl.id)}
  className="w-full p-5 flex items-center gap-4 text-left">
- <ChevronRight size={18} className={`text-app-text-faint transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+ <ChevronRight size={18} className={`text-app-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
  <div className="flex-1">
- <div className="font-bold text-app-text">{cl.template_name}</div>
- <div className="text-xs text-app-text-faint flex items-center gap-3 mt-1">
+ <div className="font-bold text-app-foreground">{cl.template_name}</div>
+ <div className="text-xs text-app-muted-foreground flex items-center gap-3 mt-1">
  <span className="flex items-center gap-1"><Calendar size={12} /> {cl.date}</span>
  <span>👤 {cl.assigned_to_name}</span>
  </div>
  </div>
  {/* Progress Bar */}
  <div className="w-32 bg-app-surface-2 rounded-full h-2.5 shrink-0">
- <div className="bg-emerald-500 h-2.5 rounded-full transition-all" style={{ width: `${progress.percentage}%` }} />
+ <div className="bg-app-primary h-2.5 rounded-full transition-all" style={{ width: `${progress.percentage}%` }} />
  </div>
- <span className="text-sm font-bold text-app-text-muted shrink-0 w-12 text-right">{progress.percentage}%</span>
+ <span className="text-sm font-bold text-app-muted-foreground shrink-0 w-12 text-right">{progress.percentage}%</span>
  <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border shrink-0 ${STATUS_STYLE[cl.status] || ''}`}>
  {cl.status}
  </span>
  {cl.points_earned > 0 && (
- <span className="flex items-center gap-1 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-xl text-sm font-bold shrink-0">
+ <span className="flex items-center gap-1 text-app-warning bg-app-warning-bg px-3 py-1.5 rounded-xl text-sm font-bold shrink-0">
  <Award size={14} /> {cl.points_earned}
  </span>
  )}
@@ -181,22 +181,22 @@ export default function ChecklistsClient({ checklists: initial, templates, users
 
  {/* Expanded Items */}
  {isExpanded && (
- <div className="border-t border-gray-50 px-5 py-4 space-y-2 animate-in slide-in-from-top duration-200">
+ <div className="border-t border-app-border px-5 py-4 space-y-2 animate-in slide-in-from-top duration-200">
  {(cl.item_responses || []).map((item: any) => (
  <button key={item.id}
  onClick={() => startTransition(() => handleToggleItem(cl.id, item.template_item || item.id, item.is_checked))}
- className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-app-bg transition-colors text-left"
+ className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-app-background transition-colors text-left"
  disabled={cl.status === 'COMPLETED'}>
  {item.is_checked ? (
- <CheckCircle size={20} className="text-emerald-500 shrink-0" />
+ <CheckCircle size={20} className="text-app-primary shrink-0" />
  ) : (
- <Circle size={20} className="text-gray-300 shrink-0" />
+ <Circle size={20} className="text-app-muted-foreground shrink-0" />
  )}
- <span className={`text-sm ${item.is_checked ? 'text-app-text-faint line-through' : 'text-gray-700 font-medium'}`}>
+ <span className={`text-sm ${item.is_checked ? 'text-app-muted-foreground line-through' : 'text-app-muted-foreground font-medium'}`}>
  {item.label}
  </span>
  {item.is_required && !item.is_checked && (
- <span className="text-[9px] text-red-400 font-bold uppercase ml-auto">Required</span>
+ <span className="text-[9px] text-app-error font-bold uppercase ml-auto">Required</span>
  )}
  </button>
  ))}

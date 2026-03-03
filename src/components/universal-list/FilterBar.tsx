@@ -40,7 +40,7 @@ export default function FilterBar({
  value={search}
  onChange={e => onSearchChange(e.target.value)}
  placeholder={searchPlaceholder}
- className="w-full pl-9 pr-4 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+ className="w-full pl-9 pr-4 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:ring-2 focus:ring-blue-500 focus:border-app-info outline-none transition-all"
  />
  {search && (
  <button
@@ -67,7 +67,7 @@ export default function FilterBar({
  <button
  onClick={() => setShowAdvanced(!showAdvanced)}
  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-lg transition-all ${showAdvanced
- ? 'bg-blue-50 border-blue-200 text-blue-700'
+ ? 'bg-app-info-bg border-app-info text-app-info'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
  }`}
  >
@@ -84,7 +84,7 @@ export default function FilterBar({
 
  {/* Advanced Filter Panel */}
  {showAdvanced && advancedFilters.length > 0 && (
- <div className="p-4 bg-gray-50/70 border border-app-border rounded-xl animate-in slide-in-from-top-2 duration-200">
+ <div className="p-4 bg-app-surface-2/70 border border-app-border rounded-xl animate-in slide-in-from-top-2 duration-200">
  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
  {advancedFilters.map(filter => (
  <div key={filter.key}>
@@ -108,9 +108,9 @@ export default function FilterBar({
  type="checkbox"
  checked={!!values[filter.key]}
  onChange={e => onFilterChange(filter.key, e.target.checked)}
- className="w-4 h-4 text-blue-600 rounded border-app-border"
+ className="w-4 h-4 text-app-info rounded border-app-border"
  />
- <span className="text-sm text-gray-700">{filter.placeholder || filter.label}</span>
+ <span className="text-sm text-app-text-muted">{filter.placeholder || filter.label}</span>
  </label>
  ) : (
  <input
@@ -155,7 +155,7 @@ function FilterDropdown({
  value={value}
  onChange={e => onChange(e.target.value)}
  className={`appearance-none px-3 pr-8 py-2 text-xs font-semibold border rounded-lg cursor-pointer transition-all ${value
- ? 'bg-blue-50 border-blue-200 text-blue-700'
+ ? 'bg-app-info-bg border-app-info text-app-info'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
  }`}
  >
@@ -176,7 +176,7 @@ function FilterDropdown({
  value={value ?? ''}
  onChange={e => onChange(e.target.value)}
  className={`px-3 py-2 text-xs font-semibold border rounded-lg transition-all ${value
- ? 'bg-blue-50 border-blue-200 text-blue-700'
+ ? 'bg-app-info-bg border-app-info text-app-info'
  : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-border'
  }`}
  />

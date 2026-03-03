@@ -60,7 +60,7 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                         </span>
                     </h1>
 
-                    <p className="mt-6 text-gray-500 text-lg max-w-xl mx-auto leading-relaxed">
+                    <p className="mt-6 text-app-text-faint text-lg max-w-xl mx-auto leading-relaxed">
                         Curated collections from {orgName || 'our boutique'}. Each piece chosen with intention, crafted with passion.
                     </p>
 
@@ -72,7 +72,7 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                             placeholder="Search our collection..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white border border-violet-200 text-indigo-950 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 shadow-lg shadow-violet-100/50 text-sm"
+                            className="w-full pl-12 pr-5 py-4 rounded-2xl bg-app-surface border border-violet-200 text-indigo-950 placeholder:text-app-text-faint focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 shadow-lg shadow-violet-100/50 text-sm"
                         />
                     </div>
 
@@ -83,7 +83,7 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                             Browse Collections <ArrowRight size={16} />
                         </Link>
                         <Link href={`/tenant/${slug}/search`}
-                            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-violet-600 text-sm font-semibold rounded-xl hover:bg-violet-50 transition border border-violet-200">
+                            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-app-surface text-violet-600 text-sm font-semibold rounded-xl hover:bg-violet-50 transition border border-violet-200">
                             Shop All
                         </Link>
                     </div>
@@ -98,7 +98,7 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                             onClick={() => setSelectedCategory(null)}
                             className={`px-5 py-2.5 rounded-full text-sm font-semibold transition border ${!selectedCategory
                                     ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200'
-                                    : 'bg-white text-gray-600 border-violet-200 hover:border-violet-400 hover:text-violet-600'
+                                    : 'bg-app-surface text-app-text-muted border-violet-200 hover:border-violet-400 hover:text-violet-600'
                                 }`}>
                             All
                         </button>
@@ -107,7 +107,7 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                                 onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
                                 className={`px-5 py-2.5 rounded-full text-sm font-semibold transition border ${selectedCategory === cat.id
                                         ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200'
-                                        : 'bg-white text-gray-600 border-violet-200 hover:border-violet-400 hover:text-violet-600'
+                                        : 'bg-app-surface text-app-text-muted border-violet-200 hover:border-violet-400 hover:text-violet-600'
                                     }`}>
                                 {cat.name}
                             </button>
@@ -125,14 +125,14 @@ export default function BoutiqueHomePage({ products = [], categories = [] }: Hom
                             ? uniqueCategories.find(c => c.id === selectedCategory)?.name || 'Products'
                             : 'Featured Products'}
                     </h2>
-                    <span className="text-sm text-gray-400 font-medium">
+                    <span className="text-sm text-app-text-faint font-medium">
                         {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
                     </span>
                 </div>
 
                 {filteredProducts.length === 0 ? (
                     <div className="text-center py-20">
-                        <p className="text-gray-400 text-lg">No products found</p>
+                        <p className="text-app-text-faint text-lg">No products found</p>
                         {searchQuery && (
                             <button onClick={() => setSearchQuery('')}
                                 className="mt-3 text-violet-600 text-sm font-semibold hover:underline">

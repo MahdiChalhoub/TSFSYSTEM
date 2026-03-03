@@ -26,7 +26,7 @@ export default function BoutiqueHeader() {
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-            <header className="bg-white border-b border-violet-100 sticky top-0 z-50">
+            <header className="bg-app-surface border-b border-violet-100 sticky top-0 z-50">
                 {/* Top bar */}
                 <div className="bg-gradient-to-r from-violet-600 to-pink-500 text-white text-center text-xs py-1.5 tracking-widest font-medium uppercase"
                     style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -48,7 +48,7 @@ export default function BoutiqueHeader() {
                         </Link>
 
                         {/* Desktop nav */}
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600"
+                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-app-text-muted"
                             style={{ fontFamily: "'DM Sans', sans-serif" }}>
                             <Link href={base} className="hover:text-violet-600 transition">Home</Link>
                             <Link href={`${base}/categories`} className="hover:text-violet-600 transition">Collections</Link>
@@ -58,12 +58,12 @@ export default function BoutiqueHeader() {
                         {/* Actions */}
                         <div className="flex items-center gap-1 sm:gap-3">
                             <Link href={`${base}/search`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition">
+                                className="p-2.5 rounded-xl text-app-text-faint hover:text-violet-600 hover:bg-violet-50 transition">
                                 <Search size={20} />
                             </Link>
 
                             <Link href={`${base}/account/wishlist`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-pink-500 hover:bg-pink-50 transition relative">
+                                className="p-2.5 rounded-xl text-app-text-faint hover:text-pink-500 hover:bg-pink-50 transition relative">
                                 <Heart size={20} />
                                 {wishlistCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-pink-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
@@ -74,7 +74,7 @@ export default function BoutiqueHeader() {
 
                             <button
                                 onClick={() => setCartOpen(true)}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition relative"
+                                className="p-2.5 rounded-xl text-app-text-faint hover:text-violet-600 hover:bg-violet-50 transition relative"
                             >
                                 <ShoppingBag size={20} />
                                 {cartCount > 0 && (
@@ -87,7 +87,7 @@ export default function BoutiqueHeader() {
                             {isAuthenticated ? (
                                 <div className="relative">
                                     <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                        className="flex items-center gap-1.5 p-2 rounded-xl text-gray-600 hover:text-violet-600 hover:bg-violet-50 transition text-sm font-medium"
+                                        className="flex items-center gap-1.5 p-2 rounded-xl text-app-text-muted hover:text-violet-600 hover:bg-violet-50 transition text-sm font-medium"
                                         style={{ fontFamily: "'DM Sans', sans-serif" }}>
                                         <User size={18} />
                                         <span className="hidden sm:inline max-w-[80px] truncate">{user?.name?.split(' ')[0]}</span>
@@ -96,14 +96,14 @@ export default function BoutiqueHeader() {
                                     {userMenuOpen && (
                                         <>
                                             <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                                            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-violet-100 py-2 z-50"
+                                            <div className="absolute right-0 top-full mt-2 w-52 bg-app-surface rounded-2xl shadow-xl border border-violet-100 py-2 z-50"
                                                 style={{ fontFamily: "'DM Sans', sans-serif" }}>
                                                 <Link href={`${base}/account`} onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-violet-50 hover:text-violet-600">
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-app-text-muted hover:bg-violet-50 hover:text-violet-600">
                                                     <User size={15} /> My Account
                                                 </Link>
                                                 <Link href={`${base}/account/orders`} onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 hover:bg-violet-50 hover:text-violet-600">
+                                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-app-text-muted hover:bg-violet-50 hover:text-violet-600">
                                                     <Package size={15} /> Orders
                                                 </Link>
                                                 <hr className="my-1 border-violet-100" />
@@ -123,7 +123,7 @@ export default function BoutiqueHeader() {
                                 </Link>
                             )}
 
-                            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 text-gray-600">
+                            <button onClick={() => setMobileOpen(true)} className="md:hidden p-2 text-app-text-muted">
                                 <Menu size={22} />
                             </button>
                         </div>
@@ -134,9 +134,9 @@ export default function BoutiqueHeader() {
                 {mobileOpen && (
                     <div className="fixed inset-0 z-50 md:hidden">
                         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-                        <div className="absolute right-0 top-0 h-full w-72 bg-white shadow-2xl p-6 flex flex-col"
+                        <div className="absolute right-0 top-0 h-full w-72 bg-app-surface shadow-2xl p-6 flex flex-col"
                             style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                            <button onClick={() => setMobileOpen(false)} className="self-end p-2 text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setMobileOpen(false)} className="self-end p-2 text-app-text-faint hover:text-app-text-muted">
                                 <X size={20} />
                             </button>
                             <nav className="mt-6 flex flex-col gap-1">
@@ -149,12 +149,12 @@ export default function BoutiqueHeader() {
                                 ].map(link => (
                                     link.href ? (
                                         <Link key={link.label} href={link.href} onClick={() => setMobileOpen(false)}
-                                            className="px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
+                                            className="px-4 py-3 rounded-xl text-app-text-muted hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
                                             {link.label}
                                         </Link>
                                     ) : (
                                         <button key={link.label} onClick={() => { link.onClick?.(); setMobileOpen(false) }}
-                                            className="w-full text-left px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
+                                            className="w-full text-left px-4 py-3 rounded-xl text-app-text-muted hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
                                             {link.label}
                                         </button>
                                     )

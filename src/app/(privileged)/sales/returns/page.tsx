@@ -17,9 +17,9 @@ import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
- PENDING: { label: 'Pending Review', color: 'bg-amber-50 text-amber-700 border-amber-100' },
- APPROVED: { label: 'Approved & Restocked', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
- COMPLETED: { label: 'Completed', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+ PENDING: { label: 'Pending Review', color: 'bg-app-warning-bg text-app-warning border-app-warning/30' },
+ APPROVED: { label: 'Approved & Restocked', color: 'bg-app-primary-light text-app-success border-app-success/30' },
+ COMPLETED: { label: 'Completed', color: 'bg-app-info-bg text-app-info border-app-info/30' },
  CANCELLED: { label: 'Cancelled', color: 'bg-rose-50 text-rose-700 border-rose-100' },
 }
 
@@ -65,17 +65,17 @@ export default function SalesReturnsPage() {
  {
  key: 'id',
  label: 'Restitution ID',
- render: (ret) => <span className="font-black text-app-text leading-tight">RET-{ret.id}</span>
+ render: (ret) => <span className="font-black text-app-foreground leading-tight">RET-{ret.id}</span>
  },
  {
  key: 'original_order_ref',
  label: 'Root Order',
  render: (ret) => (
- <Link href={`/sales/${ret.original_order}`} className="flex items-center gap-1.5 group/link">
- <span className="font-mono text-xs font-bold text-indigo-600 group-hover/link:underline">
+ <Link href={`/sales/${ret.original_order}`} className="app-page flex items-center gap-1.5 group/link">
+ <span className="font-mono text-xs font-bold text-app-primary group-hover/link:underline">
  {ret.original_order_ref || `#${ret.original_order}`}
  </span>
- <FileText size={10} className="text-stone-300 group-hover/link:text-indigo-400 transition-colors" />
+ <FileText size={10} className="text-app-muted-foreground group-hover/link:text-app-primary transition-colors" />
  </Link>
  )
  },
@@ -84,10 +84,10 @@ export default function SalesReturnsPage() {
  label: 'Consignee',
  render: (ret) => (
  <div className="flex items-center gap-2">
- <div className="w-7 h-7 rounded-lg bg-app-bg border border-app-border flex items-center justify-center text-app-text-faint">
+ <div className="w-7 h-7 rounded-lg bg-app-background border border-app-border flex items-center justify-center text-app-muted-foreground">
  <User size={12} />
  </div>
- <span className="text-sm font-semibold text-gray-700">{ret.customer_name || 'N/A'}</span>
+ <span className="text-sm font-semibold text-app-muted-foreground">{ret.customer_name || 'N/A'}</span>
  </div>
  )
  },
@@ -95,7 +95,7 @@ export default function SalesReturnsPage() {
  key: 'status',
  label: 'Lifecycle',
  render: (ret) => (
- <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border ${STATUS_CONFIG[ret.status ?? '']?.color || 'bg-app-bg text-app-text-muted'}`}>
+ <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border ${STATUS_CONFIG[ret.status ?? '']?.color || 'bg-app-background text-app-muted-foreground'}`}>
  {STATUS_CONFIG[ret.status ?? '']?.label || ret.status}
  </Badge>
  )
@@ -105,7 +105,7 @@ export default function SalesReturnsPage() {
  label: 'Refund Value',
  align: 'right',
  render: (ret) => (
- <span className="font-black text-app-text tracking-tighter">{fmt(parseFloat(String(ret.total_refund || 0)))}</span>
+ <span className="font-black text-app-foreground tracking-tighter">{fmt(parseFloat(String(ret.total_refund || 0)))}</span>
  )
  },
  {
@@ -117,13 +117,13 @@ export default function SalesReturnsPage() {
  {ret.status === 'PENDING' && (
  <Button
  size="sm"
- className="h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-app-text font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-emerald-100 gap-1.5"
+ className="h-8 px-4 bg-app-primary hover:bg-app-success text-app-foreground font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm shadow-emerald-100 gap-1.5"
  onClick={() => approveReturn(ret.id)}
  >
  <CheckCircle2 size={13} /> Restock
  </Button>
  )}
- <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-stone-300 hover:text-indigo-600 hover:bg-indigo-50">
+ <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-app-muted-foreground hover:text-app-primary hover:bg-app-primary/5">
  <Link href={`/sales/returns/${ret.id}`}>
  <ChevronRight size={18} />
  </Link>
@@ -135,26 +135,19 @@ export default function SalesReturnsPage() {
 
  return (
  <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
- <header className="flex justify-between items-center">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
- <RotateCcw size={28} className="text-app-text" />
- </div>
- Revenue <span className="text-amber-500">Restitution</span> Control
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Inventory Recovery & Credit Operations</p>
- </div>
- <div className="flex items-center gap-3">
- <Button onClick={loadReturns} variant="ghost" className="h-12 w-12 p-0 rounded-2xl text-app-text-faint hover:text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all">
- <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
- </Button>
- <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100 shadow-sm shadow-emerald-50">
- <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
- <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Restitution Guard Active</span>
- </div>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Undo2 size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Return <span className="text-app-primary">Center</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  <TypicalListView
  title="Monetary Restitution Flow"
@@ -172,7 +165,7 @@ export default function SalesReturnsPage() {
  className="rounded-3xl border-0 shadow-sm overflow-hidden"
  headerExtra={
  <div className="flex items-center gap-3">
- <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-100 text-[10px] font-black uppercase px-3 h-6">
+ <Badge variant="outline" className="bg-app-warning-bg text-app-warning border-app-warning/30 text-[10px] font-black uppercase px-3 h-6">
  Verified Returns Only
  </Badge>
  </div>

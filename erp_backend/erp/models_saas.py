@@ -154,6 +154,7 @@ class PlanAddon(models.Model):
         ('invoices', 'Extra Invoices/Month'),
         ('customers', 'Extra Customers'),
         ('encryption', 'AES-256 Encryption'),
+        ('dual_view', 'Dual View — Internal Scope Access'),
     ]
     name = models.CharField(max_length=255)
     addon_type = models.CharField(max_length=20, choices=ADDON_TYPES)

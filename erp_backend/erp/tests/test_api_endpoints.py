@@ -72,6 +72,82 @@ class TestAuthEndpoints(APITestBase):
             data = response.json()
             self.assertIn('username', data)
 
+    def test_auth_me_returns_permissions_field(self):
+        """The /auth/me/ endpoint should always include a permissions field."""
+        response = self.client.get('/api/auth/me/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('permissions', data)
+        self.assertIsInstance(data['permissions'], list)
+
+    def test_auth_me_user_with_no_role_returns_empty_permissions(self):
+        """A user with no role should receive an empty permissions list."""
+        response = self.client.get('/api/auth/me/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # cls.user has no role assigned
+        self.assertEqual(data['permissions'], [])
+
+
+class TestAuthMePermissionsWithRole(TestCase):
+    """Tests that /auth/me/ correctly returns role permission codes."""
+
+    @classmethod
+    def setUpTestData(cls):
+        import uuid
+        from erp.models import Organization, User, Role, Permission
+        cls.org = Organization.objects.create(
+            name='Perm Test Org', slug=f'perm-test-{uuid.uuid4().hex[:8]}'
+        )
+        # Seed permission
+        cls.perm = Permission.objects.create(
+            code='app.change_theme', name='Can change UI theme'
+        )
+        # Create role and assign permission
+        cls.role = Role.objects.create(name='Manager', organization=cls.org)
+        cls.role.permissions.set([cls.perm])
+        # User with role
+        cls.user = User.objects.create_user(
+            username=f'mgr_{uuid.uuid4().hex[:8]}',
+            password='pass123',
+            email=f'mgr_{uuid.uuid4().hex[:8]}@test.com',
+            organization=cls.org,
+            role=cls.role,
+        )
+        # Superuser
+        cls.superuser = User.objects.create_superuser(
+            username=f'su_{uuid.uuid4().hex[:8]}',
+            password='pass123',
+            email=f'su_{uuid.uuid4().hex[:8]}@test.com',
+        )
+
+    def _client_for(self, user):
+        from rest_framework.test import APIClient
+        from rest_framework.authtoken.models import Token
+        c = APIClient()
+        token, _ = Token.objects.get_or_create(user=user)
+        c.credentials(
+            HTTP_AUTHORIZATION=f'Token {token.key}',
+            HTTP_X_TENANT_ID=str(self.org.id),
+        )
+        return c
+
+    def test_user_with_role_receives_permission_codes(self):
+        """User with a role that has app.change_theme should see it in permissions."""
+        response = self._client_for(self.user).get('/api/auth/me/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('permissions', data)
+        self.assertIn('app.change_theme', data['permissions'])
+
+    def test_superuser_receives_wildcard_permissions(self):
+        """Superusers should receive ['*'] as their permissions sentinel."""
+        response = self._client_for(self.superuser).get('/api/auth/me/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('permissions', data)
+        self.assertEqual(data['permissions'], ['*'])
+
 
 # =============================================================================
 # INVENTORY ENDPOINTS

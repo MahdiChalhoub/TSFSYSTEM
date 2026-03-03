@@ -116,7 +116,7 @@ export default function SupplierProfilePage() {
 
  if (!session) {
  return (
- <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+ <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 bg-app-bg">
  <div className="text-center space-y-4">
  <h1 className="text-2xl font-bold text-app-text">Session expired</h1>
  <Link href={`/supplier-portal/${slug}`} className="text-indigo-400 font-bold">Go to Login</Link>
@@ -126,7 +126,7 @@ export default function SupplierProfilePage() {
  }
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
  <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-3xl mx-auto relative z-10 space-y-8">
@@ -156,18 +156,18 @@ export default function SupplierProfilePage() {
  </div>
 
  {/* Personal Information */}
- <div className="p-8 bg-slate-900/60 border border-app-text/5 rounded-3xl space-y-6">
+ <div className="p-8 bg-app-surface/60 border border-app-text/5 rounded-3xl space-y-6">
  <h2 className="text-lg font-bold text-app-text flex items-center gap-3">
  <User size={20} className="text-indigo-400" /> Contact Information
  </h2>
 
  {error && (
- <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-error-bg border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
  <AlertCircle size={16} /> {error}
  </div>
  )}
  {saved && (
- <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-success-bg border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
  <CheckCircle2 size={16} /> Profile updated successfully
  </div>
  )}
@@ -178,14 +178,14 @@ export default function SupplierProfilePage() {
  <User size={12} /> Full Name
  </label>
  <input value={name} onChange={e => setName(e.target.value)}
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 flex items-center gap-1.5">
  <Mail size={12} /> Email
  </label>
  <input value={email} disabled
- className="w-full bg-slate-950/30 border border-app-text/5 p-4 rounded-xl text-app-text-muted cursor-not-allowed" />
+ className="w-full bg-app-bg/30 border border-app-text/5 p-4 rounded-xl text-app-text-muted cursor-not-allowed" />
  <p className="text-[10px] text-app-text-muted mt-1">Contact admin to change email</p>
  </div>
  <div>
@@ -193,7 +193,7 @@ export default function SupplierProfilePage() {
  <Building2 size={12} /> Company
  </label>
  <input value={company} onChange={e => setCompany(e.target.value)}
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-indigo-500 transition-all" />
  </div>
  </div>
 
@@ -204,18 +204,18 @@ export default function SupplierProfilePage() {
  </div>
 
  {/* Change Password */}
- <div className="p-8 bg-slate-900/60 border border-app-text/5 rounded-3xl space-y-6">
+ <div className="p-8 bg-app-surface/60 border border-app-text/5 rounded-3xl space-y-6">
  <h2 className="text-lg font-bold text-app-text flex items-center gap-3">
- <Lock size={20} className="text-amber-400" /> Change Password
+ <Lock size={20} className="text-app-warning" /> Change Password
  </h2>
 
  {pwError && (
- <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-error-bg border border-app-error/20 rounded-xl text-app-error text-sm flex items-center gap-2">
  <AlertCircle size={16} /> {pwError}
  </div>
  )}
  {pwSaved && (
- <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
+ <div className="p-3 bg-app-success-bg border border-emerald-500/20 rounded-xl text-emerald-400 text-sm flex items-center gap-2">
  <CheckCircle2 size={16} /> Password changed successfully
  </div>
  )}
@@ -225,19 +225,19 @@ export default function SupplierProfilePage() {
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">Current Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={currentPassword}
  onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••"
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700 pr-12" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted pr-12" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">New Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={newPassword}
  onChange={e => setNewPassword(e.target.value)} placeholder="Min 8 characters"
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted" />
  </div>
  <div>
  <label className="text-[10px] text-app-text-muted font-black uppercase tracking-widest mb-2 block">Confirm New Password</label>
  <input type={showPasswords ? 'text' : 'password'} value={confirmPassword}
  onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password"
- className="w-full bg-slate-950/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-amber-500 transition-all placeholder:text-slate-700" />
+ className="w-full bg-app-bg/50 border border-app-text/5 p-4 rounded-xl text-app-text outline-none focus:border-app-warning transition-all placeholder:text-app-text-muted" />
  </div>
  </div>
 
@@ -247,11 +247,11 @@ export default function SupplierProfilePage() {
  {showPasswords ? <EyeOff size={14} /> : <Eye size={14} />}
  {showPasswords ? 'Hide' : 'Show'} passwords
  </button>
- <Shield size={16} className="text-slate-700" />
+ <Shield size={16} className="text-app-text-muted" />
  </div>
 
  <button onClick={handleChangePassword} disabled={pwSaving || !currentPassword || !newPassword}
- className="w-full bg-amber-600 hover:bg-amber-500 text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
+ className="w-full bg-app-warning hover:bg-app-warning text-app-text p-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-60">
  <Lock size={18} /> {pwSaving ? 'Changing...' : 'Change Password'}
  </button>
  </div>

@@ -43,41 +43,41 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  if (!brand) notFound();
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  {/* Header */}
  <div className="flex items-center gap-4">
  <Link href="/inventory/brands" className="p-2 hover:bg-app-surface-2 rounded-full transition-colors">
  <ChevronLeft size={24} />
  </Link>
  <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <Globe size={28} className="text-app-text" />
+ <Globe size={28} className="text-app-foreground" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tighter">{brand.name}</h1>
- {brand.short_name && <span className="text-sm font-mono bg-app-surface-2 px-2 py-1 rounded text-app-text-muted">{brand.short_name}</span>}
+ {brand.short_name && <span className="text-sm font-mono bg-app-surface-2 px-2 py-1 rounded text-app-muted-foreground">{brand.short_name}</span>}
  </div>
  </div>
 
  {/* Operating Countries Pills */}
  <div className="flex flex-wrap gap-2">
- <span className="text-sm font-medium text-app-text-muted py-1">Operating In:</span>
+ <span className="text-sm font-medium text-app-muted-foreground py-1">Operating In:</span>
  {brand.countries.length > 0 ? brand.countries.map(c => (
- <span key={c.id} className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full flex items-center gap-1">
+ <span key={c.id} className="text-sm bg-app-info-bg text-app-info px-3 py-1 rounded-full flex items-center gap-1">
  <Globe size={12} /> {c.name}
  </span>
- )) : <span className="text-sm text-app-text-faint italic py-1">Global / Unspecified</span>}
+ )) : <span className="text-sm text-app-muted-foreground italic py-1">Global / Unspecified</span>}
  </div>
 
  <div className="border-t border-app-border my-4"></div>
 
  {/* Content: Groups */}
- <h2 className="text-xl font-bold text-app-text flex items-center gap-2 mb-4">
- <Layers className="text-emerald-600" /> Parfums / Families
+ <h2 className="text-xl font-bold text-app-foreground flex items-center gap-2 mb-4">
+ <Layers className="text-app-primary" /> Parfums / Families
  </h2>
 
  <div className="grid gap-6">
  {(brand.productGroups?.length || 0) === 0 && (brand.products?.length || 0) === 0 && (
- <div className="p-8 text-center text-app-text-faint bg-app-bg rounded-xl">No products found for this brand.</div>
+ <div className="p-8 text-center text-app-muted-foreground bg-app-background rounded-xl">No products found for this brand.</div>
  )}
 
  {/* Groups */}
@@ -88,17 +88,17 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  return (
  <div key={group.id} className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-sm">
  {/* Group Header */}
- <div className="bg-gray-50/80 px-4 py-3 border-b border-app-border flex justify-between items-center">
+ <div className="bg-app-surface-2/80 px-4 py-3 border-b border-app-border flex justify-between items-center">
  <div className="flex items-center gap-3">
  <div className="p-1.5 bg-app-surface border rounded">
- <Layers className="text-emerald-600" size={18} />
+ <Layers className="text-app-primary" size={18} />
  </div>
  <div>
- <h3 className="text-lg font-bold text-app-text leading-none">{group.name}</h3>
- <p className="text-xs text-app-text-muted mt-1">{group.products.length} Variants ΓÇó Total Stock: {totalGroupStock}</p>
+ <h3 className="text-lg font-bold text-app-foreground leading-none">{group.name}</h3>
+ <p className="text-xs text-app-muted-foreground mt-1">{group.products.length} Variants ΓÇó Total Stock: {totalGroupStock}</p>
  </div>
  </div>
- <Link href={`/products/groups/${group.id}/edit`} className="p-2 text-app-text-faint hover:text-emerald-600 hover:bg-app-surface rounded-lg transition-all">
+ <Link href={`/products/groups/${group.id}/edit`} className="p-2 text-app-muted-foreground hover:text-app-primary hover:bg-app-surface rounded-lg transition-all">
  <Edit2 size={16} />
  </Link>
  </div>
@@ -106,7 +106,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  {/* Variants List */}
  <div className="divide-y divide-gray-50">
  {group.products.length === 0 ? (
- <div className="p-4 text-sm text-app-text-faint italic pl-12">No variants defined.</div>
+ <div className="p-4 text-sm text-app-muted-foreground italic pl-12">No variants defined.</div>
  ) : (
  group.products.map(variant => {
  const stock = variant.inventory.reduce((a, b) => a + Number(b.quantity), 0);
@@ -114,26 +114,26 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  const unitName = variant.unit?.short_name || variant.unit?.code || '';
 
  return (
- <div key={variant.id} className="p-3 pl-12 flex justify-between items-center hover:bg-app-bg transition-colors group">
+ <div key={variant.id} className="p-3 pl-12 flex justify-between items-center hover:bg-app-background transition-colors group">
  <div className="flex items-center gap-3">
  <div className="w-6 border-l-2 border-b-2 border-app-border h-4 -mt-4 rounded-bl-none text-transparent">.</div>
  <div className="flex items-center gap-2 min-w-[120px]">
- <Globe size={14} className="text-blue-500" />
- <span className="font-medium text-gray-700 text-sm">{variant.country?.name || 'Unknown'}</span>
+ <Globe size={14} className="text-app-info" />
+ <span className="font-medium text-app-muted-foreground text-sm">{variant.country?.name || 'Unknown'}</span>
  </div>
  <div className="flex flex-col">
- <span className="text-sm text-app-text">{variant.name}</span>
- <span className="text-[10px] text-app-text-faint font-mono flex items-center gap-2">
+ <span className="text-sm text-app-foreground">{variant.name}</span>
+ <span className="text-[10px] text-app-muted-foreground font-mono flex items-center gap-2">
  SKU: {variant.sku}
  <span className="bg-app-surface-2 px-1 rounded">{unitName}</span>
  </span>
  </div>
  </div>
  <div className="pr-4 text-right">
- <span className={`font-bold ${stock > 0 ? 'text-emerald-600' : 'text-red-400'}`}>
+ <span className={`font-bold ${stock > 0 ? 'text-app-primary' : 'text-app-error'}`}>
  {stock}
  </span>
- <span className="text-xs text-app-text-faint ml-1">qty</span>
+ <span className="text-xs text-app-muted-foreground ml-1">qty</span>
  </div>
  </div>
  );
@@ -148,13 +148,13 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
  {/* Standalone Products */}
  {(brand.products?.length || 0) > 0 && (
  <div className="card-premium p-6">
- <h3 className="text-lg font-bold text-app-text mb-4 border-b pb-2">Individual Items</h3>
+ <h3 className="text-lg font-bold text-app-foreground mb-4 border-b pb-2">Individual Items</h3>
  <div className="overflow-x-auto">
  <table className="w-full text-left text-sm">
  <thead>
- <tr className="text-app-text-muted"><th className="pb-2">Name</th><th className="pb-2">Country</th><th className="pb-2">Stock</th></tr>
+ <tr className="text-app-muted-foreground"><th className="pb-2">Name</th><th className="pb-2">Country</th><th className="pb-2">Stock</th></tr>
  </thead>
- <tbody className="divide-y divide-gray-100">
+ <tbody className="divide-y divide-app-border">
  {brand.products.map(p => (
  <tr key={p.id}>
  <td className="py-2">{p.name}</td>

@@ -13,7 +13,7 @@ async function getDeliveryZones() {
 }
 async function getContacts() {
  try {
- const data = await erpFetch('contacts/');
+ const data = await erpFetch('crm/contacts/');
  // Map Django camelCase/snake_case if needed. 
  // Django DRF default is snake_case unless configured otherwise.
  // Assuming camelCase based on previous knowledge or needing mapping.
@@ -39,7 +39,7 @@ async function getContacts() {
 }
 async function getSites() {
  try {
- return await erpFetch('sites/');
+ return await erpFetch('erp/sites/');
  } catch (e) {
  return [];
  }
@@ -53,19 +53,19 @@ export default async function ContactsPage() {
  return (
  <div className="page-container">
  {/* Header */}
- <header className="flex flex-col md:flex-row justify-between items-center gap-4">
+ <header className="app-page flex flex-col md:flex-row justify-between items-center gap-4">
  <div>
  <h1 className="page-header-title flex items-center gap-3">
- <div className="page-header-icon bg-emerald-600 text-app-text">
+ <div className="page-header-icon bg-app-primary text-app-foreground">
  <Users size={20} />
  </div>
- Contact <span className="text-emerald-600">Center</span>
+ Contact <span className="text-app-primary">Center</span>
  </h1>
  <p className="page-header-subtitle mt-1">Unified Client & Supplier Registry</p>
  </div>
  <div className="flex gap-3">
  <Link href="/crm">
- <Button variant="outline" className="rounded-xl h-9 px-4 gap-1.5 border-app-border hover:bg-app-bg transition-all shadow-sm text-xs">
+ <Button variant="outline" className="rounded-xl h-9 px-4 gap-1.5 border-app-border hover:bg-app-background transition-all shadow-sm text-xs">
  <ArrowLeft size={16} /> Back
  </Button>
  </Link>
@@ -73,13 +73,13 @@ export default async function ContactsPage() {
  </header>
  {/* KPI Section */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
- <div className="card-kpi bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-100">
+ <div className="card-kpi bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-app-success/30">
  <div className="flex items-center gap-4">
  <div className="w-10 h-10 rounded-xl bg-app-surface flex items-center justify-center shadow-sm">
- <Users size={18} className="text-emerald-600" />
+ <Users size={18} className="text-app-primary" />
  </div>
  <div>
- <p className="label-micro text-emerald-500 mb-0.5">Active Clients</p>
+ <p className="label-micro text-app-primary mb-0.5">Active Clients</p>
  <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</p>
  </div>
  </div>
@@ -87,52 +87,52 @@ export default async function ContactsPage() {
  <div className="card-kpi bg-gradient-to-br from-slate-50 to-slate-100/50">
  <div className="flex items-center gap-4">
  <div className="w-10 h-10 rounded-xl bg-app-surface flex items-center justify-center shadow-sm">
- <Building2 size={18} className="text-app-text-muted" />
+ <Building2 size={18} className="text-app-muted-foreground" />
  </div>
  <div>
- <p className="label-micro text-app-text-faint mb-0.5">Suppliers</p>
+ <p className="label-micro text-app-muted-foreground mb-0.5">Suppliers</p>
  <p className="value-medium">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</p>
  </div>
  </div>
  </div>
- <div className="card-kpi bg-gradient-to-br from-slate-900 to-slate-800 text-app-text border-0">
+ <div className="card-kpi bg-gradient-to-br from-slate-900 to-slate-800 text-app-foreground border-0">
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-xl bg-app-text/10 flex items-center justify-center shadow-sm backdrop-blur-sm">
- <TrendingUp size={18} className="text-emerald-300" />
+ <div className="w-10 h-10 rounded-xl bg-app-foreground/10 flex items-center justify-center shadow-sm backdrop-blur-sm">
+ <TrendingUp size={18} className="text-app-success" />
  </div>
  <div>
- <p className="label-micro text-slate-300 mb-0.5">Total Leads</p>
- <p className="text-xl font-black text-app-text tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
+ <p className="label-micro text-app-muted-foreground mb-0.5">Total Leads</p>
+ <p className="text-xl font-black text-app-foreground tracking-tighter">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</p>
  </div>
  </div>
  </div>
  </div>
  {/* Feature Info Grid */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
- <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
- <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
+ <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-app-primary/30 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+ <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
  <Building2 size={20} />
  </div>
- <h4 className="text-sm font-black text-app-text uppercase tracking-tight mb-1.5">Site Attribution</h4>
- <p className="text-app-text-muted text-[11px] font-medium leading-relaxed">
+ <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Site Attribution</h4>
+ <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
  Distinguish between a contact's <b>Home Site</b> and their <b>Transaction Site</b>.
  </p>
  </div>
- <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
- <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
+ <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-app-primary/30 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+ <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
  <CreditCard size={20} />
  </div>
- <h4 className="text-sm font-black text-app-text uppercase tracking-tight mb-1.5">Ledger Precision</h4>
- <p className="text-app-text-muted text-[11px] font-medium leading-relaxed">
+ <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Ledger Precision</h4>
+ <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
  Every contact has a direct 1:1 link to the General Ledger with live balances.
  </p>
  </div>
- <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
- <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:scale-110 transition-transform">
+ <div className="group p-4 bg-app-surface rounded-2xl border border-app-border hover:border-app-primary/30 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
+ <div className="w-10 h-10 rounded-lg bg-app-primary/5 flex items-center justify-center text-app-primary mb-3 group-hover:scale-110 transition-transform">
  <ShieldCheck size={20} />
  </div>
- <h4 className="text-sm font-black text-app-text uppercase tracking-tight mb-1.5">Trusted Data</h4>
- <p className="text-app-text-muted text-[11px] font-medium leading-relaxed">
+ <h4 className="text-sm font-black text-app-foreground uppercase tracking-tight mb-1.5">Trusted Data</h4>
+ <p className="text-app-muted-foreground text-[11px] font-medium leading-relaxed">
  Contact information stays consistent across all modules.
  </p>
  </div>

@@ -69,8 +69,8 @@ export function Numpad({
 
  const modeColors: Record<NumpadMode, string> = {
  qty: 'bg-indigo-600 text-app-text',
- disc: 'bg-amber-500 text-app-text',
- price: 'bg-emerald-600 text-app-text',
+ disc: 'bg-app-warning text-app-text',
+ price: 'bg-app-primary text-app-text',
  };
 
  return (
@@ -91,7 +91,7 @@ export function Numpad({
  onClick={() => setMode(m)}
  className={clsx(
  "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
- mode === m ? modeColors[m] : "bg-app-surface-2 text-app-text-muted hover:bg-gray-200"
+ mode === m ? modeColors[m] : "bg-app-surface-2 text-app-text-muted hover:bg-app-surface-3"
  )}
  >
  {modeLabels[m]}
@@ -105,7 +105,7 @@ export function Numpad({
  <button
  key={d}
  onClick={() => handleDigit(d)}
- className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-gray-700 hover:bg-app-bg active:scale-95 transition-all shadow-sm"
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-app-text hover:bg-app-bg active:scale-95 transition-all shadow-sm"
  >
  {d}
  </button>
@@ -126,7 +126,7 @@ export function Numpad({
  "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
  buffer
  ? `${modeColors[mode]} shadow-lg hover:opacity-90 active:scale-[0.98]`
- : "bg-app-surface-2 text-gray-300 cursor-not-allowed"
+ : "bg-app-surface-2 text-app-text-muted cursor-not-allowed"
  )}
  >
  Confirm {modeLabels[mode]}

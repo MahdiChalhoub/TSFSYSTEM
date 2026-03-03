@@ -28,16 +28,16 @@ export function CartTable({
  <th className="p-4 pr-6 text-center">Action</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50 text-xs font-bold text-gray-700">
+ <tbody className="divide-y divide-gray-50 text-xs font-bold text-app-text">
  {cart.length === 0 ? (
  <tr>
- <td colSpan={7} className="p-20 text-center text-gray-300 italic">
+ <td colSpan={7} className="p-20 text-center text-app-text-muted italic">
  Awaiting selection...
  </td>
  </tr>
  ) : (
  cart.map((item) => (
- <tr key={item.productId} className="hover:bg-gray-50/50 transition-colors">
+ <tr key={item.productId} className="hover:bg-app-bg/50 transition-colors">
  <td className="p-4 pl-6">
  <div className="font-bold text-app-text">{item.name}</div>
  <div className="text-[10px] text-app-text-faint font-mono mt-0.5">Stock check active...</div>
@@ -56,7 +56,7 @@ export function CartTable({
  <td className="p-4 pr-6 text-center">
  <button
  onClick={() => onRemoveItem(item.productId)}
- className="p-1.5 text-gray-300 hover:text-rose-500 transition-all"
+ className="p-1.5 text-app-text-muted hover:text-rose-500 transition-all"
  >
  <Trash2 size={16} />
  </button>

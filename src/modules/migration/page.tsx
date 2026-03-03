@@ -63,13 +63,13 @@ import { MigrationReviewDashboard } from "./components/MigrationReviewDashboard"
 // --
 
 const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
-    PENDING: { color: "bg-gray-500/20 text-gray-400 border-gray-500/30", icon: FileUp, label: "Pending" },
+    PENDING: { color: "bg-gray-500/20 text-app-text-faint border-gray-500/30", icon: FileUp, label: "Pending" },
     PARSING: { color: "bg-blue-500/20 text-blue-600 border-blue-500/30", icon: Database, label: "Parsing" },
     RUNNING: { color: "bg-amber-500/20 text-amber-600 border-amber-500/30", icon: Loader2, label: "Running" },
     COMPLETED: { color: "bg-emerald-500/20 text-emerald-600 border-emerald-500/30", icon: CheckCircle2, label: "Completed" },
     FAILED: { color: "bg-red-500/20 text-red-400 border-red-500/30", icon: XCircle, label: "Failed" },
     STALLED: { color: "bg-orange-500/20 text-orange-600 border-orange-500/30", icon: AlertTriangle, label: "Stalled" },
-    ROLLED_BACK: { color: "bg-gray-500/20 text-gray-400 border-gray-500/30", icon: RotateCcw, label: "Rolled Back" },
+    ROLLED_BACK: { color: "bg-gray-500/20 text-app-text-faint border-gray-500/30", icon: RotateCcw, label: "Rolled Back" },
 }
 
 const entityIcons: Record<string, any> = {
@@ -608,7 +608,7 @@ export default function MigrationPage() {
     // ═══════════════════════════════════════════════════════════════════════
 
     return (
-        <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 min-h-screen">
+        <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 min-h-screen bg-app-bg">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
@@ -617,7 +617,7 @@ export default function MigrationPage() {
                             variant="ghost"
                             size="icon"
                             onClick={goBack}
-                            className="w-14 h-14 rounded-[1.5rem] bg-white border border-gray-100 text-gray-500 hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm shrink-0"
+                            className="w-14 h-14 rounded-[1.5rem] bg-app-surface border border-app-border text-app-text-faint hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm shrink-0"
                         >
                             <ArrowLeft size={28} />
                         </Button>
@@ -627,10 +627,10 @@ export default function MigrationPage() {
                         </div>
                     )}
                     <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
                             Data <span className="text-emerald-600">Import</span>
                         </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Migrate data from external systems into TSF</p>
+                        <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Migrate data from external systems into TSF</p>
                     </div>
                 </div>
                 {step === "LIST" && (
@@ -660,45 +660,45 @@ export default function MigrationPage() {
                 <div className="space-y-6">
                     {/* KPIs */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
+                        <div className="bg-app-surface p-5 rounded-2xl border border-app-border shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
                             <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                                 <Database className="w-6 h-6 text-purple-600" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Migrated</p>
-                                <p className="text-2xl font-black text-slate-700 mt-0.5">
+                                <p className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Total Migrated</p>
+                                <p className="text-2xl font-black text-app-text-muted mt-0.5">
                                     {(jobs.reduce((sum, j) => sum + (j.total_products || 0) + (j.total_transactions || 0) + (j.total_contacts || 0), 0) || 0).toLocaleString()}
                                 </p>
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
+                        <div className="bg-app-surface p-5 rounded-2xl border border-app-border shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
                             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                                 <Loader2 className={`w-6 h-6 text-blue-600 ${jobs.some(j => j.status === 'RUNNING') ? 'animate-spin' : ''}`} />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Tasks</p>
+                                <p className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Active Tasks</p>
                                 <p className="text-2xl font-black text-blue-600 mt-0.5">
                                     {jobs.filter(j => ['RUNNING', 'PARSING', 'PENDING'].includes(j.status)).length}
                                 </p>
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
+                        <div className="bg-app-surface p-5 rounded-2xl border border-app-border shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
                             <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
                                 <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Completed</p>
+                                <p className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Completed</p>
                                 <p className="text-2xl font-black text-emerald-600 mt-0.5">
                                     {jobs.filter(j => j.status === 'COMPLETED').length}
                                 </p>
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
+                        <div className="bg-app-surface p-5 rounded-2xl border border-app-border shadow-sm flex items-center gap-4 group hover:border-emerald-200 transition-colors">
                             <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
                                 <AlertTriangle className="w-6 h-6 text-red-600" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Exceptions</p>
+                                <p className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Exceptions</p>
                                 <p className="text-2xl font-black text-red-600 mt-0.5">
                                     {(jobs.reduce((sum, j) => sum + (j.total_errors || 0), 0) || 0).toLocaleString()}
                                 </p>
@@ -708,10 +708,10 @@ export default function MigrationPage() {
 
                     <div className="space-y-4">
                         {jobs.length === 0 ? (
-                            <Card className="bg-white border-slate-200 shadow-sm border-dashed">
+                            <Card className="bg-app-surface border-app-border shadow-sm border-dashed">
                                 <CardContent className="flex flex-col items-center justify-center py-16">
                                     <Globe className="w-16 h-16 text-slate-200 mb-4" />
-                                    <p className="text-slate-400 text-lg font-bold tracking-tight">No imports yet</p>
+                                    <p className="text-app-text-faint text-lg font-bold tracking-tight">No imports yet</p>
                                     <p className="text-slate-400/60 text-sm mt-1">Import data from an external POS or ERP system</p>
                                     <Button
                                         onClick={() => setStep("SOURCE")}
@@ -728,7 +728,7 @@ export default function MigrationPage() {
                                 const isCompleted = job.status === "COMPLETED" || job.status === "FAILED" || job.status === "STALLED"
                                 return (
                                     <Card key={job.id}
-                                        className={`bg-white border-slate-200 shadow-sm transition-all ${isCompleted ? 'hover:border-emerald-500/50 cursor-pointer hover:shadow-md' : 'hover:bg-slate-50/50'
+                                        className={`bg-app-surface border-app-border shadow-sm transition-all ${isCompleted ? 'hover:border-emerald-500/50 cursor-pointer hover:shadow-md' : 'hover:bg-slate-50/50'
                                             }`}
                                         onClick={isCompleted ? () => viewResults(job) : undefined}
                                     >
@@ -738,9 +738,9 @@ export default function MigrationPage() {
                                                     <StatusIcon className={`w-5 h-5 ${job.status === "RUNNING" ? "animate-spin" : ""}`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="text-gray-900 font-black text-xl tracking-tight truncate">{job.name}</h3>
-                                                    <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-500">{config.label}</span>
+                                                    <h3 className="text-app-text font-black text-xl tracking-tight truncate">{job.name}</h3>
+                                                    <div className="flex items-center gap-3 mt-1 text-[10px] text-app-text-faint font-bold uppercase tracking-widest">
+                                                        <span className="bg-app-surface-2 px-2 py-0.5 rounded text-app-text-faint">{config.label}</span>
                                                         <span>•</span>
                                                         <span>{new Date(job.created_at).toLocaleDateString()}</span>
                                                         {job.source_business_name && (
@@ -769,7 +769,7 @@ export default function MigrationPage() {
                                                         )}
                                                     </div>
                                                     {(job.status === "RUNNING" || job.status === "PARSING") && (
-                                                        <div className="mt-2 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                                        <div className="mt-2 w-full bg-app-surface-2 rounded-full h-2 overflow-hidden">
                                                             <div
                                                                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
                                                                 style={{ width: `${job.progress}%` }}
@@ -835,8 +835,8 @@ export default function MigrationPage() {
             {step === "SOURCE" && (
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Choose Import Source</h2>
-                        <p className="text-slate-500 font-medium">Select the external system you're migrating from</p>
+                        <h2 className="text-3xl font-black text-app-text mb-2 tracking-tight">Choose Import Source</h2>
+                        <p className="text-app-text-faint font-medium">Select the external system you're migrating from</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         {IMPORT_SOURCES.map((source) => (
@@ -845,26 +845,26 @@ export default function MigrationPage() {
                                 disabled={!source.available}
                                 onClick={() => source.available && setStep("UPLOAD")}
                                 className={`text-left p-8 rounded-3xl border transition-all shadow-sm
-                                    bg-white hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1
+                                    bg-app-surface hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1
                                     ${source.available
                                         ? "cursor-pointer"
-                                        : "opacity-40 cursor-not-allowed bg-slate-50"
+                                        : "opacity-40 cursor-not-allowed bg-app-bg"
                                     }`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${source.id === 'ultimatepos' ? 'bg-orange-50' : 'bg-slate-50'}`}>
+                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${source.id === 'ultimatepos' ? 'bg-orange-50' : 'bg-app-bg'}`}>
                                             {source.icon}
                                         </div>
-                                        <h3 className="text-slate-900 font-black text-xl mt-5">{source.name}</h3>
-                                        <p className="text-slate-500 text-sm mt-1 font-medium">{source.description}</p>
+                                        <h3 className="text-app-text font-black text-xl mt-5">{source.name}</h3>
+                                        <p className="text-app-text-faint text-sm mt-1 font-medium">{source.description}</p>
                                     </div>
                                     {source.available && (
                                         <ChevronRight className="w-5 h-5 text-slate-300 mt-1" />
                                     )}
                                 </div>
                                 {!source.available && (
-                                    <span className="inline-block mt-4 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-100 text-slate-400">
+                                    <span className="inline-block mt-4 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-app-surface-2 text-app-text-faint">
                                         Coming Soon
                                     </span>
                                 )}
@@ -876,15 +876,15 @@ export default function MigrationPage() {
 
             {/*  STEP: UPLOAD  */}
             {step === "UPLOAD" && (
-                <Card className="bg-white border-gray-200 shadow-xl max-w-2xl mx-auto overflow-hidden rounded-3xl">
-                    <CardHeader className="text-center pb-2 bg-gray-50 border-b border-gray-100">
+                <Card className="bg-app-surface border-app-border shadow-xl max-w-2xl mx-auto overflow-hidden rounded-3xl">
+                    <CardHeader className="text-center pb-2 bg-app-bg border-b border-app-border">
                         <div className="flex items-center justify-center gap-3 mb-2">
                             <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center shadow-inner">
                                 <span className="text-3xl">🛒</span>
                             </div>
                             <div className="text-left">
-                                <CardTitle className="text-2xl font-black tracking-tight text-slate-900">UltimatePOS Import</CardTitle>
-                                <CardDescription className="text-slate-500 font-medium">Provide the database file to begin the migration</CardDescription>
+                                <CardTitle className="text-2xl font-black tracking-tight text-app-text">UltimatePOS Import</CardTitle>
+                                <CardDescription className="text-app-text-faint font-medium">Provide the database file to begin the migration</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
@@ -895,7 +895,7 @@ export default function MigrationPage() {
                                     className={`border-2 border-dashed rounded-3xl p-16 text-center transition-all cursor-pointer relative group
                                         ${dragActive
                                             ? "border-emerald-500 bg-emerald-50 scale-[1.01]"
-                                            : "border-gray-200 hover:border-emerald-400 bg-gray-50/50 hover:bg-white"
+                                            : "border-app-border hover:border-emerald-400 bg-gray-50/50 hover:bg-app-surface"
                                         }`}
                                     onDragEnter={handleDrag}
                                     onDragOver={handleDrag}
@@ -913,31 +913,31 @@ export default function MigrationPage() {
                                     {uploading ? (
                                         <div className="flex flex-col items-center w-full max-w-sm mx-auto py-4">
                                             <div className="w-20 h-20 mb-6 relative">
-                                                <div className={`absolute inset-0 rounded-full border-4 ${loadingBusinesses ? 'border-orange-500/20 border-t-orange-600' : 'border-gray-100 border-t-emerald-500'} animate-spin`} />
-                                                <div className="absolute inset-0 flex items-center justify-center text-xl font-black text-slate-900">
+                                                <div className={`absolute inset-0 rounded-full border-4 ${loadingBusinesses ? 'border-orange-500/20 border-t-orange-600' : 'border-app-border border-t-emerald-500'} animate-spin`} />
+                                                <div className="absolute inset-0 flex items-center justify-center text-xl font-black text-app-text">
                                                     {loadingBusinesses ? <Building2 className="w-8 h-8 text-orange-600 animate-pulse" /> : `${uploadProgress}%`}
                                                 </div>
                                             </div>
-                                            <h3 className="text-slate-900 font-bold mb-1">
+                                            <h3 className="text-app-text font-bold mb-1">
                                                 {loadingBusinesses ? "Discovering Businesses..." : "Uploading Database..."}
                                             </h3>
-                                            <p className="text-slate-500 text-xs font-medium">
+                                            <p className="text-app-text-faint text-xs font-medium">
                                                 {loadingBusinesses ? "Scanning source for isolated data logs" : "Please do not close this tab"}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center">
-                                            <div className="w-20 h-20 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                            <div className="w-20 h-20 rounded-2xl bg-app-surface border border-app-border shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                                 <Upload className="w-10 h-10 text-emerald-600" />
                                             </div>
-                                            <p className="text-slate-900 text-xl font-black mb-2 tracking-tight">
+                                            <p className="text-app-text text-xl font-black mb-2 tracking-tight">
                                                 Select SQL file from your computer
                                             </p>
-                                            <p className="text-slate-500 text-sm max-w-xs mx-auto mb-6 font-medium">
+                                            <p className="text-app-text-faint text-sm max-w-xs mx-auto mb-6 font-medium">
                                                 Drag and drop your file here, or click to browse.
                                                 We support large database backups.
                                             </p>
-                                            <Button className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl px-10 shadow-sm font-bold">
+                                            <Button className="bg-app-surface hover:bg-app-bg text-app-text-muted border border-app-border rounded-xl px-10 shadow-sm font-bold">
                                                 Browse Laptop
                                             </Button>
                                         </div>
@@ -945,9 +945,9 @@ export default function MigrationPage() {
                                 </div>
 
                                 <div className="flex items-center gap-4 py-2">
-                                    <div className="flex-1 h-px bg-slate-100" />
+                                    <div className="flex-1 h-px bg-app-surface-2" />
                                     <span className="text-[10px] uppercase tracking-widest font-black text-slate-300 mt-1">OR USE CLOUD SERVER</span>
-                                    <div className="flex-1 h-px bg-slate-100" />
+                                    <div className="flex-1 h-px bg-app-surface-2" />
                                 </div>
 
                                 <button
@@ -955,15 +955,15 @@ export default function MigrationPage() {
                                         setUploadMode('CLOUD')
                                         fetchCloudFiles()
                                     }}
-                                    className="w-full group p-6 rounded-3xl bg-gray-50 border border-gray-100 hover:border-emerald-500/50 hover:bg-white transition-all flex items-center justify-between shadow-sm hover:shadow-md"
+                                    className="w-full group p-6 rounded-3xl bg-app-bg border border-app-border hover:border-emerald-500/50 hover:bg-app-surface transition-all flex items-center justify-between shadow-sm hover:shadow-md"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                                        <div className="w-14 h-14 rounded-2xl bg-app-surface border border-app-border flex items-center justify-center shrink-0 shadow-sm">
                                             <DatabaseZap className="w-8 h-8 text-emerald-600" />
                                         </div>
                                         <div className="text-left">
-                                            <p className="text-slate-900 font-black text-lg tracking-tight">Pick from TSF Cloud Storage</p>
-                                            <p className="text-slate-500 text-xs font-medium">Access files already uploaded to your cloud server</p>
+                                            <p className="text-app-text font-black text-lg tracking-tight">Pick from TSF Cloud Storage</p>
+                                            <p className="text-app-text-faint text-xs font-medium">Access files already uploaded to your cloud server</p>
                                         </div>
                                     </div>
                                     <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-all group-hover:translate-x-1" />
@@ -972,14 +972,14 @@ export default function MigrationPage() {
                         ) : (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-slate-900 font-bold flex items-center gap-2">
+                                    <h3 className="text-app-text font-bold flex items-center gap-2">
                                         <DatabaseZap className="w-5 h-5 text-emerald-600" /> Cloud Migration Files
                                     </h3>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setUploadMode('LOCAL')}
-                                        className="text-[10px] text-slate-400 hover:text-emerald-700 uppercase tracking-widest font-black"
+                                        className="text-[10px] text-app-text-faint hover:text-emerald-700 uppercase tracking-widest font-black"
                                     >
                                         <ArrowLeft className="w-3 h-3 mr-1" /> Switch to Local
                                     </Button>
@@ -990,20 +990,20 @@ export default function MigrationPage() {
                                         placeholder="Search cloud files..."
                                         value={searchCloud}
                                         onChange={(e) => setSearchCloud(e.target.value)}
-                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300"
+                                        className="w-full bg-app-bg border border-app-border rounded-xl px-4 py-2.5 text-sm text-app-text placeholder:text-app-text-faint focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300"
                                     />
                                 </div>
 
                                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-2 pr-2">
                                     {loadingCloud ? (
                                         <div className="flex flex-col items-center py-10 opacity-40">
-                                            <Loader2 className="w-8 h-8 animate-spin mb-2 text-slate-400" />
-                                            <p className="text-sm font-medium text-slate-500">Scanning Cloud Storage...</p>
+                                            <Loader2 className="w-8 h-8 animate-spin mb-2 text-app-text-faint" />
+                                            <p className="text-sm font-medium text-app-text-faint">Scanning Cloud Storage...</p>
                                         </div>
                                     ) : cloudFiles.length === 0 ? (
-                                        <div className="text-center py-10 border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                                        <div className="text-center py-10 border border-dashed border-app-border rounded-2xl bg-app-bg">
                                             <DatabaseZap className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-                                            <p className="text-slate-400 text-sm font-medium">No .sql files found in your cloud storage</p>
+                                            <p className="text-app-text-faint text-sm font-medium">No .sql files found in your cloud storage</p>
                                             <Button
                                                 variant="link"
                                                 onClick={() => setUploadMode('LOCAL')}
@@ -1017,14 +1017,14 @@ export default function MigrationPage() {
                                             <button
                                                 key={file.uuid}
                                                 onClick={() => handleSelectCloudFile(file)}
-                                                className="w-full text-left p-4 rounded-xl bg-white border border-slate-100 hover:bg-slate-50 hover:border-emerald-500/30 transition-all flex items-center gap-3 active:scale-[0.98] shadow-sm"
+                                                className="w-full text-left p-4 rounded-xl bg-app-surface border border-app-border hover:bg-app-bg hover:border-emerald-500/30 transition-all flex items-center gap-3 active:scale-[0.98] shadow-sm"
                                             >
-                                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                                <div className="w-10 h-10 rounded-lg bg-app-bg border border-app-border flex items-center justify-center shrink-0">
                                                     <DatabaseZap className="w-5 h-5 text-emerald-600" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-slate-800 truncate">{file.original_filename || file.filename}</p>
-                                                    <p className="text-[10px] text-slate-500 flex items-center gap-2 font-medium">
+                                                    <p className="text-sm font-bold text-app-text truncate">{file.original_filename || file.filename}</p>
+                                                    <p className="text-[10px] text-app-text-faint flex items-center gap-2 font-medium">
                                                         <span className="text-emerald-700 font-bold uppercase tracking-wider">{file.category}</span>
                                                         <span>•</span>
                                                         <span>{Math.round(file.file_size / 1024 / 1024 * 100) / 100} MB</span>
@@ -1061,20 +1061,20 @@ export default function MigrationPage() {
             {step === "BUSINESSES" && (
                 <div className="max-w-3xl mx-auto space-y-8">
                     <div className="text-center mb-4">
-                        <h2 className="text-3xl font-black text-slate-900 mb-2 flex items-center justify-center gap-3 tracking-tight">
+                        <h2 className="text-3xl font-black text-app-text mb-2 flex items-center justify-center gap-3 tracking-tight">
                             <Building2 className="w-8 h-8 text-orange-600" />
                             Select Business to Import
                         </h2>
-                        <p className="text-slate-500 font-medium max-w-lg mx-auto">
-                            Your SQL dump contains <strong className="text-slate-900 font-black">{businesses.length} businesses</strong>.
+                        <p className="text-app-text-faint font-medium max-w-lg mx-auto">
+                            Your SQL dump contains <strong className="text-app-text font-black">{businesses.length} businesses</strong>.
                             Choose which one to migrate into this TSF organization.
                         </p>
                     </div>
 
                     {loadingBusinesses ? (
-                        <div className="flex flex-col items-center justify-center py-24 bg-white border border-slate-200 rounded-3xl shadow-sm border-dashed">
+                        <div className="flex flex-col items-center justify-center py-24 bg-app-surface border border-app-border rounded-3xl shadow-sm border-dashed">
                             <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
-                            <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">Discovering businesses...</span>
+                            <span className="text-app-text-faint font-bold uppercase tracking-widest text-xs">Discovering businesses...</span>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -1082,25 +1082,23 @@ export default function MigrationPage() {
                                 <button
                                     key={biz.id}
                                     onClick={() => handleSelectBusiness(biz)}
-                                    className="w-full text-left p-6 rounded-3xl bg-white border border-slate-200
-                                        hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-0.5
-                                        transition-all group shadow-sm"
+                                    className="w-full text-left p-6 rounded-3xl bg-app-surface border border-app-border
+                                        hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-0.5 transition-all group shadow-sm"
                                 >
                                     <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 rounded-2xl bg-orange-50
-                                            border border-orange-100 flex items-center justify-center shrink-0 shadow-inner">
+                                        <div className="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0 shadow-inner">
                                             <Building2 className="w-6 h-6 text-orange-600" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-slate-900 font-black text-xl tracking-tight truncate">
+                                            <h3 className="text-app-text font-black text-xl tracking-tight truncate">
                                                 {biz.name || `Business #${biz.id}`}
                                             </h3>
-                                            <div className="flex items-center gap-4 mt-1.5 text-[11px] text-slate-500 font-bold uppercase tracking-widest">
-                                                <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-400">ID: {biz.id}</span>
+                                            <div className="flex items-center gap-4 mt-1.5 text-[11px] text-app-text-faint font-bold uppercase tracking-widest">
+                                                <span className="bg-app-surface-2 px-2 py-0.5 rounded text-app-text-faint">ID: {biz.id}</span>
                                                 {biz.products !== undefined && (
                                                     <>
                                                         <span>•</span>
-                                                        <span className="flex items-center gap-1.5 text-slate-400">
+                                                        <span className="flex items-center gap-1.5 text-app-text-faint">
                                                             <Package className="w-3.5 h-3.5" /> {biz.products?.toLocaleString()}
                                                         </span>
                                                     </>
@@ -1108,7 +1106,7 @@ export default function MigrationPage() {
                                                 {biz.contacts !== undefined && (
                                                     <>
                                                         <span>•</span>
-                                                        <span className="flex items-center gap-1.5 text-slate-400">
+                                                        <span className="flex items-center gap-1.5 text-app-text-faint">
                                                             <Users className="w-3.5 h-3.5" /> {biz.contacts?.toLocaleString()}
                                                         </span>
                                                     </>
@@ -1116,7 +1114,7 @@ export default function MigrationPage() {
                                                 {biz.transactions !== undefined && (
                                                     <>
                                                         <span>•</span>
-                                                        <span className="flex items-center gap-1.5 text-slate-400">
+                                                        <span className="flex items-center gap-1.5 text-app-text-faint">
                                                             <ShoppingCart className="w-3.5 h-3.5" /> {biz.transactions?.toLocaleString()}
                                                         </span>
                                                     </>
@@ -1135,9 +1133,9 @@ export default function MigrationPage() {
             {/*  STEP: PREVIEW  */}
             {step === "PREVIEW" && activeJob && (
                 <div className="max-w-3xl mx-auto space-y-6">
-                    <Card className="bg-white border-slate-200 shadow-xl overflow-hidden rounded-3xl">
-                        <CardHeader className="bg-slate-50 border-b border-slate-100">
-                            <CardTitle className="text-2xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+                    <Card className="bg-app-surface border-app-border shadow-xl overflow-hidden rounded-3xl">
+                        <CardHeader className="bg-app-bg border-b border-app-border">
+                            <CardTitle className="text-2xl font-black text-app-text flex items-center gap-3 tracking-tight">
                                 <Eye className="w-7 h-7 text-emerald-600" />
                                 Import Preview
                                 {selectedBusiness && (
@@ -1147,18 +1145,18 @@ export default function MigrationPage() {
                                     </span>
                                 )}
                             </CardTitle>
-                            <CardDescription className="text-slate-500 font-medium">
+                            <CardDescription className="text-app-text-faint font-medium">
                                 Review the data that will be imported into your TSF system
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-8">
                             {preview?.status === 'analyzing' ? (
                                 <div className="flex flex-col items-center justify-center py-20 grayscale opacity-50">
-                                    <Loader2 className="w-12 h-12 text-slate-400 animate-spin mb-4" />
-                                    <p className="text-slate-900 text-lg font-bold">Discovering Data...</p>
-                                    <p className="text-slate-500 text-sm mt-1">We are scanning the source file to count records.</p>
+                                    <Loader2 className="w-12 h-12 text-app-text-faint animate-spin mb-4" />
+                                    <p className="text-app-text text-lg font-bold">Discovering Data...</p>
+                                    <p className="text-app-text-faint text-sm mt-1">We are scanning the source file to count records.</p>
                                     <Button
-                                        variant="outline" size="sm" className="mt-6 border-slate-200 text-slate-600 font-bold"
+                                        variant="outline" size="sm" className="mt-6 border-app-border text-app-text-muted font-bold"
                                         onClick={() => handlePreview(activeJob!)}
                                     >
                                         <RefreshCw className="w-3 h-3 mr-2" /> Refresh Status
@@ -1203,12 +1201,12 @@ export default function MigrationPage() {
                                             customer_groups: "Customer Groups",
                                         }
                                         return (
-                                            <div key={table} className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
+                                            <div key={table} className="flex items-center justify-between p-3.5 rounded-xl bg-app-bg border border-app-border shadow-sm">
                                                 <div className="flex items-center gap-3">
                                                     <Icon className="w-5 h-5 text-emerald-600" />
-                                                    <span className="text-gray-700 font-bold text-sm tracking-tight">{labels[table] || table}</span>
+                                                    <span className="text-app-text-muted font-bold text-sm tracking-tight">{labels[table] || table}</span>
                                                 </div>
-                                                <span className={`text-[11px] font-black font-mono px-2 py-0.5 rounded-md ${count > 0 ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-400"}`}>
+                                                <span className={`text-[11px] font-black font-mono px-2 py-0.5 rounded-md ${count > 0 ? "bg-emerald-100 text-emerald-700" : "bg-app-surface-2 text-app-text-faint"}`}>
                                                     {count.toLocaleString()} rows
                                                 </span>
                                             </div>
@@ -1225,12 +1223,11 @@ export default function MigrationPage() {
                                                     onChange={(e) => setSyncMode(e.target.checked)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-12 h-7 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-colors" />
-                                                <div className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md
-                                                    peer-checked:translate-x-5 transition-transform" />
+                                                <div className="w-12 h-7 bg-app-border rounded-full peer peer-checked:bg-emerald-500 transition-colors" />
+                                                <div className="absolute top-1 left-1 w-5 h-5 bg-app-surface rounded-full shadow-md peer-checked:translate-x-5 transition-transform" />
                                             </div>
                                             <div>
-                                                <span className="text-slate-900 font-black flex items-center gap-2">
+                                                <span className="text-app-text font-black flex items-center gap-2">
                                                     <RefreshCw className="w-4 h-4 text-emerald-600" />
                                                     Sync Mode
                                                 </span>
@@ -1246,8 +1243,8 @@ export default function MigrationPage() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center py-20 grayscale opacity-50">
-                                    <Loader2 className="w-8 h-8 text-gray-400 animate-spin mr-2" />
-                                    <span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading preview...</span>
+                                    <Loader2 className="w-8 h-8 text-app-text-faint animate-spin mr-2" />
+                                    <span className="text-app-text-faint font-bold uppercase tracking-widest text-xs">Loading preview...</span>
                                 </div>
                             )}
                         </CardContent>
@@ -1265,7 +1262,7 @@ export default function MigrationPage() {
                                     goBack()
                                 }
                             }}
-                            className="bg-white border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-8 rounded-xl shadow-sm"
+                            className="bg-app-surface border-app-border text-app-text-muted hover:bg-app-bg font-bold px-8 rounded-xl shadow-sm"
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             {businesses.length > 1 ? "Change Business" : "Cancel"}
@@ -1285,8 +1282,8 @@ export default function MigrationPage() {
             {/*  STEP: RUNNING  */}
             {step === "RUNNING" && activeJob && (
                 <div className="max-w-4xl mx-auto">
-                    <Card className="bg-white border-slate-200 shadow-xl mb-6 overflow-hidden rounded-3xl relative">
-                        <div className="absolute inset-0 bg-slate-50 opacity-50" />
+                    <Card className="bg-app-surface border-app-border shadow-xl mb-6 overflow-hidden rounded-3xl relative">
+                        <div className="absolute inset-0 bg-app-bg opacity-50" />
                         <CardContent className="py-16 text-center relative z-10">
                             <div className="relative w-40 h-40 mx-auto mb-8">
                                 {/* Animated spinning ring */}
@@ -1308,12 +1305,12 @@ export default function MigrationPage() {
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                    <span className="text-4xl font-black text-gray-950 tracking-tighter">{activeJob.progress}%</span>
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Progress</span>
+                                    <span className="text-4xl font-black text-app-text tracking-tighter">{activeJob.progress}%</span>
+                                    <span className="text-[10px] font-bold text-app-text-faint uppercase tracking-widest mt-1">Progress</span>
                                 </div>
                             </div>
 
-                            <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">
+                            <h2 className="text-3xl font-black text-app-text mb-2 tracking-tight">
                                 {activeJob.migration_mode === "SYNC" ? "Syncing Data..." : "Import in Progress"}
                             </h2>
                             <p className="text-emerald-700 font-bold mb-1 flex items-center justify-center gap-2">
@@ -1322,7 +1319,7 @@ export default function MigrationPage() {
                             </p>
                             {/* Live heartbeat indicator */}
                             {activeJob.last_heartbeat && (
-                                <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400 mt-1 mb-2 font-medium">
+                                <div className="flex items-center justify-center gap-2 text-[11px] text-app-text-faint mt-1 mb-2 font-medium">
                                     <span className={`w-2 h-2 rounded-full ${isStalled ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'
                                         }`} />
                                     <span>
@@ -1370,7 +1367,7 @@ export default function MigrationPage() {
                             { label: "Products", value: activeJob.total_products, icon: Package, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
                             { label: "Contacts", value: activeJob.total_contacts, icon: Users, color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
                             { label: "Orders", value: activeJob.total_transactions, icon: ShoppingCart, color: "text-orange-600", bg: "bg-orange-50 border-orange-100" },
-                            { label: "Errors", value: activeJob.total_errors, icon: XCircle, color: activeJob.total_errors > 0 ? "text-red-600" : "text-slate-300", bg: activeJob.total_errors > 0 ? "bg-red-50 border-red-100 animate-pulse" : "bg-white border-slate-100" },
+                            { label: "Errors", value: activeJob.total_errors, icon: XCircle, color: activeJob.total_errors > 0 ? "text-red-600" : "text-slate-300", bg: activeJob.total_errors > 0 ? "bg-red-50 border-red-100 animate-pulse" : "bg-app-surface border-app-border" },
                         ].map(({ label, value, icon: Icon, color, bg }) => (
                             <div key={label} className={`p-4 rounded-3xl border text-center transition-all ${bg}`}>
                                 <Icon className={`w-5 h-5 ${color} mx-auto mb-2`} />

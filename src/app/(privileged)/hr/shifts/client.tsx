@@ -8,9 +8,9 @@ import { Plus, Edit2, Trash2, Clock, Sun, Moon, Sunset, Coffee } from "lucide-re
 interface Props { shifts: any[] }
 
 const SHIFT_ICONS: Record<string, any> = {
- 'MORNING': <Sun size={18} className="text-amber-500" />,
+ 'MORNING': <Sun size={18} className="text-app-warning" />,
  'AFTERNOON': <Sunset size={18} className="text-orange-500" />,
- 'NIGHT': <Moon size={18} className="text-indigo-500" />,
+ 'NIGHT': <Moon size={18} className="text-app-primary" />,
 }
 
 export default function ShiftsClient({ shifts }: Props) {
@@ -56,40 +56,40 @@ export default function ShiftsClient({ shifts }: Props) {
  <div className="space-y-4">
  <div className="flex justify-end">
  <button onClick={() => { setEditing(null); setShowForm(!showForm) }}
- className="flex items-center gap-2 px-6 py-3 bg-amber-600 text-app-text rounded-2xl font-bold hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
+ className="flex items-center gap-2 px-6 py-3 bg-app-warning text-app-foreground rounded-2xl font-bold hover:bg-app-warning transition-all shadow-lg shadow-amber-200">
  <Plus size={18} /> Add Shift
  </button>
  </div>
 
  {showForm && (
- <form onSubmit={handleSubmit} className="bg-app-surface p-8 rounded-3xl border border-amber-100 shadow-xl space-y-4">
+ <form onSubmit={handleSubmit} className="bg-app-surface p-8 rounded-3xl border border-app-warning/30 shadow-xl space-y-4">
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Shift Name</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Shift Name</label>
  <input name="name" defaultValue={editing?.name} required
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all" />
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-warning/30 focus:ring-2 focus:ring-amber-100 outline-none transition-all" />
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Start Time</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Start Time</label>
  <input name="start_time" type="time" defaultValue={editing?.start_time} required
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-amber-400 outline-none transition-all" />
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-warning/30 outline-none transition-all" />
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">End Time</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">End Time</label>
  <input name="end_time" type="time" defaultValue={editing?.end_time} required
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-amber-400 outline-none transition-all" />
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-warning/30 outline-none transition-all" />
  </div>
  <div>
- <label className="block text-xs font-black text-app-text-faint uppercase tracking-wider mb-2">Break (min)</label>
+ <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Break (min)</label>
  <input name="break_duration_minutes" type="number" defaultValue={editing?.break_duration_minutes || 0}
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-amber-400 outline-none transition-all" />
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-warning/30 outline-none transition-all" />
  </div>
  </div>
  <div className="flex justify-end gap-3 pt-4">
  <button type="button" onClick={() => { setShowForm(false); setEditing(null) }}
- className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-text-muted hover:bg-app-bg transition-colors">Cancel</button>
+ className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-muted-foreground hover:bg-app-background transition-colors">Cancel</button>
  <button type="submit" disabled={isPending}
- className="px-8 py-3 bg-amber-600 text-app-text rounded-xl font-bold hover:bg-amber-700 disabled:opacity-50 transition-all">
+ className="px-8 py-3 bg-app-warning text-app-foreground rounded-xl font-bold hover:bg-app-warning disabled:opacity-50 transition-all">
  {isPending ? 'Saving...' : editing ? 'Update' : 'Create'}
  </button>
  </div>
@@ -98,46 +98,46 @@ export default function ShiftsClient({ shifts }: Props) {
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
  {shifts.length === 0 && (
- <div className="col-span-full text-center py-20 text-app-text-faint">
+ <div className="col-span-full text-center py-20 text-app-muted-foreground">
  <Clock size={48} className="mx-auto mb-4 opacity-30" />
  <p className="text-lg font-semibold">No shifts defined</p>
  <p className="text-sm">Create shifts to schedule your workforce</p>
  </div>
  )}
  {shifts.map((s: any) => (
- <div key={s.id} className="bg-app-surface p-6 rounded-2xl border border-app-border hover:shadow-lg hover:border-amber-200 transition-all group">
+ <div key={s.id} className="bg-app-surface p-6 rounded-2xl border border-app-border hover:shadow-lg hover:border-app-warning transition-all group">
  <div className="flex justify-between items-start mb-4">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
- {SHIFT_ICONS[s.shift_type] || <Clock size={18} className="text-amber-600" />}
+ <div className="w-10 h-10 rounded-xl bg-app-warning-bg flex items-center justify-center group-hover:bg-app-warning-bg transition-colors">
+ {SHIFT_ICONS[s.shift_type] || <Clock size={18} className="text-app-warning" />}
  </div>
  <div>
- <div className="font-bold text-app-text">{s.name}</div>
- <div className="text-xs text-app-text-faint">{s.shift_type || 'Standard'}</div>
+ <div className="font-bold text-app-foreground">{s.name}</div>
+ <div className="text-xs text-app-muted-foreground">{s.shift_type || 'Standard'}</div>
  </div>
  </div>
  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={() => { setEditing(s); setShowForm(true) }} className="p-2 hover:bg-amber-50 rounded-xl">
- <Edit2 size={14} className="text-amber-600" />
+ <button onClick={() => { setEditing(s); setShowForm(true) }} className="p-2 hover:bg-app-warning-bg rounded-xl">
+ <Edit2 size={14} className="text-app-warning" />
  </button>
- <button onClick={() => handleDelete(s.id)} className="p-2 hover:bg-red-50 rounded-xl">
- <Trash2 size={14} className="text-red-500" />
+ <button onClick={() => handleDelete(s.id)} className="p-2 hover:bg-app-error-bg rounded-xl">
+ <Trash2 size={14} className="text-app-error" />
  </button>
  </div>
  </div>
 
- <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-50">
+ <div className="grid grid-cols-3 gap-3 pt-4 border-t border-app-border">
  <div className="text-center">
- <div className="text-lg font-black text-app-text">{s.start_time || '—'}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase">Start</div>
+ <div className="text-lg font-black text-app-foreground">{s.start_time || '—'}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase">Start</div>
  </div>
  <div className="text-center">
- <div className="text-lg font-black text-app-text">{s.end_time || '—'}</div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase">End</div>
+ <div className="text-lg font-black text-app-foreground">{s.end_time || '—'}</div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase">End</div>
  </div>
  <div className="text-center">
- <div className="text-lg font-black text-amber-600">{s.break_duration_minutes || 0}<span className="text-xs">m</span></div>
- <div className="text-[10px] font-bold text-app-text-faint uppercase">Break</div>
+ <div className="text-lg font-black text-app-warning">{s.break_duration_minutes || 0}<span className="text-xs">m</span></div>
+ <div className="text-[10px] font-bold text-app-muted-foreground uppercase">Break</div>
  </div>
  </div>
  </div>

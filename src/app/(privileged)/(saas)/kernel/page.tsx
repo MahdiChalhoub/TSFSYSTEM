@@ -100,7 +100,7 @@ export default function KernelPage() {
  return (
  <div className="page-container">
  {/* Header */}
- <div className="flex items-center justify-between">
+ <div className="app-page flex items-center justify-between">
  <div>
  <h1 className="page-header-title flex items-center gap-2">
  <Cpu className="w-8 h-8" />
@@ -130,11 +130,11 @@ export default function KernelPage() {
  </div>
 
  {/* Current Version Card */}
- <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
+ <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-app-info/30">
  <CardHeader>
  <CardTitle className="flex items-center gap-2">
- <div className="p-2 rounded-lg bg-blue-500/20">
- <Cpu className="w-6 h-6 text-blue-400" />
+ <div className="p-2 rounded-lg bg-app-info/20">
+ <Cpu className="w-6 h-6 text-app-info" />
  </div>
  Current Version
  </CardTitle>
@@ -144,7 +144,7 @@ export default function KernelPage() {
  </CardHeader>
  <CardContent>
  <div className="flex items-center gap-4">
- <Badge variant="outline" className="text-2xl px-4 py-2 bg-blue-500/10 border-blue-500/50 text-blue-300">
+ <Badge variant="outline" className="text-2xl px-4 py-2 bg-app-info-bg border-app-info/50 text-app-info">
  v{currentVersion}
  </Badge>
  <span className="text-sm text-muted-foreground">
@@ -175,8 +175,8 @@ export default function KernelPage() {
  <div
  key={update.id}
  className={`p-4 rounded-lg border ${update.is_applied
- ? 'bg-green-500/5 border-green-500/30'
- : 'bg-yellow-500/5 border-yellow-500/30'
+ ? 'bg-app-success/5 border-app-success/30'
+ : 'bg-app-warning/5 border-app-warning/30'
  }`}
  >
  <div className="flex items-start justify-between">
@@ -186,12 +186,12 @@ export default function KernelPage() {
  v{update.version}
  </Badge>
  {update.is_applied ? (
- <span className="flex items-center gap-1 text-green-500 text-sm">
+ <span className="flex items-center gap-1 text-app-success text-sm">
  <CheckCircle2 className="w-4 h-4" />
  Applied
  </span>
  ) : (
- <span className="flex items-center gap-1 text-yellow-500 text-sm">
+ <span className="flex items-center gap-1 text-app-warning text-sm">
  <Clock className="w-4 h-4" />
  Staged
  </span>

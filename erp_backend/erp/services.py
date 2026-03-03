@@ -143,14 +143,15 @@ class ConfigurationService:
     def get_posting_rules(organization):
         """Read posting rules from Organization.settings JSON."""
         default_config = {
-            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None, "tax": None},
-            "purchases": {"payable": None, "inventory": None, "tax": None, "airsi_payable": None},
+            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None, "vat_collected": None},
+            "purchases": {"payable": None, "inventory": None, "vat_recoverable": None, "airsi_payable": None, "reverse_charge_vat": None, "discount_earned": None, "delivery_fees": None, "airsi": None},
             "inventory": {"adjustment": None, "transfer": None},
             "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},
             "fixedAssets": {"depreciationExpense": None, "accumulatedDepreciation": None},
             "suspense": {"reception": None},
             "partners": {"capital": None, "loan": None, "withdrawal": None},
-            "equity": {"capital": None, "draws": None}
+            "equity": {"capital": None, "draws": None},
+            "tax": {"vat_payable": None, "vat_refund_receivable": None},  # VAT control accounts
         }
         stored = organization.settings.get('finance_posting_rules')
         if not stored:
@@ -223,7 +224,7 @@ class ConfigurationService:
         config['sales']['inventory'] = find('1120') or find('31') or find('37') or config['sales']['inventory']
         config['purchases']['payable'] = find('2101') or find('401') or find('40') or config['purchases']['payable']
         config['purchases']['inventory'] = find('1120') or find('31') or find('37') or find('607') or config['purchases']['inventory']
-        config['purchases']['tax'] = find('2111') or find('4456') or find('445') or config['purchases']['tax']
+        config['purchases']['vat_recoverable'] = find('2111') or find('4456') or find('445') or config['purchases']['vat_recoverable']
         config['inventory']['adjustment'] = find('5104') or find('708') or find('709') or config['inventory']['adjustment']
         config['inventory']['transfer'] = find('1120') or find('31') or config['inventory']['transfer']
         config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
@@ -235,30 +236,65 @@ class ConfigurationService:
         ConfigurationService.save_posting_rules(organization, config)
         return config
 
+    # ── Dual View Add-On Helper ───────────────────────────────────────────────
+    @staticmethod
+    def _org_has_dual_view_addon(organization) -> bool:
+        """
+        Returns True if the organization is entitled to activate Dual View.
+        Entitlement: SaaS master org (slug='saas') OR active OrganizationAddon(dual_view).
+        """
+        if getattr(organization, 'slug', None) == 'saas':
+            return True
+        return organization.purchased_addons.filter(
+            addon__addon_type='dual_view',
+            status='active'
+        ).exists()
+
     @staticmethod
     def get_global_settings(organization):
         """Read global financial settings from Organization.settings JSON."""
         stored = organization.settings.get('global_financial_settings')
+        can_dual = ConfigurationService._org_has_dual_view_addon(organization)
+        defaults = {"worksInTTC": True, "dualView": False, "pricingCostBasis": "AMC", "canEnableDualView": can_dual}
         if not stored:
-            return {"worksInTTC": True, "dualView": False, "pricingCostBasis": "AMC"}
+            return defaults
         if isinstance(stored, str):
             try:
-                return json.loads(stored)
+                stored = json.loads(stored)
             except Exception:
-                return {}
+                return defaults
+        # Always inject the live entitlement — don't trust what's in the JSON
+        stored['canEnableDualView'] = can_dual
         return stored
 
     @staticmethod
     def save_global_settings(organization, config):
-        """Save global financial settings into Organization.settings JSON."""
+        """
+        Save global financial settings into Organization.settings JSON.
+        Enforces the Dual View add-on gate:
+        dualView=True is only allowed for SaaS master org or orgs with active dual_view addon.
+        """
+        # Strip the read-only computed flag before persisting
+        config.pop('canEnableDualView', None)
+
+        # Gate: block dualView activation without entitlement
+        if config.get('dualView') is True:
+            if not ConfigurationService._org_has_dual_view_addon(organization):
+                raise ValidationError({
+                    'dualView': (
+                        'Dual View requires an active Add-On. '
+                        'Contact your account manager to activate Internal Scope Access.'
+                    )
+                })
+
         if not organization.settings:
             organization.settings = {}
-        
+
         current = organization.settings.get('global_financial_settings', {})
         if isinstance(current, str):
             try: current = json.loads(current)
             except: current = {}
-            
+
         current.update(config)
         organization.settings['global_financial_settings'] = current
         organization.save(update_fields=['settings'])

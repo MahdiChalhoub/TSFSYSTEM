@@ -29,7 +29,7 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
  <button
  onClick={() => router.push(`/finance/ledger/${entryId}/edit`)}
  disabled={isLocked || status === 'REVERSED'}
- className="p-1.5 hover:bg-app-surface-2 rounded text-app-text-muted disabled:opacity-30"
+ className="p-1.5 hover:bg-app-surface-2 rounded text-app-muted-foreground disabled:opacity-30"
  title="Edit Entry"
  >
  <Edit2 size={14} />
@@ -48,7 +48,7 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
 
  <button
  onClick={() => router.push(`/finance/ledger/${entryId}`)}
- className="p-1.5 hover:bg-app-surface-2 rounded text-app-text-muted"
+ className="p-1.5 hover:bg-app-surface-2 rounded text-app-muted-foreground"
  title="View Details"
  >
  <Eye size={14} />

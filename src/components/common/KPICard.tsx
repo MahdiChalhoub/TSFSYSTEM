@@ -20,8 +20,8 @@ interface KPICardProps {
 }
 
 const VARIANT_STYLES = {
- emerald: { iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', shadow: 'shadow-emerald-100' },
- amber: { iconBg: 'bg-amber-50', iconColor: 'text-amber-600', shadow: 'shadow-amber-100' },
+ emerald: { iconBg: 'bg-app-primary-light', iconColor: 'text-app-primary', shadow: 'shadow-emerald-100' },
+ amber: { iconBg: 'bg-app-warning-bg', iconColor: 'text-app-warning', shadow: 'shadow-amber-100' },
  rose: { iconBg: 'bg-rose-50', iconColor: 'text-rose-600', shadow: 'shadow-rose-100' },
  slate: { iconBg: 'bg-app-bg', iconColor: 'text-app-text-muted', shadow: 'shadow-slate-100' },
  indigo: { iconBg: 'bg-indigo-50', iconColor: 'text-indigo-600', shadow: 'shadow-indigo-100' },
@@ -41,15 +41,15 @@ export default function KPICard({
 
  if (dark) {
  return (
- <div className="rounded-2xl bg-slate-900 border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 relative">
- <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
+ <div className="rounded-2xl bg-app-surface border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 relative">
+ <div className="absolute top-0 right-0 w-24 h-24 bg-app-primary/10 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-app-primary/20 transition-colors" />
  <div className="p-5 relative">
  <div className="flex justify-between items-start mb-4">
  <div className="w-11 h-11 rounded-xl bg-app-text/10 text-app-text flex items-center justify-center backdrop-blur-md">
  {icon}
  </div>
  {change !== undefined && change !== 0 && (
- <span className={`badge-status ${change > 0 ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' : 'text-rose-300 bg-rose-500/10 border-rose-500/20'}`}>
+ <span className={`badge-status ${change > 0 ? 'text-app-success bg-app-primary/10 border-app-primary/20' : 'text-rose-300 bg-rose-500/10 border-rose-500/20'}`}>
  {change > 0 ? <TrendingUp size={10} className="mr-1 inline" /> : <TrendingDown size={10} className="mr-1 inline" />}
  {change > 0 ? '+' : ''}{change}%
  </span>
@@ -83,7 +83,7 @@ export default function KPICard({
  <p className="label-micro">{label}</p>
  <h2 className="value-large mt-1">{value}</h2>
  {footnote && (
- <div className="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2 label-micro">
+ <div className="mt-4 pt-3 border-t border-app-border flex items-center gap-2 label-micro">
  {footnoteIcon} {footnote}
  </div>
  )}

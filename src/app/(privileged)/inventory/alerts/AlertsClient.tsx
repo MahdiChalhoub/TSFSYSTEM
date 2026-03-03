@@ -17,8 +17,8 @@ import { useRouter } from 'next/navigation'
 import { createTransferOrder } from '@/app/actions/inventory/transfer-orders'
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
- INFO: { label: 'Info', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100', icon: Bell },
- WARNING: { label: 'Warning', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', icon: AlertTriangle },
+ INFO: { label: 'Info', color: 'text-app-info', bg: 'bg-app-info-bg border-app-info/30', icon: Bell },
+ WARNING: { label: 'Warning', color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning/30', icon: AlertTriangle },
  CRITICAL: { label: 'Critical', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100', icon: ShieldAlert },
  EMERGENCY: { label: 'Emergency', color: 'text-rose-800', bg: 'bg-rose-100 border-rose-200', icon: XCircle },
 }
@@ -82,8 +82,8 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
  })()}
  </div>
  <div>
- <div className="font-bold text-app-text">{row.product_display || row.product_name || `ID: ${row.product}`}</div>
- <div className="text-[10px] text-app-text-faint font-black uppercase tracking-widest">{row.alert_type}</div>
+ <div className="font-bold text-app-foreground">{row.product_display || row.product_name || `ID: ${row.product}`}</div>
+ <div className="text-[10px] text-app-muted-foreground font-black uppercase tracking-widest">{row.alert_type}</div>
  </div>
  </div>
  )
@@ -94,12 +94,12 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
  render: (row: any) => (
  <div className="flex items-center gap-4">
  <div className="text-center">
- <div className="text-[9px] font-black text-app-text-faint uppercase tracking-tighter">Current</div>
- <div className="text-sm font-black text-app-text">{row.current_quantity ?? 0}</div>
+ <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-tighter">Current</div>
+ <div className="text-sm font-black text-app-foreground">{row.current_quantity ?? 0}</div>
  </div>
  <div className="w-px h-6 bg-app-surface-2" />
  <div className="text-center">
- <div className="text-[9px] font-black text-app-text-faint uppercase tracking-tighter">Threshold</div>
+ <div className="text-[9px] font-black text-app-muted-foreground uppercase tracking-tighter">Threshold</div>
  <div className="text-sm font-black text-rose-500">{row.threshold ?? 0}</div>
  </div>
  </div>
@@ -109,7 +109,7 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
  key: 'created_at',
  label: 'Urgency Age',
  render: (row: any) => (
- <div className="flex items-center gap-1.5 text-app-text-faint">
+ <div className="flex items-center gap-1.5 text-app-muted-foreground">
  <Clock size={12} />
  <span className="text-xs font-medium">{new Date(row.created_at).toLocaleDateString()}</span>
  </div>
@@ -147,13 +147,13 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
  <Button
  size="sm"
  variant="outline"
- className="h-8 border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-black text-[10px] gap-2"
+ className="h-8 border-app-primary/30 text-app-primary hover:bg-app-primary/5 font-black text-[10px] gap-2"
  onClick={() => handleQuickRestock(row)}
  disabled={isPending}
  >
  <MessageSquarePlus size={14} /> NEW WAREHOUSE ANALYTIC STRATEGY
  </Button>
- <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold text-app-text-faint">ACKNOWLEDGE ALERT</Button>
+ <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold text-app-muted-foreground">ACKNOWLEDGE ALERT</Button>
  </div>
  ),
  getDetails: (row) => [

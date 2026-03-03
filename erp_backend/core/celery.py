@@ -35,6 +35,20 @@ app.conf.beat_schedule = {
         'task': 'apps.workspace.tasks.check_stale_orders',
         'schedule': crontab(hour=8, minute=0),  # Daily at 8 AM
     },
+    # ── Finance Analytics (Gap 10) ───────────────────────────────────────────
+    'rebuild-finance-daily-summary': {
+        'task': 'finance.tasks.rebuild_finance_daily_summary',
+        'schedule': crontab(hour=2, minute=30),  # Nightly at 02:30
+    },
+    # ── Core ERP Tasks ───────────────────────────────────────────────────────
+    'check-overdue-invoices': {
+        'task': 'erp.tasks.check_overdue_invoices',
+        'schedule': crontab(minute=0),  # Every hour
+    },
+    'check-low-stock': {
+        'task': 'erp.tasks.check_low_stock',
+        'schedule': crontab(hour='*/6', minute=0),  # Every 6 hours
+    },
 }
 
 

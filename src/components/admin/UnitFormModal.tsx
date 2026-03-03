@@ -75,11 +75,11 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
  <div className="bg-app-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
- <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-gray-50/50">
+ <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-app-surface-2">
  <h3 className="font-bold text-lg text-app-text">
  {unit ? 'Edit Unit' : 'Create Unit'}
  </h3>
- <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-app-text-faint hover:text-app-text-muted transition-colors">
+ <button onClick={onClose} className="p-1 rounded-full hover:bg-app-border text-app-text-faint hover:text-app-text-muted transition-colors">
  <X size={18} />
  </button>
  </div>
@@ -91,14 +91,14 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  <button
  type="button"
  onClick={() => setUnitType('base')}
- className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${unitType === 'base' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-text-muted hover:text-gray-700'}`}
+ className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${unitType === 'base' ? 'bg-app-surface text-app-primary shadow-sm' : 'text-app-text-muted hover:text-app-text-muted'}`}
  >
  Base Unit (Root)
  </button>
  <button
  type="button"
  onClick={() => setUnitType('derived')}
- className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${unitType === 'derived' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-text-muted hover:text-gray-700'}`}
+ className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${unitType === 'derived' ? 'bg-app-surface text-app-primary shadow-sm' : 'text-app-text-muted hover:text-app-text-muted'}`}
  >
  Larger Unit (Package)
  </button>
@@ -114,7 +114,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  <label className="text-xs font-bold text-app-text-muted uppercase tracking-wide">Base / Parent Unit</label>
  <select
  required
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none bg-app-surface transition-all appearance-none"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none bg-app-surface transition-all appearance-none"
  value={selectedParentId}
  onChange={(e) => setSelectedParentId(e.target.value)}
  >
@@ -134,10 +134,10 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  name="name"
  defaultValue={unit?.name || ''}
  placeholder="e.g. Box, Piece"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
  required
  />
- {state.errors?.name && <p className="text-xs text-red-500">{state.errors.name[0]}</p>}
+ {state.errors?.name && <p className="text-xs text-app-error">{state.errors.name[0]}</p>}
  </div>
 
  <div className="space-y-1">
@@ -146,10 +146,10 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  name="code"
  defaultValue={unit?.code || ''}
  placeholder="e.g. BX, KG"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
  required
  />
- {state.errors?.code && <p className="text-xs text-red-500">{state.errors.code[0]}</p>}
+ {state.errors?.code && <p className="text-xs text-app-error">{state.errors.code[0]}</p>}
  </div>
  </div>
 
@@ -159,7 +159,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  name="shortName"
  defaultValue={unit?.short_name || ''}
  placeholder="e.g. pcs, kg"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all"
+ className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
  />
  </div>
 
@@ -174,18 +174,18 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  </div>
 
  <div className="flex flex-col justify-center gap-2">
- <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
- <input type="checkbox" name="allowFraction" defaultChecked={unit?.allow_fraction} className="w-4 h-4 text-emerald-600 rounded" />
+ <label className="flex items-center gap-2 text-sm font-medium text-app-text-muted cursor-pointer">
+ <input type="checkbox" name="allowFraction" defaultChecked={unit?.allow_fraction} className="w-4 h-4 text-app-primary rounded" />
  Allow Fractions
  </label>
- <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+ <label className="flex items-center gap-2 text-sm font-medium text-app-text-muted cursor-pointer">
  <input
  type="checkbox"
  name="needsBalance"
  defaultChecked={unit?.needs_balance}
  disabled={isInheritedBalance}
  onChange={(e) => setNeedsBalance(e.target.checked)}
- className="w-4 h-4 text-emerald-600 rounded disabled:opacity-50"
+ className="w-4 h-4 text-app-primary rounded disabled:opacity-50"
  />
  Connect to Balance
  {isInheritedBalance && <span className="text-[10px] bg-app-surface-2 text-app-text-muted px-1.5 py-0.5 rounded ml-1">Inherited</span>}
@@ -243,7 +243,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  type="number"
  step="0.001"
  defaultValue={unit?.conversion_factor || (baseUnitId ? 1 : '')}
- className="w-full pl-24 pr-4 py-3 rounded-xl border border-app-border focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+ className="w-full pl-24 pr-4 py-3 rounded-xl border border-app-border focus:border-app-primary focus:ring-4 focus:ring-app-primary/10 outline-none transition-all"
  placeholder="Qty"
  required
  />
@@ -257,7 +257,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
  <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-semibold border border-app-border text-app-text-muted hover:bg-app-bg transition-colors">
  Cancel
  </button>
- <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
+ <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-app-primary text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-app-primary/20 flex items-center justify-center gap-2">
  {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
  <span>Save Unit</span>
  </button>

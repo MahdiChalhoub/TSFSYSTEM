@@ -149,7 +149,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  "group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
  level === 0
  ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-orange-200"
- : "bg-orange-50/20 border-gray-100/50 ml-10 mt-2 hover:bg-app-surface hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/5",
+ : "bg-orange-50/20 border-app-border ml-10 mt-2 hover:bg-app-surface hover:border-orange-300 hover:shadow-lg hover:shadow-orange-500/5",
  "hover:-translate-y-0.5"
  )}
  >
@@ -210,12 +210,12 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  <div className="h-1 w-1 bg-gray-300 rounded-full" />
  )}
  {category.product_count != null && category.product_count > 0 && (
- <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
+ <span className="flex items-center gap-1.5 text-app-primary font-bold bg-app-primary-light/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
  {category.product_count} Products
  </span>
  )}
  {category.brand_count != null && category.brand_count > 0 && (
- <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-50/50 px-2 py-0.5 rounded-lg text-xs border border-blue-100/50 shadow-sm">
+ <span className="flex items-center gap-1.5 text-app-info font-bold bg-app-info-bg/50 px-2 py-0.5 rounded-lg text-xs border border-blue-100/50 shadow-sm">
  <Tag size={12} strokeWidth={3} />
  {category.brand_count} Brands
  </span>
@@ -234,14 +234,14 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  <div className="flex items-center gap-1 relative z-10">
  <button
  onClick={() => onEdit(category)}
- className="p-2.5 text-app-text-faint hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all hover:shadow-lg active:scale-90"
+ className="p-2.5 text-app-text-faint hover:text-app-primary hover:bg-app-primary-light rounded-xl transition-all hover:shadow-lg active:scale-90"
  title="Edit"
  >
  <Edit2 size={18} />
  </button>
  <button
  onClick={() => onAddChild(category.id)}
- className="p-2.5 text-app-text-faint hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:shadow-lg active:scale-90"
+ className="p-2.5 text-app-text-faint hover:text-app-info hover:bg-app-info-bg rounded-xl transition-all hover:shadow-lg active:scale-90"
  title="Add Sub-Category"
  >
  <Plus size={18} />
@@ -250,7 +250,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
  onClick={handleDelete}
  className={clsx(
  "p-2.5 rounded-xl transition-all hover:shadow-lg active:scale-90",
- hasChildren ? "text-gray-200 cursor-not-allowed" : "text-app-text-faint hover:text-red-500 hover:bg-red-50"
+ hasChildren ? "text-gray-200 cursor-not-allowed" : "text-app-text-faint hover:text-app-error hover:bg-app-error-bg"
  )}
  title={hasChildren ? "Delete sub-categories first" : "Delete"}
  >
@@ -264,7 +264,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
 
  {/* Children Recursive Render with Animation */}
  {isExpanded && hasChildren && (
- <div className="border-l-2 border-gray-100/80 ml-6 pl-1 animate-in slide-in-from-top-2 duration-300">
+ <div className="border-l-2 border-app-border/80 ml-6 pl-1 animate-in slide-in-from-top-2 duration-300">
  {category.children!.map((child) => (
  <CategoryTreeNode
  key={child.id}

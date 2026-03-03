@@ -156,6 +156,12 @@ class Product(TenantModel):
             UniqueConstraint(fields=['sku', 'organization'], name='unique_product_sku_per_org'),
             UniqueConstraint(fields=['barcode', 'organization'], name='unique_product_barcode_per_org', condition=Q(barcode__isnull=False)),
         ]
+        indexes = [
+            # Gap 10 — Performance Architecture: compound indexes for POS catalog patterns
+            models.Index(fields=['organization', 'category', 'is_active'], name='product_org_cat_active_idx'),
+            models.Index(fields=['organization', 'status'],                name='product_org_status_idx'),
+            models.Index(fields=['organization', 'min_stock_level'],       name='product_org_minstk_idx'),
+        ]
 
     def __str__(self):
         return f"{self.sku} - {self.name}"

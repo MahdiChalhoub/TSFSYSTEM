@@ -46,19 +46,19 @@ interface LogEntry {
 }
 
 const decisionColors: Record<string, string> = {
- forwarded: 'bg-emerald-100 text-emerald-700 border-emerald-200',
- cached: 'bg-blue-100 text-blue-700 border-blue-200',
- empty: 'bg-app-surface-2 text-gray-700 border-app-border',
- buffered: 'bg-amber-100 text-amber-700 border-amber-200',
- dropped: 'bg-red-100 text-red-700 border-red-200',
- error: 'bg-red-100 text-red-700 border-red-200',
+ forwarded: 'bg-app-primary-light text-app-success border-app-success',
+ cached: 'bg-app-info-bg text-app-info border-app-info',
+ empty: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
+ buffered: 'bg-app-warning-bg text-app-warning border-app-warning',
+ dropped: 'bg-app-error-bg text-app-error border-app-error',
+ error: 'bg-app-error-bg text-app-error border-app-error',
 }
 
 const stateColors: Record<string, string> = {
- available: 'bg-emerald-500',
- missing: 'bg-amber-500',
- disabled: 'bg-blue-500',
- unauthorized: 'bg-red-500',
+ available: 'bg-app-primary',
+ missing: 'bg-app-warning',
+ disabled: 'bg-app-info',
+ unauthorized: 'bg-app-error',
 }
 
 export default function ConnectorLogsPage() {
@@ -88,21 +88,21 @@ export default function ConnectorLogsPage() {
  }
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  {/* Header */}
  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
  <div>
- <Link href="/connector" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium">
+ <Link href="/connector" className="text-app-muted-foreground hover:text-app-muted-foreground flex items-center gap-2 mb-4 text-sm font-medium">
  <ArrowLeft size={16} />
  Back to Connector Dashboard
  </Link>
  <div className="flex items-center gap-3 mb-2">
- <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600">
+ <div className="p-3 rounded-2xl bg-app-primary-light text-app-primary">
  <FileText size={28} />
  </div>
  </div>
- <h2 className="text-3xl font-black text-app-text tracking-tight">Routing Logs</h2>
- <p className="text-app-text-muted mt-2 font-medium">Audit trail of Connector routing decisions</p>
+ <h2 className="text-3xl font-black text-app-foreground tracking-tight">Routing Logs</h2>
+ <p className="text-app-muted-foreground mt-2 font-medium">Audit trail of Connector routing decisions</p>
  </div>
  <Button
  onClick={() => loadLogs()}
@@ -119,8 +119,8 @@ export default function ConnectorLogsPage() {
  <Card className="rounded-2xl border-app-border">
  <CardContent className="p-4 flex flex-wrap gap-4 items-center">
  <div className="flex items-center gap-2">
- <Search size={18} className="text-app-text-faint" />
- <span className="text-sm font-medium text-app-text-muted">Filters:</span>
+ <Search size={18} className="text-app-muted-foreground" />
+ <span className="text-sm font-medium text-app-muted-foreground">Filters:</span>
  </div>
  <Input
  placeholder="Filter by module..."
@@ -150,10 +150,10 @@ export default function ConnectorLogsPage() {
  <CardContent className="p-0">
  {loading ? (
  <div className="flex items-center justify-center py-20">
- <RefreshCw className="w-8 h-8 animate-spin text-app-text-faint" />
+ <RefreshCw className="w-8 h-8 animate-spin text-app-muted-foreground" />
  </div>
  ) : logs.length === 0 ? (
- <div className="text-center py-20 text-app-text-faint">
+ <div className="text-center py-20 text-app-muted-foreground">
  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
  <p className="font-medium">No routing logs found</p>
  <p className="text-sm mt-1">Logs are created when the Connector routes requests</p>
@@ -161,29 +161,29 @@ export default function ConnectorLogsPage() {
  ) : (
  <div className="divide-y divide-gray-50">
  {logs.map((log) => (
- <div key={log.id} className="p-5 hover:bg-gray-50/50 transition-colors">
+ <div key={log.id} className="p-5 hover:bg-app-surface-2/50 transition-colors">
  <div className="flex items-center justify-between gap-4 mb-3">
  <div className="flex items-center gap-3">
- <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
- <span className="font-mono text-sm font-medium text-app-text">
+ <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-app-primary' : 'bg-app-error'}`} />
+ <span className="font-mono text-sm font-medium text-app-foreground">
  {log.source_module}
  </span>
- <ArrowRight size={14} className="text-gray-300" />
- <span className="font-mono text-sm font-medium text-app-text">
+ <ArrowRight size={14} className="text-app-muted-foreground" />
+ <span className="font-mono text-sm font-medium text-app-foreground">
  {log.target_module}
  </span>
  <Badge variant="outline" className="font-mono text-[10px] uppercase">
  {log.operation}
  </Badge>
  </div>
- <span className="text-xs text-app-text-faint">
+ <span className="text-xs text-app-muted-foreground">
  {new Date(log.created_at).toLocaleString()}
  </span>
  </div>
 
  <div className="flex flex-wrap items-center gap-3 mb-2">
  <Badge
- className={`${stateColors[log.module_state] || 'bg-gray-400'} text-app-text border-0 text-[10px] font-bold`}
+ className={`${stateColors[log.module_state] || 'bg-app-border'} text-app-foreground border-0 text-[10px] font-bold`}
  >
  {log.module_state?.toUpperCase() || 'UNKNOWN'}
  </Badge>
@@ -194,17 +194,17 @@ export default function ConnectorLogsPage() {
  {log.decision}
  </Badge>
  {log.response_time_ms > 0 && (
- <span className="text-xs text-app-text-faint font-mono">
+ <span className="text-xs text-app-muted-foreground font-mono">
  {log.response_time_ms}ms
  </span>
  )}
  </div>
 
- <div className="text-xs text-app-text-muted font-mono">
+ <div className="text-xs text-app-muted-foreground font-mono">
  {log.target_endpoint}
  </div>
 
- <div className="flex flex-wrap gap-4 mt-2 text-xs text-app-text-faint">
+ <div className="flex flex-wrap gap-4 mt-2 text-xs text-app-muted-foreground">
  {log.organization_name && (
  <span>Org: {log.organization_name}</span>
  )}
@@ -217,7 +217,7 @@ export default function ConnectorLogsPage() {
  </div>
 
  {log.error_message && (
- <div className="mt-2 p-2 rounded bg-red-50 text-red-600 text-xs font-mono">
+ <div className="mt-2 p-2 rounded bg-app-error-bg text-app-error text-xs font-mono">
  {log.error_message}
  </div>
  )}
@@ -229,8 +229,8 @@ export default function ConnectorLogsPage() {
  </Card>
 
  {/* Info Footer */}
- <div className="p-6 bg-app-bg rounded-2xl border border-app-border text-sm text-app-text-muted">
- <strong className="text-gray-700">Note:</strong> Logs are capped at 1,000 entries for performance.
+ <div className="p-6 bg-app-background rounded-2xl border border-app-border text-sm text-app-muted-foreground">
+ <strong className="text-app-muted-foreground">Note:</strong> Logs are capped at 1,000 entries for performance.
  Use filters to narrow down results. Logs older than 30 days may be automatically archived.
  </div>
  </div>

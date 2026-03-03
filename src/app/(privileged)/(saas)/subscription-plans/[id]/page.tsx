@@ -182,11 +182,11 @@ export default function PlanDetailPage() {
  { key: 'max_customers', label: 'Max Customers', icon: UserCheck },
  ]
 
- if (loading) return <div className="py-20 text-center text-app-text-muted">Loading plan...</div>
- if (!plan) return <div className="py-20 text-center text-app-text-muted">Plan not found</div>
+ if (loading) return <div className="py-20 text-center text-app-muted-foreground">Loading plan...</div>
+ if (!plan) return <div className="py-20 text-center text-app-muted-foreground">Plan not found</div>
 
  return (
- <div className="space-y-6 animate-in fade-in duration-500">
+ <div className="app-page space-y-6 animate-in fade-in duration-500">
  {/* Header */}
  <div className="flex items-center gap-4">
  <Button variant="ghost" size="icon" onClick={() => router.push('/subscription-plans')} className="shrink-0">
@@ -194,14 +194,14 @@ export default function PlanDetailPage() {
  </Button>
  <div className="flex-1">
  <div className="flex items-center gap-3">
- <h2 className="text-3xl font-black text-app-text tracking-tight">{plan.name}</h2>
- <Badge className={form.is_public ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
+ <h2 className="text-3xl font-black text-app-foreground tracking-tight">{plan.name}</h2>
+ <Badge className={form.is_public ? "bg-app-primary-light text-app-success" : "bg-app-warning-bg text-app-warning"}>
  {form.is_public ? <><Globe size={12} className="mr-1" /> Public</> : <><Lock size={12} className="mr-1" /> Private</>}
  </Badge>
  {isCustom && <Badge className="bg-purple-100 text-purple-700">Custom</Badge>}
- {form.trial_days > 0 && <Badge className="bg-blue-50 text-blue-700"><Clock size={12} className="mr-1" />{form.trial_days}d trial</Badge>}
+ {form.trial_days > 0 && <Badge className="bg-app-info-bg text-app-info"><Clock size={12} className="mr-1" />{form.trial_days}d trial</Badge>}
  </div>
- <p className="text-app-text-muted mt-1 text-sm">{plan.description || 'No description'}</p>
+ <p className="text-app-muted-foreground mt-1 text-sm">{plan.description || 'No description'}</p>
  </div>
  <div className="flex gap-2">
  <Button variant="outline" onClick={handleTogglePublic} className="gap-2 text-sm">
@@ -209,12 +209,12 @@ export default function PlanDetailPage() {
  Make {form.is_public ? 'Private' : 'Public'}
  </Button>
  {editing ? (
- <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-app-text gap-2">
+ <Button onClick={handleSave} disabled={saving} className="bg-app-primary hover:bg-app-primary text-app-foreground gap-2">
  {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
  Save Changes
  </Button>
  ) : (
- <Button onClick={() => setEditing(true)} className="bg-gray-800 hover:bg-gray-700 text-app-text gap-2">
+ <Button onClick={() => setEditing(true)} className="bg-app-surface-2 hover:bg-app-surface text-app-foreground gap-2">
  <Pencil size={16} /> Edit Plan
  </Button>
  )}
@@ -227,8 +227,8 @@ export default function PlanDetailPage() {
  <button key={t.key}
  onClick={() => setTab(t.key as any)}
  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === t.key
- ? 'bg-app-surface text-app-text shadow-sm'
- : 'text-app-text-muted hover:text-gray-700'
+ ? 'bg-app-surface text-app-foreground shadow-sm'
+ : 'text-app-muted-foreground hover:text-app-muted-foreground'
  }`}
  >{t.label}</button>
  ))}
@@ -243,34 +243,34 @@ export default function PlanDetailPage() {
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Name</Label>
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Name</Label>
  <Input value={form.name} disabled={!editing}
  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
- className="bg-app-bg border-app-border rounded-xl" />
+ className="bg-app-background border-app-border rounded-xl" />
  </div>
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Description</Label>
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Description</Label>
  <Textarea value={form.description} disabled={!editing} rows={3}
  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
- className="bg-app-bg border-app-border rounded-xl" />
+ className="bg-app-background border-app-border rounded-xl" />
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Sort Order</Label>
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Sort Order</Label>
  <Input type="number" value={form.sort_order} disabled={!editing}
  onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
- className="bg-app-bg border-app-border rounded-xl" />
+ className="bg-app-background border-app-border rounded-xl" />
  </div>
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider flex items-center gap-1">
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider flex items-center gap-1">
  <Clock size={12} /> Trial Duration (days)
  </Label>
  <Input type="number" value={form.trial_days} disabled={!editing}
  onChange={e => setForm(f => ({ ...f, trial_days: parseInt(e.target.value) || 0 }))}
- className="bg-app-bg border-app-border rounded-xl"
+ className="bg-app-background border-app-border rounded-xl"
  placeholder="0 = no trial" />
  {form.trial_days > 0 && (
- <p className="text-[10px] text-blue-500 font-bold">
+ <p className="text-[10px] text-app-info font-bold">
  {form.trial_days} days = ~{Math.round(form.trial_days / 30)} month(s) free trial
  </p>
  )}
@@ -292,23 +292,23 @@ export default function PlanDetailPage() {
  ) : (
  <>
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Monthly Price ($)</Label>
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Monthly Price ($)</Label>
  <Input type="number" value={form.monthly_price} disabled={!editing}
  onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))}
- className="bg-app-bg border-app-border rounded-xl" />
+ className="bg-app-background border-app-border rounded-xl" />
  </div>
  <div className="space-y-2">
- <Label className="text-xs font-bold text-app-text-faint uppercase tracking-wider">Annual Price ($)</Label>
+ <Label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Annual Price ($)</Label>
  <Input type="number" value={form.annual_price} disabled={!editing}
  onChange={e => setForm(f => ({ ...f, annual_price: e.target.value }))}
- className="bg-app-bg border-app-border rounded-xl" />
+ className="bg-app-background border-app-border rounded-xl" />
  </div>
  <div className="pt-4 border-t text-center">
- <p className="text-3xl font-black text-emerald-600">{parseFloat(form.monthly_price) === 0 ? 'Free' : `$${parseFloat(form.monthly_price).toFixed(0)}`}<span className="text-lg text-app-text-faint font-normal">/mo</span></p>
+ <p className="text-3xl font-black text-app-primary">{parseFloat(form.monthly_price) === 0 ? 'Free' : `$${parseFloat(form.monthly_price).toFixed(0)}`}<span className="text-lg text-app-muted-foreground font-normal">/mo</span></p>
  {parseFloat(form.annual_price) > 0 && (
- <p className="text-lg text-app-text-muted mt-1">${parseFloat(form.annual_price).toFixed(0)}<span className="text-sm font-normal">/yr</span>
+ <p className="text-lg text-app-muted-foreground mt-1">${parseFloat(form.annual_price).toFixed(0)}<span className="text-sm font-normal">/yr</span>
  {parseFloat(form.monthly_price) > 0 && (
- <span className="text-emerald-500 text-xs ml-2 font-bold">
+ <span className="text-app-primary text-xs ml-2 font-bold">
  Save {Math.round(100 - (parseFloat(form.annual_price) / (parseFloat(form.monthly_price) * 12)) * 100)}%
  </span>
  )}
@@ -328,10 +328,10 @@ export default function PlanDetailPage() {
  <CardContent>
  <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
  {limitConfig.map(lim => (
- <div key={lim.key} className="text-center p-4 bg-app-bg rounded-2xl">
- <lim.icon size={20} className="mx-auto text-app-text-faint mb-2" />
- <div className="text-xs text-app-text-faint font-bold uppercase">{lim.label}</div>
- <div className="text-xl font-black text-app-text mt-1">
+ <div key={lim.key} className="text-center p-4 bg-app-background rounded-2xl">
+ <lim.icon size={20} className="mx-auto text-app-muted-foreground mb-2" />
+ <div className="text-xs text-app-muted-foreground font-bold uppercase">{lim.label}</div>
+ <div className="text-xl font-black text-app-foreground mt-1">
  {form.limits[lim.key] != null
  ? (form.limits[lim.key] < 0 ? '∞' : form.limits[lim.key] >= 10000 ? `${(form.limits[lim.key] / 1000).toFixed(0)}K` : form.limits[lim.key].toLocaleString())
  : '—'}
@@ -352,7 +352,7 @@ export default function PlanDetailPage() {
  <CardTitle className="text-lg font-bold">Included Modules & Features</CardTitle>
  <CardDescription>
  Toggle modules on/off, then expand each module to select specific features.
- {!editing && <span className="text-amber-600 ml-2 font-bold">Click "Edit Plan" to modify.</span>}
+ {!editing && <span className="text-app-warning ml-2 font-bold">Click "Edit Plan" to modify.</span>}
  </CardDescription>
  </CardHeader>
  <CardContent className="space-y-3">
@@ -368,8 +368,8 @@ export default function PlanDetailPage() {
 
  return (
  <div key={code} className={`rounded-2xl border-2 transition-all overflow-hidden ${isIncluded
- ? 'border-emerald-200 bg-app-surface'
- : 'border-app-border bg-gray-50/50'
+ ? 'border-app-success bg-app-surface'
+ : 'border-app-border bg-app-surface-2/50'
  }`}>
  {/* Module header row */}
  <div className={`flex items-center gap-4 p-4 ${editing ? 'cursor-pointer' : ''}`}
@@ -382,12 +382,12 @@ export default function PlanDetailPage() {
  />
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 flex-wrap">
- <p className={`font-bold ${isIncluded ? 'text-app-text' : 'text-app-text-faint'}`}>{m.name}</p>
- <span className="text-[10px] font-mono text-gray-300">{code}</span>
- {m.version && <Badge className="bg-app-surface-2 text-app-text-muted text-[9px]">v{m.version}</Badge>}
- <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-emerald-50 text-emerald-600' :
- m.visibility === 'organization' ? 'bg-blue-50 text-blue-600' :
- 'bg-app-surface-2 text-app-text-muted'
+ <p className={`font-bold ${isIncluded ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{m.name}</p>
+ <span className="text-[10px] font-mono text-app-muted-foreground">{code}</span>
+ {m.version && <Badge className="bg-app-surface-2 text-app-muted-foreground text-[9px]">v{m.version}</Badge>}
+ <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-app-primary-light text-app-primary' :
+ m.visibility === 'organization' ? 'bg-app-info-bg text-app-info' :
+ 'bg-app-surface-2 text-app-muted-foreground'
  }`}>
  {m.visibility === 'public' ? '🌐 Public' :
  m.visibility === 'organization' ? '🏢 Org Only' :
@@ -395,10 +395,10 @@ export default function PlanDetailPage() {
  </Badge>
  </div>
  {m.description && (
- <p className="text-[11px] text-app-text-faint mt-0.5 line-clamp-1">{m.description}</p>
+ <p className="text-[11px] text-app-muted-foreground mt-0.5 line-clamp-1">{m.description}</p>
  )}
  {hasFeatures && isIncluded && (
- <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
+ <p className="text-[11px] text-app-primary font-medium mt-0.5">
  {activeFeatures.length}/{modFeats.features.length} features active
  </p>
  )}
@@ -407,7 +407,7 @@ export default function PlanDetailPage() {
  {/* Expand/collapse features */}
  {hasFeatures && isIncluded && (
  <Button variant="ghost" size="sm"
- className="text-app-text-faint hover:text-gray-700 gap-1"
+ className="text-app-muted-foreground hover:text-app-muted-foreground gap-1"
  onClick={(e) => { e.stopPropagation(); toggleExpandModule(code) }}>
  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
  <span className="text-xs">Features</span>
@@ -417,14 +417,14 @@ export default function PlanDetailPage() {
 
  {/* Feature toggles */}
  {hasFeatures && isIncluded && isExpanded && (
- <div className="border-t border-app-border bg-gray-50/50 px-4 py-3">
+ <div className="border-t border-app-border bg-app-surface-2/50 px-4 py-3">
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
  {modFeats.features.map(feat => {
  const isActive = activeFeatures.includes(feat.code)
  return (
  <div key={feat.code}
  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive
- ? 'bg-emerald-50 border border-emerald-100'
+ ? 'bg-app-primary-light border border-app-success/30'
  : 'bg-app-surface border border-app-border'
  } ${editing ? 'cursor-pointer hover:shadow-sm' : ''}`}
  onClick={() => editing && toggleFeature(code, feat.code)}>
@@ -435,11 +435,11 @@ export default function PlanDetailPage() {
  onClick={(e) => e.stopPropagation()}
  />
  <div className="flex-1 min-w-0">
- <p className={`text-sm font-medium ${isActive ? 'text-app-text' : 'text-app-text-faint'}`}>{feat.name}</p>
- <p className="text-[10px] text-gray-300 font-mono">{feat.code}</p>
+ <p className={`text-sm font-medium ${isActive ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{feat.name}</p>
+ <p className="text-[10px] text-app-muted-foreground font-mono">{feat.code}</p>
  </div>
  {feat.default && (
- <Badge className="bg-blue-50 text-blue-500 text-[8px]">default</Badge>
+ <Badge className="bg-app-info-bg text-app-info text-[8px]">default</Badge>
  )}
  </div>
  )
@@ -452,7 +452,7 @@ export default function PlanDetailPage() {
  })}
  </CardContent>
  </Card>
- <p className="text-xs text-app-text-faint font-medium px-2">
+ <p className="text-xs text-app-muted-foreground font-medium px-2">
  {form.modules.length} module(s) included · Core modules (core, coreplatform) are always available.
  </p>
  </div>
@@ -470,18 +470,18 @@ export default function PlanDetailPage() {
  {limitConfig.map(lim => (
  <div key={lim.key} className="space-y-2">
  <div className="flex items-center gap-2">
- <lim.icon size={16} className="text-app-text-faint" />
- <Label className="text-sm font-bold text-gray-700">{lim.label}</Label>
+ <lim.icon size={16} className="text-app-muted-foreground" />
+ <Label className="text-sm font-bold text-app-muted-foreground">{lim.label}</Label>
  </div>
  <Input
  type="number"
  value={form.limits[lim.key] ?? ''}
  disabled={!editing}
  onChange={e => updateLimit(lim.key, e.target.value)}
- className="bg-app-bg border-app-border rounded-xl"
+ className="bg-app-background border-app-border rounded-xl"
  placeholder="0"
  />
- <p className="text-[10px] text-app-text-faint">
+ <p className="text-[10px] text-app-muted-foreground">
  {form.limits[lim.key] === -1 ? 'Unlimited' : form.limits[lim.key] != null ? `Cap: ${form.limits[lim.key].toLocaleString()}` : 'Not set'}
  </p>
  </div>
@@ -503,21 +503,21 @@ export default function PlanDetailPage() {
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
  {(plan as any).organizations.map((org: Record<string, any>) => (
  <div key={org.id}
- className="flex items-center justify-between p-4 rounded-2xl bg-app-bg border border-app-border hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
+ className="flex items-center justify-between p-4 rounded-2xl bg-app-background border border-app-border hover:border-app-success hover:shadow-sm transition-all cursor-pointer"
  onClick={() => router.push(`/organizations/${org.id}`)}
  >
  <div>
- <p className="font-bold text-app-text">{org.name}</p>
- <p className="text-xs text-app-text-faint font-mono">{org.slug}</p>
+ <p className="font-bold text-app-foreground">{org.name}</p>
+ <p className="text-xs text-app-muted-foreground font-mono">{org.slug}</p>
  </div>
- <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}>
+ <Badge className={org.is_active ? "bg-app-primary-light text-app-primary" : "bg-app-error-bg text-app-error"}>
  {org.is_active ? 'Active' : 'Suspended'}
  </Badge>
  </div>
  ))}
  </div>
  ) : (
- <div className="py-12 text-center text-app-text-faint">
+ <div className="py-12 text-center text-app-muted-foreground">
  <Users size={40} className="mx-auto mb-3 opacity-30" />
  <p className="font-medium">No organizations on this plan yet</p>
  <p className="text-xs mt-1">Assign this plan to organizations from their detail page</p>

@@ -30,7 +30,7 @@ async function getEmployees() {
 
 async function getStandaloneUsers(employeeUserIds: string[]) {
  try {
- const users = await erpFetch('users/');
+ const users = await erpFetch('erp/users/');
  return users
  .filter((u: Record<string, any>) => !employeeUserIds.includes(u.id))
  .map((u: Record<string, any>) => ({
@@ -51,7 +51,7 @@ async function getStandaloneUsers(employeeUserIds: string[]) {
 }
 
 async function getSites() {
- try { return await erpFetch('sites/'); } catch { return []; }
+ try { return await erpFetch('erp/sites/'); } catch { return []; }
 }
 
 async function getRoles() {
@@ -77,8 +77,8 @@ export default async function EmployeesPage() {
 
  return (
  <div
- className="min-h-screen p-5 md:p-6 space-y-5 max-w-[1600px] mx-auto"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+ className="app-page min-h-screen p-5 md:p-6 space-y-5 max-w-[1600px] mx-auto bg-app-background"
+ style={{ color: 'var(--app-foreground)' }}
  >
  {/* ── Header ────────────────────────────── */}
  <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 fade-in-up">
@@ -92,11 +92,11 @@ export default async function EmployeesPage() {
  <div>
  <h1
  className="text-3xl font-black tracking-tight"
- style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
+ style={{ color: 'var(--app-foreground)' }}
  >
  HR <span style={{ color: 'var(--app-primary)' }}>Command</span>
  </h1>
- <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+ <p className="text-sm mt-0.5 uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
  Resource Master & Professional Directory
  </p>
  </div>
@@ -114,7 +114,7 @@ export default async function EmployeesPage() {
  <kpi.icon size={20} style={{ color: kpi.color }} />
  </div>
  <div>
- <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: 'var(--app-text-muted)' }}>
+ <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: 'var(--app-muted-foreground)' }}>
  {kpi.label}
  </p>
  <p className="text-2xl font-black tracking-tight" style={{ color: kpi.color }}>

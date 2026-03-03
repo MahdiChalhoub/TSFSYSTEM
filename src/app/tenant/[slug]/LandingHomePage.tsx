@@ -25,7 +25,7 @@ export function LandingHomePage({ org }: { org: any }) {
  </div>
  </section>
  {/* Features Grid */}
- <section id="services" className="py-24 bg-gray-50/50 border-t border-app-border">
+ <section id="services" className="py-24 bg-app-surface-2/50 border-t border-app-border">
  <div className="max-w-7xl mx-auto px-6">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
@@ -43,7 +43,7 @@ export function LandingHomePage({ org }: { org: any }) {
  <p className="text-app-text-muted font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
  </div>
  <div className="bg-app-surface p-8 rounded-[2.5rem] border border-app-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
- <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
+ <div className="w-14 h-14 rounded-2xl bg-app-success-bg text-emerald-600 flex items-center justify-center mb-6">
  <Globe size={28} />
  </div>
  <h3 className="text-xl font-bold text-app-text mb-3">Global Reach</h3>

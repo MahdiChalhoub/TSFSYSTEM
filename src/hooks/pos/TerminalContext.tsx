@@ -31,10 +31,11 @@ export const playSound = (type: 'success' | 'error' | 'click' | 'scan') => {
     if (typeof window === 'undefined') return;
     try {
         const audioPaths = {
-            success: '/sounds/success.mp3',
-            error: '/sounds/error.mp3',
-            click: '/sounds/click.mp3',
-            scan: '/sounds/scan.mp3'
+            success: '/sounds/success.wav',
+            error: '/sounds/error.wav',
+            click: '/sounds/click.wav',
+            scan: '/sounds/scan.wav'
+
         };
         const audio = new Audio(audioPaths[type]);
         audio.play().catch(() => { }); // Ignore interaction blocked errors

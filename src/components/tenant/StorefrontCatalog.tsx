@@ -55,7 +55,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  if (!products || products.length === 0) {
  return (
  <div className="p-12 text-center bg-app-text/5 rounded-[3rem] border border-app-text/10 backdrop-blur-xl">
- <ShoppingBag className="mx-auto text-slate-700 mb-4" size={48} />
+ <ShoppingBag className="mx-auto text-app-text-muted mb-4" size={48} />
  <h3 className="text-xl font-bold text-app-text">Catalog Coming Soon</h3>
  <p className="text-app-text-muted mt-2">We are currently updating our inventory. Please check back later.</p>
  </div>
@@ -68,8 +68,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <div className="flex items-center justify-between px-1">
  <h2 className="text-3xl font-black text-app-text tracking-tighter">Featured Collection</h2>
  <div className="flex gap-2">
- <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
- <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
+ <div className="w-2 h-2 rounded-full bg-app-primary animate-pulse" />
+ <span className="text-[10px] font-black text-app-primary uppercase tracking-widest">Live Inventory</span>
  </div>
  </div>
  {/* Search Bar */}
@@ -80,7 +80,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  placeholder="Search products..."
  value={search}
  onChange={e => setSearch(e.target.value)}
- className="w-full bg-slate-900/60 border border-app-text/5 pl-12 pr-10 py-4 rounded-2xl text-app-text outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700"
+ className="w-full bg-app-surface/60 border border-app-text/5 pl-12 pr-10 py-4 rounded-2xl text-app-text outline-none focus:border-app-primary/30 transition-all placeholder:text-app-text-muted"
  />
  {search && (
  <button onClick={() => setSearch('')}
@@ -96,7 +96,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  onClick={() => setSelectedCategory(null)}
  className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
  ${!selectedCategory
- ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+ ? 'bg-app-primary/20 text-app-primary border-app-primary/30'
  : 'bg-app-text/5 text-app-text-faint border-app-text/10 hover:border-app-text/20'
  }`}>
  All ({products.length})
@@ -107,7 +107,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
  className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
  ${selectedCategory === cat
- ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+ ? 'bg-app-primary/20 text-app-primary border-app-primary/30'
  : 'bg-app-text/5 text-app-text-faint border-app-text/10 hover:border-app-text/20'
  }`}>
  {cat}
@@ -121,7 +121,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <p className="text-xs text-app-text-muted px-1">
  Showing {filtered.length} of {products.length} products
  {search && <> matching &quot;<span className="text-app-text">{search}</span>&quot;</>}
- {selectedCategory && <> in <span className="text-emerald-400">{selectedCategory}</span></>}
+ {selectedCategory && <> in <span className="text-app-primary">{selectedCategory}</span></>}
  </p>
  )}
  {/* Product Grid */}
@@ -137,10 +137,10 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <Link
  key={p.id}
  href={`/tenant/${slug}/product/${p.id}`}
- className="group relative bg-slate-900/40 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
+ className="group relative bg-app-surface/40 backdrop-blur-3xl border border-app-text/5 rounded-[2.5rem] overflow-hidden hover:border-app-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-app-primary/20"
  style={{ animationDelay: `${idx * 100}ms` }}
  >
- <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">
+ <div className="aspect-[4/3] bg-app-bg overflow-hidden relative">
  {p.image_url ? (
  <img
  src={p.image_url}
@@ -165,7 +165,7 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  }`}>
  <Heart size={18} fill={isInWishlist(p.id) ? 'currentColor' : 'none'} />
  </button>
- <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-app-text opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
+ <div className="w-10 h-10 bg-app-primary rounded-full flex items-center justify-center text-app-text opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-app-primary/20">
  <ArrowRight size={20} />
  </div>
  </div>
@@ -173,8 +173,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <div className="p-8 space-y-4">
  <div className="space-y-1">
  <div className="flex justify-between items-start">
- <h3 className="text-xl font-black text-app-text group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
- <div className="flex items-center gap-1 text-emerald-500">
+ <h3 className="text-xl font-black text-app-text group-hover:text-app-primary transition-colors uppercase tracking-tight">{p.name}</h3>
+ <div className="flex items-center gap-1 text-app-primary">
  <Star size={12} fill="currentColor" />
  <span className="text-[10px] font-black">4.9</span>
  </div>
@@ -184,11 +184,11 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  <div className="flex items-center justify-between pt-2">
  {showPrice ? (
  <div className="text-2xl font-black text-app-text">
- <span className="text-emerald-500 mr-1">$</span>
+ <span className="text-app-primary mr-1">$</span>
  {p.selling_price_ttc}
  </div>
  ) : (
- <div className="text-sm text-amber-400 flex items-center gap-2">
+ <div className="text-sm text-app-warning flex items-center gap-2">
  <FileQuestion size={14} /> Request Quote
  </div>
  )}
@@ -202,8 +202,8 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
  onClick={(e) => handleQuickAdd(p, e)}
  className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
  ${addedIds.has(p.id)
- ? 'bg-emerald-500 text-app-text border border-emerald-500'
- : 'bg-app-text/5 hover:bg-emerald-500 text-app-text border border-app-text/10 hover:border-emerald-500'
+ ? 'bg-app-primary text-app-text border border-app-primary'
+ : 'bg-app-text/5 hover:bg-app-primary text-app-text border border-app-text/10 hover:border-app-primary'
  }`}>
  <ShoppingCart size={12} />
  {addedIds.has(p.id) ? 'Added!' : 'Add'}

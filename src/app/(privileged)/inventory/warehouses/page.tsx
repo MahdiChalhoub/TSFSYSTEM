@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 async function getWarehousesData() {
  try {
- const warehouses = await erpFetch('warehouses/');
+ const warehouses = await erpFetch('inventory/warehouses/');
  return (warehouses as any[]) || [];
  } catch (error) {
  console.error("Failed to fetch warehouses:", error);
@@ -19,27 +19,21 @@ export default async function WarehousesPage() {
  const warehouses = await getWarehousesData();
 
  return (
- <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+ <div className="app-page p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
  {/* Header */}
- <header className="flex flex-col md:flex-row justify-between items-center gap-6">
- <div>
- <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-app-text">
- <Warehouse size={28} />
- </div>
- Storage <span className="text-emerald-600">Nodes</span>
- </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Infrastructure Terminal Registry</p>
- </div>
- <div className="flex gap-3">
- <Button variant="outline" className="rounded-2xl h-12 px-6 gap-2 border-app-border hover:bg-app-bg transition-all shadow-sm">
- <ArrowLeft size={18} /> Back
- </Button>
- <Button className="rounded-2xl h-12 px-6 gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">
- <Plus size={18} /> Add Node
- </Button>
- </div>
- </header>
+ <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
+          <Warehouse size={32} className="text-app-primary" />
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Inventory</p>
+          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+            Warehouse <span className="text-app-primary">Manager</span>
+          </h1>
+        </div>
+      </div>
+    </header>
 
  <WarehouseClient initialWarehouses={warehouses} />
  </div>

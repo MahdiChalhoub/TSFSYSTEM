@@ -134,17 +134,27 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         return Response(PurchaseOrderSerializer(qs, many=True).data)
 
     def get_queryset(self):
+        from django.db.models import Q
         org_id = get_current_tenant_id()
         qs = self.queryset.filter(organization_id=org_id)
-        
+
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)
-            
+
         supplier_id = self.request.query_params.get('supplier')
         if supplier_id:
             qs = qs.filter(supplier_id=supplier_id)
-            
+
+        # Text search: po_number, supplier name, or notes
+        query = self.request.query_params.get('query', '').strip()
+        if query:
+            qs = qs.filter(
+                Q(po_number__icontains=query) |
+                Q(supplier__name__icontains=query) |
+                Q(notes__icontains=query)
+            )
+
         return qs
 
     def perform_create(self, serializer):
@@ -154,6 +164,24 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
             organization=organization,
             created_by=self.request.user if self.request.user.is_authenticated else None
         )
+
+    @action(detail=False, methods=['post'], url_path='auto-replenish')
+    def auto_replenish(self, request):
+        """Run the Min/Max Automated Replenishment Engine."""
+        from apps.pos.services.replenishment_service import AutomatedReplenishmentService
+        org_id = get_current_tenant_id()
+        from erp.models import Organization
+        organization = Organization.objects.get(id=org_id)
+        
+        try:
+            result = AutomatedReplenishmentService.run_auto_replenishment(organization)
+            return Response({
+                'success': True,
+                'message': f"Generated {result['pos_created']} Draft POs off {result['products_scanned']} products scanned.",
+                'data': result
+            })
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
@@ -219,6 +247,12 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         line_id = request.data.get('line_id')
         qty = Decimal(str(request.data.get('quantity', 0)))
         
+        # Discrepancy parsing
+        qty_damaged = Decimal(str(request.data.get('qty_damaged', 0)))
+        qty_rejected = Decimal(str(request.data.get('qty_rejected', 0)))
+        qty_missing = Decimal(str(request.data.get('qty_missing', 0)))
+        receipt_notes = request.data.get('receipt_notes', '')
+        
         # Gated import of StockService for cross-module loose coupling
         (StockService,) = _safe_import('apps.inventory.services.stock_service', ['StockService'])
         if not StockService:
@@ -227,23 +261,30 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         try:
             line = po.lines.get(id=line_id)
             
-            # 1. Update Inventory Stock
+            # 1. Update Inventory Stock (only for accepted qty)
             warehouse = line.warehouse or po.warehouse
             if not warehouse:
                 return Response({"error": "No warehouse defined for line or PO"}, status=400)
 
-            StockService.receive_stock(
-                organization=po.organization,
-                product=line.product,
-                warehouse=warehouse,
-                quantity=qty,
-                cost_price_ht=line.unit_price,
-                reference=f"PO-REC-{po.po_number or po.id}",
-                user=request.user
-            )
+            if qty > 0:
+                StockService.receive_stock(
+                    organization=po.organization,
+                    product=line.product,
+                    warehouse=warehouse,
+                    quantity=qty,
+                    cost_price_ht=line.unit_price,
+                    reference=f"PO-REC-{po.po_number or po.id}",
+                    user=request.user
+                )
 
-            # 2. Record receiving on the PO line (updates status automatically)
-            line.receive(qty)
+            # 2. Record receiving and discrepancies on the PO line
+            line.qty_damaged += qty_damaged
+            line.qty_rejected += qty_rejected
+            line.qty_missing += qty_missing
+            if receipt_notes:
+                line.receipt_notes = f"{line.receipt_notes}\n{receipt_notes}".strip() if line.receipt_notes else receipt_notes
+            
+            line.receive(qty) # This saves the model and triggers status checks
 
             # ── Auto-Task: check if product needs barcode ──
             try:

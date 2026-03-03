@@ -13,7 +13,7 @@ export function StorefrontFooter() {
  const storeName = config?.storefront_title || organization?.name || slug
 
  return (
- <footer className="bg-slate-950 border-t border-app-text/5">
+ <footer className="bg-app-bg border-t border-app-text/5">
  <div className="max-w-6xl mx-auto px-4 py-16">
  <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
  {/* Brand */}
@@ -22,7 +22,7 @@ export function StorefrontFooter() {
  {organization?.logo ? (
  <img src={organization.logo} alt={storeName} className="w-10 h-10 rounded-xl object-cover border border-app-text/10" />
  ) : (
- <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
+ <div className="w-10 h-10 bg-app-primary/20 border border-app-primary/30 rounded-xl flex items-center justify-center text-app-primary">
  <Store size={20} />
  </div>
  )}
@@ -120,10 +120,10 @@ export function StorefrontFooter() {
 
  {/* Bottom Bar */}
  <div className="pt-6 border-t border-app-text/5 flex flex-col md:flex-row justify-between items-center gap-4">
- <p className="text-[10px] text-slate-700 font-bold uppercase tracking-widest">
+ <p className="text-[10px] text-app-text-muted font-bold uppercase tracking-widest">
  © {new Date().getFullYear()} {storeName} • Powered by {PLATFORM_CONFIG.name}
  </p>
- <div className="flex items-center gap-2 text-[10px] text-slate-700 font-medium">
+ <div className="flex items-center gap-2 text-[10px] text-app-text-muted font-medium">
  <Shield size={12} /> Encrypted & Secured
  </div>
  </div>

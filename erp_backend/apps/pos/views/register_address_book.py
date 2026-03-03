@@ -86,7 +86,7 @@ class RegisterAddressBookMixin:
         if not org_id:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
-        session_id = request.query_params.get('session_id')
+        session_id = request.query_params.get('session_id', '').strip().strip('/')
         is_manager = request.query_params.get('is_manager', '').lower() == 'true'
         status_filter = request.query_params.get('status_filter', '')
 

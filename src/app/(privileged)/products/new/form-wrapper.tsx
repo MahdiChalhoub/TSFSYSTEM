@@ -11,16 +11,16 @@ export default function ProductFormWrapper(props: any) {
  <div className="space-y-6">
  <div className="flex justify-between items-center bg-app-surface p-4 border border-app-border rounded-xl shadow-sm">
  <div className="flex flex-col">
- <h2 className="text-lg font-bold text-app-text">Mode Selection</h2>
- <p className="text-xs text-app-text-muted font-medium">Toggle between Simple and Advanced creation forms</p>
+ <h2 className="text-lg font-bold text-app-foreground">Mode Selection</h2>
+ <p className="text-xs text-app-muted-foreground font-medium">Toggle between Simple and Advanced creation forms</p>
  </div>
- <div className="flex items-center gap-3 bg-app-bg border border-app-border px-4 py-2.5 rounded-xl">
- <span className={`text-sm font-bold transition-colors ${!isAdvancedMode ? 'text-app-text' : 'text-app-text-faint'}`}>Simple</span>
+ <div className="flex items-center gap-3 bg-app-background border border-app-border px-4 py-2.5 rounded-xl">
+ <span className={`text-sm font-bold transition-colors ${!isAdvancedMode ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>Simple</span>
  <label className="relative inline-flex items-center cursor-pointer">
  <input type="checkbox" className="sr-only peer" checked={isAdvancedMode} onChange={(e) => setIsAdvancedMode(e.target.checked)} />
- <div className="w-12 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500 shadow-inner"></div>
+ <div className="w-12 h-6 bg-app-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app-surface after:border-app-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500 shadow-inner"></div>
  </label>
- <span className={`text-sm font-bold transition-colors ${isAdvancedMode ? 'text-cyan-600' : 'text-app-text-faint'}`}>Advanced</span>
+ <span className={`text-sm font-bold transition-colors ${isAdvancedMode ? 'text-cyan-600' : 'text-app-muted-foreground'}`}>Advanced</span>
  </div>
  </div>
 

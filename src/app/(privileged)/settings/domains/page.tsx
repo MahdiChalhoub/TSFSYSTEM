@@ -127,9 +127,9 @@ export default function CustomDomainsPage() {
  }
 
  const StepIndicator = ({ step, total = 4 }: { step: number; total?: number }) => (
- <div className="flex items-center gap-1">
+ <div className="app-page flex items-center gap-1">
  {Array.from({ length: total }, (_, i) => (
- <div key={i} className={`h-1.5 rounded-full transition-all ${i < step ? 'bg-emerald-500 w-8' : 'bg-gray-200 w-4'
+ <div key={i} className={`h-1.5 rounded-full transition-all ${i < step ? 'bg-app-primary w-8' : 'bg-app-border w-4'
  }`} />
  ))}
  </div>
@@ -137,22 +137,22 @@ export default function CustomDomainsPage() {
 
  const StatusBadge = ({ domain }: { domain: CustomDomain }) => {
  if (domain.is_active) return (
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-app-primary-light text-app-success border border-app-success">
  <CheckCircle size={12} /> Live
  </span>
  )
  if (domain.ssl_status === 'PROVISIONING') return (
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-app-info-bg text-app-info border border-app-info animate-pulse">
  <Lock size={12} /> SSL Provisioning...
  </span>
  )
  if (domain.is_verified) return (
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-app-info-bg text-app-info border border-app-info">
  <Shield size={12} /> Verified — Complete Setup
  </span>
  )
  return (
- <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+ <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-app-warning-bg text-app-warning border border-app-warning">
  <Clock size={12} /> Pending Verification
  </span>
  )
@@ -160,7 +160,7 @@ export default function CustomDomainsPage() {
 
  const TypeBadge = ({ type }: { type: string }) => (
  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider
- ${type === 'SHOP' ? 'bg-violet-50 text-violet-600 border border-violet-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200'}`}>
+ ${type === 'SHOP' ? 'bg-violet-50 text-app-primary border border-violet-200' : 'bg-app-primary/5 text-app-primary border border-app-primary/30'}`}>
  {type === 'SHOP' ? '🛒 Shop' : '⚙️ Platform'}
  </span>
  )
@@ -172,11 +172,11 @@ export default function CustomDomainsPage() {
  <div>
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 border border-violet-200 flex items-center justify-center">
- <Globe className="w-6 h-6 text-violet-600" />
+ <Globe className="w-6 h-6 text-app-primary" />
  </div>
  <div>
  <h1 className="page-header-title tracking-tight">Custom Domains</h1>
- <p className="text-sm text-app-text-muted">Link your own domains to your storefront and control panel</p>
+ <p className="text-sm text-app-muted-foreground">Link your own domains to your storefront and control panel</p>
  </div>
  </div>
  </div>
@@ -186,7 +186,7 @@ export default function CustomDomainsPage() {
  </Button>
  <Button
  onClick={() => setShowAddForm(!showAddForm)}
- className="bg-gray-900 hover:bg-gray-800 text-app-text font-bold rounded-xl px-5"
+ className="bg-app-surface hover:bg-app-surface-2 text-app-foreground font-bold rounded-xl px-5"
  >
  <Plus size={16} className="mr-2" /> Add Domain
  </Button>
@@ -196,7 +196,7 @@ export default function CustomDomainsPage() {
  {/* Add Domain Form */}
  {showAddForm && (
  <div className="bg-app-surface border border-app-border rounded-2xl p-6 shadow-sm">
- <h3 className="text-sm font-black text-app-text uppercase tracking-wider mb-4">Add Custom Domain</h3>
+ <h3 className="text-sm font-black text-app-foreground uppercase tracking-wider mb-4">Add Custom Domain</h3>
  <div className="flex flex-col sm:flex-row gap-3">
  <Input
  placeholder="shop.yourdomain.com"
@@ -208,7 +208,7 @@ export default function CustomDomainsPage() {
  <select
  value={newType}
  onChange={(e) => setNewType(e.target.value as 'SHOP' | 'PLATFORM')}
- className="h-12 px-4 rounded-xl border border-app-border bg-app-surface text-sm font-bold text-gray-700 min-w-[180px]"
+ className="h-12 px-4 rounded-xl border border-app-border bg-app-surface text-sm font-bold text-app-muted-foreground min-w-[180px]"
  >
  <option value="SHOP">🛒 Storefront / Shop</option>
  <option value="PLATFORM">⚙️ Control Panel</option>
@@ -216,12 +216,12 @@ export default function CustomDomainsPage() {
  <Button
  onClick={handleAdd}
  disabled={adding || !newDomain.trim()}
- className="h-12 px-8 bg-emerald-600 hover:bg-emerald-500 text-app-text font-bold rounded-xl"
+ className="h-12 px-8 bg-app-primary hover:bg-app-primary text-app-foreground font-bold rounded-xl"
  >
  {adding ? 'Adding...' : 'Add Domain'}
  </Button>
  </div>
- <p className="text-xs text-app-text-faint mt-3">
+ <p className="text-xs text-app-muted-foreground mt-3">
  After adding, follow the 3-step verification process: DNS TXT → CNAME → SSL certificate.
  </p>
  </div>
@@ -230,7 +230,7 @@ export default function CustomDomainsPage() {
  {/* How It Works (empty state) */}
  {domains.length === 0 && !loading && (
  <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-8">
- <h3 className="text-lg font-black text-app-text mb-6">How Custom Domains Work</h3>
+ <h3 className="text-lg font-black text-app-foreground mb-6">How Custom Domains Work</h3>
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
  {[
  { step: 1, icon: <Plus size={20} />, title: 'Add Domain', desc: 'Enter the domain you want to use' },
@@ -239,13 +239,13 @@ export default function CustomDomainsPage() {
  { step: 4, icon: <Lock size={20} />, title: 'Auto-SSL', desc: 'Certificate provisioned automatically' },
  ].map(s => (
  <div key={s.step} className="space-y-2">
- <div className="w-10 h-10 rounded-xl bg-violet-100 border border-violet-200 flex items-center justify-center text-violet-600">{s.icon}</div>
- <h4 className="font-bold text-app-text">Step {s.step}: {s.title}</h4>
- <p className="text-sm text-app-text-muted">{s.desc}</p>
+ <div className="w-10 h-10 rounded-xl bg-app-primary/10 border border-violet-200 flex items-center justify-center text-app-primary">{s.icon}</div>
+ <h4 className="font-bold text-app-foreground">Step {s.step}: {s.title}</h4>
+ <p className="text-sm text-app-muted-foreground">{s.desc}</p>
  </div>
  ))}
  </div>
- <div className="mt-6 flex items-center gap-2 text-sm text-violet-600">
+ <div className="mt-6 flex items-center gap-2 text-sm text-app-primary">
  <Zap size={14} />
  <span className="font-bold">Auto-verification runs every 5 minutes — no manual checking needed!</span>
  </div>
@@ -261,7 +261,7 @@ export default function CustomDomainsPage() {
  <div className="w-10 h-10 bg-app-surface-2 rounded-xl" />
  <div className="flex-1 space-y-2">
  <div className="h-5 w-48 bg-app-surface-2 rounded" />
- <div className="h-3 w-24 bg-app-bg rounded" />
+ <div className="h-3 w-24 bg-app-background rounded" />
  </div>
  </div>
  </div>
@@ -272,23 +272,23 @@ export default function CustomDomainsPage() {
  {domains.map((domain) => {
  const step = getStep(domain)
  return (
- <div key={domain.id} className={`bg-app-surface border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all ${domain.is_active ? 'border-emerald-200' : 'border-app-border'}`}>
+ <div key={domain.id} className={`bg-app-surface border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all ${domain.is_active ? 'border-app-success' : 'border-app-border'}`}>
  {/* Domain Header */}
  <div className="p-6">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-4">
- <div className={`w-10 h-10 rounded-xl flex items-center justify-center relative ${domain.is_active ? 'bg-emerald-100 text-emerald-600' : 'bg-app-surface-2 text-app-text-faint'
+ <div className={`w-10 h-10 rounded-xl flex items-center justify-center relative ${domain.is_active ? 'bg-app-primary-light text-app-primary' : 'bg-app-surface-2 text-app-muted-foreground'
  }`}>
  <Globe size={20} />
  {domain.is_active && (
- <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
+ <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-app-primary border-2 border-white" />
  )}
  </div>
  <div>
  <div className="flex items-center gap-2">
- <h3 className="text-lg font-bold text-app-text font-mono">{domain.domain}</h3>
+ <h3 className="text-lg font-bold text-app-foreground font-mono">{domain.domain}</h3>
  {domain.is_primary && (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-200">
+ <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-app-warning-bg text-app-warning border border-app-warning">
  <Star size={10} /> Primary
  </span>
  )}
@@ -315,7 +315,7 @@ export default function CustomDomainsPage() {
  </a>
  )}
  <Button variant="outline" size="sm" onClick={() => handleRemove(domain.id, domain.domain)}
- className="text-xs font-bold rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50">
+ className="text-xs font-bold rounded-lg text-app-error hover:text-app-error hover:bg-app-error-bg">
  <Trash2 size={12} />
  </Button>
  </div>
@@ -324,13 +324,13 @@ export default function CustomDomainsPage() {
 
  {/* STEP 1: DNS TXT Verification (if not verified) */}
  {!domain.is_verified && (
- <div className="border-t border-app-border bg-amber-50/30 p-6 space-y-4">
+ <div className="border-t border-app-border bg-app-warning-bg/30 p-6 space-y-4">
  <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-black">1</div>
- <h4 className="text-sm font-black text-app-text">Verify Domain Ownership</h4>
- <span className="text-xs text-app-text-faint">(auto-checks every 5 min)</span>
+ <div className="w-6 h-6 rounded-full bg-app-warning-bg text-app-warning flex items-center justify-center text-xs font-black">1</div>
+ <h4 className="text-sm font-black text-app-foreground">Verify Domain Ownership</h4>
+ <span className="text-xs text-app-muted-foreground">(auto-checks every 5 min)</span>
  </div>
- <p className="text-sm text-app-text-muted">
+ <p className="text-sm text-app-muted-foreground">
  Add this <strong>TXT record</strong> to your DNS settings to prove you own this domain:
  </p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -344,7 +344,7 @@ export default function CustomDomainsPage() {
  <Button
  onClick={() => handleVerify(domain.id)}
  disabled={verifying === domain.id}
- className="bg-amber-600 hover:bg-amber-500 text-app-text font-bold rounded-xl px-6"
+ className="bg-app-warning hover:bg-app-warning text-app-foreground font-bold rounded-xl px-6"
  >
  {verifying === domain.id ? (
  <><RefreshCw size={14} className="mr-2 animate-spin" /> Checking DNS...</>
@@ -352,35 +352,35 @@ export default function CustomDomainsPage() {
  <><CheckCircle size={14} className="mr-2" /> Verify Now</>
  )}
  </Button>
- <p className="text-xs text-app-text-faint">DNS propagation can take up to 48 hours. We auto-check every 5 minutes.</p>
+ <p className="text-xs text-app-muted-foreground">DNS propagation can take up to 48 hours. We auto-check every 5 minutes.</p>
  </div>
  </div>
  )}
 
  {/* STEP 2: CNAME / A Record (if verified but not active) */}
  {domain.is_verified && !domain.is_active && (
- <div className="border-t border-app-border bg-blue-50/30 p-6 space-y-4">
+ <div className="border-t border-app-border bg-app-info-bg/30 p-6 space-y-4">
  <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black">2</div>
- <h4 className="text-sm font-black text-app-text">Point Your Domain to Our Server</h4>
+ <div className="w-6 h-6 rounded-full bg-app-info-bg text-app-info flex items-center justify-center text-xs font-black">2</div>
+ <h4 className="text-sm font-black text-app-foreground">Point Your Domain to Our Server</h4>
  </div>
- <p className="text-sm text-app-text-muted">
+ <p className="text-sm text-app-muted-foreground">
  Add a <strong>CNAME record</strong> (or A record for root domains) to route traffic:
  </p>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
  <DnsCard label="Record Type" value="CNAME" onCopy={() => copyToClipboard('CNAME')} />
  <DnsCard label="Target / Points To" value={domain.cname_target || 'saas.tsf.ci'} onCopy={() => copyToClipboard(domain.cname_target || 'saas.tsf.ci')} />
  </div>
- <div className="bg-app-surface border border-blue-200 rounded-xl p-4 space-y-2">
- <p className="text-xs font-bold text-blue-700">Using a root domain? (e.g., acme.com instead of shop.acme.com)</p>
- <p className="text-xs text-app-text-muted">Use an A record instead: <strong className="font-mono">91.99.186.183</strong>
- <button onClick={() => copyToClipboard('91.99.186.183')} className="ml-2 text-blue-500 hover:text-blue-700"><Copy size={10} /></button>
+ <div className="bg-app-surface border border-app-info rounded-xl p-4 space-y-2">
+ <p className="text-xs font-bold text-app-info">Using a root domain? (e.g., acme.com instead of shop.acme.com)</p>
+ <p className="text-xs text-app-muted-foreground">Use an A record instead: <strong className="font-mono">91.99.186.183</strong>
+ <button onClick={() => copyToClipboard('91.99.186.183')} className="ml-2 text-app-info hover:text-app-info"><Copy size={10} /></button>
  </p>
  </div>
  <div className="flex items-center gap-3">
  <Button
  onClick={() => handleCheckCname(domain.id)}
- className="bg-blue-600 hover:bg-blue-500 text-app-text font-bold rounded-xl px-6"
+ className="bg-app-info hover:bg-app-info text-app-foreground font-bold rounded-xl px-6"
  >
  <Wifi size={14} className="mr-2" /> Check CNAME
  </Button>
@@ -397,20 +397,20 @@ export default function CustomDomainsPage() {
 
  {/* ACTIVE: Show success state */}
  {domain.is_active && (
- <div className="border-t border-emerald-100 bg-emerald-50/30 p-4">
+ <div className="border-t border-app-success/30 bg-app-primary-light/30 p-4">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2 text-sm">
- <CheckCircle size={14} className="text-emerald-600" />
- <span className="font-bold text-emerald-700">Domain is live and routing traffic</span>
+ <CheckCircle size={14} className="text-app-primary" />
+ <span className="font-bold text-app-success">Domain is live and routing traffic</span>
  {domain.ssl_provisioned_at && (
- <span className="text-xs text-app-text-faint ml-2">
+ <span className="text-xs text-app-muted-foreground ml-2">
  SSL since {new Date(domain.ssl_provisioned_at).toLocaleDateString()}
  </span>
  )}
  </div>
  <div className="flex items-center gap-1">
- <Lock size={12} className="text-emerald-500" />
- <span className="text-xs font-bold text-emerald-600">HTTPS</span>
+ <Lock size={12} className="text-app-primary" />
+ <span className="text-xs font-bold text-app-primary">HTTPS</span>
  </div>
  </div>
  </div>
@@ -422,9 +422,9 @@ export default function CustomDomainsPage() {
  )}
 
  {/* Architecture Info */}
- <div className="bg-app-bg border border-app-border rounded-2xl p-6 space-y-4">
- <h4 className="text-sm font-black text-app-text flex items-center gap-2">
- <Zap size={14} className="text-violet-500" /> Production Features
+ <div className="bg-app-background border border-app-border rounded-2xl p-6 space-y-4">
+ <h4 className="text-sm font-black text-app-foreground flex items-center gap-2">
+ <Zap size={14} className="text-app-primary" /> Production Features
  </h4>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
  <Feature icon={<RefreshCw size={14} />} title="Auto-Verification" desc="DNS checked every 5 min — no manual clicking" />
@@ -436,20 +436,20 @@ export default function CustomDomainsPage() {
  </div>
 
  <div className="border-t border-app-border pt-4 mt-4">
- <h4 className="text-sm font-black text-app-text mb-3">Domain Types Explained</h4>
+ <h4 className="text-sm font-black text-app-foreground mb-3">Domain Types Explained</h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
  <div className="flex items-start gap-3">
  <span className="text-lg">🛒</span>
  <div>
- <p className="font-bold text-app-text">Shop Domain</p>
- <p className="text-app-text-muted">Public storefront for customers. <span className="font-mono text-violet-600">shop.yourbusiness.com</span> → your online store</p>
+ <p className="font-bold text-app-foreground">Shop Domain</p>
+ <p className="text-app-muted-foreground">Public storefront for customers. <span className="font-mono text-app-primary">shop.yourbusiness.com</span> → your online store</p>
  </div>
  </div>
  <div className="flex items-start gap-3">
  <span className="text-lg">⚙️</span>
  <div>
- <p className="font-bold text-app-text">Platform Domain</p>
- <p className="text-app-text-muted">Admin panel for employees. <span className="font-mono text-indigo-600">platform.yourbusiness.com</span> → management dashboard</p>
+ <p className="font-bold text-app-foreground">Platform Domain</p>
+ <p className="text-app-muted-foreground">Admin panel for employees. <span className="font-mono text-app-primary">platform.yourbusiness.com</span> → management dashboard</p>
  </div>
  </div>
  </div>
@@ -464,10 +464,10 @@ export default function CustomDomainsPage() {
 function DnsCard({ label, value, onCopy }: { label: string; value: string; onCopy: () => void }) {
  return (
  <div className="bg-app-surface border border-app-border rounded-xl p-4">
- <p className="text-[10px] font-black text-app-text-faint uppercase tracking-wider mb-1">{label}</p>
+ <p className="text-[10px] font-black text-app-muted-foreground uppercase tracking-wider mb-1">{label}</p>
  <div className="flex items-center gap-2">
- <p className="text-sm font-mono font-bold text-app-text truncate flex-1">{value}</p>
- <button onClick={onCopy} className="text-app-text-faint hover:text-app-text-muted shrink-0 p-1 rounded hover:bg-app-surface-2 transition-colors">
+ <p className="text-sm font-mono font-bold text-app-foreground truncate flex-1">{value}</p>
+ <button onClick={onCopy} className="text-app-muted-foreground hover:text-app-muted-foreground shrink-0 p-1 rounded hover:bg-app-surface-2 transition-colors">
  <Copy size={12} />
  </button>
  </div>
@@ -478,10 +478,10 @@ function DnsCard({ label, value, onCopy }: { label: string; value: string; onCop
 function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
  return (
  <div className="flex items-start gap-2">
- <div className="mt-0.5 text-violet-500">{icon}</div>
+ <div className="mt-0.5 text-app-primary">{icon}</div>
  <div>
- <p className="font-bold text-app-text">{title}</p>
- <p className="text-app-text-muted text-xs">{desc}</p>
+ <p className="font-bold text-app-foreground">{title}</p>
+ <p className="text-app-muted-foreground text-xs">{desc}</p>
  </div>
  </div>
  )

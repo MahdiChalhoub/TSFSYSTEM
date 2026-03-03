@@ -29,12 +29,12 @@ type POLine = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
- DRAFT: 'bg-gray-800 text-app-text-faint border-gray-700',
- SENT: 'bg-blue-900/40 text-blue-400 border-blue-800',
- PARTIALLY_RECEIVED: 'bg-amber-900/40 text-amber-400 border-amber-700',
- RECEIVED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
- CANCELLED: 'bg-red-900/40 text-red-400 border-red-800',
- COMPLETED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
+ DRAFT: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
+ SENT: 'bg-app-info/40 text-app-info border-app-info/30',
+ PARTIALLY_RECEIVED: 'bg-app-warning/40 text-app-warning border-app-warning/30',
+ RECEIVED: 'bg-app-success/40 text-app-primary border-app-success/30',
+ CANCELLED: 'bg-app-error/40 text-app-error border-app-error/30',
+ COMPLETED: 'bg-app-success/40 text-app-primary border-app-success/30',
 }
 
 export default function PurchaseInvoicesPage() {
@@ -103,15 +103,15 @@ export default function PurchaseInvoicesPage() {
  <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
  <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-text flex items-center gap-4">
+ <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
  <div className="w-14 h-14 rounded-[1.5rem] bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <FileText size={28} className="text-app-text" />
+ <FileText size={28} className="text-app-foreground" />
  </div>
  Purchase <span className="text-purple-600">Invoices</span>
  </h1>
- <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">Supplier Billing & Settlement Tracking</p>
+ <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Supplier Billing & Settlement Tracking</p>
  </div>
- <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface border border-app-border hover:bg-app-bg text-app-text-muted font-medium text-sm shadow-sm transition-all">
+ <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface border border-app-border hover:bg-app-background text-app-muted-foreground font-medium text-sm shadow-sm transition-all">
  <RefreshCw size={14} />
  Refresh
  </button>
@@ -129,7 +129,7 @@ export default function PurchaseInvoicesPage() {
  <s.icon size={22} className={`text-${s.color}-600`} />
  </div>
  <div>
- <p className="text-xs font-bold text-app-text-faint uppercase tracking-wider">{s.label}</p>
+ <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">{s.label}</p>
  <p className={`text-2xl font-black text-${s.color}-600 mt-0.5`}>{s.value}</p>
  </div>
  </div>
@@ -141,21 +141,21 @@ export default function PurchaseInvoicesPage() {
  <div className="w-1/2 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-2">
  {loading ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 bg-app-surface-2 rounded-xl animate-pulse" />) :
  orders.length === 0 ? (
- <div className="bg-app-surface rounded-2xl border border-app-border p-12 text-center text-app-text-faint font-medium text-sm shadow-sm">No purchase orders found.</div>
+ <div className="bg-app-surface rounded-2xl border border-app-border p-12 text-center text-app-muted-foreground font-medium text-sm shadow-sm">No purchase orders found.</div>
  ) : orders.map(po => (
- <button key={po.id} onClick={() => openDetail(po)} className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border transition-all shadow-sm ${selected?.id === po.id ? 'bg-purple-50 border-purple-200' : 'bg-app-surface border-app-border hover:border-app-border hover:bg-app-bg'}`}>
+ <button key={po.id} onClick={() => openDetail(po)} className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border transition-all shadow-sm ${selected?.id === po.id ? 'bg-purple-50 border-purple-200' : 'bg-app-surface border-app-border hover:border-app-border hover:bg-app-background'}`}>
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 flex-wrap">
- <span className="font-mono font-bold text-sm text-app-text">{po.po_number || `PO-${po.id}`}</span>
- <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[po.status] || 'bg-app-surface-2 text-app-text-muted border-app-border'}`}>{po.status.replace('_', ' ')}</span>
+ <span className="font-mono font-bold text-sm text-app-foreground">{po.po_number || `PO-${po.id}`}</span>
+ <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[po.status] || 'bg-app-surface-2 text-app-muted-foreground border-app-border'}`}>{po.status.replace('_', ' ')}</span>
  </div>
- <div className="flex items-center gap-3 mt-0.5 text-xs text-app-text-muted">
+ <div className="flex items-center gap-3 mt-0.5 text-xs text-app-muted-foreground">
  <span className="flex items-center gap-1"><Building2 size={10} />{po.supplier?.name || po.supplier_name || '—'}</span>
  <span className="flex items-center gap-1"><Calendar size={10} />{po.order_date}</span>
  </div>
  </div>
- <div className="text-sm font-black text-app-text shrink-0">${Number(po.total_amount || 0).toFixed(2)}</div>
- <ChevronRight size={14} className="text-app-text-faint shrink-0" />
+ <div className="text-sm font-black text-app-foreground shrink-0">${Number(po.total_amount || 0).toFixed(2)}</div>
+ <ChevronRight size={14} className="text-app-muted-foreground shrink-0" />
  </button>
  ))}
  </div>
@@ -163,68 +163,68 @@ export default function PurchaseInvoicesPage() {
  {/* Detail panel */}
  <div className="w-1/2 bg-app-surface rounded-2xl border border-app-border p-6 flex flex-col gap-5 shadow-sm">
  {!selected ? (
- <div className="flex-1 flex flex-col items-center justify-center text-app-text-faint gap-3 py-12">
- <ShoppingBag size={48} className="text-gray-200" />
+ <div className="flex-1 flex flex-col items-center justify-center text-app-muted-foreground gap-3 py-12">
+ <ShoppingBag size={48} className="text-app-foreground" />
  <p className="text-sm font-medium">Select a purchase order to view details</p>
  </div>
  ) : (
  <>
  <div className="flex justify-between items-start">
  <div>
- <h2 className="text-xl font-black text-app-text">{selected.po_number || `PO-${selected.id}`}</h2>
- <div className="flex items-center gap-3 text-sm font-bold text-gray-700 mt-1">
- <span className="flex items-center gap-1.5"><Building2 size={14} className="text-app-text-faint" /> {selected.supplier?.name || selected.supplier_name}</span>
+ <h2 className="text-xl font-black text-app-foreground">{selected.po_number || `PO-${selected.id}`}</h2>
+ <div className="flex items-center gap-3 text-sm font-bold text-app-muted-foreground mt-1">
+ <span className="flex items-center gap-1.5"><Building2 size={14} className="text-app-muted-foreground" /> {selected.supplier?.name || selected.supplier_name}</span>
  </div>
- <div className="flex items-center gap-3 text-xs text-app-text-muted mt-1">
+ <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
  <span className="flex items-center gap-1"><Calendar size={10} />Ordered: {selected.order_date}</span>
  {selected.expected_delivery && <span className="flex items-center gap-1"><Truck size={10} />Expected: {selected.expected_delivery}</span>}
  </div>
  </div>
  <div className="text-right">
- <div className="text-2xl font-black text-app-text">${Number(selected.total_amount || 0).toFixed(2)}</div>
+ <div className="text-2xl font-black text-app-foreground">${Number(selected.total_amount || 0).toFixed(2)}</div>
  <span className={`px-2 py-0.5 mt-1 inline-block rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[selected.status] || ''}`}>{selected.status.replace('_', ' ')}</span>
  </div>
  </div>
 
  {selected.notes && (
- <div className="flex items-start gap-2 bg-app-bg rounded-xl p-4 border border-app-border">
- <FileText size={14} className="text-app-text-faint shrink-0 mt-0.5" />
- <p className="text-sm font-medium text-app-text-muted leading-relaxed">{selected.notes}</p>
+ <div className="flex items-start gap-2 bg-app-background rounded-xl p-4 border border-app-border">
+ <FileText size={14} className="text-app-muted-foreground shrink-0 mt-0.5" />
+ <p className="text-sm font-medium text-app-muted-foreground leading-relaxed">{selected.notes}</p>
  </div>
  )}
 
  {/* Order lines */}
  {detail?.lines && detail.lines.length > 0 && (
  <div>
- <h3 className="text-xs font-semibold text-app-text-faint uppercase tracking-wider mb-2">Order Lines</h3>
+ <h3 className="text-xs font-semibold text-app-muted-foreground uppercase tracking-wider mb-2">Order Lines</h3>
  <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
  {detail.lines.map(line => {
  const received = Number(line.quantity_received || 0)
  const ordered = Number(line.quantity_ordered || 0)
  const pct = ordered > 0 ? Math.min((received / ordered) * 100, 100) : 0
  return (
- <div key={line.id} className="bg-[#070D1B] rounded-xl border border-gray-800 p-3">
+ <div key={line.id} className="bg-[#070D1B] rounded-xl border border-app-border p-3">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
  <Package size={14} className="text-purple-600" />
  </div>
  <div className="flex-1 min-w-0">
- <div className="text-sm font-bold text-app-text truncate">{line.product?.name || line.product_name || '—'}</div>
- {line.product?.sku && <div className="text-xs text-app-text-faint font-mono mt-0.5 font-medium">{line.product.sku}</div>}
+ <div className="text-sm font-bold text-app-foreground truncate">{line.product?.name || line.product_name || '—'}</div>
+ {line.product?.sku && <div className="text-xs text-app-muted-foreground font-mono mt-0.5 font-medium">{line.product.sku}</div>}
  </div>
  <div className="text-right text-sm">
- <div className="text-app-text-muted font-medium">{ordered} × ${Number(line.unit_price || 0).toFixed(2)}</div>
- <div className="font-black text-app-text mt-0.5">${Number(line.subtotal || 0).toFixed(2)}</div>
+ <div className="text-app-muted-foreground font-medium">{ordered} × ${Number(line.unit_price || 0).toFixed(2)}</div>
+ <div className="font-black text-app-foreground mt-0.5">${Number(line.subtotal || 0).toFixed(2)}</div>
  </div>
  </div>
  {line.quantity_received != null && (
  <div className="mt-2">
- <div className="flex justify-between text-[10px] font-bold text-app-text-muted mb-1.5 uppercase tracking-wider">
+ <div className="flex justify-between text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">
  <span>Received: {received} / {ordered}</span>
  <span>{pct.toFixed(0)}%</span>
  </div>
  <div className="h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
- <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-500' : 'bg-gray-300'}`} style={{ width: `${pct}%` }} />
+ <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-app-primary' : pct > 0 ? 'bg-app-warning' : 'bg-app-surface-hover'}`} style={{ width: `${pct}%` }} />
  </div>
  </div>
  )}

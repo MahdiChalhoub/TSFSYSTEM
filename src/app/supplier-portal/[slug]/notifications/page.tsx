@@ -18,9 +18,9 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
- ORDER: { icon: ShoppingCart, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
- PROFORMA: { icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
- PRICE_REQUEST: { icon: TrendingDown, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+ ORDER: { icon: ShoppingCart, color: 'text-app-info', bg: 'bg-app-info-bg border-app-info/20' },
+ PROFORMA: { icon: FileText, color: 'text-emerald-400', bg: 'bg-app-success-bg border-emerald-500/20' },
+ PRICE_REQUEST: { icon: TrendingDown, color: 'text-app-warning', bg: 'bg-app-warning-bg border-app-warning/20' },
  PAYMENT: { icon: Package, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
  SYSTEM: { icon: Info, color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20' },
 }
@@ -104,7 +104,7 @@ export default function SupplierNotificationsPage() {
  const unreadCount = notifications.filter(n => !n.is_read).length
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
  <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-3xl mx-auto relative z-10 space-y-8">
@@ -144,7 +144,7 @@ export default function SupplierNotificationsPage() {
  {/* List */}
  {loading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-24 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  ) : displayed.length === 0 ? (
  <div className="py-24 text-center space-y-4">
@@ -166,8 +166,8 @@ export default function SupplierNotificationsPage() {
  onClick={() => !n.is_read && markAsRead(n.id)}
  className={`p-5 rounded-2xl border transition-all cursor-pointer
  ${n.is_read
- ? 'bg-slate-900/40 border-app-text/5'
- : 'bg-slate-900/70 border-indigo-500/20 hover:border-indigo-500/40'
+ ? 'bg-app-surface/40 border-app-text/5'
+ : 'bg-app-surface/70 border-indigo-500/20 hover:border-indigo-500/40'
  }`}>
  <div className="flex items-start gap-4">
  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${cfg.bg} ${cfg.color}`}>

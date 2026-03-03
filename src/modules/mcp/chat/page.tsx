@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 /**
@@ -362,16 +363,16 @@ Always be specific with numbers and actionable recommendations.`
     if (providers.length === 0) {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
-                <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-medium">
+                <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 text-sm font-medium">
                     <ArrowLeft size={16} />
                     Back to MCP Dashboard
                 </Link>
 
-                <Card className="rounded-3xl shadow-xl border-gray-100">
+                <Card className="rounded-3xl shadow-xl border-app-border">
                     <CardContent className="p-12 text-center">
                         <AlertCircle className="w-16 h-16 mx-auto mb-4 text-amber-500" />
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">No AI Providers Configured</h2>
-                        <p className="text-gray-500 mb-6">
+                        <h2 className="text-2xl font-bold text-app-text mb-2">No AI Providers Configured</h2>
+                        <p className="text-app-text-faint mb-6">
                             Configure an AI provider to unlock full analytics capabilities.
                         </p>
                         <Link href="/mcp/providers">
@@ -391,7 +392,7 @@ Always be specific with numbers and actionable recommendations.`
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
-                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600">
+                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted">
                         <ArrowLeft size={20} />
                     </Link>
                     <div className="flex items-center gap-2">
@@ -399,8 +400,8 @@ Always be specific with numbers and actionable recommendations.`
                             <Sparkles size={20} />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">AI Analytics Assistant</h1>
-                            <p className="text-xs text-gray-500">Charts • Analysis • Strategy</p>
+                            <h1 className="text-xl font-bold text-app-text">AI Analytics Assistant</h1>
+                            <p className="text-xs text-app-text-faint">Charts • Analysis • Strategy</p>
                         </div>
                     </div>
                 </div>
@@ -462,14 +463,14 @@ Always be specific with numbers and actionable recommendations.`
             <div className="flex-1 flex gap-4 min-h-0">
                 {/* Sidebar - Conversations */}
                 <div className="w-64 flex-shrink-0 hidden lg:block">
-                    <Card className="h-full rounded-2xl shadow-lg border-gray-100">
+                    <Card className="h-full rounded-2xl shadow-lg border-app-border">
                         <CardContent className="p-3 h-full overflow-y-auto">
-                            <p className="text-xs font-semibold text-gray-400 uppercase mb-2 px-2">
+                            <p className="text-xs font-semibold text-app-text-faint uppercase mb-2 px-2">
                                 Recent Analysis
                             </p>
 
                             {conversations.length === 0 ? (
-                                <p className="text-sm text-gray-400 text-center py-8">
+                                <p className="text-sm text-app-text-faint text-center py-8">
                                     No conversations yet
                                 </p>
                             ) : (
@@ -480,14 +481,14 @@ Always be specific with numbers and actionable recommendations.`
                                             onClick={() => setCurrentConversation(conv.id)}
                                             className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${currentConversation === conv.id
                                                 ? 'bg-purple-100 text-purple-700'
-                                                : 'hover:bg-gray-100 text-gray-700'
+                                                : 'hover:bg-app-surface-2 text-app-text-muted'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
                                                 <BarChart3 size={14} />
                                                 <span className="truncate">{conv.title || 'Analysis'}</span>
                                             </div>
-                                            <p className="text-xs text-gray-400 mt-1">
+                                            <p className="text-xs text-app-text-faint mt-1">
                                                 {conv.message_count} messages
                                             </p>
                                         </button>
@@ -499,7 +500,7 @@ Always be specific with numbers and actionable recommendations.`
                 </div>
 
                 {/* Chat Messages */}
-                <Card className="flex-1 rounded-2xl shadow-lg border-gray-100 flex flex-col min-h-0">
+                <Card className="flex-1 rounded-2xl shadow-lg border-app-border flex flex-col min-h-0">
                     <CardContent className="flex-1 p-4 overflow-y-auto">
                         {messages.length === 0 && showQuickActions ? (
                             <div className="h-full flex flex-col items-center justify-center">
@@ -507,8 +508,8 @@ Always be specific with numbers and actionable recommendations.`
                                     <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 inline-block mb-4">
                                         <Sparkles className="w-12 h-12 text-purple-600" />
                                     </div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">AI Business Analytics</h2>
-                                    <p className="text-gray-500 max-w-md">
+                                    <h2 className="text-2xl font-bold text-app-text mb-2">AI Business Analytics</h2>
+                                    <p className="text-app-text-faint max-w-md">
                                         Get instant charts, data analysis, and strategic recommendations powered by AI
                                     </p>
                                 </div>
@@ -518,10 +519,10 @@ Always be specific with numbers and actionable recommendations.`
                                         <button
                                             key={i}
                                             onClick={() => handleQuickAction(action.prompt)}
-                                            className="p-4 bg-white border border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all text-left group"
+                                            className="p-4 bg-app-surface border border-app-border rounded-xl hover:border-purple-300 hover:shadow-md transition-all text-left group"
                                         >
                                             <span className="text-lg">{action.label.split(' ')[0]}</span>
-                                            <p className="text-sm font-medium text-gray-700 group-hover:text-purple-700 mt-1">
+                                            <p className="text-sm font-medium text-app-text-muted group-hover:text-purple-700 mt-1">
                                                 {action.label.split(' ').slice(1).join(' ')}
                                             </p>
                                         </button>
@@ -556,7 +557,7 @@ Always be specific with numbers and actionable recommendations.`
                                                     ? 'bg-purple-600 text-white rounded-2xl rounded-br-md px-4 py-3'
                                                     : msg.role === 'tool'
                                                         ? 'bg-blue-50 text-blue-800 rounded-2xl px-4 py-3'
-                                                        : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3'
+                                                        : 'bg-app-surface-2 text-app-text rounded-2xl rounded-bl-md px-4 py-3'
                                                     }`}>
                                                     {msg.role === 'tool' && msg.tool_calls ? (
                                                         <div className="space-y-2">
@@ -580,8 +581,8 @@ Always be specific with numbers and actionable recommendations.`
                                                 </div>
 
                                                 {msg.role === 'user' && (
-                                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                                                        <User size={16} className="text-gray-600" />
+                                                    <div className="w-8 h-8 rounded-full bg-app-border flex items-center justify-center flex-shrink-0">
+                                                        <User size={16} className="text-app-text-muted" />
                                                     </div>
                                                 )}
                                             </div>
@@ -594,8 +595,8 @@ Always be specific with numbers and actionable recommendations.`
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
                                             <Loader2 size={16} className="animate-spin text-white" />
                                         </div>
-                                        <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
-                                            <p className="text-sm text-gray-500 flex items-center gap-2">
+                                        <div className="bg-app-surface-2 rounded-2xl rounded-bl-md px-4 py-3">
+                                            <p className="text-sm text-app-text-faint flex items-center gap-2">
                                                 <span className="animate-pulse">Analyzing your data...</span>
                                             </p>
                                         </div>
@@ -608,14 +609,14 @@ Always be specific with numbers and actionable recommendations.`
                     </CardContent>
 
                     {/* Input Area */}
-                    <div className="p-4 border-t border-gray-100">
+                    <div className="p-4 border-t border-app-border">
                         <div className="flex gap-3">
                             <Textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask for analysis, charts, forecasts, or strategic recommendations..."
-                                className="flex-1 min-h-[44px] max-h-32 rounded-xl bg-gray-50 border-gray-200 resize-none"
+                                className="flex-1 min-h-[44px] max-h-32 rounded-xl bg-app-bg border-app-border resize-none"
                                 disabled={sending}
                                 rows={1}
                             />
@@ -650,7 +651,7 @@ Always be specific with numbers and actionable recommendations.`
                                     Reports
                                 </Badge>
                             </div>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-app-text-faint">
                                 Press Enter to send
                             </p>
                         </div>

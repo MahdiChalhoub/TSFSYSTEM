@@ -148,3 +148,111 @@ class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         org_id = get_current_tenant_id()
         return super().get_queryset().filter(organization_id=org_id)
+
+
+# =============================================================================
+# FLUTTERWAVE WEBHOOK
+# =============================================================================
+
+import logging
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework.authentication import BasicAuthentication
+
+webhook_logger = logging.getLogger('finance.webhooks')
+
+
+class FlutterwaveWebhookView(APIView):
+    """
+    Receives asynchronous payment confirmations from Flutterwave.
+
+    Endpoint: POST /api/finance/webhooks/flutterwave/
+
+    Security:
+        - Validates verif-hash header against org's GatewayConfig.webhook_secret
+        - Only processes 'charge.completed' events
+        - Idempotent: re-processing same tx_ref is safe (already PAID check)
+
+    Flow:
+        1. Flutterwave POSTs payload after customer completes mobile money payment
+        2. We validate signature
+        3. We verify transaction via Flutterwave API (don't trust payload alone)
+        4. We mark the ClientOrder as PAID and post loyalty points
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = []  # Webhook — no session/token auth
+
+    def post(self, request, *args, **kwargs):
+        # ── 1. Read signature header ──────────────────────────────────────
+        verif_hash = request.headers.get('verif-hash', '')
+        payload_bytes = request.body
+
+        if not verif_hash:
+            webhook_logger.warning("[Flutterwave Webhook] Missing verif-hash header")
+            return Response({'error': 'Missing verif-hash'}, status=403)
+
+        # ── 2. Resolve org from tx_ref (order_number prefix) ─────────────
+        import json
+        try:
+            payload = json.loads(payload_bytes)
+        except Exception:
+            return Response({'error': 'Invalid JSON'}, status=400)
+
+        tx_ref = payload.get('data', {}).get('tx_ref', '') or payload.get('txRef', '')
+        event_type = payload.get('event', '')
+
+        if event_type != 'charge.completed':
+            webhook_logger.info(f"[Flutterwave Webhook] Ignored event: {event_type}")
+            return Response({'status': 'ignored'})
+
+        if not tx_ref:
+            return Response({'error': 'Missing tx_ref'}, status=400)
+
+        # ── 3. Find the matching order ────────────────────────────────────
+        from apps.client_portal.models import ClientOrder
+        order = ClientOrder.objects.filter(order_number=tx_ref).first()
+        if not order:
+            webhook_logger.error(f"[Flutterwave Webhook] Order not found for tx_ref: {tx_ref}")
+            return Response({'error': 'Order not found'}, status=404)
+
+        # ── 4. Validate signature against org GatewayConfig ───────────────
+        from apps.finance.flutterwave_gateway import FlutterwaveGateway
+        try:
+            from apps.finance.gateway_models import GatewayConfig
+            cfg = GatewayConfig.objects.filter(
+                organization_id=order.organization_id,
+                gateway_type='FLUTTERWAVE',
+                is_active=True,
+            ).first()
+            secret_hash = cfg.get_webhook_secret() if cfg else None
+        except Exception:
+            secret_hash = None
+
+        if not FlutterwaveGateway.validate_webhook_signature(payload_bytes, verif_hash, secret_hash or ''):
+            webhook_logger.warning(f"[Flutterwave Webhook] Invalid signature for order {tx_ref}")
+            return Response({'error': 'Invalid signature'}, status=403)
+
+        # ── 5. Already paid? Idempotent. ──────────────────────────────────
+        if order.payment_status == 'PAID':
+            webhook_logger.info(f"[Flutterwave Webhook] Order {tx_ref} already PAID — skipping")
+            return Response({'status': 'already_processed'})
+
+        # ── 6. Verify transaction with Flutterwave API ────────────────────
+        transaction_id = payload.get('data', {}).get('id')
+        if transaction_id:
+            gateway = FlutterwaveGateway(order.organization_id)
+            verification = gateway.verify_transaction(transaction_id)
+            if verification.get('status') != 'successful':
+                webhook_logger.warning(
+                    f"[Flutterwave Webhook] Verification failed for tx {transaction_id}: {verification}"
+                )
+                return Response({'error': 'Transaction verification failed'}, status=400)
+        else:
+            webhook_logger.warning(f"[Flutterwave Webhook] No transaction_id in payload for {tx_ref}")
+
+        # ── 7. Confirm payment ────────────────────────────────────────────
+        from apps.finance.payment_gateway import PaymentGatewayService
+        PaymentGatewayService.confirm_manual_payment(order)
+        webhook_logger.info(f"[Flutterwave Webhook] Order {tx_ref} marked PAID via webhook")
+
+        return Response({'status': 'payment_confirmed', 'order_number': tx_ref})

@@ -27,7 +27,7 @@ export function QuickProducts({ products, onSelect }: QuickProductsProps) {
  onClick={() => onSelect(product)}
  className="w-full text-left p-3 rounded-xl border border-app-border hover:border-indigo-200 hover:bg-indigo-50/50 transition-all group"
  >
- <div className="text-xs font-bold text-gray-700 group-hover:text-indigo-600 truncate">{product.name}</div>
+ <div className="text-xs font-bold text-app-text group-hover:text-indigo-600 truncate">{product.name}</div>
  <div className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter mt-1">${product.price.toFixed(2)}</div>
  </button>
  ))

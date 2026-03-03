@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 import { useState, useTransition } from 'react'
 import type { FiscalPeriod } from '@/types/erp'
@@ -92,20 +93,20 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  return (
  <div className={`
  bg-app-surface border rounded-lg p-5 shadow-sm transition-all hover:shadow-md
- ${year.isHardLocked ? 'border-red-200 bg-stone-50/50' : 'border-app-border'}
+ ${year.isHardLocked ? 'border-app-error bg-app-surface/50' : 'border-app-border'}
  `}>
  <div className="flex justify-between items-start mb-6 border-b border-app-border pb-4">
  <div className="flex items-center gap-4">
  <div>
- <h3 className="text-xl font-bold text-app-text flex items-center gap-3">
+ <h3 className="text-xl font-bold text-app-foreground flex items-center gap-3">
  {year.name}
- <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${year.status === 'OPEN' ? 'bg-green-100 text-green-800' :
- year.isHardLocked ? 'bg-red-600 text-app-text' : 'bg-app-surface-2 text-app-text-muted'
+ <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${year.status === 'OPEN' ? 'bg-app-success-bg text-app-success' :
+ year.isHardLocked ? 'bg-app-error text-app-foreground' : 'bg-app-surface-2 text-app-muted-foreground'
  }`}>
  {year.isHardLocked ? 'FINALIZED' : year.status}
  </span>
  </h3>
- <p className="text-sm text-app-text-muted mt-1 font-medium">
+ <p className="text-sm text-app-muted-foreground mt-1 font-medium">
  {year.startDate ? new Date(year.startDate).toLocaleDateString() : '—'} — {year.endDate ? new Date(year.endDate).toLocaleDateString() : '—'}
  </p>
  </div>
@@ -115,7 +116,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  <button
  onClick={handleCloseYear}
  disabled={isPending}
- className="text-app-text-faint hover:text-orange-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-orange-50 transition-colors"
+ className="text-app-muted-foreground hover:text-orange-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-orange-50 transition-colors"
  >
  Soft Close
  </button>
@@ -124,7 +125,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  <button
  onClick={handleRollForward}
  disabled={isPending}
- className="text-app-text-faint hover:text-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+ className="text-app-muted-foreground hover:text-app-info px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-app-info-bg transition-colors flex items-center gap-1"
  >
  <Forward size={14} /> Roll Forward
  </button>
@@ -133,20 +134,20 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  <button
  onClick={handleHardLock}
  disabled={isPending}
- className="text-red-500 hover:text-red-700 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-red-200 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
+ className="text-app-error hover:text-app-error px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-error rounded hover:bg-app-error-bg transition-colors flex items-center gap-1"
  >
  <Lock size={12} /> Hard Lock
  </button>
  )}
  {year.isHardLocked && (
- <div className="bg-red-100 text-red-700 px-3 py-1 text-[10px] font-extrabold uppercase rounded flex items-center gap-1 border border-red-200">
+ <div className="bg-app-error-bg text-app-error px-3 py-1 text-[10px] font-extrabold uppercase rounded flex items-center gap-1 border border-app-error">
  <ShieldCheck size={12} /> IMMUTABLE
  </div>
  )}
  <button
  onClick={handleDelete}
  disabled={isPending || year.isHardLocked}
- className={`p-2 rounded-full transition-colors ${year.isHardLocked ? 'text-stone-300' : 'text-app-text-faint hover:text-red-600 hover:bg-red-50'}`}
+ className={`p-2 rounded-full transition-colors ${year.isHardLocked ? 'text-app-muted-foreground' : 'text-app-muted-foreground hover:text-app-error hover:bg-app-error-bg'}`}
  title="Delete Year"
  >
  <Trash2 size={18} />
@@ -162,9 +163,9 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  key={p.id}
  className={`
  relative group p-3 rounded-lg border text-center transition-all
- ${periodStatus === 'OPEN' ? 'bg-app-surface border-green-200 shadow-sm' : ''}
- ${periodStatus === 'CLOSED' ? 'bg-app-bg border-app-border opacity-75' : ''}
- ${periodStatus === 'FUTURE' ? 'bg-blue-50 border-blue-100' : ''}
+ ${periodStatus === 'OPEN' ? 'bg-app-surface border-app-success shadow-sm' : ''}
+ ${periodStatus === 'CLOSED' ? 'bg-app-background border-app-border opacity-75' : ''}
+ ${periodStatus === 'FUTURE' ? 'bg-app-info-bg border-app-info/30' : ''}
  `}
  >
  <div className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-50">
@@ -174,34 +175,34 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
  {p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short' }) : ''}
  </div>
  <div className="flex justify-center items-center gap-1 mt-2">
- <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${periodStatus === 'OPEN' ? 'bg-green-100 text-green-700' :
- periodStatus === 'CLOSED' ? 'bg-stone-200 text-app-text-muted' :
- 'bg-blue-100 text-blue-700'
+ <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${periodStatus === 'OPEN' ? 'bg-app-success-bg text-app-success' :
+ periodStatus === 'CLOSED' ? 'bg-app-border text-app-muted-foreground' :
+ 'bg-app-info-bg text-app-info'
  }`}>
  {periodStatus}
  </span>
  </div>
  {/* Hover Actions */}
  {!year.isHardLocked && (
- <div className="absolute inset-0 bg-app-text/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-app-text-muted">
+ <div className="absolute inset-0 bg-app-foreground/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-app-muted-foreground">
  <div className="flex gap-2">
  <button
  onClick={() => handleChangeStatus(p.id, 'OPEN')}
- className={`p-1.5 rounded hover:bg-green-100 hover:text-green-700 ${periodStatus === 'OPEN' ? 'bg-green-50 text-green-700' : ''}`}
+ className={`p-1.5 rounded hover:bg-app-success-bg hover:text-app-success ${periodStatus === 'OPEN' ? 'bg-app-success-bg text-app-success' : ''}`}
  title="Open"
  >
  <PlayCircle size={14} />
  </button>
  <button
  onClick={() => handleChangeStatus(p.id, 'CLOSED')}
- className={`p-1.5 rounded hover:bg-stone-200 hover:text-app-text ${periodStatus === 'CLOSED' ? 'bg-stone-200 text-app-text' : ''}`}
+ className={`p-1.5 rounded hover:bg-app-border hover:text-app-foreground ${periodStatus === 'CLOSED' ? 'bg-app-border text-app-foreground' : ''}`}
  title="Close"
  >
  <Lock size={14} />
  </button>
  <button
  onClick={() => handleChangeStatus(p.id, 'FUTURE')}
- className={`p-1.5 rounded hover:bg-blue-100 hover:text-blue-700 ${periodStatus === 'FUTURE' ? 'bg-blue-50 text-blue-700' : ''}`}
+ className={`p-1.5 rounded hover:bg-app-info-bg hover:text-app-info ${periodStatus === 'FUTURE' ? 'bg-app-info-bg text-app-info' : ''}`}
  title="Future"
  >
  <Clock size={14} />

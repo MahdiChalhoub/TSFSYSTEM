@@ -59,7 +59,7 @@ export default function MidnightLoginPage() {
                         </div>
                     )}
                     <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">{orgName || slug}</h1>
-                    <p className="text-slate-500 text-xs font-black uppercase tracking-[0.3em]">Accessing Commerce Stream</p>
+                    <p className="text-app-text-faint text-xs font-black uppercase tracking-[0.3em]">Accessing Commerce Stream</p>
                 </div>
 
                 {/* Form Card */}
@@ -72,7 +72,7 @@ export default function MidnightLoginPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest block mb-2 ml-2 flex items-center gap-2">
+                            <label className="text-[10px] text-app-text-faint font-black uppercase tracking-widest block mb-2 ml-2 flex items-center gap-2">
                                 <Mail size={10} className="text-emerald-500" /> Identity Endpoint
                             </label>
                             <div className="relative">
@@ -82,13 +82,13 @@ export default function MidnightLoginPage() {
                                     onChange={e => setEmail(e.target.value)}
                                     placeholder="you@identity.com"
                                     required
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-emerald-500 transition-all placeholder:text-slate-800 font-medium"
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-emerald-500 transition-all placeholder:text-app-text font-medium"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest block mb-2 ml-2 flex items-center gap-2">
+                            <label className="text-[10px] text-app-text-faint font-black uppercase tracking-widest block mb-2 ml-2 flex items-center gap-2">
                                 <Lock size={10} className="text-emerald-500" /> Security Token
                             </label>
                             <div className="relative">
@@ -98,10 +98,10 @@ export default function MidnightLoginPage() {
                                     onChange={e => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="w-full bg-slate-950/60 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-emerald-500 transition-all placeholder:text-slate-800 font-medium pr-14"
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white outline-none focus:border-emerald-500 transition-all placeholder:text-app-text font-medium pr-14"
                                 />
                                 <button type="button" onClick={() => setShowPass(!showPass)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white transition-colors">
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-app-text-muted hover:text-white transition-colors">
                                     {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
@@ -125,13 +125,13 @@ export default function MidnightLoginPage() {
                         </Link>
                         <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full border border-white/10">
                             <Shield size={12} className="text-emerald-500" />
-                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Protocol Active</span>
+                            <span className="text-[9px] text-app-text-faint font-black uppercase tracking-widest">Protocol Active</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="text-center mt-10">
-                    <Link href={path('/')} className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">
+                    <Link href={path('/')} className="text-[10px] font-black uppercase tracking-widest text-app-text-muted hover:text-white transition-colors">
                         ← Terminate & Return to Node
                     </Link>
                 </div>

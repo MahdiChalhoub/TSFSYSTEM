@@ -18,11 +18,11 @@ interface PurchaseOrder {
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
  DRAFT: { label: 'Draft', color: 'text-app-text-faint' },
- SENT: { label: 'Sent', color: 'text-blue-400' },
+ SENT: { label: 'Sent', color: 'text-app-info' },
  CONFIRMED: { label: 'Confirmed', color: 'text-emerald-400' },
- IN_TRANSIT: { label: 'In Transit', color: 'text-amber-400' },
+ IN_TRANSIT: { label: 'In Transit', color: 'text-app-warning' },
  RECEIVED: { label: 'Received', color: 'text-emerald-400' },
- CANCELLED: { label: 'Cancelled', color: 'text-red-400' },
+ CANCELLED: { label: 'Cancelled', color: 'text-app-error' },
 }
 
 function getToken(slug: string): string | null {
@@ -63,8 +63,8 @@ export default function SupplierOrdersPage() {
  }, [slug])
 
  return (
- <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative">
- <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
+ <div className="min-h-screen bg-[#020617] p-4 lg:p-12 relative bg-app-bg">
+ <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-info-bg blur-[150px] rounded-full pointer-events-none z-0" />
 
  <div className="max-w-4xl mx-auto relative z-10 space-y-8">
  <div className="space-y-2">
@@ -78,7 +78,7 @@ export default function SupplierOrdersPage() {
 
  {loading ? (
  <div className="space-y-3">
- {[1, 2, 3].map(i => <div key={i} className="h-24 bg-slate-900/60 rounded-2xl animate-pulse" />)}
+ {[1, 2, 3].map(i => <div key={i} className="h-24 bg-app-surface/60 rounded-2xl animate-pulse" />)}
  </div>
  ) : orders.length === 0 ? (
  <div className="py-24 text-center space-y-4">
@@ -92,7 +92,7 @@ export default function SupplierOrdersPage() {
  const st = STATUS_MAP[order.status] || STATUS_MAP.DRAFT
  return (
  <Link href={`/supplier-portal/${slug}/orders/${order.id}`} key={order.id}
- className="p-6 bg-slate-900/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 hover:bg-slate-800/60 transition-all group">
+ className="p-6 bg-app-surface/60 border border-app-text/5 rounded-2xl flex items-center gap-6 hover:border-app-text/10 hover:bg-app-surface-2/60 transition-all group">
  <div className={`w-12 h-12 bg-app-text/5 rounded-xl flex items-center justify-center ${st.color}`}>
  <Package size={22} />
  </div>

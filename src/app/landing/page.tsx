@@ -138,7 +138,7 @@ export default function LandingPage() {
  </Label>
  <Input
  placeholder="e.g. acme"
- className={`bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-lg transition-all focus:ring-2 ${isLogin ? 'text-emerald-400 focus:ring-emerald-500/20' : 'text-cyan-400 focus:ring-cyan-500/20'}`}
+ className={`bg-app-surface/50 border-slate-800 h-16 rounded-2xl font-mono text-lg transition-all focus:ring-2 ${isLogin ? 'text-emerald-400 focus:ring-emerald-500/20' : 'text-cyan-400 focus:ring-cyan-500/20'}`}
  value={formData.workspace}
  onChange={e => setFormData({ ...formData, workspace: e.target.value.toLowerCase().trim() })}
  />
@@ -153,7 +153,7 @@ export default function LandingPage() {
  <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-text-muted">Business Title</Label>
  <Input
  placeholder="Acme Industries"
- className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl text-app-text font-bold"
+ className="bg-app-surface/50 border-slate-800 h-16 rounded-2xl text-app-text font-bold"
  value={formData.name}
  onChange={e => setFormData({ ...formData, name: e.target.value })}
  />
@@ -162,7 +162,7 @@ export default function LandingPage() {
  <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-app-text-muted">Workspace Slug</Label>
  <Input
  placeholder="acme"
- className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-amber-400 text-lg"
+ className="bg-app-surface/50 border-slate-800 h-16 rounded-2xl font-mono text-app-warning text-lg"
  value={formData.slug}
  onChange={e => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
  />
@@ -172,8 +172,8 @@ export default function LandingPage() {
  )}
 
  {error && (
- <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-300">
- <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
+ <div className="p-4 bg-app-error-bg border border-app-error/20 rounded-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-300">
+ <div className="flex items-center gap-2 text-app-error text-xs font-bold">
  <AlertCircle size={14} />
  {error}
  </div>
@@ -186,7 +186,7 @@ export default function LandingPage() {
  key={s}
  type="button"
  onClick={() => applySuggestion(s)}
- className="px-3 py-1 bg-app-text/5 hover:bg-app-text/10 border border-app-text/10 rounded-full text-[10px] font-mono text-amber-400 transition-colors"
+ className="px-3 py-1 bg-app-text/5 hover:bg-app-text/10 border border-app-text/10 rounded-full text-[10px] font-mono text-app-warning transition-colors"
  >
  {s}
  </button>
@@ -200,7 +200,7 @@ export default function LandingPage() {
  <Button
  className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-app-text shadow-emerald-900/20' :
  isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-app-text shadow-cyan-900/20' :
- 'bg-amber-600 hover:bg-amber-500 text-app-text shadow-amber-900/20'
+ 'bg-app-warning hover:bg-app-warning text-app-text shadow-amber-900/20'
  }`}
  disabled={loading}
  >
@@ -221,7 +221,7 @@ export default function LandingPage() {
  }
 
  return (
- <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+ <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden bg-app-bg">
  {/* Ambient Background Elements */}
  <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
  <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
@@ -265,11 +265,11 @@ export default function LandingPage() {
  </button>
  <button
  onClick={() => setMode('register')}
- className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-amber-400' : 'text-app-text-muted hover:text-slate-300'}`}
+ className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-app-warning' : 'text-app-text-muted hover:text-slate-300'}`}
  >
  <Building2 size={24} />
  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Register</span>
- {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-amber-500 rounded-t-full" />}
+ {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-app-warning rounded-t-full" />}
  </button>
  </div>
 
@@ -291,7 +291,7 @@ export default function LandingPage() {
  <div className="text-[9px] text-app-text-muted uppercase tracking-widest font-bold">Encryption</div>
  </div>
  <div className="space-y-1">
- <div className="text-app-text font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-amber-400" /> INF</div>
+ <div className="text-app-text font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-app-warning" /> INF</div>
  <div className="text-[9px] text-app-text-muted uppercase tracking-widest font-bold">Provisioning</div>
  </div>
  </div>
@@ -302,10 +302,10 @@ export default function LandingPage() {
  <PricingSection />
 
  {/* Bottom Credits */}
- <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
- <div className="h-[1px] w-12 bg-slate-800" />
+ <div className="mt-16 text-[11px] font-black text-app-text-muted uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
+ <div className="h-[1px] w-12 bg-app-surface-2" />
  Secured by {PLATFORM_CONFIG.federation_name}
- <div className="h-[1px] w-12 bg-slate-800" />
+ <div className="h-[1px] w-12 bg-app-surface-2" />
  </div>
  </div>
  )

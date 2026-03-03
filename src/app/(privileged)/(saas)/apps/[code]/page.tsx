@@ -27,7 +27,7 @@ export default async function DynamicModulePage({ params }: AppPageProps) {
  })),
  {
  loading: () => (
- <div className="p-8 space-y-4">
+ <div className="app-page p-8 space-y-4">
  <Skeleton className="h-12 w-[250px]" />
  <Skeleton className="h-[400px] w-full" />
  </div>
