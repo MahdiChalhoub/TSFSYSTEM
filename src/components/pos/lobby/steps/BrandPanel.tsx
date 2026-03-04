@@ -44,8 +44,7 @@ export function BrandPanel() {
                 {orgLogo ? (
                     <img src={orgLogo} alt={orgName} className="w-20 h-20 rounded-2xl object-contain mx-auto mb-6 shadow-2xl shadow-[var(--app-primary-glow)]" />
                 ) : (
-                    <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-[var(--app-primary-glow)]"
-                        style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.25) 0%, rgba(99,102,241,0.25) 100%)', border: '1px solid rgba(0,212,255,0.3)' }}>
+                    <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-2xl shadow-[var(--app-primary-glow)] bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]/30">
                         <Zap size={36} className="text-[var(--app-primary)]" />
                     </div>
                 )}
@@ -54,7 +53,7 @@ export function BrandPanel() {
                 {orgName && (
                     <h1 className="text-2xl font-black text-[var(--app-text)] mb-1 tracking-tight">{orgName}</h1>
                 )}
-                <p className="text-xs font-bold uppercase tracking-[0.3em]" className="text-[var(--app-primary)]/60">POS Terminal</p>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--app-primary)]/60">POS Terminal</p>
 
                 {/* Live Clock */}
                 <div className="mt-10">
