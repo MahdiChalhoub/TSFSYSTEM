@@ -54,7 +54,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
 
     /* ── Loading screen ── */
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-app-bg">
+        <div className="-m-4 md:-m-5 min-h-[calc(100vh-3.5rem)] flex items-center justify-center bg-app-bg">
             <div className="text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 bg-[var(--app-primary-light)] border border-[var(--app-primary-strong)]">
                     <Loader2 size={28} className="animate-spin text-[var(--app-primary)]" />
@@ -65,7 +65,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
     );
 
     return (
-        <div className="min-h-screen flex overflow-hidden bg-app-bg">
+        <div className="-m-4 md:-m-5 min-h-[calc(100vh-3.5rem)] flex overflow-hidden bg-app-bg">
             {/* Dot grid overlay */}
             <div className="fixed inset-0 pointer-events-none opacity-10 mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
