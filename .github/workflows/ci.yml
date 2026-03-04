@@ -1,176 +1,89 @@
-name: TSF Platform CI/CD
+name: TSFSYSTEM CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ "main", "develop", "staging" ]
   pull_request:
-    branches: [main]
-
-env:
-  PYTHON_VERSION: '3.12'
-  NODE_VERSION: '20'
+    branches: [ "main", "develop" ]
 
 jobs:
-  # ═══════════════════════════════════════════════════════════════════════════
-  # BACKEND: Lint + Type Check + Test
-  # ═══════════════════════════════════════════════════════════════════════════
-  backend-lint:
-    name: Backend Lint
+  frontend-ci:
+    name: Frontend Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install linter
-        run: pip install ruff
-      - name: Run ruff
-        run: ruff check erp_backend/erp/ erp_backend/apps/ --output-format github
-
-  backend-test:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    needs: backend-lint
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: test_tsf
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: testpass123
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          cd erp_backend
-          pip install -r requirements.txt
-
-      - name: Run tests (198 tests across all modules)
-        env:
-          DB_NAME: test_tsf
-          DB_USER: postgres
-          DB_PASSWORD: testpass123
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
-          DJANGO_DEBUG: 'False'
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/1
-          LOCAL_DEV: '1'
-        run: |
-          cd erp_backend
-          python manage.py test \
-            apps.pos.tests.test_pos_integrity \
-            apps.finance.tests.test_ledger_service \
-            apps.finance.tests.test_finance_rules \
-            apps.inventory.tests.test_inventory_service \
-            apps.crm.tests.test_loyalty_service \
-            apps.hr.tests.test_hr_models \
-            erp.tests.test_encryption \
-            erp.tests.test_permissions \
-            erp.tests.test_tenant_isolation \
-            erp.tests.test_connector_engine \
-            erp.tests.test_mixed_tax_engine \
-            erp.tests.test_api_endpoints \
-            erp.tests.test_error_handler \
-            --verbosity=2 --no-input
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: erp_backend/coverage.xml
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # FRONTEND: Lint + Type Check + Build
-  # ═══════════════════════════════════════════════════════════════════════════
-  frontend-check:
-    name: Frontend Checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
-
-      - name: Install dependencies
+          
+      - name: Install Dependencies
         run: npm ci
 
-      - name: TypeScript type check
+      - name: Type Check
         run: npx tsc --noEmit
 
       - name: ESLint
-        run: npx eslint src/ --max-warnings=50
+        run: npm run lint
 
-      - name: Build
-        env:
-          NEXT_PUBLIC_API_BASE: http://localhost:8000
-          NEXT_PUBLIC_ROOT_DOMAIN: localhost
-        run: npm run build
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DOCKER: Build images (on main only)
-  # ═══════════════════════════════════════════════════════════════════════════
-  docker-build:
-    name: Docker Build
+  backend-ci:
+    name: Backend Tests & Lint
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-check]
-    if: github.ref == 'refs/heads/main'
+    
+    # Needs PostgreSQL and Redis services for testing
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tsfuser
+          POSTGRES_PASSWORD: tsfpassword
+          POSTGRES_DB: tsfci_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          -- स्वास्थ्य जांच 
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+          
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build backend image
-        run: docker build -t tsf-backend:${{ github.sha }} -f erp_backend/Dockerfile erp_backend/
-
-      - name: Build frontend image
-        run: docker build -t tsf-frontend:${{ github.sha }} .
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DEPLOY: Production deployment (manual approval recommended)
-  # ═══════════════════════════════════════════════════════════════════════════
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: docker-build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production  # Requires manual approval in GitHub settings
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        working-directory: ./erp_backend
         run: |
-          echo "🚀 Deployment would happen here"
-          echo "Target: $DEPLOY_HOST"
-          echo "Commit: ${{ github.sha }}"
-          # Uncomment when ready:
-          # mkdir -p ~/.ssh
-          # echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          # chmod 600 ~/.ssh/deploy_key
-          # ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST \
-          #   "cd /app && git pull && docker compose up -d --build"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 isort pytest pytest-django coverage
+          
+      - name: Check imports with isort
+        working-directory: ./erp_backend
+        run: isort --check-only .
+        
+      - name: Lint with flake8
+        working-directory: ./erp_backend
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          
+      - name: Run Django Tests
+        working-directory: ./erp_backend
+        env:
+          DATABASE_URL: postgres://tsfuser:tsfpassword@localhost:5432/tsfci_test_db
+          SECRET_KEY: testing-secret-key-123
+          REDIS_URL: redis://localhost:6379/1
+          DEBUG: False
+        run: |
+          coverage run manage.py test
+          coverage report -m

@@ -210,12 +210,21 @@ DATABASES = {
 # ─── Redis Cache Layer ─────────────────────────────────────────────────
 # ─── Cache Layer ──────────────────────────────────────────────────────
 # Force LocMemCache for local dev to avoid "Connection Refused" if Redis is down
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+_REDIS_URL = os.getenv('REDIS_URL') or os.getenv('CELERY_BROKER_URL')
+if _REDIS_URL and not DEBUG:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _REDIS_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
 
 # SaaS Integration Settings
 X_TENANT_HEADER = 'HTTP_X_TENANT_ID'

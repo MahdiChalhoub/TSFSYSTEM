@@ -49,12 +49,34 @@ docker logs -f tsf_gateway
 docker exec -it tsf_db psql -U postgres -d tsfci_db
 ```
 
-### Resetting Migrations (Disaster Recovery Only)
-If migrations become inconsistent:
-1. Stop the stack.
-2. Delete all `00*.py` files in app migration folders.
-3. Run `makemigrations` and `migrate` sequentially in an isolated container.
-4. Verify schema via `docker exec tsf_backend python manage.py migrate --check`.
+### Database Backup & Restore
+**Always backup before deploying schema changes.**
+
+**Create Snapshot:**
+```bash
+docker exec -t tsf_db pg_dump -U postgres -F c tsfci_db > /root/backups/tsfci_db_$(date +%Y%m%d_%H%M%S).dump
+```
+
+**Restore Snapshot (Disaster Recovery):**
+```bash
+# 1. Stop backend & frontend to prevent connections
+docker-compose stop tsf_backend tsf_frontend
+# 2. Drop and recreate DB
+docker exec -it tsf_db psql -U postgres -c "DROP DATABASE tsfci_db;"
+docker exec -it tsf_db psql -U postgres -c "CREATE DATABASE tsfci_db;"
+# 3. Restore from dump
+docker exec -i tsf_db pg_restore -U postgres -d tsfci_db < /root/backups/tsfci_db_YOUR_DATE.dump
+# 4. Restart stack
+docker-compose start
+```
+
+### Safe Migration Rollbacks
+If a deployment introduces a bad migration, **do NOT delete migration files**. 
+Use Django's built-in rollback to reverse the schema change safely:
+```bash
+# Example: Rollback 'sales' app to migration 0014
+docker exec -it tsf_backend python manage.py migrate sales 0014
+```
 
 ---
 *Created by Agent-3 (Session #38152f) - Verified Stable on 2026-02-22*

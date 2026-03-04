@@ -56,19 +56,8 @@ class TenantMiddleware:
         
         # ── Normalize Header: ID or Slug ──
         if header_tenant_id:
-            import uuid
-            try:
-                # Validate UUID format
-                uuid.UUID(str(header_tenant_id))
-            except (ValueError, AttributeError):
-                # Not a UUID -> Try resolving as Slug
-                from erp.models import Organization
-                org = Organization.objects.filter(slug__iexact=header_tenant_id, is_active=True).first()
-                if org:
-                    header_tenant_id = str(org.id)
-                else:
-                    # Invalid slug/id -> Let it fail naturally in downstream checks
-                    pass
+            from .tenant_utils import resolve_tenant_header
+            header_tenant_id = resolve_tenant_header(header_tenant_id)
 
         tenant_id = None
 
@@ -103,12 +92,10 @@ class TenantMiddleware:
                     status=401
                 )
 
-            if user.is_superuser:
-                # Superusers can access any tenant for management, but we log it.
-                # In Strict Mode, they should only be able to do this if they 
-                # come from the 'saas' management context.
+            if user.is_superuser and user.organization and user.organization.slug == 'saas':
+                # Superusers can access any tenant for management ONLY if they come from the 'saas' org.
                 tenant_id = header_tenant_id
-                logger.info(f"[ISOLATION] Superuser {user.username} accessing tenant {tenant_id}")
+                logger.info(f"[ISOLATION] SaaS Superuser {user.username} accessing tenant {tenant_id}")
             elif str(user.organization_id) == str(header_tenant_id):
                 # User matches the requested tenant — allowed
                 tenant_id = header_tenant_id
@@ -190,7 +177,17 @@ class TenantMiddleware:
             return None
         try:
             from rest_framework.authtoken.models import Token
+            from django.conf import settings
+            import datetime
+            from django.utils import timezone
+            
             token = Token.objects.select_related('user', 'user__organization').get(key=token_key)
+            
+            # Explicit TTL check: match DRF ExpiringTokenAuthentication
+            ttl_days = getattr(settings, 'EXPIRING_AUTH_TOKEN_DURATION', 14)
+            if timezone.now() > token.created + datetime.timedelta(days=ttl_days):
+                return None
+                
             return token.user
         except Exception:
             return None

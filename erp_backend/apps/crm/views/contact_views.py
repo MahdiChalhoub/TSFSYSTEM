@@ -15,9 +15,11 @@ from apps.crm.models import Contact
 from apps.crm.serializers import ContactSerializer
 from apps.finance.models import ChartOfAccount
 from apps.finance.services import LedgerService
+from erp.permissions import CRMReadOnlyOrManage
 
 
 class ContactViewSet(TenantModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, CRMReadOnlyOrManage]
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 

@@ -52,8 +52,12 @@ class RegisterLobbyMixin:
                     } if current_session else None,
                     'cashAccountId': reg.cash_account_id,
                     'cashAccountName': reg.cash_account.name if reg.cash_account else None,
+                    'accountBookId': reg.account_book_id,
+                    'accountBookName': reg.account_book.name if reg.account_book else None,
                     'warehouseId': reg.warehouse_id,
                     'warehouseName': reg.warehouse.name if reg.warehouse else None,
+                    'reserveAccountId': reg.reserve_account_id,
+                    'reserveAccountName': reg.reserve_account.name if reg.reserve_account else None,
                     'allowedAccounts': [
                         {'id': acc.id, 'name': acc.name, 'type': acc.type}
                         for acc in reg.allowed_accounts.all()
@@ -70,6 +74,11 @@ class RegisterLobbyMixin:
                     'openingMode': reg.opening_mode.lower(),
                     'cashierCanSeeSoftware': reg.cashier_can_see_software,
                     'paymentMethods': reg.payment_methods or [],
+                    'registerRulesOverride': reg.register_rules_override or {},
+                    # Config completeness flags
+                    'isConfigComplete': bool(reg.cash_account_id and reg.account_book_id),
+                    'missingCashAccount': not bool(reg.cash_account_id),
+                    'missingAccountBook': not bool(reg.account_book_id),
                 })
 
             data.append({
@@ -233,6 +242,8 @@ class RegisterLobbyMixin:
             register.warehouse_id = request.data['warehouse_id']
         if 'cash_account_id' in request.data:
             register.cash_account_id = request.data['cash_account_id']
+        if 'account_book_id' in request.data:
+            register.account_book_id = request.data['account_book_id']
         if 'is_active' in request.data:
             register.is_active = request.data['is_active']
         if 'opening_mode' in request.data:
@@ -241,6 +252,10 @@ class RegisterLobbyMixin:
             register.cashier_can_see_software = request.data['cashier_can_see_software']
         if 'payment_methods' in request.data:
             register.payment_methods = request.data['payment_methods']
+        if 'register_rules_override' in request.data:
+            register.register_rules_override = request.data['register_rules_override']
+        if 'reserve_account_id' in request.data:
+            register.reserve_account_id = request.data['reserve_account_id']
 
         register.save()
 

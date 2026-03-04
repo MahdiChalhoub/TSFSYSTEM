@@ -114,6 +114,14 @@ class StockReservationService:
                 if reserved_for_order <= Decimal('0'):
                     continue
 
+                # Lock the inventory row to serialize StockLedger writes
+                from apps.inventory.models import Inventory
+                Inventory.objects.select_for_update().filter(
+                    product=line.product,
+                    warehouse=warehouse,
+                    organization=order.organization,
+                ).first()
+
                 prev = cls._latest_entry(line.product, warehouse, order.organization)
                 StockLedger.objects.create(
                     organization=order.organization,
@@ -145,6 +153,15 @@ class StockReservationService:
         with transaction.atomic():
             for line in order.lines.select_related('product').all():
                 qty = line.quantity
+
+                # Lock the inventory row to serialize StockLedger writes
+                from apps.inventory.models import Inventory
+                Inventory.objects.select_for_update().filter(
+                    product=line.product,
+                    warehouse=warehouse,
+                    organization=order.organization,
+                ).first()
+
                 prev = cls._latest_entry(line.product, warehouse, order.organization)
 
                 # How much is currently reserved for THIS order?

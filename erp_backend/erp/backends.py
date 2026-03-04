@@ -30,7 +30,8 @@ class TenantAuthBackend(ModelBackend):
             if not org_id and request:
                 tenant_header = request.headers.get('X-Tenant-Id')
                 if tenant_header:
-                    org_id = tenant_header
+                    from .tenant_utils import resolve_tenant_header
+                    org_id = resolve_tenant_header(tenant_header)
 
             # Query Logic
             query = Q(username=username)
