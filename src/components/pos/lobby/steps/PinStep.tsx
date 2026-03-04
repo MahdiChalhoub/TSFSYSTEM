@@ -94,7 +94,7 @@ export const PinStep = memo(function PinStep({ register, cashier, onVerified }: 
                             'h-14 rounded-2xl font-black text-lg transition-all duration-100 active:scale-90 select-none',
                             key === '✓'
                                 ? pin.length >= 4
-                                    ? 'bg-gradient-to-br from-[var(--app-primary)] to-teal-500 text-white shadow-xl shadow-[var(--app-primary-glow)] hover:shadow-[var(--app-primary-glow)]'
+                                    ? 'bg-[var(--app-primary)] text-white shadow-xl shadow-[var(--app-primary-glow)] hover:shadow-[var(--app-primary-glow)]'
                                     : 'bg-[var(--app-surface-hover)] text-[var(--app-text-faint)] cursor-not-allowed'
                                 : key === 'DEL'
                                     ? 'bg-[var(--app-error-bg)] text-[var(--app-error)] hover:bg-[var(--app-error-bg)]'

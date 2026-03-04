@@ -32,7 +32,7 @@ export const RegisterStep = memo(function RegisterStep({ site, onSelect }: { sit
                         <div className="flex items-start justify-between mb-3">
                             <div className={clsx(
                                 'w-11 h-11 rounded-xl flex items-center justify-center transition-all',
-                                reg.isOpen ? 'bg-[var(--app-success-bg)] text-[var(--app-success)]' : 'bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] group-hover:bg-indigo-400 group-hover:text-[var(--app-text)]'
+                                reg.isOpen ? 'bg-[var(--app-success-bg)] text-[var(--app-success)]' : 'bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] group-hover:bg-[var(--app-primary)] group-hover:text-white'
                             )}>
                                 <Monitor size={20} />
                             </div>
