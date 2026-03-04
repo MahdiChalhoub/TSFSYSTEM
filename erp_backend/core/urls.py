@@ -20,14 +20,20 @@ from django.conf import settings
 from django.conf.urls.static import static
 from erp.views import health_check
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from django.contrib.auth.decorators import login_required
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes, api_view
+
+# Wrap the class-based views with a generic authentication requirement or use staff_member_required
+from django.contrib.admin.views.decorators import staff_member_required
 
 urlpatterns = [
     path('tsf-system-kernel-7788/', admin.site.urls),
     path('api/', include('erp.urls')),
     path('api/migration/', include('apps.migration.urls')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
+    path('api/docs/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
+    path('api/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
     path('health/', health_check),
 ]
 

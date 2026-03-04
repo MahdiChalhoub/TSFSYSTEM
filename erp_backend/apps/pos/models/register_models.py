@@ -69,6 +69,19 @@ class POSRegister(TenantModel):
         help_text='Ordered list of payment methods for this register: [{key, label, accountId}]'
     )
 
+    # Account Book — REQUIRED: register cannot open without this
+    account_book = models.ForeignKey(
+        'finance.FinancialAccount', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='register_account_book',
+        help_text='Cashier Account Book (Livre de Caisse) linked to this register. REQUIRED to open.'
+    )
+
+    # Per-register overrides for global security rules (JSON patch)
+    # e.g. { "requireCountOnClose": true, "lockRegisterOnClose": false }
+    register_rules_override = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per-register overrides for global POS security rules'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)

@@ -41,12 +41,10 @@ from .product_bulk import ProductBulkMixin
 from .product_analytics import ProductAnalyticsMixin
 from .product_combo import ProductComboMixin
 from .product_storefront import ProductStorefrontMixin
+from erp.permissions import InventoryReadOnlyOrManage
 
 class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin, ProductStorefrontMixin, UDLEViewSetMixin, TenantModelViewSet):
-
-
-
-
+    permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
     queryset = Product.objects.select_related(
         'brand', 'country', 'category', 'unit', 'parfum', 'size_unit', 'product_group'
     ).all()

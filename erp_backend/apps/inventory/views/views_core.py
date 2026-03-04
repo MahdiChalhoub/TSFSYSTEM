@@ -46,10 +46,13 @@ from apps.inventory.models import StockAlert, StockAlertService
 from apps.inventory.serializers import StockAlertSerializer
 from apps.inventory.models import StockAlert, StockAlertService
 from apps.inventory.serializers import StockAlertSerializer
+from rest_framework import permissions
+from erp.permissions import InventoryReadOnlyOrManage, permission_required
 
 
 
 class InventoryViewSet(TenantModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
     queryset = Inventory.objects.select_related('product', 'warehouse').all()
     serializer_class = InventorySerializer
 
@@ -77,6 +80,7 @@ class InventoryViewSet(TenantModelViewSet):
 
     # --- H4: cross-tenant validation ---
     @action(detail=False, methods=['post'])
+    @permission_required('inventory.manage')
     def receive_stock(self, request):
         organization, err = _get_org_or_400()
         if err: return err
@@ -104,6 +108,7 @@ class InventoryViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
+    @permission_required('inventory.adjust')
     def adjust_stock(self, request):
         organization, err = _get_org_or_400()
         if err: return err
@@ -331,6 +336,7 @@ class InventoryViewSet(TenantModelViewSet):
         })
 
     @action(detail=False, methods=['post'])
+    @permission_required('inventory.transfer')
     def transfer_stock(self, request):
         """Transfer stock between warehouses within the same organization."""
         organization, err = _get_org_or_400()
@@ -440,6 +446,7 @@ class InventoryViewSet(TenantModelViewSet):
 
 
 class InventoryMovementViewSet(UDLEViewSetMixin, TenantModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
     queryset = InventoryMovement.objects.select_related('product', 'warehouse').all()
     serializer_class = InventoryMovementSerializer
     http_method_names = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']
