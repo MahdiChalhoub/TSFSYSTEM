@@ -51,10 +51,10 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    RETAIL: { label: 'Retail', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
+    RETAIL: { label: 'Retail', color: 'theme-text-muted', bg: 'theme-surface theme-border' },
     WHOLESALE: { label: 'Wholesale', color: 'text-app-warning', bg: 'bg-app-warning/10 border-app-warning/20' },
-    CONSIGNEE: { label: 'Consignee', color: 'text-app-primary', bg: 'bg-app-primary/10 border-app-primary/20' },
-    STANDARD: { label: 'Standard', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
+    CONSIGNEE: { label: 'Consignee', color: 'theme-primary', bg: 'bg-app-primary/10 border-app-primary/20' },
+    STANDARD: { label: 'Standard', color: 'theme-text-muted', bg: 'theme-surface theme-border' },
 }
 
 export default function InvoicesPage() {
@@ -169,12 +169,12 @@ export default function InvoicesPage() {
             key: 'invoice_number',
             label: 'Invoice #',
             sortable: true,
-            render: (inv) => <span className="font-mono font-semibold text-app-muted-foreground">{inv.invoice_number || `DRAFT-${inv.id}`}</span>
+            render: (inv) => <span className="font-mono font-semibold theme-text-muted">{inv.invoice_number || `DRAFT-${inv.id}`}</span>
         },
         {
             key: 'type',
             label: 'Type',
-            render: (inv) => <span className="text-xs font-medium text-app-muted-foreground">{TYPE_LABELS[inv.type] || inv.type}</span>
+            render: (inv) => <span className="text-xs font-medium theme-text-muted">{TYPE_LABELS[inv.type] || inv.type}</span>
         },
     ]
 
@@ -183,10 +183,10 @@ export default function InvoicesPage() {
             key: 'sub_type',
             label: 'Sub-Type',
             render: (inv) => inv.sub_type && SUB_TYPE_CONFIG[inv.sub_type] ? (
-                <Badge variant="outline" className={`rounded-md text-[10px] font-semibold border ${SUB_TYPE_CONFIG[inv.sub_type].bg} ${SUB_TYPE_CONFIG[inv.sub_type].color}`}>
+                <Badge variant="outline" className={`layout-card-radius text-[10px] font-semibold border ${SUB_TYPE_CONFIG[inv.sub_type].bg} ${SUB_TYPE_CONFIG[inv.sub_type].color}`}>
                     {SUB_TYPE_CONFIG[inv.sub_type].label}
                 </Badge>
-            ) : <span className="text-xs text-app-muted-foreground">—</span>
+            ) : <span className="text-xs theme-text-muted">—</span>
         })
     }
 
@@ -213,7 +213,7 @@ export default function InvoicesPage() {
             label: 'Total',
             align: 'right',
             sortable: true,
-            render: (inv) => <span className="font-semibold text-app-foreground">{fmt(inv.total_amount)}</span>
+            render: (inv) => <span className="font-semibold theme-text">{fmt(inv.total_amount)}</span>
         },
         {
             key: 'balance_due',
@@ -233,81 +233,117 @@ export default function InvoicesPage() {
 
     if (loading) {
         return (
-            <div className="app-page space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="app-page space-y-[var(--layout-section-spacing)] animate-in fade-in duration-500 max-w-7xl mx-auto">
                 <div className="flex justify-between items-center">
                     <div><Skeleton className="h-10 w-48" /><Skeleton className="h-4 w-64 mt-2" /></div>
                     <Skeleton className="h-10 w-36" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-[var(--layout-element-gap)]">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 layout-card-radius" />)}
                 </div>
-                <Skeleton className="h-96 rounded-2xl" />
+                <Skeleton className="h-96 layout-card-radius" />
             </div>
         )
     }
 
     return (
         <div className="app-page">
-            <div className="min-h-screen p-5 md:p-6 space-y-6 max-w-[1400px] mx-auto">
+            <div className="min-h-screen layout-container-padding space-y-[var(--layout-section-spacing)] max-w-[1400px] mx-auto">
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
-                            <FileText size={32} className="text-app-primary" />
+                        <div className="w-16 h-16 layout-card-radius flex items-center justify-center shrink-0" style={{
+                            background: 'var(--theme-primary)',
+                            opacity: 0.1,
+                            border: '1px solid var(--theme-primary)'
+                        }}>
+                            <FileText size={32} className="theme-primary" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">
+                            <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">
                                 Accounting
                             </p>
-                            <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
-                                Invoice <span className="text-app-primary">Suite</span>
+                            <h1 className="text-4xl font-black tracking-tight theme-text italic">
+                                Invoice <span className="theme-primary">Suite</span>
                             </h1>
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <Button onClick={() => setCreateOpen(true)} className="h-11 px-5 rounded-xl bg-app-primary text-app-primary-foreground font-bold flex items-center gap-2 hover:bg-app-primary/90 transition-all shadow-lg shadow-app-primary/20">
+                        <Button onClick={() => setCreateOpen(true)} className="h-11 px-5 layout-card-radius font-bold flex items-center gap-2 transition-all shadow-lg" style={{
+                            background: 'var(--theme-primary)',
+                            color: 'var(--theme-bg)',
+                            boxShadow: '0 10px 40px -10px var(--theme-primary)'
+                        }}>
                             <Plus size={16} /> New Invoice
                         </Button>
                     </div>
                 </header>
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 fade-in-up" style={{ animationDelay: '60ms' }}>
-                    <div className="app-glass p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 bg-app-info/10 border-app-info/30" style={{ boxShadow: '0 4px 14px var(--app-info-20)' }}>
-                                <DollarSign size={22} className="text-app-info" />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-[var(--layout-element-gap)] fade-in-up" style={{ animationDelay: '60ms' }}>
+                    <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+                        <CardContent className="layout-card-padding">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 layout-card-radius flex items-center justify-center" style={{
+                                    background: 'var(--app-info)',
+                                    opacity: 0.1
+                                }}>
+                                    <DollarSign size={24} className="text-app-info" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-app-info uppercase tracking-wider">Outstanding</p>
+                                    <p className="text-2xl font-bold text-app-info mt-0.5">{fmt(dashboard?.total_outstanding || 0)}</p>
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Outstanding</p>
-                        <p className="text-3xl font-black tracking-tight text-app-info italic">{fmt(dashboard?.total_outstanding || 0)}</p>
-                    </div>
-                    <div className="app-glass p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 bg-app-error/10 border-app-error/30" style={{ boxShadow: '0 4px 14px var(--app-error-20)' }}>
-                                <AlertTriangle size={22} className="text-app-error" />
+                        </CardContent>
+                    </Card>
+                    <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+                        <CardContent className="layout-card-padding">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 layout-card-radius flex items-center justify-center" style={{
+                                    background: 'var(--app-error)',
+                                    opacity: 0.1
+                                }}>
+                                    <AlertTriangle size={24} className="text-app-error" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-app-error uppercase tracking-wider">Overdue</p>
+                                    <p className="text-2xl font-bold text-app-error mt-0.5">{fmt(dashboard?.total_overdue || 0)}</p>
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Overdue</p>
-                        <p className="text-3xl font-black tracking-tight text-app-error italic">{fmt(dashboard?.total_overdue || 0)}</p>
-                    </div>
-                    <div className="app-glass p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 bg-app-success/10 border-app-success/30" style={{ boxShadow: '0 4px 14px var(--app-success-20)' }}>
-                                <TrendingUp size={22} className="text-app-success" />
+                        </CardContent>
+                    </Card>
+                    <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+                        <CardContent className="layout-card-padding">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 layout-card-radius flex items-center justify-center" style={{
+                                    background: 'var(--app-success)',
+                                    opacity: 0.1
+                                }}>
+                                    <TrendingUp size={24} className="text-app-success" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-app-success uppercase tracking-wider">Collected</p>
+                                    <p className="text-2xl font-bold text-app-success mt-0.5">{fmt(dashboard?.total_received || 0)}</p>
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Collected</p>
-                        <p className="text-3xl font-black tracking-tight text-app-success italic">{fmt(dashboard?.total_received || 0)}</p>
-                    </div>
-                    <div className="app-glass p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 bg-app-surface-2 border-app-border text-app-muted-foreground">
-                                <Receipt size={22} />
+                        </CardContent>
+                    </Card>
+                    <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+                        <CardContent className="layout-card-padding">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 layout-card-radius flex items-center justify-center" style={{
+                                    background: 'var(--theme-primary)',
+                                    opacity: 0.1
+                                }}>
+                                    <Receipt size={24} className="theme-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold theme-primary uppercase tracking-wider">Total</p>
+                                    <p className="text-2xl font-bold theme-primary mt-0.5">{dashboard?.total_invoices || 0}</p>
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1">Total</p>
-                        <p className="text-3xl font-black tracking-tight text-app-foreground italic">{dashboard?.total_invoices || 0}</p>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* ─── Create Invoice Dialog ────────────────────────── */}
@@ -317,10 +353,10 @@ export default function InvoicesPage() {
                             <DialogTitle className="flex items-center gap-2"><FileText size={20} /> New Invoice</DialogTitle>
                             <DialogDescription>Create a new sales or purchase invoice.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
+                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-[var(--layout-element-gap)] pt-2">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Type *</label>
-                                <select name="type" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                <label className="text-xs font-bold theme-text-muted uppercase">Type *</label>
+                                <select name="type" required className="w-full px-3 py-2 border layout-card-radius bg-background text-sm">
                                     <option value="SALES">Sales Invoice</option>
                                     <option value="PURCHASE">Purchase Invoice</option>
                                     <option value="CREDIT_NOTE">Credit Note</option>
@@ -330,8 +366,8 @@ export default function InvoicesPage() {
                             </div>
                             {tradeSubTypesEnabled && (
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-app-muted-foreground uppercase">Sub-Type</label>
-                                    <select name="sub_type" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    <label className="text-xs font-bold theme-text-muted uppercase">Sub-Type</label>
+                                    <select name="sub_type" className="w-full px-3 py-2 border layout-card-radius bg-background text-sm">
                                         <option value="RETAIL">Retail</option>
                                         <option value="WHOLESALE">Wholesale</option>
                                         <option value="CONSIGNEE">Consignee</option>
@@ -340,15 +376,15 @@ export default function InvoicesPage() {
                                 </div>
                             )}
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Contact *</label>
+                                <label className="text-xs font-bold theme-text-muted uppercase">Contact *</label>
                                 <input
                                     type="text"
                                     placeholder="Search customer or supplier..."
                                     value={contactSearch}
                                     onChange={e => setContactSearch(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-xl bg-background text-sm mb-1 focus:outline-none focus:border-app-border"
+                                    className="w-full px-3 py-2 border layout-card-radius bg-background text-sm mb-1 focus:outline-none focus:border-app-border"
                                 />
-                                <select name="contact" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" size={4}>
+                                <select name="contact" required className="w-full px-3 py-2 border layout-card-radius bg-background text-sm" size={4}>
                                     {contacts
                                         .filter(c => !contactSearch ||
                                             (c.name || c.company_name || '').toLowerCase().includes(contactSearch.toLowerCase())
@@ -366,12 +402,12 @@ export default function InvoicesPage() {
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Issue Date *</label>
-                                <Input name="issue_date" type="date" required className="rounded-xl" defaultValue={new Date().toISOString().split('T')[0]} />
+                                <label className="text-xs font-bold theme-text-muted uppercase">Issue Date *</label>
+                                <Input name="issue_date" type="date" required className="layout-card-radius" defaultValue={new Date().toISOString().split('T')[0]} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Payment Terms *</label>
-                                <select name="payment_terms" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                <label className="text-xs font-bold theme-text-muted uppercase">Payment Terms *</label>
+                                <select name="payment_terms" required className="w-full px-3 py-2 border layout-card-radius bg-background text-sm">
                                     <option value="NET_30">Net 30 Days</option>
                                     <option value="NET_15">Net 15 Days</option>
                                     <option value="NET_7">Net 7 Days</option>
@@ -382,19 +418,19 @@ export default function InvoicesPage() {
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Display Mode</label>
-                                <select name="display_mode" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                <label className="text-xs font-bold theme-text-muted uppercase">Display Mode</label>
+                                <select name="display_mode" className="w-full px-3 py-2 border layout-card-radius bg-background text-sm">
                                     <option value="TTC">TTC (Incl. Tax)</option>
                                     <option value="HT">HT (Excl. Tax)</option>
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Notes</label>
-                                <Input name="notes" placeholder="Optional notes..." className="rounded-xl" />
+                                <label className="text-xs font-bold theme-text-muted uppercase">Notes</label>
+                                <Input name="notes" placeholder="Optional notes..." className="layout-card-radius" />
                             </div>
-                            <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
-                                <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} className="rounded-xl">Cancel</Button>
-                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                            <div className="col-span-2 flex justify-end gap-2 pt-3 theme-border" style={{ borderTop: '1px solid var(--theme-border)' }}>
+                                <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} className="layout-card-radius">Cancel</Button>
+                                <Button type="submit" disabled={isPending} className="layout-card-radius gap-2">
                                     {isPending ? "Creating..." : <><Plus size={14} /> Create</>}
                                 </Button>
                             </div>
@@ -413,17 +449,17 @@ export default function InvoicesPage() {
                                 )}
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleRecordPayment} className="space-y-4 pt-2">
+                        <form onSubmit={handleRecordPayment} className="space-y-[var(--layout-element-gap)] pt-2">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Amount *</label>
+                                <label className="text-xs font-bold theme-text-muted uppercase">Amount *</label>
                                 <Input name="amount" type="number" step="0.01" min="0.01"
                                     max={selectedInvoice?.balance_due}
                                     defaultValue={selectedInvoice?.balance_due}
-                                    required className="rounded-xl" />
+                                    required className="layout-card-radius" />
                             </div>
-                            <div className="flex justify-end gap-2 pt-3 border-t">
-                                <Button type="button" variant="outline" onClick={() => setPaymentOpen(false)} className="rounded-xl">Cancel</Button>
-                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                            <div className="flex justify-end gap-2 pt-3 theme-border" style={{ borderTop: '1px solid var(--theme-border)' }}>
+                                <Button type="button" variant="outline" onClick={() => setPaymentOpen(false)} className="layout-card-radius">Cancel</Button>
+                                <Button type="submit" disabled={isPending} className="layout-card-radius gap-2">
                                     {isPending ? "Recording..." : <><CreditCard size={14} /> Record</>}
                                 </Button>
                             </div>
@@ -480,19 +516,19 @@ export default function InvoicesPage() {
                     sortKey={settings.sortKey}
                     sortDir={settings.sortDir}
                     onSort={settings.setSort}
-                    className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-app-surface"
+                    className="layout-card-radius border-0 shadow-sm overflow-hidden theme-surface"
                     headerExtra={
-                        <div className="flex flex-col md:flex-row items-center gap-4">
-                            <div className="flex gap-1 bg-app-surface-2 p-1 rounded-xl w-full md:w-auto">
+                        <div className="flex flex-col md:flex-row items-center gap-[var(--layout-element-gap)]">
+                            <div className="flex gap-1 p-1 layout-card-radius w-full md:w-auto" style={{ background: 'var(--theme-surface-hover)' }}>
                                 {(['ALL', 'DRAFT', 'SENT', 'OVERDUE', 'PAID'] as ActiveTab[]).map(tab => {
                                     const isActive = activeTab === tab
                                     return (
                                         <button
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
-                                            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs rounded-lg transition-all ${isActive
-                                                ? "bg-app-surface shadow-sm font-bold text-app-primary"
-                                                : "text-app-muted-foreground hover:text-app-foreground"
+                                            className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs layout-card-radius transition-all ${isActive
+                                                ? "theme-surface shadow-sm font-bold theme-primary"
+                                                : "theme-text-muted hover:theme-text"
                                                 }`}
                                         >
                                             {tab}
@@ -501,12 +537,12 @@ export default function InvoicesPage() {
                                 })}
                             </div>
                             <div className="relative w-full md:w-64">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 theme-text-muted" />
                                 <Input
                                     placeholder="Search..."
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    className="pl-9 h-11 rounded-xl text-sm border-0 bg-app-surface-2 focus-visible:ring-app-primary/30"
+                                    className="pl-9 h-11 layout-card-radius text-sm border-0 focus-visible:ring-offset-0" style={{ background: 'var(--theme-surface-hover)' }}
                                 />
                             </div>
                         </div>
