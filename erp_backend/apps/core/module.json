@@ -1,0 +1,49 @@
+{
+  "name": "core",
+  "display_name": "Core System",
+  "version": "2.0.0",
+  "description": "Core system module providing base functionality, tenant management, and shared utilities",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "core",
+  "depends_on": [],
+  "is_system_module": true,
+  "permissions": [
+    "system.manage_users",
+    "system.manage_roles",
+    "system.view_audit_logs",
+    "system.manage_config",
+    "system.view_reports"
+  ],
+  "events_emitted": [
+    "system.user_created",
+    "system.user_updated",
+    "system.config_changed"
+  ],
+  "events_consumed": [],
+  "config_schema": {
+    "system_email": {
+      "type": "string",
+      "default": "noreply@tsfsystem.com",
+      "description": "System email address"
+    },
+    "timezone": {
+      "type": "string",
+      "default": "UTC",
+      "description": "Default timezone"
+    }
+  },
+  "models": [
+    "Tenant",
+    "Organization",
+    "AppUser",
+    "SystemSetting"
+  ],
+  "migrations": [
+    "0001_initial.py"
+  ],
+  "api_endpoints": [
+    "/api/core/users",
+    "/api/core/settings"
+  ]
+}

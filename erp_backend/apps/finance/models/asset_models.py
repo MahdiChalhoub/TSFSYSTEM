@@ -1,10 +1,11 @@
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 from apps.finance.models.coa_models import ChartOfAccount, FinancialAccount
 from apps.finance.models.ledger_models import JournalEntry
 
-class Asset(TenantModel):
+class Asset(AuditLogMixin, TenantOwnedModel):
     CATEGORIES = (
         ('VEHICLE', 'Vehicle'),
         ('EQUIPMENT', 'Equipment'),
@@ -49,7 +50,7 @@ class Asset(TenantModel):
             self.book_value = self.purchase_value - self.accumulated_depreciation
         super().save(*args, **kwargs)
 
-class AmortizationSchedule(TenantModel):
+class AmortizationSchedule(AuditLogMixin, TenantOwnedModel):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='amortization_lines')
     period_date = models.DateField()
     amount = models.DecimalField(max_digits=15, decimal_places=2)

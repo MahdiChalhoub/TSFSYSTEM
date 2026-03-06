@@ -226,8 +226,148 @@ LIFECYCLE_ACTION_CHOICES = (
 )
 
 
+class TransactionType(TenantModel):
+    """
+    Define controlled entities (e.g., REFUND, PRICE_CHANGE, STOCK_ADJ).
+    Each type can have its own verification policy.
+    """
+    code = models.CharField(max_length=50, help_text='Unique code for this transaction type')
+    name = models.CharField(max_length=100, help_text='Display name')
+    description = models.TextField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'transaction_type'
+        unique_together = ('organization', 'code')
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+POLICY_MODE_CHOICES = (
+    ('SIMPLE', 'Simple - Fixed levels for all transactions'),
+    ('RULED', 'Rule-Based - Dynamic levels based on conditions'),
+)
+
+
+class TransactionVerificationPolicy(TenantModel):
+    """
+    Policy defines is_controlled, mode (SIMPLE/RULED), and allow_override.
+    Links to TransactionType and contains default verification settings.
+    """
+    transaction_type = models.ForeignKey(
+        TransactionType,
+        on_delete=models.CASCADE,
+        related_name='policies'
+    )
+    is_controlled = models.BooleanField(
+        default=True,
+        help_text='Whether this transaction type requires approval'
+    )
+    mode = models.CharField(
+        max_length=10,
+        choices=POLICY_MODE_CHOICES,
+        default='SIMPLE',
+        help_text='SIMPLE: fixed levels, RULED: dynamic based on rules'
+    )
+    default_levels = models.IntegerField(
+        default=1,
+        help_text='Default verification levels (used in SIMPLE mode)'
+    )
+    allow_override = models.BooleanField(
+        default=False,
+        help_text='Allow managers to use "Verify & Complete" to skip levels'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'transaction_verification_policy'
+        unique_together = ('organization', 'transaction_type')
+        ordering = ['transaction_type__name']
+
+    def __str__(self):
+        controlled = "Controlled" if self.is_controlled else "No Approval"
+        return f"{self.transaction_type.name}: {controlled} ({self.mode})"
+
+
+class ApprovalRule(TenantModel):
+    """
+    Rules use JSON conditions (e.g., {"amount__gt": 10000}) to resolve required_levels.
+    Evaluated in order of priority (higher priority = evaluated first).
+    """
+    policy = models.ForeignKey(
+        TransactionVerificationPolicy,
+        on_delete=models.CASCADE,
+        related_name='rules'
+    )
+    name = models.CharField(max_length=100, help_text='Rule description')
+    priority = models.IntegerField(
+        default=100,
+        help_text='Higher priority rules are evaluated first'
+    )
+    conditions = models.JSONField(
+        help_text='JSON conditions e.g., {"amount__gt": 10000, "type": "REFUND"}'
+    )
+    required_levels = models.IntegerField(
+        help_text='Number of verification levels required if this rule matches'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'approval_rule'
+        ordering = ['-priority', 'id']
+
+    def __str__(self):
+        return f"{self.name} (Priority: {self.priority}) → {self.required_levels} levels"
+
+
+class LevelRoleMap(TenantModel):
+    """
+    Links specific roles (Accountant, Manager) to verification levels.
+    Defines who can verify at which level.
+    """
+    policy = models.ForeignKey(
+        TransactionVerificationPolicy,
+        on_delete=models.CASCADE,
+        related_name='level_role_maps'
+    )
+    level = models.IntegerField(help_text='Verification level (1, 2, 3, ...)')
+    # Temporary: using role_name until kernel_role table is available
+    role_name = models.CharField(
+        max_length=100,
+        help_text='Role name required to verify at this level',
+        null=True,
+        blank=True
+    )
+    # role = models.ForeignKey(
+    #     'erp.Role',
+    #     on_delete=models.CASCADE,
+    #     help_text='Role required to verify at this level',
+    #     null=True,
+    #     blank=True
+    # )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'level_role_map'
+        unique_together = ('policy', 'level')
+        ordering = ['level']
+
+    def __str__(self):
+        return f"Level {self.level}: {self.role_name or 'Unassigned'}"
+
+
+# Deprecated - keeping for backward compatibility
 class TransactionVerificationConfig(TenantModel):
     """
+    DEPRECATED: Use TransactionVerificationPolicy instead.
     Per-organization settings for how many verification levels each
     transaction type requires. Supports optional amount-based thresholds.
     """
@@ -260,6 +400,7 @@ class TransactionStatusLog(models.Model):
     """
     Immutable audit trail for every lifecycle action on any transaction.
     Stores who did what, when, and why.
+    Enhanced with meta field to track rule matching and bypasses.
     """
     transaction_type = models.CharField(max_length=30, choices=TRANSACTION_TYPES, db_index=True)
     transaction_id = models.IntegerField(db_index=True)
@@ -269,6 +410,11 @@ class TransactionStatusLog(models.Model):
     performed_at = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(null=True, blank=True, help_text='Mandatory for UNLOCK and UNVERIFY')
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+    meta = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='JSON metadata: which rule matched, bypass reason, etc.'
+    )
 
     class Meta:
         db_table = 'transaction_status_log'
@@ -288,6 +434,11 @@ class VerifiableModel(TenantModel):
       - lifecycle_status (OPEN/LOCKED/VERIFIED/CONFIRMED)
       - locked_by, locked_at
       - current_verification_level
+      - required_levels_frozen (frozen at LOCK time)
+      - policy_snapshot (JSON snapshot of policy at LOCK time)
+
+    IMPORTANT: Verification levels are frozen at LOCK time to prevent
+    retroactive policy changes from affecting locked transactions.
     """
     lifecycle_status = models.CharField(
         max_length=20, choices=LIFECYCLE_STATUS_CHOICES, default='OPEN',
@@ -302,17 +453,79 @@ class VerifiableModel(TenantModel):
         default=0,
         help_text='How many verification levels have been completed'
     )
+    required_levels_frozen = models.IntegerField(
+        default=0,
+        help_text='Required levels frozen at LOCK time (immutable)'
+    )
+    policy_snapshot = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='JSON snapshot of policy/rules at LOCK time for audit trail'
+    )
 
     class Meta:
         abstract = True
 
     @property
     def is_editable(self):
+        """Only OPEN transactions can be edited"""
         return self.lifecycle_status == 'OPEN'
 
     @property
     def is_locked(self):
+        """Check if transaction is locked (not editable)"""
         return self.lifecycle_status in ('LOCKED', 'VERIFIED', 'CONFIRMED')
+
+    @property
+    def is_fully_verified(self):
+        """Check if all required verification levels are complete"""
+        return self.current_verification_level >= self.required_levels_frozen
+
+    @property
+    def is_controlled(self):
+        """Check if this transaction requires approval"""
+        return self.required_levels_frozen > 0
+
+    @property
+    def verification_progress(self):
+        """Return progress string like 'L1 / L3' or 'No Approval Required'"""
+        if self.required_levels_frozen == 0:
+            return 'No Approval Required'
+        return f'L{self.current_verification_level} / L{self.required_levels_frozen}'
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to prevent mutations in non-OPEN states.
+        Whitelist: lifecycle_status, current_verification_level, and *_at timestamps
+        """
+        if self.pk and not self.is_editable:
+            # Get original instance from DB
+            original = self.__class__.objects.filter(pk=self.pk).first()
+            if original:
+                # Whitelist of fields that can be updated when locked
+                allowed_fields = {
+                    'lifecycle_status',
+                    'current_verification_level',
+                    'locked_at',
+                    'locked_by',
+                    'required_levels_frozen',
+                    'policy_snapshot',
+                    'updated_at'
+                }
+
+                # Check if any non-whitelisted fields changed
+                for field in self._meta.fields:
+                    if field.name not in allowed_fields:
+                        old_value = getattr(original, field.name)
+                        new_value = getattr(self, field.name)
+                        if old_value != new_value:
+                            from django.core.exceptions import ValidationError
+                            raise ValidationError(
+                                f"Cannot modify '{field.name}' when transaction is {self.lifecycle_status}. "
+                                f"Unlock the transaction first."
+                            )
+
+        super().save(*args, **kwargs)
 
 
 class OrganizationModule(models.Model):
@@ -343,32 +556,8 @@ class Site(TenantModel):
         unique_together = ('code', 'organization')
 
 
-# =============================================================================
-# RBAC (Role-Based Access Control) — Kernel Infrastructure
-# =============================================================================
-
-class Permission(models.Model):
-    code = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'permission'
-
-
-class Role(TenantModel):
-    name = models.CharField(max_length=100)
-    description = models.TextField(null=True, blank=True)
-    permissions = models.ManyToManyField(Permission, related_name='roles')
-    is_public_requestable = models.BooleanField(default=False, help_text="Can users self-request this role during registration")
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'role'
-        unique_together = ('name', 'organization')
+# RBAC (Role-Based Access Control) — Handled by Kernel RBAC Infrastructure (kernel.rbac)
+# Model definitions have been moved to kernel.rbac.models and are imported at the end of this file.
 
 
 class User(AbstractUser):
@@ -389,7 +578,7 @@ class User(AbstractUser):
         ]
     
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    role = models.ForeignKey('erp.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
     # cash_register FK — uses IntegerField to avoid hard dependency on finance module
     cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
@@ -582,3 +771,14 @@ from .models_ui import Notification, UDLESavedView  # noqa: E402, F401
 # Import domain models so Django discovers them for migrations
 from .models_domains import CustomDomain  # noqa: E402, F401
 
+
+# =============================================================================
+# KERNEL MODELS (registered under app_label='erp')
+# =============================================================================
+from kernel.tenancy.models import TenantOwnedModel, TenantAwareModel  # noqa: F401
+from kernel.audit.models import AuditLog, AuditTrail  # noqa: F401
+from kernel.config.models import TenantConfig, FeatureFlag, ConfigHistory  # noqa: F401
+from kernel.contracts.models import Contract, ContractVersion, ContractUsage  # noqa: F401
+from kernel.events.models import DomainEvent, EventSubscription  # noqa: F401
+from kernel.modules.models import KernelModule, OrgModule, ModuleMigration, ModuleDependency  # noqa: F401
+from kernel.rbac.models import Permission, Role, UserRole, ResourcePermission  # noqa: F401

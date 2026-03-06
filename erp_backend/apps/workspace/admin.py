@@ -28,7 +28,7 @@ class QuestionnaireQuestionInline(admin.TabularInline):
 
 @admin.register(TaskCategory)
 class TaskCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'is_active', 'organization')
+    list_display = ('name', 'color', 'is_active', )
     list_filter = ('is_active',)
 
 
@@ -85,7 +85,7 @@ class QuestionnaireResponseAdmin(admin.ModelAdmin):
 
 @admin.register(WorkspaceConfig)
 class WorkspaceConfigAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'task_completion_weight', 'on_time_weight', 'checklist_weight', 'evaluation_weight')
+    list_display = ('task_completion_weight', 'on_time_weight', 'checklist_weight', 'evaluation_weight')
 
 
 @admin.register(EmployeePerformance)

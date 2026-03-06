@@ -15,7 +15,7 @@ import clsx from 'clsx';
 const G = 'bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-2xl';
 const I = 'w-full px-3 py-2 bg-[var(--app-surface-2)] border border-[var(--app-border)] rounded-xl text-[var(--app-text)] text-sm outline-none focus:border-[var(--app-primary-strong)]/50 transition-all placeholder:text-[var(--app-text-faint)]';
 const L = 'text-[10px] text-[var(--app-text-muted)] uppercase tracking-widest font-black block mb-1.5';
-const BP = 'flex items-center gap-2 px-4 py-2 bg-[var(--app-primary)] hover:bg-[var(--app-primary-dark)] text-white rounded-xl font-black text-sm shadow-lg shadow-[var(--app-primary-glow)] hover:brightness-110 transition-all disabled:opacity-50';
+const BP = 'flex items-center gap-2 px-4 py-2 bg-[var(--app-primary)] hover:bg-[var(--app-primary-dark)] text-[var(--app-text)] rounded-xl font-black text-sm shadow-lg shadow-[var(--app-primary-glow)] hover:brightness-110 transition-all disabled:opacity-50';
 const BG = 'flex items-center gap-2 px-3 py-2 text-[var(--app-text-muted)] hover:text-[var(--app-text)] rounded-xl font-bold text-sm hover:bg-[var(--app-surface-2)] transition-all';
 const SH = 'text-[10px] text-[var(--app-text-faint)] uppercase tracking-widest font-black mb-3 flex items-center gap-2';
 
@@ -191,7 +191,7 @@ function RegistersView({ sites, accounts, warehouses, users, selected, setSelect
         )}
 
         {allRegisters.length === 0 && !showCreate && (
-          <div className={G + ' p-10 text-center'}><Monitor size={32} className="text-white/10 mx-auto mb-3" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No registers yet</p></div>
+          <div className={G + ' p-10 text-center'}><Monitor size={32} className="text-[var(--app-text-faint)]/50 mx-auto mb-3" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No registers yet</p></div>
         )}
 
         {sites.map(site => (
@@ -374,8 +374,8 @@ function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefresh, onCl
               <button key={a.id} onClick={() => set('allowedAccountIds', toggleId(form.allowedAccountIds, a.id))}
                 className={clsx('w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-all text-sm',
                   on ? 'bg-[var(--app-success-bg)] border-[var(--app-success)]/25 text-[var(--app-success)]' : 'border-[var(--app-border)]/50 text-[var(--app-text-muted)] hover:bg-[var(--app-surface-2)]/50')}>
-                <div className={clsx('w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0', on ? 'bg-emerald-400 border-emerald-400' : 'border-[var(--app-border-strong)]/30')}>
-                  {on && <Check size={9} className="text-white" />}
+                <div className={clsx('w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0', on ? 'bg-[var(--app-success)] border-emerald-400' : 'border-[var(--app-border-strong)]/30')}>
+                  {on && <Check size={9} className="text-[var(--app-text)]" />}
                 </div>
                 <span className="flex-1 truncate font-medium">{a.name}</span>
                 <span className="text-[9px] opacity-50">{a.type}</span>
@@ -724,7 +724,7 @@ function UsersView({ users, onRefresh }: { users: UD[]; onRefresh: () => void })
             </div>
           );
         })}
-        {filtered.length === 0 && <div className={G + ' p-10 text-center'}><Users size={28} className="text-white/10 mx-auto mb-2" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No users found</p></div>}
+        {filtered.length === 0 && <div className={G + ' p-10 text-center'}><Users size={28} className="text-[var(--app-text-faint)]/50 mx-auto mb-2" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No users found</p></div>}
       </div>
     </div>
   );
@@ -759,7 +759,7 @@ function AccountsView({ accounts, onRefresh }: { accounts: FA[]; onRefresh: () =
             </div>
           </div>
         ))}
-        {accounts.length === 0 && <div className={G + ' col-span-2 p-10 text-center'}><CreditCard size={28} className="text-white/10 mx-auto mb-2" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No accounts found</p></div>}
+        {accounts.length === 0 && <div className={G + ' col-span-2 p-10 text-center'}><CreditCard size={28} className="text-[var(--app-text-faint)]/50 mx-auto mb-2" /><p className="text-[var(--app-text-faint)] text-sm font-bold">No accounts found</p></div>}
       </div>
     </div>
   );

@@ -18,7 +18,10 @@ from .views_auth import (
     setup_2fa_view, verify_2fa_setup_view, disable_2fa_view
 )
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet, PublicPricingView, SaaSClientViewSet
-from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
+from .views_modules import (
+    ModuleListView, ModuleEnableView, ModuleDisableView,
+    MarketplaceView, MarketplaceModuleActionView, ActiveSidebarView,
+)
 from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
 from .views_encryption import EncryptionViewSet
@@ -27,6 +30,10 @@ from .views_domains import CustomDomainViewSet, resolve_custom_domain
 from .list_preferences_views import (
     user_list_preference as list_pref_user_view,
     org_list_default as list_pref_org_view,
+)
+from .views_lifecycle import (
+    lock_transaction, unlock_transaction, verify_transaction,
+    verify_and_complete, unverify_transaction, get_transaction_history
 )
 
 # ── Kernel Router (infrastructure only) ──────────────────────────────────────
@@ -77,14 +84,28 @@ urlpatterns = [
     path('saas/pricing/', PublicPricingView.as_view(), name='public_pricing'),
     path('domains/resolve/', resolve_custom_domain, name='domain_resolve'),
     
-    # Module Management (Tenant Side)
+    # Module Management (Tenant Side) — Legacy
     path('modules/', ModuleListView.as_view(), name='module_list'),
     path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
 
+    # Module Marketplace — Full UX API
+    path('marketplace/', MarketplaceView.as_view(), name='marketplace_list'),
+    path('marketplace/<str:code>/enable/', MarketplaceModuleActionView.as_view(), {'action': 'enable'}, name='marketplace_enable'),
+    path('marketplace/<str:code>/disable/', MarketplaceModuleActionView.as_view(), {'action': 'disable'}, name='marketplace_disable'),
+    path('modules/active-sidebar/', ActiveSidebarView.as_view(), name='active_sidebar'),
+
     # List Preferences
     path('list-preferences/<str:list_key>/', list_pref_user_view, name='list_pref_user'),
     path('list-defaults/<str:list_key>/', list_pref_org_view, name='list_pref_org'),
+
+    # Lifecycle Management
+    path('lifecycle/lock/', lock_transaction, name='lifecycle_lock'),
+    path('lifecycle/unlock/', unlock_transaction, name='lifecycle_unlock'),
+    path('lifecycle/verify/', verify_transaction, name='lifecycle_verify'),
+    path('lifecycle/verify-complete/', verify_and_complete, name='lifecycle_verify_complete'),
+    path('lifecycle/unverify/', unverify_transaction, name='lifecycle_unverify'),
+    path('lifecycle/history/<str:model_name>/<int:instance_id>/', get_transaction_history, name='lifecycle_history'),
 
     # Kernel Router
     path('', include(router.urls)),

@@ -16,10 +16,16 @@ Stock accounting:
 """
 from decimal import Decimal
 from django.db import models
-from erp.models import TenantModel, User
+from django.utils import timezone
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.lifecycle.models import PostableMixin
+from kernel.lifecycle.constants import LifecycleStatus
+from erp.models import User
 
 
-class StockMove(TenantModel):
+class StockMove(AuditLogMixin, TenantOwnedModel, PostableMixin):
+    lifecycle_txn_type = 'STOCK_MOVE'
 
     STATUS_CHOICES = (
         ('DRAFT',      'Draft — not yet submitted'),
@@ -36,12 +42,9 @@ class StockMove(TenantModel):
         ('DROPSHIP', 'Dropship — vendor ships to customer'),
     )
 
-    # ── Identity ──────────────────────────────────────────────────────────────
     ref_code       = models.CharField(max_length=50, null=True, blank=True, db_index=True,
                          help_text='Auto-generated sequence reference')
     move_type      = models.CharField(max_length=12, choices=MOVE_TYPES, default='TRANSFER')
-    status         = models.CharField(max_length=12, choices=STATUS_CHOICES,
-                         default='DRAFT', db_index=True)
 
     # ── Source & Destination ─────────────────────────────────────────────────
     from_warehouse = models.ForeignKey(
@@ -83,7 +86,7 @@ class StockMove(TenantModel):
     class Meta:
         db_table = 'stock_move'
         indexes  = [
-            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['tenant', 'status']),
             models.Index(fields=['from_warehouse', 'to_warehouse']),
             models.Index(fields=['ref_code']),
         ]
@@ -93,7 +96,7 @@ class StockMove(TenantModel):
         return f"{self.ref_code or f'MOVE-{self.id}'}: {self.from_warehouse} → {self.to_warehouse} [{self.status}]"
 
 
-class StockMoveLine(TenantModel):
+class StockMoveLine(AuditLogMixin, TenantOwnedModel):
     """
     One product/quantity row within a StockMove.
     Supports partial fulfilment: quantity_done may be < quantity.

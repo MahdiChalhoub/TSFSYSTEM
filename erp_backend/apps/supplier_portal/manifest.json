@@ -2,10 +2,56 @@
     "code": "supplier_portal",
     "name": "Supplier Portal",
     "version": "1.0.0",
-    "description": "Supplier-facing portal for proformas, price requests, and access management.",
+    "description": "Dedicated supplier self-service portal: purchase order management, invoice submission, delivery tracking, and supplier performance scoring.",
+    "category": "operations",
+    "plan_required": "business",
+    "is_core": false,
+    "required": false,
+    "icon": "Truck",
     "dependencies": [
-        "core",
-        "workspace"
+        "inventory",
+        "finance"
     ],
-    "required": false
+    "features": [
+        {
+            "code": "po_management",
+            "label": "Purchase Order Management",
+            "default": true
+        },
+        {
+            "code": "invoice_submission",
+            "label": "Invoice Submission",
+            "default": true
+        },
+        {
+            "code": "delivery_tracking",
+            "label": "Delivery Tracking",
+            "default": true
+        },
+        {
+            "code": "performance_scoring",
+            "label": "Supplier Scoring",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Supplier Portal",
+            "icon": "Truck",
+            "children": [
+                {
+                    "title": "Suppliers",
+                    "path": "/procurement/suppliers"
+                },
+                {
+                    "title": "Purchase Orders",
+                    "path": "/procurement/purchase-orders"
+                },
+                {
+                    "title": "Deliveries",
+                    "path": "/procurement/deliveries"
+                }
+            ]
+        }
+    ]
 }

@@ -46,12 +46,14 @@ class TaxEngineContext:
         purchase_tax_rate: Decimal = Decimal('0.0000'),
         purchase_tax_mode: str = 'CAPITALIZE',
         internal_cost_mode: str = 'TTC_ALWAYS',
+        internal_sales_vat_mode: str = 'NONE',
         is_export: bool = False,
         custom_rules: list = None,
     ):
         self.scope = scope
         self.is_export = is_export
         self.internal_cost_mode = internal_cost_mode
+        self.internal_sales_vat_mode = internal_sales_vat_mode
         self.custom_rules = custom_rules or []
 
         # ── SCOPE GUARD (evaluated once at construction) ──────────────
@@ -90,6 +92,7 @@ class TaxEngineContext:
                     purchase_tax_rate=policy.purchase_tax_rate,
                     purchase_tax_mode=policy.purchase_tax_mode,
                     internal_cost_mode=policy.internal_cost_mode,
+                    internal_sales_vat_mode=policy.internal_sales_vat_mode,
                     custom_rules=list(CustomTaxRule.objects.filter(
                         organization=organization, is_active=True
                     )),
@@ -408,7 +411,12 @@ class TaxCalculator:
                     'cost_impact_ratio': float(Decimal('1') - ratio),
                 })
             # else: supplier doesn't charge VAT → no VAT lines, no cost impact
-        # else: vat_active=False (INTERNAL scope or org not VAT-registered) → no VAT lines at all
+        else:
+            # vat_active=False (INTERNAL scope or org not VAT-registered)
+            # All VAT paid to supplier is a cost (capitalized)
+            vat_cost_impact = vat_amount
+            vat_recoverable = Decimal('0')
+            # No tax_lines added because we don't track statutory VAT here
 
         # ── AIRSI ─────────────────────────────────────────────────────
         airsi_cost_impact = Decimal('0')
@@ -530,3 +538,57 @@ class TaxCalculator:
             return 'TVA_INVOICE'
 
         return 'RECEIPT'
+
+    @staticmethod
+    def calculate_sales_breakdown(
+        base_ht: Decimal,
+        vat_rate: Decimal,
+        ctx: 'TaxEngineContext' = None,
+    ) -> dict:
+        """
+        Final sales math for invoicing and ledger.
+        Respects internal_sales_vat_mode (NONE vs DISPLAY_ONLY).
+        
+        Returns:
+            ttc             - Total shown to customer
+            vat_display     - VAT shown in UI/Invoice
+            ledger_amount   - Amount to post to Revenue
+            statutory_vat   - Amount to post to VAT Collected (0 for INTERNAL)
+        """
+        if ctx is None:
+            ctx = TaxEngineContext()
+
+        base_ht = Decimal(str(base_ht))
+        rate = Decimal(str(vat_rate))
+        vat_amount = (base_ht * rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+        if ctx.scope == 'INTERNAL':
+            if ctx.internal_sales_vat_mode == 'NONE':
+                return {
+                    'ttc': base_ht,
+                    'vat_display': Decimal('0.00'),
+                    'ledger_amount': base_ht,
+                    'statutory_vat': Decimal('0.00'),
+                }
+            else:  # DISPLAY_ONLY
+                return {
+                    'ttc': base_ht + vat_amount,
+                    'vat_display': vat_amount,
+                    'ledger_amount': base_ht,
+                    'statutory_vat': Decimal('0.00'),
+                }
+        else:  # OFFICIAL
+            if not ctx.vat_active:
+                return {
+                    'ttc': base_ht,
+                    'vat_display': Decimal('0.00'),
+                    'ledger_amount': base_ht,
+                    'statutory_vat': Decimal('0.00'),
+                }
+            
+            return {
+                'ttc': base_ht + vat_amount,
+                'vat_display': vat_amount,
+                'ledger_amount': base_ht,
+                'statutory_vat': vat_amount,
+            }

@@ -8,4 +8,5 @@ class PosConfig(AppConfig):
 
     def ready(self):
         import apps.pos.signals  # noqa: F401
+        import apps.pos.events  # noqa: F401 - registers @subscribe_to_event handlers
 

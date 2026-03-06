@@ -1,7 +1,8 @@
 from django.db import models
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 
-class OperationalRequest(TenantModel):
+class OperationalRequest(AuditLogMixin, TenantOwnedModel):
     REQUEST_TYPES = (
         ('PURCHASE_ORDER', 'Purchase Order'),
         ('STOCK_ADJUSTMENT', 'Stock Adjustment'),
@@ -42,7 +43,7 @@ class OperationalRequest(TenantModel):
         ordering = ['-date', '-created_at']
 
 
-class OperationalRequestLine(models.Model):
+class OperationalRequestLine(AuditLogMixin, TenantOwnedModel):
     request = models.ForeignKey(OperationalRequest, on_delete=models.CASCADE, related_name='lines')
     product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=15, decimal_places=2)

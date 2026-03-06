@@ -5,10 +5,11 @@
  * Handles authentication, base URL, and headers automatically.
  */
 
-import { cookies } from 'next/headers'
+// Remote import moved inside erpFetch for universal support
 
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
-const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000'
+const DJANGO_URL = process.env.DJANGO_URL ||
+    (typeof window !== 'undefined' ? '' : 'http://127.0.0.1:8000')
 
 export interface ErpFetchOptions extends RequestInit {
     skipAuth?: boolean
@@ -34,16 +35,27 @@ export async function erpFetch(
 
     // Add auth token from cookies if available
     if (!skipAuth) {
-        try {
-            const cookieStore = await cookies()
-            const token = cookieStore.get('auth_token')?.value
+        let token: string | undefined
 
-            if (token) {
-                (headers as Record<string, string>)['Authorization'] = `Token ${token}`
+        if (typeof window === 'undefined') {
+            // Server-side: use next/headers dynamic import to avoid client-side build errors
+            try {
+                const { cookies } = await import('next/headers')
+                const cookieStore = await cookies()
+                token = cookieStore.get('auth_token')?.value
+            } catch (e) {
+                console.warn('[erpFetch] Could not access server cookies:', e)
             }
-        } catch (e) {
-            // Cookies not available (e.g., in static generation)
-            console.warn('[erpFetch] Could not access cookies:', e)
+        } else {
+            // Client-side: use document.cookie
+            token = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('auth_token='))
+                ?.split('=')[1]
+        }
+
+        if (token) {
+            (headers as Record<string, string>)['Authorization'] = `Token ${token}`
         }
     }
 

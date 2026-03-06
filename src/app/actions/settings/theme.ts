@@ -85,21 +85,29 @@ export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
     try {
         const { getTenantContext } = await import('@/lib/erp-api');
         const context = await getTenantContext();
-        if (!context) return null;
+        // NOTE: We do NOT bail out if context is null (SaaS root domain).
+        // Django's TenantMiddleware will resolve the org from the user's auth token.
+        // This allows the SaaS admin org to persist and load its own default theme.
 
         const { cookies } = await import('next/headers');
         const cookieStore = await cookies();
         const token = cookieStore.get('auth_token')?.value;
+
+        // Without a token we have no way to authenticate the request — bail early.
+        if (!token) return null;
 
         const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000';
         const targetUrl = `${DJANGO_URL}/api/organizations/me-theme/`;
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            'X-Tenant-Id': context.id,
-            'X-Tenant-Slug': context.slug,
+            'Authorization': `Token ${token}`,
         };
-        if (token) headers['Authorization'] = `Token ${token}`;
+        // Forward tenant context when available (tenant subdomains)
+        if (context) {
+            headers['X-Tenant-Id'] = context.id;
+            headers['X-Tenant-Slug'] = context.slug;
+        }
 
         const res = await fetch(targetUrl, { headers, cache: 'no-store' });
         if (!res.ok) return null;
@@ -126,6 +134,8 @@ export async function setOrgDefaultTheme(
     try {
         const { getTenantContext } = await import('@/lib/erp-api');
         const context = await getTenantContext();
+        // NOTE: context may be null on the SaaS root domain — this is fine.
+        // Django resolves the org from the auth token in that case.
 
         const cookieStore = await cookies();
         const token = cookieStore.get('auth_token')?.value;
@@ -136,6 +146,7 @@ export async function setOrgDefaultTheme(
             'Content-Type': 'application/json',
         };
         if (token) headers['Authorization'] = `Token ${token}`;
+        // Forward tenant context when available (tenant subdomains)
         if (context) {
             headers['X-Tenant-Id'] = context.id;
             headers['X-Tenant-Slug'] = context.slug;

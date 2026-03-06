@@ -4,7 +4,7 @@ Purchase Order Models
 Dedicated PurchaseOrder & PurchaseOrderLine models with a 10-state lifecycle.
 
 Lifecycle:
-    DRAFT → SUBMITTED → APPROVED → ORDERED → PARTIALLY_RECEIVED →
+    DRAFT → SUBMITTED → APPROVED → SENT → PARTIALLY_RECEIVED →
     RECEIVED → INVOICED → COMPLETED    
                   ↓                          
     REJECTED / CANCELLED (terminal states)
@@ -32,7 +32,7 @@ class PurchaseOrder(TenantModel):
     Purchase order with 10-state lifecycle and transition validation.
     
     State Machine:
-        DRAFT → SUBMITTED → APPROVED → ORDERED → PARTIALLY_RECEIVED →
+        DRAFT → SUBMITTED → APPROVED → SENT → PARTIALLY_RECEIVED →
         RECEIVED → INVOICED → COMPLETED
         Any non-terminal state → CANCELLED
         SUBMITTED → REJECTED
@@ -42,11 +42,12 @@ class PurchaseOrder(TenantModel):
         ('SUBMITTED', 'Submitted for Approval'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
-        ('ORDERED', 'Ordered (Sent to Supplier)'),
+        ('SENT', 'Sent to Supplier'),
         ('CONFIRMED', 'Confirmed by Supplier'),
         ('IN_TRANSIT', 'In Transit / Dispatched'),
         ('PARTIALLY_RECEIVED', 'Partially Received'),
         ('RECEIVED', 'Fully Received'),
+        ('PARTIALLY_INVOICED', 'Partially Invoiced'),
         ('INVOICED', 'Invoiced'),
         ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
@@ -69,13 +70,14 @@ class PurchaseOrder(TenantModel):
     VALID_TRANSITIONS = {
         'DRAFT': {'SUBMITTED', 'CANCELLED'},
         'SUBMITTED': {'APPROVED', 'REJECTED', 'CANCELLED'},
-        'APPROVED': {'ORDERED', 'CANCELLED'},
+        'APPROVED': {'SENT', 'CANCELLED'},
         'REJECTED': {'DRAFT'},  # Can re-open as draft
-        'ORDERED': {'CONFIRMED', 'CANCELLED', 'PARTIALLY_RECEIVED', 'RECEIVED'},
+        'SENT': {'CONFIRMED', 'CANCELLED', 'PARTIALLY_RECEIVED', 'RECEIVED'},
         'CONFIRMED': {'IN_TRANSIT', 'CANCELLED', 'PARTIALLY_RECEIVED', 'RECEIVED'},
         'IN_TRANSIT': {'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'},
         'PARTIALLY_RECEIVED': {'RECEIVED', 'CANCELLED'},
-        'RECEIVED': {'INVOICED', 'COMPLETED'},
+        'RECEIVED': {'PARTIALLY_INVOICED', 'INVOICED', 'COMPLETED'},
+        'PARTIALLY_INVOICED': {'INVOICED', 'COMPLETED'},
         'INVOICED': {'COMPLETED'},
         'COMPLETED': set(),  # Terminal
         'CANCELLED': set(),  # Terminal
@@ -141,6 +143,16 @@ class PurchaseOrder(TenantModel):
     # Invoice & Payment
     invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='linked_purchase_orders')
+
+    # Invoice Policy — determines what qty invoices are matched against
+    INVOICE_POLICY_CHOICES = (
+        ('RECEIVED_QTY', 'Received Quantity (default — 3-way match)'),
+        ('ORDERED_QTY', 'Ordered Quantity (2-way match)'),
+    )
+    invoice_policy = models.CharField(
+        max_length=15, choices=INVOICE_POLICY_CHOICES, default='RECEIVED_QTY',
+        help_text='Which qty the invoice is validated against'
+    )
 
     # Notes
     notes = models.TextField(null=True, blank=True)
@@ -212,7 +224,7 @@ class PurchaseOrder(TenantModel):
             self.cancelled_by = user
             self.cancelled_at = timezone.now()
             self.cancellation_reason = reason
-        elif new_status == 'ORDERED':
+        elif new_status == 'SENT':
             if not self.order_date:
                 self.order_date = timezone.now().date()
         elif new_status == 'RECEIVED':
@@ -239,13 +251,51 @@ class PurchaseOrder(TenantModel):
         all_received = all(l.qty_received >= l.quantity for l in lines)
         any_received = any(l.qty_received > 0 for l in lines)
 
-        if all_received and self.status in ('ORDERED', 'PARTIALLY_RECEIVED'):
+        if all_received and self.status in ('SENT', 'PARTIALLY_RECEIVED'):
             self.status = 'RECEIVED'
             self.received_date = timezone.now().date()
             self.save()
-        elif any_received and not all_received and self.status == 'ORDERED':
+        elif any_received and not all_received and self.status == 'SENT':
             self.status = 'PARTIALLY_RECEIVED'
             self.save()
+
+    def check_invoice_completeness(self):
+        """Auto-transition between RECEIVED → PARTIALLY_INVOICED → INVOICED."""
+        lines = self.lines.all()
+        if not lines.exists():
+            return
+
+        total_received = sum(l.qty_received for l in lines)
+        total_invoiced = sum(l.qty_invoiced for l in lines)
+
+        if total_invoiced <= 0:
+            return  # Stay at RECEIVED
+
+        if total_invoiced < total_received:
+            if self.status in ('RECEIVED', 'PARTIALLY_INVOICED'):
+                self.status = 'PARTIALLY_INVOICED'
+                self.save(update_fields=['status'])
+        else:
+            if self.status in ('RECEIVED', 'PARTIALLY_INVOICED'):
+                self.status = 'INVOICED'
+                self.save(update_fields=['status'])
+
+    def get_discrepancy_summary(self):
+        """Aggregate discrepancies across all lines for the discrepancy dashboard."""
+        lines = list(self.lines.all())
+        return {
+            'total_ordered': sum(l.quantity for l in lines),
+            'total_declared': sum((l.supplier_declared_qty or Decimal('0')) for l in lines),
+            'has_declarations': any(l.supplier_declared_qty is not None for l in lines),
+            'total_received': sum(l.qty_received for l in lines),
+            'total_damaged': sum(l.qty_damaged for l in lines),
+            'total_rejected': sum(l.qty_rejected for l in lines),
+            'total_invoiced': sum(l.qty_invoiced for l in lines),
+            'total_missing_vs_po': sum(l.missing_vs_po for l in lines),
+            'total_received_amount': sum(l.received_amount for l in lines),
+            'total_damaged_amount': sum(l.damaged_amount for l in lines),
+            'total_missing_amount': sum(l.missing_amount for l in lines),
+        }
 
 
 # =============================================================================
@@ -260,6 +310,10 @@ class PurchaseOrderLine(TenantModel):
 
     # Quantities
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('1.00'))
+    supplier_declared_qty = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Quantity declared by supplier in BL/Proforma. None = not yet declared.'
+    )
     qty_received = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     qty_invoiced = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
@@ -289,6 +343,51 @@ class PurchaseOrderLine(TenantModel):
     def __str__(self):
         return f"{self.product} × {self.quantity}"
 
+    # ── Discrepancy Computed Properties (Phase 5) ─────────────────────────
+
+    @property
+    def declared_gap(self):
+        """Gap: what supplier declared vs what was ordered. None if no declaration."""
+        if self.supplier_declared_qty is None:
+            return None
+        return self.supplier_declared_qty - self.quantity
+
+    @property
+    def receipt_gap_vs_declared(self):
+        """Gap: what was declared vs what actually arrived (received + damaged)."""
+        if self.supplier_declared_qty is None:
+            return None
+        return self.supplier_declared_qty - (self.qty_received + self.qty_damaged)
+
+    @property
+    def receipt_gap_vs_ordered(self):
+        """Gap: what was ordered vs what actually arrived (received + damaged + rejected)."""
+        return self.quantity - (self.qty_received + self.qty_damaged + self.qty_rejected)
+
+    @property
+    def missing_vs_po(self):
+        """Qty missing compared to original PO order."""
+        return max(self.quantity - (self.qty_received + self.qty_damaged + self.qty_rejected), Decimal('0'))
+
+    @property
+    def missing_vs_declared(self):
+        """Qty missing compared to supplier declaration. None if no declaration."""
+        if self.supplier_declared_qty is None:
+            return None
+        return max(self.supplier_declared_qty - (self.qty_received + self.qty_damaged + self.qty_rejected), Decimal('0'))
+
+    @property
+    def received_amount(self):
+        return self.qty_received * self.unit_price
+
+    @property
+    def damaged_amount(self):
+        return self.qty_damaged * self.unit_price
+
+    @property
+    def missing_amount(self):
+        return self.missing_vs_po * self.unit_price
+
     def save(self, *args, **kwargs):
         """Auto-calculate line totals and validate mutability."""
         bypass = kwargs.pop('force_audit_bypass', False)
@@ -311,13 +410,33 @@ class PurchaseOrderLine(TenantModel):
         super().delete(*args, **kwargs)
 
     def receive(self, qty):
-        """Record received quantity for this line."""
+        """
+        Record received quantity for this line.
+
+        Phase 8: Tolerance-based over-receipt protection.
+        Checks total arrived (received + damaged + rejected) against
+        ordered qty + configurable tolerance.
+        """
         if qty <= 0:
             raise ValidationError("Received quantity must be positive.")
-        if self.qty_received + qty > self.quantity:
+
+        # Total arrived = everything that physically showed up
+        total_arrived = self.qty_received + self.qty_damaged + self.qty_rejected
+        total_after = total_arrived + qty
+
+        # Configurable tolerance (default 5%)
+        from erp.services import ConfigurationService
+        settings = ConfigurationService.get_global_settings(self.order.organization)
+        tolerance_pct = Decimal(str(settings.get('po_over_receipt_tolerance', 5)))
+        max_allowed = self.quantity * (1 + tolerance_pct / 100)
+
+        if total_after > max_allowed:
             raise ValidationError(
-                f"Cannot receive {qty}. Already received {self.qty_received} of {self.quantity}."
+                f"Over-receipt: Cannot accept {qty} more. "
+                f"Total arrived would be {total_after} vs max allowed {max_allowed} "
+                f"(ordered {self.quantity} + {tolerance_pct}% tolerance)."
             )
+
         self.qty_received += qty
         self.save()
         # Check parent PO completeness

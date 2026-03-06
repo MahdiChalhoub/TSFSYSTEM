@@ -30,6 +30,9 @@ from django.contrib.admin.views.decorators import staff_member_required
 urlpatterns = [
     path('tsf-system-kernel-7788/', admin.site.urls),
     path('api/', include('erp.urls')),
+    # Dual-mount: frontend erpFetch calls use 'erp/' prefix (e.g. erp/sites/, erp/users/)
+    # so we expose kernel routes at /api/erp/ as well for namespaced access.
+    path('api/erp/', include('erp.urls')),
     path('api/migration/', include('apps.migration.urls')),
     path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
     path('api/docs/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),

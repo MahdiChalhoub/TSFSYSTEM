@@ -1,0 +1,252 @@
+# Module Boundaries Enforcement Configuration
+# Version: 1.0.0
+# Date: 2026-03-04
+
+# =============================================================================
+# ENFORCEMENT LEVELS
+# =============================================================================
+enforcement:
+  level: strict  # Options: strict, warn, off
+
+  # Individual rule toggles
+  rules:
+    cross_module_imports: true      # Block direct cross-module imports
+    hardcoded_values: true          # Detect hardcoded constants
+    tenant_isolation: true          # Ensure TenantOwnedModel inheritance
+    audit_logging: true             # Ensure AuditLogMixin inheritance
+    rbac_checks: warn               # Warn on missing permission checks
+    event_contracts: warn           # Warn on missing contract definitions
+
+# =============================================================================
+# MODULE DEFINITIONS
+# =============================================================================
+modules:
+  core:
+    path: erp_backend/apps/core
+    allowed_dependencies: []  # Core has no dependencies
+
+  finance:
+    path: erp_backend/apps/finance
+    allowed_dependencies:
+      - core
+      - crm  # Can import from CRM for customer data
+
+  inventory:
+    path: erp_backend/apps/inventory
+    allowed_dependencies:
+      - core
+
+  crm:
+    path: erp_backend/apps/crm
+    allowed_dependencies:
+      - core
+
+  pos:
+    path: erp_backend/apps/pos
+    allowed_dependencies:
+      - core
+
+  hr:
+    path: erp_backend/apps/hr
+    allowed_dependencies:
+      - core
+
+  ecommerce:
+    path: erp_backend/apps/ecommerce
+    allowed_dependencies:
+      - core
+      - inventory  # Temporarily allowed (TODO: migrate to events)
+
+  client_portal:
+    path: erp_backend/apps/client_portal
+    allowed_dependencies:
+      - core
+
+  packages:
+    path: erp_backend/apps/packages
+    allowed_dependencies:
+      - core
+
+# =============================================================================
+# WHITELISTED PATTERNS (Exceptions)
+# =============================================================================
+whitelist:
+  # Imports that are allowed (will not trigger violations)
+  imports:
+    # Standard library and Django
+    - "^from django\\."
+    - "^import django"
+    - "^from rest_framework\\."
+    - "^import rest_framework"
+    - "^from typing import"
+    - "^import typing"
+    - "^from decimal import"
+    - "^from datetime import"
+    - "^import json"
+    - "^import os"
+
+    # Kernel imports (always allowed)
+    - "^from kernel\\."
+    - "^import kernel"
+    - "^from erp_backend\\.kernel\\."
+
+    # Self-module imports (always allowed)
+    - "^from apps\\.\\{module\\}\\."  # Replaced with actual module name
+
+  # Hardcoded values that are allowed
+  hardcoded:
+    # File paths and patterns
+    - file: "*/version.py"
+      pattern: "^VERSION = "
+      reason: "Version strings are acceptable constants"
+
+    - file: "*/einvoicing_*.py"
+      pattern: "^[A-Z_]+_NS = 'urn:"
+      reason: "XML namespaces are standard constants"
+
+    - file: "*/settings*.py"
+      pattern: ".*"
+      reason: "Django settings files have many constants"
+
+    - file: "*/urls.py"
+      pattern: ".*"
+      reason: "URL patterns use string literals"
+
+    - file: "*/migrations/*.py"
+      pattern: ".*"
+      reason: "Django migrations have auto-generated constants"
+
+    # Test files
+    - file: "*/test_*.py"
+      pattern: ".*"
+      reason: "Test files can have hardcoded test data"
+
+    - file: "*/tests.py"
+      pattern: ".*"
+      reason: "Test files can have hardcoded test data"
+
+  # Models that don't need TenantOwnedModel (rare exceptions)
+  non_tenant_models:
+    - "TenantModel"  # The tenant model itself
+    - "User"  # Users span tenants
+    - "Migration"  # Django migrations
+    - "ContentType"  # Django internal
+    - "Session"  # Django sessions
+    - "AbstractBaseModel"  # Abstract models
+    - ".*Mixin$"  # Mixins aren't models
+    - ".*Config$"  # Config models (some are global)
+
+# =============================================================================
+# AUTO-FIX CONFIGURATION
+# =============================================================================
+autofix:
+  enabled: false  # Disabled by default (require manual review)
+
+  # What to auto-fix (when enabled)
+  rules:
+    add_tenant_model: false      # Auto-add TenantOwnedModel inheritance
+    add_audit_mixin: false       # Auto-add AuditLogMixin
+    convert_to_config: false     # Convert hardcoded to get_config()
+    add_import_statements: true  # Add missing import statements (safe)
+
+# =============================================================================
+# REPORTING
+# =============================================================================
+reporting:
+  # Output format for reports
+  format: detailed  # Options: minimal, detailed, json
+
+  # Show suggestions for fixes
+  show_suggestions: true
+
+  # Group violations by type
+  group_by_type: true
+
+  # Show file paths relative to project root
+  relative_paths: true
+
+  # Color output (for terminal)
+  colors: true
+
+# =============================================================================
+# CI/CD INTEGRATION
+# =============================================================================
+ci:
+  # Fail CI build on violations
+  fail_on_error: true
+
+  # Fail on warnings (stricter)
+  fail_on_warning: false
+
+  # Generate reports
+  generate_report: true
+  report_path: ".ai/enforcement/reports/"
+
+  # Notify on violations
+  notify:
+    slack: false
+    github_comments: true  # Comment on PR with violations
+
+# =============================================================================
+# PRE-COMMIT HOOK
+# =============================================================================
+pre_commit:
+  enabled: true
+
+  # Only check staged files (faster)
+  staged_only: true
+
+  # Allow commit with warnings (but not errors)
+  allow_warnings: true
+
+  # Show summary
+  show_summary: true
+
+# =============================================================================
+# GRADUAL MIGRATION STRATEGY
+# =============================================================================
+migration:
+  # Allow existing violations (don't break existing code)
+  allow_existing: true
+
+  # Track existing violations (baseline)
+  baseline_file: ".ai/enforcement/baseline.json"
+
+  # Only fail on NEW violations
+  fail_on_new_only: true
+
+  # Gradual strictness increase
+  phases:
+    phase1:
+      date: "2026-03-04"
+      rules: [cross_module_imports]
+      level: warn
+
+    phase2:
+      date: "2026-03-11"  # 1 week
+      rules: [cross_module_imports, hardcoded_values]
+      level: warn
+
+    phase3:
+      date: "2026-03-18"  # 2 weeks
+      rules: [cross_module_imports, hardcoded_values, tenant_isolation]
+      level: strict
+
+    phase4:
+      date: "2026-04-01"  # 1 month
+      rules: all
+      level: strict
+
+# =============================================================================
+# CUSTOM RULES (Advanced)
+# =============================================================================
+custom_rules:
+  # Example: Enforce specific import order
+  - name: import_order
+    enabled: false
+    pattern: "Django imports must come before local imports"
+
+  # Example: Naming conventions
+  - name: model_naming
+    enabled: false
+    pattern: "Models must not have 'Model' suffix"

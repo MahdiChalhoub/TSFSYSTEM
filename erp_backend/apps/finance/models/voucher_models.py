@@ -1,11 +1,15 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from erp.models import VerifiableModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.lifecycle.models import PostableMixin
 from apps.finance.models.coa_models import FinancialAccount
 from apps.finance.models.ledger_models import JournalEntry
 from apps.finance.models.loan_models import FinancialEvent
 
-class Voucher(VerifiableModel):
+class Voucher(AuditLogMixin, TenantOwnedModel, PostableMixin):
+    lifecycle_txn_type = 'VOUCHER'
+
     VOUCHER_TYPES = (
         ('TRANSFER', 'Transfer Voucher'),
         ('RECEIPT', 'Receipt Voucher'),
@@ -22,7 +26,6 @@ class Voucher(VerifiableModel):
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
-    is_posted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     class Meta:

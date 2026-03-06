@@ -178,7 +178,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
                                                     </div>
                                                     <div className="flex gap-2">
                                                         <button onClick={() => handleRespond(q.id)} disabled={isPending}
-                                                            id={`send-quote-${q.id}`} className="app-btn app-btn-primary text-sm flex-1">
+                                                            id={`send-quote-${q.id}`} className="app-btn app-btn-primary text-sm flex-1 flex items-center gap-1.5 justify-center">
                                                             <Send size={13} />
                                                             {isPending ? 'Sending…' : 'Send Quote'}
                                                         </button>

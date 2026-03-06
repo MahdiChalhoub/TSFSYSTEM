@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, useTransition } from "react"
+import Link from "next/link"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 import {
     FileText, Plus, DollarSign, AlertTriangle,
     TrendingUp, Receipt, Send, CreditCard, Search,
-    Ban, ClipboardList
+    Ban, ClipboardList, Eye
 } from "lucide-react"
 import AttachmentManager from "@/components/common/AttachmentManager"
 import { toast } from "sonner"
@@ -440,6 +441,11 @@ export default function InvoicesPage() {
                     actions={{
                         extra: (inv) => (
                             <>
+                                <Link href={`/finance/invoices/${inv.id}`}>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-app-muted-foreground hover:bg-app-background">
+                                        <Eye size={13} />
+                                    </Button>
+                                </Link>
                                 {inv.status === 'DRAFT' && (
                                     <>
                                         <Button size="sm" variant="ghost" className="h-7 px-2 text-app-info hover:bg-app-info-bg"

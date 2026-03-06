@@ -1,15 +1,53 @@
 from .base import serializers
 from apps.pos.models import PurchaseOrder, PurchaseOrderLine
 
+
 class PurchaseOrderLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     product_sku = serializers.ReadOnlyField(source='product.sku')
     warehouse_name = serializers.ReadOnlyField(source='warehouse.name')
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    # Phase 5 — Discrepancy computed fields
+    declared_gap = serializers.SerializerMethodField()
+    receipt_gap_vs_declared = serializers.SerializerMethodField()
+    receipt_gap_vs_ordered = serializers.SerializerMethodField()
+    missing_vs_po = serializers.SerializerMethodField()
+    missing_vs_declared = serializers.SerializerMethodField()
+    received_amount = serializers.SerializerMethodField()
+    damaged_amount = serializers.SerializerMethodField()
+    missing_amount = serializers.SerializerMethodField()
+
     class Meta:
         model = PurchaseOrderLine
         fields = '__all__'
+
+    def _safe_float(self, val):
+        return float(val) if val is not None else None
+
+    def get_declared_gap(self, obj):
+        return self._safe_float(obj.declared_gap)
+
+    def get_receipt_gap_vs_declared(self, obj):
+        return self._safe_float(obj.receipt_gap_vs_declared)
+
+    def get_receipt_gap_vs_ordered(self, obj):
+        return self._safe_float(obj.receipt_gap_vs_ordered)
+
+    def get_missing_vs_po(self, obj):
+        return self._safe_float(obj.missing_vs_po)
+
+    def get_missing_vs_declared(self, obj):
+        return self._safe_float(obj.missing_vs_declared)
+
+    def get_received_amount(self, obj):
+        return float(obj.received_amount)
+
+    def get_damaged_amount(self, obj):
+        return float(obj.damaged_amount)
+
+    def get_missing_amount(self, obj):
+        return float(obj.missing_amount)
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
@@ -22,6 +60,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
     line_count = serializers.SerializerMethodField()
     receipt_progress = serializers.SerializerMethodField()
+    discrepancy_summary = serializers.SerializerMethodField()
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -55,3 +94,10 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             return 0
         received = sum(1 for l in lines if l.qty_received >= l.quantity)
         return round(received / len(lines) * 100)
+
+    def get_discrepancy_summary(self, obj):
+        """Phase 5 — Aggregate discrepancy data for the PO."""
+        summary = obj.get_discrepancy_summary()
+        # Convert Decimals to floats for JSON serialization
+        return {k: float(v) if hasattr(v, 'quantize') else v for k, v in summary.items()}
+

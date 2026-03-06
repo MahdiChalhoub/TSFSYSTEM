@@ -1,5 +1,11 @@
 import logging
 from contextvars import ContextVar
+try:
+    from kernel.tenancy.middleware import set_current_tenant, clear_current_tenant
+except ImportError:
+    # Kernel not available
+    def set_current_tenant(t): pass
+    def clear_current_tenant(): pass
 
 logger = logging.getLogger('erp.security')
 
@@ -36,7 +42,12 @@ _PUBLIC_PATHS = frozenset([
 
 def _is_public_path(path: str) -> bool:
     """Check if the request path is a public endpoint that doesn't require tenant context."""
-    return any(path.startswith(p) for p in _PUBLIC_PATHS)
+    # Normalize paths: remove optional '/erp' prefix if present from /api/erp/...
+    normalized_path = path
+    if path.startswith('/api/erp/'):
+        normalized_path = '/api/' + path[len('/api/erp/'):]
+    
+    return any(normalized_path.startswith(p) for p in _PUBLIC_PATHS)
 
 
 class TenantMiddleware:
@@ -66,10 +77,8 @@ class TenantMiddleware:
             # For public paths, we don't ENFORCE isolation, but we DO establish context
             # if the header is provided (important for login/register).
             if header_tenant_id:
-                # Basic validation: does it exist? (Now guaranteed to be UUID if it matched org)
-                from erp.models import Organization
-                if Organization.objects.filter(id=header_tenant_id, is_active=True).exists():
-                    tenant_id = header_tenant_id
+                # establish context if header is provided
+                tenant_id = header_tenant_id
             
             set_current_tenant_id(tenant_id)
             request.organization_id = tenant_id
@@ -128,6 +137,7 @@ class TenantMiddleware:
                 return JsonResponse({"error": "Organization not found or inactive."}, status=404)
 
         set_current_tenant_id(tenant_id)
+        set_current_tenant(request.organization)
         request.organization_id = tenant_id
 
         # ─── 4. RESOLVE AUTHORIZED SCOPE ───
@@ -150,6 +160,7 @@ class TenantMiddleware:
             response = self.get_response(request)
         finally:
             set_current_tenant_id(None)
+            clear_current_tenant()
             set_authorized_scope(None)
 
         return response

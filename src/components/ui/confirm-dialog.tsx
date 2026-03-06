@@ -75,7 +75,7 @@ export function ConfirmDialog({
             <DialogContent className="sm:max-w-md rounded-2xl">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${style.iconClass}`}>
+                        <div className={`w-10 h-10 rounded-[var(--layout-card-radius)] flex items-center justify-center ${style.iconClass}`}>
                             <Icon size={20} />
                         </div>
                         <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
@@ -89,14 +89,14 @@ export function ConfirmDialog({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={busy}
-                        className="rounded-xl"
+                        className="rounded-[var(--layout-card-radius)]"
                     >
                         {cancelText}
                     </Button>
                     <Button
                         onClick={handleConfirm}
                         disabled={busy}
-                        className={`rounded-xl ${style.btnClass}`}
+                        className={`rounded-[var(--layout-card-radius)] ${style.btnClass}`}
                     >
                         {busy ? 'Processing...' : confirmText}
                     </Button>

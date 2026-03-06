@@ -136,3 +136,13 @@
 - **Frontend Features**: Added VAT Settlement portal, VAT Reports, and Tax Policy views under Finance.
 - **CRM Integration**: Contact form now supports assigning `CounterpartyTaxProfile`.
 - **Bugfixes**: Resolved `pos` index migration conflict and recovered database from ENOSPC constraints.
+
+## v3.3.0-AG-260305.0239 — 2026-03-05
+**Dynamic Multi-Level Lifecycle System Level-Up**
+- **Lifecycle Kernel**: Implemented `VerifiableModel` mixin and `TransactionLifecycleService` (666 lines) for enterprise-grade approval workflows.
+- **Dynamic Rules**: Added `ApprovalRule` with JSON condition evaluation (e.g., "Amount > 10k → 3 Levels").
+- **Immutability Guards**: Transactions now automatically freeze upon `LOCKED` status, preventing unauthorized edits during verification.
+- **REST API**: Deployed 6 new endpoints under `/api/lifecycle/` for Lock/Verify/Override operations.
+- **Frontend UI**: Built `LifecycleBadges`, `LifecycleActions`, and `LifecycleHistory` (Timeline) shared components.
+- **Migrations**: Added `finance.0014` extending Invoice, Payment, and JournalEntry with lifecycle progress tracking.
+- **Audit Trail**: Enhanced Ledger Audit with rule-bypass tracking and manager override logging.

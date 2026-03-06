@@ -1,0 +1,78 @@
+{
+  "name": "inventory",
+  "display_name": "Inventory Management",
+  "version": "1.3.0",
+  "description": "Stock management, warehouses, product catalog, stock movements, and inventory valuation",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "inventory",
+  "depends_on": ["core"],
+  "permissions": [
+    "inventory.view_product",
+    "inventory.create_product",
+    "inventory.edit_product",
+    "inventory.delete_product",
+    "inventory.adjust_stock",
+    "inventory.view_warehouse",
+    "inventory.manage_warehouse",
+    "inventory.transfer_stock",
+    "inventory.view_reports"
+  ],
+  "events_emitted": [
+    "inventory.product_created",
+    "inventory.product_updated",
+    "inventory.stock_moved",
+    "inventory.stock_adjusted",
+    "inventory.stockout_alert",
+    "inventory.reorder_point_reached"
+  ],
+  "events_consumed": [
+    "sales.order_created",
+    "sales.order_cancelled",
+    "invoice.paid",
+    "pos.sale_completed"
+  ],
+  "config_schema": {
+    "allow_negative_stock": {
+      "type": "boolean",
+      "default": false,
+      "description": "Allow stock quantity to go negative"
+    },
+    "default_warehouse": {
+      "type": "string",
+      "default": "",
+      "description": "Default warehouse ID"
+    },
+    "auto_reorder": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically create purchase orders when stock reaches reorder point"
+    },
+    "valuation_method": {
+      "type": "string",
+      "default": "FIFO",
+      "enum": ["FIFO", "LIFO", "Average"],
+      "description": "Inventory valuation method"
+    }
+  },
+  "models": [
+    "Product",
+    "ProductVariant",
+    "Warehouse",
+    "StockMovement",
+    "StockAdjustment",
+    "InventoryValuation"
+  ],
+  "migrations": [
+    "0001_initial.py",
+    "0002_add_warehouses.py",
+    "0003_add_valuation.py"
+  ],
+  "api_endpoints": [
+    "/api/inventory/products",
+    "/api/inventory/warehouses",
+    "/api/inventory/stock",
+    "/api/inventory/movements",
+    "/api/inventory/reports"
+  ]
+}

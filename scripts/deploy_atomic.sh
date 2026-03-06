@@ -35,13 +35,13 @@ CURRENT_LINK="${CURRENT_LINK:-/root/current}"
 BRANCH="${APP_BRANCH:-main}"
 MAX_RELEASES="${MAX_RELEASES:-5}"
 HEALTH_URL_FRONTEND="${HEALTH_URL_FRONTEND:-https://tsf.ci}"
-HEALTH_URL_BACKEND="${HEALTH_URL_BACKEND:-https://api.tsf.ci/api/auth/config/}"
+HEALTH_URL_BACKEND="${HEALTH_URL_BACKEND:-http://127.0.0.1:8000/api/auth/config/}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-30}"
 LOG_FILE="${LOG_FILE:-/var/log/tsf-deploy.log}"
 
 # Services
-BACKEND_SERVICE="${BACKEND_SERVICE:-django}"
-FRONTEND_SERVICE="${FRONTEND_SERVICE:-nextjs}"
+BACKEND_SERVICE="${BACKEND_SERVICE:-tsfsystem}"
+FRONTEND_SERVICE="${FRONTEND_SERVICE:-tsfsystem-frontend}"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
@@ -98,11 +98,15 @@ log "═════════════════════════
 log ""
 
 # ── Step 1: Update Source Code ────────────────────────────────────────────────
-log "📥 [1/6] Updating source code in $APP_ROOT..."
-cd "$APP_ROOT"
-git fetch origin "$BRANCH"
-git reset --hard "origin/$BRANCH"
-ok "Code updated to $BRANCH"
+if [[ "${SKIP_FETCH:-false}" == "true" ]]; then
+    log "⏭️  [1/6] Skipping git fetch (using local code)..."
+else
+    log "📥 [1/6] Updating source code in $APP_ROOT..."
+    cd "$APP_ROOT"
+    git fetch origin "$BRANCH"
+    git reset --hard "origin/$BRANCH"
+    ok "Code updated to $BRANCH"
+fi
 
 # ── Step 2: Backend Validation ────────────────────────────────────────────────
 log ""
@@ -247,21 +251,21 @@ if [[ -n "$WSGI_PROCESS" ]]; then
 fi
 
 # Systemd TSF Backend service restart (if managed by systemd)
-if systemctl is-active --quiet tsf-backend.service 2>/dev/null; then
-    systemctl reload-or-restart tsf-backend.service
-    ok "  tsf-backend.service restarted"
+if systemctl is-active --quiet tsfsystem.service 2>/dev/null; then
+    systemctl reload-or-restart tsfsystem.service
+    ok "  tsfsystem.service restarted"
 fi
 
-# CRITICAL: Restart Next.js frontend (tsf-frontend.service)
-# This service reads from /root/TSFSYSTEM/.next — must restart to pick up new builds
-if systemctl is-active --quiet tsf-frontend.service 2>/dev/null; then
-    log "  Restarting tsf-frontend.service (Next.js)..."
-    systemctl restart tsf-frontend.service
+# CRITICAL: Restart Next.js frontend (tsfsystem-frontend.service)
+# This service reads from /root/current (via systemd WorkingDirectory)
+if systemctl is-active --quiet tsfsystem-frontend.service 2>/dev/null; then
+    log "  Restarting tsfsystem-frontend.service (Next.js)..."
+    systemctl restart tsfsystem-frontend.service
     # Wait up to 15s for Next.js to come back
     for i in $(seq 1 15); do
         sleep 1
-        if systemctl is-active --quiet tsf-frontend.service 2>/dev/null; then
-            ok "  tsf-frontend.service restarted successfully"
+        if systemctl is-active --quiet tsfsystem-frontend.service 2>/dev/null; then
+            ok "  tsfsystem-frontend.service restarted successfully"
             break
         fi
     done

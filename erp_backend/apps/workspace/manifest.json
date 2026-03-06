@@ -1,10 +1,54 @@
 {
     "code": "workspace",
-    "name": "Workspace & Portals",
+    "name": "Workspace",
     "version": "1.0.0",
-    "description": "Task management, checklists, performance tracking, supplier gate, and client gate.",
-    "dependencies": [
-        "core"
+    "description": "Internal collaboration tools: task management, document sharing, team notes, project tracking, and activity feeds.",
+    "category": "operations",
+    "plan_required": "starter",
+    "is_core": false,
+    "required": false,
+    "icon": "LayoutDashboard",
+    "dependencies": [],
+    "features": [
+        {
+            "code": "tasks",
+            "label": "Task Management",
+            "default": true
+        },
+        {
+            "code": "documents",
+            "label": "Document Sharing",
+            "default": true
+        },
+        {
+            "code": "notes",
+            "label": "Team Notes",
+            "default": true
+        },
+        {
+            "code": "projects",
+            "label": "Project Tracking",
+            "default": false
+        }
     ],
-    "required": false
+    "sidebar_items": [
+        {
+            "title": "Workspace",
+            "icon": "LayoutDashboard",
+            "children": [
+                {
+                    "title": "Tasks",
+                    "path": "/workspace/tasks"
+                },
+                {
+                    "title": "Documents",
+                    "path": "/workspace/documents"
+                },
+                {
+                    "title": "Projects",
+                    "path": "/workspace/projects"
+                }
+            ]
+        }
+    ]
 }

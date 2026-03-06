@@ -84,7 +84,7 @@ export default function PromotionsClient({ initialPromotions }: Props) {
                         <p className="app-page-subtitle">Cart rules and automatic discount campaigns</p>
                     </div>
                 </div>
-                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary" id="create-promo-btn">
+                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary flex items-center gap-1.5" id="create-promo-btn">
                     <Plus size={15} /> New Promotion
                 </button>
             </div>

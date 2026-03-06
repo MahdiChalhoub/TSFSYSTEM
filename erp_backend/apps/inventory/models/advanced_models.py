@@ -81,6 +81,11 @@ class ProductSerial(TenantModel):
         db_table = 'product_serial'
         unique_together = ('serial_number', 'product', 'organization')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'serial_number']),
+            models.Index(fields=['organization', 'product', 'status']),
+            models.Index(fields=['organization', 'warehouse', 'status']),
+        ]
 
     def __str__(self):
         return f"S/N {self.serial_number} — {self.product.name} [{self.status}]"
@@ -163,6 +168,17 @@ class StockValuationEntry(TenantModel):
     unit_cost = models.DecimalField(max_digits=15, decimal_places=2)
     total_value = models.DecimalField(max_digits=15, decimal_places=2)
     valuation_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='WEIGHTED_AVG')
+
+    VALUATION_SCOPE_CHOICES = (
+        ('GLOBAL', 'Global — single cost across all warehouses'),
+        ('PER_WAREHOUSE', 'Per Warehouse — cost differs by location'),
+        ('PER_BATCH', 'Per Batch — cost tracked at batch level'),
+    )
+    valuation_scope = models.CharField(
+        max_length=15, choices=VALUATION_SCOPE_CHOICES, default='GLOBAL',
+        help_text='Determines costing granularity'
+    )
+
     reference = models.CharField(max_length=100, null=True, blank=True, help_text='E.g., PUR-123, SALE-456')
     batch = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True)
 

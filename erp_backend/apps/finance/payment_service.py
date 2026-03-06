@@ -70,39 +70,9 @@ class PaymentService:
                 status='DRAFT'
             )
 
-            # Post GL entry
-            journal_entry = None
-            if LedgerService:
-                rules = ConfigurationService.get_posting_rules(organization)
-                ap_acc = rules.get('purchases', {}).get('payable')
-
-                from apps.finance.models import FinancialAccount
-                fin_acc = FinancialAccount.objects.filter(
-                    id=payment_account_id, organization=organization
-                ).first()
-                cash_acc = fin_acc.ledger_account_id if fin_acc else None
-
-                if not ap_acc or not cash_acc:
-                    raise ValidationError("Payment GL mapping missing: AP or Cash account not configured")
-
-                journal_entry = LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=payment_date,
-                    description=f"Supplier Payment: {description or ref}",
-                    reference=f"PAY-{payment.id}",
-                    status='POSTED',
-                    scope=scope,
-                    user=user,
-                    lines=[
-                        {"account_id": ap_acc, "debit": amount, "credit": Decimal('0'),
-                         "description": "AP reduction"},
-                        {"account_id": cash_acc, "debit": Decimal('0'), "credit": amount,
-                         "description": "Cash/Bank outflow"},
-                    ]
-                )
-                payment.journal_entry = journal_entry
-                payment.status = 'POSTED'
-                payment.save()
+            # Post GL entry via dedicated service
+            from apps.finance.services.posting_service import PaymentPostingService
+            payment = PaymentPostingService.post_payment(payment, user=user)
 
             # Update running balance
             balance, _ = SupplierBalance.objects.get_or_create(
@@ -160,39 +130,9 @@ class PaymentService:
                 status='DRAFT'
             )
 
-            # Post GL entry
-            journal_entry = None
-            if LedgerService:
-                rules = ConfigurationService.get_posting_rules(organization)
-                ar_acc = rules.get('sales', {}).get('receivable')
-
-                from apps.finance.models import FinancialAccount
-                fin_acc = FinancialAccount.objects.filter(
-                    id=payment_account_id, organization=organization
-                ).first()
-                cash_acc = fin_acc.ledger_account_id if fin_acc else None
-
-                if not ar_acc or not cash_acc:
-                    raise ValidationError("Receipt GL mapping missing: AR or Cash account not configured")
-
-                journal_entry = LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=payment_date,
-                    description=f"Customer Receipt: {description or ref}",
-                    reference=f"REC-{payment.id}",
-                    status='POSTED',
-                    scope=scope,
-                    user=user,
-                    lines=[
-                        {"account_id": cash_acc, "debit": amount, "credit": Decimal('0'),
-                         "description": "Cash/Bank inflow"},
-                        {"account_id": ar_acc, "debit": Decimal('0'), "credit": amount,
-                         "description": "AR reduction"},
-                    ]
-                )
-                payment.journal_entry = journal_entry
-                payment.status = 'POSTED'
-                payment.save()
+            # Post GL entry via dedicated service
+            from apps.finance.services.posting_service import PaymentPostingService
+            payment = PaymentPostingService.post_payment(payment, user=user)
 
             # Update running balance
             balance, _ = CustomerBalance.objects.get_or_create(

@@ -1,28 +1,52 @@
 {
     "code": "core",
-    "name": "Base Infrastructure",
+    "name": "Core Platform",
     "version": "1.0.0",
-    "description": "Essential infrastructure, security, and tenant management services.",
-    "dependencies": [],
+    "description": "Essential platform infrastructure: multi-tenancy, RBAC, audit logging, organization management, and user accounts. Required for all other modules.",
+    "category": "platform",
+    "plan_required": "starter",
+    "is_core": true,
     "required": true,
-    "sidebar_items": [
+    "icon": "Building2",
+    "dependencies": [],
+    "features": [
         {
-            "title": "Dashboard",
-            "icon": "LayoutDashboard",
-            "path": "/dashboard"
+            "code": "tenancy",
+            "label": "Multi-Tenancy",
+            "default": true
         },
         {
-            "title": "System Settings",
-            "icon": "Settings",
+            "code": "rbac",
+            "label": "Role-Based Access Control",
+            "default": true
+        },
+        {
+            "code": "audit",
+            "label": "Audit Logging",
+            "default": true
+        },
+        {
+            "code": "users",
+            "label": "User Management",
+            "default": true
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Administration",
+            "icon": "Shield",
             "children": [
                 {
-                    "title": "Sites & Branches",
-                    "path": "/settings/sites"
+                    "title": "Users",
+                    "path": "/settings/users"
                 },
                 {
-                    "title": "Billing & Subscription",
-                    "path": "/subscription",
-                    "icon": "CreditCard"
+                    "title": "Roles & Permissions",
+                    "path": "/settings/roles"
+                },
+                {
+                    "title": "Organization",
+                    "path": "/settings/organization"
                 }
             ]
         }

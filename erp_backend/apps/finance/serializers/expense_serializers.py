@@ -2,7 +2,7 @@ from rest_framework import serializers
 from apps.finance.models import DeferredExpense, DirectExpense
 
 class DeferredExpenseSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    tenant = serializers.PrimaryKeyRelatedField(read_only=True)
     progress = serializers.SerializerMethodField()
     class Meta:
         model = DeferredExpense
@@ -12,7 +12,7 @@ class DeferredExpenseSerializer(serializers.ModelSerializer):
         return round((obj.months_recognized / obj.duration_months) * 100, 1)
 
 class DirectExpenseSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    tenant = serializers.PrimaryKeyRelatedField(read_only=True)
     source_account_name = serializers.ReadOnlyField(source='source_account.name')
     expense_coa_name = serializers.ReadOnlyField(source='expense_coa.name')
     class Meta:

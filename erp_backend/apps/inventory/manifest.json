@@ -2,7 +2,62 @@
     "code": "inventory",
     "name": "Inventory Management",
     "version": "1.0.0",
-    "description": "Real-time stock tracking, warehouse management and movements.",
+    "description": "Real-time stock tracking, multi-warehouse support, automated replenishment, stock movements, and inventory valuation.",
+    "category": "operations",
+    "plan_required": "starter",
+    "is_core": false,
+    "required": false,
+    "icon": "Package",
     "dependencies": [],
-    "required": false
+    "features": [
+        {
+            "code": "stock_tracking",
+            "label": "Live Stock Tracking",
+            "default": true
+        },
+        {
+            "code": "multi_warehouse",
+            "label": "Multi-Warehouse",
+            "default": true
+        },
+        {
+            "code": "stock_movements",
+            "label": "Stock Movements",
+            "default": true
+        },
+        {
+            "code": "replenishment",
+            "label": "Automated Replenishment",
+            "default": false
+        },
+        {
+            "code": "valuation",
+            "label": "Inventory Valuation",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Inventory",
+            "icon": "Package",
+            "children": [
+                {
+                    "title": "Products",
+                    "path": "/inventory/products"
+                },
+                {
+                    "title": "Stock Movements",
+                    "path": "/inventory/movements"
+                },
+                {
+                    "title": "Warehouses",
+                    "path": "/inventory/warehouses"
+                },
+                {
+                    "title": "Replenishment",
+                    "path": "/inventory/replenishment"
+                }
+            ]
+        }
+    ]
 }

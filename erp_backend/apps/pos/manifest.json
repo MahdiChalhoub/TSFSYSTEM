@@ -2,9 +2,60 @@
     "code": "pos",
     "name": "Point of Sale",
     "version": "1.0.0",
-    "description": "Fast checkout, thermal printing, and retail operations.",
+    "description": "Fast checkout terminal with thermal printing, barcode scanning, cash management, multi-register support, and retail operations.",
+    "category": "commercial",
+    "plan_required": "starter",
+    "is_core": false,
+    "required": false,
+    "icon": "ShoppingCart",
     "dependencies": [
         "inventory"
     ],
-    "required": false
+    "features": [
+        {
+            "code": "checkout",
+            "label": "Fast Checkout",
+            "default": true
+        },
+        {
+            "code": "thermal_printing",
+            "label": "Thermal Printing",
+            "default": true
+        },
+        {
+            "code": "cash_management",
+            "label": "Cash Management",
+            "default": true
+        },
+        {
+            "code": "multi_register",
+            "label": "Multi-Register",
+            "default": true
+        },
+        {
+            "code": "loyalty",
+            "label": "Loyalty & Discounts",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Point of Sale",
+            "icon": "ShoppingCart",
+            "children": [
+                {
+                    "title": "POS Lobby",
+                    "path": "/sales/pos"
+                },
+                {
+                    "title": "Registers",
+                    "path": "/sales/pos-settings"
+                },
+                {
+                    "title": "Sessions",
+                    "path": "/sales/pos-sessions"
+                }
+            ]
+        }
+    ]
 }

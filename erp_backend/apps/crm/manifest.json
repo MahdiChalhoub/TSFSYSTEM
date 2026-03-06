@@ -1,8 +1,59 @@
 {
     "code": "crm",
-    "name": "Customer Relationship",
+    "name": "CRM & Contacts",
     "version": "1.0.0",
-    "description": "Lead tracking, contact management and customer engagement.",
+    "description": "Customer relationship management: contact profiles, lead tracking, sales pipeline, pricing tiers, and communication history.",
+    "category": "relationships",
+    "plan_required": "business",
+    "is_core": false,
+    "required": false,
+    "icon": "Users",
     "dependencies": [],
-    "required": false
+    "features": [
+        {
+            "code": "contacts",
+            "label": "Contact Management",
+            "default": true
+        },
+        {
+            "code": "leads",
+            "label": "Lead Tracking",
+            "default": true
+        },
+        {
+            "code": "pipeline",
+            "label": "Sales Pipeline",
+            "default": true
+        },
+        {
+            "code": "pricing_tiers",
+            "label": "Pricing Tiers",
+            "default": false
+        },
+        {
+            "code": "communication_log",
+            "label": "Communication History",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "CRM",
+            "icon": "Users",
+            "children": [
+                {
+                    "title": "Contacts",
+                    "path": "/crm/contacts"
+                },
+                {
+                    "title": "Leads",
+                    "path": "/crm/leads"
+                },
+                {
+                    "title": "Pipeline",
+                    "path": "/crm/pipeline"
+                }
+            ]
+        }
+    ]
 }

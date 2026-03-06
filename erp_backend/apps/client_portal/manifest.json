@@ -2,10 +2,52 @@
     "code": "client_portal",
     "name": "Client Portal",
     "version": "1.0.0",
-    "description": "Client-facing portal for orders, tickets, and loyalty wallet.",
+    "description": "Self-service client portal: invoice viewing & payment, order history, support ticket submission, and account management.",
+    "category": "relationships",
+    "plan_required": "business",
+    "is_core": false,
+    "required": false,
+    "icon": "UserCircle",
     "dependencies": [
-        "core",
-        "workspace"
+        "finance",
+        "crm"
     ],
-    "required": false
+    "features": [
+        {
+            "code": "invoice_view",
+            "label": "Invoice Viewing & Payment",
+            "default": true
+        },
+        {
+            "code": "order_history",
+            "label": "Order History",
+            "default": true
+        },
+        {
+            "code": "support_tickets",
+            "label": "Support Tickets",
+            "default": false
+        },
+        {
+            "code": "account_management",
+            "label": "Account Self-Service",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Client Portal",
+            "icon": "UserCircle",
+            "children": [
+                {
+                    "title": "Portal Settings",
+                    "path": "/client-portal/settings"
+                },
+                {
+                    "title": "Client Accounts",
+                    "path": "/client-portal/accounts"
+                }
+            ]
+        }
+    ]
 }

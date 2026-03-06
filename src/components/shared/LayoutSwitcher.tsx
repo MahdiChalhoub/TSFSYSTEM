@@ -1,0 +1,190 @@
+"use client"
+
+import React from 'react'
+import { useLayout, type LayoutType } from '@/contexts/LayoutContext'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { LayoutGrid, Check } from 'lucide-react'
+
+interface LayoutSwitcherProps {
+  className?: string
+  showLabel?: boolean
+}
+
+export function LayoutSwitcher({ className, showLabel = true }: LayoutSwitcherProps) {
+  const { layout, layoutConfig, setLayout, availableLayouts } = useLayout()
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  return (
+    <div className={cn('relative', className)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="gap-2"
+      >
+        <LayoutGrid className="h-4 w-4" />
+        {showLabel && <span>{layoutConfig.name}</span>}
+      </Button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Menu */}
+          <div className="absolute right-0 mt-2 w-96 rounded-[var(--layout-card-radius)] border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-50 overflow-hidden">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-[var(--theme-border)]">
+              <h3 className="text-sm font-semibold text-[var(--theme-text)]">
+                Choose Layout
+              </h3>
+              <p className="text-xs text-[var(--theme-text-muted)] mt-1">
+                Select a layout structure for your workspace
+              </p>
+            </div>
+
+            {/* Layout List */}
+            <div className="max-h-96 overflow-y-auto p-3 space-y-2">
+              {availableLayouts.map((layoutOption) => (
+                <LayoutOption
+                  key={layoutOption.id}
+                  layoutOption={layoutOption}
+                  isActive={layout === layoutOption.id}
+                  onClick={() => {
+                    setLayout(layoutOption.id)
+                    setIsOpen(false)
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+interface LayoutOptionProps {
+  layoutOption: {
+    id: LayoutType
+    name: string
+    description: string
+    characteristics: {
+      density: string
+      whitespace: string
+      cardStyle: string
+      layout: string
+    }
+    bestFor: string[]
+  }
+  isActive: boolean
+  onClick: () => void
+}
+
+function LayoutOption({ layoutOption, isActive, onClick }: LayoutOptionProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'w-full p-3 rounded-[var(--layout-card-radius)] border-2 transition-all text-left',
+        isActive
+          ? 'border-[var(--theme-primary)] bg-[var(--theme-surface-hover)]'
+          : 'border-[var(--theme-border)] hover:border-[var(--theme-primary)]/50 hover:bg-[var(--theme-surface-hover)]'
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Visual Preview */}
+        <div className="w-16 h-12 rounded border border-[var(--theme-border)] flex-shrink-0 bg-[var(--theme-bg)] overflow-hidden">
+          <LayoutPreview layoutId={layoutOption.id} />
+        </div>
+
+        {/* Layout Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-[var(--theme-text)]">
+              {layoutOption.name}
+            </h4>
+            {isActive && (
+              <Check className="h-4 w-4 text-[var(--theme-primary)] flex-shrink-0" />
+            )}
+          </div>
+          <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">
+            {layoutOption.description}
+          </p>
+
+          {/* Characteristics */}
+          <div className="flex gap-2 mt-1.5">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]">
+              {layoutOption.characteristics.density}
+            </span>
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface)] text-[var(--theme-text-muted)] border border-[var(--theme-border)]">
+              {layoutOption.characteristics.layout}
+            </span>
+          </div>
+
+          {/* Best For */}
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {layoutOption.bestFor.slice(0, 3).map((use) => (
+              <span
+                key={use}
+                className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-primary)]/10 text-[var(--theme-primary)]"
+              >
+                {use}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+// Mini ASCII-style visual preview for each layout
+function LayoutPreview({ layoutId }: { layoutId: LayoutType }) {
+  const previews = {
+    'minimal': (
+      <div className="w-full h-full p-1 flex flex-col gap-1">
+        <div className="h-1 w-8 bg-[var(--theme-border)] rounded"></div>
+        <div className="flex-1 border border-[var(--theme-border)] rounded"></div>
+      </div>
+    ),
+    'card-heavy': (
+      <div className="w-full h-full p-0.5 grid grid-cols-2 gap-0.5">
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+      </div>
+    ),
+    'split-view': (
+      <div className="w-full h-full flex gap-0.5">
+        <div className="w-1/3 border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="flex-1 border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+      </div>
+    ),
+    'dashboard-grid': (
+      <div className="w-full h-full p-0.5 grid grid-cols-3 grid-rows-3 gap-0.5">
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+      </div>
+    ),
+    'fullscreen-focus': (
+      <div className="w-full h-full bg-[var(--theme-surface)] border-2 border-[var(--theme-primary)]"></div>
+    ),
+  }
+
+  return previews[layoutId] || null
+}
+
+// Compact version for tight spaces
+export function LayoutSwitcherCompact({ className }: { className?: string }) {
+  return <LayoutSwitcher className={className} showLabel={false} />
+}

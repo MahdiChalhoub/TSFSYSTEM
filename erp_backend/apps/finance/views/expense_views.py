@@ -3,6 +3,7 @@ from .base import (
     TenantModelViewSet, get_current_tenant_id,
     Organization
 )
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.finance.models import (
     DeferredExpense, DirectExpense, Asset, AmortizationSchedule,
     TransactionSequence, FinancialEvent, JournalEntry, JournalEntryLine
@@ -50,9 +51,10 @@ class DeferredExpenseViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=400)
 
 
-class DirectExpenseViewSet(TenantModelViewSet):
+class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     queryset = DirectExpense.objects.all()
     serializer_class = DirectExpenseSerializer
+    lifecycle_transaction_type = 'DIRECT_EXPENSE'
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -74,7 +76,7 @@ class DirectExpenseViewSet(TenantModelViewSet):
             # Auto-generate reference
             ref = TransactionSequence.next_value(organization, 'EXPENSE')
             expense = DirectExpense.objects.create(
-                organization=organization,
+                tenant=organization,
                 name=data.get('name'),
                 description=data.get('description', ''),
                 category=data.get('category', 'OTHER'),
@@ -108,21 +110,26 @@ class DirectExpenseViewSet(TenantModelViewSet):
         expense.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='post')
     def post_expense(self, request, pk=None):
-        organization_id = get_current_tenant_id()
-        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
-        organization = Organization.objects.get(id=organization_id)
-
+        """Standardize post action for DirectExpense."""
+        expense = self.get_object()
+        if expense.status != 'DRAFT':
+            return Response({"error": "Only DRAFT expenses can be posted."}, status=400)
+        
+        # Call original posting logic but update status via LifecycleService
+        # Refactoring to move the heavy lifting to a service would be better, 
+        # but for now I'll just call LifecycleService.post after the JE logic.
+        # ... (Actually I'll just call the service if it existed, but here it's in the viewset)
+        # I'll keep the logic here but wrap it in LifecycleService.post logic.
+        
         try:
-            expense = DirectExpense.objects.get(id=pk, organization=organization)
-            if expense.status != 'DRAFT':
-                return Response({"error": "Only DRAFT expenses can be posted."}, status=400)
-
+            from kernel.lifecycle.service import LifecycleService
             with transaction.atomic():
+                # (Existing posting logic - I'll keep it for now as I don't want to break the module)
                 # 1. Create financial event
                 event = FinancialEvent.objects.create(
-                    organization=organization,
+                    tenant=expense.tenant,
                     event_type='EXPENSE',
                     amount=expense.amount,
                     date=expense.date,
@@ -133,9 +140,9 @@ class DirectExpenseViewSet(TenantModelViewSet):
                     status='COMPLETED',
                 )
 
-                # 2. Create journal entry (Debit expense COA, Credit source account COA)
+                # 2. Create journal entry
                 je = JournalEntry.objects.create(
-                    organization=organization,
+                    tenant=expense.tenant,
                     transaction_date=expense.date,
                     description=f"Direct Expense: {expense.name}",
                     reference=expense.reference,
@@ -145,20 +152,18 @@ class DirectExpenseViewSet(TenantModelViewSet):
                     posted_by=request.user if request.user.is_authenticated else None,
                 )
                 
-                # Debit expense account
                 if expense.expense_coa:
                     JournalEntryLine.objects.create(
-                        organization=organization,
+                        tenant=expense.tenant,
                         journal_entry=je,
                         account=expense.expense_coa,
                         debit=expense.amount,
                         credit=0,
                         description=expense.name,
                     )
-                # Credit source account's linked COA
                 if expense.source_account and expense.source_account.ledger_account:
                     JournalEntryLine.objects.create(
-                        organization=organization,
+                        tenant=expense.tenant,
                         journal_entry=je,
                         account=expense.source_account.ledger_account,
                         debit=0,
@@ -166,26 +171,16 @@ class DirectExpenseViewSet(TenantModelViewSet):
                         description=expense.name,
                     )
 
-                # 3. Update expense record
                 expense.financial_event = event
                 expense.journal_entry = je
-                expense.status = 'POSTED'
                 expense.save()
+                
+                # Signal engine to move to POSTED
+                LifecycleService.post(expense, request.user)
 
             return Response(DirectExpenseSerializer(expense).data)
-        except DirectExpense.DoesNotExist:
-            return Response({"error": "Expense not found"}, status=404)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
-
-    @action(detail=True, methods=['post'])
-    def cancel_expense(self, request, pk=None):
-        expense = self.get_object()
-        if expense.status != 'DRAFT':
-            return Response({"error": "Only DRAFT expenses can be cancelled."}, status=400)
-        expense.status = 'CANCELLED'
-        expense.save()
-        return Response(DirectExpenseSerializer(expense).data)
 
 
 class AssetViewSet(TenantModelViewSet):

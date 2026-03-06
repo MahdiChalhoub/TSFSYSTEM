@@ -51,6 +51,24 @@ class StockLedger(TenantModel):
 
     movement_type  = models.CharField(max_length=30, choices=MOVEMENT_TYPES, db_index=True)
 
+    # ── Reservation Source Tracking ──────────────────────────────────────────
+    RESERVATION_SOURCE_TYPES = [
+        ('SALES_ORDER', 'Sales Order'),
+        ('TRANSFER_ORDER', 'Transfer Order'),
+        ('PRODUCTION_ORDER', 'Production Order'),
+        ('PICK_LIST', 'Pick List'),
+        ('MANUAL', 'Manual Reservation'),
+    ]
+    reservation_source_type = models.CharField(
+        max_length=30, choices=RESERVATION_SOURCE_TYPES,
+        null=True, blank=True,
+        help_text='What document reserved this stock'
+    )
+    reservation_source_id = models.IntegerField(
+        null=True, blank=True,
+        help_text='PK of the source document'
+    )
+
     # Signed quantities: positive = increase, negative = decrease
     reserved_delta = models.DecimalField(
         max_digits=15, decimal_places=3, default=Decimal('0.000'),

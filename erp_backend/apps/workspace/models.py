@@ -1,3 +1,4 @@
+from erp.models import User
 """
 Workspace Module Models
 Task management, checklists, KPIs, questionnaires, and employee performance.
@@ -5,14 +6,16 @@ Task management, checklists, KPIs, questionnaires, and employee performance.
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
-from erp.models import TenantModel, User
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.events import emit_event
 
 
 # =============================================================================
 # WORKSPACE CONFIGURATION
 # =============================================================================
 
-class WorkspaceConfig(TenantModel):
+class WorkspaceConfig(TenantOwnedModel):
     """
     Per-organization configuration for the Workspace module.
     Allows customizing task labels, colors, and performance scoring.
@@ -110,7 +113,7 @@ SOURCE_CHOICES = (
 )
 
 
-class TaskCategory(TenantModel):
+class TaskCategory(TenantOwnedModel):
     """Categories for organizing tasks (e.g. Inventory, Finance, HR)."""
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default='#6366f1', help_text='Hex color code')
@@ -119,14 +122,14 @@ class TaskCategory(TenantModel):
 
     class Meta:
         db_table = 'workspace_task_category'
-        unique_together = ('organization', 'name')
+        unique_together = ('tenant', 'name')
         verbose_name_plural = 'Task Categories'
 
     def __str__(self):
         return self.name
 
 
-class TaskTemplate(TenantModel):
+class TaskTemplate(TenantOwnedModel):
     """
     Reusable task blueprints for recurring or auto-generated tasks.
     Defines default values for task creation.
@@ -161,7 +164,7 @@ class TaskTemplate(TenantModel):
         return self.name
 
 
-class AutoTaskRule(TenantModel):
+class AutoTaskRule(TenantOwnedModel):
     """
     Rules for automatic task generation from system events OR recurring schedules.
     Supports:
@@ -353,7 +356,7 @@ class AutoTaskRule(TenantModel):
 
 
 
-class Task(TenantModel):
+class Task(TenantOwnedModel):
     """
     Core task model with full lifecycle.
     Supports hierarchy (higher→lower), bidirectional flow (replies go back up),
@@ -482,7 +485,7 @@ class Task(TenantModel):
 
 
 
-class TaskComment(TenantModel):
+class TaskComment(TenantOwnedModel):
     """
     Comments / replies on tasks.
     Supports bidirectional flow: lower replies to higher and vice versa.
@@ -504,7 +507,7 @@ class TaskComment(TenantModel):
         return f"Comment on {self.task.title} by {self.author}"
 
 
-class TaskAttachment(TenantModel):
+class TaskAttachment(TenantOwnedModel):
     """File attachments on tasks."""
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(upload_to='workspace/attachments/')
@@ -519,7 +522,7 @@ class TaskAttachment(TenantModel):
         return self.filename
 
 
-class EmployeeRequest(TenantModel):
+class EmployeeRequest(TenantOwnedModel):
     """
     Requests/suggestions from lower to higher in the hierarchy.
     These are NOT direct tasks — they require approval to become tasks.
@@ -567,7 +570,7 @@ class EmployeeRequest(TenantModel):
 # CHECKLISTS
 # =============================================================================
 
-class ChecklistTemplate(TenantModel):
+class ChecklistTemplate(TenantOwnedModel):
     """
     Reusable checklist blueprints (e.g. Start of Shift, End of Shift).
     """
@@ -588,7 +591,7 @@ class ChecklistTemplate(TenantModel):
         return f"{self.name} ({self.get_trigger_display()})"
 
 
-class ChecklistTemplateItem(TenantModel):
+class ChecklistTemplateItem(TenantOwnedModel):
     """Individual items within a checklist template."""
     template = models.ForeignKey(
         ChecklistTemplate, on_delete=models.CASCADE, related_name='items'
@@ -606,7 +609,7 @@ class ChecklistTemplateItem(TenantModel):
         return f"{self.order}. {self.label}"
 
 
-class ChecklistInstance(TenantModel):
+class ChecklistInstance(TenantOwnedModel):
     """An assigned checklist to a specific employee for a specific date/shift."""
     template = models.ForeignKey(ChecklistTemplate, on_delete=models.CASCADE, related_name='instances')
     assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checklists')
@@ -633,7 +636,7 @@ class ChecklistInstance(TenantModel):
             self.save(update_fields=['status', 'completed_at', 'points_earned'])
 
 
-class ChecklistItemResponse(TenantModel):
+class ChecklistItemResponse(TenantOwnedModel):
     """Employee response to a single checklist item."""
     instance = models.ForeignKey(
         ChecklistInstance, on_delete=models.CASCADE, related_name='item_responses'
@@ -656,7 +659,7 @@ class ChecklistItemResponse(TenantModel):
 # QUESTIONNAIRES & EVALUATIONS
 # =============================================================================
 
-class Questionnaire(TenantModel):
+class Questionnaire(TenantOwnedModel):
     """Evaluation questionnaire template configured by organization."""
     FREQUENCY_CHOICES = (
         ('WEEKLY', 'Weekly'),
@@ -681,7 +684,7 @@ class Questionnaire(TenantModel):
         return self.name
 
 
-class QuestionnaireQuestion(TenantModel):
+class QuestionnaireQuestion(TenantOwnedModel):
     """Individual question in a questionnaire."""
     QUESTION_TYPES = (
         ('RATING', 'Rating (1-5)'),
@@ -710,7 +713,7 @@ class QuestionnaireQuestion(TenantModel):
         return self.question_text
 
 
-class QuestionnaireResponse(TenantModel):
+class QuestionnaireResponse(TenantOwnedModel):
     """A completed questionnaire from an evaluator for a specific employee."""
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
     employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='questionnaire_evaluations')
@@ -738,7 +741,7 @@ class QuestionnaireResponse(TenantModel):
         self.save(update_fields=['total_score', 'max_possible_score', 'score_percentage'])
 
 
-class QuestionnaireAnswer(TenantModel):
+class QuestionnaireAnswer(TenantOwnedModel):
     """Individual answer to a question within a response."""
     response = models.ForeignKey(
         QuestionnaireResponse, on_delete=models.CASCADE, related_name='answers'
@@ -756,7 +759,7 @@ class QuestionnaireAnswer(TenantModel):
         return f"Q: {self.question.question_text[:50]} → {self.score}"
 
 
-class EmployeePerformance(TenantModel):
+class EmployeePerformance(TenantOwnedModel):
     """Monthly performance score for an employee."""
     employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_records')
     period_label = models.CharField(max_length=50) # e.g. "2026-02"
@@ -766,7 +769,7 @@ class EmployeePerformance(TenantModel):
     
     class Meta:
         db_table = 'workspace_employee_performance'
-        unique_together = ('organization', 'employee', 'period_label')
+        unique_together = ('tenant', 'employee', 'period_label')
 
     def calculate_tier(self, config=None):
         """Determine performance tier from overall_score using WorkspaceConfig thresholds."""

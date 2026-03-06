@@ -36,16 +36,13 @@ class StockAdjustmentOrderSerializer(serializers.ModelSerializer):
             'id', 'reference', 'date', 'supplier', 'supplier_name',
             'warehouse', 'warehouse_name', 'reason',
             'total_qty_adjustment', 'total_amount_adjustment',
-            'notes', 'is_posted',
-            'lifecycle_status', 'locked_by', 'locked_by_name',
-            'locked_at', 'current_verification_level',
-            'created_by', 'created_by_name',
+            'notes', 'status', 'is_locked', 'locked_by', 'locked_by_name',
+            'locked_at', 'created_by', 'created_by_name',
             'created_at', 'updated_at',
-            'lines', 'line_count', 'organization',
+            'lines', 'line_count', 'tenant',
         ]
-        read_only_fields = ['organization', 'reference', 'is_posted',
-                            'lifecycle_status', 'locked_by', 'locked_at',
-                            'current_verification_level', 'total_qty_adjustment',
+        read_only_fields = ['tenant', 'reference', 'status', 'is_locked', 
+                            'locked_by', 'locked_at', 'total_qty_adjustment',
                             'total_amount_adjustment']
 
     def get_line_count(self, obj):
@@ -87,16 +84,14 @@ class StockTransferOrderSerializer(serializers.ModelSerializer):
             'from_warehouse', 'from_warehouse_name',
             'to_warehouse', 'to_warehouse_name',
             'driver', 'supplier', 'supplier_name', 'reason',
-            'total_qty_transferred', 'is_posted', 'notes',
-            'lifecycle_status', 'locked_by', 'locked_by_name',
-            'locked_at', 'current_verification_level',
+            'total_qty_transferred', 'notes', 'status', 'is_locked', 
+            'locked_by', 'locked_by_name', 'locked_at',
             'created_by', 'created_by_name',
             'created_at', 'updated_at',
-            'lines', 'line_count', 'organization',
+            'lines', 'line_count', 'tenant',
         ]
-        read_only_fields = ['organization', 'reference', 'is_posted',
-                            'lifecycle_status', 'locked_by', 'locked_at',
-                            'current_verification_level', 'total_qty_transferred']
+        read_only_fields = ['tenant', 'reference', 'status', 'is_locked', 
+                            'locked_by', 'locked_at', 'total_qty_transferred']
 
     def get_line_count(self, obj):
         return obj.lines.count()

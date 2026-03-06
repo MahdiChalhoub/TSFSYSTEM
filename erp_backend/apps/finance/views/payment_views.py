@@ -3,14 +3,16 @@ from .base import (
     TenantModelViewSet, get_current_tenant_id,
     Organization
 )
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance
 from apps.finance.invoice_models import Invoice
 from apps.finance.serializers import PaymentSerializer, CustomerBalanceSerializer, SupplierBalanceSerializer
 from apps.finance.payment_service import PaymentService
 
-class PaymentViewSet(TenantModelViewSet):
+class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    lifecycle_transaction_type = 'PAYMENT'
 
     @action(detail=False, methods=['post'])
     def supplier_payment(self, request):

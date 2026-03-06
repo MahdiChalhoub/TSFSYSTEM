@@ -17,9 +17,10 @@ class LedgerCryptography:
         data = {
             "id": entry_data.get('id'),
             "organization_id": entry_data.get('organization_id'),
+            "scope": entry_data.get('scope', 'OFFICIAL'),
             "transaction_date": entry_data.get('transaction_date'),
             "reference": entry_data.get('reference'),
-            "lines": sorted(entry_data.get('lines', []), key=lambda x: str(x.get('account_id'))),
+            "lines": sorted(entry_data.get('lines', []), key=lambda x: (str(x.get('account_id')), str(x.get('debit', '0')), str(x.get('credit', '0')))),
             "previous_hash": previous_hash or "GENESIS"
         }
         

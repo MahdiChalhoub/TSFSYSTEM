@@ -43,6 +43,11 @@ async function resolveCustomDomainCached(hostname: string): Promise<{ slug: stri
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl;
 
+    // ─── PUBLIC BYPASS ──────────────────────────────────────────────────────
+    if (url.pathname.startsWith('/design-demo')) {
+        return NextResponse.next();
+    }
+
     // ─── DEV MODULE GUARD ────────────────────────────────────────────────────
     // When DEV_MODULE is set, only allow routes for the active module + core routes.
     // This is only set locally via `npm run dev:module -- <module>`.
@@ -192,8 +197,10 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/login') ||
         url.pathname.startsWith('/register');
 
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || url.pathname.startsWith('/saas/login') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || url.pathname.startsWith('/saas/login') || url.pathname.startsWith('/design-demo') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
+
+    console.log(`[Middleware DEBUG] path: ${url.pathname}, isPublic: ${isPublicRoute}, hasToken: ${hasAuthToken}`);
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
@@ -201,7 +208,7 @@ export default async function middleware(req: NextRequest) {
         loginUrl.port = ""; // Ensure we don't redirect to internal port 3000
         // On saas subdomain, use /saas/login; on tenant subdomains, use /login
         loginUrl.pathname = isSaaSSubdomain ? '/saas/login' : '/login';
-        loginUrl.searchParams.set('error', 'session_expired');
+        loginUrl.searchParams.set('error', 'debug_redirect');
         return NextResponse.redirect(loginUrl);
     }
 
@@ -312,6 +319,7 @@ export default async function middleware(req: NextRequest) {
             || url.pathname.startsWith('/mcp')
             || url.pathname.startsWith('/switcher')
             || url.pathname.startsWith('/supplier-portal')
+            || url.pathname.startsWith('/design-demo')
             || url.pathname.startsWith('/tsf-system-kernel-7788');
 
         if (isAppRoute) {
@@ -421,8 +429,9 @@ export const config = {
          * 1. /api routes
          * 2. /_next (Next.js internals)
          * 3. /_static (inside /public)
-         * 4. all root files inside /public (e.g. /favicon.ico)
+         * 4. /design-demo (Public demo)
+         * 5. all root files inside /public (e.g. /favicon.ico)
          */
-        "/((?!api/|_next/|_static/|[\\w-]+\\.\\w+).*)",
+        "/((?!api/|_next/|_static/|design-demo|[\\w-]+\\.\\w+).*)",
     ],
 };

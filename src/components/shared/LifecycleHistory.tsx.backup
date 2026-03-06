@@ -1,0 +1,179 @@
+/**
+ * Lifecycle History Timeline
+ * ===========================
+ * Display complete audit trail of lifecycle actions.
+ *
+ * Usage:
+ *   <LifecycleHistory
+ *     model="Invoice"
+ *     instanceId={invoice.id}
+ *   />
+ */
+
+import React, { useEffect, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { History, Lock, Unlock, ShieldCheck, ShieldOff, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
+
+interface HistoryEntry {
+  action: string;
+  level: number;
+  performed_by: string;
+  performed_at: string;
+  comment: string | null;
+  ip_address: string | null;
+  meta: Record<string, any>;
+}
+
+interface LifecycleHistoryProps {
+  model: string;
+  instanceId: number;
+  trigger?: React.ReactNode;
+}
+
+export function LifecycleHistory({ model, instanceId, trigger }: LifecycleHistoryProps) {
+  const [open, setOpen] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      fetchHistory();
+    }
+  }, [open]);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/lifecycle/history/${model.toLowerCase()}/${instanceId}/`);
+      const data = await response.json();
+      if (data.success) {
+        setHistory(data.history);
+      }
+    } catch (error) {
+      console.error('Failed to fetch history:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'LOCK':
+        return <Lock className="h-4 w-4" />;
+      case 'UNLOCK':
+        return <Unlock className="h-4 w-4" />;
+      case 'VERIFY':
+        return <ShieldCheck className="h-4 w-4" />;
+      case 'UNVERIFY':
+        return <ShieldOff className="h-4 w-4" />;
+      case 'CONFIRM':
+        return <CheckCircle className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'LOCK':
+        return 'text-orange-600';
+      case 'UNLOCK':
+        return 'text-blue-600';
+      case 'VERIFY':
+        return 'text-green-600';
+      case 'UNVERIFY':
+        return 'text-red-600';
+      case 'CONFIRM':
+        return 'text-green-700';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  return (
+    <>
+      {trigger ? (
+        <div onClick={() => setOpen(true)}>{trigger}</div>
+      ) : (
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <History className="h-4 w-4 mr-2" />
+          History
+        </Button>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Lifecycle History</DialogTitle>
+          </DialogHeader>
+
+          {loading ? (
+            <div className="py-8 text-center text-muted-foreground">Loading...</div>
+          ) : history.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              No lifecycle actions recorded yet.
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {history.map((entry, index) => (
+                <div
+                  key={index}
+                  className="flex gap-4 pb-4 border-b last:border-b-0"
+                >
+                  {/* Icon */}
+                  <div className={`flex-shrink-0 ${getActionColor(entry.action)}`}>
+                    {getActionIcon(entry.action)}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium">
+                          {entry.action}
+                          {entry.level > 0 && ` (Level ${entry.level})`}
+                          {entry.meta?.override && ' [Manager Override]'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          by {entry.performed_by || 'Unknown'}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground flex-shrink-0">
+                        {format(new Date(entry.performed_at), 'MMM d, yyyy HH:mm')}
+                      </p>
+                    </div>
+
+                    {entry.comment && (
+                      <p className="mt-2 text-sm bg-muted p-2 rounded">
+                        {entry.comment}
+                      </p>
+                    )}
+
+                    {entry.meta?.override && (
+                      <p className="mt-1 text-xs text-orange-600">
+                        Skipped {entry.meta.skipped_levels} level(s)
+                      </p>
+                    )}
+
+                    {entry.ip_address && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        IP: {entry.ip_address}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -1,0 +1,316 @@
+/**
+ * Theme Integration Layer
+ *
+ * This CSS file creates a bridge between:
+ * 1. Old system (--app-* variables)
+ * 2. New system (--theme-* and --layout-* variables)
+ *
+ * This allows gradual migration while keeping both systems working.
+ */
+
+/* ========================================
+   SYNC OLD VARIABLES WITH NEW THEME
+   ======================================== */
+
+:root {
+  /* Map new theme variables to old app variables for backward compatibility */
+  --app-bg-from-theme: var(--theme-bg);
+  --app-surface-from-theme: var(--theme-surface);
+  --app-text-from-theme: var(--theme-text);
+  --app-text-muted-from-theme: var(--theme-text-muted);
+  --app-primary-from-theme: var(--theme-primary);
+  --app-border-from-theme: var(--theme-border);
+}
+
+/* ========================================
+   UTILITY CLASSES FOR THEME VARIABLES
+   ======================================== */
+
+/* Background utilities */
+.theme-bg {
+  background: var(--theme-bg);
+}
+
+.theme-surface {
+  background: var(--theme-surface);
+}
+
+.theme-surface-hover {
+  background: var(--theme-surface-hover);
+}
+
+/* Text utilities */
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-text-muted {
+  color: var(--theme-text-muted);
+}
+
+.theme-primary {
+  color: var(--theme-primary);
+}
+
+/* Border utilities */
+.theme-border {
+  border-color: var(--theme-border);
+}
+
+/* ========================================
+   UTILITY CLASSES FOR LAYOUT VARIABLES
+   ======================================== */
+
+/* Padding utilities */
+.layout-container-padding {
+  padding: var(--layout-container-padding);
+}
+
+.layout-card-padding {
+  padding: var(--layout-card-padding);
+}
+
+/* Gap utilities */
+.layout-section-gap {
+  gap: var(--layout-section-spacing);
+}
+
+.layout-element-gap {
+  gap: var(--layout-element-gap);
+}
+
+/* Border radius utilities */
+.layout-card-radius {
+  border-radius: var(--layout-card-radius);
+}
+
+/* Card utilities */
+.layout-card {
+  padding: var(--layout-card-padding);
+  border-radius: var(--layout-card-radius);
+  box-shadow: var(--layout-card-shadow);
+  border: var(--layout-card-border);
+}
+
+/* ========================================
+   COMPONENT-LEVEL INTEGRATION
+   ======================================== */
+
+/* Make shadcn/ui Card component adapt to theme */
+.card {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+.card-header {
+  padding: var(--layout-card-padding);
+}
+
+.card-content {
+  padding: var(--layout-card-padding);
+}
+
+/* Make Button component adapt to theme */
+.btn-primary {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.btn-outline {
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+.btn-outline:hover {
+  background: var(--theme-surface-hover);
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT ADJUSTMENTS
+   ======================================== */
+
+/* Adjust spacing based on layout density */
+[data-layout-density="sparse"] {
+  --content-spacing: var(--layout-section-spacing);
+}
+
+[data-layout-density="medium"] {
+  --content-spacing: var(--layout-element-gap);
+}
+
+[data-layout-density="dense"] {
+  --content-spacing: calc(var(--layout-element-gap) * 0.75);
+}
+
+/* ========================================
+   THEME MODE OVERRIDES
+   ======================================== */
+
+/* Dark mode adjustments */
+[data-theme-mode="dark"] {
+  color-scheme: dark;
+}
+
+/* Light mode adjustments */
+[data-theme-mode="light"] {
+  color-scheme: light;
+}
+
+/* ========================================
+   LAYOUT-SPECIFIC STYLES
+   ======================================== */
+
+/* Minimal layout: extra whitespace */
+[data-layout="minimal"] .container {
+  padding: var(--layout-container-padding);
+}
+
+[data-layout="minimal"] .card {
+  box-shadow: none;
+  border: 1px solid var(--theme-border);
+}
+
+/* Card Heavy layout: prominent shadows */
+[data-layout="card-heavy"] .card {
+  box-shadow: var(--layout-card-shadow);
+}
+
+/* Dashboard Grid layout: dense spacing */
+[data-layout="dashboard-grid"] .grid {
+  gap: var(--layout-element-gap);
+}
+
+[data-layout="dashboard-grid"] .card {
+  padding: calc(var(--layout-card-padding) * 0.75);
+}
+
+/* Fullscreen Focus layout: no cards */
+[data-layout="fullscreen-focus"] .card {
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+/* ========================================
+   ANIMATION TRANSITIONS
+   ======================================== */
+
+/* Smooth theme transitions */
+:root {
+  --theme-transition-duration: 200ms;
+}
+
+body,
+.card,
+.btn,
+[class*="theme-"],
+[class*="layout-"] {
+  transition:
+    background var(--theme-transition-duration) ease,
+    color var(--theme-transition-duration) ease,
+    border-color var(--theme-transition-duration) ease,
+    box-shadow var(--theme-transition-duration) ease;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  /* Force light theme for printing */
+  :root {
+    --theme-bg: #ffffff;
+    --theme-surface: #ffffff;
+    --theme-text: #000000;
+    --theme-text-muted: #666666;
+    --theme-border: #cccccc;
+  }
+
+  /* Remove shadows for printing */
+  .card,
+  [class*="shadow"] {
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --theme-border: currentColor;
+  }
+
+  .card {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .card,
+  .btn,
+  [class*="theme-"],
+  [class*="layout-"] {
+    transition: none !important;
+  }
+}
+
+/* ========================================
+   FOCUS STATES
+   ======================================== */
+
+/* Make focus rings adapt to theme */
+:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   SCROLLBAR STYLING (WEBKIT)
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-border);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-text-muted);
+}
+
+/* ========================================
+   SELECTION COLORS
+   ======================================== */
+
+::selection {
+  background: var(--theme-primary);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background: var(--theme-primary);
+  color: #ffffff;
+}

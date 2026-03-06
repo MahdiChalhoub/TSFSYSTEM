@@ -8,95 +8,94 @@ import { serializeDecimals } from '@/lib/utils/serialization';
 export const dynamic = 'force-dynamic';
 
 async function getCategories() {
- try {
- return await erpFetch('inventory/categories/');
- } catch (e) {
- console.warn("Error fetching categories:", e);
- return [];
- }
+    try {
+        return await erpFetch('inventory/categories/');
+    } catch (e) {
+        console.warn("Error fetching categories:", e);
+        return [];
+    }
 }
 
 async function getUnits() {
- try {
- return await erpFetch('units/');
- } catch (e) {
- console.warn("Error fetching units:", e);
- return [];
- }
+    try {
+        return await erpFetch('units/');
+    } catch (e) {
+        console.warn("Error fetching units:", e);
+        return [];
+    }
 }
 
 async function getBrands() {
- try {
- return await erpFetch('inventory/brands/');
- } catch (e) {
- console.warn("Error fetching brands:", e);
- return [];
- }
+    try {
+        return await erpFetch('inventory/brands/');
+    } catch (e) {
+        console.warn("Error fetching brands:", e);
+        return [];
+    }
 }
 
 async function getCountries() {
- try {
- return await erpFetch('countries/');
- } catch (e) {
- console.warn("Error fetching countries:", e);
- return [];
- }
+    try {
+        return await erpFetch('countries/');
+    } catch (e) {
+        console.warn("Error fetching countries:", e);
+        return [];
+    }
 }
 
 export default async function NewProductPage(props: { searchParams: Promise<{ cloneId?: string }> }) {
- const searchParams = await props.searchParams;
- const cloneId = searchParams.cloneId;
+    const searchParams = await props.searchParams;
+    const cloneId = searchParams.cloneId;
 
- let clonedProduct = null;
- if (cloneId) {
- try {
- clonedProduct = await erpFetch(`/inventory/products/${cloneId}/`);
- if (clonedProduct) {
- // Reset unique fields
- clonedProduct.sku = '';
- clonedProduct.barcode = '';
- clonedProduct.name = `${clonedProduct.name} (Copy)`;
- }
- } catch (error) {
- console.error("Failed to fetch cloned product", error);
- }
- }
+    let clonedProduct = null;
+    if (cloneId) {
+        try {
+            clonedProduct = await erpFetch(`/inventory/products/${cloneId}/`);
+            if (clonedProduct) {
+                // Reset unique fields
+                clonedProduct.sku = '';
+                clonedProduct.barcode = '';
+                clonedProduct.name = `${clonedProduct.name} (Copy)`;
+            }
+        } catch (error) {
+            console.error("Failed to fetch cloned product", error);
+        }
+    }
 
- const [categories, units, brands, countries, namingRule, financialSettings] = await Promise.all([
- getCategories(),
- getUnits(),
- getBrands(),
- getCountries(),
- getProductNamingRule(),
- getFinancialSettings()
- ]);
+    const [categories, units, brands, countries, namingRule, financialSettings] = await Promise.all([
+        getCategories(),
+        getUnits(),
+        getBrands(),
+        getCountries(),
+        getProductNamingRule(),
+        getFinancialSettings()
+    ]);
 
 
 
- return (
- <div>
- <div className="mb-6">
- <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
- <PackagePlus size={28} className="text-app-foreground" />
- </div>
- New <span className="text-app-primary">Product</span>
- </h1>
- <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Create Product</p>
- <p className="text-app-muted-foreground">
- {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Create a new item in the TSF Catalog.'}
- </p>
- </div>
+    return (
+        <div>
+            <div className="mb-6">
+                <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-app-primary to-app-info flex items-center justify-center shadow-lg shadow-app-primary/20">
+                        <PackagePlus size={28} className="text-white" />
+                    </div>
+                    New <span className="text-app-primary">Product</span>
+                </h1>
+                <p className="text-app-muted-foreground text-sm mt-2">
+                    {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Smart Product Creator — guided setup with AI assistance.'}
+                </p>
+            </div>
 
- <ProductFormWrapper
- categories={categories}
- units={units}
- brands={brands}
- countries={countries}
- namingRule={namingRule}
- initialData={clonedProduct}
- worksInTTC={financialSettings?.worksInTTC ?? false}
- />
- </div>
- );
+            <ProductFormWrapper
+                categories={categories}
+                units={units}
+                brands={brands}
+                countries={countries}
+                namingRule={namingRule}
+                initialData={clonedProduct}
+                worksInTTC={financialSettings?.worksInTTC ?? false}
+            />
+        </div>
+    );
 }

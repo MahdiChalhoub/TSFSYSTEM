@@ -1,8 +1,9 @@
 from .base import (
     status, Response, action,
-    TenantModelViewSet, LifecycleViewSetMixin, get_current_tenant_id,
+    TenantModelViewSet, get_current_tenant_id,
     Organization
 )
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.finance.models import Voucher, ProfitDistribution
 from apps.finance.serializers import VoucherSerializer, ProfitDistributionSerializer
 from apps.finance.services import VoucherService, ProfitDistributionService
@@ -14,12 +15,12 @@ class VoucherViewSet(LifecycleViewSetMixin, TenantModelViewSet):
 
     def get_queryset(self):
         vtype = self.request.query_params.get('type')
-        lc_status = self.request.query_params.get('lifecycle_status')
+        lc_status = self.request.query_params.get('status')
         qs = super().get_queryset().order_by('-created_at')
         if vtype:
             qs = qs.filter(voucher_type=vtype)
         if lc_status:
-            qs = qs.filter(lifecycle_status=lc_status)
+            qs = qs.filter(status=lc_status)
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -58,33 +59,16 @@ class VoucherViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         voucher.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='post')
     def post_voucher(self, request, pk=None):
-        organization_id = get_current_tenant_id()
-        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
-        organization = Organization.objects.get(id=organization_id)
-
+        """Standardize post action for Voucher."""
         voucher = self.get_object()
-        if voucher.lifecycle_status != 'CONFIRMED':
-            return Response({"error": "Voucher must be CONFIRMED before posting."}, status=400)
-        if voucher.is_posted:
-            return Response({"error": "Voucher is already posted."}, status=400)
-
         try:
-            voucher = VoucherService.post_voucher(organization, pk, user=request.user)
+            from apps.finance.services import VoucherService
+            voucher = VoucherService.post_voucher(voucher.tenant, pk, user=request.user)
             return Response(VoucherSerializer(voucher).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
-
-    @action(detail=True, methods=['post'])
-    def cancel_voucher(self, request, pk=None):
-        voucher = self.get_object()
-        if voucher.is_posted:
-            return Response({"error": "Posted vouchers cannot be cancelled. Create a reversal instead."}, status=400)
-        if not voucher.is_editable:
-            return Response({"error": "Only OPEN vouchers can be cancelled."}, status=400)
-        voucher.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProfitDistributionViewSet(TenantModelViewSet):

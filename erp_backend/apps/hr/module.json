@@ -1,0 +1,58 @@
+{
+  "name": "hr",
+  "display_name": "Human Resources",
+  "version": "1.0.0",
+  "description": "Human resources management including employees, attendance, payroll, and leave management",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "hr",
+  "depends_on": ["core", "finance"],
+  "permissions": [
+    "hr.view_employee",
+    "hr.create_employee",
+    "hr.edit_employee",
+    "hr.delete_employee",
+    "hr.view_salary",
+    "hr.process_payroll",
+    "hr.manage_attendance",
+    "hr.manage_leave"
+  ],
+  "events_emitted": [
+    "hr.employee_created",
+    "hr.employee_updated",
+    "hr.payroll_processed",
+    "hr.leave_approved",
+    "hr.attendance_marked"
+  ],
+  "events_consumed": [
+    "finance.payment_created"
+  ],
+  "config_schema": {
+    "payroll_frequency": {
+      "type": "string",
+      "default": "monthly",
+      "enum": ["weekly", "biweekly", "monthly"],
+      "description": "Payroll processing frequency"
+    },
+    "auto_approve_leave": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically approve leave requests"
+    }
+  },
+  "models": [
+    "Employee",
+    "Attendance",
+    "LeaveRequest",
+    "Payroll"
+  ],
+  "migrations": [
+    "0001_initial.py"
+  ],
+  "api_endpoints": [
+    "/api/hr/employees",
+    "/api/hr/attendance",
+    "/api/hr/leave",
+    "/api/hr/payroll"
+  ]
+}

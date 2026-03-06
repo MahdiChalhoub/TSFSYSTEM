@@ -1,7 +1,15 @@
 """
 Transaction Lifecycle ViewSet Mixin
-Adds lock / unlock / verify / unverify actions to any ViewSet.
+====================================
+DEPRECATED: This module is kept for backward compatibility only.
+All new code should import from kernel.lifecycle.viewsets.
+
+    from kernel.lifecycle.viewsets import LifecycleViewSetMixin
+
+The old LifecycleViewSetMixin from this module delegates to
+the TransactionLifecycleService which is also deprecated.
 """
+import warnings
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response

@@ -1,47 +1,62 @@
 {
     "code": "mcp",
-    "name": "AI Intelligence",
+    "name": "AI Intelligence (MCP)",
     "version": "1.0.0",
-    "description": "Autonomous AI agents, virtual employees and LLM tool integration.",
-    "dependencies": [],
+    "description": "AI-powered business intelligence: predictive analytics, natural language queries, automated insights, demand forecasting, and smart recommendations.",
+    "category": "intelligence",
+    "plan_required": "enterprise",
+    "is_core": false,
     "required": false,
-    "icon": "Bot",
+    "icon": "Sparkles",
+    "dependencies": [
+        "finance",
+        "inventory"
+    ],
+    "features": [
+        {
+            "code": "nl_queries",
+            "label": "Natural Language Queries",
+            "default": true
+        },
+        {
+            "code": "predictive_analytics",
+            "label": "Predictive Analytics",
+            "default": true
+        },
+        {
+            "code": "demand_forecasting",
+            "label": "Demand Forecasting",
+            "default": true
+        },
+        {
+            "code": "smart_recommendations",
+            "label": "Smart Recommendations",
+            "default": false
+        },
+        {
+            "code": "automated_reports",
+            "label": "Automated Reports",
+            "default": false
+        }
+    ],
     "sidebar_items": [
         {
-            "title": "AI Assistant",
-            "path": "/mcp/chat",
-            "icon": "Bot",
-            "visibility": "tenant"
-        },
-        {
-            "title": "Virtual Employees",
-            "path": "/mcp/agents",
+            "title": "AI Intelligence",
             "icon": "Sparkles",
-            "visibility": "tenant"
-        },
-        {
-            "title": "AI Providers",
-            "path": "/mcp/providers",
-            "icon": "Cloud",
-            "visibility": "tenant"
-        },
-        {
-            "title": "AI Tool Registry",
-            "path": "/mcp/tools",
-            "icon": "Wrench",
-            "visibility": "tenant"
-        },
-        {
-            "title": "Conversations",
-            "path": "/mcp/conversations",
-            "icon": "MessageSquare",
-            "visibility": "tenant"
-        },
-        {
-            "title": "Usage Stats",
-            "path": "/mcp/usage",
-            "icon": "BarChart3",
-            "visibility": "tenant"
+            "children": [
+                {
+                    "title": "Analytics",
+                    "path": "/mcp/analytics"
+                },
+                {
+                    "title": "Forecasting",
+                    "path": "/mcp/forecasting"
+                },
+                {
+                    "title": "Insights",
+                    "path": "/mcp/insights"
+                }
+            ]
         }
     ]
 }

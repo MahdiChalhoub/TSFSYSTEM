@@ -7,6 +7,7 @@ from .audit_service import ForensicAuditService, AuditVerificationService
 from .asset_service import AssetService, DeferredExpenseService
 from .voucher_service import VoucherService, ProfitDistributionService
 from .airsi_remittance_service import AIRSIRemittanceService
+from .invoice_posting_service import InvoicePostingService
 
 __all__ = [
     'FinancialAccountService', 'SequenceService', 'BarcodeService',
@@ -17,4 +18,5 @@ __all__ = [
     'AssetService', 'DeferredExpenseService',
     'VoucherService', 'ProfitDistributionService',
     'AIRSIRemittanceService',
+    'InvoicePostingService',
 ]

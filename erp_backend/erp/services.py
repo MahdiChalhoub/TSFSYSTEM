@@ -228,6 +228,7 @@ class ConfigurationService:
         config['inventory']['adjustment'] = find('5104') or find('708') or find('709') or config['inventory']['adjustment']
         config['inventory']['transfer'] = find('1120') or find('31') or config['inventory']['transfer']
         config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
+        config['tax']['vat_payable'] = find('2111') or find('4457') or config['tax']['vat_payable']
         
         config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or find('41') or config['automation']['customerRoot']
         config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or find('40') or config['automation']['supplierRoot']

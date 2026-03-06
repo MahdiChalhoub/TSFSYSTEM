@@ -1,47 +1,66 @@
 """
 CRM Module Event Handlers
-==============================
-Receives inter-module events routed by the ConnectorEngine.
+==========================
 
-The ConnectorEngine discovers this module via:
-    importlib.import_module('apps.crm.events')
-    
-And calls handle_event() for each subscribed event.
+Handles events from other modules and emits CRM-related events.
 
-To subscribe to events, register them in your ModuleContract's
-`needs.events_from` JSON field.
+Kernel OS v2.0 Integration - Event Contracts Implemented:
+- contact.created (emits)
+- user.created (subscribes - may create contact)
+- invoice.created (subscribes - updates customer data)
+- order.completed (subscribes - updates customer purchase history)
+- org:provisioned (subscribes - legacy support)
 """
 
 import logging
 from decimal import Decimal
+from django.db import transaction
+from django.utils import timezone
+from kernel.events import emit_event, subscribe_to_event
+from kernel.contracts.decorators import enforce_contract
 
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, organization_id: int):
+def handle_event(event_name: str, payload: dict, tenant_id: int):
     """
-    Main event handler for the CRM module.
-    
-    Called by ConnectorEngine._deliver_event when an event is
-    routed to this module.
-    
+    Main event handler for CRM module (Kernel OS v2.0)
+
+    Routes events to appropriate handlers based on event name.
+    Compatible with both old (organization_id) and new (tenant_id) signatures.
+
     Args:
-        event_name: The event identifier (e.g., 'org:provisioned')
+        event_name: The event identifier (e.g., 'contact.created')
         payload: Event data dictionary
-        organization_id: The tenant context
+        tenant_id: The tenant context (replaces organization_id)
     """
+    logger.info(f"[CRM] Received event: {event_name}")
+
     handlers = {
+        # Kernel OS v2.0 events
+        'user.created': handle_user_created,
+        'invoice.created': handle_invoice_created,
+        'invoice.paid': handle_invoice_paid,
+        'order.completed': handle_order_completed,
+
+        # Legacy events (backward compatibility)
         'org:provisioned': _on_org_provisioned,
         'subscription:updated': _on_subscription_updated,
-        'order:completed': _on_order_completed,
         'purchase_order:completed': _on_purchase_order_completed,
     }
-    
+
     handler = handlers.get(event_name)
+
     if handler:
-        return handler(payload, organization_id)
+        try:
+            result = handler(payload, tenant_id)
+            logger.info(f"[CRM] Successfully handled {event_name}")
+            return result
+        except Exception as e:
+            logger.error(f"[CRM] Error handling {event_name}: {e}")
+            raise
     else:
-        logger.debug(f"CRM module: unhandled event '{event_name}'")
+        logger.warning(f"[CRM] No handler for event: {event_name}")
         return None
 
 
@@ -277,3 +296,193 @@ def _on_purchase_order_completed(payload: dict, organization_id: int):
     except Exception as e:
         logger.error(f"CRM: Failed to update supplier metrics: {e}")
         return {'success': False, 'error': str(e)}
+
+
+# ============================================================================
+# KERNEL OS v2.0 EVENT HANDLERS
+# ============================================================================
+
+@subscribe_to_event('user.created')
+def on_user_created(event):
+    """EventBus handler wrapper for user.created"""
+    handle_user_created(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_user_created(payload: dict, tenant_id: int):
+    """
+    Handle user.created event (Kernel OS v2.0)
+
+    Creates a contact record for new users if they don't have one.
+    """
+    from apps.crm.models import Contact
+
+    user_id = payload.get('user_id')
+    email = payload.get('email')
+    first_name = payload.get('first_name', '')
+    last_name = payload.get('last_name', '')
+
+    logger.info(f"[CRM] Creating contact for new user: {user_id}")
+
+    try:
+        # Check if contact already exists
+        existing = Contact.objects.filter(
+            email=email,
+            tenant_id=tenant_id
+        ).first()
+
+        if existing:
+            logger.info(f"[CRM] Contact already exists for {email}")
+            return {'success': True, 'contact_id': existing.id, 'existed': True}
+
+        # Create new contact
+        contact = Contact.objects.create(
+            name=f"{first_name} {last_name}".strip(),
+            email=email,
+            type='CUSTOMER',
+            tenant_id=tenant_id
+        )
+
+        # Emit contact.created event
+        emit_event('contact.created', {
+            'contact_id': contact.id,
+            'email': email,
+            'contact_type': 'CUSTOMER',
+            'tenant_id': tenant_id
+        })
+
+        logger.info(f"[CRM] Created contact {contact.id} for user {user_id}")
+
+        return {'success': True, 'contact_id': contact.id, 'created': True}
+
+    except Exception as e:
+        logger.error(f"[CRM] Error creating contact for user {user_id}: {e}")
+        raise
+
+
+@subscribe_to_event('invoice.created')
+@enforce_contract('invoice.created')
+def on_invoice_created(event):
+    """EventBus handler wrapper for invoice.created"""
+    handle_invoice_created(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_invoice_created(payload: dict, tenant_id: int):
+    """
+    Handle invoice.created event (Kernel OS v2.0)
+
+    Updates customer purchase history and statistics.
+    """
+    from apps.crm.models import Contact
+
+    customer_id = payload.get('customer_id')
+    total_amount = Decimal(str(payload.get('total_amount', 0)))
+
+    if not customer_id:
+        return {'success': True, 'skipped': True}
+
+    try:
+        contact = Contact.objects.get(id=customer_id, tenant_id=tenant_id)
+
+        # Update analytics if fields exist
+        if hasattr(contact, 'total_orders'):
+            contact.total_orders += 1
+        if hasattr(contact, 'lifetime_value'):
+            contact.lifetime_value += total_amount
+        if hasattr(contact, 'last_purchase_date'):
+            contact.last_purchase_date = timezone.now().date()
+
+        contact.save()
+
+        logger.info(f"[CRM] Updated contact {customer_id} stats for invoice")
+
+        return {'success': True}
+
+    except Contact.DoesNotExist:
+        logger.warning(f"[CRM] Contact {customer_id} not found for invoice update")
+        return {'success': False, 'error': 'Contact not found'}
+    except Exception as e:
+        logger.error(f"[CRM] Error updating contact stats: {e}")
+        raise
+
+
+@subscribe_to_event('invoice.paid')
+@enforce_contract('invoice.paid')
+def on_invoice_paid(event):
+    """EventBus handler wrapper for invoice.paid"""
+    handle_invoice_paid(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_invoice_paid(payload: dict, tenant_id: int):
+    """
+    Handle invoice.paid event (Kernel OS v2.0)
+
+    Updates customer payment history and credit score.
+    """
+    from apps.crm.models import Contact
+
+    customer_id = payload.get('customer_id')
+    amount_paid = Decimal(str(payload.get('amount_paid', 0)))
+
+    if not customer_id:
+        return {'success': True, 'skipped': True}
+
+    try:
+        contact = Contact.objects.get(id=customer_id, tenant_id=tenant_id)
+
+        # Update payment stats if fields exist
+        if hasattr(contact, 'balance'):
+            contact.balance -= amount_paid  # Reduce outstanding balance
+        if hasattr(contact, 'last_purchase_date'):
+            contact.last_purchase_date = timezone.now().date()
+
+        contact.save()
+
+        logger.info(f"[CRM] Updated contact {customer_id} payment stats")
+
+        return {'success': True}
+
+    except Contact.DoesNotExist:
+        logger.warning(f"[CRM] Contact {customer_id} not found for payment update")
+        return {'success': False, 'error': 'Contact not found'}
+    except Exception as e:
+        logger.error(f"[CRM] Error updating contact payment stats: {e}")
+        raise
+
+
+# Utility functions for CRM operations
+
+def create_contact_from_event(email: str, name: str, contact_type: str, tenant_id: int, **kwargs):
+    """
+    Create a new contact and emit event.
+
+    Utility function that can be called from anywhere.
+    """
+    from apps.crm.models import Contact
+
+    try:
+        contact = Contact.objects.create(
+            email=email,
+            name=name,
+            type=contact_type,
+            tenant_id=tenant_id,
+            **kwargs
+        )
+
+        # Emit contact.created event
+        emit_event('contact.created', {
+            'contact_id': contact.id,
+            'email': email,
+            'contact_type': contact_type,
+            'tenant_id': tenant_id
+        })
+
+        logger.info(f"[CRM] Created contact {contact.id}: {email}")
+
+        return contact
+
+    except Exception as e:
+        logger.error(f"[CRM] Error creating contact: {e}")
+        raise

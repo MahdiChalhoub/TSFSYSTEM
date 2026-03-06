@@ -1,11 +1,11 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, User
+from erp.models import TenantModel, User, VerifiableModel
 from apps.finance.models.coa_models import ChartOfAccount
 from apps.finance.models.fiscal_models import FiscalYear, FiscalPeriod
 
-class JournalEntry(TenantModel):
+class JournalEntry(VerifiableModel):
     transaction_date = models.DateTimeField(null=True, blank=True)
     description = models.TextField()
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT, null=True, blank=True)
@@ -27,10 +27,31 @@ class JournalEntry(TenantModel):
     def calculate_hash(self):
         from apps.finance.cryptography import LedgerCryptography
         lines_data = []
-        for line in self.lines.all():
+        # Enforce deterministic order (account_id, debit, credit)
+        sorted_lines = sorted(self.lines.all(), key=lambda l: (str(l.account_id), l.debit, l.credit))
+        for line in sorted_lines:
             lines_data.append({"account_id": str(line.account_id), "debit": str(line.debit), "credit": str(line.credit)})
-        entry_meta = {"id": self.id, "organization_id": str(self.organization_id), "transaction_date": self.transaction_date.isoformat() if self.transaction_date else None, "reference": self.reference, "lines": lines_data}
+        
+        entry_meta = {
+            "id": self.id, 
+            "organization_id": str(self.organization_id), 
+            "scope": self.scope,
+            "transaction_date": self.transaction_date.isoformat() if self.transaction_date else None, 
+            "reference": self.reference, 
+            "lines": lines_data
+        }
         return LedgerCryptography.calculate_entry_hash(entry_meta, self.previous_hash)
+
+    def clean(self):
+        super().clean()
+        if self.status == 'POSTED' and self.pk:
+            lines = list(self.lines.all())
+            if len(lines) < 2:
+                raise ValidationError("Immutable Ledger: 'POSTED' entry must have at least 2 lines.")
+            total_debit = sum(line.debit for line in lines)
+            total_credit = sum(line.credit for line in lines)
+            if abs(total_debit - total_credit) > Decimal('0.001'):
+                raise ValidationError(f"Immutable Ledger: 'POSTED' entry is out of balance (Dr: {total_debit}, Cr: {total_credit}).")
 
     def save(self, *args, **kwargs):
         bypass = kwargs.pop('force_audit_bypass', False)
@@ -38,6 +59,8 @@ class JournalEntry(TenantModel):
             original = JournalEntry.objects.get(pk=self.pk)
             if original.status == 'POSTED' and self.status == 'POSTED' and not bypass:
                 raise ValidationError("Immutable Ledger: 'POSTED' entries cannot be modified. Use reversals instead.")
+        if not bypass:
+            self.clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

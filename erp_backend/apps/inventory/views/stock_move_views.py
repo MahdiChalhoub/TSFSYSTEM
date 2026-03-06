@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 
 from erp.views import TenantModelViewSet
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.inventory.models import StockMove, StockMoveLine
 from apps.inventory.services.warehouse_transfer_service import WarehouseTransferService
 
@@ -62,7 +63,7 @@ class StockMoveSerializer(serializers.ModelSerializer):
 
 # ── ViewSet ────────────────────────────────────────────────────────────────────
 
-class StockMoveViewSet(TenantModelViewSet):
+class StockMoveViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     """
     Mixin-compatible viewset — requires TenantModelViewSet base from the inventory app.
     Registered at router.register(r'stock-moves', StockMoveViewSet, basename='stock-moves').
@@ -78,7 +79,7 @@ class StockMoveViewSet(TenantModelViewSet):
     def perform_create(self, serializer):
         """Extract lines from request.data and call WarehouseTransferService.create_transfer."""
         lines_data  = self.request.data.get('lines', [])
-        org         = self.request.auth_context['organization']
+        org         = self.request.tenant
         from_wh     = serializer.validated_data.get('from_warehouse')
         to_wh       = serializer.validated_data.get('to_warehouse')
         move_type   = serializer.validated_data.get('move_type', 'TRANSFER')
@@ -109,43 +110,35 @@ class StockMoveViewSet(TenantModelViewSet):
             user=self.request.user,
         )
 
-    @action(detail=True, methods=['post'], url_path='action')
-    def lifecycle_action(self, request, pk=None):
-        """
-        POST /inventory/stock-moves/{id}/action/
-        Body: { "action": "submit" | "dispatch" | "receive" | "cancel", "reason": "" }
-        """
-        move   = self.get_object()
-        act    = request.data.get('action', '').strip().lower()
-        reason = request.data.get('reason', '')
-        user   = request.user
-
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        move = self.get_object()
         try:
-            if act == 'submit':
-                WarehouseTransferService.submit(move, user=user)
-            elif act == 'dispatch':
-                WarehouseTransferService.dispatch(move, user=user)
-            elif act == 'receive':
-                # Optional per-product quantity override
-                qty_override = request.data.get('quantities')
-                if qty_override:
-                    from decimal import Decimal
-                    qty_override = {int(k): Decimal(str(v)) for k, v in qty_override.items()}
-                WarehouseTransferService.receive(move, user=user, quantities=qty_override)
-            elif act == 'cancel':
-                WarehouseTransferService.cancel(move, reason=reason, user=user)
-            else:
-                return Response(
-                    {'error': f"Unknown action '{act}'. Use submit | dispatch | receive | cancel."},
-                    status=http_status.HTTP_400_BAD_REQUEST
-                )
+            WarehouseTransferService.submit(move, user=request.user)
+            return Response(StockMoveSerializer(move).data)
         except ValidationError as e:
             return Response({'error': str(e)}, status=http_status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': str(e)}, status=http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        move.refresh_from_db()
-        return Response(StockMoveSerializer(move).data, status=http_status.HTTP_200_OK)
+    @action(detail=True, methods=['post'])
+    def dispatch(self, request, pk=None):
+        """Map dispatch to standard 'verify' level 1 in lifecycle logic."""
+        move = self.get_object()
+        try:
+            WarehouseTransferService.dispatch(move, user=request.user)
+            return Response(StockMoveSerializer(move).data)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=http_status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def receive(self, request, pk=None):
+        """Map receive to standard 'post' action in lifecycle logic."""
+        move = self.get_object()
+        qty_override = request.data.get('quantities')
+        try:
+            WarehouseTransferService.receive(move, user=request.user, quantities=qty_override)
+            return Response(StockMoveSerializer(move).data)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=http_status.HTTP_400_BAD_REQUEST)
 
 
 class WarehouseStockView(APIView):

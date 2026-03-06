@@ -371,6 +371,7 @@ export const MENU_ITEMS = [
                     { title: 'Package Manager', path: '/storage/packages' },
                 ]
             },
+            { title: 'App Marketplace', path: '/marketplace', icon: Store },
             { title: 'Security & Roles', path: '/settings/roles', icon: Shield },
             { title: 'Appearance & Theme', path: '/settings/appearance', icon: Paintbrush },
             { title: 'Custom Domains', path: '/settings/domains', icon: Globe },

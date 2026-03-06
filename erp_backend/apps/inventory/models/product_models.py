@@ -1,9 +1,13 @@
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from decimal import Decimal
-from erp.models import TenantModel, Country
+from erp.models import Country, TenantModel  # TenantModel used by Product, ProductAttribute, etc.
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.events import emit_event
 
-class Unit(TenantModel):
+class Unit(TenantOwnedModel):
+    """Unit of measurement with Kernel OS v2.0 integration"""
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=20, null=True, blank=True)
@@ -17,14 +21,15 @@ class Unit(TenantModel):
     class Meta:
         db_table = 'unit'
         constraints = [
-            models.UniqueConstraint(fields=['code', 'organization'], name='unique_unit_code_org')
+            models.UniqueConstraint(fields=['code', 'tenant'], name='unique_unit_code_tenant')
         ]
 
     def __str__(self):
         return self.code
 
 
-class Category(TenantModel):
+class Category(TenantOwnedModel):
+    """Product category with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
     short_name = models.CharField(max_length=50, null=True, blank=True)
@@ -38,7 +43,7 @@ class Category(TenantModel):
     class Meta:
         db_table = 'category'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'organization'], name='unique_category_name_org')
+            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_category_name_tenant')
         ]
 
     def __str__(self):
@@ -64,7 +69,8 @@ class Category(TenantModel):
         self.full_path = ' > '.join(parts)
 
 
-class Brand(TenantModel):
+class Brand(TenantOwnedModel):
+    """Brand with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     logo = models.CharField(max_length=255, null=True, blank=True)
@@ -75,14 +81,15 @@ class Brand(TenantModel):
     class Meta:
         db_table = 'brand'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'organization'], name='unique_brand_name_org')
+            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_brand_name_tenant')
         ]
 
     def __str__(self):
         return self.name
 
 
-class Parfum(TenantModel):
+class Parfum(TenantOwnedModel):
+    """Parfum/Fragrance with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     categories = models.ManyToManyField(Category, blank=True, related_name='parfums')
@@ -90,14 +97,15 @@ class Parfum(TenantModel):
     class Meta:
         db_table = 'parfum'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'organization'], name='unique_parfum_name_org')
+            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_parfum_name_tenant')
         ]
 
     def __str__(self):
         return self.name
 
 
-class ProductGroup(TenantModel):
+class ProductGroup(TenantOwnedModel):
+    """Product group with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_groups')
     parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True)

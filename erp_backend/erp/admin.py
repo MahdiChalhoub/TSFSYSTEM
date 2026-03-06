@@ -33,8 +33,8 @@ class SiteAdmin(admin.ModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization')
-    list_filter = ('organization',)
+    list_display = ('name', 'tenant')
+    list_filter = ('tenant',)
 
 @admin.register(Permission)
 class PermissionAdmin(admin.ModelAdmin):

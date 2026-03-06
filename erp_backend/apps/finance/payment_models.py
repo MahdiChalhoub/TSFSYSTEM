@@ -5,19 +5,24 @@ Payment, CustomerBalance, and SupplierBalance for managing
 accounts receivable/payable and cash-basis VAT release.
 """
 from django.db import models
+from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.lifecycle.models import PostableMixin
+from kernel.lifecycle.constants import LifecycleStatus
 
 
 # =============================================================================
 # PAYMENTS
 # =============================================================================
 
-class Payment(TenantModel):
+class Payment(AuditLogMixin, TenantOwnedModel, PostableMixin):
     """
     Universal payment record for supplier payments, customer receipts, and refunds.
     Each payment posts a GL entry and optionally triggers cash-basis VAT release.
     """
+    lifecycle_txn_type = 'PAYMENT'
     TYPE_CHOICES = (
         ('SUPPLIER_PAYMENT', 'Supplier Payment'),
         ('CUSTOMER_RECEIPT', 'Customer Receipt'),
@@ -29,11 +34,6 @@ class Payment(TenantModel):
         ('CHECK', 'Check'),
         ('CARD', 'Card'),
         ('OTHER', 'Other'),
-    )
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
-        ('POSTED', 'Posted'),
-        ('CANCELLED', 'Cancelled'),
     )
 
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
@@ -73,11 +73,10 @@ class Payment(TenantModel):
         'finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='direct_payments', help_text='Primary invoice this payment applies to'
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     scope = models.CharField(max_length=20, default='OFFICIAL')
 
     # Audit
-    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True)
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments_created')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
@@ -89,18 +88,25 @@ class Payment(TenantModel):
         return f"PAY-{self.id} ({self.type}: {self.amount})"
 
     def save(self, *args, **kwargs):
-        bypass = kwargs.pop('force_audit_bypass', False)
-        if self.pk and not bypass:
+        if self.pk:
             original = Payment.objects.get(pk=self.pk)
-            if original.status == 'POSTED' and self.status == 'POSTED':
-                from django.core.exceptions import ValidationError
-                raise ValidationError(f"Immutable Payment: Cannot modify a POSTED payment (PAY-{self.id}). Use reversals instead.")
+            if original.status == LifecycleStatus.POSTED or original.is_locked:
+                raise ValidationError(
+                    f"Immutable Payment: Cannot modify a POSTED/LOCKED payment (PAY-{self.id}). Use reversals instead."
+                )
+            
+            # Check transition to POSTED (if manually updating, though LifecycleService should be used)
+            if original.status != LifecycleStatus.POSTED and self.status == LifecycleStatus.POSTED:
+                if not self.journal_entry_id:
+                    raise ValidationError(
+                        "Payment cannot be set to POSTED without a JournalEntry."
+                    )
+        
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.status == 'POSTED':
-            from django.core.exceptions import ValidationError
-            raise ValidationError(f"Immutable Payment: Cannot delete a POSTED payment (PAY-{self.id}).")
+        if self.status not in (LifecycleStatus.DRAFT, LifecycleStatus.CANCELLED):
+            raise ValidationError(f"Immutable Payment: Cannot delete a {self.status} payment. Only DRAFT or CANCELLED can be deleted.")
         super().delete(*args, **kwargs)
 
 
@@ -108,7 +114,7 @@ class Payment(TenantModel):
 # RUNNING BALANCES
 # =============================================================================
 
-class CustomerBalance(TenantModel):
+class CustomerBalance(AuditLogMixin, TenantOwnedModel):
     """
     Running accounts receivable balance per customer.
     Updated by PaymentService when receipts are recorded.
@@ -125,12 +131,13 @@ class CustomerBalance(TenantModel):
 
     class Meta:
         db_table = 'customer_balance'
+        unique_together = ('contact', 'tenant')
 
     def __str__(self):
         return f"AR: {self.contact} = {self.current_balance}"
 
 
-class SupplierBalance(TenantModel):
+class SupplierBalance(AuditLogMixin, TenantOwnedModel):
     """
     Running accounts payable balance per supplier.
     Updated by PaymentService when payments are recorded.
@@ -146,6 +153,7 @@ class SupplierBalance(TenantModel):
 
     class Meta:
         db_table = 'supplier_balance'
+        unique_together = ('contact', 'tenant')
 
     def __str__(self):
         return f"AP: {self.contact} = {self.current_balance}"

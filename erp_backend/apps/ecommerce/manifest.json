@@ -1,11 +1,65 @@
 {
     "code": "ecommerce",
-    "name": "eCommerce",
+    "name": "eCommerce Storefront",
     "version": "1.0.0",
-    "description": "Online storefront, product catalog, themes, and order management for B2C/B2B commerce.",
+    "description": "Tenant-branded online storefront with dynamic theming, product catalog, cart, checkout, B2B quote inbox, and customer portal.",
+    "category": "commercial",
+    "plan_required": "business",
+    "is_core": false,
+    "required": false,
+    "icon": "Globe",
     "dependencies": [
-        "client_portal",
         "inventory"
     ],
-    "required": false
+    "features": [
+        {
+            "code": "storefront",
+            "label": "Branded Storefront",
+            "default": true
+        },
+        {
+            "code": "catalog",
+            "label": "Product Catalog",
+            "default": true
+        },
+        {
+            "code": "checkout",
+            "label": "Online Checkout",
+            "default": true
+        },
+        {
+            "code": "theming",
+            "label": "Custom Theming",
+            "default": true
+        },
+        {
+            "code": "b2b_quotes",
+            "label": "B2B Quote Inbox",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "eCommerce",
+            "icon": "Globe",
+            "children": [
+                {
+                    "title": "Storefront",
+                    "path": "/ecommerce/storefront"
+                },
+                {
+                    "title": "Products",
+                    "path": "/ecommerce/products"
+                },
+                {
+                    "title": "Orders",
+                    "path": "/ecommerce/orders"
+                },
+                {
+                    "title": "Themes",
+                    "path": "/ecommerce/themes"
+                }
+            ]
+        }
+    ]
 }

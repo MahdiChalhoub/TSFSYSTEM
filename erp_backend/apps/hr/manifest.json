@@ -2,7 +2,62 @@
     "code": "hr",
     "name": "Human Resources",
     "version": "1.0.0",
-    "description": "Employee records, payroll, and performance management.",
+    "description": "Employee records, department management, payroll processing, leave management, and performance tracking.",
+    "category": "human_resources",
+    "plan_required": "business",
+    "is_core": false,
+    "required": false,
+    "icon": "UserCheck",
     "dependencies": [],
-    "required": false
+    "features": [
+        {
+            "code": "employees",
+            "label": "Employee Records",
+            "default": true
+        },
+        {
+            "code": "departments",
+            "label": "Departments",
+            "default": true
+        },
+        {
+            "code": "payroll",
+            "label": "Payroll",
+            "default": true
+        },
+        {
+            "code": "leave",
+            "label": "Leave Management",
+            "default": false
+        },
+        {
+            "code": "performance",
+            "label": "Performance Reviews",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Human Resources",
+            "icon": "UserCheck",
+            "children": [
+                {
+                    "title": "Employees",
+                    "path": "/hr/employees"
+                },
+                {
+                    "title": "Departments",
+                    "path": "/hr/departments"
+                },
+                {
+                    "title": "Payroll",
+                    "path": "/hr/payroll"
+                },
+                {
+                    "title": "Leave",
+                    "path": "/hr/leave"
+                }
+            ]
+        }
+    ]
 }

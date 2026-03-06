@@ -65,10 +65,16 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 isort pytest pytest-django coverage
           
+      - name: 🔒 Architecture Enforcement
+        run: |
+          pip install pyyaml
+          python3 .ai/enforcement/enforce.py check
+        continue-on-error: false
+
       - name: Check imports with isort
         working-directory: ./erp_backend
         run: isort --check-only .
-        
+
       - name: Lint with flake8
         working-directory: ./erp_backend
         run: |

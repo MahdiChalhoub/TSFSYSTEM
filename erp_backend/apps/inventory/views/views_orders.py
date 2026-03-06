@@ -41,7 +41,7 @@ from .base import (
     timezone,
 )
 from erp.mixins import UDLEViewSetMixin
-from erp.lifecycle_mixin import LifecycleViewSetMixin
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.inventory.models import StockAlert, StockAlertService
 from apps.inventory.serializers import StockAlertSerializer
 from apps.inventory.models import StockAlert, StockAlertService
@@ -61,7 +61,7 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         lifecycle_status = self.request.query_params.get('status')
         warehouse_id = self.request.query_params.get('warehouse')
         if lifecycle_status:
-            qs = qs.filter(lifecycle_status=lifecycle_status)
+            qs = qs.filter(status=lifecycle_status)
         if warehouse_id:
             qs = qs.filter(warehouse_id=warehouse_id)
         return qs
@@ -72,7 +72,7 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'STOCK_ADJ')
         serializer.save(
-            organization=org,
+            tenant=org,
             created_by=self.request.user,
             reference=ref
         )
@@ -87,10 +87,10 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         warehouse_id = request.data.get('warehouse', order.warehouse_id)
         
         # Prevent cross-tenant product injection
-        if not Product.objects.filter(id=product_id, organization=order.organization).exists():
+        if not Product.objects.filter(id=product_id, tenant=order.tenant).exists():
             return Response({'error': 'Product not found or access denied'}, status=403)
             
-        if warehouse_id and not Warehouse.objects.filter(id=warehouse_id, organization=order.organization).exists():
+        if warehouse_id and not Warehouse.objects.filter(id=warehouse_id, tenant=order.tenant).exists():
             return Response({'error': 'Warehouse not found or access denied'}, status=403)
             
         try:
@@ -122,21 +122,18 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-    @action(detail=True, methods=['post'])
-    def post_order(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='post')
+    def post_txn(self, request, pk=None):
         order = self.get_object()
-        if order.lifecycle_status != 'CONFIRMED' and order.status != 'CONFIRMED':
-            return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
-        if order.is_posted:
-            return Response({'error': 'Order already posted'}, status=400)
-
+        # Additional inventory logic for posting
         try:
             InventoryService.process_adjustment_order(
-                organization=order.organization,
+                organization=order.tenant, # Using tenant instead of organization
                 order=order,
                 user=request.user
             )
-            return Response({'message': f'Posted {order.lines.count()} adjustments successfully.'})
+            # Delegate status update to super (LifecycleService)
+            return super().post_txn(request, pk)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -163,7 +160,7 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         from_wh = self.request.query_params.get('from_warehouse')
         to_wh = self.request.query_params.get('to_warehouse')
         if lifecycle_status:
-            qs = qs.filter(lifecycle_status=lifecycle_status)
+            qs = qs.filter(status=lifecycle_status)
         if from_wh:
             qs = qs.filter(from_warehouse_id=from_wh)
         if to_wh:
@@ -176,7 +173,7 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'STOCK_TRF')
         serializer.save(
-            organization=org,
+            tenant=org,
             created_by=self.request.user,
             reference=ref
         )
@@ -192,10 +189,10 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         to_warehouse_id = request.data.get('to_warehouse', order.to_warehouse_id)
         
         # Prevent cross-tenant product/warehouse injection
-        if not Product.objects.filter(id=product_id, organization=order.organization).exists():
+        if not Product.objects.filter(id=product_id, tenant=order.tenant).exists():
             return Response({'error': 'Product not found or access denied'}, status=403)
             
-        if not Warehouse.objects.filter(id__in=[from_warehouse_id, to_warehouse_id], organization=order.organization).count() == 2:
+        if not Warehouse.objects.filter(id__in=[from_warehouse_id, to_warehouse_id], tenant=order.tenant).count() == 2:
             return Response({'error': 'Source or Destination warehouse not found or access denied'}, status=403)
             
         try:
@@ -226,21 +223,16 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-    @action(detail=True, methods=['post'])
-    def post_order(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='post')
+    def post_txn(self, request, pk=None):
         order = self.get_object()
-        if order.lifecycle_status != 'CONFIRMED' and order.status != 'CONFIRMED':
-            return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
-        if order.is_posted:
-            return Response({'error': 'Order already posted'}, status=400)
-
         try:
             InventoryService.process_transfer_order(
-                organization=order.organization,
+                organization=order.tenant,
                 order=order,
                 user=request.user
             )
-            return Response({'message': f'Posted {order.lines.count()} transfers successfully.'})
+            return super().post_txn(request, pk)
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -267,19 +259,19 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         try:
             # Create the Execution Transfer (StockMove)
             move = StockMove.objects.create(
-                organization=order.organization,
+                tenant=order.tenant,
                 from_warehouse=order.from_warehouse,
                 to_warehouse=order.to_warehouse,
                 scheduled_date=order.date,
                 notes=f"Auto-generated from Strategy Manifest #{order.reference or order.id}.\n{order.notes or ''}",
                 requested_by=request.user,
-                status='PENDING', # Starts slightly advanced since it's pre-approved
+                status=LifecycleStatus.SUBMITTED, # Starts slightly advanced since it's pre-approved
             )
 
             # Copy all lines
             for line in order.lines.all():
                 StockMoveLine.objects.create(
-                    organization=order.organization,
+                    tenant=order.tenant,
                     move=move,
                     product=line.product,
                     quantity=line.qty_transferred,
@@ -323,7 +315,7 @@ class OperationalRequestViewSet(TenantModelViewSet):
         org = Organization.objects.get(id=org_id)
         ref = TransactionSequence.next_value(org, 'OP_REQ')
         serializer.save(
-            organization=org,
+            tenant=org,
             requested_by=self.request.user,
             reference=ref
         )
@@ -338,10 +330,10 @@ class OperationalRequestViewSet(TenantModelViewSet):
         warehouse_id = request.data.get('warehouse')
         
         # Prevent cross-tenant injection
-        if not Product.objects.filter(id=product_id, organization=req.organization).exists():
+        if not Product.objects.filter(id=product_id, tenant=req.tenant).exists():
             return Response({'error': 'Product not found or access denied'}, status=403)
             
-        if warehouse_id and not Warehouse.objects.filter(id=warehouse_id, organization=req.organization).exists():
+        if warehouse_id and not Warehouse.objects.filter(id=warehouse_id, tenant=req.tenant).exists():
             return Response({'error': 'Warehouse not found or access denied'}, status=403)
             
         try:
@@ -384,7 +376,7 @@ class OperationalRequestViewSet(TenantModelViewSet):
             return Response({'error': 'Only APPROVED requests can be converted'}, status=400)
 
         from apps.finance.models import TransactionSequence
-        organization = req.organization
+        organization = req.tenant
         lines = req.lines.all()
 
         if req.request_type == 'STOCK_ADJUSTMENT':
@@ -396,7 +388,7 @@ class OperationalRequestViewSet(TenantModelViewSet):
 
             ref = TransactionSequence.next_value(organization, 'STOCK_ADJ')
             order = StockAdjustmentOrder.objects.create(
-                organization=organization,
+                tenant=organization,
                 reference=ref,
                 date=timezone.now().date(),
                 warehouse_id=warehouse_id,
@@ -423,7 +415,7 @@ class OperationalRequestViewSet(TenantModelViewSet):
 
             ref = TransactionSequence.next_value(organization, 'STOCK_TRF')
             order = StockTransferOrder.objects.create(
-                organization=organization,
+                tenant=organization,
                 reference=ref,
                 date=timezone.now().date(),
                 from_warehouse_id=from_wh,

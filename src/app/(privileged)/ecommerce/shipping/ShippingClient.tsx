@@ -137,7 +137,7 @@ export default function ShippingClient({ initialZones, initialRates }: Props) {
                             </p>
                         </div>
                         {selectedZoneId && (
-                            <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary text-sm" id="add-rate-btn">
+                            <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary text-sm flex items-center gap-1.5" id="add-rate-btn">
                                 <Plus size={14} /> Add Tier
                             </button>
                         )}

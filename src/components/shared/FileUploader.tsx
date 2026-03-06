@@ -154,7 +154,7 @@ export function FileUploader({
  {files.map((f, idx) => {
  const Icon = getFileIcon(f.result?.content_type || '');
  return (
- <div key={idx} className="flex items-center gap-3 px-4 py-3 bg-app-surface/50 rounded-xl border border-gray-800">
+ <div key={idx} className="flex items-center gap-3 px-4 py-3 bg-app-surface/50 rounded-[var(--layout-card-radius)] border border-gray-800">
  <Icon size={18} className="text-app-text-faint shrink-0" />
  <div className="flex-1 min-w-0">
  <p className="text-sm text-gray-200 truncate">{f.name}</p>

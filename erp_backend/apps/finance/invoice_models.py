@@ -13,24 +13,33 @@ Integrates with:
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, User
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.lifecycle.models import PostableMixin
+from kernel.lifecycle.constants import LifecycleStatus
+from erp.models import User
 
 
 # =============================================================================
 # INVOICE
 # =============================================================================
 
-class Invoice(TenantModel):
+class Invoice(AuditLogMixin, TenantOwnedModel, PostableMixin):
     """
-    Formal invoice document with lifecycle management.
-    
-    Status Flow:
-        DRAFT → SENT → PARTIAL_PAID → PAID
-                 ↓                      ↓
-               OVERDUE              (terminal)
-                 ↓
-             CANCELLED / WRITTEN_OFF
+    Formal invoice document with universal lifecycle management.
+
+    lifecycle_txn_type is resolved dynamically based on invoice type.
     """
+    @property
+    def lifecycle_txn_type(self):
+        type_map = {
+            'SALES': 'SALES_INVOICE',
+            'PURCHASE': 'PURCHASE_INVOICE',
+            'CREDIT_NOTE': 'CREDIT_NOTE',
+            'DEBIT_NOTE': 'DEBIT_NOTE',
+        }
+        return type_map.get(getattr(self, 'type', ''), 'SALES_INVOICE')
+
     INVOICE_TYPES = (
         ('SALES', 'Sales Invoice'),
         ('PURCHASE', 'Purchase Invoice'),
@@ -49,15 +58,7 @@ class Invoice(TenantModel):
         ('CONSIGNEE', 'Consignee'),
     )
     SUB_TYPE_CHOICES = SALES_SUB_TYPES + PURCHASE_SUB_TYPES
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
-        ('SENT', 'Sent'),
-        ('PARTIAL_PAID', 'Partially Paid'),
-        ('PAID', 'Paid'),
-        ('OVERDUE', 'Overdue'),
-        ('CANCELLED', 'Cancelled'),
-        ('WRITTEN_OFF', 'Written Off'),
-    )
+    
     PAYMENT_TERMS_CHOICES = (
         ('IMMEDIATE', 'Immediate'),
         ('NET_7', 'Net 7 Days'),
@@ -83,7 +84,24 @@ class Invoice(TenantModel):
         max_length=20, choices=SUB_TYPE_CHOICES, default='RETAIL', blank=True,
         help_text='Sub-classification: Retail/Wholesale/Consignee (sales) or Standard/Wholesale/Consignee (purchase)'
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+
+    # 3-Way Match Dispute Fields (Phase 6)
+    payment_blocked = models.BooleanField(
+        default=False,
+        help_text='Blocked by 3-way match failure — cannot process payment'
+    )
+    dispute_reason = models.TextField(
+        null=True, blank=True,
+        help_text='Auto-generated reason from 3-way match validation'
+    )
+    disputed_lines_count = models.IntegerField(
+        default=0,
+        help_text='Number of lines that failed 3-way match'
+    )
+    disputed_amount_delta = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Total excess amount (sum of excess × unit_price)'
+    )
 
     # ── Contact & Site ───────────────────────────────────────────────────────
     contact = models.ForeignKey(
@@ -235,10 +253,10 @@ class Invoice(TenantModel):
         db_table = 'invoice'
         ordering = ['-issue_date', '-created_at']
         indexes = [
-            models.Index(fields=['organization', 'status']),
-            models.Index(fields=['organization', 'type']),
-            models.Index(fields=['organization', 'contact']),
-            models.Index(fields=['organization', 'due_date']),
+            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'type']),
+            models.Index(fields=['tenant', 'contact']),
+            models.Index(fields=['tenant', 'due_date']),
             models.Index(fields=['invoice_number']),
         ]
 
@@ -246,19 +264,30 @@ class Invoice(TenantModel):
         return f"{self.invoice_number or f'INV-{self.id}'} ({self.status})"
 
     def save(self, *args, **kwargs):
-        bypass = kwargs.pop('force_audit_bypass', False)
-        if self.pk and not bypass:
+        if self.pk:
             original = Invoice.objects.get(pk=self.pk)
-            if original.status in ('SENT', 'PARTIAL_PAID', 'PAID', 'WRITTEN_OFF') and self.status in ('SENT', 'PARTIAL_PAID', 'PAID', 'WRITTEN_OFF'):
-                if original.total_amount != self.total_amount or original.tax_amount != self.tax_amount:
-                    raise ValidationError(f"Immutable Invoice: Cannot alter financial totals of a non-DRAFT invoice ({original.status}).")
+            # Immutability Check (Universal rule)
+            if original.status == LifecycleStatus.POSTED or original.is_locked:
+                # Allow only whitelisted fields (like payment updates if status is PAID/PARTIAL)
+                # But for now, strictly blocking as per rule
+                raise ValidationError(f"Immutable Invoice: Cannot alter a {original.status} invoice.")
+            
+            # Status Guard: Prevent POSTED without JournalEntry
+            if original.status != LifecycleStatus.POSTED and self.status == LifecycleStatus.POSTED:
+                if not self.journal_entry_id:
+                    raise ValidationError(
+                        "Invoice cannot be set to POSTED without a JournalEntry."
+                    )
+        
+        # New record Guard
+        if not self.pk and self.status == LifecycleStatus.POSTED and not self.journal_entry_id:
+            raise ValidationError("Invoice cannot be created as POSTED without a JournalEntry.")
 
         # Auto-generate invoice number on first save
-        if not self.invoice_number and self.status != 'DRAFT':
+        if not self.invoice_number and self.status != LifecycleStatus.DRAFT:
             from apps.finance.models import TransactionSequence
-            prefix = 'INV' if self.type == 'SALES' else 'PINV' if self.type == 'PURCHASE' else 'CN'
             self.invoice_number = TransactionSequence.next_value(
-                self.organization, f'INVOICE_{self.type}'
+                self.tenant, f'INVOICE_{self.type}'
             )
 
         # Recalculate balance
@@ -271,8 +300,8 @@ class Invoice(TenantModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.status not in ('DRAFT', 'CANCELLED'):
-            raise ValidationError(f"Immutable Invoice: Cannot delete invoice in '{self.status}' state. Cancel or write it off instead.")
+        if self.status not in (LifecycleStatus.DRAFT, LifecycleStatus.CANCELLED):
+            raise ValidationError(f"Immutable Invoice: Cannot delete invoice in '{self.status}' state.")
         super().delete(*args, **kwargs)
 
     def recalculate_totals(self):
@@ -332,7 +361,7 @@ class Invoice(TenantModel):
 # INVOICE LINES
 # =============================================================================
 
-class InvoiceLine(TenantModel):
+class InvoiceLine(AuditLogMixin, TenantOwnedModel):
     """
     Individual line item on an invoice.
     Supports both HT and TTC pricing with automatic tax calculation.
@@ -342,6 +371,10 @@ class InvoiceLine(TenantModel):
     )
     product = models.ForeignKey(
         'inventory.Product', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='invoice_lines'
+    )
+    purchase_order_line = models.ForeignKey(
+        'pos.PurchaseOrderLine', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='invoice_lines'
     )
     description = models.CharField(
@@ -426,7 +459,7 @@ class InvoiceLine(TenantModel):
 # PAYMENT ALLOCATION (links payments ↔ invoices, many-to-many)
 # =============================================================================
 
-class PaymentAllocation(TenantModel):
+class PaymentAllocation(AuditLogMixin, TenantOwnedModel):
     """
     Allocates a payment (full or partial) to one or more invoices.
     Enables split payments across multiple invoices and partial payments.

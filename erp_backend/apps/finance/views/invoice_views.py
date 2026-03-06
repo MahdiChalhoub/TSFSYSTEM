@@ -3,12 +3,13 @@ from .base import (
     TenantModelViewSet, get_current_tenant_id,
     Organization
 )
+from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.finance.invoice_models import Invoice, InvoiceLine, PaymentAllocation
 from apps.finance.serializers import (
     InvoiceSerializer, InvoiceLineSerializer, PaymentAllocationSerializer
 )
 
-class InvoiceViewSet(TenantModelViewSet):
+class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 
@@ -88,15 +89,6 @@ class InvoiceViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-    @action(detail=True, methods=['post'])
-    def send_invoice(self, request, pk=None):
-        """Mark invoice as SENT and auto-generate invoice number."""
-        invoice = self.get_object()
-        if invoice.status != 'DRAFT':
-            return Response({"error": "Only DRAFT invoices can be sent."}, status=400)
-        invoice.status = 'SENT'
-        invoice.save()  # Triggers auto-numbering in save()
-        return Response(InvoiceSerializer(invoice).data)
 
     @action(detail=True, methods=['post'])
     def record_payment(self, request, pk=None):

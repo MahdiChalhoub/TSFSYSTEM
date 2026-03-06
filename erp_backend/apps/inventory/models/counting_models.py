@@ -128,3 +128,63 @@ class InventorySessionLine(models.Model):
         self.needs_adjustment = diff is not None and diff != 0
 
         return self
+
+
+# =============================================================================
+# CYCLE COUNT POLICY (ABC Classification)
+# =============================================================================
+
+class CycleCountPolicy(TenantModel):
+    """
+    ABC classification-based counting strategy.
+    Determines how frequently products should be counted
+    based on their value classification.
+    """
+    ABC_CHOICES = (
+        ('A', 'A — High Value / Fast Moving'),
+        ('B', 'B — Medium Value'),
+        ('C', 'C — Low Value / Slow Moving'),
+    )
+    FREQUENCY_CHOICES = (
+        ('WEEKLY', 'Weekly'),
+        ('BIWEEKLY', 'Bi-Weekly'),
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('YEARLY', 'Yearly'),
+    )
+
+    name = models.CharField(max_length=100)
+    classification = models.CharField(max_length=1, choices=ABC_CHOICES)
+    count_frequency = models.CharField(max_length=15, choices=FREQUENCY_CHOICES)
+
+    warehouse = models.ForeignKey(
+        'inventory.Warehouse', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='cycle_count_policies',
+        help_text='Null = applies to all warehouses'
+    )
+    category = models.ForeignKey(
+        'inventory.Category', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cycle_count_policies'
+    )
+
+    min_value_threshold = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Products with total value >= this threshold qualify for this class'
+    )
+    max_value_threshold = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+    )
+
+    last_generated_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'cycle_count_policy'
+        ordering = ['classification', 'name']
+        indexes = [
+            models.Index(fields=['organization', 'classification', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} — {self.get_classification_display()} / {self.get_count_frequency_display()}"

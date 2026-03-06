@@ -1,0 +1,455 @@
+# 🎯 Task Routing Rules
+# Determines which AI handles which tasks
+# Version: 1.0.0
+
+# ============================================
+# GENERAL ROUTING RULES
+# ============================================
+
+routing_rules:
+  # ==========================================
+  # CLAUDE CODE (File operations, terminal)
+  # ==========================================
+
+  file_operations:
+    handler: claude_code
+    priority: high
+    patterns:
+      - "edit file"
+      - "modify code"
+      - "create file"
+      - "write file"
+      - "update file"
+      - "fix bug"
+      - "refactor code"
+    examples:
+      - "Edit apps/finance/models.py to add field"
+      - "Create new file apps/inventory/utils.py"
+      - "Fix bug in payment processing"
+
+  terminal_commands:
+    handler: claude_code
+    priority: high
+    patterns:
+      - "run command"
+      - "execute script"
+      - "python manage.py"
+      - "npm"
+      - "git commit"
+      - "git push"
+      - "pytest"
+      - "migration"
+    examples:
+      - "Run migrations"
+      - "Commit changes"
+      - "Install dependencies"
+
+  git_operations:
+    handler: claude_code
+    priority: high
+    patterns:
+      - "git"
+      - "commit"
+      - "push"
+      - "pull request"
+      - "merge"
+    examples:
+      - "Create PR for feature X"
+      - "Commit all changes"
+
+  # ==========================================
+  # ANTIGRAVITY (Research, planning, docs)
+  # ==========================================
+
+  research:
+    handler: antigravity
+    priority: high
+    patterns:
+      - "explain"
+      - "analyze"
+      - "research"
+      - "investigate"
+      - "understand"
+      - "how does"
+      - "why"
+    examples:
+      - "Explain how the event bus works"
+      - "Analyze the invoice processing flow"
+      - "Research best practices for multi-tenancy"
+
+  planning:
+    handler: antigravity
+    priority: high
+    patterns:
+      - "design"
+      - "plan"
+      - "architecture"
+      - "propose"
+      - "suggest approach"
+      - "create roadmap"
+    examples:
+      - "Design a cash reconciliation feature"
+      - "Plan the module boundaries implementation"
+      - "Propose architecture for AI agents"
+
+  documentation:
+    handler: antigravity
+    priority: high
+    patterns:
+      - "write documentation"
+      - "document"
+      - "create diagram"
+      - "explain system"
+      - "write README"
+    examples:
+      - "Document the API endpoints"
+      - "Create architecture diagram"
+      - "Write user guide"
+
+  code_review:
+    handler: antigravity
+    priority: medium
+    patterns:
+      - "review code"
+      - "check implementation"
+      - "suggest improvements"
+      - "code quality"
+    examples:
+      - "Review the invoice module implementation"
+      - "Check for security issues"
+      - "Suggest performance improvements"
+
+  long_conversation:
+    handler: antigravity
+    priority: high
+    patterns:
+      - "discuss"
+      - "let's talk about"
+      - "I have questions"
+    threshold:
+      messages: 8  # Switch to Antigravity after 8 messages
+    examples:
+      - "Let's discuss the overall architecture"
+      - "I need to understand the module system"
+
+  # ==========================================
+  # BOTH (Multi-step tasks)
+  # ==========================================
+
+  feature_implementation:
+    handler: both
+    priority: high
+    patterns:
+      - "implement feature"
+      - "build system"
+      - "create module"
+      - "add functionality"
+    workflow:
+      - step: 1_plan
+        handler: antigravity
+        output: ".ai/plans/{task_name}.md"
+      - step: 2_execute
+        handler: claude_code
+        input: ".ai/plans/{task_name}.md"
+      - step: 3_review
+        handler: antigravity
+        optional: true
+    examples:
+      - "Implement cash reconciliation feature"
+      - "Build module boundaries linter"
+      - "Create AI agent framework"
+
+  bug_investigation:
+    handler: both
+    priority: high
+    patterns:
+      - "debug"
+      - "investigate bug"
+      - "fix error"
+    workflow:
+      - step: 1_diagnose
+        handler: antigravity
+        actions:
+          - "Analyze stack trace"
+          - "Read relevant code"
+          - "Identify root cause"
+      - step: 2_fix
+        handler: claude_code
+        actions:
+          - "Apply fix"
+          - "Run tests"
+    threshold:
+      - simple_fix: claude_code  # <5 lines changed
+      - complex_fix: both  # >5 lines or multiple files
+
+# ============================================
+# MODULE-SPECIFIC RULES
+# ============================================
+
+module_rules:
+  kernel:
+    # Kernel is COMPLETE - minimal modifications
+    status: locked
+    allow_modifications: false
+    exceptions:
+      - "critical bug fix"
+      - "security patch"
+      - "documentation update"
+    approval_required: true
+    handler: claude_code  # Quick fixes only
+
+  finance:
+    status: active
+    allow_modifications: true
+    handler: both  # Plan + execute
+
+  inventory:
+    status: active
+    allow_modifications: true
+    handler: both
+
+  crm:
+    status: active
+    allow_modifications: true
+    handler: both
+
+  pos:
+    status: active
+    allow_modifications: true
+    handler: both
+
+  hr:
+    status: active
+    allow_modifications: true
+    handler: both
+
+# ============================================
+# FILE-SPECIFIC RULES
+# ============================================
+
+file_rules:
+  locked_files:
+    # These files should NOT be modified
+    - "erp_backend/kernel/**/*"  # All kernel files
+    - "apps/*/module.json"  # Approved manifests
+    - "KERNEL_COMPLETE_V2.md"  # Final documentation
+    - ".ai/ROUTING_RULES.yaml"  # This file
+
+  documentation_files:
+    # Always use Antigravity for docs
+    - "**/*.md"
+    - "**/README.*"
+    - "**/DESIGN_*.md"
+    handler: antigravity
+
+  code_files:
+    # Use Claude for code
+    - "**/*.py"
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    handler: claude_code
+
+  config_files:
+    # Review required
+    - "**/settings.py"
+    - "**/*.yaml"
+    - "**/*.json"
+    handler: both
+    approval_required: true
+
+# ============================================
+# CREDIT OPTIMIZATION
+# ============================================
+
+api_limits:
+  claude_code:
+    # Expensive - use sparingly
+    max_messages_per_conversation: 10
+    prefer_batch_operations: true  # Do multiple edits in ONE message
+    auto_switch_threshold: 8  # Switch to Antigravity after 8 messages
+
+  antigravity:
+    # Cheap - use freely
+    no_limit: true
+    prefer_for:
+      - "long explanations"
+      - "multi-turn conversations"
+      - "research and analysis"
+
+# Batch operation templates
+batch_templates:
+  multi_file_edit:
+    description: "Edit multiple files in single message"
+    template: |
+      Execute these changes in PARALLEL (single message):
+
+      1. Edit file1.py: [changes]
+      2. Edit file2.py: [changes]
+      3. Create file3.py: [content]
+
+      Use parallel tool calling.
+    savings: "66% fewer messages"
+
+  feature_implementation:
+    description: "Plan with Antigravity, execute with Claude"
+    template: |
+      Step 1 (Antigravity): Design and plan
+      Step 2 (Claude): Execute from plan
+      Step 3 (Antigravity): Review
+    savings: "50-70% fewer Claude messages"
+
+# ============================================
+# AUTO-SWITCH TRIGGERS
+# ============================================
+
+auto_switch:
+  enabled: true
+
+  claude_to_antigravity:
+    # Switch FROM Claude TO Antigravity when:
+    triggers:
+      - message_count: 8
+      - conversation_patterns:
+          - "Let me explain more..."
+          - "There are several approaches..."
+          - "We should discuss..."
+          - "This is complex..."
+    action: |
+      Suggest to user:
+      "This conversation is getting long. Switch to Antigravity to save credits?
+       Antigravity is better for planning and long discussions."
+
+  antigravity_to_claude:
+    # Switch FROM Antigravity TO Claude when:
+    triggers:
+      - task_type: "file_edit"
+      - task_type: "terminal_command"
+      - planning_complete: true
+    action: |
+      Tell user:
+      "Planning complete! Hand off to Claude Code for execution.
+       Plan saved to: .ai/plans/{task_name}.md"
+
+# ============================================
+# HANDOFF PROTOCOL
+# ============================================
+
+handoff:
+  antigravity_to_claude:
+    steps:
+      - "Save plan to .ai/plans/{task_name}.md"
+      - "Update CURRENT_WORK.md with handoff"
+      - "Tell user: 'Ready for Claude Code to execute'"
+
+  claude_to_antigravity:
+    steps:
+      - "Save summary to .ai/completed/{task_name}.md"
+      - "Update CURRENT_WORK.md with completion"
+      - "Tell user: 'Implementation complete. Antigravity can review'"
+
+# ============================================
+# DECISION TREE
+# ============================================
+
+decision_tree:
+  # Quick decision logic
+  - question: "Is it editing code or files?"
+    yes: claude_code
+    no: continue
+
+  - question: "Is it running terminal commands?"
+    yes: claude_code
+    no: continue
+
+  - question: "Is it research, planning, or documentation?"
+    yes: antigravity
+    no: continue
+
+  - question: "Is it a multi-step task?"
+    yes: both  # Antigravity plans, Claude executes
+    no: continue
+
+  - question: "Has conversation reached 8 messages?"
+    yes: antigravity
+    no: user_choice
+
+# ============================================
+# USAGE EXAMPLES
+# ============================================
+
+examples:
+  # Example 1: Simple file edit
+  - user_request: "Add a field to Invoice model"
+    routed_to: claude_code
+    reason: "File editing task"
+
+  # Example 2: Architecture design
+  - user_request: "Design module boundaries system"
+    routed_to: antigravity
+    reason: "Planning and design task"
+
+  # Example 3: Feature implementation
+  - user_request: "Implement cash reconciliation feature"
+    routed_to: both
+    workflow:
+      - antigravity: "Plan feature (save to .ai/plans/)"
+      - claude_code: "Execute plan"
+      - antigravity: "Review implementation (optional)"
+
+  # Example 4: Bug fix
+  - user_request: "Fix payment processing error"
+    routed_to: both  # If complex
+    workflow:
+      - antigravity: "Analyze error, identify root cause"
+      - claude_code: "Apply fix"
+    alternate: claude_code  # If simple (<5 lines)
+
+  # Example 5: Long conversation
+  - user_request: "Explain the entire kernel architecture"
+    routed_to: antigravity
+    reason: "Long explanation, better context retention"
+
+# ============================================
+# STATISTICS & MONITORING
+# ============================================
+
+monitoring:
+  track_usage:
+    enabled: true
+    log_to: ".ai/usage_stats.json"
+    metrics:
+      - "messages_per_ai"
+      - "cost_per_ai"
+      - "task_completion_time"
+      - "handoff_count"
+
+  optimize:
+    enabled: true
+    target: "minimize_claude_messages"
+    goal: "70% cost reduction"
+
+# ============================================
+# VERSION & METADATA
+# ============================================
+
+metadata:
+  version: "1.0.0"
+  created: "2026-03-04"
+  last_updated: "2026-03-04"
+  maintained_by: "User + AIs"
+
+notes: |
+  This file defines routing rules for coordinating Antigravity and Claude Code.
+
+  KEY PRINCIPLE:
+  - Use Antigravity for THINKING (planning, research, docs)
+  - Use Claude Code for DOING (editing, terminal, git)
+  - Use BOTH for complex tasks (plan → execute → review)
+
+  COST OPTIMIZATION:
+  - Batch operations whenever possible
+  - Switch to Antigravity for long conversations
+  - Use Antigravity for planning to reduce Claude usage
+
+  EXPECTED SAVINGS: 70-80% reduction in Claude API costs

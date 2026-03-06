@@ -1,31 +1,55 @@
 """
 HR Module Event Handlers
 =========================
-Receives inter-module events routed by the ConnectorEngine.
 
-The ConnectorEngine discovers this module via:
-    importlib.import_module('apps.hr.events')
+Handles events from other modules and emits HR-related events.
+
+Kernel OS v2.0 Integration - Event Contracts Implemented:
+- user.created (subscribes - creates employee record)
+- employee.created (emits)
+- role.assigned (subscribes - updates employee permissions)
 """
 
 import logging
+from django.db import transaction
+from django.utils import timezone
+from kernel.events import emit_event, subscribe_to_event
+from kernel.contracts.decorators import enforce_contract
 
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, organization_id: int):
+def handle_event(event_name: str, payload: dict, tenant_id: int):
     """
-    Main event handler for the HR module.
+    Main event handler for HR module (Kernel OS v2.0)
+
+    Routes events to appropriate handlers based on event name.
+    Compatible with both old (organization_id) and new (tenant_id) signatures.
     """
+    logger.info(f"[HR] Received event: {event_name}")
+
     handlers = {
+        # Kernel OS v2.0 events
+        'user.created': handle_user_created,
+        'role.assigned': handle_role_assigned,
+
+        # Legacy events
         'org:provisioned': _on_org_provisioned,
         'payroll:processed': _on_payroll_processed,
     }
-    
+
     handler = handlers.get(event_name)
+
     if handler:
-        return handler(payload, organization_id)
+        try:
+            result = handler(payload, tenant_id)
+            logger.info(f"[HR] Successfully handled {event_name}")
+            return result
+        except Exception as e:
+            logger.error(f"[HR] Error handling {event_name}: {e}")
+            raise
     else:
-        logger.debug(f"HR module: unhandled event '{event_name}'")
+        logger.warning(f"[HR] No handler for event: {event_name}")
         return None
 
 
@@ -67,4 +91,65 @@ def _on_payroll_processed(payload: dict, organization_id: int) -> dict:
     except Exception as e:
         logger.warning(f"HR: Failed to dispatch payroll event: {e}")
     
+    return {'success': True}
+
+
+# ============================================================================
+# KERNEL OS v2.0 EVENT HANDLERS
+# ============================================================================
+
+@subscribe_to_event('user.created')
+def on_user_created(event):
+    """EventBus handler wrapper for user.created"""
+    handle_user_created(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_user_created(payload: dict, tenant_id: int):
+    """Handle user.created event - Create employee record"""
+    from apps.hr.models import Employee
+
+    user_id = payload.get('user_id')
+    email = payload.get('email')
+    first_name = payload.get('first_name', '')
+    last_name = payload.get('last_name', '')
+
+    logger.info(f"[HR] Creating employee for user: {user_id}")
+
+    try:
+        existing = Employee.objects.filter(user_id=user_id, tenant_id=tenant_id).first()
+        if existing:
+            return {'success': True, 'employee_id': existing.id, 'existed': True}
+
+        employee = Employee.objects.create(
+            user_id=user_id,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            hire_date=timezone.now().date(),
+            tenant_id=tenant_id
+        )
+
+        emit_event('employee.created', {
+            'employee_id': employee.id,
+            'user_id': user_id,
+            'tenant_id': tenant_id
+        })
+
+        return {'success': True, 'employee_id': employee.id}
+    except Exception as e:
+        logger.error(f"[HR] Error creating employee: {e}")
+        raise
+
+
+@subscribe_to_event('role.assigned')
+def on_role_assigned(event):
+    """EventBus handler wrapper for role.assigned"""
+    handle_role_assigned(event.payload, event.tenant_id)
+
+
+def handle_role_assigned(payload: dict, tenant_id: int):
+    """Handle role.assigned event - Update employee permissions"""
+    logger.info(f"[HR] Role assigned event received")
+    # Update employee role/position if needed
     return {'success': True}

@@ -13,14 +13,16 @@ Integration:
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.events import emit_event
 
 
 # =============================================================================
 # SUPPLIER PORTAL CONFIGURATION
 # =============================================================================
 
-class SupplierPortalConfig(TenantModel):
+class SupplierPortalConfig(TenantOwnedModel):
     """
     Per-organization configuration for the Supplier Portal module.
     Allows customizing proforma workflows, currencies, and status labels.
@@ -72,7 +74,7 @@ class SupplierPortalConfig(TenantModel):
 # SUPPLIER PORTAL ACCESS
 # =============================================================================
 
-class SupplierPortalAccess(TenantModel):
+class SupplierPortalAccess(TenantOwnedModel):
     """
     Links a CRM Contact (supplier) to a User account for portal login.
     Stores granted permissions and access status.
@@ -146,7 +148,7 @@ class SupplierPortalAccess(TenantModel):
             self.save(update_fields=['permissions'])
 
 
-class SupplierProforma(TenantModel):
+class SupplierProforma(TenantOwnedModel):
     """
     A proforma invoice created by a supplier and submitted for approval.
 
@@ -284,7 +286,7 @@ class SupplierProforma(TenantModel):
         self.save(update_fields=['subtotal', 'tax_amount', 'total_amount', 'currency'])
 
 
-class ProformaLine(TenantModel):
+class ProformaLine(TenantOwnedModel):
     """Individual line item on a supplier proforma."""
     proforma = models.ForeignKey(SupplierProforma, on_delete=models.CASCADE, related_name='lines')
     product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
@@ -319,7 +321,7 @@ class ProformaLine(TenantModel):
 # PRICE CHANGE REQUEST
 # =============================================================================
 
-class PriceChangeRequest(TenantModel):
+class PriceChangeRequest(TenantOwnedModel):
     """
     Supplier-initiated price change request.
     Can be for selling price (retail) or purchase price (wholesale).
@@ -389,7 +391,7 @@ class PriceChangeRequest(TenantModel):
 # SUPPLIER NOTIFICATION
 # =============================================================================
 
-class SupplierNotification(TenantModel):
+class SupplierNotification(TenantOwnedModel):
     """In-portal notifications for supplier events."""
     TYPE_CHOICES = (
         ('ORDER_UPDATE', 'Order Status Update'),

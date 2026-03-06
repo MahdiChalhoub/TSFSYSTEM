@@ -12,6 +12,7 @@ from .tax_entry_models import OrderLineTaxEntry
 from .analytics_models import SalesDailySummary
 from .payment_models import SalesPaymentLeg
 from .generated_document import GeneratedDocument
+from .purchase_enhancement_models import LandedCost, LandedCostLine, PurchaseAttachment
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
@@ -27,4 +28,6 @@ __all__ = [
     'OrderLineTaxEntry',
     'SalesDailySummary',
     'SalesPaymentLeg',
+    'LandedCost', 'LandedCostLine', 'PurchaseAttachment',
 ]
+

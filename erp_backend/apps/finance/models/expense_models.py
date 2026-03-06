@@ -1,12 +1,15 @@
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel
 from django.core.exceptions import ValidationError
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.lifecycle.models import PostableMixin
+from kernel.lifecycle.constants import LifecycleStatus
 from apps.finance.models.coa_models import ChartOfAccount, FinancialAccount
 from apps.finance.models.ledger_models import JournalEntry
 from apps.finance.models.loan_models import FinancialEvent
 
-class DeferredExpense(TenantModel):
+class DeferredExpense(AuditLogMixin, TenantOwnedModel):
     CATEGORIES = (
         ('SUBSCRIPTION', 'Subscription'),
         ('RENOVATION', 'Renovation'),
@@ -53,7 +56,9 @@ class DeferredExpense(TenantModel):
             raise ValidationError(f"Immutable Expense: Cannot delete a {self.status} deferred expense.")
         super().delete(*args, **kwargs)
 
-class DirectExpense(TenantModel):
+class DirectExpense(AuditLogMixin, TenantOwnedModel, PostableMixin):
+    lifecycle_txn_type = 'DIRECT_EXPENSE'
+
     CATEGORIES = (
         ('RENT', 'Rent'),
         ('UTILITIES', 'Utilities'),
@@ -67,11 +72,6 @@ class DirectExpense(TenantModel):
         ('MARKETING', 'Marketing'),
         ('OTHER', 'Other'),
     )
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
-        ('POSTED', 'Posted'),
-        ('CANCELLED', 'Cancelled'),
-    )
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORIES, default='OTHER')
@@ -83,7 +83,6 @@ class DirectExpense(TenantModel):
     financial_event = models.ForeignKey(FinancialEvent, on_delete=models.SET_NULL, null=True, blank=True, related_name='direct_expenses')
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True, related_name='direct_expenses')
     scope = models.CharField(max_length=20, default='OFFICIAL')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     class Meta:
@@ -93,14 +92,13 @@ class DirectExpense(TenantModel):
         return f"{self.name} — {self.amount}"
 
     def save(self, *args, **kwargs):
-        bypass = kwargs.pop('force_audit_bypass', False)
-        if self.pk and not bypass:
+        if self.pk:
             original = DirectExpense.objects.get(pk=self.pk)
-            if original.status == 'POSTED' and self.status == 'POSTED':
-                raise ValidationError(f"Immutable Expense: Cannot modify a POSTED direct expense ('{self.name}').")
+            if original.status == LifecycleStatus.POSTED or original.is_locked:
+                raise ValidationError(f"Immutable Expense: Cannot modify a POSTED/LOCKED direct expense ('{self.name}').")
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.status == 'POSTED':
-            raise ValidationError(f"Immutable Expense: Cannot delete a POSTED direct expense ('{self.name}').")
+        if self.status not in (LifecycleStatus.DRAFT, LifecycleStatus.CANCELLED):
+            raise ValidationError(f"Immutable Expense: Cannot delete a {self.status} direct expense ('{self.name}'). Only DRAFT or CANCELLED can be deleted.")
         super().delete(*args, **kwargs)

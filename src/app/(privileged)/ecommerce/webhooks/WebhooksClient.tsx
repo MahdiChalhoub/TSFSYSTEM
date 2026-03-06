@@ -61,7 +61,7 @@ export default function WebhooksClient({ initialWebhooks, supportedEvents }: Pro
                         <p className="app-page-subtitle">HTTP event callbacks for storefront integrations</p>
                     </div>
                 </div>
-                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary" id="create-webhook-btn">
+                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary flex items-center gap-1.5" id="create-webhook-btn">
                     <Plus size={15} /> Add Webhook
                 </button>
             </div>

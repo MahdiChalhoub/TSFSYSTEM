@@ -1,235 +1,311 @@
 """
 Inventory Module Event Handlers
 ================================
-Receives inter-module events routed by the ConnectorEngine.
 
-The ConnectorEngine discovers this module via:
-    importlib.import_module('apps.inventory.events')
+Handles events from other modules and emits inventory-related events.
+
+Event Contracts Implemented:
+- product.created (emits)
+- inventory.low_stock (emits)
+- inventory.adjustment (emits)
+- order.completed (subscribes - updates inventory)
+- invoice.paid (subscribes - may trigger stock reservation)
 """
 
 import logging
 from decimal import Decimal
+from django.db import transaction
+from kernel.events import emit_event, subscribe_to_event
+from kernel.contracts.decorators import enforce_contract
+from kernel.tenancy.context import get_current_tenant
 
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, organization_id: int):
+def handle_event(event_name: str, payload: dict, tenant_id: int):
     """
-    Main event handler for the inventory module.
+    Main event handler for Inventory module
+
+    Routes events to appropriate handlers based on event name.
     """
+    logger.info(f"[Inventory] Received event: {event_name}")
+
+    # Map event names to handler functions
     handlers = {
-        'order:completed': _on_order_completed,
-        'order:voided': _on_order_voided,
-        'org:provisioned': _on_org_provisioned,
-        'purchase_order:received': _on_purchase_order_received,
+        'order.completed': handle_order_completed,
+        'order.voided': handle_order_voided,
+        'purchase_order.received': handle_purchase_order_received,
+        'invoice.created': handle_invoice_created,
     }
-    
+
     handler = handlers.get(event_name)
+
     if handler:
-        return handler(payload, organization_id)
+        try:
+            handler(payload, tenant_id)
+            logger.info(f"[Inventory] Successfully handled {event_name}")
+        except Exception as e:
+            logger.error(f"[Inventory] Error handling {event_name}: {e}")
+            raise
     else:
-        logger.debug(f"Inventory module: unhandled event '{event_name}'")
-        return None
+        logger.warning(f"[Inventory] No handler for event: {event_name}")
 
 
-def _on_order_completed(payload: dict, organization_id: int) -> dict:
+@subscribe_to_event('order.completed')
+@enforce_contract('order.completed')
+def on_order_completed(event):
     """
-    React to POS order completion — deduct stock for sold items.
+    EventBus handler wrapper for order.completed
+    Automatically registered and validated against contract.
     """
-    from .models import Inventory, InventoryMovement
-    from erp.models import Organization
-    
-    order_id = payload.get('order_id')
-    order_type = payload.get('type', 'SALE')
-    lines = payload.get('lines', [])
-    warehouse_id = payload.get('warehouse_id')
-    
-    # We only deduct stock if it's a SALE.
-    # If it's a PURCHASE recorded in POS, we add stock.
-    multiplier = -1 if order_type == 'SALE' else 1
-    move_type = 'SALE' if order_type == 'SALE' else 'PURCHASE'
-
-    if not lines:
-        return {'success': True, 'skipped': True}
-    
-    try:
-        org = Organization.objects.get(id=organization_id)
-        adjusted = 0
-        
-        for line in lines:
-            product_id = line.get('product_id')
-            quantity = line.get('quantity', 0)
-            
-            if not product_id or quantity <= 0:
-                continue
-            
-            # Find inventory record in the specified warehouse
-            # If no warehouse_id, we might need a default one or fail
-            if not warehouse_id:
-                from .models import Warehouse
-                default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
-                warehouse_id = default_wh.id if default_wh else None
-
-            if not warehouse_id:
-                logger.warning(f"Inventory: No warehouse found for org {organization_id}, skipping deduction")
-                continue
-
-            inv, created = Inventory.objects.get_or_create(
-                organization=org,
-                product_id=product_id,
-                warehouse_id=warehouse_id,
-                defaults={'quantity': 0}
-            )
-            
-            # Atomic update
-            inv.quantity += (Decimal(str(quantity)) * multiplier)
-            inv.save(update_fields=['quantity'])
-            
-            InventoryMovement.objects.create(
-                organization=org,
-                product_id=product_id,
-                warehouse_id=warehouse_id,
-                type=move_type,
-                quantity=(Decimal(str(quantity)) * multiplier),
-                reference=f"ORDER-{order_id}"
-            )
-            adjusted += 1
-        
-        return {'success': True, 'adjusted_count': adjusted}
-    except Exception as e:
-        logger.error(f"Inventory: Failed to process order completion: {e}")
-        return {'success': False, 'error': str(e)}
+    handle_order_completed(event.payload, event.tenant_id)
 
 
-def _on_order_voided(payload: dict, organization_id: int) -> dict:
+@transaction.atomic
+def handle_order_completed(payload: dict, tenant_id: int):
     """
-    React to POS order void — reverse any stock movements made for the order.
+    Handle order.completed event from POS module
+
+    Decrements inventory when an order is completed.
     """
-    from .models import Inventory, InventoryMovement
-    from erp.models import Organization
+    from apps.inventory.models import Inventory, InventoryMovement
 
     order_id = payload.get('order_id')
-    order_type = payload.get('type', 'SALE')
-    lines = payload.get('lines', [])
-    warehouse_id = payload.get('warehouse_id')
+    items = payload.get('items', [])
 
-    if not lines:
-        return {'success': True, 'skipped': True}
+    logger.info(f"[Inventory] Processing order completion: {order_id}")
 
-    # Reverse the multiplier: void a SALE means adding stock back
-    multiplier = 1 if order_type == 'SALE' else -1
-    move_type = 'VOID_REVERSAL'
+    for item in items:
+        product_id = item.get('product_id')
+        quantity = Decimal(str(item.get('quantity', 0)))
+        warehouse_id = item.get('warehouse_id')  # May be in payload
 
-    try:
-        org = Organization.objects.get(id=organization_id)
-        reversed_count = 0
+        if not product_id or quantity <= 0:
+            continue
 
-        for line in lines:
-            product_id = line.get('product_id')
-            quantity = line.get('quantity', 0)
-
-            if not product_id or quantity <= 0:
-                continue
-
-            if not warehouse_id:
-                from .models import Warehouse
-                default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
-                wh_id = default_wh.id if default_wh else None
-            else:
-                wh_id = warehouse_id
-
-            if not wh_id:
-                logger.warning(f"Inventory: No warehouse found for org {organization_id}, skipping void reversal")
-                continue
-
-            try:
-                inv = Inventory.objects.get(organization=org, product_id=product_id, warehouse_id=wh_id)
-                inv.quantity += (Decimal(str(quantity)) * multiplier)
-                inv.save(update_fields=['quantity'])
-            except Inventory.DoesNotExist:
-                logger.warning(f"Inventory: No inventory record found for product {product_id} in warehouse {wh_id}")
-                continue
-
-            InventoryMovement.objects.create(
-                organization=org,
-                product_id=product_id,
-                warehouse_id=wh_id,
-                type=move_type,
-                quantity=(Decimal(str(quantity)) * multiplier),
-                reference=f"VOID-ORDER-{order_id}"
-            )
-            reversed_count += 1
-
-        return {'success': True, 'reversed_count': reversed_count}
-    except Exception as e:
-        logger.error(f"Inventory: Failed to process order void: {e}")
-        return {'success': False, 'error': str(e)}
-
-
-def _on_purchase_order_received(payload: dict, organization_id: int) -> dict:
-    """
-    React to Purchase Order receipt — add stock.
-    """
-    from .models import Inventory, InventoryMovement, Warehouse
-    from erp.models import Organization
-    
-    po_id = payload.get('po_id')
-    po_number = payload.get('po_number')
-    lines = payload.get('lines', [])
-    warehouse_id = payload.get('warehouse_id')
-    
-    if not lines:
-        return {'success': True, 'skipped': True}
-    
-    try:
-        org = Organization.objects.get(id=organization_id)
-        
-        if not warehouse_id:
-            default_wh = Warehouse.objects.filter(organization=org, location_type='WAREHOUSE').first()
-            warehouse_id = default_wh.id if default_wh else None
-
-        if not warehouse_id:
-            logger.error(f"Inventory: No warehouse for PO receipt in org {organization_id}")
-            return {'success': False, 'error': "No destination warehouse found"}
-
-        received_count = 0
-        for line in lines:
-            product_id = line.get('product_id')
-            qty = Decimal(str(line.get('qty_received', 0)))
-            
-            if qty <= 0: continue
-
-            inv, created = Inventory.objects.get_or_create(
-                organization=org,
+        try:
+            # Get inventory record
+            inventory = Inventory.objects.get(
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-                defaults={'quantity': 0}
+                tenant_id=tenant_id
             )
-            
-            inv.quantity += qty
-            inv.save(update_fields=['quantity'])
-            
+
+            # Check if sufficient stock
+            if inventory.quantity < quantity:
+                logger.warning(
+                    f"[Inventory] Insufficient stock for product {product_id}: "
+                    f"Available: {inventory.quantity}, Requested: {quantity}"
+                )
+                # Still process but emit warning event
+                emit_event('inventory.insufficient_stock', {
+                    'product_id': product_id,
+                    'warehouse_id': warehouse_id,
+                    'available_quantity': float(inventory.quantity),
+                    'requested_quantity': float(quantity),
+                    'tenant_id': tenant_id
+                })
+
+            # Decrement inventory
+            old_quantity = inventory.quantity
+            inventory.quantity -= quantity
+            inventory.save()
+
+            # Create movement record
             InventoryMovement.objects.create(
-                organization=org,
+                inventory=inventory,
+                movement_type='OUT',
+                quantity=quantity,
+                reference_type='ORDER',
+                reference_id=order_id,
+                notes=f'Sale from Order #{order_id}',
+                tenant_id=tenant_id
+            )
+
+            # Check if stock is now low
+            if inventory.quantity <= inventory.product.min_stock_level:
+                emit_event('inventory.low_stock', {
+                    'product_id': product_id,
+                    'warehouse_id': warehouse_id,
+                    'current_quantity': float(inventory.quantity),
+                    'min_level': inventory.product.min_stock_level,
+                    'tenant_id': tenant_id
+                })
+
+            logger.info(
+                f"[Inventory] Updated stock for product {product_id}: "
+                f"{old_quantity} → {inventory.quantity}"
+            )
+
+        except Inventory.DoesNotExist:
+            logger.error(f"[Inventory] No inventory record for product {product_id}")
+        except Exception as e:
+            logger.error(f"[Inventory] Error processing item: {e}")
+            raise
+
+
+@subscribe_to_event('order.voided')
+@enforce_contract('order.voided')
+def on_order_voided(event):
+    """EventBus handler wrapper for order.voided"""
+    handle_order_voided(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_order_voided(payload: dict, tenant_id: int):
+    """
+    Handle order.voided event
+
+    Restores inventory when an order is voided.
+    """
+    from apps.inventory.models import Inventory, InventoryMovement
+
+    order_id = payload.get('order_id')
+    items = payload.get('items', [])
+
+    logger.info(f"[Inventory] Processing order void: {order_id}")
+
+    for item in items:
+        product_id = item.get('product_id')
+        quantity = Decimal(str(item.get('quantity', 0)))
+        warehouse_id = item.get('warehouse_id')
+
+        if not product_id or quantity <= 0:
+            continue
+
+        try:
+            inventory = Inventory.objects.get(
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-                type='IN',
-                quantity=qty,
-                reference=f"PO-{po_number}-L{line.get('line_id')}",
-                description=f"Received from PO {po_number}"
+                tenant_id=tenant_id
             )
-            received_count += 1
-            
-        return {'success': True, 'received_count': received_count}
-    except Exception as e:
-        logger.error(f"Inventory: Failed to process PO receipt: {e}")
-        return {'success': False, 'error': str(e)}
+
+            # Restore inventory
+            inventory.quantity += quantity
+            inventory.save()
+
+            # Create movement record
+            InventoryMovement.objects.create(
+                inventory=inventory,
+                movement_type='IN',
+                quantity=quantity,
+                reference_type='ORDER_VOID',
+                reference_id=order_id,
+                notes=f'Void of Order #{order_id}',
+                tenant_id=tenant_id
+            )
+
+            logger.info(f"[Inventory] Restored stock for product {product_id}: +{quantity}")
+
+        except Inventory.DoesNotExist:
+            logger.error(f"[Inventory] No inventory record for product {product_id}")
+        except Exception as e:
+            logger.error(f"[Inventory] Error restoring item: {e}")
+            raise
 
 
-def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
+@subscribe_to_event('purchase_order.received')
+@enforce_contract('purchase_order.received')
+def on_purchase_order_received(event):
+    """EventBus handler wrapper for purchase_order.received"""
+    handle_purchase_order_received(event.payload, event.tenant_id)
+
+
+@transaction.atomic
+def handle_purchase_order_received(payload: dict, tenant_id: int):
     """
-    React to org provisioning — inventory module hook.
-    Currently a no-op: warehouses are provisioned by the erp.services layer directly.
+    Handle purchase_order.received event
+
+    Increments inventory when goods are received.
     """
-    logger.info(f"Inventory: org:provisioned event received for org {organization_id} — no inventory-level action needed.")
-    return {'success': True}
+    from apps.inventory.models import Inventory, InventoryMovement
+
+    po_id = payload.get('purchase_order_id')
+    items = payload.get('items', [])
+    warehouse_id = payload.get('warehouse_id')
+
+    logger.info(f"[Inventory] Processing PO receipt: {po_id}")
+
+    for item in items:
+        product_id = item.get('product_id')
+        quantity_received = Decimal(str(item.get('quantity_received', 0)))
+
+        if not product_id or quantity_received <= 0:
+            continue
+
+        try:
+            # Get or create inventory record
+            inventory, created = Inventory.objects.get_or_create(
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                tenant_id=tenant_id,
+                defaults={'quantity': Decimal('0')}
+            )
+
+            # Increment inventory
+            inventory.quantity += quantity_received
+            inventory.save()
+
+            # Create movement record
+            InventoryMovement.objects.create(
+                inventory=inventory,
+                movement_type='IN',
+                quantity=quantity_received,
+                reference_type='PURCHASE_ORDER',
+                reference_id=po_id,
+                notes=f'Receipt from PO #{po_id}',
+                tenant_id=tenant_id
+            )
+
+            logger.info(
+                f"[Inventory] Received stock for product {product_id}: +{quantity_received}"
+            )
+
+        except Exception as e:
+            logger.error(f"[Inventory] Error receiving item: {e}")
+            raise
+
+
+@subscribe_to_event('invoice.created')
+@enforce_contract('invoice.created')
+def on_invoice_created(event):
+    """EventBus handler wrapper for invoice.created"""
+    handle_invoice_created(event.payload, event.tenant_id)
+
+
+def handle_invoice_created(payload: dict, tenant_id: int):
+    """
+    Handle invoice.created event
+
+    May trigger stock reservation or allocation logic.
+    For now, just logs - implement reservation logic as needed.
+    """
+    invoice_id = payload.get('invoice_id')
+    logger.info(f"[Inventory] Invoice created: {invoice_id} - no action taken")
+    # TODO: Implement stock reservation if needed
+
+
+# Utility functions for inventory operations
+
+def check_low_stock_and_emit(product_id: int, tenant_id: int):
+    """
+    Check if a product is low on stock and emit event if needed.
+
+    Can be called from anywhere to check stock levels.
+    """
+    from apps.inventory.models import Inventory
+
+    inventories = Inventory.objects.filter(
+        product_id=product_id,
+        tenant_id=tenant_id
+    )
+
+    for inventory in inventories:
+        if inventory.quantity <= inventory.product.min_stock_level:
+            emit_event('inventory.low_stock', {
+                'product_id': product_id,
+                'warehouse_id': inventory.warehouse_id,
+                'current_quantity': float(inventory.quantity),
+                'min_level': inventory.product.min_stock_level,
+                'tenant_id': tenant_id
+            })

@@ -236,7 +236,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
     def send_to_supplier(self, request, pk=None):
         """Mark PO as ordered / sent to supplier."""
         po = self.get_object()
-        po.status = 'ORDERED'
+        po.status = 'SENT'
         po.save(update_fields=['status'])
         return Response(PurchaseOrderSerializer(po).data)
 
@@ -339,14 +339,42 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         po.save(update_fields=['status'])
         return Response(PurchaseOrderSerializer(po).data)
 
+    @action(detail=True, methods=['post'], url_path='record-supplier-declaration')
+    def record_supplier_declaration(self, request, pk=None):
+        """Record supplier declared quantities from BL/Proforma."""
+        po = self.get_object()
+        declarations = request.data.get('lines', [])
+        if not declarations:
+            return Response({"error": "No line declarations provided"}, status=400)
+
+        for decl in declarations:
+            try:
+                line = po.lines.get(id=decl['line_id'])
+                line.supplier_declared_qty = Decimal(str(decl['declared_qty']))
+                line.save(update_fields=['supplier_declared_qty'])
+            except PurchaseOrderLine.DoesNotExist:
+                return Response({"error": f"Line {decl.get('line_id')} not found"}, status=404)
+
+        return Response(PurchaseOrderSerializer(po).data)
+
     @action(detail=True, methods=['post'], url_path='mark-invoiced')
     def mark_invoiced(self, request, pk=None):
-        """Mark PO as invoiced."""
-        po = self.get_object()
-        po.status = 'INVOICED'
-        po.invoice_number = request.data.get('invoice_number')
-        po.save(update_fields=['status', 'invoice_number'])
-        return Response(PurchaseOrderSerializer(po).data)
+        """Invoke PurchaseService to create an invoice and trigger 3-way matching."""
+        from apps.pos.services.purchase_service import PurchaseService
+        invoice_number = request.data.get('invoice_number')
+        if not invoice_number:
+            return Response({"error": "invoice_number is required"}, status=400)
+            
+        try:
+            order = PurchaseService.invoice_po(
+                organization=request.tenant_id,
+                order_id=pk,
+                invoice_number=invoice_number,
+                user=request.user
+            )
+            return Response(PurchaseOrderSerializer(order).data)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):

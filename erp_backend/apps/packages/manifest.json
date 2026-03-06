@@ -1,65 +1,47 @@
 {
     "code": "packages",
-    "name": "Artifact Distribution Engine",
-    "version": "1.2.0-LTS",
-    "description": "High-performance distribution orchestrator for the platform. Handles binary lifecycle management, atomic kernel patching, and secure module distribution with built-in integrity checks.",
-    "is_core": true,
-    "author": "TSF Engineering",
-    "dependencies": [],
-    "minimum_kernel_version": "1.2.9",
-    "icon": "BoxSelect",
-    "category": "infrastructure",
+    "name": "Packages & Bundles",
+    "version": "1.0.0",
+    "description": "Product packaging engine: bundle creation, kit assembly, packing rule configuration, and shipping integration.",
+    "category": "platform",
+    "plan_required": "starter",
+    "is_core": false,
+    "required": false,
+    "icon": "Box",
+    "dependencies": [
+        "inventory"
+    ],
     "features": [
         {
-            "code": "binary_lifecycle",
-            "name": "Binary Lifecycle Management",
+            "code": "bundles",
+            "label": "Product Bundles",
             "default": true
         },
         {
-            "code": "atomic_patch",
-            "name": "Atomic Kernel Patching",
+            "code": "kits",
+            "label": "Kit Assembly",
             "default": true
         },
         {
-            "code": "distribution",
-            "name": "Secure Distribution Hub",
-            "default": true
-        }
-    ],
-    "permissions": [
-        {
-            "code": "packages.view",
-            "label": "View Packages"
-        },
-        {
-            "code": "packages.upload",
-            "label": "Upload Packages"
-        },
-        {
-            "code": "packages.deploy",
-            "label": "Deploy Packages"
-        },
-        {
-            "code": "packages.rollback",
-            "label": "Rollback Packages"
-        }
-    ],
-    "models": [
-        "PackageUpload"
-    ],
-    "routes": [
-        {
-            "path": "/saas/packages",
-            "label": "Package Storage"
+            "code": "packing_rules",
+            "label": "Packing Rules",
+            "default": false
         }
     ],
     "sidebar_items": [
         {
-            "title": "Storage Cloud",
-            "icon": "Cloud",
-            "path": "/saas/packages",
-            "visibility": "saas"
+            "title": "Packages",
+            "icon": "Box",
+            "children": [
+                {
+                    "title": "Bundles",
+                    "path": "/packages/bundles"
+                },
+                {
+                    "title": "Kits",
+                    "path": "/packages/kits"
+                }
+            ]
         }
-    ],
-    "settings_schema": {}
+    ]
 }

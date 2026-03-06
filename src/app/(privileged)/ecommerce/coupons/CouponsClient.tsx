@@ -61,7 +61,7 @@ export default function CouponsClient({ initialCoupons }: Props) {
                         <p className="app-page-subtitle">Discount codes applied at checkout</p>
                     </div>
                 </div>
-                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary" id="create-coupon-btn">
+                <button onClick={() => setShowModal(true)} className="app-btn app-btn-primary flex items-center gap-1.5" id="create-coupon-btn">
                     <Plus size={15} /> New Coupon
                 </button>
             </div>

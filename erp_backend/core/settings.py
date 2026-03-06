@@ -65,6 +65,9 @@ INSTALLED_APPS = [
     
     # Local
     'erp',
+    # NOTE: kernel sub-packages (kernel.tenancy, kernel.audit, etc.) are NOT
+    # listed here. Their models use app_label='erp' so Django manages them
+    # under the 'erp' app without requiring separate registration.
 ]
 
 # Auto-discover modules in 'apps' directory

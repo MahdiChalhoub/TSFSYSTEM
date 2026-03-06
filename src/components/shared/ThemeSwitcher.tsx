@@ -1,0 +1,164 @@
+"use client"
+
+import React from 'react'
+import { useTheme, type ThemeType } from '@/contexts/ThemeContext'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { Palette, Check } from 'lucide-react'
+
+interface ThemeSwitcherProps {
+  className?: string
+  showLabel?: boolean
+}
+
+export function ThemeSwitcher({ className, showLabel = true }: ThemeSwitcherProps) {
+  const { theme, themeConfig, setTheme, availableThemes } = useTheme()
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  return (
+    <div className={cn('relative', className)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="gap-2"
+      >
+        <Palette className="h-4 w-4" />
+        {showLabel && <span>{themeConfig.name}</span>}
+      </Button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Menu */}
+          <div className="absolute right-0 mt-2 w-80 rounded-[var(--layout-card-radius)] border border-[var(--theme-border)] bg-[var(--theme-surface)] shadow-lg z-50 overflow-hidden">
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-[var(--theme-border)]">
+              <h3 className="text-sm font-semibold text-[var(--theme-text)]">
+                Choose Theme
+              </h3>
+              <p className="text-xs text-[var(--theme-text-muted)] mt-1">
+                Select a color theme for your workspace
+              </p>
+            </div>
+
+            {/* Theme List */}
+            <div className="max-h-96 overflow-y-auto">
+              {/* Dark Themes */}
+              <div className="px-4 py-2">
+                <h4 className="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">
+                  Dark Themes
+                </h4>
+              </div>
+              {availableThemes
+                .filter((t) => t.mode === 'dark')
+                .map((themeOption) => (
+                  <ThemeOption
+                    key={themeOption.id}
+                    themeOption={themeOption}
+                    isActive={theme === themeOption.id}
+                    onClick={() => {
+                      setTheme(themeOption.id)
+                      setIsOpen(false)
+                    }}
+                  />
+                ))}
+
+              {/* Light Themes */}
+              <div className="px-4 py-2 mt-2">
+                <h4 className="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">
+                  Light Themes
+                </h4>
+              </div>
+              {availableThemes
+                .filter((t) => t.mode === 'light')
+                .map((themeOption) => (
+                  <ThemeOption
+                    key={themeOption.id}
+                    themeOption={themeOption}
+                    isActive={theme === themeOption.id}
+                    onClick={() => {
+                      setTheme(themeOption.id)
+                      setIsOpen(false)
+                    }}
+                  />
+                ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+interface ThemeOptionProps {
+  themeOption: {
+    id: ThemeType
+    name: string
+    description: string
+    colors: {
+      primary: string
+      bg: string
+      surface: string
+      text: string
+    }
+    bestFor: string[]
+  }
+  isActive: boolean
+  onClick: () => void
+}
+
+function ThemeOption({ themeOption, isActive, onClick }: ThemeOptionProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'w-full px-4 py-3 flex items-start gap-3 hover:bg-[var(--theme-surface-hover)] transition-colors text-left',
+        isActive && 'bg-[var(--theme-surface-hover)]'
+      )}
+    >
+      {/* Color Preview */}
+      <div
+        className="w-10 h-10 rounded-md border border-[var(--theme-border)] flex-shrink-0 mt-0.5"
+        style={{
+          background: `linear-gradient(135deg, ${themeOption.colors.primary} 0%, ${themeOption.colors.surface} 100%)`,
+        }}
+      />
+
+      {/* Theme Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium text-[var(--theme-text)]">
+            {themeOption.name}
+          </h4>
+          {isActive && (
+            <Check className="h-4 w-4 text-[var(--theme-primary)] flex-shrink-0" />
+          )}
+        </div>
+        <p className="text-xs text-[var(--theme-text-muted)] mt-0.5">
+          {themeOption.description}
+        </p>
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {themeOption.bestFor.slice(0, 3).map((use) => (
+            <span
+              key={use}
+              className="text-xs px-1.5 py-0.5 rounded bg-[var(--theme-surface-hover)] text-[var(--theme-text-muted)]"
+            >
+              {use}
+            </span>
+          ))}
+        </div>
+      </div>
+    </button>
+  )
+}
+
+// Compact version for tight spaces
+export function ThemeSwitcherCompact({ className }: { className?: string }) {
+  return <ThemeSwitcher className={className} showLabel={false} />
+}

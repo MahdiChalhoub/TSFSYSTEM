@@ -1,8 +1,72 @@
 {
     "code": "finance",
-    "name": "Financial Management",
-    "version": "1.0.7",
-    "description": "General ledger, accounts payable/receivable, and financial reporting.",
+    "name": "Finance & Accounting",
+    "version": "1.0.0",
+    "description": "Full double-entry accounting, invoicing, purchase management, VAT engine, journal entries, chart of accounts, and financial reporting.",
+    "category": "accounting",
+    "plan_required": "starter",
+    "is_core": false,
+    "required": false,
+    "icon": "BarChart3",
     "dependencies": [],
-    "required": false
+    "features": [
+        {
+            "code": "invoicing",
+            "label": "Sales Invoicing",
+            "default": true
+        },
+        {
+            "code": "purchasing",
+            "label": "Purchase Invoicing",
+            "default": true
+        },
+        {
+            "code": "journal_entries",
+            "label": "Journal Entries",
+            "default": true
+        },
+        {
+            "code": "vat_engine",
+            "label": "VAT Engine",
+            "default": true
+        },
+        {
+            "code": "financial_reporting",
+            "label": "Financial Reports",
+            "default": true
+        },
+        {
+            "code": "vat_settlement",
+            "label": "VAT Settlement",
+            "default": false
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Finance",
+            "icon": "BarChart3",
+            "children": [
+                {
+                    "title": "Invoices",
+                    "path": "/finance/invoices"
+                },
+                {
+                    "title": "Purchases",
+                    "path": "/finance/purchases"
+                },
+                {
+                    "title": "Journal Entries",
+                    "path": "/finance/journal-entries"
+                },
+                {
+                    "title": "Chart of Accounts",
+                    "path": "/finance/accounts"
+                },
+                {
+                    "title": "Tax Reports",
+                    "path": "/finance/tax-reports"
+                }
+            ]
+        }
+    ]
 }

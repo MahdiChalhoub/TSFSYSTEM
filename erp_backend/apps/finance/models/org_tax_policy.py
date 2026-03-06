@@ -47,6 +47,11 @@ class OrgTaxPolicy(TenantModel):
         ('CUSTOM',           'Custom logic (override in code)'),
     )
 
+    INTERNAL_SALES_VAT_MODE = (
+        ('NONE',         'No VAT — totals are HT only'),
+        ('DISPLAY_ONLY', 'Show VAT in UI, but no statutory liability in ledger'),
+    )
+
     # ── Identity ──────────────────────────────────────────────────────
     name = models.CharField(max_length=150,
                             help_text='e.g. "Standard VAT Policy", "Micro Regime"')
@@ -65,6 +70,21 @@ class OrgTaxPolicy(TenantModel):
     vat_input_recoverability = models.DecimalField(
         max_digits=4, decimal_places=3, default=Decimal('1.000'),
         help_text='0.000=none, 0.500=50%, 1.000=fully refundable'
+    )
+
+    VAT_TREATMENT = (
+        ('RECOVERABLE', 'Recoverable / Standard'),
+        ('CAPITALIZE',  'Capitalize into cost (Expense/Asset)'),
+        ('EXPENSE',     'Expense to P&L'),
+    )
+
+    official_vat_treatment = models.CharField(
+        max_length=15, choices=VAT_TREATMENT, default='RECOVERABLE',
+        help_text='How VAT is treated on official purchases (default: RECOVERABLE)'
+    )
+    internal_vat_treatment = models.CharField(
+        max_length=15, choices=VAT_TREATMENT, default='CAPITALIZE',
+        help_text='How VAT is treated on internal purchases (default: CAPITALIZE)'
     )
 
     # ── AIRSI ─────────────────────────────────────────────────────────
@@ -114,6 +134,15 @@ class OrgTaxPolicy(TenantModel):
     # ── Internal cost rule ────────────────────────────────────────────
     internal_cost_mode = models.CharField(
         max_length=20, choices=INTERNAL_COST_MODE, default='TTC_ALWAYS'
+    )
+
+    # ── Internal sales VAT rule ───────────────────────────────────────
+    internal_sales_vat_mode = models.CharField(
+        max_length=15, choices=INTERNAL_SALES_VAT_MODE, default='NONE',
+        help_text=(
+            'NONE: INTERNAL sales totals are HT only. '
+            'DISPLAY_ONLY: VAT shown in UI but never posted as a statutory liability.'
+        )
     )
 
     # ── Audit ─────────────────────────────────────────────────────────

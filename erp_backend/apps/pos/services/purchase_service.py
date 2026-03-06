@@ -548,24 +548,78 @@ class PurchaseService:
     def invoice_po(organization, order_id, invoice_number, invoice_date=None, user=None):
         # Gated cross-module import
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
-        if not LedgerService:
+        (Invoice, InvoiceLine) = _safe_import('apps.finance.models', ['Invoice', 'InvoiceLine'])
+        (ThreeWayMatchService,) = _safe_import('apps.pos.services.three_way_match_service', ['ThreeWayMatchService'])
+
+        if not LedgerService or not Invoice or not InvoiceLine:
             raise ValidationError("Finance module is required for invoice processing.")
 
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
 
-            # Check if there is anything received but not invoiced
+            # 1. Create the Backend Invoice record
+            invoice = Invoice.objects.create(
+                organization=organization,
+                invoice_number=invoice_number,
+                issue_date=invoice_date or timezone.now().date(),
+                type='PURCHASE',
+                sub_type='STANDARD',
+                status='DRAFT', # Initially draft until match passes
+                contact=order.contact,
+                contact_name=order.contact.name,
+                site_id=order.warehouse.parent_id if order.warehouse else order.site_id,
+                source_order=order,
+                user=user,
+                total_amount_ttc=Decimal('0')
+            )
+
             total_invoiced_value = Decimal('0')
+            inv_lines = []
+
             for line in order.lines.all():
                 qty_to_invoice = line.qty_received - line.qty_invoiced
                 if qty_to_invoice > 0:
-                    total_invoiced_value += (qty_to_invoice * line.unit_price)
+                    line_total = (qty_to_invoice * line.unit_price)
+                    total_invoiced_value += line_total
+                    
+                    # Create Invoice Line
+                    inv_line = InvoiceLine.objects.create(
+                        organization=organization,
+                        invoice=invoice,
+                        product=line.product,
+                        description=f"Purchase of {line.product.name} (Ref: {order.po_number or order.id})",
+                        quantity=qty_to_invoice,
+                        unit_price=line.unit_price,
+                        tax_rate=line.tax_rate,
+                        line_total_ht=line_total,
+                        line_total_ttc=line_total * (1 + line.tax_rate / 100),
+                        purchase_order_line=line
+                    )
+                    inv_lines.append(inv_line)
+
                     line.qty_invoiced += qty_to_invoice
                     line.save()
 
             if total_invoiced_value <= 0:
+                invoice.delete()
                 raise ValidationError("There are no received items pending invoicing on this order.")
 
+            invoice.total_amount_ttc = sum(l.line_total_ttc for l in inv_lines)
+            invoice.subtotal_ht = total_invoiced_value
+            invoice.tax_amount = invoice.total_amount_ttc - invoice.subtotal_ht
+            invoice.save()
+
+            # 2. Trigger 3-Way Matching Validation (Phase 4)
+            if ThreeWayMatchService:
+                is_valid, violations = ThreeWayMatchService.validate_invoice(invoice)
+                if not is_valid:
+                    # Invoice is now marked DISPUTED and payment_blocked by the service
+                    pass
+                else:
+                    invoice.status = 'POSTED'
+                    invoice.save(update_fields=['status'])
+
+            # 3. Create Posting Entry
             rules = ConfigurationService.get_posting_rules(organization)
             susp_acc = rules.get('suspense', {}).get('reception')
             ap_acc = order.contact.linked_account_id or rules.get('purchases', {}).get('payable')
@@ -598,9 +652,8 @@ class PurchaseService:
                 ]
             )
 
-            # Update Order Status
-            all_invoiced = all(line.qty_invoiced >= line.quantity for line in order.lines.all())
-            order.status = 'INVOICED' if all_invoiced else 'PARTIAL_RECEIVED'
+            # 4. Update Order Status
+            order.check_invoice_completeness() # Uses Phase 5 method if available
             order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number} | Value: {total_invoiced_value}".strip()
             order.save()
             return order

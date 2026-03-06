@@ -39,7 +39,7 @@ class AutomatedReplenishmentService:
                 product=product,
                 order__organization=organization,
                 order__status__in=[
-                    'DRAFT', 'SUBMITTED', 'APPROVED', 'ORDERED', 
+                    'DRAFT', 'SUBMITTED', 'APPROVED', 'SENT', 
                     'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'
                 ]
             ).aggregate(

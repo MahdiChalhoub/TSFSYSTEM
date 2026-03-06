@@ -40,7 +40,7 @@ class InvoiceService:
         # Find a default payment account if not provided (e.g. 'Stripe Clearing')
         payment_account = FinancialAccount.objects.filter(
             organization_id=invoice.organization_id,
-            account_type='BANK'
+            type='BANK'
         ).first()
 
         return InvoiceService.record_payment_for_invoice(
@@ -137,10 +137,13 @@ class InvoiceService:
         amount = Decimal(str(amount))
 
         # Determine payment type based on invoice type
-        if invoice.type in ('SALE', 'POS'):
+        # The Invoice model uses 'SALES' for customer invoices
+        if invoice.type in ('SALES', 'SALE', 'POS'):
             payment_type = 'CUSTOMER_RECEIPT'
-        else:
+        elif invoice.type in ('PURCHASE', 'EXPENSE'):
             payment_type = 'SUPPLIER_PAYMENT'
+        else:
+            raise ValidationError(f"Unknown invoice type: {invoice.type}")
 
         payment = Payment.objects.create(
             organization=invoice.organization,
@@ -153,16 +156,22 @@ class InvoiceService:
             description=description or f"Payment for invoice {invoice.invoice_number}",
             invoice=invoice,
             payment_account_id=payment_account_id,
-            status='POSTED',
+            status='DRAFT',
+            scope=invoice.scope,
             created_by=user,
         )
 
+        # Allocate payment first so unallocated checks pass
         allocation = InvoiceService.allocate_payment(
             payment=payment,
             invoice=invoice,
             amount=amount,
             user=user,
         )
+
+        # Now post the payment (this generates the JournalEntry and sets status to POSTED)
+        from apps.finance.services.posting_service import PaymentPostingService
+        payment = PaymentPostingService.post_payment(payment, user=user)
 
         return payment, allocation
 
