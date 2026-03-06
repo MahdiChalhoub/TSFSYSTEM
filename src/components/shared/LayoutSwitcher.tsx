@@ -145,29 +145,33 @@ function LayoutOption({ layoutOption, isActive, onClick }: LayoutOptionProps) {
 
 // Mini ASCII-style visual preview for each layout
 function LayoutPreview({ layoutId }: { layoutId: LayoutType }) {
-  const previews = {
-    'minimal': (
-      <div className="w-full h-full p-1 flex flex-col gap-1">
-        <div className="h-1 w-8 bg-[var(--theme-border)] rounded"></div>
-        <div className="flex-1 border border-[var(--theme-border)] rounded"></div>
+  const previews: Record<LayoutType, React.ReactNode> = {
+    'apple-minimal': (
+      <div className="w-full h-full p-1 flex flex-col gap-0.5">
+        <div className="h-0.5 w-6 bg-[var(--theme-border)] rounded-full"></div>
+        <div className="flex-1 border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
       </div>
     ),
     'card-heavy': (
       <div className="w-full h-full p-0.5 grid grid-cols-2 gap-0.5">
-        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
-        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
-        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
-        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)] shadow-sm"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)] shadow-sm"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)] shadow-sm"></div>
+        <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)] shadow-sm"></div>
       </div>
     ),
-    'split-view': (
-      <div className="w-full h-full flex gap-0.5">
-        <div className="w-1/3 border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
-        <div className="flex-1 border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
+    'compact': (
+      <div className="w-full h-full p-0.5 grid grid-cols-3 gap-0.5">
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
+        <div className="border border-[var(--theme-border)] rounded-sm bg-[var(--theme-surface)]"></div>
       </div>
     ),
     'dashboard-grid': (
-      <div className="w-full h-full p-0.5 grid grid-cols-3 grid-rows-3 gap-0.5">
+      <div className="w-full h-full p-0.5 grid grid-cols-3 grid-rows-2 gap-0.5">
         <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
         <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
         <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
@@ -176,8 +180,16 @@ function LayoutPreview({ layoutId }: { layoutId: LayoutType }) {
         <div className="border border-[var(--theme-border)] rounded bg-[var(--theme-surface)]"></div>
       </div>
     ),
+    'spacious': (
+      <div className="w-full h-full p-1.5 flex flex-col gap-1">
+        <div className="h-1 w-8 bg-[var(--theme-border)] rounded"></div>
+        <div className="flex-1 border border-[var(--theme-border)] rounded"></div>
+      </div>
+    ),
     'fullscreen-focus': (
-      <div className="w-full h-full bg-[var(--theme-surface)] border-2 border-[var(--theme-primary)]"></div>
+      <div className="w-full h-full bg-[var(--theme-primary)] flex items-center justify-center">
+        <div className="w-2 h-2 bg-[var(--theme-bg)] rounded-full"></div>
+      </div>
     ),
   }
 

@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
 export type LayoutType =
-  | 'minimal'           // Clean, spacious, lots of whitespace
+  | 'apple-minimal'     // Apple-style: tight, clean, minimalist (NEW)
   | 'card-heavy'        // Emphasis on cards, modern feel (DEFAULT)
-  | 'split-view'        // Sidebar + main content area
+  | 'compact'           // Efficient spacing, maximum content visibility
   | 'dashboard-grid'    // Dense, information-rich grid
+  | 'spacious'          // Generous whitespace, relaxed reading
   | 'fullscreen-focus'  // Single task focus (like POS)
 
 export interface LayoutConfig {
@@ -40,34 +41,34 @@ export interface LayoutConfig {
 }
 
 export const LAYOUTS: Record<LayoutType, LayoutConfig> = {
-  'minimal': {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Clean and spacious with generous whitespace',
+  'apple-minimal': {
+    id: 'apple-minimal',
+    name: 'Apple Minimal',
+    description: 'Clean Apple-style design with tight spacing and subtle borders',
     characteristics: {
-      density: 'sparse',
-      whitespace: 'generous',
+      density: 'medium',
+      whitespace: 'balanced',
       cardStyle: 'subtle',
       layout: 'single-column',
     },
     spacing: {
-      container: '3rem',      // 48px
-      section: '3rem',        // 48px
-      card: '2rem',          // 32px
-      element: '1.5rem',     // 24px
+      container: '1.25rem',   // 20px - Tight like macOS
+      section: '1.5rem',      // 24px - Clean separation
+      card: '1rem',           // 16px - Compact cards
+      element: '0.75rem',     // 12px - Minimal gaps
     },
     cards: {
       enabled: true,
-      borderRadius: '0.5rem',  // 8px
-      shadow: 'none',
+      borderRadius: '0.625rem',  // 10px - Apple's signature radius
+      shadow: '0 1px 3px rgba(0,0,0,0.08)',  // Very subtle shadow
       border: '1px solid var(--theme-border)',
-      padding: '2rem',
+      padding: '1rem',  // 16px - Tight padding
     },
     navigation: {
-      position: 'top',
+      position: 'side',
       style: 'minimal',
     },
-    bestFor: ['Focus work', 'Writing', 'Simple forms', 'Reports'],
+    bestFor: ['macOS-like', 'Clean design', 'Professional', 'Documents', 'Settings'],
   },
 
   'card-heavy': {
@@ -100,34 +101,34 @@ export const LAYOUTS: Record<LayoutType, LayoutConfig> = {
     bestFor: ['Dashboards', 'Overview pages', 'Marketing', 'Modern feel'],
   },
 
-  'split-view': {
-    id: 'split-view',
-    name: 'Split View',
-    description: 'Two-column layout with sidebar and main content',
+  'compact': {
+    id: 'compact',
+    name: 'Compact',
+    description: 'Efficient spacing for maximum content visibility',
     characteristics: {
-      density: 'medium',
-      whitespace: 'balanced',
+      density: 'dense',
+      whitespace: 'minimal',
       cardStyle: 'subtle',
-      layout: 'two-column',
+      layout: 'grid',
     },
     spacing: {
-      container: '1.5rem',    // 24px
-      section: '2rem',        // 32px
-      card: '1.5rem',        // 24px
-      element: '1rem',       // 16px
+      container: '1rem',      // 16px - Tight container
+      section: '1.25rem',     // 20px - Minimal section gaps
+      card: '0.875rem',       // 14px - Very compact cards
+      element: '0.625rem',    // 10px - Tight element spacing
     },
     cards: {
       enabled: true,
       borderRadius: '0.5rem',  // 8px
-      shadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      shadow: '0 1px 2px rgba(0,0,0,0.05)',
       border: '1px solid var(--theme-border)',
-      padding: '1.5rem',
+      padding: '0.875rem',  // 14px
     },
     navigation: {
       position: 'side',
       style: 'compact',
     },
-    bestFor: ['Document editing', 'Settings', 'Detail views', 'List + Detail'],
+    bestFor: ['Data tables', 'Admin panels', 'Maximum content', 'Small screens'],
   },
 
   'dashboard-grid': {
@@ -160,34 +161,64 @@ export const LAYOUTS: Record<LayoutType, LayoutConfig> = {
     bestFor: ['Analytics', 'Monitoring', 'Data visualization', 'KPI tracking'],
   },
 
+  'spacious': {
+    id: 'spacious',
+    name: 'Spacious',
+    description: 'Generous whitespace for comfortable reading and focus',
+    characteristics: {
+      density: 'sparse',
+      whitespace: 'generous',
+      cardStyle: 'subtle',
+      layout: 'single-column',
+    },
+    spacing: {
+      container: '2.5rem',    // 40px - Generous padding
+      section: '2.5rem',      // 40px - Spacious sections
+      card: '1.75rem',        // 28px - Roomy cards
+      element: '1.25rem',     // 20px - Comfortable gaps
+    },
+    cards: {
+      enabled: true,
+      borderRadius: '0.75rem',  // 12px
+      shadow: '0 2px 4px rgba(0,0,0,0.06)',
+      border: '1px solid var(--theme-border)',
+      padding: '1.75rem',  // 28px
+    },
+    navigation: {
+      position: 'top',
+      style: 'minimal',
+    },
+    bestFor: ['Reading', 'Writing', 'Focus work', 'Presentations', 'Reports'],
+  },
+
   'fullscreen-focus': {
     id: 'fullscreen-focus',
     name: 'Fullscreen Focus',
-    description: 'Single task fullscreen mode with no distractions',
+    description: 'Immersive fullscreen mode for single-task workflows (POS, Kiosk)',
     characteristics: {
       density: 'medium',
-      whitespace: 'balanced',
+      whitespace: 'minimal',
       cardStyle: 'none',
       layout: 'fullscreen',
     },
     spacing: {
-      container: '2rem',      // 32px
-      section: '1.5rem',      // 24px
-      card: '1.5rem',        // 24px
-      element: '1rem',       // 16px
+      container: '0',         // NO padding - true fullscreen
+      section: '0.5rem',      // Minimal section spacing
+      card: '1rem',           // Card padding when needed
+      element: '0.75rem',     // Tight element gaps
     },
     cards: {
-      enabled: false,
-      borderRadius: '0',
+      enabled: false,         // NO cards in fullscreen
+      borderRadius: '0',      // Sharp corners
       shadow: 'none',
       border: 'none',
-      padding: '0',
+      padding: '1rem',        // Fallback padding
     },
     navigation: {
       position: 'hidden',
       style: 'minimal',
     },
-    bestFor: ['POS Terminal', 'Kiosk mode', 'Presentations', 'Single-task workflows'],
+    bestFor: ['POS Terminal', 'Kiosk mode', 'Cashier', 'Single-task', 'Presentations'],
   },
 }
 
