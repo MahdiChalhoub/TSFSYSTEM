@@ -1,15 +1,26 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
 import { TypicalFilter } from '@/components/common/TypicalFilter';
 import { useListViewSettings } from '@/hooks/useListViewSettings';
 import { useCurrency } from '@/lib/utils/currency';
 import { toast } from 'sonner';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown, Tag, Star, Users, ExternalLink } from "lucide-react";
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown, Tag, Star, Users, ExternalLink, X, Settings as SettingsIcon } from "lucide-react";
 import ContactModal from './form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+
+// Advanced filtering imports
+import type { FilterGroup, SavedFilter, FilterTemplate } from '@/types/filters';
+import { CRM_CONTACT_FILTER_FIELDS } from '@/types/filters';
+import { applyFilterGroup } from '@/lib/filters';
+import { FilterBuilder } from '@/components/shared/filters/FilterBuilder';
+import { SavedFilters } from '@/components/shared/filters/SavedFilters';
+import { FilterChips } from '@/components/shared/filters/FilterChips';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 type Contact = Record<string, any>;
 const ALL_COLUMNS: ColumnDef<Contact>[] = [
  { key: 'name', label: 'Entity Identity', sortable: true, alwaysVisible: true },
@@ -42,13 +53,90 @@ export default function RelationshipMasterList({
  const [siteFilter, setSiteFilter] = useState('ALL');
  const [isModalOpen, setIsModalOpen] = useState(false);
  const [modalType, setModalType] = useState<'CUSTOMER' | 'SUPPLIER'>('CUSTOMER');
- const filtered = contacts.filter(c => {
- const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
- c.email?.toLowerCase().includes(search.toLowerCase());
- const matchesType = typeFilter === 'ALL' || c.type === typeFilter;
- const matchesSite = siteFilter === 'ALL' || c.homeSiteId?.toString() === siteFilter;
- return matchesSearch && matchesType && matchesSite;
+
+ // Advanced filtering state
+ const [filterGroup, setFilterGroup] = useState<FilterGroup>({
+   id: 'root',
+   logic: 'AND',
+   conditions: [],
  });
+ const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
+ const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+
+ // Filter templates
+ const filterTemplates = useMemo(() => [
+   {
+     id: 'high-value',
+     name: 'High-Value Customers',
+     description: 'Customers with lifetime value >= $10,000',
+     icon: '💎',
+     filterGroup: {
+       id: 'template-1',
+       logic: 'AND' as const,
+       conditions: [
+         { id: 'c1', field: 'lifetime_value', operator: 'greaterThanOrEqual' as const, value: 10000 },
+       ],
+     },
+   },
+   {
+     id: 'vip',
+     name: 'VIP Contacts',
+     description: 'Contacts marked as VIP tier',
+     icon: '⭐',
+     filterGroup: {
+       id: 'template-2',
+       logic: 'AND' as const,
+       conditions: [
+         { id: 'c1', field: 'customer_tier', operator: 'equals' as const, value: 'VIP' },
+       ],
+     },
+   },
+   {
+     id: 'overdue',
+     name: 'Overdue Balance',
+     description: 'Contacts with negative balance',
+     icon: '⚠️',
+     filterGroup: {
+       id: 'template-3',
+       logic: 'AND' as const,
+       conditions: [
+         { id: 'c1', field: 'balance', operator: 'lessThan' as const, value: 0 },
+       ],
+     },
+   },
+ ], []);
+
+ // Apply all filters with useMemo for performance
+ const filtered = useMemo(() => {
+   let result = contacts;
+
+   // Basic search filter
+   if (search) {
+     const term = search.toLowerCase();
+     result = result.filter(c =>
+       c.name.toLowerCase().includes(term) ||
+       c.email?.toLowerCase().includes(term) ||
+       c.phone?.includes(term)
+     );
+   }
+
+   // Type filter
+   if (typeFilter !== 'ALL') {
+     result = result.filter(c => c.type === typeFilter);
+   }
+
+   // Site filter
+   if (siteFilter !== 'ALL') {
+     result = result.filter(c => c.homeSiteId?.toString() === siteFilter);
+   }
+
+   // Advanced filters
+   if (filterGroup.conditions.length > 0 || filterGroup.groups?.length) {
+     result = applyFilterGroup(result, filterGroup);
+   }
+
+   return result;
+ }, [contacts, search, typeFilter, siteFilter, filterGroup]);
  const columns: ColumnDef<Contact>[] = ALL_COLUMNS.map(c => {
  const renderers: Record<string, (r: Contact) => React.ReactNode> = {
  name: r => (
@@ -110,6 +198,68 @@ export default function RelationshipMasterList({
  };
  return { ...c, render: renderers[c.key] };
  });
+
+ // Filter handlers
+ const handleLoadFilter = useCallback((filter: SavedFilter | FilterTemplate) => {
+   setFilterGroup(filter.filterGroup);
+   setFilterDialogOpen(false);
+ }, []);
+
+ const handleSaveFilter = useCallback((name: string, description: string, isPublic: boolean, isDefault: boolean) => {
+   const now = new Date().toISOString();
+   const newFilter: SavedFilter = {
+     id: `filter-${Date.now().toString()}`,
+     name,
+     description,
+     module: 'crm',
+     entity: 'contact',
+     filterGroup,
+     isPublic,
+     isDefault,
+     createdBy: 1, // TODO: Get actual user ID
+     createdAt: now,
+     updatedAt: now,
+     usageCount: 0,
+   };
+
+   const updated = [...savedFilters, newFilter];
+   setSavedFilters(updated);
+   localStorage.setItem('crm_contacts_saved_filters', JSON.stringify(updated));
+   toast.success(`Filter "${name}" saved successfully`);
+ }, [filterGroup, savedFilters]);
+
+ const handleDeleteFilter = useCallback((filterId: string) => {
+   const updated = savedFilters.filter(f => f.id !== filterId);
+   setSavedFilters(updated);
+   localStorage.setItem('crm_contacts_saved_filters', JSON.stringify(updated));
+   toast.success('Filter deleted');
+ }, [savedFilters]);
+
+ const handleSetDefaultFilter = useCallback((filterId: string) => {
+   const updated = savedFilters.map(f => ({
+     ...f,
+     isDefault: f.id === filterId,
+   }));
+   setSavedFilters(updated);
+   localStorage.setItem('crm_contacts_saved_filters', JSON.stringify(updated));
+   toast.success('Default filter updated');
+ }, [savedFilters]);
+
+ const handleRemoveCondition = useCallback((conditionId: string) => {
+   setFilterGroup({
+     ...filterGroup,
+     conditions: filterGroup.conditions.filter(c => c.id !== conditionId),
+   });
+ }, [filterGroup]);
+
+ const handleClearAllFilters = useCallback(() => {
+   setFilterGroup({ id: 'root', logic: 'AND', conditions: [] });
+   setSearch('');
+   setTypeFilter('ALL');
+   setSiteFilter('ALL');
+   toast.success('All filters cleared');
+ }, []);
+
  return (
  <div className="space-y-4">
  <TypicalListView<Contact>
@@ -178,6 +328,65 @@ export default function RelationshipMasterList({
  values={{ type: typeFilter, site: siteFilter }}
  onChange={(k, v) => k === 'type' ? setTypeFilter(String(v)) : setSiteFilter(String(v))}
  />
+
+ {/* Advanced Filters Button & Dialog */}
+ <div className="flex items-center justify-between px-4 -mt-2">
+   <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+     <DialogTrigger asChild>
+       <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl font-bold text-[10px] uppercase">
+         <Filter size={14} className="mr-2" />
+         Advanced Filters
+         {filterGroup.conditions.length > 0 && (
+           <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full">
+             {filterGroup.conditions.length}
+           </Badge>
+         )}
+       </Button>
+     </DialogTrigger>
+     <DialogContent className="max-w-4xl max-h-[90vh]">
+       <DialogHeader>
+         <DialogTitle className="flex items-center gap-2">
+           <Filter className="h-5 w-5" />
+           Advanced Filters
+         </DialogTitle>
+         <DialogDescription>
+           Build complex filters with multiple conditions using AND/OR logic
+         </DialogDescription>
+       </DialogHeader>
+       <ScrollArea className="max-h-[70vh] pr-4">
+         <div className="space-y-4 pb-4">
+           <SavedFilters
+             savedFilters={savedFilters}
+             templates={filterTemplates}
+             onLoadFilter={handleLoadFilter}
+             onSaveFilter={handleSaveFilter}
+             onDeleteFilter={handleDeleteFilter}
+             onSetDefault={handleSetDefaultFilter}
+           />
+           <Separator />
+           <FilterBuilder
+             fields={CRM_CONTACT_FILTER_FIELDS}
+             filterGroup={filterGroup}
+             onChange={setFilterGroup}
+           />
+         </div>
+       </ScrollArea>
+     </DialogContent>
+   </Dialog>
+ </div>
+
+ {/* Active Filter Chips */}
+ {(filterGroup.conditions.length > 0 || search || typeFilter !== 'ALL' || siteFilter !== 'ALL') && (
+   <div className="px-4 mt-2">
+     <FilterChips
+       conditions={filterGroup.conditions}
+       fields={CRM_CONTACT_FILTER_FIELDS}
+       onRemoveCondition={handleRemoveCondition}
+       onClearAll={handleClearAllFilters}
+     />
+   </div>
+ )}
+
  </TypicalListView>
  {isModalOpen && (
  <ContactModal

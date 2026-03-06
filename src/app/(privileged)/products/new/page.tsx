@@ -75,18 +75,6 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
 
     return (
         <div>
-            <div className="mb-6">
-                <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-app-primary to-app-info flex items-center justify-center shadow-lg shadow-app-primary/20">
-                        <PackagePlus size={28} className="text-white" />
-                    </div>
-                    New <span className="text-app-primary">Product</span>
-                </h1>
-                <p className="text-app-muted-foreground text-sm mt-2">
-                    {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Smart Product Creator — guided setup with AI assistance.'}
-                </p>
-            </div>
-
             <ProductFormWrapper
                 categories={categories}
                 units={units}

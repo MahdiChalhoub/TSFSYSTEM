@@ -84,6 +84,16 @@ class ClientPriceRule(TenantModel):
         null=True, blank=True, db_column='category_id',
         help_text='Product category (null = all categories)'
     )
+    # Product group scope — apply rule to all products in a group
+    product_group_id = models.IntegerField(
+        null=True, blank=True, db_column='product_group_id',
+        help_text='Product group (null = not group-scoped)'
+    )
+    # Packaging level scope — apply rule to a specific packaging level
+    packaging_level_id = models.IntegerField(
+        null=True, blank=True, db_column='packaging_level_id',
+        help_text='Packaging level (null = base unit price)'
+    )
 
     # Pricing rule
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default='FIXED_PRICE')

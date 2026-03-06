@@ -6,7 +6,14 @@ import type { PurchaseLine } from '@/types/erp';
 import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
-import { Plus, Trash2, Search, Info, AlertTriangle, CheckCircle2, ShoppingCart, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Plus, Trash2, Search, AlertTriangle, CheckCircle2,
+    ShoppingCart, ArrowRight, Package, Building2, Truck
+} from "lucide-react";
 
 export default function FormalOrderForm({
     suppliers,
@@ -26,33 +33,32 @@ export default function FormalOrderForm({
     const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
     const [lines, setLines] = useState<PurchaseLine[]>([]);
 
+    const safeSites = Array.isArray(sites) ? sites : [];
+    const safeSuppliers = Array.isArray(suppliers) ? suppliers : [];
+
     useEffect(() => {
         if (selectedSiteId) {
-            const site = sites.find(s => s.id === Number(selectedSiteId));
-            const warehouses = site?.warehouses || [];
+            const site = safeSites.find(s => s.id === Number(selectedSiteId));
+            const warehouses = Array.isArray(site?.warehouses) ? site.warehouses : [];
             setAvailableWarehouses(warehouses);
-            // Auto-select first warehouse if none selected or if switching sites
-            if (warehouses.length > 0) {
-                setSelectedWarehouseId(warehouses[0].id);
-            } else {
-                setSelectedWarehouseId('');
-            }
+            if (warehouses.length > 0) setSelectedWarehouseId(warehouses[0].id);
+            else setSelectedWarehouseId('');
         } else {
             setAvailableWarehouses([]);
             setSelectedWarehouseId('');
         }
-    }, [selectedSiteId, sites]);
+    }, [selectedSiteId, safeSites]);
 
-    // Fetch Supplier Price Hints
     useEffect(() => {
         if (selectedSupplierId) {
             erpFetch(`sourcing/?supplier=${selectedSupplierId}`).then(data => {
+                const raw = Array.isArray(data) ? data : (data?.results ?? []);
                 const hints: Record<number, number> = {};
-                data.forEach((item: Record<string, any>) => {
+                raw.forEach((item: Record<string, any>) => {
                     hints[item.product] = parseFloat(item.last_purchased_price);
                 });
                 setSupplierPriceHints(hints);
-            }).catch(console.error);
+            }).catch(() => setSupplierPriceHints({}));
         } else {
             setSupplierPriceHints({});
         }
@@ -60,10 +66,7 @@ export default function FormalOrderForm({
 
     const addProductToLines = (product: Record<string, any>) => {
         if (lines.find(l => l.productId === product.id)) return;
-
-        // Use supplier hint if available, otherwise fallback to product cost price
         const suggestedPrice = supplierPriceHints[product.id] || product.costPriceHT || 0;
-
         setLines([{
             productId: product.id,
             productName: product.name,
@@ -79,189 +82,214 @@ export default function FormalOrderForm({
         setLines(newLines);
     };
 
-    const removeLine = (idx: number) => {
-        setLines(lines.filter((_, i) => i !== idx));
-    };
-
+    const removeLine = (idx: number) => setLines(lines.filter((_, i) => i !== idx));
     const totalAmount = lines.reduce((acc, l) => acc + (l.quantity * l.unitPrice), 0);
 
     return (
-        <form action={formAction} className="space-y-6">
-            <div className="grid lg:grid-cols-4 gap-4">
+        <form action={formAction} className="space-y-4 md:space-y-[var(--layout-element-gap)]">
+            {/* Configuration Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Scope */}
-                <div className="bg-app-surface/60 backdrop-blur-md p-5 rounded-3xl border border-app-border/50 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
-                    <div className="flex p-1 bg-app-background rounded-2xl h-11">
-                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-app-primary shadow-sm' : 'text-app-muted-foreground'}`}>OFFICIAL</button>
-                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-app-primary text-app-foreground shadow-sm' : 'text-app-muted-foreground'}`}>INTERNAL</button>
-                    </div>
-                    <input type="hidden" name="scope" value={scope} />
-                </div>
+                <Card className="border shadow-sm">
+                    <CardContent className="p-4">
+                        <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block text-center">Scope</Label>
+                        <div className="flex p-1 rounded-xl theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
+                            <button type="button" onClick={() => setScope('OFFICIAL')}
+                                className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all min-h-[36px] ${scope === 'OFFICIAL' ? 'bg-white dark:bg-gray-800 shadow-sm theme-text' : 'theme-text-muted'}`}>
+                                OFFICIAL
+                            </button>
+                            <button type="button" onClick={() => setScope('INTERNAL')}
+                                className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all min-h-[36px] ${scope === 'INTERNAL' ? 'bg-indigo-500 text-white shadow-sm' : 'theme-text-muted'}`}>
+                                INTERNAL
+                            </button>
+                        </div>
+                        <input type="hidden" name="scope" value={scope} />
+                    </CardContent>
+                </Card>
 
-                {/* Logistics */}
-                <div className="bg-app-surface/60 backdrop-blur-md p-5 rounded-3xl border border-app-border/50 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Destination Site</label>
-                    <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
-                        <option value="">Select Destination...</option>
-                        {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                </div>
+                {/* Site */}
+                <Card className="border shadow-sm">
+                    <CardContent className="p-4">
+                        <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block text-center">Destination Site</Label>
+                        <select className="w-full text-xs font-bold bg-transparent rounded-lg p-2 min-h-[36px] theme-text"
+                            style={{ border: '1px solid var(--theme-border)' }}
+                            value={selectedSiteId} onChange={e => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
+                            <option value="">Select Site...</option>
+                            {safeSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </CardContent>
+                </Card>
 
-                <div className="bg-app-surface/60 backdrop-blur-md p-5 rounded-3xl border border-app-border/50 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Warehouse</label>
-                    <select
-                        className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-app-primary"
-                        name="warehouseId"
-                        required
-                        value={selectedWarehouseId}
-                        onChange={(e) => setSelectedWarehouseId(Number(e.target.value))}
-                    >
-                        <option value="">Warehouse...</option>
-                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                    </select>
-                </div>
+                {/* Warehouse */}
+                <Card className="border shadow-sm">
+                    <CardContent className="p-4">
+                        <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block text-center">Warehouse</Label>
+                        <select className="w-full text-xs font-bold bg-transparent rounded-lg p-2 min-h-[36px] text-indigo-500"
+                            style={{ border: '1px solid var(--theme-border)' }}
+                            name="warehouseId" required value={selectedWarehouseId}
+                            onChange={e => setSelectedWarehouseId(Number(e.target.value))}>
+                            <option value="">Warehouse...</option>
+                            {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                        </select>
+                    </CardContent>
+                </Card>
 
                 {/* Supplier */}
-                <div className="bg-app-surface/60 backdrop-blur-md p-5 rounded-3xl border border-app-border/50 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Supplier</label>
-                    <select
-                        className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center"
-                        name="supplierId"
-                        required
-                        value={selectedSupplierId}
-                        onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
-                    >
-                        <option value="">Select Supplier...</option>
-                        {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                </div>
+                <Card className="border shadow-sm">
+                    <CardContent className="p-4">
+                        <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block text-center">Supplier</Label>
+                        <select className="w-full text-xs font-bold bg-transparent rounded-lg p-2 min-h-[36px] theme-text"
+                            style={{ border: '1px solid var(--theme-border)' }}
+                            name="supplierId" required value={selectedSupplierId}
+                            onChange={e => setSelectedSupplierId(Number(e.target.value))}>
+                            <option value="">Select Supplier...</option>
+                            {safeSuppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Items Table */}
-            <div className="bg-app-surface/80 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-app-border/40 overflow-hidden">
-                <div className="p-4 bg-app-background border-b flex items-center gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
-                        <ProductSearch
-                            callback={addProductToLines}
-                            siteId={Number(selectedSiteId)}
-                            supplierId={Number(selectedSupplierId)}
-                        />
-                    </div>
+            {/* Items */}
+            <Card className="border shadow-sm overflow-hidden">
+                <div className="p-3 md:p-4 flex items-center gap-3" style={{ borderBottom: '1px solid var(--theme-border)' }}>
+                    <Search size={16} className="theme-text-muted shrink-0" />
+                    <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)} />
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-[#F8FAFC] text-[10px] font-black text-app-muted-foreground uppercase tracking-widest border-b border-app-border">
-                            <tr>
-                                <th className="p-6">Product</th>
-                                <th className="p-6 w-32 text-center">Quantity</th>
-                                <th className="p-6 w-48 text-center">Expected Price (HT)</th>
-                                <th className="p-6 text-right">Subtotal</th>
-                                <th className="p-6 w-10"></th>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="text-[10px] font-black uppercase tracking-wider theme-text-muted" style={{ borderBottom: '1px solid var(--theme-border)' }}>
+                                <th className="text-left py-3 px-4">Product</th>
+                                <th className="text-center py-3 px-4 w-28">Qty</th>
+                                <th className="text-center py-3 px-4 w-40">Price (HT)</th>
+                                <th className="text-right py-3 px-4">Subtotal</th>
+                                <th className="py-3 px-4 w-10"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50 text-sm">
+                        <tbody>
                             {lines.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="p-20 text-center text-app-muted-foreground italic">
-                                        No items added to the quotation yet.
+                                <tr><td colSpan={5} className="py-16 text-center theme-text-muted text-sm">
+                                    <Package size={32} className="mx-auto mb-2 opacity-30" />No items added yet — search above to add products
+                                </td></tr>
+                            ) : lines.map((line, idx) => (
+                                <tr key={line.productId} className="hover:bg-gray-50 dark:hover:bg-gray-900/20" style={{ borderBottom: '1px solid var(--theme-border)' }}>
+                                    <td className="py-3 px-4">
+                                        <div className="font-bold theme-text">{line.productName}</div>
+                                        <div className="text-[10px] theme-text-muted font-mono mt-0.5">{line.sku}</div>
+                                        <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <Input type="number" className="text-center font-black min-h-[36px]"
+                                            value={line.quantity} onChange={e => updateLine(idx, { quantity: Number(e.target.value) })}
+                                            name={`lines[${idx}][quantity]`} />
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <div className="relative">
+                                            <Input type="number" step="0.01" className="text-center font-black min-h-[36px]"
+                                                value={line.unitPrice} onChange={e => updateLine(idx, { unitPrice: Number(e.target.value) })}
+                                                name={`lines[${idx}][unitPrice]`} />
+                                            {supplierPriceHints[line.productId] && (
+                                                <div className="text-[9px] font-bold text-emerald-500 text-center mt-0.5">
+                                                    Hint: {supplierPriceHints[line.productId].toLocaleString()}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-right font-black theme-text">{(line.quantity * line.unitPrice).toLocaleString()}</td>
+                                    <td className="py-3 px-4">
+                                        <button type="button" onClick={() => removeLine(idx)}
+                                            className="p-2 theme-text-muted hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all min-h-[36px] min-w-[36px] flex items-center justify-center">
+                                            <Trash2 size={14} />
+                                        </button>
                                     </td>
                                 </tr>
-                            ) : (
-                                lines.map((line, idx) => (
-                                    <tr key={line.productId} className="hover:bg-app-surface-2/50 transition-colors">
-                                        <td className="p-6">
-                                            <div className="font-bold text-app-foreground">{line.productName}</div>
-                                            <div className="text-[10px] text-app-muted-foreground font-mono mt-1">{line.sku}</div>
-                                            <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
-                                        </td>
-                                        <td className="p-6">
-                                            <input
-                                                type="number"
-                                                className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 text-center font-bold focus:border-app-primary/30 focus:ring-2 focus:ring-app-primary outline-none transition-all"
-                                                value={line.quantity}
-                                                onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
-                                                name={`lines[${idx}][quantity]`}
-                                            />
-                                        </td>
-                                        <td className="p-6">
-                                            <div className="relative flex items-center">
-                                                <input
-                                                    type="number" step="0.01"
-                                                    className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 pr-10 text-center font-bold focus:border-app-primary/30 focus:ring-2 focus:ring-app-primary outline-none transition-all"
-                                                    value={line.unitPrice}
-                                                    onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
-                                                    name={`lines[${idx}][unitPrice]`}
-                                                />
-                                                <span className="absolute right-3 text-[10px] font-black text-app-muted-foreground">XOF</span>
-                                                {supplierPriceHints[line.productId] && (
-                                                    <div className="absolute -top-6 left-0 right-0 text-center">
-                                                        <span className="bg-app-primary-light text-app-primary text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-app-success/30">
-                                                            Vendor Hint: {supplierPriceHints[line.productId].toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="p-6 text-right font-black text-app-foreground whitespace-nowrap">
-                                            {(line.quantity * line.unitPrice).toLocaleString()} XOF
-                                        </td>
-                                        <td className="p-6 text-center">
-                                            <button type="button" onClick={() => removeLine(idx)} className="p-2 text-app-muted-foreground hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                <div className="flex-1 w-full bg-app-surface/60 backdrop-blur-md p-6 rounded-3xl border border-app-border/50 shadow-sm">
-                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-3 block">Conditions & Observations</label>
-                    <textarea
-                        name="notes"
-                        rows={4}
-                        className="w-full border border-app-border rounded-2xl p-4 text-sm focus:border-app-primary/30 focus:ring-2 focus:ring-app-primary outline-none transition-all resize-none"
-                        placeholder="Specify delivery terms, payment conditions, or reference codes..."
-                    />
+                {/* Mobile Cards */}
+                <div className="md:hidden p-3 space-y-2">
+                    {lines.length === 0 ? (
+                        <div className="py-12 text-center theme-text-muted text-sm">
+                            <Package size={32} className="mx-auto mb-2 opacity-30" />No items added yet
+                        </div>
+                    ) : lines.map((line, idx) => (
+                        <div key={line.productId} className="p-3 rounded-xl theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
+                            <div className="flex justify-between items-start mb-2">
+                                <div>
+                                    <div className="font-bold theme-text text-sm">{line.productName}</div>
+                                    <div className="text-[10px] theme-text-muted font-mono">{line.sku}</div>
+                                </div>
+                                <button type="button" onClick={() => removeLine(idx)}
+                                    className="p-2 theme-text-muted hover:text-rose-500 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label className="text-[9px] font-bold">Qty</Label>
+                                    <Input type="number" className="text-center font-black min-h-[44px]"
+                                        value={line.quantity} onChange={e => updateLine(idx, { quantity: Number(e.target.value) })}
+                                        name={`lines[${idx}][quantity]`} />
+                                </div>
+                                <div>
+                                    <Label className="text-[9px] font-bold">Price HT</Label>
+                                    <Input type="number" step="0.01" className="text-center font-black min-h-[44px]"
+                                        value={line.unitPrice} onChange={e => updateLine(idx, { unitPrice: Number(e.target.value) })}
+                                        name={`lines[${idx}][unitPrice]`} />
+                                </div>
+                            </div>
+                            <div className="text-right font-black theme-text mt-2">{(line.quantity * line.unitPrice).toLocaleString()}</div>
+                            <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
+                        </div>
+                    ))}
+                </div>
+            </Card>
+
+            {/* Bottom: Notes + Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                    <Card className="border shadow-sm">
+                        <CardContent className="p-4 md:p-5">
+                            <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block">Notes & Conditions</Label>
+                            <textarea name="notes" rows={4}
+                                className="w-full rounded-xl p-3 text-sm theme-text theme-surface resize-none min-h-[96px]"
+                                style={{ border: '1px solid var(--theme-border)' }}
+                                placeholder="Delivery terms, payment conditions, or reference codes..." />
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div className="w-full md:w-96 space-y-4">
-                    <div className="bg-app-surface/80 backdrop-blur-xl text-app-foreground p-8 rounded-[2.5rem] shadow-2xl border border-app-border/40">
-                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-6 border-b border-app-border pb-4">Quotation Summary</div>
-                        <div className="space-y-4 mb-8">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-app-muted-foreground">Items Count</span>
-                                <span className="font-bold">{lines.length}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-lg font-bold">Estimated Total</span>
-                                <span className="text-3xl font-black text-app-primary">{totalAmount.toLocaleString()} XOF</span>
-                            </div>
+                <Card className="border shadow-sm">
+                    <CardContent className="p-5 space-y-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-wider theme-text-muted">Order Summary</h3>
+                        <div className="flex justify-between text-sm">
+                            <span className="theme-text-muted">Items</span>
+                            <span className="font-bold theme-text">{lines.length}</span>
+                        </div>
+                        <div className="pt-3" style={{ borderTop: '1px solid var(--theme-border)' }}>
+                            <p className="text-[10px] font-black theme-text-muted uppercase tracking-wider mb-1">Estimated Total</p>
+                            <p className="text-2xl md:text-3xl font-black text-indigo-500 tracking-tight">{totalAmount.toLocaleString()}</p>
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isPending || lines.length === 0}
-                            className="w-full bg-app-primary hover:bg-app-primary/10 text-app-foreground font-black py-5 rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group"
-                        >
-                            {isPending ? 'CREATING RFQ...' : 'SEND RFQ TO SUPPLIER'}
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
+                        <Button type="submit" disabled={isPending || lines.length === 0}
+                            className="w-full min-h-[52px] bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm">
+                            {isPending ? 'Creating...' : (
+                                <><ArrowRight size={16} className="mr-2" /> Send PO to Supplier</>
+                            )}
+                        </Button>
 
                         {state.message && (
-                            <div className={`mt-6 p-4 rounded-xl flex items-center gap-3 text-xs font-bold ${state.errors ? 'bg-app-error/10 text-rose-400' : 'bg-app-primary/10 text-app-primary'}`}>
-                                {state.errors ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+                            <div className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold ${state.errors ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/20' : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/20'}`}>
+                                {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
                                 {state.message}
                             </div>
                         )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </form>
     );
@@ -276,7 +304,8 @@ function ProductSearch({ callback, siteId, supplierId }: { callback: (p: Record<
         const timer = setTimeout(async () => {
             if (query.length > 1) {
                 const res = await searchProductsSimple(query, siteId, supplierId);
-                setResults(res);
+                const raw = Array.isArray(res) ? res : (res?.results ?? []);
+                setResults(raw);
                 setOpen(true);
             } else {
                 setResults([]);
@@ -287,35 +316,25 @@ function ProductSearch({ callback, siteId, supplierId }: { callback: (p: Record<
     }, [query, siteId, supplierId]);
 
     return (
-        <div className="relative">
-            <input
-                type="text"
-                className="w-full bg-transparent p-2 pl-4 text-sm font-bold text-app-foreground placeholder:text-app-muted-foreground outline-none"
-                placeholder="Search products to replenish..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => query.length > 1 && setOpen(true)}
-            />
+        <div className="relative flex-1">
+            <input type="text"
+                className="w-full bg-transparent p-2 text-sm font-bold theme-text placeholder:theme-text-muted outline-none min-h-[40px]"
+                placeholder="Search products to add..."
+                value={query} onChange={e => setQuery(e.target.value)}
+                onFocus={() => query.length > 1 && setOpen(true)} />
             {open && results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-app-surface/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-app-border/40 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
-                    {results.map(r => (
-                        <button
-                            key={r.id}
-                            type="button"
-                            onClick={() => {
-                                callback(r);
-                                setQuery('');
-                                setOpen(false);
-                            }}
-                            className="w-full p-4 text-left hover:bg-app-primary/5 flex items-center justify-between group transition-all"
-                        >
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-xl shadow-2xl z-50 overflow-hidden max-h-[300px] overflow-y-auto animate-in slide-in-from-top-2 duration-200"
+                    style={{ border: '1px solid var(--theme-border)' }}>
+                    {results.map((r: any) => (
+                        <button key={r.id} type="button"
+                            onClick={() => { callback(r); setQuery(''); setOpen(false); }}
+                            className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between transition-all min-h-[52px]"
+                            style={{ borderBottom: '1px solid var(--theme-border)' }}>
                             <div>
-                                <div className="font-bold text-sm text-app-foreground group-hover:text-app-primary">{r.name}</div>
-                                <div className="text-[10px] text-app-muted-foreground">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm theme-text">{r.name}</div>
+                                <div className="text-[10px] theme-text-muted">SKU: {r.sku} • Stock: {r.stockLevel}</div>
                             </div>
-                            <div className="text-right whitespace-nowrap">
-                                <div className="text-xs font-black text-app-primary">{r.costPriceHT?.toLocaleString()} XOF HT</div>
-                            </div>
+                            <div className="text-xs font-black text-indigo-500 shrink-0 ml-2">{r.costPriceHT?.toLocaleString()} HT</div>
                         </button>
                     ))}
                 </div>

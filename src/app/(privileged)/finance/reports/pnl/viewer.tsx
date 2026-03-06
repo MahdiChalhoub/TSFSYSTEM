@@ -7,198 +7,211 @@ import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
 import { Printer, Calendar, TrendingUp, TrendingDown, ChevronRight, ChevronDown, Download } from 'lucide-react'
 
 export default function PnlViewer({ initialData, fiscalYears }: { initialData: Record<string, any>[], fiscalYears: Record<string, any>[] }) {
- const now = new Date()
- const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0])
- const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0])
+    const now = new Date()
+    const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0])
+    const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0])
 
- const [data, setData] = useState(initialData)
- const [isPending, startTransition] = useTransition()
- const [mounted, setMounted] = useState(false)
- const { fmt } = useCurrency()
+    const [data, setData] = useState(initialData)
+    const [isPending, startTransition] = useTransition()
+    const [mounted, setMounted] = useState(false)
+    const { fmt } = useCurrency()
 
- useEffect(() => {
- setMounted(true)
- }, [])
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
- // SSR-safe amount formatter: plain number during hydration, org-currency after mount
- const formatAmount = (val: number) => {
- if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
- return fmt(val)
- }
+    // SSR-safe amount formatter: plain number during hydration, org-currency after mount
+    const formatAmount = (val: number) => {
+        if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        return fmt(val)
+    }
 
- return (
- <div className="space-y-8 animate-in fade-in duration-700">
- {/* Controls */}
- <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
- <div className="flex gap-4 items-end">
- <div className="space-y-1.5">
- <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
- <Calendar size={12} /> Start Date
- </label>
- <input
- type="date"
- value={startDate}
- onChange={e => setStartDate(e.target.value)}
- className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
- />
- </div>
- <div className="space-y-1.5">
- <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
- <Calendar size={12} /> End Date
- </label>
- <input
- type="date"
- value={endDate}
- onChange={e => setEndDate(e.target.value)}
- className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
- />
- </div>
- <button
- onClick={handleRefresh}
- disabled={isPending}
- className="bg-app-surface text-app-foreground px-6 py-2.5 rounded-lg hover:bg-app-background font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
- >
- {isPending ? 'Calculating...' : 'Update Report'}
- </button>
- </div>
+    const handleRefresh = () => {
+        startTransition(async () => {
+            try {
+                const result = await getProfitAndLossReport(new Date(startDate), new Date(endDate))
+                setData(result)
+            } catch { }
+        })
+    }
 
- <div className="flex gap-2">
- <button
- onClick={() => window.print()}
- className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-background font-bold text-sm shadow-sm flex items-center gap-2"
- >
- <Printer size={18} /> Print PDF
- </button>
- </div>
- </div>
+    const allAccounts: any[] = Array.isArray(data) ? data : (data as any)?.accounts ?? []
+    const incomes = allAccounts.filter((a: any) => a.type === 'INCOME')
+    const expenses = allAccounts.filter((a: any) => a.type === 'EXPENSE')
+    const netProfit = incomes.reduce((s: number, a: any) => s + (a.balance || 0), 0) - expenses.reduce((s: number, a: any) => s + Math.abs(a.balance || 0), 0)
+    return (
+        <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Controls */}
+            <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
+                <div className="flex gap-4 items-end">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
+                            <Calendar size={12} /> Start Date
+                        </label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
+                            <Calendar size={12} /> End Date
+                        </label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={e => setEndDate(e.target.value)}
+                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                        />
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={isPending}
+                        className="bg-app-surface text-app-foreground px-6 py-2.5 rounded-lg hover:bg-app-background font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isPending ? 'Calculating...' : 'Update Report'}
+                    </button>
+                </div>
 
- {/* Hero Summary Card */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <SummaryCard
- title="Total Income"
- amount={incomes.reduce((sum, a) => sum + a.balance, 0)}
- icon={<TrendingUp className="text-app-primary" />}
- color="emerald"
- formatAmount={formatAmount}
- />
- <SummaryCard
- title="Total Expenses"
- amount={expenses.reduce((sum, a) => sum + a.balance, 0)}
- icon={<TrendingDown className="text-rose-500" />}
- color="rose"
- formatAmount={formatAmount}
- />
- <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-app-surface border-app-border text-app-foreground shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-app-foreground shadow-xl shadow-rose-200'}`}>
- <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] mb-1">Net Profit / Loss</p>
- <p className="text-3xl font-mono font-bold">
- {formatAmount(netProfit)}
- </p>
- <p className="text-xs mt-2 opacity-60 font-medium">Bottom Line for chosen period</p>
- </div>
- </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => window.print()}
+                        className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-background font-bold text-sm shadow-sm flex items-center gap-2"
+                    >
+                        <Printer size={18} /> Print PDF
+                    </button>
+                </div>
+            </div>
 
- {/* Detailed Table */}
- <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
- <table className="w-full text-sm border-collapse">
- <thead>
- <tr className="bg-app-background text-app-muted-foreground uppercase text-[10px] tracking-[0.2em] font-bold border-b border-app-border">
- <th className="p-6 text-left">Account Description</th>
- <th className="p-6 text-right w-48">Amount</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-stone-50">
- {/* Income Section */}
- <tr className="bg-app-primary-light/30">
- <td colSpan={2} className="px-6 py-3 text-app-success font-black uppercase tracking-widest text-[11px]">Operating Income</td>
- </tr>
- {incomes.map(acc => (
- <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
- ))}
- <TotalRow title="Total Income" amount={incomes.reduce((sum, a) => sum + a.balance, 0)} color="emerald" formatAmount={formatAmount} />
+            {/* Hero Summary Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <SummaryCard
+                    title="Total Income"
+                    amount={incomes.reduce((sum, a) => sum + a.balance, 0)}
+                    icon={<TrendingUp className="text-app-primary" />}
+                    color="emerald"
+                    formatAmount={formatAmount}
+                />
+                <SummaryCard
+                    title="Total Expenses"
+                    amount={expenses.reduce((sum, a) => sum + a.balance, 0)}
+                    icon={<TrendingDown className="text-rose-500" />}
+                    color="rose"
+                    formatAmount={formatAmount}
+                />
+                <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-app-surface border-app-border text-app-foreground shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-app-foreground shadow-xl shadow-rose-200'}`}>
+                    <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] mb-1">Net Profit / Loss</p>
+                    <p className="text-3xl font-mono font-bold">
+                        {formatAmount(netProfit)}
+                    </p>
+                    <p className="text-xs mt-2 opacity-60 font-medium">Bottom Line for chosen period</p>
+                </div>
+            </div>
 
- {/* Expense Section */}
- <tr className="bg-rose-50/30">
- <td colSpan={2} className="px-6 py-3 text-rose-800 font-black uppercase tracking-widest text-[11px]">Operating Expenses</td>
- </tr>
- {expenses.map(acc => (
- <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
- ))}
- <TotalRow title="Total Expenses" amount={expenses.reduce((sum, a) => sum + a.balance, 0)} color="rose" formatAmount={formatAmount} />
+            {/* Detailed Table */}
+            <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
+                <table className="w-full text-sm border-collapse">
+                    <thead>
+                        <tr className="bg-app-background text-app-muted-foreground uppercase text-[10px] tracking-[0.2em] font-bold border-b border-app-border">
+                            <th className="p-6 text-left">Account Description</th>
+                            <th className="p-6 text-right w-48">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-50">
+                        {/* Income Section */}
+                        <tr className="bg-app-primary-light/30">
+                            <td colSpan={2} className="px-6 py-3 text-app-success font-black uppercase tracking-widest text-[11px]">Operating Income</td>
+                        </tr>
+                        {incomes.map(acc => (
+                            <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
+                        ))}
+                        <TotalRow title="Total Income" amount={incomes.reduce((sum, a) => sum + a.balance, 0)} color="emerald" formatAmount={formatAmount} />
 
- {/* Final Net */}
- <tr className="bg-app-surface text-app-foreground border-t-4 border-white">
- <td className="p-8 text-xl font-serif font-bold italic">Net Profit / Loss</td>
- <td className="p-8 text-right text-2xl font-mono font-bold">
- {formatAmount(netProfit)}
- </td>
- </tr>
- </tbody>
- </table>
- </div>
+                        {/* Expense Section */}
+                        <tr className="bg-rose-50/30">
+                            <td colSpan={2} className="px-6 py-3 text-rose-800 font-black uppercase tracking-widest text-[11px]">Operating Expenses</td>
+                        </tr>
+                        {expenses.map(acc => (
+                            <ReportRow key={acc.id} account={acc} allAccounts={data} level={0} formatAmount={formatAmount} />
+                        ))}
+                        <TotalRow title="Total Expenses" amount={expenses.reduce((sum, a) => sum + a.balance, 0)} color="rose" formatAmount={formatAmount} />
 
- <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
- TSF Financial Control System • Integrity Confirmed • {mounted ? new Date().toLocaleDateString() : ''}
- </div>
- </div>
- )
+                        {/* Final Net */}
+                        <tr className="bg-app-surface text-app-foreground border-t-4 border-white">
+                            <td className="p-8 text-xl font-serif font-bold italic">Net Profit / Loss</td>
+                            <td className="p-8 text-right text-2xl font-mono font-bold">
+                                {formatAmount(netProfit)}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
+                TSF Financial Control System • Integrity Confirmed • {mounted ? new Date().toLocaleDateString() : ''}
+            </div>
+        </div>
+    )
 }
 
 function SummaryCard({ title, amount, icon, color, formatAmount }: Record<string, any>) {
- return (
- <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm flex items-center justify-between">
- <div>
- <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-wider mb-1">{title}</p>
- <p className="text-2xl font-mono font-bold text-app-foreground">{formatAmount(amount)}</p>
- </div>
- <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-50`}>
- {icon}
- </div>
- </div>
- )
+    return (
+        <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm flex items-center justify-between">
+            <div>
+                <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-wider mb-1">{title}</p>
+                <p className="text-2xl font-mono font-bold text-app-foreground">{formatAmount(amount)}</p>
+            </div>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-50`}>
+                {icon}
+            </div>
+        </div>
+    )
 }
 
 function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
- const [expanded, setExpanded] = useState(level < 1)
- const isParent = account.children && account.children.length > 0
- const hasBalance = Math.abs(account.balance) > 0.001
+    const [expanded, setExpanded] = useState(level < 1)
+    const isParent = account.children && account.children.length > 0
+    const hasBalance = Math.abs(account.balance) > 0.001
 
- if (!hasBalance && !isParent) return null
+    if (!hasBalance && !isParent) return null
 
- return (
- <>
- <tr className={`group transition-colors ${isParent ? 'bg-app-surface/40 font-bold' : 'hover:bg-app-surface/30'}`}>
- <td className="p-4" style={{ paddingLeft: `${level * 24 + 24}px` }}>
- <div className="flex items-center gap-3">
- {isParent && (
- <button onClick={() => setExpanded(!expanded)} className="text-app-muted-foreground hover:text-app-foreground transition-colors">
- {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
- </button>
- )}
- <span className="text-app-muted-foreground font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
- <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
- </div>
- </td>
- <td className="p-4 text-right font-mono font-medium text-app-foreground">
- {formatAmount(account.balance)}
- </td>
- </tr>
- {isParent && expanded && account.children.map((childId: Record<string, any>) => {
- const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
- if (!child) return null
- return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
- })}
- </>
- )
+    return (
+        <>
+            <tr className={`group transition-colors ${isParent ? 'bg-app-surface/40 font-bold' : 'hover:bg-app-surface/30'}`}>
+                <td className="p-4" style={{ paddingLeft: `${level * 24 + 24}px` }}>
+                    <div className="flex items-center gap-3">
+                        {isParent && (
+                            <button onClick={() => setExpanded(!expanded)} className="text-app-muted-foreground hover:text-app-foreground transition-colors">
+                                {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                            </button>
+                        )}
+                        <span className="text-app-muted-foreground font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
+                        <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
+                    </div>
+                </td>
+                <td className="p-4 text-right font-mono font-medium text-app-foreground">
+                    {formatAmount(account.balance)}
+                </td>
+            </tr>
+            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
+                const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
+                if (!child) return null
+                return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
+            })}
+        </>
+    )
 }
 
 function TotalRow({ title, amount, color, formatAmount }: Record<string, any>) {
- const isEmerald = color === 'emerald'
- return (
- <tr className={isEmerald ? 'bg-app-primary-light/50' : 'bg-rose-50/50'}>
- <td className="p-6 text-right font-bold uppercase tracking-widest text-xs text-app-muted-foreground">{title}</td>
- <td className={`p-6 text-right font-mono font-black text-lg ${isEmerald ? 'text-app-success' : 'text-rose-700'}`}>
- {formatAmount(amount)}
- </td>
- </tr>
- )
+    const isEmerald = color === 'emerald'
+    return (
+        <tr className={isEmerald ? 'bg-app-primary-light/50' : 'bg-rose-50/50'}>
+            <td className="p-6 text-right font-bold uppercase tracking-widest text-xs text-app-muted-foreground">{title}</td>
+            <td className={`p-6 text-right font-mono font-black text-lg ${isEmerald ? 'text-app-success' : 'text-rose-700'}`}>
+                {formatAmount(amount)}
+            </td>
+        </tr>
+    )
 }

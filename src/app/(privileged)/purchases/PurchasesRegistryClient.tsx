@@ -44,16 +44,16 @@ const STATUS_MAP: Record<string, { label: string; variant: 'default' | 'success'
 }
 
 const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
-    LOW: { label: 'Low', color: 'text-app-muted-foreground' },
-    NORMAL: { label: 'Normal', color: 'text-app-info' },
-    HIGH: { label: 'High', color: 'text-app-warning' },
-    URGENT: { label: 'Urgent', color: 'text-app-error font-black' },
+    LOW: { label: 'Low', color: 'theme-text-muted' },
+    NORMAL: { label: 'Normal', color: 'text-blue-500' },
+    HIGH: { label: 'High', color: 'text-amber-500' },
+    URGENT: { label: 'Urgent', color: 'text-rose-500 font-black' },
 }
 
 const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-    STANDARD: { label: 'Standard', color: 'bg-app-surface border border-app-border text-app-muted-foreground' },
-    WHOLESALE: { label: 'Wholesale', color: 'bg-app-warning/10 text-app-warning border border-app-warning/20' },
-    CONSIGNEE: { label: 'Consignee', color: 'bg-app-primary/10 text-app-primary border border-app-primary/20' },
+    STANDARD: { label: 'Standard', color: 'bg-gray-100 border border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400' },
+    WHOLESALE: { label: 'Wholesale', color: 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' },
+    CONSIGNEE: { label: 'Consignee', color: 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400' },
 }
 
 export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled }: PurchasesRegistryClientProps) {
@@ -71,10 +71,10 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             sortable: true,
             render: (po) => (
                 <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="flex flex-col group">
-                    <span className="font-bold text-app-foreground group-hover:text-app-primary transition-colors uppercase tracking-tight">
+                    <span className="font-bold theme-text group-hover:text-emerald-500 transition-colors uppercase tracking-tight">
                         {po.po_number || `PO-${po.id}`}
                     </span>
-                    <div className="flex items-center gap-1 text-[10px] text-app-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-1 text-[10px] theme-text-muted mt-0.5">
                         <Calendar size={10} />
                         {po.created_at ? new Date(po.created_at).toLocaleDateString('fr-FR') : '—'}
                     </div>
@@ -86,7 +86,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             label: 'Supplier',
             sortable: true,
             render: (po) => (
-                <span className="text-sm font-bold text-app-muted-foreground">
+                <span className="text-sm font-bold theme-text-muted">
                     {po.supplier_display || po.supplier_name || 'N/A'}
                 </span>
             )
@@ -101,7 +101,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
                         {PO_SUB_TYPE_CONFIG[po.purchase_sub_type].label}
                     </span>
                 ) : (
-                    <span className="text-xs text-app-muted-foreground">—</span>
+                    <span className="text-xs theme-text-muted">—</span>
                 )
             )
         }] as ColumnDef<PurchaseOrder>[] : []),
@@ -110,7 +110,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             label: 'Priority',
             sortable: true,
             render: (po) => {
-                const priorityInfo = PRIORITY_MAP[po.priority] || { label: po.priority, color: 'text-app-muted-foreground' }
+                const priorityInfo = PRIORITY_MAP[po.priority] || { label: po.priority, color: 'theme-text-muted' }
                 return (
                     <span className={`text-xs font-bold ${priorityInfo.color}`}>
                         {po.priority === 'URGENT' && <AlertTriangle size={12} className="inline mr-1" />}
@@ -125,7 +125,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             sortable: true,
             align: 'right',
             render: (po) => (
-                <span className="font-black text-app-foreground">
+                <span className="font-black theme-text">
                     {parseFloat(String(po.total_amount || 0)).toLocaleString()} {currency}
                 </span>
             )
@@ -135,7 +135,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             label: 'Expected',
             sortable: true,
             render: (po) => (
-                <span className="text-sm text-app-muted-foreground">
+                <span className="text-sm theme-text-muted">
                     {po.expected_date ? new Date(po.expected_date).toLocaleDateString('fr-FR') : '—'}
                 </span>
             )
@@ -170,7 +170,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             actions={{
                 onView: (po) => router.push(`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`),
                 extra: (po) => (
-                    <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="p-1.5 text-app-muted-foreground hover:text-app-primary hover:bg-app-primary/10 rounded-lg transition-all">
+                    <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="p-1.5 theme-text-muted hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all min-h-[44px] min-w-[44px] md:min-h-[28px] md:min-w-[28px] flex items-center justify-center">
                         <Clock size={16} />
                     </Link>
                 )
@@ -199,6 +199,9 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
                             { label: 'Draft', value: 'DRAFT' },
                             { label: 'Pending Approval', value: 'SUBMITTED' },
                             { label: 'Approved', value: 'APPROVED' },
+                            { label: 'Ordered', value: 'ORDERED' },
+                            { label: 'Partially Received', value: 'PARTIALLY_RECEIVED' },
+                            { label: 'Received', value: 'RECEIVED' },
                             { label: 'Invoiced', value: 'INVOICED' },
                             { label: 'Completed', value: 'COMPLETED' },
                             { label: 'Cancelled', value: 'CANCELLED' },

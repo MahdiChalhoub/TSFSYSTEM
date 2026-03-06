@@ -130,28 +130,11 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
-                    { title: 'Delivery Zones', path: '/sales/delivery-zones' },
-                    { title: 'Drivers', path: '/sales/drivers' },
+                    { title: 'Delivery Hub', path: '/delivery' },
                     { title: 'Sales Returns', path: '/sales/returns' },
                     { title: 'Credit Notes', path: '/sales/credit-notes' },
                     { title: 'Discount Rules', path: '/sales/discounts' },
                     { title: 'Consignment', path: '/sales/consignment' },
-                ]
-            },
-            {
-                title: 'eCommerce',
-                icon: Globe,
-                children: [
-                    { title: 'Analytics', path: '/ecommerce/dashboard', icon: BarChart3 },
-                    { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
-                    { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
-                    { title: 'Coupons', path: '/ecommerce/coupons', icon: Percent, badge: 'NEW' },
-                    { title: 'Promotions', path: '/ecommerce/promotions', icon: Percent, badge: 'NEW' },
-                    { title: 'Shipping Rates', path: '/ecommerce/shipping', icon: Truck, badge: 'NEW' },
-                    { title: 'Webhooks', path: '/ecommerce/webhooks', icon: Webhook, badge: 'NEW' },
-                    { title: 'Quote Inbox', path: '/ecommerce/quotes', icon: MailQuestion, badge: 'NEW' },
-                    { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
-                    { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
                 ]
             },
         ]
@@ -166,10 +149,14 @@ export const MENU_ITEMS = [
                 icon: Wallet,
                 children: [
                     { title: 'Procurement Center', path: '/purchases' },
+                    { title: 'Dashboard', path: '/purchases/dashboard' },
                     { title: 'Purchase Orders', path: '/purchases/purchase-orders' },
-                    { title: 'Receipt Orders', path: '/purchases/receipts' },
                     { title: 'Purchase Invoices', path: '/purchases/invoices' },
+                    { title: 'Receipt Orders', path: '/purchases/receipts' },
                     { title: 'Purchase Returns', path: '/purchases/returns' },
+                    { title: 'Quotations & RFQ', path: '/purchases/quotations' },
+                    { title: 'Credit Notes', path: '/purchases/credit-notes' },
+                    { title: 'Consignments', path: '/purchases/consignments' },
                     { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
                 ]
             },
@@ -289,9 +276,16 @@ export const MENU_ITEMS = [
             { title: 'Contacts (Legacy)', path: '/crm/contacts/legacy', icon: UserCheck, badge: 'LOCKED' },
             { title: 'Price Groups', path: '/crm/pricing', icon: Tag },
             { title: 'Customer Insights', path: '/crm/insights', icon: BarChart3 },
+        ]
+    },
+    {
+        title: 'Client Gate',
+        icon: Globe,
+        module: 'ecommerce',
+        children: [
             {
-                title: 'Client Portal',
-                icon: Globe,
+                title: 'Portal & Access',
+                icon: Shield,
                 children: [
                     { title: 'Portal Settings', path: '/workspace/portal-config' },
                     { title: 'Client Access', path: '/workspace/client-access' },
@@ -299,6 +293,27 @@ export const MENU_ITEMS = [
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
                     { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
                     { title: 'Tender Inbox', path: '/workspace/tenders' },
+                ]
+            },
+            {
+                title: 'Online Store (eCommerce)',
+                icon: Store,
+                children: [
+                    { title: 'Store Analytics', path: '/ecommerce/dashboard', icon: BarChart3 },
+                    { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
+                    { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+                    { title: 'Coupons', path: '/ecommerce/coupons', icon: Percent },
+                    { title: 'Promotions', path: '/ecommerce/promotions', icon: Percent },
+                    { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
+                    { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
+                ]
+            },
+            {
+                title: 'Communication',
+                icon: MessageSquare,
+                children: [
+                    { title: 'Webhooks', path: '/ecommerce/webhooks', icon: Webhook },
+                    { title: 'Quote Inbox (B2B)', path: '/ecommerce/quotes', icon: MailQuestion },
                 ]
             },
         ]

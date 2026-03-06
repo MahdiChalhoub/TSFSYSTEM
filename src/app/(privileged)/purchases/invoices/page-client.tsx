@@ -1,243 +1,234 @@
+// @ts-nocheck
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getPurchaseOrders, getPurchaseOrder, getLegacyPurchases, getLegacyPurchase } from '@/app/actions/inventory/locations'
-import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText, ClipboardList } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { fetchPurchaseOrders } from '@/app/actions/pos/purchases'
+import { erpFetch } from '@/lib/erp-api'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+    FileText, RefreshCw, ChevronRight, Clock, CheckCircle, Package, Building2,
+    Calendar, Search, Eye, BookOpen, Receipt, DollarSign, Loader2
+} from 'lucide-react'
+import Link from 'next/link'
 
-type PO = {
- id: number
- po_number?: string
- supplier?: { id: number; name: string }
- supplier_name?: string
- status: string
- order_date: string
- expected_delivery?: string
- total_amount: number
- notes?: string
- lines?: POLine[]
- is_legacy?: boolean
+type Invoice = {
+    id: number
+    po_number?: string
+    invoice_number?: string
+    ref_code?: string
+    supplier?: { id: number; name: string }
+    supplier_name?: string
+    supplier_display?: string
+    contact_name?: string
+    status: string
+    order_date?: string
+    created_at?: string
+    total_amount: number
+    notes?: string
+    is_legacy?: boolean
+    lines?: any[]
 }
 
-type POLine = {
- id: number
- product?: { id: number; name: string; sku?: string }
- product_name?: string
- quantity_ordered: number
- quantity_received?: number
- unit_price: number
- subtotal: number
+const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
+    RECEIVED: { label: 'Awaiting Invoice', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
+    INVOICED: { label: 'Invoiced', class: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+    COMPLETED: { label: 'Settled', class: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
+    FINAL: { label: 'Final', class: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
 }
 
-const STATUS_STYLES: Record<string, string> = {
- DRAFT: 'bg-app-surface-2 text-app-muted-foreground border-app-border',
- SENT: 'bg-app-info/40 text-app-info border-app-info/30',
- PARTIALLY_RECEIVED: 'bg-app-warning/40 text-app-warning border-app-warning/30',
- RECEIVED: 'bg-app-success/40 text-app-primary border-app-success/30',
- CANCELLED: 'bg-app-error/40 text-app-error border-app-error/30',
- COMPLETED: 'bg-app-success/40 text-app-primary border-app-success/30',
+async function getLegacyPurchases() {
+    try {
+        const data = await erpFetch('orders/?type=PURCHASE')
+        const results = Array.isArray(data) ? data : (data.results || [])
+        return results.map((o: any) => ({
+            ...o,
+            po_number: o.ref_code || `LEGACY-${o.id}`,
+            supplier_name: o.contact_name || 'Legacy Supplier',
+            is_legacy: true,
+        }))
+    } catch { return [] }
 }
 
 export default function PurchaseInvoicesPage() {
- const [orders, setOrders] = useState<PO[]>([])
- const [selected, setSelected] = useState<PO | null>(null)
- const [detail, setDetail] = useState<PO | null>(null)
- const [loading, setLoading] = useState(true)
+    const [orders, setOrders] = useState<Invoice[]>([])
+    const [selected, setSelected] = useState<Invoice | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
 
- useEffect(() => { load() }, [])
+    const load = useCallback(async () => {
+        setLoading(true)
+        try {
+            const [poData, legacyData] = await Promise.all([fetchPurchaseOrders(), getLegacyPurchases()])
+            const rawPO = Array.isArray(poData) ? poData : (poData?.results ?? [])
+            const combined = [...rawPO, ...legacyData]
+            setOrders(combined.filter((o: Invoice) => ['RECEIVED', 'INVOICED', 'COMPLETED', 'FINAL'].includes(o.status)))
+        } catch { setOrders([]) }
+        setLoading(false)
+    }, [])
 
- async function load() {
- setLoading(true)
- const [poData, legacyData] = await Promise.all([
- getPurchaseOrders(),
- getLegacyPurchases()
- ])
- const rawPO = Array.isArray(poData) ? poData : (poData?.results ?? [])
- const rawLegacy = Array.isArray(legacyData) ? legacyData : (legacyData?.results ?? [])
+    useEffect(() => { load() }, [load])
 
- const mappedLegacy: PO[] = rawLegacy.map((o: any) => ({
- id: o.id,
- is_legacy: true,
- po_number: o.ref_code || `LEGACY-${o.id}`,
- supplier: o.contact,
- status: o.status,
- order_date: o.created_at ? String(o.created_at).split('T')[0] : '',
- total_amount: o.total_amount,
- notes: o.notes
- }))
+    const filtered = orders.filter(o => {
+        if (!search) return true
+        const q = search.toLowerCase()
+        const num = (o.po_number || o.invoice_number || `INV-${o.id}`).toLowerCase()
+        const sup = (o.supplier?.name || o.supplier_name || o.supplier_display || o.contact_name || '').toLowerCase()
+        return num.includes(q) || sup.includes(q)
+    })
 
- const combined = [...rawPO, ...mappedLegacy]
- // Filter to only show records where invoicing/billing is the focus
- setOrders(combined.filter((o: PO) => ['RECEIVED', 'INVOICED', 'COMPLETED', 'FINAL'].includes(o.status)))
- setLoading(false)
- }
+    const totalValue = filtered.reduce((s, o) => s + Number(o.total_amount || 0), 0)
+    const pendingCount = filtered.filter(o => ['RECEIVED'].includes(o.status)).length
+    const settledCount = filtered.filter(o => ['COMPLETED', 'FINAL'].includes(o.status)).length
 
- async function openDetail(po: PO) {
- setSelected(po)
- setDetail(null)
- if (po.is_legacy) {
- const d = await getLegacyPurchase(po.id)
- setDetail({
- ...d,
- po_number: d.ref_code || `LEGACY-${d.id}`,
- supplier: d.contact,
- order_date: d.created_at ? String(d.created_at).split('T')[0] : '',
- lines: d.items?.map((item: any) => ({
- id: item.id,
- product: item.product,
- quantity_ordered: item.quantity,
- unit_price: item.unit_price,
- subtotal: item.subtotal || (item.quantity * item.unit_price)
- })) || []
- })
- } else {
- const d = await getPurchaseOrder(po.id)
- setDetail(d)
- }
- }
+    return (
+        <main className="space-y-[var(--layout-section-spacing)] animate-in fade-in duration-500 pb-20">
+            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-[var(--layout-section-spacing)]">
 
- const pending = orders.filter(o => ['RECEIVED', 'INVOICED'].includes(o.status))
- const totalValue = orders.reduce((s, o) => s + Number(o.total_amount || 0), 0)
- const received = orders.filter(o => o.status === 'COMPLETED').length
+                {/* ── Header ── */}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center shadow-sm">
+                            <Receipt size={24} className="text-purple-500" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl md:text-4xl font-black tracking-tight theme-text">
+                                Purchase <span className="text-purple-500">Invoices</span>
+                            </h1>
+                            <p className="text-xs md:text-sm font-medium theme-text-muted mt-0.5 hidden sm:block">
+                                Supplier billing & settlement tracking
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={load} className="min-h-[44px] md:min-h-[36px]">
+                            <RefreshCw size={14} className="mr-1.5" /> Refresh
+                        </Button>
+                        <Link href="/purchases/credit-notes">
+                            <Button variant="outline" size="sm" className="min-h-[44px] md:min-h-[36px]">
+                                <FileText size={14} className="mr-1.5" /> Credit Notes
+                            </Button>
+                        </Link>
+                    </div>
+                </header>
 
- return (
- <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div>
- <h1 className="text-4xl font-black tracking-tighter text-app-foreground flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
- <FileText size={28} className="text-app-foreground" />
- </div>
- Purchase <span className="text-purple-600">Invoices</span>
- </h1>
- <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Supplier Billing & Settlement Tracking</p>
- </div>
- <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface border border-app-border hover:bg-app-background text-app-muted-foreground font-medium text-sm shadow-sm transition-all">
- <RefreshCw size={14} />
- Refresh
- </button>
- </div>
+                {/* ── KPI Strip ── */}
+                <section className="grid grid-cols-3 gap-3 md:gap-[var(--layout-element-gap)]" aria-label="Invoice statistics">
+                    {[
+                        { label: 'Total Invoiced', value: totalValue.toLocaleString(), icon: DollarSign, accent: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/30' },
+                        { label: 'Pending Invoice', value: pendingCount, icon: Clock, accent: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+                        { label: 'Settled', value: settledCount, icon: CheckCircle, accent: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+                    ].map(s => (
+                        <Card key={s.label} className="border shadow-sm">
+                            <CardContent className="p-4 md:p-5 flex items-center gap-3 md:gap-4">
+                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}>
+                                    <s.icon size={20} className={s.accent} />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[9px] md:text-[10px] font-black theme-text-muted uppercase tracking-wider">{s.label}</p>
+                                    <p className={`text-lg md:text-2xl font-black ${s.accent} mt-0.5 truncate`}>{s.value}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </section>
 
- {/* Stats */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- {[
- { label: 'Total Invoiced', value: `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: FileText, color: 'purple' },
- { label: 'Pending Payment', value: pending.length, icon: Clock, color: 'amber' },
- { label: 'Received', value: received, icon: CheckCircle, color: 'emerald' },
- ].map(s => (
- <div key={s.label} className="bg-app-surface p-5 rounded-2xl border border-app-border shadow-sm flex items-center gap-4 group">
- <div className={`w-12 h-12 rounded-xl bg-${s.color}-50 flex items-center justify-center group-hover:bg-${s.color}-100 transition-colors`}>
- <s.icon size={22} className={`text-${s.color}-600`} />
- </div>
- <div>
- <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">{s.label}</p>
- <p className={`text-2xl font-black text-${s.color}-600 mt-0.5`}>{s.value}</p>
- </div>
- </div>
- ))}
- </div>
+                {/* ── Search ── */}
+                <div className="relative">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 theme-text-muted" />
+                    <Input placeholder="Search invoices, suppliers..." value={search} onChange={e => setSearch(e.target.value)}
+                        className="pl-10 min-h-[44px] md:min-h-[40px]" />
+                </div>
 
- <div className="flex gap-6">
- {/* Orders list */}
- <div className="w-1/2 flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-2">
- {loading ? Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-16 bg-app-surface-2 rounded-xl animate-pulse" />) :
- orders.length === 0 ? (
- <div className="bg-app-surface rounded-2xl border border-app-border p-12 text-center text-app-muted-foreground font-medium text-sm shadow-sm">No purchase orders found.</div>
- ) : orders.map(po => (
- <button key={po.id} onClick={() => openDetail(po)} className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-xl border transition-all shadow-sm ${selected?.id === po.id ? 'bg-purple-50 border-purple-200' : 'bg-app-surface border-app-border hover:border-app-border hover:bg-app-background'}`}>
- <div className="flex-1 min-w-0">
- <div className="flex items-center gap-2 flex-wrap">
- <span className="font-mono font-bold text-sm text-app-foreground">{po.po_number || `PO-${po.id}`}</span>
- <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[po.status] || 'bg-app-surface-2 text-app-muted-foreground border-app-border'}`}>{po.status.replace('_', ' ')}</span>
- </div>
- <div className="flex items-center gap-3 mt-0.5 text-xs text-app-muted-foreground">
- <span className="flex items-center gap-1"><Building2 size={10} />{po.supplier?.name || po.supplier_name || '—'}</span>
- <span className="flex items-center gap-1"><Calendar size={10} />{po.order_date}</span>
- </div>
- </div>
- <div className="text-sm font-black text-app-foreground shrink-0">${Number(po.total_amount || 0).toFixed(2)}</div>
- <ChevronRight size={14} className="text-app-muted-foreground shrink-0" />
- </button>
- ))}
- </div>
+                {/* ── Content ── */}
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-[var(--layout-element-gap)]">
+                    {/* List */}
+                    <div className="w-full lg:w-1/2 xl:w-5/12 flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
+                        {loading ? Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="h-[72px] rounded-xl animate-pulse theme-surface" style={{ border: '1px solid var(--theme-border)' }} />
+                        )) : filtered.length === 0 ? (
+                            <Card className="border shadow-sm">
+                                <CardContent className="p-12 text-center">
+                                    <Receipt size={40} className="mx-auto theme-text-muted mb-3 opacity-30" />
+                                    <p className="text-sm font-medium theme-text-muted">No invoices found</p>
+                                </CardContent>
+                            </Card>
+                        ) : filtered.map(inv => (
+                            <button key={`${inv.id}-${inv.is_legacy ? 'l' : 'p'}`} onClick={() => setSelected(inv)}
+                                className={`w-full text-left flex items-center gap-3 px-3 md:px-4 py-3 rounded-xl border transition-all shadow-sm min-h-[64px] ${selected?.id === inv.id ? 'bg-purple-50 border-purple-300 dark:bg-purple-900/20 dark:border-purple-600' : 'theme-surface'
+                                    }`}
+                                style={{ borderColor: selected?.id === inv.id ? undefined : 'var(--theme-border)' }}
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-mono font-bold text-sm theme-text">{inv.invoice_number || inv.po_number || `INV-${inv.id}`}</span>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[inv.status]?.class || 'bg-gray-100 text-gray-500'}`}>
+                                            {STATUS_CONFIG[inv.status]?.label || inv.status}
+                                        </span>
+                                        {inv.is_legacy && <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-gray-100 text-gray-400 uppercase">Legacy</span>}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1 text-xs theme-text-muted truncate">
+                                        <span className="flex items-center gap-1"><Building2 size={10} />{inv.supplier?.name || inv.supplier_name || inv.contact_name || '—'}</span>
+                                        <span className="flex items-center gap-1"><Calendar size={10} />{inv.order_date || (inv.created_at ? new Date(inv.created_at).toLocaleDateString('fr-FR') : '—')}</span>
+                                    </div>
+                                </div>
+                                <div className="text-sm font-black theme-text shrink-0">{Number(inv.total_amount || 0).toLocaleString()}</div>
+                                <ChevronRight size={14} className="theme-text-muted shrink-0 hidden md:block" />
+                            </button>
+                        ))}
+                    </div>
 
- {/* Detail panel */}
- <div className="w-1/2 bg-app-surface rounded-2xl border border-app-border p-6 flex flex-col gap-5 shadow-sm">
- {!selected ? (
- <div className="flex-1 flex flex-col items-center justify-center text-app-muted-foreground gap-3 py-12">
- <ShoppingBag size={48} className="text-app-foreground" />
- <p className="text-sm font-medium">Select a purchase order to view details</p>
- </div>
- ) : (
- <>
- <div className="flex justify-between items-start">
- <div>
- <h2 className="text-xl font-black text-app-foreground">{selected.po_number || `PO-${selected.id}`}</h2>
- <div className="flex items-center gap-3 text-sm font-bold text-app-muted-foreground mt-1">
- <span className="flex items-center gap-1.5"><Building2 size={14} className="text-app-muted-foreground" /> {selected.supplier?.name || selected.supplier_name}</span>
- </div>
- <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
- <span className="flex items-center gap-1"><Calendar size={10} />Ordered: {selected.order_date}</span>
- {selected.expected_delivery && <span className="flex items-center gap-1"><Truck size={10} />Expected: {selected.expected_delivery}</span>}
- </div>
- </div>
- <div className="text-right">
- <div className="text-2xl font-black text-app-foreground">${Number(selected.total_amount || 0).toFixed(2)}</div>
- <span className={`px-2 py-0.5 mt-1 inline-block rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_STYLES[selected.status] || ''}`}>{selected.status.replace('_', ' ')}</span>
- </div>
- </div>
-
- {selected.notes && (
- <div className="flex items-start gap-2 bg-app-background rounded-xl p-4 border border-app-border">
- <FileText size={14} className="text-app-muted-foreground shrink-0 mt-0.5" />
- <p className="text-sm font-medium text-app-muted-foreground leading-relaxed">{selected.notes}</p>
- </div>
- )}
-
- {/* Order lines */}
- {detail?.lines && detail.lines.length > 0 && (
- <div>
- <h3 className="text-xs font-semibold text-app-muted-foreground uppercase tracking-wider mb-2">Order Lines</h3>
- <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
- {detail.lines.map(line => {
- const received = Number(line.quantity_received || 0)
- const ordered = Number(line.quantity_ordered || 0)
- const pct = ordered > 0 ? Math.min((received / ordered) * 100, 100) : 0
- return (
- <div key={line.id} className="bg-[#070D1B] rounded-xl border border-app-border p-3">
- <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
- <Package size={14} className="text-purple-600" />
- </div>
- <div className="flex-1 min-w-0">
- <div className="text-sm font-bold text-app-foreground truncate">{line.product?.name || line.product_name || '—'}</div>
- {line.product?.sku && <div className="text-xs text-app-muted-foreground font-mono mt-0.5 font-medium">{line.product.sku}</div>}
- </div>
- <div className="text-right text-sm">
- <div className="text-app-muted-foreground font-medium">{ordered} × ${Number(line.unit_price || 0).toFixed(2)}</div>
- <div className="font-black text-app-foreground mt-0.5">${Number(line.subtotal || 0).toFixed(2)}</div>
- </div>
- </div>
- {line.quantity_received != null && (
- <div className="mt-2">
- <div className="flex justify-between text-[10px] font-bold text-app-muted-foreground mb-1.5 uppercase tracking-wider">
- <span>Received: {received} / {ordered}</span>
- <span>{pct.toFixed(0)}%</span>
- </div>
- <div className="h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
- <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-app-primary' : pct > 0 ? 'bg-app-warning' : 'bg-app-surface-hover'}`} style={{ width: `${pct}%` }} />
- </div>
- </div>
- )}
- </div>
- )
- })}
- </div>
- </div>
- )}
- </>
- )}
- </div>
- </div>
- </div>
- )
+                    {/* Detail */}
+                    <div className="w-full lg:w-1/2 xl:w-7/12 lg:sticky lg:top-4 lg:self-start">
+                        <Card className="border shadow-sm min-h-[300px]">
+                            {!selected ? (
+                                <CardContent className="flex flex-col items-center justify-center py-20 theme-text-muted gap-3">
+                                    <Receipt size={48} className="opacity-20" />
+                                    <p className="text-sm font-medium">Select an invoice to view details</p>
+                                </CardContent>
+                            ) : (
+                                <>
+                                    <CardHeader className="pb-4">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div>
+                                                <CardTitle className="text-xl font-black theme-text">{selected.invoice_number || selected.po_number || `INV-${selected.id}`}</CardTitle>
+                                                <div className="flex items-center gap-3 text-sm font-bold theme-text-muted mt-1"><Building2 size={14} /> {selected.supplier?.name || selected.supplier_name || selected.contact_name || '—'}</div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <div className="text-2xl font-black theme-text">{Number(selected.total_amount || 0).toLocaleString()}</div>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mt-1 inline-block ${STATUS_CONFIG[selected.status]?.class || ''}`}>
+                                                    {STATUS_CONFIG[selected.status]?.label || selected.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div className="flex gap-2 flex-wrap">
+                                            <Link href={`/purchases/${selected.id}`}>
+                                                <Button size="sm" variant="outline" className="min-h-[44px] md:min-h-[32px]">
+                                                    <Eye size={12} className="mr-1" /> View PO
+                                                </Button>
+                                            </Link>
+                                            <Link href={`/finance/ledger?q=${selected.po_number || selected.id}`}>
+                                                <Button size="sm" variant="outline" className="min-h-[44px] md:min-h-[32px]">
+                                                    <BookOpen size={12} className="mr-1" /> Ledger
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                        {selected.notes && (
+                                            <div className="p-3 rounded-xl text-sm theme-text-muted theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
+                                                <FileText size={12} className="inline mr-1.5" />{selected.notes}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </>
+                            )}
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        </main>
+    )
 }

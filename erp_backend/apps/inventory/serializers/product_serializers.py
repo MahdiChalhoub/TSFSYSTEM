@@ -139,7 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.inventory.models import StockMoveLine
         qs = StockMoveLine.objects.filter(
             product=obj,
-            organization=obj.organization,
+            tenant=obj.organization,
             move__status__in=['PENDING', 'IN_TRANSIT']
         )
         if warehouse:
@@ -151,7 +151,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.inventory.models import StockMoveLine
         qs = StockMoveLine.objects.filter(
             product=obj,
-            organization=obj.organization,
+            tenant=obj.organization,
             move__status__in=['PENDING', 'IN_TRANSIT']
         )
         if warehouse:

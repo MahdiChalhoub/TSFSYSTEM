@@ -34,6 +34,7 @@ urlpatterns = [
     # so we expose kernel routes at /api/erp/ as well for namespaced access.
     path('api/erp/', include('erp.urls')),
     path('api/migration/', include('apps.migration.urls')),
+    path('api/migration-v2/', include('apps.migration_v2.urls')),  # New migration system
     path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
     path('api/docs/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
     path('api/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),

@@ -101,3 +101,15 @@ django_*.txt
 server_*.txt
 frontend_*.log
 deploy.log
+
+# Sensitive data files
+*.sql
+u739151801_dataPOS.*
+
+# Session artifacts (agent-generated docs)
+CRM_*.md
+EXCELLENCE_PLAN.md
+SESSION_COMPLETE_SUMMARY.md
+*.backup
+*.tsx.new
+*.tsx.backup

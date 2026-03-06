@@ -62,7 +62,7 @@ class BrandViewSet(TenantModelViewSet):
 
         category_id = request.query_params.get('category_id') or request.query_params.get('categoryId')
 
-        brands = Brand.objects.filter(organization=organization)
+        brands = Brand.objects.filter(tenant=organization)
         if category_id:
             product_brand_ids = Product.objects.filter(
                 organization=organization,
@@ -79,7 +79,7 @@ class BrandViewSet(TenantModelViewSet):
         if err: return err
 
         try:
-            brand = Brand.objects.get(id=pk, organization=organization)
+            brand = Brand.objects.get(id=pk, tenant=organization)
         except Brand.DoesNotExist:
             return Response({"error": "Brand not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -149,7 +149,7 @@ class BrandViewSet(TenantModelViewSet):
             return Response({"error": "Organization not found"}, status=404)
 
         brands = Brand.objects.filter(
-            organization=organization,
+            tenant=organization,
             products__is_active=True
         ).distinct()
 
@@ -171,7 +171,7 @@ class CategoryViewSet(TenantModelViewSet):
         if err: return err
 
         categories = Category.objects.filter(
-            organization=organization
+            tenant=organization
         ).annotate(
             annotated_product_count=Count('products', distinct=True),
             annotated_brand_count=Count('brands', distinct=True),
@@ -191,18 +191,18 @@ class CategoryViewSet(TenantModelViewSet):
     @action(detail=True, methods=['get'])
     def explore(self, request, pk=None):
         category = self.get_object()
-        organization = category.organization
+        organization = category.tenant
 
         brands = Brand.objects.filter(
             categories=category,
-            organization=organization
+            tenant=organization
         ).annotate(
             cat_product_count=Count('products', filter=Q(products__category=category))
         ).values('id', 'name', 'logo', 'cat_product_count')
 
         parfums = Parfum.objects.filter(
             categories=category,
-            organization=organization
+            tenant=organization
         ).annotate(
             cat_product_count=Count('products', filter=Q(products__category=category))
         ).values('id', 'name', 'cat_product_count')
@@ -245,7 +245,7 @@ class CategoryViewSet(TenantModelViewSet):
             return Response({"error": "Organization not found"}, status=404)
 
         categories = Category.objects.filter(
-            organization=organization,
+            tenant=organization,
             products_count__gt=0
         )
 
@@ -280,7 +280,7 @@ class ParfumViewSet(TenantModelViewSet):
         category_id = request.query_params.get('category_id') or request.query_params.get('categoryId')
         brand_id = request.query_params.get('brand_id') or request.query_params.get('brandId')
 
-        parfums = Parfum.objects.filter(organization=organization)
+        parfums = Parfum.objects.filter(tenant=organization)
         if category_id or brand_id:
             product_filter = {'organization': organization}
             if category_id:
@@ -300,7 +300,7 @@ class ParfumViewSet(TenantModelViewSet):
         if err: return err
 
         try:
-            parfum = Parfum.objects.get(id=pk, organization=organization)
+            parfum = Parfum.objects.get(id=pk, tenant=organization)
         except Parfum.DoesNotExist:
             return Response({"error": "Parfum not found"}, status=404)
 
@@ -344,7 +344,7 @@ class ProductGroupViewSet(TenantModelViewSet):
         try:
             with transaction.atomic():
                 group = ProductGroup.objects.create(
-                    organization=organization,
+                    tenant=organization,
                     name=request.data.get('name'),
                     description=request.data.get('description', ''),
                     brand_id=request.data.get('brand_id'),
@@ -382,7 +382,7 @@ class ProductGroupViewSet(TenantModelViewSet):
         if err: return err
 
         try:
-            group = ProductGroup.objects.get(id=pk, organization=organization)
+            group = ProductGroup.objects.get(id=pk, tenant=organization)
 
             with transaction.atomic():
                 group.name = request.data.get('name', group.name)
@@ -444,7 +444,7 @@ class ProductGroupViewSet(TenantModelViewSet):
         if err: return err
 
         try:
-            group = ProductGroup.objects.get(id=pk, organization=organization)
+            group = ProductGroup.objects.get(id=pk, tenant=organization)
             product_ids = request.data.get('product_ids', [])
             Product.objects.filter(id__in=product_ids, organization=organization).update(product_group=group)
             return Response({"success": True})

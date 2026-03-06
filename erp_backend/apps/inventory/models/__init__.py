@@ -27,6 +27,7 @@ from .reason_models import AdjustmentReason
 from .unit_conversion_models import UnitConversion
 from .replenishment_models import ReplenishmentRule, PurchaseSuggestion
 from .fulfillment_models import PickList, PickListLine, PackingOrder, Shipment
+from .goods_receipt_models import GoodsReceipt, GoodsReceiptLine
 
 __all__ = [
     # Product Catalog
@@ -56,4 +57,6 @@ __all__ = [
     'UnitConversion',
     'ReplenishmentRule', 'PurchaseSuggestion',
     'PickList', 'PickListLine', 'PackingOrder', 'Shipment',
+    # Goods Receipt
+    'GoodsReceipt', 'GoodsReceiptLine',
 ]

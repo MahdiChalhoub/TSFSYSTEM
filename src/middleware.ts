@@ -320,6 +320,7 @@ export default async function middleware(req: NextRequest) {
             || url.pathname.startsWith('/switcher')
             || url.pathname.startsWith('/supplier-portal')
             || url.pathname.startsWith('/design-demo')
+            || url.pathname.startsWith('/ui-kit')
             || url.pathname.startsWith('/tsf-system-kernel-7788');
 
         if (isAppRoute) {

@@ -102,3 +102,31 @@ export async function erpPost(endpoint: string, data: unknown, options?: ErpFetc
         body: JSON.stringify(data),
     })
 }
+
+/**
+ * Typed fetch wrapper that automatically parses JSON response
+ * Use this for API calls that return typed data
+ */
+export async function erpFetchJSON<T>(
+    endpoint: string,
+    options: ErpFetchOptions = {}
+): Promise<T> {
+    const response = await erpFetch(endpoint, options)
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`API Error ${response.status}: ${errorText}`)
+    }
+
+    // Handle empty responses (DELETE, etc.)
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return undefined as T
+    }
+
+    // Handle blob responses (PDF, images, etc.)
+    if (options.headers && (options.headers as Record<string, string>)['Accept']?.includes('pdf')) {
+        return response.blob() as unknown as T
+    }
+
+    return response.json()
+}

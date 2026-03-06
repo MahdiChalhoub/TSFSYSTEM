@@ -113,6 +113,24 @@ class ProductGroup(TenantOwnedModel):
     description = models.TextField(null=True, blank=True)
     image = models.CharField(max_length=255, null=True, blank=True)
 
+    # ── Level 1: Price Sync ─────────────────────────────────────────
+    price_sync_enabled = models.BooleanField(
+        default=True,
+        help_text='When enabled, changing any member product price updates all members'
+    )
+    base_selling_price_ttc = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Reference selling price (TTC) for all products in this group'
+    )
+    base_selling_price_ht = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Reference selling price (HT) for all products in this group'
+    )
+    packaging_formula = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per-packaging-level discount formula, e.g. {"CARTON": {"discount_pct": 2.0}, "PAQUET": {"discount_pct": 5.0}}'
+    )
+
     class Meta:
         db_table = 'productgroup'
 
@@ -151,7 +169,49 @@ class Product(TenantModel):
     max_stock_level = models.IntegerField(null=True, blank=True)
     reorder_point = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     reorder_quantity = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+
+    # ── Cost Valuation Method ───────────────────────────────────────
+    COST_VALUATION_CHOICES = (
+        ('WAVG', 'Weighted Average Cost (Moving Average)'),
+        ('FIFO', 'First In, First Out'),
+        ('LIFO', 'Last In, First Out'),
+        ('STANDARD', 'Standard Cost (Fixed)'),
+    )
+    cost_valuation_method = models.CharField(
+        max_length=10, choices=COST_VALUATION_CHOICES, default='WAVG',
+        help_text='How the cost of goods is calculated when stock is consumed'
+    )
+
+    # ── Lot / Date Management Strategy ──────────────────────────────
+    LOT_MANAGEMENT_CHOICES = (
+        ('NONE', 'No lot tracking'),
+        ('FIFO_AUTO', 'FIFO — Automatic (oldest lot consumed first)'),
+        ('FEFO', 'FEFO — First Expiry, First Out (shortest life consumed first)'),
+        ('MANUAL', 'Manual — Operator selects lot/layer at POS or picking'),
+    )
+    lot_management = models.CharField(
+        max_length=12, choices=LOT_MANAGEMENT_CHOICES, default='NONE',
+        help_text='How lots/batches are selected when consuming stock'
+    )
+    tracks_lots = models.BooleanField(
+        default=False,
+        help_text='Enable lot/batch number tracking for this product'
+    )
+
+    # ── Expiry / Shelf-Life Configuration ───────────────────────────
     is_expiry_tracked = models.BooleanField(default=False)
+    manufacturer_shelf_life_days = models.IntegerField(
+        null=True, blank=True,
+        help_text='Total shelf life as per manufacturer, in days (e.g. 240 = 8 months)'
+    )
+    avg_available_expiry_days = models.IntegerField(
+        null=True, blank=True,
+        help_text='Typical remaining shelf life when product arrives, in days (e.g. 120 = 4 months)'
+    )
+    shipping_duration_days = models.IntegerField(
+        null=True, blank=True,
+        help_text='Average shipping/transit time in days — auto-populated from purchase invoices'
+    )
     tracks_serials = models.BooleanField(default=False)
     status = models.CharField(max_length=20, default='ACTIVE')
     is_active = models.BooleanField(default=True)
@@ -244,6 +304,11 @@ class ProductPackaging(TenantModel):
       Level 2: Carton = 24 pieces, barcode=6001234000002, price=20000
       Level 3: Pallet = 480 pieces, barcode=6001234000003, price=380000
     """
+    PRICE_MODE_CHOICES = (
+        ('FORMULA', 'Formula — auto-calculated from base price × ratio × discount'),
+        ('FIXED',   'Fixed — manually set custom_selling_price'),
+    )
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='packaging_levels')
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='packaging_levels')
     level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=first above base, 2=second, etc.)")
@@ -253,6 +318,16 @@ class ProductPackaging(TenantModel):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    # ── Level 2: Formula Pricing ────────────────────────────────────
+    price_mode = models.CharField(
+        max_length=10, choices=PRICE_MODE_CHOICES, default='FORMULA',
+        help_text='FORMULA: auto = base × ratio × (1 - discount%). FIXED: use custom_selling_price.'
+    )
+    discount_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('0.00'),
+        help_text='Discount percentage vs unit price (e.g. 2.00 = 2% cheaper per unit in this packaging)'
+    )
+
     class Meta:
         db_table = 'product_packaging'
         ordering = ['level']
@@ -260,6 +335,18 @@ class ProductPackaging(TenantModel):
             models.UniqueConstraint(fields=['product', 'unit', 'organization'], name='unique_packaging_per_unit'),
             models.UniqueConstraint(fields=['barcode', 'organization'], name='unique_packaging_barcode', condition=Q(barcode__isnull=False)),
         ]
+
+    @property
+    def effective_selling_price(self):
+        """Calculate the effective selling price based on price_mode."""
+        if self.price_mode == 'FIXED' and self.custom_selling_price is not None:
+            return self.custom_selling_price
+        # FORMULA mode: base_price × ratio × (1 - discount_pct/100)
+        base_price = self.product.selling_price_ttc
+        if not base_price:
+            return Decimal('0.00')
+        discount_factor = Decimal('1') - (self.discount_pct / Decimal('100'))
+        return (base_price * self.ratio * discount_factor).quantize(Decimal('0.01'))
 
     def __str__(self):
         unit_name = self.unit.name if self.unit else 'Unknown'

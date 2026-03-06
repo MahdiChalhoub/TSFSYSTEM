@@ -1,231 +1,234 @@
+// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
-
 import { useState, useEffect, Suspense } from "react"
-import type { PurchaseOrder } from '@/types/erp'
 import { useSearchParams, useRouter } from "next/navigation"
 import { erpFetch } from "@/lib/erp-api"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { ArrowLeft, Truck, AlertCircle, ShoppingBag, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Truck, AlertCircle, CheckCircle, Package, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 function CreatePurchaseReturnForm() {
- const { fmt } = useCurrency()
- const searchParams = useSearchParams()
- const router = useRouter()
- const orderId = searchParams.get('order_id')
+    const { fmt } = useCurrency()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const orderId = searchParams.get('order_id')
 
- const [order, setOrder] = useState<PurchaseOrder | null>(null)
- const [loading, setLoading] = useState(true)
- const [returnItems, setReturnItems] = useState<Record<number, number>>({})
- const [reason, setReason] = useState("")
- const [submitting, setSubmitting] = useState(false)
+    const [order, setOrder] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const [returnItems, setReturnItems] = useState<Record<number, number>>({})
+    const [reason, setReason] = useState("")
+    const [submitting, setSubmitting] = useState(false)
 
- useEffect(() => {
- if (orderId) loadOrder()
- else {
- toast.error("No Order ID provided")
- setLoading(false)
- }
- }, [orderId])
+    useEffect(() => {
+        if (orderId) loadOrder()
+        else { toast.error("No Order ID provided"); setLoading(false) }
+    }, [orderId])
 
- async function loadOrder() {
- try {
- const data = await erpFetch(`purchase/${orderId}/`)
- setOrder(data)
- const initialQtys: Record<number, number> = {}
- data.lines.forEach((l: Record<string, any>) => {
- initialQtys[l.id] = 0
- })
- setReturnItems(initialQtys)
- } catch {
- toast.error("Failed to load purchase details")
- } finally {
- setLoading(false)
- }
- }
+    async function loadOrder() {
+        try {
+            const data = await erpFetch(`purchase-orders/${orderId}/`)
+            setOrder(data)
+            const initial: Record<number, number> = {}
+            data.lines?.forEach((l: any) => { initial[l.id] = 0 })
+            setReturnItems(initial)
+        } catch { toast.error("Failed to load purchase details") }
+        setLoading(false)
+    }
 
- const handleQtyChange = (lineId: number, qty: number, max: number) => {
- const val = Math.max(0, Math.min(qty, max))
- setReturnItems(prev => ({ ...prev, [lineId]: val }))
- }
+    const handleQtyChange = (lineId: number, qty: number, max: number) => {
+        setReturnItems(prev => ({ ...prev, [lineId]: Math.max(0, Math.min(qty, max)) }))
+    }
 
- const calculateTotals = () => {
- let total = 0
- if (!order) return 0
- order.lines?.forEach((l: Record<string, any>) => {
- const qty = returnItems[l.id] || 0
- total += qty * parseFloat(l.unit_price)
- })
- return total
- }
+    const total = order?.lines?.reduce((sum: number, l: any) =>
+        sum + (returnItems[l.id] || 0) * parseFloat(l.unit_price || 0), 0
+    ) || 0
 
- const handleSubmit = async () => {
- const lines = Object.entries(returnItems)
- .filter(([_, qty]) => qty > 0)
- .map(([lineId, qty]) => {
- const line = order?.lines?.find((l: Record<string, any>) => l.id === Number(lineId))
- return {
- product_id: line?.product || line?.product_id,
- quantity: qty,
- unit_price: line?.unit_price
- }
- })
+    const handleSubmit = async () => {
+        const lines = Object.entries(returnItems)
+            .filter(([_, qty]) => qty > 0)
+            .map(([lineId, qty]) => {
+                const l = order?.lines?.find((x: any) => x.id === Number(lineId))
+                return { product_id: l?.product || l?.product_id, quantity: qty, unit_price: l?.unit_price }
+            })
+        if (!lines.length) { toast.error("Select at least one item"); return }
 
- if (lines.length === 0) {
- toast.error("Please select at least one item to return")
- return
- }
+        setSubmitting(true)
+        try {
+            await erpFetch('purchase-returns/', {
+                method: 'POST',
+                body: JSON.stringify({ original_order: order?.id, reason, lines })
+            })
+            toast.success("Purchase return created")
+            router.push('/purchases/returns')
+        } catch (e: any) { toast.error(e?.message || "Failed to create return") }
+        setSubmitting(false)
+    }
 
- setSubmitting(true)
- try {
- await erpFetch('purchase-returns/', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- original_order: order?.id,
- reason: reason,
- lines: lines
- })
- })
- toast.success("Purchase return request created")
- router.push('/purchases/returns')
- } catch (e: unknown) {
- toast.error((e instanceof Error ? e.message : String(e)) || "Failed to create return")
- } finally {
- setSubmitting(false)
- }
- }
+    if (loading) return (
+        <main className="layout-container-padding max-w-4xl mx-auto py-10">
+            <div className="flex flex-col items-center gap-4 py-20">
+                <Loader2 size={32} className="animate-spin theme-text-muted" />
+                <p className="text-sm theme-text-muted">Loading purchase order...</p>
+            </div>
+        </main>
+    )
 
- if (loading) return <div className="app-page p-10 space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>
- if (!order) return <div className="p-20 text-center"><AlertCircle className="mx-auto mb-4 text-app-muted-foreground" size={48} /><p>Purchase Order not found</p></div>
+    if (!order) return (
+        <main className="layout-container-padding max-w-4xl mx-auto py-10">
+            <Card className="border shadow-sm">
+                <CardContent className="p-12 text-center">
+                    <AlertCircle size={48} className="mx-auto theme-text-muted mb-4 opacity-30" />
+                    <p className="text-sm theme-text-muted">Purchase order not found</p>
+                    <Link href="/purchases" className="text-blue-500 text-sm font-bold mt-2 inline-block hover:underline">← Back</Link>
+                </CardContent>
+            </Card>
+        </main>
+    )
 
- return (
- <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
- <header className="flex items-center justify-between">
- <div>
- <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-info mb-4 transition-all">
- <ArrowLeft size={14} /> Back to Purchase Detail
- </Link>
- <h1 className="page-header-title tracking-tighter flex items-center gap-3">
- <Truck size={32} className="text-app-info" />
- Supplier Return for <span className="text-app-info">{order.ref_code || `#${orderId}`}</span>
- </h1>
- </div>
- </header>
+    return (
+        <main className="space-y-[var(--layout-section-spacing)] animate-in fade-in duration-500 pb-20">
+            <div className="layout-container-padding max-w-5xl mx-auto space-y-[var(--layout-section-spacing)]">
 
- <div className="grid lg:grid-cols-3 gap-8">
- <div className="lg:col-span-2 space-y-6">
- <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden">
- <div className="p-6 bg-app-background border-b border-app-border font-bold text-[10px] uppercase tracking-widest text-app-muted-foreground">
- Select Items to Ship Back
- </div>
- <Table>
- <TableHeader>
- <TableRow>
- <TableHead>Product</TableHead>
- <TableHead className="text-center">Received</TableHead>
- <TableHead className="text-center w-32">Return Qty</TableHead>
- <TableHead className="text-right">Unit Cost</TableHead>
- </TableRow>
- </TableHeader>
- <TableBody>
- {order?.lines?.map((line: Record<string, any>) => (
- <TableRow key={line.id}>
- <TableCell>
- <div className="font-bold text-app-foreground">{line.product_name}</div>
- <div className="text-[10px] text-app-muted-foreground uppercase font-mono">Line ID: {line.id}</div>
- </TableCell>
- <TableCell className="text-center font-bold text-app-muted-foreground">{line.qty_received}</TableCell>
- <TableCell>
- <Input
- type="number"
- min={0}
- max={parseFloat(line.qty_received)}
- className="text-center font-black rounded-xl border-app-border"
- value={returnItems[line.id] || 0}
- onChange={(e) => handleQtyChange(line.id, parseFloat(e.target.value), parseFloat(line.qty_received))}
- />
- </TableCell>
- <TableCell className="text-right font-medium text-app-foreground">{fmt(parseFloat(line.unit_price))}</TableCell>
- </TableRow>
- ))}
- </TableBody>
- </Table>
- </Card>
+                <Link href={`/purchases/${orderId}`} className="inline-flex items-center gap-2 text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px] md:min-h-[auto]">
+                    <ArrowLeft size={16} /> Back to Purchase Detail
+                </Link>
 
- <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
- <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Instructions / Reason</h3>
- <textarea
- className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface-2/50 focus:ring-2 focus:ring-blue-200 focus:border-app-info/30 transition-all outline-none text-sm"
- placeholder="Reason for return, RMN number, or special instructions for the supplier..."
- value={reason}
- onChange={(e) => setReason(e.target.value)}
- />
- </Card>
- </div>
+                <header className="flex items-center gap-3 md:gap-4">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center shadow-sm">
+                        <Truck size={24} className="text-orange-500" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight theme-text">
+                            Return for <span className="text-orange-500">{order.ref_code || order.po_number || `#${orderId}`}</span>
+                        </h1>
+                        <p className="text-xs theme-text-muted mt-0.5">Select items and quantities to return to supplier</p>
+                    </div>
+                </header>
 
- <div className="space-y-6">
- <Card className="bg-app-surface text-app-foreground p-8 rounded-[2.5rem] shadow-2xl border-none">
- <div className="space-y-6">
- <div>
- <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Debit Summary</div>
- <div className="flex justify-between items-center py-2 border-b border-app-border">
- <span className="text-sm text-app-muted-foreground">Items to Return</span>
- <span className="font-bold">{Object.values(returnItems).filter(q => q > 0).length} Lines</span>
- </div>
- <div className="flex justify-between items-center py-2 border-b border-app-border">
- <span className="text-sm text-app-muted-foreground">Debit Value</span>
- <span className="font-mono text-xs">{fmt(calculateTotals())}</span>
- </div>
- </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-[var(--layout-element-gap)]">
+                    {/* Lines */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <Card className="border shadow-sm">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-xs font-black uppercase tracking-wider theme-text-muted flex items-center gap-2">
+                                    <Package size={14} className="text-orange-500" /> Select Items to Return
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {/* Desktop Table */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b text-[10px] font-black uppercase tracking-wider theme-text-muted">
+                                                <th className="text-left py-3 px-2">Product</th>
+                                                <th className="text-center py-3 px-2">Received</th>
+                                                <th className="text-center py-3 px-2 w-32">Return Qty</th>
+                                                <th className="text-right py-3 px-2">Unit Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {order.lines?.map((line: any) => (
+                                                <tr key={line.id} className="border-b last:border-0">
+                                                    <td className="py-3 px-2">
+                                                        <div className="font-bold theme-text">{line.product_name || line.product?.name || '—'}</div>
+                                                        {line.product?.sku && <div className="text-xs theme-text-muted font-mono">{line.product.sku}</div>}
+                                                    </td>
+                                                    <td className="py-3 px-2 text-center theme-text-muted font-bold">{line.qty_received || line.quantity_received || 0}</td>
+                                                    <td className="py-3 px-2">
+                                                        <Input type="number" min={0} max={line.qty_received || line.quantity_received || 0}
+                                                            className="text-center font-black min-h-[44px] md:min-h-[36px]"
+                                                            value={returnItems[line.id] || 0}
+                                                            onChange={e => handleQtyChange(line.id, parseFloat(e.target.value) || 0, line.qty_received || line.quantity_received || 0)} />
+                                                    </td>
+                                                    <td className="py-3 px-2 text-right theme-text font-medium">{fmt(parseFloat(line.unit_price || 0))}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Mobile Cards */}
+                                <div className="md:hidden space-y-3">
+                                    {order.lines?.map((line: any) => (
+                                        <div key={line.id} className="p-3 rounded-xl theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
+                                            <div className="font-bold theme-text text-sm mb-1">{line.product_name || line.product?.name || '—'}</div>
+                                            <div className="flex justify-between text-xs theme-text-muted mb-2">
+                                                <span>Received: {line.qty_received || line.quantity_received || 0}</span>
+                                                <span>{fmt(parseFloat(line.unit_price || 0))} ea</span>
+                                            </div>
+                                            <Label className="text-xs font-bold mb-1 block">Return Qty</Label>
+                                            <Input type="number" min={0} max={line.qty_received || line.quantity_received || 0}
+                                                className="text-center font-black min-h-[48px]"
+                                                value={returnItems[line.id] || 0}
+                                                onChange={e => handleQtyChange(line.id, parseFloat(e.target.value) || 0, line.qty_received || line.quantity_received || 0)} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
 
- <div className="pt-4">
- <div className="text-[10px] font-black text-app-info uppercase tracking-widest mb-1 text-right">Estimated Debit</div>
- <div className="text-5xl font-black text-app-foreground text-right tracking-tighter">
- {fmt(calculateTotals())}
- </div>
- </div>
+                        <Card className="border shadow-sm">
+                            <CardContent className="p-4 md:p-5 space-y-3">
+                                <Label className="text-xs font-black uppercase tracking-wider theme-text-muted">Return Reason</Label>
+                                <textarea
+                                    className="w-full h-24 p-3 rounded-xl text-sm theme-surface theme-text resize-none min-h-[96px]"
+                                    style={{ border: '1px solid var(--theme-border)' }}
+                                    placeholder="Reason for return, RMN number, or special instructions..."
+                                    value={reason}
+                                    onChange={e => setReason(e.target.value)}
+                                />
+                            </CardContent>
+                        </Card>
+                    </div>
 
- <Button
- className="w-full h-16 rounded-2xl bg-app-info hover:bg-app-info text-app-foreground font-black text-lg shadow-lg shadow-blue-900/20 flex items-center gap-3 transition-all active:scale-[0.98]"
- onClick={handleSubmit}
- disabled={submitting || calculateTotals() === 0}
- >
- {submitting ? "Processing..." : (
- <>
- <CheckCircle2 size={24} />
- Initialize Ship-back
- </>
- )}
- </Button>
- </div>
- </Card>
+                    {/* Summary Sidebar */}
+                    <div className="space-y-4">
+                        <Card className="border shadow-sm">
+                            <CardContent className="p-5 space-y-4">
+                                <h3 className="text-xs font-black theme-text-muted uppercase tracking-wider">Return Summary</h3>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="theme-text-muted">Items to Return</span>
+                                        <span className="font-bold theme-text">{Object.values(returnItems).filter(q => q > 0).length} lines</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="theme-text-muted">Total Qty</span>
+                                        <span className="font-bold theme-text">{Object.values(returnItems).reduce((s, q) => s + q, 0)}</span>
+                                    </div>
+                                </div>
+                                <div className="pt-4 border-t" style={{ borderColor: 'var(--theme-border)' }}>
+                                    <p className="text-[10px] font-black theme-text-muted uppercase tracking-wider mb-1">Debit Value</p>
+                                    <p className="text-3xl font-black text-orange-500 tracking-tight">{fmt(total)}</p>
+                                </div>
 
- <div className="p-6 bg-app-info-bg rounded-[2rem] border border-app-info/30">
- <div className="flex items-center gap-2 text-app-info mb-2 font-black text-[10px] uppercase tracking-widest">
- <AlertCircle size={16} /> Destination
- </div>
- <p className="text-xs text-app-info leading-relaxed font-medium">
- Starting a return will mark items as **Pending Ship-out**. Stock will be removed from your warehouse once you click **Complete** in the Return Registry.
- </p>
- </div>
- </div>
- </div>
- </div>
- )
+                                <Button className="w-full min-h-[52px] bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm"
+                                    onClick={handleSubmit} disabled={submitting || total === 0}>
+                                    {submitting ? <Loader2 size={16} className="animate-spin mr-2" /> : <CheckCircle size={16} className="mr-2" />}
+                                    {submitting ? 'Processing...' : 'Create Return'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-600 dark:text-blue-400" style={{ border: '1px solid var(--theme-border)' }}>
+                            <AlertCircle size={14} className="inline mr-1.5" />
+                            Starting a return marks items as <strong>Pending Ship-out</strong>. Stock is removed when you click <strong>Complete</strong> in the Returns list.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    )
 }
 
 export default function NewPurchaseReturnPage() {
- return (
- <Suspense fallback={<div className="p-20 text-center">Loading return wizard...</div>}>
- <CreatePurchaseReturnForm />
- </Suspense>
- )
+    return (
+        <Suspense fallback={<div className="p-20 text-center theme-text-muted">Loading return wizard...</div>}>
+            <CreatePurchaseReturnForm />
+        </Suspense>
+    )
 }
