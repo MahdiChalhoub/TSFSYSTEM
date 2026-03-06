@@ -59,24 +59,35 @@ export default function FinancialAccountsPage() {
  }
 
  return (
- <div className="app-page">
+ <div className="app-page layout-container-padding space-y-[var(--layout-section-spacing)] max-w-7xl mx-auto">
  <div className="flex justify-between items-center">
  <div>
- <h1 className="page-header-title tracking-tighter text-app-foreground flex items-center gap-4">
- <div className="w-14 h-14 rounded-[1.5rem] bg-app-primary flex items-center justify-center shadow-lg shadow-emerald-200">
- <Wallet size={28} className="text-app-foreground" />
+ <div className="flex items-center gap-4">
+ <div className="w-14 h-14 layout-card-radius flex items-center justify-center shrink-0" style={{
+   background: 'var(--theme-primary)',
+   opacity: 0.1,
+   border: '1px solid var(--theme-primary)'
+ }}>
+   <Wallet size={28} className="theme-primary" />
  </div>
- Financial <span className="text-app-primary">Accounts</span>
- </h1>
- <p className="text-sm font-medium text-app-muted-foreground mt-2 uppercase tracking-widest">Cash Drawers & Bank Accounts</p>
- <p className="text-muted-foreground">Manage cash drawers, bank accounts, and their ledger links.</p>
+ <div>
+   <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">Finance</p>
+   <h1 className="text-4xl font-black tracking-tight theme-text italic">
+     Financial <span className="theme-primary">Accounts</span>
+   </h1>
+ </div>
+ </div>
+ <p className="text-sm font-medium theme-text-muted mt-2 uppercase tracking-widest">Cash Drawers & Bank Accounts</p>
  </div>
  <Link href="/finance/accounts/new">
- <Button><Plus className="mr-2 h-4 w-4" /> New Account</Button>
+ <Button className="layout-card-radius" style={{
+   background: 'var(--theme-primary)',
+   color: 'var(--theme-bg)'
+ }}><Plus className="mr-2 h-4 w-4" /> New Account</Button>
  </Link>
  </div>
 
- <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+ <div className="grid gap-[var(--layout-element-gap)] md:grid-cols-2 lg:grid-cols-3">
  {accounts.map(account => (
  <AccountCard
  key={account.id}
@@ -88,7 +99,7 @@ export default function FinancialAccountsPage() {
  </div>
 
  {!loading && accounts.length === 0 && (
- <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+ <div className="text-center py-10 theme-text-muted border-2 border-dashed layout-card-radius theme-border">
  No financial accounts found. Create one to get started.
  </div>
  )}
@@ -132,16 +143,16 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  }).format(balance)
 
  return (
- <Card className="relative group">
- <CardHeader className="pb-2">
+ <Card className="relative group layout-card-radius border-0 shadow-sm theme-surface">
+ <CardHeader className="pb-2 layout-card-padding">
  <div className="flex justify-between items-start">
  <div className="flex items-center gap-2">
- <div className={`p-2 rounded-lg ${isConfigured ? 'bg-primary/10 text-primary' : 'bg-app-error-bg text-app-error'}`}>
+ <div className={`p-2 layout-card-radius ${isConfigured ? 'bg-primary/10 text-primary' : 'bg-app-error-bg text-app-error'}`}>
  <Icon className="h-5 w-5" />
  </div>
  <div>
- <CardTitle className="text-lg">{account.name}</CardTitle>
- <CardDescription>{account.type} · {account.currency}</CardDescription>
+ <CardTitle className="text-lg theme-text">{account.name}</CardTitle>
+ <CardDescription className="theme-text-muted">{account.type} · {account.currency}</CardDescription>
  </div>
  </div>
  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -152,18 +163,18 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </div>
  </div>
  </CardHeader>
- <CardContent className="space-y-4">
+ <CardContent className="space-y-[var(--layout-element-gap)] layout-card-padding pt-0">
 
  {/* Balance Display */}
- <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border">
- <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Balance</p>
+ <div className="p-3 layout-card-radius border theme-border" style={{ background: 'var(--theme-surface-hover)' }}>
+ <p className="text-xs theme-text-muted uppercase font-semibold mb-1">Balance</p>
  <p className={`text-xl font-bold tabular-nums ${balance >= 0 ? 'text-app-success' : 'text-app-error'}`}>
  {account.currency} {formattedBalance}
  </p>
  </div>
 
  {/* Ledger Link Status */}
- <div className={`text-xs p-2 rounded-xl border flex items-center justify-between ${isConfigured ? 'bg-app-primary-light border-app-success/30 text-app-success' : 'bg-app-error-bg border-app-error/30 text-app-error'}`}>
+ <div className={`text-xs p-2 layout-card-radius border flex items-center justify-between ${isConfigured ? 'bg-app-primary-light border-app-success/30 text-app-success' : 'bg-app-error-bg border-app-error/30 text-app-error'}`}>
  <div className="flex items-center gap-2 truncate">
  {isConfigured ? (
  <>
@@ -200,10 +211,10 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </div>
  )}
  {/* POS Access Toggle */}
- <div className="flex items-center justify-between p-2 rounded-lg bg-app-background border">
+ <div className="flex items-center justify-between p-2 layout-card-radius border theme-border" style={{ background: 'var(--theme-bg)' }}>
  <div className="flex items-center gap-2">
- <Monitor className="h-4 w-4 text-app-muted-foreground" />
- <span className="text-xs font-medium">POS Access</span>
+ <Monitor className="h-4 w-4 theme-text-muted" />
+ <span className="text-xs font-medium theme-text">POS Access</span>
  </div>
  <button
  onClick={async () => {
@@ -224,7 +235,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  {/* Assigned Users */}
  <div>
  <div className="flex justify-between items-center mb-2">
- <h4 className="text-xs font-semibold uppercase text-muted-foreground">Assigned Users</h4>
+ <h4 className="text-xs font-semibold uppercase theme-text-muted">Assigned Users</h4>
  <AssignUserDialog accountId={account.id} onAssign={onRefresh} />
  </div>
  <div className="flex flex-wrap gap-2">
@@ -242,7 +253,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
  </Badge>
  ))
  ) : (
- <span className="text-sm text-app-muted-foreground italic">No active users</span>
+ <span className="text-sm theme-text-muted italic">No active users</span>
  )}
  </div>
  </div>
@@ -340,7 +351,7 @@ function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>
  return (
  <Dialog open={open} onOpenChange={setOpen}>
  <DialogTrigger asChild>
- <Button variant="ghost" size="icon" className="text-app-muted-foreground">
+ <Button variant="ghost" size="icon" className="theme-text-muted">
  <Edit3 className="h-4 w-4" />
  </Button>
  </DialogTrigger>
@@ -349,13 +360,13 @@ function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>
  <DialogTitle>Edit Account</DialogTitle>
  <DialogDescription>Update account details or link it to a ledger sub-account.</DialogDescription>
  </DialogHeader>
- <div className="space-y-4 py-4">
+ <div className="space-y-[var(--layout-element-gap)] py-4">
  <div className="space-y-2">
- <label className="text-sm font-medium">Account Name</label>
+ <label className="text-sm font-medium theme-text">Account Name</label>
  <Input value={name} onChange={(e) => setName(e.target.value)} />
  </div>
  <div className="space-y-2">
- <label className="text-sm font-medium">Ledger Sub-account Link</label>
+ <label className="text-sm font-medium theme-text">Ledger Sub-account Link</label>
  <Select onValueChange={setLedgerId} value={ledgerId}>
  <SelectTrigger>
  <SelectValue placeholder={loadingCoa ? "Loading..." : "Select Ledger Sub-account..."} />
@@ -363,12 +374,12 @@ function EditAccountDialog({ account, onUpdate }: { account: Record<string, any>
  <SelectContent className="max-h-[300px]">
  {coaList.map(coa => (
  <SelectItem key={coa.id} value={coa.id.toString()}>
- {coa.code} - {coa.name} <span className="text-app-muted-foreground text-xs ml-2">({coa.type})</span>
+ {coa.code} - {coa.name} <span className="theme-text-muted text-xs ml-2">({coa.type})</span>
  </SelectItem>
  ))}
  </SelectContent>
  </Select>
- <p className="text-xs text-muted-foreground">Select an existing ledger sub-account to link the transactions to.</p>
+ <p className="text-xs theme-text-muted">Select an existing ledger sub-account to link the transactions to.</p>
  </div>
  <Button onClick={handleSave} disabled={loading || !name} className="w-full">
  {loading ? "Saving..." : "Save Changes"}
