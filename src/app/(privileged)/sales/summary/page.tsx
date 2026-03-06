@@ -41,11 +41,11 @@ export default function DailySummaryPage() {
 
  if (loading || !data) {
  return (
- <div className="app-page space-y-8 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <div className="app-page space-y-[var(--layout-section-spacing)] layout-container-padding animate-in fade-in slide-in-from-bottom-4 duration-700">
  <Skeleton className="h-12 w-72" />
- <div className="grid grid-cols-4 gap-6">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-[2rem]" />)}</div>
- <Skeleton className="h-64 rounded-[2rem]" />
- <div className="grid grid-cols-2 gap-6">{[1, 2].map(i => <Skeleton key={i} className="h-64 rounded-[2rem]" />)}</div>
+ <div className="grid grid-cols-4 gap-[var(--layout-element-gap)]">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 layout-card-radius" />)}</div>
+ <Skeleton className="h-64 layout-card-radius" />
+ <div className="grid grid-cols-2 gap-[var(--layout-element-gap)]">{[1, 2].map(i => <Skeleton key={i} className="h-64 layout-card-radius" />)}</div>
  </div>
  )
  }
@@ -56,54 +56,68 @@ export default function DailySummaryPage() {
  const timeStr = today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
  return (
- <div className="space-y-8 p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+ <div className="space-y-[var(--layout-section-spacing)] layout-container-padding animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 max-w-7xl mx-auto">
  {/* Header */}
  <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 bg-app-primary/10 border border-app-primary/20">
-          <BarChart3 size={32} className="text-app-primary" />
+        <div className="w-16 h-16 layout-card-radius flex items-center justify-center shrink-0" style={{
+          background: 'var(--theme-primary)',
+          opacity: 0.1,
+          border: '1px solid var(--theme-primary)'
+        }}>
+          <BarChart3 size={32} className="theme-primary" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Sales</p>
-          <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
-            Sales <span className="text-app-primary">Summary</span>
+          <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">Sales</p>
+          <h1 className="text-4xl font-black tracking-tight theme-text italic">
+            Sales <span className="theme-primary">Summary</span>
           </h1>
         </div>
       </div>
     </header>
 
  {/* Hero KPIs */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
- <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-[2rem] text-app-foreground shadow-xl shadow-emerald-100 relative overflow-hidden">
- <div className="absolute top-0 right-0 w-32 h-32 bg-app-foreground/5 rounded-full -translate-y-10 translate-x-10" />
- <div className="relative">
+ <div className="grid grid-cols-2 lg:grid-cols-4 gap-[var(--layout-element-gap)]">
+ <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 layout-card-radius border-0 shadow-xl relative overflow-hidden">
+ <CardContent className="layout-card-padding">
+ <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
+ <div className="relative text-white">
  <DollarSign size={24} className="mb-3 opacity-80" />
  <div className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Today's Revenue</div>
  <div className="text-3xl font-black tracking-tight">{fmt(overall?.revenue || 0)}</div>
  </div>
- </div>
+ </CardContent>
+ </Card>
 
- <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
+ <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+ <CardContent className="layout-card-padding">
  <ShoppingCart size={24} className="text-app-info mb-3" />
- <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Total Orders</div>
- <div className="text-3xl font-black text-app-foreground tracking-tight">{overall?.orders || 0}</div>
- </div>
+ <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Total Orders</div>
+ <div className="text-3xl font-black theme-text tracking-tight">{overall?.orders || 0}</div>
+ </CardContent>
+ </Card>
 
- <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
- <TrendingUp size={24} className="text-app-primary mb-3" />
- <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Avg. Order</div>
- <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.avg_order || 0)}</div>
- </div>
+ <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+ <CardContent className="layout-card-padding">
+ <TrendingUp size={24} className="theme-primary mb-3" />
+ <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Avg. Order</div>
+ <div className="text-3xl font-black theme-text tracking-tight">{fmt(overall?.avg_order || 0)}</div>
+ </CardContent>
+ </Card>
 
- <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
+ <Card className="layout-card-radius border-0 shadow-sm theme-surface">
+ <CardContent className="layout-card-padding">
  <Receipt size={24} className="text-rose-500 mb-3" />
- <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Tax Collected</div>
- <div className="text-3xl font-black text-app-foreground tracking-tight">{fmt(overall?.tax || 0)}</div>
- </div>
+ <div className="text-[10px] font-black theme-text-muted uppercase tracking-widest mb-1">Tax Collected</div>
+ <div className="text-3xl font-black theme-text tracking-tight">{fmt(overall?.tax || 0)}</div>
+ </CardContent>
+ </Card>
  </div>
 
  {/* Revenue Breakdown Banner */}
- <div className="bg-app-surface text-app-foreground p-8 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+ <Card className="layout-card-radius border-0 shadow-lg theme-surface">
+ <CardContent className="layout-card-padding">
+ <div className="flex flex-col md:flex-row justify-between items-center gap-8">
  <div className="flex gap-10">
  <div>
  <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Gross Revenue</div>
