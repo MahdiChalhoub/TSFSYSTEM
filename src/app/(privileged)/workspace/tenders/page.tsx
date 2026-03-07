@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
  FileText, Clock, CheckCircle2, XCircle, RefreshCw,
- Users, DollarSign, CalendarDays
+ Users, DollarSign, CalendarDays, Briefcase
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'

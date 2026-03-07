@@ -131,6 +131,11 @@ class RejectLineSerializer(serializers.Serializer):
     evidence_attachment = serializers.URLField(required=False, allow_blank=True, default='')
 
 
+class ResetLineSerializer(serializers.Serializer):
+    """Serializer for resetting a line back to PENDING."""
+    line_id = serializers.IntegerField()
+
+
 class DecisionPreviewSerializer(serializers.Serializer):
     """Serializer for decision preview request."""
     product_id = serializers.IntegerField()
@@ -142,13 +147,18 @@ class DecisionPreviewSerializer(serializers.Serializer):
 # VIEWSET
 # ═══════════════════════════════════════════════════════════════════════════
 
-class GoodsReceiptViewSet(TenantModelViewSet):
+from apps.inventory.mixins.branch_scoped import BranchScopedMixin
+
+class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
     """
     ViewSet for Goods Receipt (Purchase Receiving Screen).
     Provides CRUD + custom actions for the receiving workflow.
+    Branch-scoped: users only see receipts from their assigned branches.
     """
     serializer_class = GoodsReceiptSerializer
     queryset = GoodsReceipt.objects.all()
+    branch_field = 'branch'
+    warehouse_field = 'warehouse'
 
     def get_queryset(self):
         qs = super().get_queryset().select_related(
@@ -362,6 +372,42 @@ class GoodsReceiptViewSet(TenantModelViewSet):
         line.processed_by = request.user
         line.processed_at = timezone.now()
         line.save()
+
+        return Response(GoodsReceiptLineSerializer(line).data)
+
+    @action(detail=True, methods=['post'], url_path='reset-line')
+    def reset_line(self, request, pk=None):
+        """Reset a received/rejected line back to PENDING."""
+        receipt = self.get_object()
+
+        if receipt.status in ('CLOSED', 'CANCELLED'):
+            return Response(
+                {'error': 'Cannot reset lines on a closed/cancelled session'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ser = ResetLineSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+
+        try:
+            line = receipt.lines.get(id=data['line_id'])
+        except GoodsReceiptLine.DoesNotExist:
+            return Response({'error': 'Line not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Reset quantities and status
+        line.qty_received = Decimal('0.00')
+        line.qty_rejected = Decimal('0.00')
+        line.rejection_reason = 'NOT_REJECTED'
+        line.rejection_notes = ''
+        line.evidence_attachment = ''
+        line.line_status = 'PENDING'
+        line.processed_by = None
+        line.processed_at = None
+        line.save()
+
+        # Recompute decision metrics
+        GoodsReceiptService.compute_and_apply(line)
 
         return Response(GoodsReceiptLineSerializer(line).data)
 

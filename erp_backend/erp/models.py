@@ -580,6 +580,11 @@ class User(AbstractUser):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
     role = models.ForeignKey('erp.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
+    assigned_branches = models.ManyToManyField(
+        'inventory.Warehouse', blank=True, related_name='branch_users',
+        limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Branches this user can access. Empty = all branches.'
+    )
     # cash_register FK — uses IntegerField to avoid hard dependency on finance module
     cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
     is_active_account = models.BooleanField(default=True)
@@ -651,6 +656,33 @@ class User(AbstractUser):
         if not self.pos_pin:
             return False  # No PIN = cannot authenticate via PIN
         return check_password(raw_pin, self.pos_pin)
+
+    def get_accessible_warehouses(self):
+        """
+        Return warehouses the user can work with.
+        - If assigned_branches is set: returns all non-BRANCH children under those branches
+        - If no branches assigned: returns all warehouses (admin/backward compat)
+        """
+        from apps.inventory.models import Warehouse
+        branches = self.assigned_branches.all()
+        if not branches.exists():
+            # No branch restriction — return all (backward compat for admins)
+            return Warehouse.objects.filter(organization=self.organization).exclude(location_type='BRANCH')
+
+        # Collect all descendant IDs from assigned branches
+        warehouse_ids = []
+        for branch in branches:
+            warehouse_ids.extend(branch.get_all_descendant_ids())
+
+        return Warehouse.objects.filter(
+            id__in=warehouse_ids,
+            organization=self.organization,
+        ).exclude(location_type='BRANCH')
+
+    def get_accessible_branch_ids(self):
+        """Return branch IDs the user can access. Empty list = all branches."""
+        branch_ids = list(self.assigned_branches.values_list('id', flat=True))
+        return branch_ids
 
     def __str__(self):
         return self.email if self.email else self.username

@@ -2,7 +2,7 @@ import React from 'react'
 import ConsignmentManager from './manager'
 import { getAvailableConsignmentStock, getPendingConsignmentItems, getConsignmentSettlements } from '@/app/actions/consignment'
 import { getContacts } from '@/app/actions/crm/contacts'
-import { Handshake } from 'lucide-react'
+import { Handshake, Package } from 'lucide-react'
 
 export default async function ConsignmentPage() {
  let availableStock: any = [], pendingItems: any = [], settlements: any = [], contacts: any = [];

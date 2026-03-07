@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { erpFetch } from "@/lib/erp-api";
-import { Plus, Search, Layers, ChevronLeft, ChevronRight, Filter, ShieldCheck, Database } from 'lucide-react';
+import { Plus, Search, Layers, ChevronLeft, ChevronRight, Filter, ShieldCheck, Database, Archive } from 'lucide-react';
 import ProductDashboardStats from '../ProductStats';
 import { ProductRow, GroupRow } from '../ProductRows';
 

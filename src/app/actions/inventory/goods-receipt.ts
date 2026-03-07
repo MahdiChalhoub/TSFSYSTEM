@@ -131,6 +131,16 @@ export async function rejectLine(sessionId: number, data: {
     })
 }
 
+export async function resetLine(sessionId: number, data: {
+    line_id: number
+}): Promise<GoodsReceiptLine> {
+    return await erpFetch(`inventory/goods-receipts/${sessionId}/reset-line/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    })
+}
+
 export async function finalizeReceiving(sessionId: number): Promise<GoodsReceipt> {
     return await erpFetch(`inventory/goods-receipts/${sessionId}/finalize/`, {
         method: 'POST',

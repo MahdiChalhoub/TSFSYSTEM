@@ -30,7 +30,7 @@ export default async function CountriesPage() {
           <p className="text-sm text-app-muted-foreground mt-0.5">Country and region management</p>
         </div>
       </header>
-      <CountriesClient initialCountries={countries} />
+      <CountriesClient initialCountries={countries} categories={[]} />
     </div>
   )
 }

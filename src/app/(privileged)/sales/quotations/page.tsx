@@ -1,4 +1,4 @@
-import { erpFetch } from '@/lib/erp-fetch'
+import { erpFetchJSON } from '@/lib/erp-fetch'
 import { FileText } from 'lucide-react';
 import QuotationManager from './manager'
 
@@ -7,12 +7,31 @@ interface Contact {
  name: string
 }
 
+interface Product {
+ id: number
+ sku: string
+ name: string
+ selling_price_ttc: number
+ tva_rate: number
+}
+
+interface QuotationLine {
+ id: number
+ product: number
+ product_name: string
+ product_sku: string
+ quantity: number
+ unit_price_ttc: number
+ total_ttc: number
+ discount: number
+}
+
 interface Quotation {
  id: number
  reference: string | null
  status: string
  contact_name: string | null
- user_name: string | null
+ contact: number | null
  total_ht: number
  total_tax: number
  total_ttc: number
@@ -22,23 +41,23 @@ interface Quotation {
  line_count: number
  converted_order: number | null
  created_at: string
- lines: Record<string, any>[]
+ lines: QuotationLine[]
 }
 
 export default async function QuotationsPage() {
  let quotations: Quotation[] = []
  let contacts: Contact[] = []
- let products: Record<string, any>[] = []
+ let products: Product[] = []
 
  try {
  const [qRes, cRes, pRes] = await Promise.all([
- erpFetch('/quotations/'),
- erpFetch('/contacts/'),
- erpFetch('/products/'),
+ erpFetchJSON<any>('/quotations/'),
+ erpFetchJSON<any>('/contacts/'),
+ erpFetchJSON<any>('/products/'),
  ])
- quotations = Array.isArray(qRes) ? qRes : qRes.results || []
- contacts = Array.isArray(cRes) ? cRes : cRes.results || []
- products = Array.isArray(pRes) ? pRes : pRes.results || []
+ quotations = Array.isArray(qRes) ? qRes : (qRes as any)?.results || []
+ contacts = Array.isArray(cRes) ? cRes : (cRes as any)?.results || []
+ products = Array.isArray(pRes) ? pRes : (pRes as any)?.results || []
  } catch { /* empty */ }
 
  return (

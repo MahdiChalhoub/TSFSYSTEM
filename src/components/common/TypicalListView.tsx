@@ -196,7 +196,7 @@ export function TypicalListView<T, D = any>({
  }
 
  return (
- <div className={cn("space-y-4 bg-app-text/70 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-app-border p-1.5 overflow-hidden", className)}>
+ <div className={cn("space-y-4 bg-app-surface/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-app-shadow border border-app-border p-1.5 overflow-hidden", className)}>
  {/* ─── Header Section ────────────────── */}
  <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-app-border">
  <div className="flex items-center gap-4">
@@ -257,7 +257,7 @@ export function TypicalListView<T, D = any>({
  )}
 
  {onAdd && (
- <Button onClick={onAdd} size="sm" className="bg-app-primary hover:bg-app-primary text-xs font-bold shadow-emerald-100 shadow-lg border-none px-4">
+ <Button onClick={onAdd} size="sm" className="bg-app-primary hover:bg-app-primary text-xs font-bold shadow-app-primary/20 shadow-lg border-none px-4">
  <Plus className="h-4 w-4 mr-1 text-app-text stroke-[3px]" /> {addLabel || 'ADD'}
  </Button>
  )}
@@ -270,11 +270,11 @@ export function TypicalListView<T, D = any>({
 
  {/* ─── Bulk Actions Bar ──────────────── */}
  {selection && selection.selectedIds.size > 0 && (
- <div className="mx-5 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shadow-sm">
+ <div className="mx-5 px-4 py-2 bg-app-primary-light/10 border border-app-primary-light rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shadow-sm">
  <div className="flex items-center gap-3">
- <span className="text-sm font-bold text-indigo-700">{selection.selectedIds.size} lines selected</span>
- <div className="h-4 w-px bg-indigo-200" />
- <button onClick={() => selection.onSelectionChange(new Set())} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-4">
+ <span className="text-sm font-bold text-app-primary">{selection.selectedIds.size} lines selected</span>
+ <div className="h-4 w-px bg-app-primary-light/20" />
+ <button onClick={() => selection.onSelectionChange(new Set())} className="text-xs text-app-primary hover:text-app-primary font-medium underline underline-offset-4">
  Clear selection
  </button>
  </div>
@@ -309,7 +309,7 @@ export function TypicalListView<T, D = any>({
  {sortKey === c.key ? (
  sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-app-primary animate-in zoom-in" /> : <ArrowUp className="h-3 w-3 text-app-primary animate-in zoom-in" />
  ) : (
- <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-slate-300 transition-all duration-300" />
+ <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-app-text-muted transition-all duration-300" />
  )}
  </button>
  ) : (
@@ -351,7 +351,7 @@ export function TypicalListView<T, D = any>({
 
  return (
  <React.Fragment key={id}>
- <TableRow className={`group cursor-pointer transition-all duration-300 border-b border-app-border relative ${isSelected ? 'bg-app-primary-light/50 shadow-[inset_4px_0_0_0_#10b981]' : 'hover:bg-app-surface-2 hover:shadow-lg hover:shadow-slate-200/20'}`}>
+ <TableRow className={`group cursor-pointer transition-all duration-300 border-b border-app-border relative ${isSelected ? 'bg-app-primary-light/50 shadow-[inset_4px_0_0_0_#10b981]' : 'hover:bg-app-surface-2 hover:shadow-lg hover:shadow-app-shadow/20'}`}>
  {(expandable || renderExpanded) && (
  <TableCell className="px-4" onClick={() => toggleExpand(id)}>
  {isExpanded ? <ChevronDown className="h-4 w-4 text-app-text-faint" /> : <ChevronRight className="h-4 w-4 text-app-text-faint" />}
@@ -382,10 +382,10 @@ export function TypicalListView<T, D = any>({
  const s = lifecycle.getStatus(row)
  const colorMap: Record<string, string> = {
  default: 'bg-app-surface-2 text-app-text-muted border-app-border',
- success: 'bg-app-primary-light text-app-success border-emerald-100 shadow-[0_0_8px_rgba(16,185,129,0.1)]',
+ success: 'bg-app-primary-light text-app-success border-app-primary-light shadow-[0_0_8px_rgba(16,185,129,0.1)]',
  warning: 'bg-app-warning-bg text-app-warning border-amber-100',
- danger: 'bg-rose-50 text-rose-700 border-rose-100',
- info: 'bg-app-info-bg text-app-info border-blue-100'
+ danger: 'bg-app-error-bg text-app-error border-app-error-light',
+ info: 'bg-app-info-bg text-app-info border-app-info-light'
  }
  return <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight border ${colorMap[s.variant]}`}>{s.label}</span>
  })()}
@@ -398,7 +398,7 @@ export function TypicalListView<T, D = any>({
  onClick={(e) => { e.stopPropagation(); lifecycle.onLockToggle?.(row) }}
  className="p-1.5 rounded-lg hover:bg-app-surface-2 transition-colors"
  >
- {lifecycle.getLocked?.(row) ? <Lock className="h-4 w-4 text-app-warning" /> : <Unlock className="h-4 w-4 text-gray-300" />}
+ {lifecycle.getLocked?.(row) ? <Lock className="h-4 w-4 text-app-warning" /> : <Unlock className="h-4 w-4 text-app-text-muted" />}
  </button>
  </TableCell>
  </>
@@ -422,7 +422,7 @@ export function TypicalListView<T, D = any>({
  </DropdownMenuItem>
  )}
  {lifecycle.onCancel && !lifecycle.getCanceled?.(row) && (
- <DropdownMenuItem onClick={() => lifecycle.onCancel?.(row)} className="text-rose-600 font-semibold focus:text-rose-600 focus:bg-rose-50">
+ <DropdownMenuItem onClick={() => lifecycle.onCancel?.(row)} className="text-app-error font-semibold focus:text-app-error focus:bg-app-error-bg">
  <XCircle className="mr-2 h-4 w-4" /> Cancel
  </DropdownMenuItem>
  )}
@@ -453,7 +453,7 @@ export function TypicalListView<T, D = any>({
  {actions.onDelete && (
  <>
  <DropdownMenuSeparator />
- <DropdownMenuItem onClick={() => actions.onDelete!(row)} className="text-xs font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600">
+ <DropdownMenuItem onClick={() => actions.onDelete!(row)} className="text-xs font-bold text-app-error hover:bg-app-error-bg hover:text-app-error">
  <Trash2 size={14} className="mr-2" /> Delete
  </DropdownMenuItem>
  </>
@@ -473,7 +473,7 @@ export function TypicalListView<T, D = any>({
  renderExpanded(row)
  ) : expandable && (
  <div className="p-5 overflow-hidden animate-in slide-in-from-top-2 duration-300">
- <div className="bg-app-surface rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
+ <div className="bg-app-surface rounded-xl border border-app-primary-light shadow-sm overflow-hidden">
  <Table>
  <TableHeader className="bg-app-primary-light/50">
  <TableRow className="border-b-0 hover:bg-transparent">
@@ -487,7 +487,7 @@ export function TypicalListView<T, D = any>({
  </TableHeader>
  <TableBody>
  {expandable.getDetails(row).map((detail: any, di: number) => (
- <TableRow key={di} className="hover:bg-app-primary-light/30 border-b border-emerald-50 last:border-0">
+ <TableRow key={di} className="hover:bg-app-primary-light/30 border-b border-app-border last:border-0">
  {expandable.columns.map(ec => (
  <TableCell key={ec.key} className={`px-4 py-3 text-xs ${ec.align === 'right' ? 'text-right font-mono' : 'text-left'}`}>
  {ec.render ? ec.render(detail) : detail[ec.key]}
@@ -552,7 +552,7 @@ export function TypicalListView<T, D = any>({
  )}
 
  {/* ─── Pagination Section ────────────── */}
- <div className="px-5 py-3 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+ <div className="px-5 py-3 border-t border-app-border flex flex-col sm:flex-row items-center justify-between gap-4">
  <div className="flex items-center gap-4">
  <p className="text-xs text-app-text-faint font-medium whitespace-nowrap">
  Showing <span className="text-app-text-muted font-bold">{Math.min(sortedData.length, (currentPage - 1) * pageSize + 1)}</span>

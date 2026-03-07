@@ -60,6 +60,9 @@ class Order(TenantModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='orders', help_text='Branch/location where this order was made')
+    branch = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='branch_orders', limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from site — do not set manually')
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -192,3 +195,17 @@ class PosTicket(TenantModel):
         unique_together = ('user', 'ticket_id')
     def __str__(self):
         return f"Ticket {self.name} ({self.user.username})"
+
+
+# ─── Auto-derive branch on Order ─────────────────────────────────────────────
+
+from django.db.models.signals import pre_save  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+@receiver(pre_save, sender=Order)
+def derive_order_branch(sender, instance, **kwargs):
+    """Stamp branch FK from the order's site (warehouse) parent chain."""
+    if instance.site:
+        site = instance.site
+        instance.branch = site.get_branch() if site.location_type != 'BRANCH' else site

@@ -218,7 +218,5 @@ export {
   CardFooter,
   CardTitle,
   CardDescription,
-  CardContent,
-  type CardVariant,
-  type CardProps
+  CardContent
 }

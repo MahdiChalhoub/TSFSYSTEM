@@ -61,15 +61,19 @@ class StockMoveSerializer(serializers.ModelSerializer):
         return None
 
 
+from apps.inventory.mixins.branch_scoped import StockMoveBranchScopedMixin
+
+
 # ── ViewSet ────────────────────────────────────────────────────────────────────
 
-class StockMoveViewSet(LifecycleViewSetMixin, TenantModelViewSet):
+class StockMoveViewSet(StockMoveBranchScopedMixin, LifecycleViewSetMixin, TenantModelViewSet):
     """
-    Mixin-compatible viewset — requires TenantModelViewSet base from the inventory app.
+    Branch-scoped viewset — validates both source and destination warehouses.
     Registered at router.register(r'stock-moves', StockMoveViewSet, basename='stock-moves').
     """
     queryset         = StockMove.objects.select_related(
-        'from_warehouse', 'to_warehouse', 'order', 'requested_by'
+        'from_warehouse', 'to_warehouse', 'order', 'requested_by',
+        'source_branch', 'dest_branch'
     ).prefetch_related('lines__product').all()
     serializer_class = StockMoveSerializer
     filterset_fields = ['status', 'move_type', 'from_warehouse', 'to_warehouse']

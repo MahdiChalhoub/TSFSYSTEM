@@ -76,6 +76,12 @@ class GoodsReceipt(AuditLogMixin, TenantOwnedModel):
         null=True, blank=True, related_name='goods_receipts',
         limit_choices_to={'type': 'SUPPLIER'}
     )
+    branch = models.ForeignKey(
+        'inventory.Warehouse', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='branch_goods_receipts',
+        limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from warehouse — do not set manually'
+    )
 
     # Actors
     received_by = models.ForeignKey(
@@ -326,3 +332,17 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
 
     def __str__(self):
         return f"{self.product} × {self.qty_received} ({self.get_line_status_display()})"
+
+
+# ─── Auto-derive branch on GoodsReceipt ─────────────────────────────────────
+
+from django.db.models.signals import pre_save  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+@receiver(pre_save, sender=GoodsReceipt)
+def derive_goods_receipt_branch(sender, instance, **kwargs):
+    """Stamp branch FK from the receiving warehouse's parent chain."""
+    if instance.warehouse:
+        wh = instance.warehouse
+        instance.branch = wh.get_branch() if wh.location_type != 'BRANCH' else wh

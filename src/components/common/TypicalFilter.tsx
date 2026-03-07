@@ -89,7 +89,7 @@ export function TypicalFilter({
  <Select key={f.key}
  value={typeof val === 'string' ? val : ''}
  onValueChange={v => onChange?.(f.key, v === '__all__' ? '' : v)}>
- <SelectTrigger className={`bg-app-text/50 border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
+ <SelectTrigger className={`bg-app-surface border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[140px]'} font-black uppercase tracking-tight`}>
  <SelectValue placeholder={f.label} />
  </SelectTrigger>
  <SelectContent className="rounded-xl border-app-border shadow-2xl">
@@ -106,7 +106,7 @@ export function TypicalFilter({
  <Input key={f.key} type="date"
  value={typeof val === 'string' ? val : ''}
  onChange={e => onChange?.(f.key, e.target.value)}
- className={`bg-app-text/50 border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ className={`bg-app-surface border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
  placeholder={f.placeholder || f.label} />
  )
 
@@ -115,7 +115,7 @@ export function TypicalFilter({
  <Input key={f.key}
  value={typeof val === 'string' ? val : ''}
  onChange={e => onChange?.(f.key, e.target.value)}
- className={`bg-app-text/50 border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
+ className={`bg-app-surface border-app-border focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-xl font-bold ${compact ? 'h-8 text-[11px]' : 'h-10 text-xs'} ${inPanel ? 'w-full' : 'w-auto min-w-[150px]'}`}
  placeholder={f.placeholder || f.label} />
  )
 
@@ -141,15 +141,15 @@ export function TypicalFilter({
  {/* Search */}
  {search && (
  <div className="relative w-72 group/search">
- <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-slate-300 group-hover/search:text-app-primary transition-colors duration-500`} />
+ <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} text-app-text-muted group-hover/search:text-app-primary transition-colors duration-500`} />
  <Input
  placeholder={search.placeholder || 'IDENTIFY TARGET NODES...'}
  value={search.value}
  onChange={e => search.onChange(e.target.value)}
- className={`pl-11 pr-10 bg-app-text/50 border-app-border focus:bg-app-surface focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
+ className={`pl-11 pr-10 bg-app-surface border-app-border focus:bg-app-surface focus:ring-app-primary/10 focus:border-app-primary transition-all rounded-full font-black text-[11px] uppercase tracking-tight shadow-inner ${compact ? 'h-8' : 'h-10'}`} />
  {search.value && (
  <button onClick={() => search.onChange('')}
- className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-app-error hover:bg-app-error-bg transition-all">
+ className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-app-text-muted hover:text-app-error hover:bg-app-error-bg transition-all">
  <X className="h-3.5 w-3.5" />
  </button>
  )}
@@ -169,10 +169,10 @@ export function TypicalFilter({
  ? 'border-app-primary bg-app-primary text-app-text shadow-lg shadow-app-primary/20'
  : 'border-app-border bg-app-surface text-app-text-muted hover:text-app-text hover:border-app-border hover:shadow-lg'
  } ${compact ? 'h-8 text-[10px]' : 'h-10 text-[11px] font-black uppercase tracking-widest'}`}>
- <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-app-text' : 'text-slate-300 group-hover/adv:text-app-primary'} transition-colors duration-500`} />
+ <SlidersHorizontal className={`h-4 w-4 ${showAdvanced ? 'text-app-text' : 'text-app-text-muted group-hover/adv:text-app-primary'} transition-colors duration-500`} />
  Advanced
  {activeCount > 0 && (
- <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-app-success shadow-inner' : 'bg-app-primary text-app-text shadow-lg shadow-emerald-200'}`}>
+ <span className={`inline-flex items-center justify-center px-1.5 py-0 rounded-full text-[9px] font-black min-w-[20px] h-5 ${showAdvanced ? 'bg-app-surface text-app-success shadow-inner' : 'bg-app-primary text-app-text shadow-lg shadow-app-primary/20'}`}>
  {activeCount}
  </span>
  )}
@@ -184,7 +184,7 @@ export function TypicalFilter({
  {onReset && (
  <button
  onClick={onReset}
- className={`flex items-center gap-2 px-3 h-10 rounded-xl text-slate-300 hover:text-app-error hover:bg-app-error-bg transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
+ className={`flex items-center gap-2 px-3 h-10 rounded-xl text-app-text-muted hover:text-app-error hover:bg-app-error-bg transition-all duration-300 group/reset ${compact ? 'text-[10px]' : 'text-[11px] font-black uppercase tracking-widest'}`}>
  <RotateCcw className="h-3.5 w-3.5 group-hover/reset:rotate-[-180deg] transition-transform duration-500" /> Reset
  </button>
  )}

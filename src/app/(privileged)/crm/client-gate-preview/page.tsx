@@ -9,7 +9,7 @@ export default function ClientGatePreviewPage() {
   {/* V2 Header */}
   <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 fade-in-up">
     <div className="flex items-center gap-4">
-      <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-primary)20', border: `1px solid ${color}40` }}>
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-primary)20', border: '1px solid var(--app-primary)40' }}>
         <Users size={26} style={{ color: 'var(--app-primary)' }} />
       </div>
       <div>

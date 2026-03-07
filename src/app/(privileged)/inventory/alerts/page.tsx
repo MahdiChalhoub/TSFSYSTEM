@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import { BarChart3, RefreshCw, Activity } from "lucide-react";
+import { BarChart3, RefreshCw, Activity, Bell } from "lucide-react";
 import { AlertsClient } from "./AlertsClient";
 import Link from "next/link";
 export const dynamic = 'force-dynamic';

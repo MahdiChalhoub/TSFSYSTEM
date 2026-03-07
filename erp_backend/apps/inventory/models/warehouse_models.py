@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from decimal import Decimal
 from erp.models import TenantModel
 
@@ -64,10 +66,107 @@ class Warehouse(TenantModel):
             return self.parent.name
         return self.name
 
+    def clean(self):
+        """Enforce hierarchy constraints."""
+        from django.core.exceptions import ValidationError
+        errors = {}
+
+        # Rule: STORE / WAREHOUSE / VIRTUAL must have a parent (branch)
+        if self.location_type in ('STORE', 'WAREHOUSE', 'VIRTUAL') and not self.parent:
+            errors['parent'] = f'{self.get_location_type_display()} must belong to a Branch.'
+
+        # Rule: parent of non-BRANCH must be a BRANCH (strict 2-level tree)
+        if self.parent and self.location_type != 'BRANCH':
+            if self.parent.location_type != 'BRANCH':
+                errors['parent'] = 'Locations can only be placed directly under a Branch.'
+
+        # Rule: BRANCH cannot be nested under another BRANCH
+        if self.location_type == 'BRANCH' and self.parent:
+            errors['parent'] = 'Branches are top-level and cannot be nested under another location.'
+
+        # Rule: no self-referencing
+        if self.parent_id and self.pk and self.parent_id == self.pk:
+            errors['parent'] = 'A location cannot be its own parent.'
+
+        # Rule: BRANCH cannot have can_sell=True
+        if self.location_type == 'BRANCH' and self.can_sell:
+            self.can_sell = False  # silently fix instead of erroring
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def get_branch(self):
+        """Walk up the parent chain to find the root Branch."""
+        node = self
+        while node:
+            if node.location_type == 'BRANCH':
+                return node
+            node = node.parent
+        return None
+
+    def get_all_children(self):
+        """Return all descendant locations (flat queryset)."""
+        return Warehouse.objects.filter(parent=self)
+
+    def get_all_descendant_ids(self):
+        """Return IDs of self + all descendants (recursive)."""
+        ids = [self.id]
+        for child in self.children.all():
+            ids.extend(child.get_all_descendant_ids())
+        return ids
+
+
+@receiver(post_save, sender=Warehouse)
+def auto_create_branch_children(sender, instance, created, **kwargs):
+    """When a new Branch is created, auto-generate Main Store + Main Warehouse."""
+    if not created:
+        return
+    if instance.location_type != 'BRANCH':
+        return
+
+    # Avoid recursion — children are not BRANCH type
+    org = instance.organization
+
+    # Generate codes based on branch code
+    branch_code = instance.code or f'BR{instance.id}'
+
+    Warehouse.objects.create(
+        organization=org,
+        parent=instance,
+        name=f'{instance.name} — Main Store',
+        code=f'{branch_code}-STORE',
+        location_type='STORE',
+        can_sell=True,
+        address=instance.address,
+        city=instance.city,
+        phone=instance.phone,
+    )
+
+    Warehouse.objects.create(
+        organization=org,
+        parent=instance,
+        name=f'{instance.name} — Main Warehouse',
+        code=f'{branch_code}-WH',
+        location_type='WAREHOUSE',
+        can_sell=False,
+        address=instance.address,
+        city=instance.city,
+        phone=instance.phone,
+    )
+
 
 
 class Inventory(TenantModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    branch = models.ForeignKey(
+        Warehouse, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='branch_inventory', limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from warehouse'
+    )
     product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE, related_name='inventory')
     variant = models.ForeignKey('inventory.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True, related_name='inventory_stock')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
@@ -85,6 +184,9 @@ class Inventory(TenantModel):
     class Meta:
         db_table = 'inventory'
         unique_together = ('warehouse', 'product', 'variant', 'organization')
+        indexes = [
+            models.Index(fields=['organization', 'branch'], name='inv_org_branch_idx'),
+        ]
 
 
 class InventoryMovement(TenantModel):
@@ -96,6 +198,11 @@ class InventoryMovement(TenantModel):
     )
     product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    branch = models.ForeignKey(
+        Warehouse, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='branch_movements', limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from warehouse'
+    )
     type = models.CharField(max_length=20, choices=MOVEMENT_TYPES)
     quantity = models.DecimalField(max_digits=15, decimal_places=2)
     reference = models.CharField(max_length=100, null=True, blank=True)
@@ -107,3 +214,29 @@ class InventoryMovement(TenantModel):
 
     class Meta:
         db_table = 'inventorymovement'
+        indexes = [
+            models.Index(fields=['organization', 'branch'], name='invmov_org_branch_idx'),
+        ]
+
+
+# ─── Auto-derive branch from warehouse on save ──────────────────────────────
+
+from django.db.models.signals import pre_save  # noqa: E402
+
+
+def _derive_branch_from_warehouse(instance, warehouse_field='warehouse', branch_field='branch'):
+    """Resolve and stamp the branch FK from the warehouse's parent chain."""
+    wh = getattr(instance, warehouse_field, None)
+    if wh:
+        branch = wh.get_branch() if wh.location_type != 'BRANCH' else wh
+        setattr(instance, branch_field, branch)
+
+
+@receiver(pre_save, sender=Inventory)
+def derive_inventory_branch(sender, instance, **kwargs):
+    _derive_branch_from_warehouse(instance)
+
+
+@receiver(pre_save, sender=InventoryMovement)
+def derive_movement_branch(sender, instance, **kwargs):
+    _derive_branch_from_warehouse(instance)

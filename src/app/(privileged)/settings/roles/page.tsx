@@ -1,6 +1,6 @@
 import { getPermissionsMatrix } from "@/app/actions/settings/roles"
 import { RolesMatrixClient } from "./RolesMatrixClient"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Shield } from "lucide-react"
 
 export const dynamic = 'force-dynamic'
 

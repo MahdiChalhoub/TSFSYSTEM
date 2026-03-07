@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Standalone output: creates a minimal production bundle
+  // Reduces Docker image from ~900MB to ~100MB
+  output: 'standalone',
+
   // Server action configuration for Hostinger
   experimental: {
     serverActions: {
@@ -31,6 +35,26 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Cache static assets aggressively — filenames are content-hashed
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache fonts (30 days)
+        source: '/fonts/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=2592000, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           {
@@ -47,7 +71,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(), geolocation=(), unload=()',
           },
           {
             key: 'Content-Security-Policy',

@@ -428,7 +428,7 @@ export function Sidebar({
 
     const ALL_KNOWN_MODULES = ['core', 'pos', 'finance', 'inventory', 'crm', 'hr', 'purchases', 'ecommerce', 'mcp'];
     const [installedModules, setInstalledModules] = useState<Set<string>>(
-        new Set(isSaas ? ['core', 'mcp'] : ALL_KNOWN_MODULES)
+        new Set(ALL_KNOWN_MODULES)
     );
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
@@ -437,7 +437,11 @@ export function Sidebar({
             try {
                 const [modules, sidebarData] = await Promise.all([getSaaSModules(), getDynamicSidebar()]);
                 if (Array.isArray(modules)) {
-                    setInstalledModules(new Set(modules.map((m: Record<string, unknown>) => m.code as string)));
+                    // MERGE dynamic modules with built-in ones — built-in Django apps
+                    // (pos, finance, inventory, crm, hr, ecommerce) don't have manifest.json
+                    // in the module registry, so getSaaSModules() won't return them.
+                    const dynamicCodes = modules.map((m: Record<string, unknown>) => m.code as string);
+                    setInstalledModules(new Set([...ALL_KNOWN_MODULES, ...dynamicCodes]));
                 }
                 if (Array.isArray(sidebarData)) {
                     const parsed = sidebarData.map(item => {

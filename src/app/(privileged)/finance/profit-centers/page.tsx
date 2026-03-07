@@ -57,7 +57,7 @@ export default function ProfitCentersPage() {
  classGroups[cls] = { name: CLASS_NAMES[cls], income: 0, expense: 0, accounts: [] }
  }
 
- const bal = parseFloat(a.balance || 0)
+ const bal = parseFloat(String(a.balance || 0))
  classGroups[cls].accounts.push(a)
 
  if (a.type === 'INCOME' || cls === '7') {

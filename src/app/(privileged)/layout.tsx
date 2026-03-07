@@ -95,10 +95,16 @@ export default async function AdminLayout({
     }
 
     // 2. Fetch data in parallel ONLY if authenticated
-    const [sites, organizations, financialSettings] = await Promise.all([
+    // ── All independent fetches run concurrently to minimize waterfall ──
+    const setupReadinessPromise = !isSaas ? checkSetupReadiness().catch(() => ({ ready: true })) : Promise.resolve({ ready: true });
+    const themePromise = import('@/app/actions/settings/theme');
+
+    const [sites, organizations, financialSettings, setupReadiness, themeModule] = await Promise.all([
         getSites(),
         getOrganizations(),
         getGlobalFinancialSettings(),
+        setupReadinessPromise,
+        themePromise,
     ]);
 
     // ── HARD GATE: Setup Wizard for TENANT subdomains only ──
@@ -106,29 +112,18 @@ export default async function AdminLayout({
     if (!isSaas) {
         const pathname = headerList.get('x-pathname') || '';
         const isOnWizard = pathname.startsWith('/setup-wizard') || pathname.startsWith('/migration');
-        if (!isOnWizard) {
-            try {
-                const setupReadiness = await checkSetupReadiness();
-                if (!setupReadiness.ready) {
-                    redirect('/setup-wizard');
-                }
-            } catch {
-                // If check fails, don't block — let user through
-            }
+        if (!isOnWizard && !setupReadiness.ready) {
+            redirect('/setup-wizard');
         }
     }
-
-
-
+    // ── Phase 5: 3-tier theme fallback chain ────────────────────────────
     const cookieStore = await cookies();
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
 
-    // ── Phase 5: 3-tier theme fallback chain ────────────────────────────
     // Priority: user cookie → org default (DB) → system default (midnight-pro)
-    const { getPersistedTheme, getOrgDefaultTheme } = await import('@/app/actions/settings/theme');
-    const userTheme = await getPersistedTheme();
+    const userTheme = await themeModule.getPersistedTheme();
     // Only hit the backend for org default if the user has no personal preference
-    const orgTheme = userTheme ? null : await getOrgDefaultTheme();
+    const orgTheme = userTheme ? null : await themeModule.getOrgDefaultTheme();
     const serverTheme = userTheme ?? orgTheme ?? undefined;
 
     return (

@@ -11,14 +11,17 @@ from apps.pos.models import Order
 from apps.pos.serializers import OrderSerializer
 from apps.pos.services.workflow_service import SalesWorkflowService, WorkflowError
 from apps.pos.services.permission_service import SalesPermissionService
+from apps.inventory.mixins.branch_scoped import BranchScopedMixin
 
 
-class OrderViewSet(TenantModelViewSet):
-    """CRUD for sales/purchase orders + workflow state machine actions."""
-    queryset = Order.objects.select_related('contact', 'user', 'site').prefetch_related(
+class OrderViewSet(BranchScopedMixin, TenantModelViewSet):
+    """CRUD for sales/purchase orders + workflow state machine actions. Branch-scoped."""
+    queryset = Order.objects.select_related('contact', 'user', 'site', 'branch').prefetch_related(
         'lines', 'payments_received', 'payments_made', 'deliveries', 'returns', 'purchase_returns'
     ).all()
     serializer_class = OrderSerializer
+    branch_field = 'branch'
+    warehouse_field = 'site'
     # Expose all 4 axes as filter fields
     filterset_fields = [
         'type', 'status',

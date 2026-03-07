@@ -97,7 +97,7 @@ export default function POSSettingsPage() {
   <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 fade-in-up">
     <div className="flex items-center gap-4">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-warning)20', border: `1px solid $var(--app-warning)40` }}>
-        <Settings size={26} style={{ color: 'var(--app-warning)' }} />
+        <Settings2 size={26} style={{ color: 'var(--app-warning)' }} />
       </div>
       <div>
         <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Management</p>

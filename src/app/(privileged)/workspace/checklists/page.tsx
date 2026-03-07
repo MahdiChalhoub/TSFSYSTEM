@@ -1,6 +1,6 @@
 /** Workspace — Checklists */
 import { erpFetch } from "@/lib/erp-api";
-import { ListChecks, ClipboardCheck, Calendar, Award } from "lucide-react";
+import { ListChecks, ClipboardCheck, Calendar, Award, ClipboardList } from "lucide-react";
 import ChecklistsClient from "./client";
 
 export const dynamic = 'force-dynamic';

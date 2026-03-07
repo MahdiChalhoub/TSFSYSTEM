@@ -8,7 +8,7 @@ export default async function AccountPage() {
     const summary = await getAccountSummary().catch(() => null)
 
     const kpis = [
-        { label: 'Total Orders', value: summary?.total_orders ?? '—', icon: Package },
+        { label: 'Total Orders', value: summary?.orders_count ?? '—', icon: Package },
         { label: 'Total Spent', value: summary?.total_spent ? parseFloat(summary.total_spent).toLocaleString() : '—', icon: ShoppingBag },
         { label: 'Loyalty Points', value: summary?.loyalty_points ?? '—', icon: Star },
         { label: 'Wallet Balance', value: summary?.wallet_balance ? parseFloat(summary.wallet_balance).toLocaleString() : '—', icon: Wallet },

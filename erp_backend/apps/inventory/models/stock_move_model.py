@@ -58,6 +58,20 @@ class StockMove(AuditLogMixin, TenantOwnedModel, PostableMixin):
         help_text='Destination warehouse (stock arrives here)',
     )
 
+    # ── Branch Scope (auto-derived from warehouses) ──────────────────────────
+    source_branch  = models.ForeignKey(
+        'inventory.Warehouse', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='outgoing_branch_moves',
+        limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from from_warehouse',
+    )
+    dest_branch    = models.ForeignKey(
+        'inventory.Warehouse', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='incoming_branch_moves',
+        limit_choices_to={'location_type': 'BRANCH'},
+        help_text='Auto-derived from to_warehouse',
+    )
+
     # ── Optional order link (for inter-warehouse fulfilment on sales orders) ─
     order          = models.ForeignKey(
         'pos.Order', on_delete=models.SET_NULL,
@@ -117,3 +131,20 @@ class StockMoveLine(AuditLogMixin, TenantOwnedModel):
 
     def __str__(self):
         return f"{self.product} × {self.quantity} (done: {self.quantity_done})"
+
+
+# ─── Auto-derive branches on StockMove ───────────────────────────────────────
+
+from django.db.models.signals import pre_save  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+@receiver(pre_save, sender=StockMove)
+def derive_stock_move_branches(sender, instance, **kwargs):
+    """Stamp source_branch and dest_branch from from/to warehouses."""
+    if instance.from_warehouse:
+        wh = instance.from_warehouse
+        instance.source_branch = wh.get_branch() if wh.location_type != 'BRANCH' else wh
+    if instance.to_warehouse:
+        wh = instance.to_warehouse
+        instance.dest_branch = wh.get_branch() if wh.location_type != 'BRANCH' else wh

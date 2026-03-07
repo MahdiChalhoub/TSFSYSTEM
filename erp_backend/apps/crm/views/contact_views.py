@@ -146,7 +146,7 @@ class ContactViewSet(TenantModelViewSet):
             from apps.finance.payment_models import Payment
             payment_type = 'CUSTOMER_RECEIPT' if contact.type == 'CUSTOMER' else 'SUPPLIER_PAYMENT'
             payments = Payment.objects.filter(
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 contact=contact,
                 type=payment_type
             ).order_by('-payment_date')
@@ -164,12 +164,12 @@ class ContactViewSet(TenantModelViewSet):
             if contact.type == 'CUSTOMER':
                 from apps.finance.payment_models import CustomerBalance
                 bal_obj = CustomerBalance.objects.filter(
-                    organization_id=organization_id, contact=contact
+                    tenant_id=organization_id, contact=contact
                 ).first()
             else:
                 from apps.finance.payment_models import SupplierBalance
                 bal_obj = SupplierBalance.objects.filter(
-                    organization_id=organization_id, contact=contact
+                    tenant_id=organization_id, contact=contact
                 ).first()
 
             balance_data = {
@@ -179,11 +179,11 @@ class ContactViewSet(TenantModelViewSet):
 
             # Journal entries via linked COA sub-account
             recent_journal = []
-            if contact.linked_account:
+            if contact.linked_account_id:
                 from apps.finance.models import JournalEntryLine
                 journal_lines = JournalEntryLine.objects.filter(
                     organization_id=organization_id,
-                    account_id=contact.linked_account
+                    account_id=contact.linked_account_id
                 ).select_related('journal_entry', 'account').order_by('-journal_entry__transaction_date')[:10]
 
                 recent_journal = [{

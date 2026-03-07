@@ -1,29 +1,40 @@
-# Using Node.js 20 (Required for Next.js 16)
-FROM node:20-alpine
+# Multi-stage build for minimal production image
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Set work directory
 WORKDIR /app
 
-# Increase Node.js memory limit
+# Increase Node.js memory limit for build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Copy package files
+# Install dependencies (cached layer)
 COPY package.json package-lock.json* ./
-
-# Install dependencies
 RUN npm install
 
-# Copy project files
+# Copy source and build
 COPY scripts/ ./scripts/
 COPY . .
-
-# Build the application
-# Note: Next.js build requires environment variables if they are used at build time
 RUN npm run build
+
+# Stage 2: Runtime (minimal image)
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+# Reduce memory for runtime (standalone needs less)
+ENV NODE_OPTIONS="--max-old-space-size=512"
+
+# Copy only what's needed for production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "start"]
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
+# Start with standalone server (no npm overhead)
+CMD ["node", "server.js"]

@@ -49,12 +49,15 @@ from apps.inventory.serializers import StockAlertSerializer
 from rest_framework import permissions
 from erp.permissions import InventoryReadOnlyOrManage, permission_required
 
+from apps.inventory.mixins.branch_scoped import BranchScopedMixin
 
 
-class InventoryViewSet(TenantModelViewSet):
+class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
     permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
-    queryset = Inventory.objects.select_related('product', 'warehouse').all()
+    queryset = Inventory.objects.select_related('product', 'warehouse', 'branch').all()
     serializer_class = InventorySerializer
+    branch_field = 'branch'
+    warehouse_field = 'warehouse'
 
     @action(detail=False, methods=['get'], url_path='available-consignment')
     def available_consignment(self, request):
@@ -445,10 +448,12 @@ class InventoryViewSet(TenantModelViewSet):
         })
 
 
-class InventoryMovementViewSet(UDLEViewSetMixin, TenantModelViewSet):
+class InventoryMovementViewSet(BranchScopedMixin, UDLEViewSetMixin, TenantModelViewSet):
     permission_classes = [permissions.IsAuthenticated, InventoryReadOnlyOrManage]
-    queryset = InventoryMovement.objects.select_related('product', 'warehouse').all()
+    queryset = InventoryMovement.objects.select_related('product', 'warehouse', 'branch').all()
     serializer_class = InventoryMovementSerializer
+    branch_field = 'branch'
+    warehouse_field = 'warehouse'
     http_method_names = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']
     filterset_fields = ['type', 'product', 'warehouse']
     search_fields = ['reference', 'product__name', 'warehouse__name']

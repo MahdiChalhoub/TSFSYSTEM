@@ -1,6 +1,7 @@
 from django.db import models
 from apps.inventory.models import Warehouse
 from apps.inventory.serializers import WarehouseSerializer
+from apps.inventory.mixins.branch_scoped import BranchScopedMixin
 from .base import (
     Organization,
     Response,
@@ -9,9 +10,29 @@ from .base import (
     status,
 )
 
-class WarehouseViewSet(TenantModelViewSet):
+class WarehouseViewSet(BranchScopedMixin, TenantModelViewSet):
+    """Branch-scoped warehouse viewset. Users only see warehouses under their assigned branches."""
     queryset = Warehouse.objects.select_related('parent').all()
     serializer_class = WarehouseSerializer
+    branch_field = 'parent'  # For non-branch locations, filter by parent (branch)
+    warehouse_field = 'parent'
+    enforce_branch = True
+
+    def get_queryset(self):
+        """Custom: show branches + their children (not just filtered by branch FK)."""
+        qs = Warehouse.objects.select_related('parent').filter(
+            organization_id=get_current_tenant_id() or self.request.user.organization_id
+        )
+
+        user = self.request.user
+        if hasattr(user, 'assigned_branches'):
+            branch_ids = user.get_accessible_branch_ids()
+            if branch_ids:
+                # Show the branches themselves + all children under them
+                from django.db.models import Q
+                qs = qs.filter(Q(id__in=branch_ids) | Q(parent__in=branch_ids))
+
+        return qs
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)

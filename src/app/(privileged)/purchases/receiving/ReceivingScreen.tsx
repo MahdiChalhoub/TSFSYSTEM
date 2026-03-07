@@ -6,11 +6,12 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useCurrency } from '@/lib/utils/currency'
 import {
-    startReceivingSession, addReceivingLine, receiveLine, rejectLine,
+    startReceivingSession, addReceivingLine, receiveLine, rejectLine, resetLine,
     finalizeReceiving, getDecisionPreview, getReceivingSession,
     type GoodsReceipt, type GoodsReceiptLine
 } from '@/app/actions/inventory/goods-receipt'
 import { fetchPurchaseOrders } from '@/app/actions/pos/purchases'
+import { getContactsByType } from '@/app/actions/crm/contacts'
 import {
     Package, Truck, Search, PackageCheck, PackageX, ScanBarcode,
     ChevronLeft, Check, X, AlertTriangle, ArrowRightLeft, ShieldCheck,
@@ -19,6 +20,7 @@ import {
     ChevronDown, ChevronUp, Warehouse as WarehouseIcon, Store
 } from 'lucide-react'
 import Link from 'next/link'
+import SmartDatePicker from '@/components/ui/SmartDatePicker'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BADGE CONFIG — Decision engine warning badges
@@ -77,8 +79,10 @@ export default function ReceivingScreen() {
     const [mode, setMode] = useState<'DIRECT' | 'PO_BASED'>(initialMode)
     const [selectedPO, setSelectedPO] = useState<number | null>(null)
     const [selectedWarehouse, setSelectedWarehouse] = useState<number | null>(null)
+    const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null)
     const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
     const [warehouses, setWarehouses] = useState<any[]>([])
+    const [suppliers, setSuppliers] = useState<any[]>([])
 
     // Product search
     const [searchQuery, setSearchQuery] = useState('')
@@ -108,6 +112,7 @@ export default function ReceivingScreen() {
     useEffect(() => {
         loadPurchaseOrders()
         loadWarehouses()
+        loadSuppliers()
     }, [])
 
     async function loadPurchaseOrders() {
@@ -115,7 +120,7 @@ export default function ReceivingScreen() {
             const data = await fetchPurchaseOrders()
             const list = Array.isArray(data) ? data : (data?.results ?? [])
             setPurchaseOrders(list.filter((po: any) =>
-                ['SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(po.status)
+                ['APPROVED', 'SENT', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED'].includes(po.status)
             ))
         } catch { setPurchaseOrders([]) }
     }
@@ -127,6 +132,19 @@ export default function ReceivingScreen() {
             setWarehouses(Array.isArray(data) ? data : (data?.results ?? []))
         } catch { setWarehouses([]) }
     }
+
+    async function loadSuppliers() {
+        try {
+            const data = await getContactsByType('SUPPLIER')
+            const list = Array.isArray(data) ? data : (data?.results ?? [])
+            setSuppliers(list)
+        } catch { setSuppliers([]) }
+    }
+
+    // Filtered POs based on selected supplier
+    const filteredPurchaseOrders = selectedSupplier
+        ? purchaseOrders.filter((po: any) => po.supplier === selectedSupplier || po.supplier?.id === selectedSupplier)
+        : purchaseOrders
 
     // ── Start Session ──
     async function handleStartSession() {
@@ -246,6 +264,25 @@ export default function ReceivingScreen() {
                     rejection_notes: popupRejNotes,
                 })
                 toast.success(`${popup.line.product_name} rejected`)
+
+            } else if (popup?.action === 'reject' && popup.product) {
+                // Add new line and reject it
+                const line = await addReceivingLine(session.id, {
+                    product_id: popup.product.id,
+                    qty_rejected: Number(popupQty) || 0,
+                    expiry_date: popupExpiry || null,
+                    batch_number: popupBatch,
+                })
+
+                if (Number(popupQty) > 0) {
+                    await rejectLine(session.id, {
+                        line_id: line.id,
+                        qty_rejected: Number(popupQty),
+                        rejection_reason: popupRejReason,
+                        rejection_notes: popupRejNotes,
+                    })
+                }
+                toast.success(`${popup.product.name} added and rejected`)
             }
 
             // Refresh session
@@ -268,6 +305,21 @@ export default function ReceivingScreen() {
             toast.success('Receiving session finalized — stock updated')
         } catch (e: any) {
             toast.error(e?.message || 'Failed to finalize')
+        }
+        setActionLoading(false)
+    }
+
+    // ── Reset Line (back to pending) ──
+    async function handleResetLine(line: GoodsReceiptLine) {
+        if (!session) return
+        setActionLoading(true)
+        try {
+            await resetLine(session.id, { line_id: line.id })
+            const updated = await getReceivingSession(session.id)
+            setSession(updated)
+            toast.success(`${line.product_name} reset to pending`)
+        } catch (e: any) {
+            toast.error(e?.message || 'Failed to reset line')
         }
         setActionLoading(false)
     }
@@ -351,23 +403,46 @@ export default function ReceivingScreen() {
                             </select>
                         </div>
 
-                        {/* PO Selection (Mode B only) */}
+                        {/* Supplier + PO Selection (Mode B only) */}
                         {mode === 'PO_BASED' && (
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-2 block">Purchase Order</label>
-                                <select
-                                    value={selectedPO || ''}
-                                    onChange={e => setSelectedPO(Number(e.target.value) || null)}
-                                    className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none"
-                                >
-                                    <option value="">Select PO...</option>
-                                    {purchaseOrders.map((po: any) => (
-                                        <option key={po.id} value={po.id}>
-                                            {po.po_number || `PO-${po.id}`} — {po.supplier?.name || po.supplier_name || 'Unknown'} ({po.status})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <>
+                                <div>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-2 block">Supplier</label>
+                                    <select
+                                        value={selectedSupplier || ''}
+                                        onChange={e => {
+                                            const val = Number(e.target.value) || null
+                                            setSelectedSupplier(val)
+                                            setSelectedPO(null) // reset PO when supplier changes
+                                        }}
+                                        className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    >
+                                        <option value="">Select supplier...</option>
+                                        {suppliers.map((s: any) => (
+                                            <option key={s.id} value={s.id}>{s.name || s.company_name || `Supplier #${s.id}`}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-2 block">Purchase Order</label>
+                                    <select
+                                        value={selectedPO || ''}
+                                        onChange={e => setSelectedPO(Number(e.target.value) || null)}
+                                        disabled={!selectedSupplier}
+                                        className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none disabled:opacity-50"
+                                    >
+                                        <option value="">{selectedSupplier ? 'Select PO...' : 'Select a supplier first...'}</option>
+                                        {filteredPurchaseOrders.map((po: any) => (
+                                            <option key={po.id} value={po.id}>
+                                                {po.po_number || `PO-${po.id}`} — {po.status}{po.expected_date ? ` • Due: ${po.expected_date}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {selectedSupplier && filteredPurchaseOrders.length === 0 && (
+                                        <p className="text-xs text-amber-600 mt-1.5 font-medium">No open purchase orders for this supplier</p>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                         {/* Start button */}
@@ -494,7 +569,7 @@ export default function ReceivingScreen() {
 
                 {/* ── Section Tabs ── */}
                 <div className="flex border-b border-app-border">
-                    {(mode === 'PO_BASED' ? ['pending', 'received', 'rejected'] : ['received', 'rejected']).map(tab => {
+                    {['pending', 'received', 'rejected'].map(tab => {
                         const count = tab === 'pending' ? pendingLines.length : tab === 'received' ? receivedLines.length : rejectedLines.length
                         const isActive = activeTab === tab
                         return (
@@ -502,8 +577,8 @@ export default function ReceivingScreen() {
                                 key={tab}
                                 onClick={() => setActiveTab(tab as any)}
                                 className={`px-4 py-3 text-sm font-bold capitalize transition-colors border-b-2 flex items-center gap-2 ${isActive
-                                        ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                                        : 'border-transparent text-app-muted-foreground hover:text-app-foreground'
+                                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                    : 'border-transparent text-app-muted-foreground hover:text-app-foreground'
                                     }`}
                             >
                                 {tab}
@@ -521,13 +596,13 @@ export default function ReceivingScreen() {
                 {/* ── Lines Table ── */}
                 <div className="space-y-2">
                     {activeTab === 'pending' && pendingLines.map(line => (
-                        <LineCard key={line.id} line={line} onReceive={l => handleOpenLine(l, 'receive')} onReject={l => handleOpenLine(l, 'reject')} fmt={fmt} />
+                        <LineCard key={line.id} line={line} onReceive={l => handleOpenLine(l, 'receive')} onReject={l => handleOpenLine(l, 'reject')} fmt={fmt} sessionOpen={session.status !== 'CLOSED' && session.status !== 'CANCELLED'} />
                     ))}
                     {activeTab === 'received' && receivedLines.map(line => (
-                        <LineCard key={line.id} line={line} fmt={fmt} />
+                        <LineCard key={line.id} line={line} onReject={l => handleOpenLine(l, 'reject')} onReset={handleResetLine} fmt={fmt} sessionOpen={session.status !== 'CLOSED' && session.status !== 'CANCELLED'} />
                     ))}
                     {activeTab === 'rejected' && rejectedLines.map(line => (
-                        <LineCard key={line.id} line={line} fmt={fmt} />
+                        <LineCard key={line.id} line={line} onReceive={l => handleOpenLine(l, 'receive')} onReset={handleResetLine} fmt={fmt} sessionOpen={session.status !== 'CLOSED' && session.status !== 'CANCELLED'} />
                     ))}
                     {((activeTab === 'pending' && pendingLines.length === 0) ||
                         (activeTab === 'received' && receivedLines.length === 0) ||
@@ -550,147 +625,150 @@ export default function ReceivingScreen() {
      ═══════════════════════════════════════════════════════════════════════ */}
             {popup && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setPopup(null)}>
-                    <div className="w-full md:max-w-lg bg-app-surface rounded-t-2xl md:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="w-full md:max-w-lg bg-app-surface rounded-t-2xl md:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                        <div className="overflow-y-auto flex-1">
 
-                        {/* Block 1: Product Identity */}
-                        <div className="p-5 border-b border-app-border">
-                            <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                                    <Package size={20} className="text-emerald-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-black text-lg text-app-foreground truncate">
-                                        {popup.line?.product_name || popup.product?.name || 'Product'}
-                                    </h3>
-                                    <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
-                                        {(popup.line?.product_barcode || popup.product?.barcode) && (
-                                            <span className="font-mono">{popup.line?.product_barcode || popup.product?.barcode}</span>
-                                        )}
-                                        {popup.line?.qty_ordered > 0 && (
-                                            <span className="font-bold">Ordered: {popup.line.qty_ordered}</span>
+                            {/* Block 1: Product Identity */}
+                            <div className="p-5 border-b border-app-border">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                                        <Package size={20} className="text-emerald-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-black text-lg text-app-foreground truncate">
+                                            {popup.line?.product_name || popup.product?.name || 'Product'}
+                                        </h3>
+                                        <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
+                                            {(popup.line?.product_barcode || popup.product?.barcode) && (
+                                                <span className="font-mono">{popup.line?.product_barcode || popup.product?.barcode}</span>
+                                            )}
+                                            {popup.line?.qty_ordered > 0 && (
+                                                <span className="font-bold">Ordered: {popup.line.qty_ordered}</span>
+                                            )}
+                                        </div>
+                                        {popup.line?.is_unexpected && (
+                                            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
+                                                ⚠ Unexpected Item
+                                            </span>
                                         )}
                                     </div>
-                                    {popup.line?.is_unexpected && (
-                                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
-                                            ⚠ Unexpected Item
-                                        </span>
-                                    )}
-                                </div>
-                                <button onClick={() => setPopup(null)} className="text-app-muted-foreground hover:text-app-foreground">
-                                    <X size={20} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Block 2: User Input */}
-                        <div className="p-5 space-y-4 border-b border-app-border">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
-                                        {popup.action === 'reject' ? 'Qty to Reject' : 'Qty to Receive'}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={popupQty}
-                                        onChange={e => setPopupQty(e.target.value)}
-                                        placeholder="0"
-                                        className="w-full border border-app-border rounded-lg p-3 text-sm font-bold bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
-                                        autoFocus
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Expiry Date</label>
-                                    <input
-                                        type="date"
-                                        value={popupExpiry}
-                                        onChange={e => setPopupExpiry(e.target.value)}
-                                        className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
-                                    />
+                                    <button onClick={() => setPopup(null)} className="text-app-muted-foreground hover:text-app-foreground">
+                                        <X size={20} />
+                                    </button>
                                 </div>
                             </div>
 
-                            {popup.action !== 'reject' && (
-                                <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Batch / Lot Number</label>
-                                    <input
-                                        type="text"
-                                        value={popupBatch}
-                                        onChange={e => setPopupBatch(e.target.value)}
-                                        placeholder="Optional"
-                                        className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
-                                    />
-                                </div>
-                            )}
-
-                            {popup.action === 'reject' && (
-                                <>
+                            {/* Block 2: User Input */}
+                            <div className="p-5 space-y-4 border-b border-app-border">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Rejection Reason</label>
-                                        <select
-                                            value={popupRejReason}
-                                            onChange={e => setPopupRejReason(e.target.value)}
-                                            className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
-                                        >
-                                            {REJECTION_REASONS.map(r => (
-                                                <option key={r.value} value={r.value}>{r.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Notes</label>
-                                        <textarea
-                                            value={popupRejNotes}
-                                            onChange={e => setPopupRejNotes(e.target.value)}
-                                            rows={2}
-                                            placeholder="Optional details..."
-                                            className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">
+                                            {popup.action === 'reject' ? 'Qty to Reject' : 'Qty to Receive'}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={popupQty}
+                                            onChange={e => setPopupQty(e.target.value)}
+                                            placeholder="0"
+                                            className="w-full border border-app-border rounded-lg p-3 text-sm font-bold bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
+                                            autoFocus
                                         />
                                     </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Block 3: Decision Support */}
-                        {(popup.preview || popup.line?.stock_on_location !== undefined) && (
-                            <div className="p-5 border-b border-app-border">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-3 flex items-center gap-1.5">
-                                    <BarChart3 size={12} /> Decision Intelligence
-                                </p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { label: 'Stock Here', value: popup.preview?.stock_on_location ?? popup.line?.stock_on_location ?? 0 },
-                                        { label: 'Total Stock', value: popup.preview?.total_stock ?? popup.line?.total_stock ?? 0 },
-                                        { label: 'Avg Daily Sales', value: Number(popup.preview?.avg_daily_sales ?? popup.line?.avg_daily_sales ?? 0).toFixed(1) },
-                                        { label: 'Safe Qty', value: Number(popup.preview?.safe_qty ?? popup.line?.safe_qty ?? 0).toFixed(0), highlight: true },
-                                        { label: 'Safe After Rcpt', value: Number(popup.preview?.safe_qty_after_receipt ?? popup.line?.safe_qty_after_receipt ?? 0).toFixed(0) },
-                                        { label: 'Coverage %', value: `${Number(popup.preview?.receipt_coverage_pct ?? popup.line?.receipt_coverage_pct ?? 0).toFixed(0)}%` },
-                                    ].map(m => (
-                                        <div key={m.label} className="bg-app-background rounded-lg p-2.5 text-center">
-                                            <p className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground">{m.label}</p>
-                                            <p className={`text-sm font-black ${m.highlight ? 'text-emerald-500' : 'text-app-foreground'} mt-0.5`}>{m.value}</p>
-                                        </div>
-                                    ))}
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Expiry Date</label>
+                                        <SmartDatePicker
+                                            value={popupExpiry}
+                                            onChange={setPopupExpiry}
+                                            placeholder="Pick expiry date..."
+                                            showPresets={true}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Block 4: Warnings / Recommendations */}
-                        {(popup.preview?.warnings || popup.line?.decision_warnings)?.length > 0 && (
-                            <div className="px-5 py-3 border-b border-app-border flex flex-wrap gap-1.5">
-                                {(popup.preview?.warnings || popup.line?.decision_warnings || []).map((w: string) => {
-                                    const cfg = BADGE_CONFIG[w]
-                                    if (!cfg) return null
-                                    return (
-                                        <span key={w} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${cfg.color}`}>
-                                            <cfg.icon size={10} /> {cfg.label}
-                                        </span>
-                                    )
-                                })}
-                            </div>
-                        )}
+                                {popup.action !== 'reject' && (
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Batch / Lot Number</label>
+                                        <input
+                                            type="text"
+                                            value={popupBatch}
+                                            onChange={e => setPopupBatch(e.target.value)}
+                                            placeholder="Optional"
+                                            className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
+                                        />
+                                    </div>
+                                )}
 
-                        {/* Block 5: Actions */}
-                        <div className="p-5 flex gap-3">
+                                {popup.action === 'reject' && (
+                                    <>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Rejection Reason</label>
+                                            <select
+                                                value={popupRejReason}
+                                                onChange={e => setPopupRejReason(e.target.value)}
+                                                className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none min-h-[48px]"
+                                            >
+                                                {REJECTION_REASONS.map(r => (
+                                                    <option key={r.value} value={r.value}>{r.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1 block">Notes</label>
+                                            <textarea
+                                                value={popupRejNotes}
+                                                onChange={e => setPopupRejNotes(e.target.value)}
+                                                rows={2}
+                                                placeholder="Optional details..."
+                                                className="w-full border border-app-border rounded-lg p-3 text-sm font-medium bg-app-background text-app-foreground focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Block 3: Decision Support */}
+                            {(popup.preview || popup.line?.stock_on_location !== undefined) && (
+                                <div className="p-5 border-b border-app-border">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-3 flex items-center gap-1.5">
+                                        <BarChart3 size={12} /> Decision Intelligence
+                                    </p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { label: 'Stock Here', value: popup.preview?.stock_on_location ?? popup.line?.stock_on_location ?? 0 },
+                                            { label: 'Total Stock', value: popup.preview?.total_stock ?? popup.line?.total_stock ?? 0 },
+                                            { label: 'Avg Daily Sales', value: Number(popup.preview?.avg_daily_sales ?? popup.line?.avg_daily_sales ?? 0).toFixed(1) },
+                                            { label: 'Safe Qty', value: Number(popup.preview?.safe_qty ?? popup.line?.safe_qty ?? 0).toFixed(0), highlight: true },
+                                            { label: 'Safe After Rcpt', value: Number(popup.preview?.safe_qty_after_receipt ?? popup.line?.safe_qty_after_receipt ?? 0).toFixed(0) },
+                                            { label: 'Coverage %', value: `${Number(popup.preview?.receipt_coverage_pct ?? popup.line?.receipt_coverage_pct ?? 0).toFixed(0)}%` },
+                                        ].map(m => (
+                                            <div key={m.label} className="bg-app-background rounded-lg p-2.5 text-center">
+                                                <p className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground">{m.label}</p>
+                                                <p className={`text-sm font-black ${m.highlight ? 'text-emerald-500' : 'text-app-foreground'} mt-0.5`}>{m.value}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Block 4: Warnings / Recommendations */}
+                            {(popup.preview?.warnings || popup.line?.decision_warnings)?.length > 0 && (
+                                <div className="px-5 py-3 border-b border-app-border flex flex-wrap gap-1.5">
+                                    {(popup.preview?.warnings || popup.line?.decision_warnings || []).map((w: string) => {
+                                        const cfg = BADGE_CONFIG[w]
+                                        if (!cfg) return null
+                                        return (
+                                            <span key={w} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${cfg.color}`}>
+                                                <cfg.icon size={10} /> {cfg.label}
+                                            </span>
+                                        )
+                                    })}
+                                </div>
+                            )}
+
+                        </div>{/* end scroll wrapper */}
+
+                        {/* Block 5: Actions (pinned at bottom) */}
+                        <div className="p-5 flex gap-3 shrink-0 border-t border-app-border">
                             <button
                                 onClick={() => setPopup(null)}
                                 className="flex-1 py-3 rounded-xl border border-app-border text-app-foreground font-bold text-sm hover:bg-app-background transition-colors min-h-[48px]"
@@ -741,15 +819,23 @@ function LineCard({
     line,
     onReceive,
     onReject,
+    onReset,
     fmt,
+    sessionOpen = true,
 }: {
     line: GoodsReceiptLine
     onReceive?: (line: GoodsReceiptLine) => void
     onReject?: (line: GoodsReceiptLine) => void
+    onReset?: (line: GoodsReceiptLine) => void
     fmt: (val: number) => string
+    sessionOpen?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
     const statusCfg = STATUS_BADGE[line.line_status] || { label: line.line_status, color: 'bg-gray-100 text-gray-500' }
+
+    const isPending = ['PENDING', 'SCANNED', 'UNDER_REVIEW', 'APPROVAL_REQUIRED'].includes(line.line_status)
+    const isReceived = ['RECEIVED', 'PARTIALLY_RECEIVED', 'APPROVED_EXTRA', 'VERIFIED', 'CLOSED'].includes(line.line_status)
+    const isRejected = ['REJECTED', 'REFUSED_EXTRA', 'RETURN_PENDING'].includes(line.line_status)
 
     return (
         <div className="bg-app-surface border border-app-border rounded-xl shadow-sm overflow-hidden">
@@ -793,21 +879,60 @@ function LineCard({
                     })}
                 </div>
 
-                {/* Action buttons */}
-                {onReceive && (
+                {/* Action buttons — context-sensitive based on line status */}
+                {sessionOpen && (
                     <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                            onClick={() => onReceive(line)}
-                            className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
-                        >
-                            <PackageCheck size={12} /> Receive
-                        </button>
-                        {onReject && (
+                        {/* Pending lines: Receive + Reject */}
+                        {isPending && onReceive && (
+                            <button
+                                onClick={() => onReceive(line)}
+                                className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
+                            >
+                                <PackageCheck size={12} /> Receive
+                            </button>
+                        )}
+                        {isPending && onReject && (
                             <button
                                 onClick={() => onReject(line)}
                                 className="px-3 py-2 rounded-lg border border-red-300 text-red-600 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <PackageX size={12} /> Reject
+                            </button>
+                        )}
+
+                        {/* Received lines: Reset + Reject */}
+                        {isReceived && onReset && (
+                            <button
+                                onClick={() => onReset(line)}
+                                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
+                            >
+                                <RefreshCw size={12} /> Reset
+                            </button>
+                        )}
+                        {isReceived && onReject && (
+                            <button
+                                onClick={() => onReject(line)}
+                                className="px-3 py-2 rounded-lg border border-red-300 text-red-600 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[40px] flex items-center gap-1"
+                            >
+                                <PackageX size={12} /> Reject
+                            </button>
+                        )}
+
+                        {/* Rejected lines: Reset + Receive */}
+                        {isRejected && onReset && (
+                            <button
+                                onClick={() => onReset(line)}
+                                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
+                            >
+                                <RefreshCw size={12} /> Reset
+                            </button>
+                        )}
+                        {isRejected && onReceive && (
+                            <button
+                                onClick={() => onReceive(line)}
+                                className="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors min-h-[40px] flex items-center gap-1"
+                            >
+                                <PackageCheck size={12} /> Receive
                             </button>
                         )}
                     </div>

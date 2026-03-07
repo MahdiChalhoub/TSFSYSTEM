@@ -1,6 +1,6 @@
 /** Admin — Quote Request Inbox (Catalogue Storefront Leads) */
 import { getQuoteRequests } from '@/app/actions/client-portal';
-import { Mail, Clock, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { Mail, Clock, CheckCircle, XCircle, FileText, Inbox } from 'lucide-react';
 import QuoteInboxClient from './client';
 
 export const dynamic = 'force-dynamic';

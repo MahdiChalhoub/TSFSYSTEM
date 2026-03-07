@@ -159,7 +159,7 @@ export default function QuotesClient({ initialQuotes }: Props) {
                                                     <div className="app-card p-3 space-y-1">
                                                         <p className="text-sm text-[var(--app-text)]">{q.description}</p>
                                                         <p className="text-xs text-[var(--app-text-muted)]">Qty: {q.quantity}</p>
-                                                        {q.contact_email && <p className="text-xs text-[var(--app-text-muted)]">{q.contact_email}</p>}
+                                                        {typeof q.contact === 'object' && q.contact !== null && 'email' in q.contact && (q.contact as any).email && <p className="text-xs text-[var(--app-text-muted)]">{(q.contact as any).email}</p>}
                                                     </div>
                                                 </div>
                                                 <div className="space-y-3">

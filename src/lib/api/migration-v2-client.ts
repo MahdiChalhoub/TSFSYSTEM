@@ -36,9 +36,9 @@ function getAuthToken(): string | null {
  */
 async function authFetch(url: string, options: RequestInit = {}) {
     const token = getAuthToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
     };
 
     if (token) {
@@ -148,12 +148,19 @@ export async function verifyEntities(jobId: number, data: VerifyEntitiesRequest)
 // ─── Organizations ──────────────────────────────────────────────
 
 export async function getOrganizations(): Promise<Organization[]> {
-    const response = await authFetch(`${API_BASE}/organizations/`);
-    return response.results || response;
+    // Use saas/my-organizations/ like the rest of the app
+    try {
+        const response = await authFetch(`${API_BASE}/saas/my-organizations/`);
+        return response.results || response || [];
+    } catch (err) {
+        console.error('Failed to load organizations:', err);
+        // Fallback to empty array
+        return [];
+    }
 }
 
 export async function getOrganization(orgId: string): Promise<Organization> {
-    return authFetch(`${API_BASE}/organizations/${orgId}/`);
+    return authFetch(`${API_BASE}/saas/organizations/${orgId}/`);
 }
 
 // ─── Chart of Accounts (for validation display) ────────────────
