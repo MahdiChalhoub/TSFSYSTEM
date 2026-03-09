@@ -485,3 +485,83 @@ class BusinessTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = BusinessType.objects.all().order_by('name')
     serializer_class = BusinessTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PAYMENT TERMS
+# ═══════════════════════════════════════════════════════════════════
+
+from .models import PaymentTerm
+
+
+class PaymentTermSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentTerm
+        fields = [
+            'id', 'name', 'code', 'description', 'days',
+            'discount_percent', 'discount_days',
+            'is_default', 'is_active', 'sort_order',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class PaymentTermViewSet(TenantModelViewSet):
+    """Full CRUD for payment terms + seed-defaults action."""
+    queryset = PaymentTerm.objects.all()
+    serializer_class = PaymentTermSerializer
+    pagination_class = None  # return flat list, not paginated
+
+    def get_queryset(self):
+        user = self.request.user
+        tenant_id = get_current_tenant_id()
+        org_id = tenant_id or getattr(user, 'organization_id', None)
+        if not org_id:
+            return PaymentTerm.objects.none()
+        return PaymentTerm.objects.filter(organization_id=org_id).order_by('sort_order', 'name')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        tenant_id = get_current_tenant_id()
+        org_id = tenant_id or user.organization_id
+        serializer.save(organization_id=org_id)
+
+    @action(detail=False, methods=['post'], url_path='seed-defaults')
+    def seed_defaults(self, request):
+        user = request.user
+        tenant_id = get_current_tenant_id()
+        org_id = tenant_id or user.organization_id
+
+        if not org_id:
+            return Response({'error': 'No organization context'}, status=400)
+
+        defaults = [
+            {'name': 'Due on Receipt',       'code': 'DUE_ON_RECEIPT', 'days': 0,  'sort_order': 1},
+            {'name': '100% at Delivery',     'code': '100_DELIVERY',   'days': 0,  'sort_order': 2},
+            {'name': 'Net 30 Days',          'code': 'NET_30',         'days': 30, 'sort_order': 3},
+            {'name': 'Net 60 Days',          'code': 'NET_60',         'days': 60, 'sort_order': 4},
+            {'name': 'Net 90 Days',          'code': 'NET_90',         'days': 90, 'sort_order': 5},
+            {'name': 'Cash on Delivery',     'code': 'COD',            'days': 0,  'sort_order': 6},
+            {'name': 'Prepaid',              'code': 'PREPAID',        'days': 0,  'sort_order': 7},
+            {'name': '2/10 Net 30',          'code': '2_10_NET_30',    'days': 30, 'sort_order': 8,
+             'discount_percent': 2.00, 'discount_days': 10,
+             'description': '2% discount if paid within 10 days, otherwise due in 30'},
+        ]
+
+        created = []
+        for d in defaults:
+            term, was_created = PaymentTerm.objects.get_or_create(
+                organization_id=org_id,
+                code=d['code'],
+                defaults={k: v for k, v in d.items() if k != 'code'}
+            )
+            if was_created:
+                created.append(term)
+
+        if not created:
+            return Response({'message': 'Default terms already exist.', 'terms': []})
+
+        return Response({
+            'message': f'Created {len(created)} default terms.',
+            'terms': PaymentTermSerializer(created, many=True).data,
+        })

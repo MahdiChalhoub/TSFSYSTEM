@@ -796,6 +796,47 @@ from .list_preferences import OrgListDefault, UserListPreference  # noqa: E402, 
 
 
 # =============================================================================
+# PAYMENT TERMS (centralized for purchases, sales, CRM)
+# =============================================================================
+
+class PaymentTerm(models.Model):
+    """
+    Dynamic, tenant-scoped payment terms used across purchases, sales, and CRM.
+    Examples: Net 30, Due on Receipt, 2/10 Net 30, COD, etc.
+    """
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='payment_terms'
+    )
+    name = models.CharField(max_length=100)          # "Net 30 Days"
+    code = models.CharField(max_length=50)            # "NET_30"
+    description = models.TextField(blank=True, default='')
+    days = models.IntegerField(default=0)             # days until due
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_days = models.IntegerField(default=0)    # discount valid within N days
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'erp'
+        ordering = ['sort_order', 'name']
+        unique_together = [('organization', 'code')]
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default per organization
+        if self.is_default:
+            PaymentTerm.objects.filter(
+                organization_id=self.organization_id, is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+# =============================================================================
 # UI MODELS (extracted to erp/models_ui.py)
 # =============================================================================
 from .models_ui import Notification, UDLESavedView  # noqa: E402, F401

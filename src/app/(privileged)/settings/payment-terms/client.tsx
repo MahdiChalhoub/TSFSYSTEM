@@ -133,12 +133,10 @@ export default function PaymentTermsClient({ initialTerms }: { initialTerms: Pay
                     className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs">
                     <Plus size={14} className="mr-1" /> New Payment Term
                 </Button>
-                {terms.length === 0 && (
-                    <Button onClick={handleSeedDefaults} variant="outline"
-                        className="text-xs font-bold" disabled={loading}>
-                        <Sparkles size={14} className="mr-1" /> Seed Default Terms
-                    </Button>
-                )}
+                <Button onClick={handleSeedDefaults} variant="outline"
+                    className="text-xs font-bold" disabled={loading}>
+                    <Sparkles size={14} className="mr-1" /> Seed Default Terms
+                </Button>
             </div>
 
             {/* Create/Edit Form */}

@@ -11,6 +11,7 @@ from .views import (
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
     NotificationViewSet, PermissionViewSet, import_sales_csv_view, BusinessTypeViewSet
 )
+from .views_org import PaymentTermViewSet
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
     register_user_view,
@@ -54,6 +55,7 @@ router.register(r'notifications', NotificationViewSet, basename='notifications')
 router.register(r'permissions', PermissionViewSet, basename='permissions')
 router.register(r'udle-views', UDLESavedViewViewSet, basename='udle-views')
 router.register(r'business-types', BusinessTypeViewSet, basename='business-types')
+router.register(r'payment-terms', PaymentTermViewSet, basename='payment-terms')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
