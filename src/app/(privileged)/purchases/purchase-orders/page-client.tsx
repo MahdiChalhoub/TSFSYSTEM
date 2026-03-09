@@ -41,7 +41,7 @@ type POLine = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300' },
+    DRAFT: { label: 'Draft', class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
     SUBMITTED: { label: 'Pending', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
     APPROVED: { label: 'Approved', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     REJECTED: { label: 'Rejected', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
@@ -170,7 +170,7 @@ export default function PurchaseOrdersPage() {
                                 onClick={() => setStatusFilter(s)}
                                 className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap min-h-[44px] md:min-h-[32px] transition-all border ${statusFilter === s
                                     ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700'
-                                    : 'theme-surface border-transparent theme-text-muted hover:border-app-border dark:hover:border-gray-700'
+                                    : 'theme-surface border-transparent theme-text-muted hover:border-gray-200 dark:hover:border-gray-700'
                                     }`}
                             >
                                 {s === 'ALL' ? 'All' : (STATUS_CONFIG[s]?.label || s)}
@@ -207,7 +207,7 @@ export default function PurchaseOrdersPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-mono font-bold text-sm theme-text">{po.po_number || `PO-${po.id}`}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[po.status]?.class || 'bg-app-surface theme-text-muted'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[po.status]?.class || 'bg-gray-100 text-gray-500'}`}>
                                             {STATUS_CONFIG[po.status]?.label || po.status}
                                         </span>
                                     </div>
@@ -304,7 +304,7 @@ export default function PurchaseOrdersPage() {
                                                                             <span>Received: {received} / {ordered}</span>
                                                                             <span>{pct.toFixed(0)}%</span>
                                                                         </div>
-                                                                        <div className="h-1.5 rounded-full overflow-hidden bg-app-surface bg-app-surface">
+                                                                        <div className="h-1.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                                             <div className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-500' : 'bg-gray-200'}`} style={{ width: `${pct}%` }} />
                                                                         </div>
                                                                     </div>

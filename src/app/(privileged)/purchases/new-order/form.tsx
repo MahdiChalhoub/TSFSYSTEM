@@ -95,7 +95,7 @@ export default function FormalOrderForm({
                         <Label className="text-[10px] font-black uppercase tracking-wider theme-text-muted mb-2 block text-center">Scope</Label>
                         <div className="flex p-1 rounded-xl theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
                             <button type="button" onClick={() => setScope('OFFICIAL')}
-                                className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all min-h-[36px] ${scope === 'OFFICIAL' ? 'bg-white bg-app-surface shadow-sm theme-text' : 'theme-text-muted'}`}>
+                                className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all min-h-[36px] ${scope === 'OFFICIAL' ? 'bg-white dark:bg-gray-800 shadow-sm theme-text' : 'theme-text-muted'}`}>
                                 OFFICIAL
                             </button>
                             <button type="button" onClick={() => setScope('INTERNAL')}
@@ -174,7 +174,7 @@ export default function FormalOrderForm({
                                     <Package size={32} className="mx-auto mb-2 opacity-30" />No items added yet — search above to add products
                                 </td></tr>
                             ) : lines.map((line, idx) => (
-                                <tr key={line.productId} className="hover:bg-app-surface-hover dark:hover:bg-gray-900/20" style={{ borderBottom: '1px solid var(--theme-border)' }}>
+                                <tr key={line.productId} className="hover:bg-gray-50 dark:hover:bg-gray-900/20" style={{ borderBottom: '1px solid var(--theme-border)' }}>
                                     <td className="py-3 px-4">
                                         <div className="font-bold theme-text">{line.productName}</div>
                                         <div className="text-[10px] theme-text-muted font-mono mt-0.5">{line.sku}</div>
@@ -328,7 +328,7 @@ function ProductSearch({ callback, siteId, supplierId }: { callback: (p: Record<
                     {results.map((r: any) => (
                         <button key={r.id} type="button"
                             onClick={() => { callback(r); setQuery(''); setOpen(false); }}
-                            className="w-full p-3 text-left hover:bg-app-surface-hover dark:hover:bg-gray-800 flex items-center justify-between transition-all min-h-[52px]"
+                            className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between transition-all min-h-[52px]"
                             style={{ borderBottom: '1px solid var(--theme-border)' }}>
                             <div>
                                 <div className="font-bold text-sm theme-text">{r.name}</div>

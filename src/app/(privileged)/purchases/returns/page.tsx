@@ -152,7 +152,7 @@ export default function PurchaseReturnsPage() {
                     </thead>
                     <tbody>
                       {filtered.map(ret => (
-                        <tr key={ret.id} className="border-b last:border-0 hover:bg-app-surface-hover dark:hover:bg-gray-900/20">
+                        <tr key={ret.id} className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/20">
                           <td className="py-3 px-4 font-black theme-text">PRET-{ret.id}</td>
                           <td className="py-3 px-4">
                             {ret.original_order ? (
@@ -167,7 +167,7 @@ export default function PurchaseReturnsPage() {
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[ret.status]?.class || 'bg-app-surface theme-text-muted'}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[ret.status]?.class || 'bg-gray-100 text-gray-500'}`}>
                               {STATUS_CONFIG[ret.status]?.label || ret.status}
                             </span>
                           </td>

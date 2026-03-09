@@ -164,10 +164,10 @@ export default function PurchaseInvoicesPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-mono font-bold text-sm theme-text">{inv.invoice_number || inv.po_number || `INV-${inv.id}`}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[inv.status]?.class || 'bg-app-surface theme-text-muted'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[inv.status]?.class || 'bg-gray-100 text-gray-500'}`}>
                                             {STATUS_CONFIG[inv.status]?.label || inv.status}
                                         </span>
-                                        {inv.is_legacy && <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-app-surface theme-text-muted uppercase">Legacy</span>}
+                                        {inv.is_legacy && <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-gray-100 text-gray-400 uppercase">Legacy</span>}
                                     </div>
                                     <div className="flex items-center gap-3 mt-1 text-xs theme-text-muted truncate">
                                         <span className="flex items-center gap-1"><Building2 size={10} />{inv.supplier?.name || inv.supplier_name || inv.contact_name || '—'}</span>

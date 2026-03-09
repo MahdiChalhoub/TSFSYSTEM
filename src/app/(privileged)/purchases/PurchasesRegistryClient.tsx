@@ -51,7 +51,7 @@ const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
 }
 
 const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-    STANDARD: { label: 'Standard', color: 'bg-app-surface border border-app-border theme-text-muted bg-app-surface border-app-border dark:theme-text-muted' },
+    STANDARD: { label: 'Standard', color: 'bg-gray-100 border border-gray-200 text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400' },
     WHOLESALE: { label: 'Wholesale', color: 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' },
     CONSIGNEE: { label: 'Consignee', color: 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700 dark:text-emerald-400' },
 }

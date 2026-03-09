@@ -129,7 +129,7 @@ export default function PurchaseDashboardPage() {
                                                 <span className="text-xs font-bold theme-text">{stage.label}</span>
                                                 <span className={`text-xs font-black ${stage.color}`}>{stage.count}</span>
                                             </div>
-                                            <div className="h-2 rounded-full bg-app-surface bg-app-surface overflow-hidden">
+                                            <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                                                 <div className={`h-full rounded-full transition-all duration-700 ${stage.key === 'RECEIVED' ? 'bg-emerald-400' : 'bg-blue-400'}`}
                                                     style={{ width: `${(stage.count / maxPipelineCount) * 100}%` }} />
                                             </div>

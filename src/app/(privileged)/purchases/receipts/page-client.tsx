@@ -186,7 +186,7 @@ export default function ReceiptsPage() {
                                 </CardContent>
                             </Card>
                         ) : filtered.map(po => {
-                            const statusCfg = STATUS_CONFIG[po.status] || { label: po.status, class: 'bg-app-surface theme-text-muted' }
+                            const statusCfg = STATUS_CONFIG[po.status] || { label: po.status, class: 'bg-gray-100 text-gray-500' }
                             return (
                                 <button key={po.id} onClick={() => openDetail(po)}
                                     className={`w-full text-left p-4 rounded-xl border transition-all shadow-sm min-h-[72px] ${selected?.id === po.id ? 'bg-emerald-50 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-600' : 'theme-surface'
@@ -274,7 +274,7 @@ export default function ReceiptsPage() {
                                                     return (
                                                         <div key={line.id} className="p-3 md:p-4 rounded-xl theme-surface" style={{ border: '1px solid var(--theme-border)' }}>
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isComplete ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-app-surface bg-app-surface'}`}>
+                                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isComplete ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
                                                                     {isComplete ? <ShieldCheck size={16} className="text-emerald-500" /> : <Package size={16} className="theme-text-muted" />}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
@@ -300,7 +300,7 @@ export default function ReceiptsPage() {
                                                                     <span>{received} / {ordered} received</span>
                                                                     <span className={isComplete ? 'text-emerald-500' : 'text-amber-500'}>{pct}%</span>
                                                                 </div>
-                                                                <div className="h-2 rounded-full overflow-hidden bg-app-surface bg-app-surface">
+                                                                <div className="h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                                     <div className={`h-full rounded-full transition-all duration-500 ${isComplete ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-200'}`}
                                                                         style={{ width: `${pct}%` }} />
                                                                 </div>
