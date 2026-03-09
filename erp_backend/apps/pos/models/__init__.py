@@ -14,6 +14,7 @@ from .analytics_models import SalesDailySummary
 from .payment_models import SalesPaymentLeg
 from .generated_document import GeneratedDocument
 from .purchase_enhancement_models import LandedCost, LandedCostLine, PurchaseAttachment
+from .procurement_request_models import ProcurementRequest
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
@@ -31,5 +32,6 @@ __all__ = [
     'SalesPaymentLeg',
     'LandedCost', 'LandedCostLine', 'PurchaseAttachment',
     'PaymentTerm',
+    'ProcurementRequest',
 ]
 

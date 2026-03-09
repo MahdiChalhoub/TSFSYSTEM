@@ -522,3 +522,86 @@ class PurchaseOrderLineViewSet(viewsets.ModelViewSet):
         if order and order.organization_id != org_id:
             raise ValidationError("Cross-tenant PO assignment blocked.")
         serializer.save(organization_id=org_id)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PROCUREMENT REQUEST VIEWSET
+# ═══════════════════════════════════════════════════════════════════
+
+from apps.pos.models import ProcurementRequest
+from rest_framework import serializers as drf_serializers
+
+
+class ProcurementRequestSerializer(drf_serializers.ModelSerializer):
+    product_name = drf_serializers.CharField(source='product.name', read_only=True)
+    supplier_name = drf_serializers.CharField(source='supplier.name', read_only=True, default='')
+    from_warehouse_name = drf_serializers.CharField(source='from_warehouse.name', read_only=True, default='')
+    to_warehouse_name = drf_serializers.CharField(source='to_warehouse.name', read_only=True, default='')
+    requested_by_name = drf_serializers.CharField(source='requested_by.get_full_name', read_only=True, default='')
+
+    class Meta:
+        model = ProcurementRequest
+        fields = '__all__'
+        read_only_fields = ['organization', 'requested_by', 'reviewed_by', 'reviewed_at']
+
+
+class ProcurementRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = ProcurementRequestSerializer
+    queryset = ProcurementRequest.objects.all()
+
+    def get_queryset(self):
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return ProcurementRequest.objects.none()
+        qs = ProcurementRequest.objects.filter(organization_id=org_id).select_related(
+            'product', 'supplier', 'from_warehouse', 'to_warehouse', 'requested_by'
+        ).order_by('-requested_at')
+
+        req_type = self.request.query_params.get('type')
+        if req_type:
+            qs = qs.filter(request_type=req_type)
+        req_status = self.request.query_params.get('status')
+        if req_status:
+            qs = qs.filter(status=req_status)
+        return qs
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        serializer.save(
+            organization_id=org_id,
+            requested_by=self.request.user if self.request.user.is_authenticated else None
+        )
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        obj = self.get_object()
+        if obj.status != 'PENDING':
+            return Response({'error': f'Cannot approve request in {obj.status} status'}, status=400)
+        from django.utils import timezone
+        obj.status = 'APPROVED'
+        obj.reviewed_by = request.user if request.user.is_authenticated else None
+        obj.reviewed_at = timezone.now()
+        obj.save()
+        return Response(ProcurementRequestSerializer(obj).data)
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        obj = self.get_object()
+        if obj.status != 'PENDING':
+            return Response({'error': f'Cannot reject request in {obj.status} status'}, status=400)
+        from django.utils import timezone
+        obj.status = 'REJECTED'
+        obj.reviewed_by = request.user if request.user.is_authenticated else None
+        obj.reviewed_at = timezone.now()
+        obj.notes = request.data.get('reason', obj.notes)
+        obj.save()
+        return Response(ProcurementRequestSerializer(obj).data)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        obj = self.get_object()
+        if obj.status in ('EXECUTED', 'CANCELLED'):
+            return Response({'error': f'Cannot cancel request in {obj.status} status'}, status=400)
+        obj.status = 'CANCELLED'
+        obj.save()
+        return Response(ProcurementRequestSerializer(obj).data)

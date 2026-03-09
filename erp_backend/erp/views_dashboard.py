@@ -560,3 +560,138 @@ class DashboardViewSet(viewsets.ViewSet):
             
         return Response(data)
 
+    @action(detail=False, methods=['get'])
+    def catalogue_list(self, request):
+        """Fast paginated catalogue with annotated stock/sales — powers the Catalogue modal."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({'results': [], 'count': 0})
+        
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Subquery, OuterRef, DecimalField
+        from django.db.models.functions import Coalesce
+        
+        organization = Organization.objects.get(id=organization_id)
+        qs = Product.objects.filter(organization=organization, status='ACTIVE')
+        
+        # Apply filters
+        category = request.query_params.get('category')
+        brand = request.query_params.get('brand')
+        supplier = request.query_params.get('supplier')
+        product_type = request.query_params.get('type')
+        tax_rate = request.query_params.get('tax_rate')
+        min_stock = request.query_params.get('min_stock')
+        max_stock = request.query_params.get('max_stock')
+        min_margin = request.query_params.get('min_margin')
+        query = request.query_params.get('query', '')
+        
+        if query:
+            qs = qs.filter(Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query))
+        if category:
+            qs = qs.filter(category_id=category)
+        if brand:
+            qs = qs.filter(brand__icontains=brand) if hasattr(Product, 'brand') else qs
+        if product_type:
+            qs = qs.filter(product_type=product_type) if hasattr(Product, 'product_type') else qs
+        if tax_rate:
+            qs = qs.filter(tax_rate=tax_rate) if hasattr(Product, 'tax_rate') else qs
+        
+        # Annotate stock from Inventory
+        stock_subquery = Inventory.objects.filter(
+            organization=organization, product=OuterRef('pk')
+        ).values('product').annotate(total=Sum('quantity')).values('total')
+        
+        qs = qs.annotate(
+            stock_level=Coalesce(Subquery(stock_subquery, output_field=DecimalField()), 0)
+        )
+        
+        # Stock filter
+        if min_stock is not None:
+            qs = qs.filter(stock_level__gte=float(min_stock))
+        if max_stock is not None:
+            qs = qs.filter(stock_level__lte=float(max_stock))
+        
+        # Pagination
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 30))
+        total_count = qs.count()
+        offset = (page - 1) * page_size
+        products_page = qs.order_by('name')[offset:offset + page_size]
+        
+        # Sales subquery (30 days)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        results = []
+        for p in products_page:
+            stock = float(getattr(p, 'stock_level', 0))
+            
+            # Quick sales query
+            sales_qty = OrderLine.objects.filter(
+                order__organization=organization, product=p,
+                order__created_at__gte=thirty_days_ago,
+                order__status='COMPLETED', order__type='SALE'
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            daily_sales = float(sales_qty) / 30.0
+            
+            # Safety tag
+            shelf_life = getattr(p, 'manufacturer_shelf_life_days', None) or 0
+            avg_expiry = getattr(p, 'avg_available_expiry_days', None) or 0
+            is_expiry = getattr(p, 'is_expiry_tracked', False)
+            days_to_sell = round(stock / daily_sales) if daily_sales > 0 else 0
+            safety_tag = 'SAFE'
+            if is_expiry and avg_expiry > 0:
+                if days_to_sell >= avg_expiry:
+                    safety_tag = 'RISKY'
+                elif days_to_sell >= avg_expiry * 0.6:
+                    safety_tag = 'CAUTION'
+            
+            # Margin
+            cost = float(p.cost_price or 0)
+            sell = float(p.selling_price_ht or 0)
+            margin_pct = round(((sell - cost) / cost * 100) if cost > 0 else 0, 1)
+            
+            results.append({
+                'id': p.id,
+                'name': p.name,
+                'sku': p.sku,
+                'barcode': p.barcode or '',
+                'category_name': getattr(p.category, 'name', '') if hasattr(p, 'category') and p.category else '',
+                'stock': stock,
+                'daily_sales': round(daily_sales, 2),
+                'cost_price': cost,
+                'selling_price': sell,
+                'margin_pct': margin_pct,
+                'safety_tag': safety_tag,
+                'is_expiry_tracked': is_expiry,
+            })
+        
+        return Response({
+            'results': results,
+            'count': total_count,
+            'page': page,
+            'page_size': page_size,
+        })
+
+    @action(detail=False, methods=['get'])
+    def catalogue_filters(self, request):
+        """Return available filter dimensions for the catalogue."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({})
+        
+        from apps.inventory.models import Category
+        
+        categories = list(Category.objects.filter(
+            organization_id=organization_id
+        ).values('id', 'name').order_by('name')[:100])
+        
+        # Product types
+        types = list(Product.objects.filter(
+            organization_id=organization_id, status='ACTIVE'
+        ).values_list('product_type', flat=True).distinct()[:20]) if hasattr(Product, 'product_type') else []
+        
+        return Response({
+            'categories': categories,
+            'types': [t for t in types if t],
+        })

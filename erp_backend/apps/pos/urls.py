@@ -18,6 +18,7 @@ from apps.pos.views import (
     POSSettingsViewSet,
     ManagerAddressBookViewSet,
 )
+from apps.pos.views.purchase_views import ProcurementRequestViewSet
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')
@@ -41,6 +42,7 @@ router.register(r'pos-audit-events', POSAuditEventViewSet, basename='pos-audit-e
 router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rules')
 router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
 router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
+router.register(r'procurement-requests', ProcurementRequestViewSet, basename='procurement-requests')
 
 from apps.pos.views.analytics_views import SalesDailySummaryListView, SalesDailyRollupView  # noqa: E402
 

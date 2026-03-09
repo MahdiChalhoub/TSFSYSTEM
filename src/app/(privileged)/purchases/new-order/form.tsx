@@ -3,6 +3,7 @@
 
 import { useActionState, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
+import { createProcurementRequest } from "@/app/actions/commercial/procurement-requests";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -162,9 +163,20 @@ export default function FormalOrderForm({
     const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
     const [lines, setLines] = useState<OrderLine[]>([]);
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
+    const [stockScope, setStockScope] = useState<'branch' | 'all'>('branch');
+    const [notes, setNotes] = useState('');
+
+    // ── Dialog State ──
+    const [transferDialogLine, setTransferDialogLine] = useState<OrderLine | null>(null);
+    const [transferQty, setTransferQty] = useState('');
+    const [transferFromWh, setTransferFromWh] = useState<number | ''>('');
+    const [purchaseDialogLine, setPurchaseDialogLine] = useState<OrderLine | null>(null);
+    const [purchaseQty, setPurchaseQty] = useState('');
+    const [purchaseSupplier, setPurchaseSupplier] = useState<number | ''>('');
 
     const safeSites = Array.isArray(sites) ? sites : [];
     const safeSuppliers = Array.isArray(suppliers) ? suppliers : [];
+    const safePaymentTerms = Array.isArray(paymentTerms) ? paymentTerms : [];
 
     // ── Site → Warehouse cascade ──
     useEffect(() => {
@@ -195,6 +207,40 @@ export default function FormalOrderForm({
         setLines(prev => prev.filter(l => l.id !== id));
     }, []);
 
+    // ── Transfer Request ──
+    const handleTransferRequest = async () => {
+        if (!transferDialogLine || !transferFromWh || !transferQty) return;
+        try {
+            await createProcurementRequest({
+                requestType: 'TRANSFER',
+                productId: transferDialogLine.productId,
+                quantity: Number(transferQty),
+                fromWarehouseId: Number(transferFromWh),
+                toWarehouseId: Number(selectedWarehouseId),
+                reason: `Transfer request from PO form — ${transferDialogLine.productName}`,
+            });
+            alert('✅ Transfer request sent!');
+        } catch { alert('❌ Failed to send transfer request'); }
+        setTransferDialogLine(null);
+    };
+
+    // ── Purchase Request ──
+    const handlePurchaseRequest = async () => {
+        if (!purchaseDialogLine || !purchaseSupplier || !purchaseQty) return;
+        try {
+            await createProcurementRequest({
+                requestType: 'PURCHASE',
+                productId: purchaseDialogLine.productId,
+                quantity: Number(purchaseQty),
+                supplierId: Number(purchaseSupplier),
+                suggestedUnitPrice: purchaseDialogLine.bestPrice || purchaseDialogLine.unitCost,
+                reason: `Purchase request from PO form — ${purchaseDialogLine.productName}`,
+            });
+            alert('✅ Purchase request sent!');
+        } catch { alert('❌ Failed to send purchase request'); }
+        setPurchaseDialogLine(null);
+    };
+
     // ── Totals ──
     const totalCost = lines.reduce((a, l) => a + (l.actionQty * l.unitCost), 0);
 
@@ -203,179 +249,278 @@ export default function FormalOrderForm({
     // ═══════════════════════════════════════════════════════════════
 
     return (
-        <form action={formAction} className="space-y-3">
+        <>
+            <form action={formAction} className="space-y-3">
 
-            {/* ── HEADER BAR: Site + Warehouse + Supplier + Scope ── */}
-            <div className="flex flex-wrap items-end gap-2 bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
-                <div className="flex-1 min-w-[140px]">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Site</label>
-                    <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
-                        value={selectedSiteId} onChange={e => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
-                        <option value="">Select...</option>
-                        {safeSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                </div>
-                <div className="flex-1 min-w-[140px]">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Warehouse</label>
-                    <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
-                        name="warehouseId" required value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(Number(e.target.value))}>
-                        <option value="">Select...</option>
-                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                    </select>
-                </div>
-                <div className="flex-1 min-w-[140px]">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Supplier</label>
-                    <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
-                        name="supplierId" required value={selectedSupplierId} onChange={e => setSelectedSupplierId(Number(e.target.value))}>
-                        <option value="">Select...</option>
-                        {safeSuppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                </div>
-                <div className="min-w-[100px]">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Scope</label>
-                    <div className="flex p-0.5 rounded-lg bg-app-background border border-app-border h-[34px]">
-                        <button type="button" onClick={() => setScope('OFFICIAL')}
-                            className={`flex-1 rounded-md text-[9px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
-                            Official
-                        </button>
-                        <button type="button" onClick={() => setScope('INTERNAL')}
-                            className={`flex-1 rounded-md text-[9px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
-                            Internal
-                        </button>
+                {/* ── HEADER BAR: Site + Warehouse + Supplier + Scope ── */}
+                <div className="flex flex-wrap items-end gap-2 bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
+                    <div className="flex-1 min-w-[140px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Site</label>
+                        <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
+                            value={selectedSiteId} onChange={e => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
+                            <option value="">Select...</option>
+                            {safeSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
                     </div>
-                    <input type="hidden" name="scope" value={scope} />
+                    <div className="flex-1 min-w-[140px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Warehouse</label>
+                        <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
+                            name="warehouseId" required value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(Number(e.target.value))}>
+                            <option value="">Select...</option>
+                            {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Supplier</label>
+                        <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
+                            name="supplierId" required value={selectedSupplierId} onChange={e => setSelectedSupplierId(Number(e.target.value))}>
+                            <option value="">Select...</option>
+                            {safeSuppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="min-w-[100px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Scope</label>
+                        <div className="flex p-0.5 rounded-lg bg-app-background border border-app-border h-[34px]">
+                            <button type="button" onClick={() => setScope('OFFICIAL')}
+                                className={`flex-1 rounded-md text-[9px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
+                                Official
+                            </button>
+                            <button type="button" onClick={() => setScope('INTERNAL')}
+                                className={`flex-1 rounded-md text-[9px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
+                                Internal
+                            </button>
+                        </div>
+                        <input type="hidden" name="scope" value={scope} />
+                    </div>
+                    <div className="min-w-[120px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Stock Scope</label>
+                        <div className="flex p-0.5 rounded-lg bg-app-background border border-app-border h-[34px]">
+                            <button type="button" onClick={() => setStockScope('branch')}
+                                className={`flex-1 rounded-md text-[9px] font-bold transition-all ${stockScope === 'branch' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
+                                🏪 Branch
+                            </button>
+                            <button type="button" onClick={() => setStockScope('all')}
+                                className={`flex-1 rounded-md text-[9px] font-bold transition-all ${stockScope === 'all' ? 'bg-app-primary text-white shadow-sm' : 'text-app-muted-foreground'}`}>
+                                🌐 All
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            {/* ── SEARCH BAR ── */}
-            <div className="flex items-center gap-2 bg-app-surface border border-app-border rounded-xl shadow-sm">
-                <div className="flex-1 relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <ProductSearchInput onSelect={addProduct} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)} />
+                {/* ── NOTES ── */}
+                <div className="bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
+                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Notes</label>
+                    <textarea name="notes" rows={2} value={notes} onChange={e => setNotes(e.target.value)}
+                        className="w-full text-xs bg-app-background rounded-lg p-2 border border-app-border outline-none resize-none text-app-foreground"
+                        placeholder="Order notes..." />
                 </div>
-                <Button type="button" variant="outline" className="shrink-0 text-[9px] font-black uppercase tracking-wider h-9 px-3 border-l border-app-border rounded-none rounded-r-xl hover:bg-app-primary/10 hover:text-app-primary">
-                    <BookOpen size={13} className="mr-1" /> Catalogue
-                </Button>
-            </div>
 
-            {/* ══════════════════════════════════════════════════════
+                {/* ── SEARCH BAR ── */}
+                <div className="flex items-center gap-2 bg-app-surface border border-app-border rounded-xl shadow-sm">
+                    <div className="flex-1 relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <ProductSearchInput onSelect={addProduct} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)} />
+                    </div>
+                    <Button type="button" variant="outline" className="shrink-0 text-[9px] font-black uppercase tracking-wider h-9 px-3 border-l border-app-border rounded-none rounded-r-xl hover:bg-app-primary/10 hover:text-app-primary">
+                        <BookOpen size={13} className="mr-1" /> Catalogue
+                    </Button>
+                </div>
+
+                {/* ══════════════════════════════════════════════════════
                 MAIN TABLE — matching the screenshot layout exactly
             ══════════════════════════════════════════════════════ */}
-            <div className="bg-app-surface border border-app-border rounded-xl shadow-sm overflow-hidden">
-                {lines.length === 0 ? (
-                    <div className="py-20 text-center text-app-muted-foreground">
-                        <Package size={36} className="mx-auto mb-3 opacity-15" />
-                        <p className="font-bold text-sm">No products added</p>
-                        <p className="text-xs mt-1 opacity-60">Search or open catalogue to add products</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* ── DESKTOP TABLE ── */}
-                        <div className="hidden lg:block overflow-x-auto">
-                            <table className="w-full text-[10px] border-collapse">
-                                {/* Header */}
-                                <thead>
-                                    <tr className="bg-app-background/60 border-b-2 border-app-border">
-                                        <th className="text-left py-2 px-3 min-w-[200px]">
-                                            <span className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Product Info</span>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">QTY REQUIRED</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">qty proposed</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">TOTAL STOCK</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">stock on location<br />transfer</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Purchase Count</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">product status</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Daily Sales</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">monthly average</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[100px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Financial Score</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">adjustment score</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Total Purchase</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">total sales</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Unit Cost</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">selling price</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[120px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Best Supplier</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">best price</div>
-                                        </th>
-                                        <th className="text-center py-2 px-2 w-[100px] border-l border-app-border/50">
-                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Expiry</div>
-                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">safety tag</div>
-                                        </th>
-                                        <th className="w-[50px] border-l border-app-border/50"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {lines.map((line) => (
-                                        <ProductRow key={line.id} line={line} updateLine={updateLine} removeLine={removeLine} />
-                                    ))}
-                                </tbody>
-                            </table>
+                <div className="bg-app-surface border border-app-border rounded-xl shadow-sm overflow-hidden">
+                    {lines.length === 0 ? (
+                        <div className="py-20 text-center text-app-muted-foreground">
+                            <Package size={36} className="mx-auto mb-3 opacity-15" />
+                            <p className="font-bold text-sm">No products added</p>
+                            <p className="text-xs mt-1 opacity-60">Search or open catalogue to add products</p>
                         </div>
+                    ) : (
+                        <>
+                            {/* ── DESKTOP TABLE ── */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <table className="w-full text-[10px] border-collapse">
+                                    {/* Header */}
+                                    <thead>
+                                        <tr className="bg-app-background/60 border-b-2 border-app-border">
+                                            <th className="text-left py-2 px-3 min-w-[200px]">
+                                                <span className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Product Info</span>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">QTY REQUIRED</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">qty proposed</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">TOTAL STOCK</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">stock on location<br />transfer</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Purchase Count</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">product status</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Daily Sales</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">monthly average</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[100px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Financial Score</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">adjustment score</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Total Purchase</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">total sales</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[90px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Unit Cost</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">selling price</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[120px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Best Supplier</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">best price</div>
+                                            </th>
+                                            <th className="text-center py-2 px-2 w-[100px] border-l border-app-border/50">
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Expiry</div>
+                                                <div className="text-[7px] font-bold text-app-muted-foreground italic">safety tag</div>
+                                            </th>
+                                            <th className="w-[50px] border-l border-app-border/50"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {lines.map((line) => (
+                                            <ProductRow key={line.id} line={line} updateLine={updateLine} removeLine={removeLine}
+                                                onTransfer={setTransferDialogLine} onPurchaseRequest={setPurchaseDialogLine} />
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        {/* ── MOBILE CARDS ── */}
-                        <div className="lg:hidden p-2 space-y-2">
-                            {lines.map((line) => (
-                                <MobileCard key={line.id} line={line} updateLine={updateLine} removeLine={removeLine} />
-                            ))}
+                            {/* ── MOBILE CARDS ── */}
+                            <div className="lg:hidden p-2 space-y-2">
+                                {lines.map((line) => (
+                                    <MobileCard key={line.id} line={line} updateLine={updateLine} removeLine={removeLine}
+                                        onTransfer={setTransferDialogLine} onPurchaseRequest={setPurchaseDialogLine} />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* ── FOOTER: Summary + Submit ── */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
+                    <div className="flex-1 flex items-center gap-6 text-xs">
+                        <div>
+                            <span className="text-app-muted-foreground">Lines: </span>
+                            <span className="font-black text-app-foreground">{lines.length}</span>
                         </div>
-                    </>
+                        <div>
+                            <span className="text-app-muted-foreground">Total Qty: </span>
+                            <span className="font-black text-app-foreground">{lines.reduce((a, l) => a + l.actionQty, 0)}</span>
+                        </div>
+                        <div>
+                            <span className="text-app-muted-foreground">Total Cost: </span>
+                            <span className="font-black text-app-primary text-sm">{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+                    <Button type="submit" disabled={isPending || lines.length === 0}
+                        className="min-h-[40px] bg-app-primary hover:bg-app-primary/90 text-app-primary-foreground font-bold text-xs shadow-lg shadow-app-primary/20 px-8">
+                        {isPending ? <><Loader2 size={14} className="mr-2 animate-spin" /> Processing...</> : <><ArrowRight size={14} className="mr-2" /> Confirm Order</>}
+                    </Button>
+                </div>
+
+                {state.message && (
+                    <div className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold ${state.errors ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/20 border border-rose-200' : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/20 border border-emerald-200'}`}>
+                        {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
+                        {state.message}
+                    </div>
                 )}
-            </div>
 
-            {/* ── FOOTER: Summary + Submit ── */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
-                <div className="flex-1 flex items-center gap-6 text-xs">
-                    <div>
-                        <span className="text-app-muted-foreground">Lines: </span>
-                        <span className="font-black text-app-foreground">{lines.length}</span>
+                {/* Hidden fields */}
+                {lines.map((line, idx) => (
+                    <div key={`h-${line.id}`}>
+                        <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
+                        <input type="hidden" name={`lines[${idx}][quantity]`} value={line.actionQty} />
+                        <input type="hidden" name={`lines[${idx}][unitPrice]`} value={line.unitCost} />
+                        <input type="hidden" name={`lines[${idx}][tax_rate]`} value={18} />
+                        <input type="hidden" name={`lines[${idx}][discount_percent]`} value={0} />
                     </div>
-                    <div>
-                        <span className="text-app-muted-foreground">Total Qty: </span>
-                        <span className="font-black text-app-foreground">{lines.reduce((a, l) => a + l.actionQty, 0)}</span>
-                    </div>
-                    <div>
-                        <span className="text-app-muted-foreground">Total Cost: </span>
-                        <span className="font-black text-app-primary text-sm">{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                </div>
-                <Button type="submit" disabled={isPending || lines.length === 0}
-                    className="min-h-[40px] bg-app-primary hover:bg-app-primary/90 text-app-primary-foreground font-bold text-xs shadow-lg shadow-app-primary/20 px-8">
-                    {isPending ? <><Loader2 size={14} className="mr-2 animate-spin" /> Processing...</> : <><ArrowRight size={14} className="mr-2" /> Confirm Order</>}
-                </Button>
-            </div>
+                ))}
+            </form>
 
-            {state.message && (
-                <div className={`p-3 rounded-xl flex items-center gap-2 text-xs font-bold ${state.errors ? 'bg-rose-50 text-rose-500 dark:bg-rose-900/20 border border-rose-200' : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-900/20 border border-emerald-200'}`}>
-                    {state.errors ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
-                    {state.message}
-                </div>
-            )}
+            {/* ═══ TRANSFER REQUEST DIALOG ═══ */}
+            {
+                transferDialogLine && (
+                    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                        <div className="bg-app-surface rounded-2xl border border-app-border shadow-2xl w-full max-w-md p-6 space-y-4">
+                            <h3 className="font-black text-sm text-app-foreground flex items-center gap-2">
+                                <ArrowLeftRight size={16} className="text-app-primary" /> Transfer Request
+                            </h3>
+                            <p className="text-xs text-app-muted-foreground">
+                                Request <b>{transferDialogLine.productName}</b> from another warehouse
+                            </p>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-[9px] font-bold text-app-muted-foreground">From Warehouse</label>
+                                    <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 border border-app-border"
+                                        value={transferFromWh} onChange={e => setTransferFromWh(Number(e.target.value))}>
+                                        <option value="">Select source...</option>
+                                        {transferDialogLine.otherWarehouseStock.map(w => (
+                                            <option key={w.warehouse_id} value={w.warehouse_id}>{w.warehouse} ({w.qty} in stock)</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-bold text-app-muted-foreground">Quantity</label>
+                                    <input type="number" min={1} className="w-full text-xs font-bold bg-app-background rounded-lg p-2 border border-app-border"
+                                        value={transferQty} onChange={e => setTransferQty(e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button type="button" variant="outline" onClick={() => setTransferDialogLine(null)} className="flex-1 text-xs">Cancel</Button>
+                                <Button type="button" onClick={handleTransferRequest} className="flex-1 text-xs bg-app-primary text-white">Send Request</Button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
-            {/* Hidden fields */}
-            {lines.map((line, idx) => (
-                <div key={`h-${line.id}`}>
-                    <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
-                    <input type="hidden" name={`lines[${idx}][quantity]`} value={line.actionQty} />
-                    <input type="hidden" name={`lines[${idx}][unitPrice]`} value={line.unitCost} />
-                    <input type="hidden" name={`lines[${idx}][tax_rate]`} value={18} />
-                    <input type="hidden" name={`lines[${idx}][discount_percent]`} value={0} />
-                </div>
-            ))}
-        </form>
+            {/* ═══ PURCHASE REQUEST DIALOG ═══ */}
+            {
+                purchaseDialogLine && (
+                    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                        <div className="bg-app-surface rounded-2xl border border-app-border shadow-2xl w-full max-w-md p-6 space-y-4">
+                            <h3 className="font-black text-sm text-app-foreground flex items-center gap-2">
+                                <Truck size={16} className="text-app-primary" /> Purchase Request
+                            </h3>
+                            <p className="text-xs text-app-muted-foreground">
+                                Request <b>{purchaseDialogLine.productName}</b> from a different supplier
+                            </p>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-[9px] font-bold text-app-muted-foreground">Supplier</label>
+                                    <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 border border-app-border"
+                                        value={purchaseSupplier} onChange={e => setPurchaseSupplier(Number(e.target.value))}>
+                                        <option value="">Select supplier...</option>
+                                        {safeSuppliers.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-bold text-app-muted-foreground">Quantity</label>
+                                    <input type="number" min={1} className="w-full text-xs font-bold bg-app-background rounded-lg p-2 border border-app-border"
+                                        value={purchaseQty} onChange={e => setPurchaseQty(e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button type="button" variant="outline" onClick={() => setPurchaseDialogLine(null)} className="flex-1 text-xs">Cancel</Button>
+                                <Button type="button" onClick={handlePurchaseRequest} className="flex-1 text-xs bg-app-primary text-white">Send Request</Button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </>
     );
 }
 
@@ -383,10 +528,12 @@ export default function FormalOrderForm({
 // PRODUCT ROW — dual-row per the screenshot
 // ═══════════════════════════════════════════════════════════════════
 
-function ProductRow({ line, updateLine, removeLine }: {
+function ProductRow({ line, updateLine, removeLine, onTransfer, onPurchaseRequest }: {
     line: OrderLine,
     updateLine: (id: string, u: Partial<OrderLine>) => void,
     removeLine: (id: string) => void,
+    onTransfer: (line: OrderLine) => void,
+    onPurchaseRequest: (line: OrderLine) => void,
 }) {
     // Color logic for financial score
     const fsColor = line.financialScore >= 100 ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' :
@@ -429,7 +576,15 @@ function ProductRow({ line, updateLine, removeLine }: {
             {/* Col 3: TOTAL STOCK / stock on location / transfer */}
             <td className="py-2 px-2 text-center border-l border-app-border/30">
                 <div className={`text-[12px] ${stockColor}`}>{line.stockOnLocation}</div>
-                <div className="text-[9px] text-app-muted-foreground font-bold mt-0.5">{line.stockTransfer}</div>
+                <div className="text-[9px] text-app-muted-foreground font-bold mt-0.5">
+                    {line.stockTransfer > 0 ? `${line.stockTransfer} in transit` : ''}
+                </div>
+                {line.otherWarehouseStock?.length > 0 && (
+                    <button type="button" onClick={() => onTransfer(line)}
+                        className="text-[7px] font-bold text-app-primary hover:underline mt-0.5">
+                        ⇄ Transfer ({line.otherWarehouseStock.reduce((a, w) => a + w.qty, 0)} avail)
+                    </button>
+                )}
             </td>
 
             {/* Col 4: Purchase Count / product status */}
@@ -515,10 +670,12 @@ function ProductRow({ line, updateLine, removeLine }: {
 // MOBILE CARD
 // ═══════════════════════════════════════════════════════════════════
 
-function MobileCard({ line, updateLine, removeLine }: {
+function MobileCard({ line, updateLine, removeLine, onTransfer, onPurchaseRequest }: {
     line: OrderLine,
     updateLine: (id: string, u: Partial<OrderLine>) => void,
     removeLine: (id: string) => void,
+    onTransfer: (line: OrderLine) => void,
+    onPurchaseRequest: (line: OrderLine) => void,
 }) {
     const [expanded, setExpanded] = useState(false);
     const stockColor = line.stockOnLocation <= 0 ? 'text-rose-500' : line.stockOnLocation < line.monthlyAverage ? 'text-amber-500' : 'text-emerald-500';
