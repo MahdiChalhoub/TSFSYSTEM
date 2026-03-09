@@ -11,7 +11,7 @@ export async function getPermissions() {
     return await erpFetch('permissions/')
 }
 
-export async function updateRolePermissions(roleId: number, permissions: number[]) {
+export async function updateRolePermissions(roleId: number, permissions: (number | string)[]) {
     // Assuming role update requires a PATCH request to updating `permissions` field.
     const result = await erpFetch(`roles/${roleId}/`, {
         method: 'PATCH',

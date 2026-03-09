@@ -119,12 +119,14 @@ export default function MigrationWizardPage() {
 
     async function loadOrganizations() {
         try {
-            // In TSFSYSTEM, users typically have ONE organization from their session
-            if (user && user.organization_id && user.organization_name) {
+            // In TSFSYSTEM, UserSerializer returns { organization: { id, name, slug } }
+            const org = user?.organization;
+            if (org && org.id && org.name) {
                 const currentOrg: Organization = {
-                    id: user.organization_id,
-                    name: user.organization_name,
-                    business_name: user.organization_name,
+                    id: org.id,
+                    name: org.name,
+                    business_name: org.name,
+                    slug: org.slug,
                     is_active: true,
                 };
                 setOrganizations([currentOrg]);

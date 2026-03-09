@@ -30,7 +30,7 @@ class MigrationJobViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Filter jobs by current user's accessible organizations."""
-        return MigrationJob.objects.all().order_by('-created_at')
+        return MigrationJob.objects.all().order_by('-id')
 
     @action(detail=False, methods=['post'], url_path='create-job')
     def create_job(self, request):

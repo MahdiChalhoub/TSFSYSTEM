@@ -11,8 +11,50 @@ import { Button } from '@/components/ui/button'
 
 type Jobs = Record<string, any>
 
+const STATUS_COLORS: Record<string, string> = {
+  DRAFT: 'bg-gray-100 text-gray-700',
+  VALIDATING: 'bg-yellow-100 text-yellow-700',
+  MAPPING: 'bg-blue-100 text-blue-700',
+  READY: 'bg-emerald-100 text-emerald-700',
+  RUNNING: 'bg-purple-100 text-purple-700',
+  COMPLETED: 'bg-green-100 text-green-800',
+  FAILED: 'bg-red-100 text-red-700',
+  ROLLED_BACK: 'bg-orange-100 text-orange-700',
+}
+
 const ALL_COLUMNS: ColumnDef<Jobs>[] = [
-  { key: 'id', label: 'ID', sortable: true }
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'name', label: 'Job Name', sortable: true },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    render: (row) => {
+      const cls = STATUS_COLORS[row.status] || 'bg-gray-100 text-gray-600'
+      return (
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${cls}`}>
+          {row.status}
+        </span>
+      )
+    }
+  },
+  {
+    key: 'imported_products',
+    label: 'Products',
+    render: (row) => `${row.imported_products || 0} / ${row.total_products || 0}`
+  },
+  {
+    key: 'imported_customers',
+    label: 'Contacts',
+    render: (row) => `${(row.imported_customers || 0) + (row.imported_suppliers || 0)} / ${row.total_contacts || 0}`
+  },
+  { key: 'progress_percent', label: 'Progress', render: (row) => `${row.progress_percent || 0}%` },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    render: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'
+  },
 ]
 
 export default function JobsListPage() {
@@ -25,7 +67,7 @@ export default function JobsListPage() {
     columns: ALL_COLUMNS.map(c => c.key),
     pageSize: 20,
     sortKey: 'id',
-    sortDir: 'asc',
+    sortDir: 'desc',
   })
 
   useEffect(() => {
@@ -51,7 +93,7 @@ export default function JobsListPage() {
   return (
     <div className="space-y-4">
       <TypicalListView<Jobs>
-        title="Jobs"
+        title="Migration Jobs"
         data={filtered}
         loading={loading}
         getRowId={r => r.id}
@@ -66,19 +108,18 @@ export default function JobsListPage() {
         onSort={k => settings.setSort(k)}
         headerExtra={
           <Button
-            onClick={() => router.push('/migration_v2/jobs/new')}
-            className="h-9 px-4 bg-app-primary text-app-foreground hover:bg-app-primary rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
+            onClick={() => router.push('/migration_v2')}
+            className="h-9 px-4 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
           >
-            <Plus size={14} className="mr-2" /> Create New
+            <Plus size={14} className="mr-2" /> New Migration
           </Button>
         }
         actions={{
           onView: (r) => router.push(`/migration_v2/jobs/${r.id}`),
-          onEdit: (r) => router.push(`/migration_v2/jobs/${r.id}/edit`),
         }}
       >
         <TypicalFilter
-          search={{ placeholder: 'Search...', value: search, onChange: setSearch }}
+          search={{ placeholder: 'Search jobs...', value: search, onChange: setSearch }}
         />
       </TypicalListView>
     </div>

@@ -16,8 +16,14 @@ class MigrationJob(TenantOwnedModel):
     - Uses AuditLogMixin for full audit trail
     - Stores posting rules snapshot to preserve migration context
     """
-
     name = models.CharField(max_length=255, help_text='Migration job name')
+    created_by = models.ForeignKey(
+        'erp.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='migration_jobs_v2_created'
+    )
 
     # Source file (uploaded SQL dump)
     source_file = models.ForeignKey(
