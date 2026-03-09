@@ -360,6 +360,18 @@ class DashboardViewSet(viewsets.ViewSet):
                 Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query)
             )
         
+        # Filter by supplier if specified
+        supplier_id = request.query_params.get('supplier_id')
+        if supplier_id:
+            try:
+                from apps.pos.models import ProductSupplier
+                linked_product_ids = ProductSupplier.objects.filter(
+                    organization=organization, supplier_id=supplier_id
+                ).values_list('product_id', flat=True)
+                products_qs = products_qs.filter(id__in=linked_product_ids)
+            except Exception:
+                pass
+        
         products_qs = products_qs[:20]
         
         data = []

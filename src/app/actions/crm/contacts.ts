@@ -17,7 +17,7 @@ const ContactSchema = z.object({
 export async function getContacts() {
     try {
         const data = await erpFetch('contacts/')
-        return Array.isArray(data) ? data : []
+        return Array.isArray(data) ? data : (data?.results ?? [])
     } catch {
         return []
     }
@@ -25,8 +25,9 @@ export async function getContacts() {
 
 export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
     try {
-        const all = await erpFetch('contacts/')
-        return Array.isArray(all) ? all.filter((c: Record<string, any>) => c.type === type) : []
+        const data = await erpFetch(`contacts/?type=${type}`)
+        const all = Array.isArray(data) ? data : (data?.results ?? [])
+        return all.filter((c: Record<string, any>) => c.type === type)
     } catch {
         return []
     }

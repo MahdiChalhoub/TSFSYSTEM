@@ -18,18 +18,40 @@ async function getSitesAndWarehouses() {
     }
 }
 
+async function getPaymentTerms() {
+    try {
+        const data = await erpFetch('payment-terms/');
+        return Array.isArray(data) ? data : (data?.results ?? []);
+    } catch {
+        return [];
+    }
+}
+
+async function getDrivers() {
+    try {
+        const data = await erpFetch('users/?role=DRIVER');
+        return Array.isArray(data) ? data : (data?.results ?? []);
+    } catch {
+        return [];
+    }
+}
+
 export default async function NewFormalOrderPage() {
-    const [suppliers, sites] = await Promise.all([
+    const [suppliers, sites, paymentTerms, drivers] = await Promise.all([
         getContactsByType('SUPPLIER'),
         getSitesAndWarehouses(),
+        getPaymentTerms(),
+        getDrivers(),
     ]);
 
     const normalizedSuppliers = Array.isArray(suppliers) ? suppliers : [];
     const normalizedSites = Array.isArray(sites) ? sites : [];
+    const normalizedPaymentTerms = Array.isArray(paymentTerms) ? paymentTerms : [];
+    const normalizedDrivers = Array.isArray(drivers) ? drivers : [];
 
     return (
         <main className="space-y-[var(--layout-section-spacing)] animate-in fade-in duration-500 pb-20">
-            <div className="layout-container-padding max-w-5xl mx-auto space-y-[var(--layout-section-spacing)]">
+            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-[var(--layout-section-spacing)]">
                 <Link href="/purchases" className="inline-flex items-center gap-2 text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px] md:min-h-[auto]">
                     ← Back to Procurement Center
                 </Link>
@@ -49,6 +71,8 @@ export default async function NewFormalOrderPage() {
                 <FormalOrderForm
                     suppliers={serializeDecimals(normalizedSuppliers)}
                     sites={normalizedSites}
+                    paymentTerms={serializeDecimals(normalizedPaymentTerms)}
+                    drivers={serializeDecimals(normalizedDrivers)}
                 />
             </div>
         </main>

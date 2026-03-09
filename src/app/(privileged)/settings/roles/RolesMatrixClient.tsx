@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateUserPermissions } from '@/app/actions/settings/roles'
+import { updateRolePermissions } from '@/app/actions/settings/roles'
 import { toast } from 'sonner'
 import { Save, ShieldAlert, CheckCircle2, Lock } from 'lucide-react'
 
@@ -48,7 +48,7 @@ export function RolesMatrixClient({ data }: { data: RoleData }) {
 
         try {
             const promises = Object.entries(pendingChanges).map(([userId, perms]) =>
-                updateUserPermissions(Number(userId), perms)
+                updateRolePermissions(Number(userId), perms)
             )
             await Promise.all(promises)
             toast.success("Role permissions updated successfully!")
@@ -139,8 +139,8 @@ export function RolesMatrixClient({ data }: { data: RoleData }) {
                                                     ) : (
                                                         <label className="flex items-center justify-center cursor-pointer w-full h-full p-2 group">
                                                             <div className={`w-5 h-5 rounded flex items-center justify-center transition-all ${hasPerm
-                                                                    ? 'bg-app-primary text-app-primary-foreground shadow-md shadow-indigo-500/30'
-                                                                    : 'bg-app-background border border-app-border group-hover:border-app-primary/30 group-hover:bg-app-primary/5'
+                                                                ? 'bg-app-primary text-app-primary-foreground shadow-md shadow-indigo-500/30'
+                                                                : 'bg-app-background border border-app-border group-hover:border-app-primary/30 group-hover:bg-app-primary/5'
                                                                 }`}>
                                                                 {hasPerm && <CheckCircle2 size={12} strokeWidth={4} />}
                                                             </div>

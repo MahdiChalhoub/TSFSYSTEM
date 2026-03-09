@@ -4,7 +4,7 @@
 import { useActionState, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
 import { createProcurementRequest } from "@/app/actions/commercial/procurement-requests";
-import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
+import { searchProductsSimple, getCatalogueProducts, getCatalogueFilters } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,10 +148,12 @@ export default function FormalOrderForm({
     suppliers,
     sites,
     paymentTerms = [],
+    drivers = [],
 }: {
     suppliers: Record<string, any>[],
     sites: Record<string, any>[],
     paymentTerms?: Record<string, any>[],
+    drivers?: Record<string, any>[],
 }) {
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createFormalPurchaseOrder, initialState);
@@ -165,6 +167,9 @@ export default function FormalOrderForm({
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
     const [stockScope, setStockScope] = useState<'branch' | 'all'>('branch');
     const [notes, setNotes] = useState('');
+    const [selectedPaymentTermId, setSelectedPaymentTermId] = useState<number | ''>('');
+    const [selectedDriverId, setSelectedDriverId] = useState<number | ''>('');
+    const [catalogueOpen, setCatalogueOpen] = useState(false);
 
     // ── Dialog State ──
     const [transferDialogLine, setTransferDialogLine] = useState<OrderLine | null>(null);
@@ -177,6 +182,7 @@ export default function FormalOrderForm({
     const safeSites = Array.isArray(sites) ? sites : [];
     const safeSuppliers = Array.isArray(suppliers) ? suppliers : [];
     const safePaymentTerms = Array.isArray(paymentTerms) ? paymentTerms : [];
+    const safeDrivers = Array.isArray(drivers) ? drivers : [];
 
     // ── Site → Warehouse cascade ──
     useEffect(() => {
@@ -307,23 +313,47 @@ export default function FormalOrderForm({
                     </div>
                 </div>
 
-                {/* ── NOTES ── */}
-                <div className="bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
-                    <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Notes</label>
-                    <textarea name="notes" rows={2} value={notes} onChange={e => setNotes(e.target.value)}
-                        className="w-full text-xs bg-app-background rounded-lg p-2 border border-app-border outline-none resize-none text-app-foreground"
-                        placeholder="Order notes..." />
+                {/* ── ROW 2: Payment Terms + Driver + Notes ── */}
+                <div className="flex flex-wrap items-end gap-2 bg-app-surface border border-app-border rounded-xl p-3 shadow-sm">
+                    <div className="flex-1 min-w-[140px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Payment Terms</label>
+                        <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
+                            name="paymentTermId" value={selectedPaymentTermId} onChange={e => setSelectedPaymentTermId(Number(e.target.value))}>
+                            <option value="">Default</option>
+                            {safePaymentTerms.map(pt => <option key={pt.id} value={pt.id}>{pt.name || pt.label}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[140px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Assigned Driver</label>
+                        <select className="w-full text-xs font-bold bg-app-background rounded-lg p-2 text-app-foreground border border-app-border outline-none focus:ring-1 focus:ring-app-primary/30"
+                            name="driverId" value={selectedDriverId} onChange={e => setSelectedDriverId(Number(e.target.value))}>
+                            <option value="">None</option>
+                            {safeDrivers.map(d => <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-[2] min-w-[200px]">
+                        <label className="text-[8px] font-black uppercase tracking-wider text-app-muted-foreground block mb-1">Notes</label>
+                        <input type="text" name="notes" value={notes} onChange={e => setNotes(e.target.value)}
+                            className="w-full text-xs bg-app-background rounded-lg p-2 border border-app-border outline-none text-app-foreground"
+                            placeholder="Order notes..." />
+                    </div>
                 </div>
 
                 {/* ── SEARCH BAR ── */}
                 <div className="flex items-center gap-2 bg-app-surface border border-app-border rounded-xl shadow-sm">
                     <div className="flex-1 relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <ProductSearchInput onSelect={addProduct} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)} />
+                        <ProductSearchInput onSelect={addProduct} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)}
+                            warehouseId={Number(selectedWarehouseId)} stockScope={stockScope} />
                     </div>
-                    <Button type="button" variant="outline" className="shrink-0 text-[9px] font-black uppercase tracking-wider h-9 px-3 border-l border-app-border rounded-none rounded-r-xl hover:bg-app-primary/10 hover:text-app-primary">
+                    <Button type="button" variant="outline" onClick={() => setCatalogueOpen(true)}
+                        className="shrink-0 text-[9px] font-black uppercase tracking-wider h-9 px-3 border-l border-app-border rounded-none hover:bg-app-primary/10 hover:text-app-primary">
                         <BookOpen size={13} className="mr-1" /> Catalogue
                     </Button>
+                    <a href="https://saas.tsf.ci/products/new" target="_blank" rel="noopener noreferrer"
+                        className="shrink-0 text-[9px] font-black uppercase tracking-wider h-9 px-3 flex items-center border-l border-app-border rounded-none rounded-r-xl hover:bg-emerald-500/10 hover:text-emerald-500 text-app-muted-foreground transition-colors">
+                        <Plus size={13} className="mr-1" /> New Product
+                    </a>
                 </div>
 
                 {/* ══════════════════════════════════════════════════════
@@ -520,6 +550,15 @@ export default function FormalOrderForm({
                     </div>
                 )
             }
+
+            {/* ═══ CATALOGUE MODAL ═══ */}
+            {catalogueOpen && (
+                <CatalogueModal
+                    onSelect={(p: any) => { addProduct(p); }}
+                    onClose={() => setCatalogueOpen(false)}
+                    siteId={Number(selectedSiteId)}
+                />
+            )}
         </>
     );
 }
@@ -755,7 +794,7 @@ function MobileCard({ line, updateLine, removeLine, onTransfer, onPurchaseReques
 // PRODUCT SEARCH INPUT
 // ═══════════════════════════════════════════════════════════════════
 
-function ProductSearchInput({ onSelect, siteId, supplierId }: { onSelect: (p: any) => void, siteId: number, supplierId: number }) {
+function ProductSearchInput({ onSelect, siteId, supplierId, warehouseId, stockScope }: { onSelect: (p: any) => void, siteId: number, supplierId: number, warehouseId?: number, stockScope?: string }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [open, setOpen] = useState(false);
@@ -765,14 +804,14 @@ function ProductSearchInput({ onSelect, siteId, supplierId }: { onSelect: (p: an
         const t = setTimeout(async () => {
             if (query.length > 1) {
                 setLoading(true);
-                const res = await searchProductsSimple(query, siteId, supplierId);
+                const res = await searchProductsSimple(query, siteId, supplierId, warehouseId, stockScope);
                 setResults(Array.isArray(res) ? res : (res?.results ?? []));
                 setOpen(true);
                 setLoading(false);
             } else { setResults([]); setOpen(false); }
         }, 300);
         return () => clearTimeout(t);
-    }, [query, siteId, supplierId]);
+    }, [query, siteId, supplierId, warehouseId, stockScope]);
 
     return (
         <div className="relative flex-1">
@@ -823,6 +862,140 @@ function MiniStat({ label, value, className = 'text-app-foreground' }: { label: 
         <div className="text-center p-1 rounded-md bg-app-surface">
             <div className="text-app-muted-foreground text-[6px] font-bold uppercase tracking-wider">{label}</div>
             <div className={`font-black text-[10px] ${className} truncate`}>{value}</div>
+        </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CATALOGUE MODAL
+// ═══════════════════════════════════════════════════════════════════
+
+function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => void, onClose: () => void, siteId: number }) {
+    const [query, setQuery] = useState('');
+    const [category, setCategory] = useState('');
+    const [products, setProducts] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Load filters on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                const data = await getCatalogueFilters();
+                setCategories(data?.categories || []);
+            } catch { /* ignore */ }
+        })();
+    }, []);
+
+    // Load products
+    const loadProducts = useCallback(async (pageNum: number, append = false) => {
+        setLoading(true);
+        try {
+            const params: Record<string, string> = { page: String(pageNum), page_size: '30' };
+            if (query) params.query = query;
+            if (category) params.category = category;
+            if (siteId) params.site_id = siteId.toString();
+            const data = await getCatalogueProducts(params);
+            const results = data?.results || [];
+            setProducts(prev => append ? [...prev, ...results] : results);
+            setTotalCount(data?.count || 0);
+            setPage(pageNum);
+        } catch { /* ignore */ }
+        setLoading(false);
+    }, [query, category, siteId]);
+
+    // Reload on filter change
+    useEffect(() => {
+        const t = setTimeout(() => loadProducts(1), 300);
+        return () => clearTimeout(t);
+    }, [query, category, loadProducts]);
+
+    // Infinite scroll
+    const handleScroll = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el || loading) return;
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
+            if (products.length < totalCount) {
+                loadProducts(page + 1, true);
+            }
+        }
+    }, [loading, products.length, totalCount, page, loadProducts]);
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 pt-8">
+            <div className="bg-app-surface rounded-2xl border border-app-border shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-app-border">
+                    <h3 className="font-black text-sm text-app-foreground flex items-center gap-2">
+                        <BookOpen size={16} className="text-app-primary" /> Product Catalogue
+                    </h3>
+                    <button type="button" onClick={onClose} className="text-app-muted-foreground hover:text-app-foreground text-xl font-bold">×</button>
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-2 p-3 border-b border-app-border bg-app-background/50">
+                    <div className="flex-1 relative">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input type="text" className="w-full pl-9 pr-3 py-2 text-xs font-bold bg-app-surface rounded-lg border border-app-border outline-none text-app-foreground"
+                            placeholder="Search products..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+                    </div>
+                    <select className="text-xs font-bold bg-app-surface rounded-lg p-2 border border-app-border text-app-foreground"
+                        value={category} onChange={e => setCategory(e.target.value)}>
+                        <option value="">All Categories</option>
+                        {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                </div>
+
+                {/* Product Grid */}
+                <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-2">
+                    {products.length === 0 && !loading ? (
+                        <div className="py-16 text-center text-app-muted-foreground">
+                            <Package size={32} className="mx-auto mb-2 opacity-20" />
+                            <p className="text-xs font-bold">No products found</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {products.map((p: any) => (
+                                <button key={p.id} type="button"
+                                    onClick={() => { onSelect(p); }}
+                                    className="p-3 bg-app-background rounded-xl border border-app-border hover:border-app-primary/50 hover:bg-app-primary/5 transition-all text-left group">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-bold text-xs text-app-foreground truncate">{p.name}</div>
+                                            <div className="text-[9px] text-app-muted-foreground mt-0.5">
+                                                {p.barcode || p.sku || '—'}{p.category_name ? ` • ${p.category_name}` : ''}
+                                            </div>
+                                        </div>
+                                        <Plus size={14} className="text-app-primary shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2 text-[8px]">
+                                        <span className={`font-black ${p.stock > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                            Stock: {p.stock}
+                                        </span>
+                                        <span className="text-app-muted-foreground">Sales/d: {p.daily_sales}</span>
+                                        <span className="text-app-muted-foreground">Cost: {p.cost_price}</span>
+                                        {p.margin_pct > 0 && <span className="text-emerald-500">+{p.margin_pct}%</span>}
+                                        {p.is_expiry_tracked && <SafetyTagBadge tag={p.safety_tag} />}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {loading && (
+                        <div className="py-4 text-center">
+                            <Loader2 size={16} className="mx-auto animate-spin text-app-muted-foreground" />
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-3 border-t border-app-border text-center text-[9px] text-app-muted-foreground font-bold">
+                    {products.length} of {totalCount} products
+                </div>
+            </div>
         </div>
     );
 }
