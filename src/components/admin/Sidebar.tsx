@@ -158,6 +158,7 @@ export const MENU_ITEMS = [
                     { title: 'Credit Notes', path: '/purchases/credit-notes' },
                     { title: 'Consignments', path: '/purchases/consignments' },
                     { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
+                    { title: 'Payment Terms', path: '/settings/payment-terms' },
                 ]
             },
             {
@@ -390,6 +391,8 @@ export const MENU_ITEMS = [
             { title: 'Security & Roles', path: '/settings/roles', icon: Shield },
             { title: 'Appearance & Theme', path: '/settings/appearance', icon: Paintbrush },
             { title: 'Custom Domains', path: '/settings/domains', icon: Globe },
+            { title: 'Payment Terms', path: '/settings/payment-terms', icon: ScrollText },
+            { title: 'Document Numbering', path: '/settings/sequences', icon: ListChecks },
             { title: 'Postings (Rules)', path: '/finance/settings/posting-rules', icon: ListChecks },
             { title: 'System Audit Log', path: '/finance/events', icon: History },
             { title: 'Subscription Info', path: '/subscription', icon: CreditCard },
