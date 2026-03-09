@@ -51,7 +51,7 @@ const ALL_COLUMNS: ColumnDef<MappingRecord>[] = [
         render: (r) => (
             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700' :
                 r.verify_status === 'FLAGGED' ? 'bg-amber-100 text-amber-700' :
-                    'bg-gray-100 text-gray-500'
+                    'bg-app-surface theme-text-muted'
                 }`}>
                 {r.verify_status || 'UNVERIFIED'}
             </span>

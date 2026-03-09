@@ -45,7 +45,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         render: (r) => (
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${r.verify_status === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700' :
                 r.verify_status === 'FLAGGED' ? 'bg-amber-100 text-amber-700' :
-                    'bg-gray-100 text-gray-500'
+                    'bg-app-surface theme-text-muted'
                 }`}>
                 {r.verify_status || 'PENDING'}
             </span>

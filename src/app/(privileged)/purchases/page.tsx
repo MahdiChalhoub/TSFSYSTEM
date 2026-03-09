@@ -66,7 +66,7 @@ export default async function PurchaseRegistryPage(props: {
     const totalValue = (dashboard?.total_value || 0) + legacyTotal;
 
     const kpis = [
-        { label: 'Drafts', value: rfqCount, icon: FileText, accent: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-800' },
+        { label: 'Drafts', value: rfqCount, icon: FileText, accent: 'theme-text-muted', bg: 'bg-app-surface bg-app-surface' },
         { label: 'Pending Approval', value: pendingApproval, icon: Clock, accent: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' },
         { label: 'Incoming Stock', value: awaitingReceipt, icon: Truck, accent: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/30' },
         { label: 'Total Procurement', value: `${Number(totalValue).toLocaleString()} ${currency}`, icon: Package, accent: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },

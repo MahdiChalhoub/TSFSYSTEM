@@ -129,7 +129,7 @@ export default async function SourcingDashboardPage() {
                       <Clock size={10} /> {sup.avg_lead_time}d lead time
                     </div>
                   )}
-                  <div className="w-24 h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 hidden md:block">
+                  <div className="w-24 h-2 rounded-full bg-app-surface bg-app-surface overflow-hidden shrink-0 hidden md:block">
                     <div className="h-full rounded-full bg-indigo-400" style={{ width: `${Math.min((sup.products / (topSuppliers[0]?.products || 1)) * 100, 100)}%` }} />
                   </div>
                 </div>

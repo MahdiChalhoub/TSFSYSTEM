@@ -29,12 +29,12 @@ type Quotation = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: 'Draft', class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
+    DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300' },
     SENT: { label: 'Sent to Supplier', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     RECEIVED: { label: 'Received', class: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
     ACCEPTED: { label: 'Accepted', class: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
     REJECTED: { label: 'Rejected', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
-    EXPIRED: { label: 'Expired', class: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' },
+    EXPIRED: { label: 'Expired', class: 'bg-app-surface theme-text-muted bg-app-surface dark:theme-text-muted' },
     CONVERTED: { label: 'Converted to PO', class: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
 }
 
@@ -99,7 +99,7 @@ export default function QuotationsPage() {
                 <section className="grid grid-cols-3 gap-3 md:gap-[var(--layout-element-gap)]" aria-label="Quotation statistics">
                     {[
                         { label: 'Total Value', value: totalValue.toLocaleString(), icon: DollarSign, accent: 'text-teal-500', bg: 'bg-teal-50 dark:bg-teal-900/30' },
-                        { label: 'Drafts', value: draftCount, icon: FileText, accent: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-800' },
+                        { label: 'Drafts', value: draftCount, icon: FileText, accent: 'theme-text-muted', bg: 'bg-app-surface bg-app-surface' },
                         { label: 'Active', value: activeCount, icon: Send, accent: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/30' },
                     ].map(s => (
                         <Card key={s.label} className="border shadow-sm">
@@ -143,7 +143,7 @@ export default function QuotationsPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-mono font-bold text-sm theme-text">{q.quotation_number || q.ref_code || `QTN-${q.id}`}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[q.status]?.class || 'bg-gray-100 text-gray-500'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[q.status]?.class || 'bg-app-surface theme-text-muted'}`}>
                                             {STATUS_CONFIG[q.status]?.label || q.status}
                                         </span>
                                     </div>

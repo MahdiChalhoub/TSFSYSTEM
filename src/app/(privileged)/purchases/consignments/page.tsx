@@ -30,7 +30,7 @@ type ConsignmentSettlement = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: 'Draft', class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
+    DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300' },
     PENDING: { label: 'Pending', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
     SETTLED: { label: 'Settled', class: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
     CANCELLED: { label: 'Cancelled', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
@@ -140,7 +140,7 @@ export default function ConsignmentsPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-mono font-bold text-sm theme-text">{cs.settlement_number || cs.ref_code || `CS-${cs.id}`}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[cs.status]?.class || 'bg-gray-100 text-gray-500'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[cs.status]?.class || 'bg-app-surface theme-text-muted'}`}>
                                             {STATUS_CONFIG[cs.status]?.label || cs.status}
                                         </span>
                                     </div>

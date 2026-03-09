@@ -29,7 +29,7 @@ type CreditNote = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: 'Draft', class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300' },
+    DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300' },
     ISSUED: { label: 'Issued', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     APPLIED: { label: 'Applied', class: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
     CANCELLED: { label: 'Cancelled', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' },
@@ -144,7 +144,7 @@ export default function CreditNotesPage() {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-mono font-bold text-sm theme-text">{cn.credit_note_number || cn.ref_code || `CN-${cn.id}`}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[cn.status]?.class || 'bg-gray-100 text-gray-500'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${STATUS_CONFIG[cn.status]?.class || 'bg-app-surface theme-text-muted'}`}>
                                             {STATUS_CONFIG[cn.status]?.label || cn.status}
                                         </span>
                                     </div>

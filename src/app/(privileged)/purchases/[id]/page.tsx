@@ -60,7 +60,7 @@ type POLine = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; class: string; actions: string[] }> = {
-    DRAFT: { label: 'Draft', class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300', actions: ['submit', 'cancel'] },
+    DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300', actions: ['submit', 'cancel'] },
     SUBMITTED: { label: 'Pending Approval', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400', actions: ['approve', 'reject'] },
     APPROVED: { label: 'Approved', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', actions: ['send_to_supplier', 'cancel'] },
     REJECTED: { label: 'Rejected', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400', actions: [] },
@@ -76,7 +76,7 @@ const STATUS_CONFIG: Record<string, { label: string; class: string; actions: str
 }
 
 const PRIORITY_BADGE: Record<string, string> = {
-    LOW: 'bg-gray-100 text-gray-500',
+    LOW: 'bg-app-surface theme-text-muted',
     NORMAL: 'bg-blue-50 text-blue-500',
     HIGH: 'bg-amber-50 text-amber-500',
     URGENT: 'bg-rose-50 text-rose-500',
@@ -196,7 +196,7 @@ export default function PurchaseOrderDetailPage() {
         setActionLoading(null)
     }
 
-    const status = po ? STATUS_CONFIG[po.status] || { label: po.status, class: 'bg-gray-100 text-gray-500', actions: [] } : null
+    const status = po ? STATUS_CONFIG[po.status] || { label: po.status, class: 'bg-app-surface theme-text-muted', actions: [] } : null
     const availableActions = status?.actions || []
 
     if (loading) {
@@ -282,70 +282,73 @@ export default function PurchaseOrderDetailPage() {
 
                     {/* ── Workflow Actions Bar ── */}
                     {availableActions.length > 0 && (
-                        <div className="px-[var(--layout-container-padding)] pb-4 flex flex-wrap gap-2" role="toolbar" aria-label="Purchase order actions">
+                        <div className="px-[var(--layout-container-padding)] pb-4 border-t border-app-border pt-4 mt-2 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Purchase order actions">
                             {availableActions.includes('submit') && (
                                 <Button size="sm" onClick={() => handleAction('submit')} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] bg-blue-500 hover:bg-blue-600 text-white">
-                                    {actionLoading === 'submit' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Send size={14} className="mr-1.5" />}
+                                    className="min-h-[44px] md:min-h-[36px] bg-blue-500 hover:bg-blue-600 text-white font-bold px-4">
+                                    {actionLoading === 'submit' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Send size={16} className="mr-2" />}
                                     Submit for Approval
                                 </Button>
                             )}
                             {availableActions.includes('approve') && (
                                 <Button size="sm" onClick={() => handleAction('approve')} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] bg-emerald-500 hover:bg-emerald-600 text-white">
-                                    {actionLoading === 'approve' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <CheckCircle size={14} className="mr-1.5" />}
-                                    Approve
+                                    className="min-h-[44px] md:min-h-[36px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4">
+                                    {actionLoading === 'approve' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle size={16} className="mr-2" />}
+                                    Approve Order
                                 </Button>
                             )}
                             {availableActions.includes('reject') && (
                                 <Button size="sm" variant="destructive" onClick={() => setShowRejectDialog(true)} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px]">
-                                    <XCircle size={14} className="mr-1.5" /> Reject
+                                    className="min-h-[44px] md:min-h-[36px] font-bold px-4">
+                                    <XCircle size={16} className="mr-2" /> Reject
                                 </Button>
                             )}
                             {availableActions.includes('send_to_supplier') && (
                                 <Button size="sm" onClick={() => handleAction('send_to_supplier')} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] bg-cyan-500 hover:bg-cyan-600 text-white">
-                                    {actionLoading === 'send_to_supplier' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Send size={14} className="mr-1.5" />}
+                                    className="min-h-[44px] md:min-h-[36px] bg-cyan-500 hover:bg-cyan-600 text-white font-bold px-4">
+                                    {actionLoading === 'send_to_supplier' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Send size={16} className="mr-2" />}
                                     Send to Supplier
                                 </Button>
                             )}
-                            {availableActions.includes('receive') && (
-                                <Button size="sm" onClick={() => setShowReceiveDialog(true)} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] bg-emerald-500 hover:bg-emerald-600 text-white">
-                                    <PackageCheck size={14} className="mr-1.5" /> Receive Goods
-                                </Button>
+
+                            {/* Operational Actions */}
+                            {!po.is_legacy && (
+                                <>
+                                    {availableActions.includes('receive') && (
+                                        <Button size="sm" onClick={() => setShowReceiveDialog(true)} disabled={!!actionLoading}
+                                            className="min-h-[44px] md:min-h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 ml-auto">
+                                            <PackageCheck size={16} className="mr-2" /> Receive Goods
+                                        </Button>
+                                    )}
+                                    {availableActions.includes('record_declaration') && (
+                                        <Button size="sm" variant="outline" onClick={() => setShowDeclarationDialog(true)} disabled={!!actionLoading}
+                                            className="min-h-[44px] md:min-h-[36px] font-bold px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">
+                                            <Shield size={16} className="mr-2" /> Supplier Declaration
+                                        </Button>
+                                    )}
+                                    {availableActions.includes('mark_invoiced') && (
+                                        <Button size="sm" onClick={() => setShowInvoiceDialog(true)} disabled={!!actionLoading}
+                                            className="min-h-[44px] md:min-h-[36px] bg-purple-600 hover:bg-purple-700 text-white font-bold px-4">
+                                            <Receipt size={16} className="mr-2" /> Log Invoice
+                                        </Button>
+                                    )}
+                                </>
                             )}
-                            {availableActions.includes('record_declaration') && (
-                                <Button size="sm" variant="outline" onClick={() => setShowDeclarationDialog(true)} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px]">
-                                    <Shield size={14} className="mr-1.5" /> Record Declaration
-                                </Button>
-                            )}
-                            {availableActions.includes('mark_invoiced') && (
-                                <Button size="sm" variant="outline" onClick={() => setShowInvoiceDialog(true)} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px]">
-                                    <Receipt size={14} className="mr-1.5" /> Mark Invoiced
-                                </Button>
-                            )}
+
+                            {/* Complete and Cancel actions */}
                             {availableActions.includes('complete') && (
                                 <Button size="sm" onClick={() => handleAction('complete')} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white">
-                                    {actionLoading === 'complete' ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Flag size={14} className="mr-1.5" />}
+                                    className="min-h-[44px] md:min-h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4">
+                                    {actionLoading === 'complete' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Flag size={16} className="mr-2" />}
                                     Complete PO
                                 </Button>
                             )}
                             {availableActions.includes('cancel') && (
                                 <Button size="sm" variant="ghost" onClick={() => handleAction('cancel')} disabled={!!actionLoading}
-                                    className="min-h-[44px] md:min-h-[36px] text-rose-500 hover:text-rose-600 hover:bg-rose-50">
-                                    <Ban size={14} className="mr-1.5" /> Cancel
+                                    className="min-h-[44px] md:min-h-[36px] text-rose-500 hover:text-rose-600 hover:bg-rose-50 font-bold px-4">
+                                    <Ban size={16} className="mr-2" /> Cancel
                                 </Button>
                             )}
-                            <Link href={`/finance/ledger?q=${po.po_number || po.id}`}>
-                                <Button size="sm" variant="outline" className="min-h-[44px] md:min-h-[36px]">
-                                    <BookOpen size={14} className="mr-1.5" /> View Ledger
-                                </Button>
-                            </Link>
                         </div>
                     )}
                 </Card>
@@ -358,7 +361,7 @@ export default function PurchaseOrderDetailPage() {
                                 <span className="text-xs font-black theme-text-muted uppercase tracking-wider">Receiving Progress</span>
                                 <span className="text-sm font-black theme-text">{receivePct}%</span>
                             </div>
-                            <div className="h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                            <div className="h-3 rounded-full overflow-hidden bg-app-surface bg-app-surface">
                                 <div className={`h-full rounded-full transition-all duration-700 ${receivePct >= 100 ? 'bg-emerald-500' : receivePct > 0 ? 'bg-blue-500' : 'bg-gray-200'}`}
                                     style={{ width: `${receivePct}%` }} />
                             </div>
@@ -405,7 +408,7 @@ export default function PurchaseOrderDetailPage() {
                                                     const pct = ordered > 0 ? Math.round((received / ordered) * 100) : 0
                                                     const isComplete = pct >= 100
                                                     return (
-                                                        <tr key={line.id} className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/20">
+                                                        <tr key={line.id} className="border-b last:border-0 hover:bg-app-surface-hover dark:hover:bg-gray-900/20">
                                                             <td className="py-3 px-2 theme-text-muted">{i + 1}</td>
                                                             <td className="py-3 px-2">
                                                                 <div className="font-bold theme-text">{line.product?.name || line.product_name || '—'}</div>
@@ -458,7 +461,7 @@ export default function PurchaseOrderDetailPage() {
                                                                         <span>Received: {received}/{ordered}</span>
                                                                         <span>{pct}%</span>
                                                                     </div>
-                                                                    <div className="h-1.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                                                    <div className="h-1.5 rounded-full overflow-hidden bg-app-surface bg-app-surface">
                                                                         <div className={`h-full rounded-full ${isComplete ? 'bg-emerald-500' : pct > 0 ? 'bg-amber-500' : 'bg-gray-200'}`} style={{ width: `${pct}%` }} />
                                                                     </div>
                                                                 </div>
@@ -543,17 +546,16 @@ export default function PurchaseOrderDetailPage() {
 
                         {/* Quick Links */}
                         <Card className="border shadow-sm">
-                            <CardContent className="p-4 space-y-2">
-                                <h3 className="text-xs font-black theme-text-muted uppercase tracking-wider mb-2">Quick Links</h3>
-                                <Link href={`/finance/ledger?q=${po.po_number || po.id}`} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px]">
-                                    <BookOpen size={14} /> General Ledger
-                                </Link>
-                                <Link href="/purchases/receipts" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px]">
-                                    <PackageCheck size={14} /> Goods Receipts
-                                </Link>
-                                <Link href="/purchases/returns/new" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px]">
-                                    <RotateCcw size={14} /> Create Return
-                                </Link>
+                            <CardContent className="p-4">
+                                <h3 className="text-xs font-black theme-text-muted uppercase tracking-wider mb-3">Quick Links</h3>
+                                <div className="flex flex-wrap gap-3">
+                                    <Link href="/purchases/receipts" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px]" style={{ border: '1px solid var(--theme-border)' }}>
+                                        <PackageCheck size={14} /> Goods Receipts
+                                    </Link>
+                                    <Link href="/purchases/returns/new" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px]" style={{ border: '1px solid var(--theme-border)' }}>
+                                        <RotateCcw size={14} /> Create Return
+                                    </Link>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
