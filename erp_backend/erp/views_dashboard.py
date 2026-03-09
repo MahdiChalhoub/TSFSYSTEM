@@ -347,9 +347,12 @@ class DashboardViewSet(viewsets.ViewSet):
         organization = Organization.objects.get(id=organization_id)
         query = request.query_params.get('query', '')
         site_id = request.query_params.get('site_id')
+        warehouse_id = request.query_params.get('warehouse_id')
+        stock_scope = request.query_params.get('stock_scope', 'branch')  # 'branch' or 'all'
         
         from django.utils import timezone
         from datetime import timedelta
+        from decimal import Decimal
         
         products_qs = Product.objects.filter(organization=organization, status='ACTIVE')
         if query:
@@ -357,40 +360,203 @@ class DashboardViewSet(viewsets.ViewSet):
                 Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query)
             )
         
-        products_qs = products_qs[:10]
+        products_qs = products_qs[:20]
         
         data = []
         thirty_days_ago = timezone.now() - timedelta(days=30)
+        ninety_days_ago = timezone.now() - timedelta(days=90)
         
         for p in products_qs:
+            # ── Stock ──
             stock_filter = {'organization': organization, 'product': p}
-            if site_id:
+            if warehouse_id:
+                stock_filter['warehouse_id'] = warehouse_id
+            elif site_id:
                 stock_filter['warehouse__parent_id'] = site_id
-                
-            stock_level = Inventory.objects.filter(**stock_filter).aggregate(total=Sum('quantity'))['total'] or 0
             
-            sales_qty = OrderLine.objects.filter(
+            stock_in_location = Inventory.objects.filter(**stock_filter).aggregate(
+                total=Sum('quantity'))['total'] or 0
+            
+            total_stock = Inventory.objects.filter(
+                organization=organization, product=p
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            
+            # Other warehouse stock for transfer suggestions
+            other_warehouse_stock = []
+            if warehouse_id or site_id:
+                other_inv = Inventory.objects.filter(
+                    organization=organization, product=p, quantity__gt=0
+                ).exclude(
+                    **({'warehouse_id': warehouse_id} if warehouse_id else {'warehouse__parent_id': site_id})
+                ).values('warehouse__name', 'warehouse__id').annotate(
+                    qty=Sum('quantity')
+                ).order_by('-qty')[:5]
+                other_warehouse_stock = [
+                    {'warehouse': i['warehouse__name'], 'warehouse_id': i['warehouse__id'], 'qty': float(i['qty'])}
+                    for i in other_inv
+                ]
+            
+            # Stock in transit
+            from apps.inventory.models import TransferOrder
+            stock_in_transit = 0
+            try:
+                transit_filter = {'organization': organization, 'status__in': ['PENDING', 'IN_TRANSIT']}
+                if warehouse_id:
+                    transit_filter['destination_warehouse_id'] = warehouse_id
+                transfers = TransferOrder.objects.filter(**transit_filter)
+                for t in transfers:
+                    from apps.inventory.models import TransferOrderLine
+                    stock_in_transit += TransferOrderLine.objects.filter(
+                        transfer_order=t, product=p
+                    ).aggregate(total=Sum('quantity'))['total'] or 0
+            except Exception:
+                pass
+            
+            # ── Sales ──
+            sales_30d = OrderLine.objects.filter(
                 order__organization=organization,
                 product=p,
                 order__created_at__gte=thirty_days_ago,
                 order__status='COMPLETED',
                 order__type='SALE'
-            ).aggregate(total=Sum('quantity'))['total'] or 0
+            ).aggregate(
+                total_qty=Sum('quantity'),
+                total_amount=Sum('total_amount')
+            )
+            sales_qty_30d = float(sales_30d['total_qty'] or 0)
+            daily_sales = sales_qty_30d / 30.0
+            monthly_average = sales_qty_30d
             
-            daily_sales = float(sales_qty) / 30.0
+            total_sales_all = OrderLine.objects.filter(
+                order__organization=organization,
+                product=p,
+                order__status='COMPLETED',
+                order__type='SALE'
+            ).aggregate(total=Sum('total_amount'))['total'] or 0
+            
+            # ── Purchases ──
+            from apps.pos.models import PurchaseOrderLine
+            purchase_data = PurchaseOrderLine.objects.filter(
+                order__organization=organization,
+                product=p,
+            ).aggregate(
+                count=models.Count('id'),
+                total=Sum('line_total')
+            )
+            purchase_count = purchase_data['count'] or 0
+            total_purchased = float(purchase_data['total'] or 0)
+            
+            # ── Financial Score ──
+            # financial_score = (total_sales / total_purchased) * 100 if purchased > 0
+            financial_score = 0
+            if total_purchased > 0:
+                financial_score = round((float(total_sales_all) / total_purchased) * 100)
+            
+            # adjustment_score = (adjustments_qty / total_purchased_qty) * 100
+            from apps.inventory.models import StockAdjustment
+            adjustment_qty = 0
+            try:
+                adjustment_qty = abs(float(StockAdjustment.objects.filter(
+                    organization=organization, product=p
+                ).aggregate(total=Sum('quantity_change'))['total'] or 0))
+            except Exception:
+                pass
+            
+            purchased_qty_total = PurchaseOrderLine.objects.filter(
+                order__organization=organization, product=p
+            ).aggregate(total=Sum('quantity'))['total'] or 1
+            adjustment_score = round((adjustment_qty / float(purchased_qty_total)) * 100)
+            
+            # ── Best Supplier ──
+            best_supplier_name = ''
+            best_supplier_price = 0
+            try:
+                from apps.pos.models import ProductSupplier
+                best = ProductSupplier.objects.filter(
+                    organization=organization, product=p
+                ).order_by('last_purchased_price').first()
+                if best:
+                    best_supplier_name = best.supplier.name if best.supplier else ''
+                    best_supplier_price = float(best.last_purchased_price or 0)
+            except Exception:
+                pass
+            
+            # ── Expiry / Safety ──
+            shelf_life_days = getattr(p, 'manufacturer_shelf_life_days', None) or 0
+            avg_expiry_days = getattr(p, 'avg_available_expiry_days', None) or 0
+            is_expiry_tracked = getattr(p, 'is_expiry_tracked', False)
+            
+            # days_to_sell_all = total_stock / daily_sales (if daily_sales > 0)
+            days_to_sell_all = 0
+            if daily_sales > 0:
+                days_to_sell_all = round(float(total_stock) / daily_sales)
+            
+            # Safety tag:
+            # SAFE = days_to_sell_all < avg_expiry_days * 0.6  
+            # CAUTION = days_to_sell_all < avg_expiry_days
+            # RISKY = days_to_sell_all >= avg_expiry_days (will expire before sold)
+            safety_tag = 'SAFE'
+            if is_expiry_tracked and avg_expiry_days > 0:
+                if days_to_sell_all >= avg_expiry_days:
+                    safety_tag = 'RISKY'
+                elif days_to_sell_all >= avg_expiry_days * 0.6:
+                    safety_tag = 'CAUTION'
+            
+            # ── Proposed Qty ──
+            lead_time = getattr(p, 'shipping_duration_days', None) or 14
+            proposed_qty = max(0, int(daily_sales * lead_time - float(stock_in_location)))
             
             data.append({
                 "id": p.id,
                 "name": p.name,
                 "sku": p.sku,
-                "barcode": p.barcode,
-                "costPrice": float(p.cost_price),
-                "costPriceHT": float(p.cost_price_ht),
-                "sellingPriceHT": float(p.selling_price_ht),
-                "sellingPriceTTC": float(p.selling_price_ttc),
-                "stockLevel": float(stock_level),
-                "dailySales": round(daily_sales, 2),
-                "proposedQty": max(0, int(daily_sales * 14 - stock_level))
+                "barcode": p.barcode or '',
+                "category_name": getattr(p.category, 'name', '') if hasattr(p, 'category') and p.category else '',
+                "is_active": p.status == 'ACTIVE',
+                
+                # Pricing
+                "cost_price": float(p.cost_price or 0),
+                "costPriceHT": float(p.cost_price_ht or 0),
+                "selling_price_ht": float(p.selling_price_ht or 0),
+                "selling_price": float(p.selling_price_ttc or 0),
+                
+                # Stock
+                "stockLevel": float(stock_in_location),
+                "stock_on_location": float(stock_in_location),
+                "total_stock": float(total_stock),
+                "stock_in_transit": float(stock_in_transit),
+                "other_warehouse_stock": other_warehouse_stock,
+                
+                # Sales
+                "daily_sales": round(daily_sales, 2),
+                "avg_daily_sales": round(daily_sales, 2),
+                "monthly_average": round(monthly_average, 1),
+                "total_sold": float(total_sales_all or 0),
+                
+                # Purchases
+                "purchase_count": purchase_count,
+                "total_purchased": total_purchased,
+                
+                # Financial
+                "financial_score": financial_score,
+                "sales_performance_score": financial_score,
+                "adjustment_score": adjustment_score,
+                "adjustment_risk_score": adjustment_score,
+                
+                # Best Supplier
+                "best_supplier_name": best_supplier_name,
+                "best_supplier_price": best_supplier_price,
+                
+                # Expiry / Safety
+                "is_expiry_tracked": is_expiry_tracked,
+                "manufacturer_shelf_life_days": shelf_life_days,
+                "avg_available_expiry_days": avg_expiry_days,
+                "days_to_sell_all": days_to_sell_all,
+                "safety_tag": safety_tag,
+                
+                # Proposed
+                "proposedQty": proposed_qty,
             })
             
         return Response(data)
+

@@ -66,6 +66,16 @@ interface OrderLine {
     bestSupplier: string;      // Row 1: supplier name
     bestPrice: number;         // Row 2: best price from that supplier
 
+    // Col 10 — Expiry / Safety
+    isExpiryTracked: boolean;
+    shelfLifeDays: number;     // manufacturer shelf life
+    avgExpiryDays: number;     // typical remaining shelf life on arrival
+    daysToSellAll: number;     // at current sell rate
+    safetyTag: 'SAFE' | 'CAUTION' | 'RISKY';
+
+    // Other warehouse stock (for transfer suggestions)
+    otherWarehouseStock: { warehouse: string; warehouse_id: number; qty: number }[];
+
     // Action
     actionQty: number;         // the quantity to order
 }
@@ -116,6 +126,14 @@ function createLine(product: Record<string, any>): OrderLine {
 
         bestSupplier: product.best_supplier_name ?? '',
         bestPrice: product.best_supplier_price ?? product.cost_price ?? 0,
+
+        isExpiryTracked: product.is_expiry_tracked ?? false,
+        shelfLifeDays: product.manufacturer_shelf_life_days ?? 0,
+        avgExpiryDays: product.avg_available_expiry_days ?? 0,
+        daysToSellAll: product.days_to_sell_all ?? 0,
+        safetyTag: product.safety_tag ?? 'SAFE',
+
+        otherWarehouseStock: product.other_warehouse_stock ?? [],
 
         actionQty: qtyRequired > 0 ? qtyRequired : 1,
     };
@@ -293,6 +311,10 @@ export default function FormalOrderForm({
                                             <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Best Supplier</div>
                                             <div className="text-[7px] font-bold text-app-muted-foreground italic">best price</div>
                                         </th>
+                                        <th className="text-center py-2 px-2 w-[100px] border-l border-app-border/50">
+                                            <div className="text-[9px] font-black uppercase tracking-wider text-app-foreground">Expiry</div>
+                                            <div className="text-[7px] font-bold text-app-muted-foreground italic">safety tag</div>
+                                        </th>
                                         <th className="w-[50px] border-l border-app-border/50"></th>
                                     </tr>
                                 </thead>
@@ -454,6 +476,25 @@ function ProductRow({ line, updateLine, removeLine }: {
                 </div>
             </td>
 
+            {/* Col 10: Expiry / Safety Tag */}
+            <td className="py-2 px-2 text-center border-l border-app-border/30">
+                {line.isExpiryTracked ? (
+                    <>
+                        <SafetyTagBadge tag={line.safetyTag} />
+                        <div className="text-[8px] text-app-muted-foreground font-bold mt-1">
+                            {line.avgExpiryDays > 0 ? `${line.avgExpiryDays}d shelf` : ''}
+                        </div>
+                        {line.daysToSellAll > 0 && (
+                            <div className="text-[8px] text-app-muted-foreground">
+                                {line.daysToSellAll}d to sell
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <span className="text-[8px] text-app-muted-foreground">N/A</span>
+                )}
+            </td>
+
             {/* Action: qty → order */}
             <td className="py-2 px-2 text-center border-l border-app-border/30">
                 <div className="flex items-center gap-1">
@@ -512,11 +553,18 @@ function MobileCard({ line, updateLine, removeLine }: {
             </div>
 
             {/* Stats Strip */}
-            <div className="px-3 pb-2 grid grid-cols-4 gap-1.5 text-[8px]">
+            <div className="px-3 pb-2 grid grid-cols-5 gap-1.5 text-[8px]">
                 <MiniStat label="Stock" value={line.stockOnLocation} className={stockColor} />
                 <MiniStat label="Sales/d" value={line.dailySales.toFixed(1)} />
                 <MiniStat label="Fin Score" value={line.financialScore} className={line.financialScore >= 100 ? 'text-emerald-500' : 'text-amber-500'} />
                 <MiniStat label="Cost" value={line.unitCost.toFixed(0)} />
+                {line.isExpiryTracked ? (
+                    <div className="text-center p-1 rounded-md bg-app-surface">
+                        <SafetyTagBadge tag={line.safetyTag} />
+                    </div>
+                ) : (
+                    <MiniStat label="Expiry" value="N/A" />
+                )}
             </div>
 
             {/* Expanded Details */}
@@ -531,6 +579,15 @@ function MobileCard({ line, updateLine, removeLine }: {
                     <MiniStat label="Sell Price" value={line.sellingPrice.toFixed(0)} />
                     <MiniStat label="Best Supplier" value={line.bestSupplier || '—'} />
                     <MiniStat label="Best Price" value={line.bestPrice.toFixed(0)} />
+                    {line.isExpiryTracked && line.avgExpiryDays > 0 && (
+                        <MiniStat label="Shelf Life" value={`${line.avgExpiryDays}d`} />
+                    )}
+                    {line.daysToSellAll > 0 && (
+                        <MiniStat label="Days to Sell" value={line.daysToSellAll} className={line.safetyTag === 'RISKY' ? 'text-rose-500' : line.safetyTag === 'CAUTION' ? 'text-amber-500' : 'text-emerald-500'} />
+                    )}
+                    {line.otherWarehouseStock?.length > 0 && (
+                        <MiniStat label="Other WH" value={line.otherWarehouseStock.map(w => `${w.warehouse}: ${w.qty}`).join(', ')} />
+                    )}
                 </div>
             )}
         </div>
@@ -584,6 +641,20 @@ function ProductSearchInput({ onSelect, siteId, supplierId }: { onSelect: (p: an
             )}
         </div>
     );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SAFETY TAG BADGE
+// ═══════════════════════════════════════════════════════════════════
+
+function SafetyTagBadge({ tag }: { tag: string }) {
+    const config: Record<string, { bg: string; text: string; label: string }> = {
+        SAFE: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600', label: '🟢 SAFE' },
+        CAUTION: { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600', label: '🟡 CAUTION' },
+        RISKY: { bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-600', label: '🔴 RISKY' },
+    };
+    const c = config[tag] || config.SAFE;
+    return <span className={`${c.bg} ${c.text} text-[8px] font-black px-1.5 py-0.5 rounded-full inline-block`}>{c.label}</span>;
 }
 
 // ═══════════════════════════════════════════════════════════════════
