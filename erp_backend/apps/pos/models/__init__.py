@@ -7,6 +7,7 @@ from .discount_models import DiscountRule, DiscountUsageLog
 from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
 from .sourcing_models import ProductSupplier, SupplierPriceHistory
 from .purchase_order_models import PurchaseOrder, PurchaseOrderLine
+from .payment_terms_models import PaymentTerm
 from .audit_models import POSAuditRule, POSAuditEvent, SalesAuditLog
 from .tax_entry_models import OrderLineTaxEntry
 from .analytics_models import SalesDailySummary
@@ -29,5 +30,6 @@ __all__ = [
     'SalesDailySummary',
     'SalesPaymentLeg',
     'LandedCost', 'LandedCostLine', 'PurchaseAttachment',
+    'PaymentTerm',
 ]
 
