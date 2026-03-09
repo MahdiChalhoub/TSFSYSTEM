@@ -154,6 +154,18 @@ class PurchaseOrder(TenantModel):
         help_text='Which qty the invoice is validated against'
     )
 
+    # Payment Terms & Logistics
+    payment_term = models.ForeignKey(
+        'pos.PaymentTerm', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='purchase_orders',
+        help_text='Payment conditions (Net 30, 60/90, etc.)'
+    )
+    assigned_driver = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assigned_po_deliveries',
+        help_text='Driver assigned for pickup/delivery coordination'
+    )
+
     # Notes
     notes = models.TextField(null=True, blank=True)
     internal_notes = models.TextField(null=True, blank=True, help_text='Internal notes not shared with supplier')

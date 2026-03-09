@@ -157,13 +157,63 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        """Override create to support nested line creation in a single POST."""
+        import json
         org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({"error": "No organization context"}, status=400)
         organization = Organization.objects.get(id=org_id)
-        serializer.save(
+
+        # Parse request data — handle both JSON and QueryDict
+        try:
+            data = json.loads(request.body) if hasattr(request.body, 'decode') else dict(request.data)
+        except Exception:
+            data = dict(request.data)
+
+        lines_data = data.pop('lines', [])
+
+        # Build PO header
+        po = PurchaseOrder(
             organization=organization,
-            created_by=self.request.user if self.request.user.is_authenticated else None
+            supplier_id=data.get('supplier'),
+            supplier_name=data.get('supplier_name', ''),
+            site_id=data.get('site') or None,
+            warehouse_id=data.get('warehouse') or None,
+            status=data.get('status', 'DRAFT'),
+            priority=data.get('priority', 'NORMAL'),
+            purchase_sub_type=data.get('purchase_sub_type', 'STANDARD'),
+            supplier_ref=data.get('supplier_ref', ''),
+            expected_date=data.get('expected_date') or None,
+            currency=data.get('currency', 'XOF'),
+            shipping_cost=Decimal(str(data.get('shipping_cost', 0))),
+            discount_amount=Decimal(str(data.get('discount_amount', 0))),
+            notes=data.get('notes', ''),
+            internal_notes=data.get('internal_notes', ''),
+            invoice_policy=data.get('invoice_policy', 'RECEIVED_QTY'),
+            payment_term_id=data.get('payment_term') or None,
+            assigned_driver_id=data.get('assigned_driver') or None,
+            created_by=request.user if request.user.is_authenticated else None,
         )
+        po.save()
+
+        # Create lines
+        for idx, line_data in enumerate(lines_data):
+            PurchaseOrderLine.objects.create(
+                organization=organization,
+                order=po,
+                product_id=line_data.get('product') or line_data.get('product_id'),
+                quantity=Decimal(str(line_data.get('quantity', 1))),
+                unit_price=Decimal(str(line_data.get('unit_price', 0))),
+                tax_rate=Decimal(str(line_data.get('tax_rate', 0))),
+                discount_percent=Decimal(str(line_data.get('discount_percent', 0))),
+                description=line_data.get('description', ''),
+                sort_order=idx,
+            )
+
+        po.recalculate_totals()
+        return Response(PurchaseOrderSerializer(po).data, status=status.HTTP_201_CREATED)
+
 
     @action(detail=False, methods=['post'], url_path='auto-replenish')
     def auto_replenish(self, request):
