@@ -160,3 +160,96 @@ class MigrationJobViewSet(viewsets.ModelViewSet):
             'job_id': job.id,
             'status': job.status
         })
+
+    @action(detail=True, methods=['post'], url_path='link-file')
+    def link_file(self, request, pk=None):
+        """Link a storage file to this migration job."""
+        job = self.get_object()
+        file_id = request.data.get('file_uuid')
+        
+        if not file_id:
+            return Response({'error': 'file_uuid is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from apps.storage.models import StoredFile # assuming standard storage app
+        try:
+            stored_file = StoredFile.objects.get(uuid=file_id)
+            job.source_file = stored_file
+            job.save(update_fields=['source_file'])
+        except StoredFile.DoesNotExist:
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        return Response(self.get_serializer(job).data)
+
+    @action(detail=True, methods=['post'], url_path='execute-step')
+    def execute_step(self, request, pk=None):
+        import threading
+        from django.db import connections
+        
+        job = self.get_object()
+        step = request.data.get('step')
+        
+        if job.status not in ['READY', 'RUNNING']:
+            return Response({'error': f'Job status is {job.status}'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not job.source_file:
+            return Response({'error': 'No source file linked to this job'}, status=status.HTTP_400_BAD_REQUEST)
+
+        job.status = 'RUNNING'
+        job.save(update_fields=['status'])
+
+        threading.Thread(
+            target=self._run_migration_in_background,
+            args=(job.id, step),
+            name=f"migration-{job.id}-{step}"
+        ).start()
+
+        return Response(self.get_serializer(job).data)
+
+    def _run_migration_in_background(self, job_id, step):
+        from django.db import connections
+        connections.close_all()
+        
+        try:
+            job = MigrationJob.objects.get(id=job_id)
+            from apps.migration.parsers import SQLDumpParser
+            
+            parser = SQLDumpParser(file_path=job.source_file.file.path)
+            parser.parse()
+            
+            if step == 'MASTER_DATA':
+                from .services.master_data_service import MasterDataMigrationService
+                service = MasterDataMigrationService(job)
+                
+                # Import in order
+                units = list(parser.stream_rows('units'))
+                service.import_units(units)
+                
+                categories = list(parser.stream_rows('categories'))
+                service.import_categories(categories)
+                
+                brands = list(parser.stream_rows('brands'))
+                service.import_brands(brands)
+                
+                products = list(parser.stream_rows('products'))
+                service.import_products_batch(products)
+                
+            elif step == 'ENTITIES':
+                from .services.entity_service import EntityMigrationService
+                service = EntityMigrationService(job)
+                
+                contacts = list(parser.stream_rows('contacts'))
+                service.import_customers(contacts)
+                service.import_suppliers(contacts)
+            
+            job.status = 'READY'
+            # In case this was the last step, maybe set COMPLETED? Wait, ENTITIES is usually the last step in this sequence.
+            if step == 'ENTITIES':
+                job.status = 'COMPLETED'
+            job.save(update_fields=['status'])
+            
+        except Exception as e:
+            job.status = 'FAILED'
+            job.errors.append({'step': step, 'error': str(e)})
+            job.save(update_fields=['status', 'errors'])
+        finally:
+            connections.close_all()

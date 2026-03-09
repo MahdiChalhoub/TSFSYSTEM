@@ -5,10 +5,9 @@ Tracks migration jobs and entity mappings with full audit trail.
 """
 from django.db import models
 from erp.models import TenantOwnedModel
-from erp.mixins import AuditLogMixin
 
 
-class MigrationJob(AuditLogMixin, TenantOwnedModel):
+class MigrationJob(TenantOwnedModel):
     """
     Tracks a complete migration job from UltimatePOS to TSFSYSTEM.
 
@@ -116,7 +115,8 @@ class MigrationJob(AuditLogMixin, TenantOwnedModel):
     # Timestamps
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    # Note: created_at, updated_at provided by AuditLogMixin
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'migration_v2_job'

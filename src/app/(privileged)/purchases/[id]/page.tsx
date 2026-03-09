@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
     fetchPurchaseOrder, submitPO, approvePO, rejectPO, sendToSupplier,
-    cancelPO, completePO, markInvoiced, recordSupplierDeclaration, receivePOLine
+    cancelPO, completePO, revertToDraft, markInvoiced, recordSupplierDeclaration, receivePOLine
 } from '@/app/actions/pos/purchases'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -61,9 +61,9 @@ type POLine = {
 
 const STATUS_CONFIG: Record<string, { label: string; class: string; actions: string[] }> = {
     DRAFT: { label: 'Draft', class: 'bg-app-surface text-gray-600 bg-app-surface dark:text-gray-300', actions: ['submit', 'cancel'] },
-    SUBMITTED: { label: 'Pending Approval', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400', actions: ['approve', 'reject'] },
-    APPROVED: { label: 'Approved', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', actions: ['send_to_supplier', 'cancel'] },
-    REJECTED: { label: 'Rejected', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400', actions: [] },
+    SUBMITTED: { label: 'Pending Approval', class: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400', actions: ['approve', 'reject', 'revert_to_draft'] },
+    APPROVED: { label: 'Approved', class: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', actions: ['send_to_supplier', 'revert_to_draft', 'cancel'] },
+    REJECTED: { label: 'Rejected', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400', actions: ['revert_to_draft'] },
     ORDERED: { label: 'Ordered', class: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400', actions: ['receive', 'record_declaration', 'cancel'] },
     SENT: { label: 'Sent to Supplier', class: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400', actions: ['receive', 'record_declaration', 'cancel'] },
     CONFIRMED: { label: 'Supplier Confirmed', class: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', actions: ['receive', 'record_declaration', 'cancel'] },
@@ -72,7 +72,7 @@ const STATUS_CONFIG: Record<string, { label: string; class: string; actions: str
     RECEIVED: { label: 'Fully Received', class: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400', actions: ['mark_invoiced', 'complete'] },
     INVOICED: { label: 'Invoiced', class: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400', actions: ['complete'] },
     COMPLETED: { label: 'Completed', class: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', actions: [] },
-    CANCELLED: { label: 'Cancelled', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400', actions: [] },
+    CANCELLED: { label: 'Cancelled', class: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400', actions: ['revert_to_draft'] },
 }
 
 const PRIORITY_BADGE: Record<string, string> = {
@@ -131,6 +131,7 @@ export default function PurchaseOrderDetailPage() {
                 case 'send_to_supplier': await sendToSupplier(po.id); break
                 case 'cancel': await cancelPO(po.id); break
                 case 'complete': await completePO(po.id); break
+                case 'revert_to_draft': await revertToDraft(po.id); break
                 default: break
             }
             toast.success(`PO ${action.replace('_', ' ')} successful`)
@@ -341,6 +342,13 @@ export default function PurchaseOrderDetailPage() {
                                     className="min-h-[44px] md:min-h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4">
                                     {actionLoading === 'complete' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Flag size={16} className="mr-2" />}
                                     Complete PO
+                                </Button>
+                            )}
+                            {availableActions.includes('revert_to_draft') && (
+                                <Button size="sm" variant="outline" onClick={() => handleAction('revert_to_draft')} disabled={!!actionLoading}
+                                    className="min-h-[44px] md:min-h-[36px] font-bold px-4 border-amber-300 text-amber-600 hover:bg-amber-50">
+                                    {actionLoading === 'revert_to_draft' ? <Loader2 size={16} className="mr-2 animate-spin" /> : <RotateCcw size={16} className="mr-2" />}
+                                    Revert to Draft
                                 </Button>
                             )}
                             {availableActions.includes('cancel') && (

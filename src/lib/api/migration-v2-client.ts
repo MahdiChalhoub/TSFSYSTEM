@@ -20,7 +20,7 @@ import {
 } from '@/types/migration-v2';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://saas.tsf.ci/api';
-const MIGRATION_V2_BASE = `${API_BASE}/migration-v2`;
+const MIGRATION_V2_BASE = `${API_BASE}/migration_v2`;
 
 /**
  * Helper to get auth token from cookies/localStorage
@@ -78,8 +78,8 @@ export async function createMigrationJob(data: CreateJobRequest): Promise<Migrat
     });
 }
 
-export async function linkMigrationFile(data: LinkFileRequest): Promise<MigrationV2Job> {
-    return authFetch(`${MIGRATION_V2_BASE}/jobs/link-file/`, {
+export async function linkMigrationFile(jobId: number, data: LinkFileRequest): Promise<MigrationV2Job> {
+    return authFetch(`${MIGRATION_V2_BASE}/jobs/${jobId}/link-file/`, {
         method: 'POST',
         body: JSON.stringify(data),
     });

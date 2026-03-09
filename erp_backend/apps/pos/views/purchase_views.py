@@ -240,6 +240,31 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         po.save(update_fields=['status'])
         return Response(PurchaseOrderSerializer(po).data)
 
+    @action(detail=True, methods=['post'], url_path='revert-to-draft')
+    def revert_to_draft(self, request, pk=None):
+        """Revert a PO back to DRAFT status.
+        
+        Allowed from: SUBMITTED, APPROVED, REJECTED, CANCELLED.
+        Not allowed once goods have been sent to supplier or received.
+        """
+        po = self.get_object()
+        revertable = ['SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED']
+        if po.status not in revertable:
+            return Response(
+                {"error": f"Cannot revert from '{po.status}'. Only {', '.join(revertable)} POs can be reverted to Draft."},
+                status=400
+            )
+        old_status = po.status
+        po.status = 'DRAFT'
+        po.approved_by = None
+        reason = request.data.get('reason', '')
+        note = f"\nReverted from {old_status} to DRAFT"
+        if reason:
+            note += f": {reason}"
+        po.notes = f"{po.notes or ''}{note}".strip()
+        po.save(update_fields=['status', 'approved_by', 'notes'])
+        return Response(PurchaseOrderSerializer(po).data)
+
     @action(detail=True, methods=['post'], url_path='receive-line')
     def receive_line(self, request, pk=None):
         """Receive goods for a specific line and update inventory."""

@@ -50,6 +50,10 @@ export async function completePO(id: number | string) {
     return erpFetch(`purchase-orders/${id}/complete/`, { method: 'POST' })
 }
 
+export async function revertToDraft(id: number | string, reason?: string) {
+    return erpFetch(`purchase-orders/${id}/revert_to_draft/`, { method: 'POST', body: JSON.stringify({ reason }) })
+}
+
 export async function receivePOLine(poId: number | string, data: Record<string, any>) {
     return erpFetch(`purchase-orders/${poId}/receive_line/`, { method: 'POST', body: JSON.stringify(data) })
 }

@@ -45,6 +45,7 @@ import {
     executeEntities,
     pollJobStatus,
     getOrganizations,
+    linkMigrationFile,
 } from '@/lib/api/migration-v2-client';
 import type {
     MigrationV2Job,
@@ -97,7 +98,7 @@ export default function MigrationWizardPage() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [, setSelectedOrg] = useState<Organization | null>(null);
     const [dataSourceType, setDataSourceType] = useState<DataSourceType | null>(null);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFile, setSelectedFile] = useState<any | null>(null);
     const [cloudFiles, setCloudFiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -180,8 +181,17 @@ export default function MigrationWizardPage() {
                 target_organization_id: org.id,
                 coa_template: 'SYSCOHADA',
             });
+
+            // Link the selected file
+            if (selectedFile?.uuid) {
+                await linkMigrationFile(newJob.id, {
+                    file_uuid: selectedFile.uuid,
+                    name: selectedFile.filename || selectedFile.original_filename || 'migration.sql'
+                });
+            }
+
             setJob(newJob);
-            toast.success('Migration job created!');
+            toast.success('Migration job created & file linked!');
             setCurrentStep('VALIDATE');
         } catch (err: any) {
             setError(err.message || 'Failed to create migration job');
@@ -206,11 +216,11 @@ export default function MigrationWizardPage() {
         }
     }
 
-    async function handleSelectCloudFile(_file: any) {
+    async function handleSelectCloudFile(file: any) {
         setLoading(true);
         try {
             toast.success('File selected! Now choose target organization...');
-            // TODO: Store file info for later linking after org selection
+            setSelectedFile(file);
             setCurrentStep('SELECT_ORG');
         } catch (err: any) {
             setError(err.message || 'Failed to select file');
