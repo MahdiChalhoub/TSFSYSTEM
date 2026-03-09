@@ -2,7 +2,7 @@
 import { erpFetch } from "@/lib/erp-api";
 import { getContactsByType } from "@/app/actions/crm/contacts";
 import FormalOrderForm from "./form";
-import { FileText } from "lucide-react";
+import { FileText, ArrowLeft } from "lucide-react";
 import { serializeDecimals } from "@/lib/utils/serialization";
 import Link from "next/link";
 
@@ -22,18 +22,14 @@ async function getPaymentTerms() {
     try {
         const data = await erpFetch('payment-terms/');
         return Array.isArray(data) ? data : (data?.results ?? []);
-    } catch {
-        return [];
-    }
+    } catch { return []; }
 }
 
 async function getDrivers() {
     try {
         const data = await erpFetch('users/?role=DRIVER');
         return Array.isArray(data) ? data : (data?.results ?? []);
-    } catch {
-        return [];
-    }
+    } catch { return []; }
 }
 
 export default async function NewFormalOrderPage() {
@@ -44,35 +40,36 @@ export default async function NewFormalOrderPage() {
         getDrivers(),
     ]);
 
-    const normalizedSuppliers = Array.isArray(suppliers) ? suppliers : [];
-    const normalizedSites = Array.isArray(sites) ? sites : [];
-    const normalizedPaymentTerms = Array.isArray(paymentTerms) ? paymentTerms : [];
-    const normalizedDrivers = Array.isArray(drivers) ? drivers : [];
-
     return (
-        <main className="space-y-[var(--layout-section-spacing)] animate-in fade-in duration-500 pb-20">
-            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-[var(--layout-section-spacing)]">
-                <Link href="/purchases" className="inline-flex items-center gap-2 text-sm font-bold theme-text-muted hover:theme-text transition-colors min-h-[44px] md:min-h-[auto]">
-                    ← Back to Procurement Center
+        <main className="animate-in fade-in duration-500 pb-20">
+            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-6">
+                {/* Back link */}
+                <Link href="/purchases"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-app-foreground transition-colors py-2">
+                    <ArrowLeft size={14} /> Back to Procurement
                 </Link>
 
-                <header className="flex items-center gap-3 md:gap-4">
-                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shadow-sm">
-                        <FileText size={24} className="text-indigo-500" />
+                {/* Page header */}
+                <header className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/10 flex items-center justify-center shadow-sm border border-indigo-500/10">
+                        <FileText size={26} className="text-indigo-500" />
                     </div>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tight theme-text">
-                            New <span className="text-indigo-500">Purchase Order</span>
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                            New <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Purchase Order</span>
                         </h1>
-                        <p className="text-xs theme-text-muted mt-0.5">Create a formal purchase order for supplier</p>
+                        <p className="text-xs text-app-muted-foreground mt-0.5">
+                            Create a formal purchase order with intelligent procurement analytics
+                        </p>
                     </div>
                 </header>
 
+                {/* Form */}
                 <FormalOrderForm
-                    suppliers={serializeDecimals(normalizedSuppliers)}
-                    sites={normalizedSites}
-                    paymentTerms={serializeDecimals(normalizedPaymentTerms)}
-                    drivers={serializeDecimals(normalizedDrivers)}
+                    suppliers={serializeDecimals(Array.isArray(suppliers) ? suppliers : [])}
+                    sites={Array.isArray(sites) ? sites : []}
+                    paymentTerms={serializeDecimals(Array.isArray(paymentTerms) ? paymentTerms : [])}
+                    drivers={serializeDecimals(Array.isArray(drivers) ? drivers : [])}
                 />
             </div>
         </main>
