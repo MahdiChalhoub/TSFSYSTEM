@@ -1,6 +1,10 @@
 import { erpFetch } from '@/lib/erp-api';
 import Link from 'next/link';
-import { CheckCircle2, Truck, FileText, Package, Plus, Clock, BarChart3, Receipt, RotateCcw, ScrollText } from 'lucide-react';
+import {
+    Package, Plus, Clock, BarChart3, Receipt, RotateCcw, ScrollText,
+    Truck, FileText, TrendingUp, ShoppingBag, AlertTriangle,
+    ArrowUpRight, Zap, CheckCircle2, CircleDollarSign,
+} from 'lucide-react';
 import { getCommercialContext } from '@/app/actions/commercial';
 import { PurchasesRegistryClient } from './PurchasesRegistryClient';
 import { AutoReplenishButton } from './AutoReplenishButton';
@@ -62,105 +66,224 @@ export default async function PurchaseRegistryPage(props: {
     const rfqCount = (dashboard?.by_status?.DRAFT || 0) + normalizedLegacy.filter((o: any) => o.status === 'DRAFT').length;
     const pendingApproval = (dashboard?.pending_approval || 0) + normalizedLegacy.filter((o: any) => o.status === 'SUBMITTED').length;
     const awaitingReceipt = (dashboard?.awaiting_receipt || 0) + normalizedLegacy.filter((o: any) => ['ORDERED', 'PARTIALLY_RECEIVED'].includes(o.status)).length;
+    const completedCount = normalizedAdvanced.filter((o: any) => o.status === 'COMPLETED').length + normalizedLegacy.filter((o: any) => o.status === 'COMPLETED').length;
     const legacyTotal = normalizedLegacy.reduce((acc: number, o: any) => acc + parseFloat(String(o.total_amount || 0)), 0);
     const totalValue = (dashboard?.total_value || 0) + legacyTotal;
 
-    const kpis = [
-        { label: 'Drafts', value: rfqCount, icon: FileText, accent: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-800' },
-        { label: 'Pending Approval', value: pendingApproval, icon: Clock, accent: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' },
-        { label: 'Incoming Stock', value: awaitingReceipt, icon: Truck, accent: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/30' },
-        { label: 'Total Procurement', value: `${Number(totalValue).toLocaleString()} ${currency}`, icon: Package, accent: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-    ];
-
     const navLinks = [
-        { href: '/purchases/purchase-orders', label: 'Purchase Orders', icon: ScrollText },
-        { href: '/purchases/invoices', label: 'Invoices', icon: Receipt },
-        { href: '/purchases/receipts', label: 'Receipts', icon: Package },
-        { href: '/purchases/returns', label: 'Returns', icon: RotateCcw },
-        { href: '/purchases/quotations', label: 'Quotations', icon: FileText },
-        { href: '/purchases/sourcing', label: 'Sourcing', icon: BarChart3 },
+        { href: '/purchases/purchase-orders', label: 'Purchase Orders', icon: ScrollText, desc: 'Formal POs' },
+        { href: '/purchases/new-order', label: 'New Order', icon: Plus, desc: 'Create PO', primary: true },
+        { href: '/purchases/invoices', label: 'Invoices', icon: Receipt, desc: 'Supplier bills' },
+        { href: '/purchases/receipts', label: 'Receipts', icon: Package, desc: 'Goods received' },
+        { href: '/purchases/returns', label: 'Returns', icon: RotateCcw, desc: 'Purchase returns' },
+        { href: '/purchases/sourcing', label: 'Sourcing', icon: BarChart3, desc: 'Supplier analytics' },
     ];
 
     return (
-        <main className="space-y-[var(--layout-section-spacing)] animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-[var(--layout-section-spacing)]">
-                {/* ── Header ────────────────────────────── */}
-                <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 md:gap-6">
-                    <div className="flex items-center gap-3 md:gap-4">
-                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shrink-0"
-                            style={{ background: 'color-mix(in srgb, var(--theme-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--theme-primary) 20%, transparent)' }}>
-                            <Package size={28} className="theme-primary hidden md:block" />
-                            <Package size={22} className="theme-primary md:hidden" />
+        <main className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+            <div className="layout-container-padding max-w-[1600px] mx-auto space-y-6">
+
+                {/* ═══════════════════════════════════════════════════════════════
+                    HEADER — Premium glassmorphism with gradient accent
+                ═══════════════════════════════════════════════════════════════ */}
+                <header className="relative overflow-hidden rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-xl">
+                    {/* Gradient accent bar */}
+                    <div className="h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500" />
+
+                    <div className="p-6 md:p-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/10 flex items-center justify-center border border-indigo-500/20 shadow-lg shadow-indigo-500/10 shrink-0">
+                                    <ShoppingBag size={26} className="text-indigo-500" />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-app-muted-foreground">
+                                        Supply Chain · Procurement
+                                    </p>
+                                    <h1 className="text-2xl md:text-3xl font-black tracking-tight text-app-foreground">
+                                        Procurement <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Command</span>
+                                    </h1>
+                                    <p className="text-xs text-app-muted-foreground mt-0.5 hidden sm:block">
+                                        Purchase Orders · Supplier Management · Reception Tracking
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <AutoReplenishButton />
+                                <Link
+                                    href="/purchases/new-order"
+                                    className="flex items-center gap-2 px-6 h-11 rounded-xl font-black text-sm whitespace-nowrap transition-all shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 bg-gradient-to-r from-indigo-500 to-violet-500 text-white"
+                                >
+                                    <Plus size={16} /> New Purchase Order
+                                </Link>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest theme-text-muted">
-                                Supply Chain
-                            </p>
-                            <h1 className="text-2xl md:text-4xl font-black tracking-tight theme-text">
-                                Procurement <span className="theme-primary">Center</span>
-                            </h1>
-                            <p className="text-xs md:text-sm mt-0.5 font-medium theme-text-muted hidden sm:block">
-                                Manage RFQs, Purchase Orders & Reception
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-2 lg:pb-0">
-                        <AutoReplenishButton />
-                        <Link
-                            href="/purchases/new-order"
-                            className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap min-h-[44px] md:min-h-[36px] transition-all shadow-lg"
-                            style={{ background: 'var(--theme-primary)', color: 'white' }}
-                        >
-                            <Plus size={16} /> New Purchase Order
-                        </Link>
                     </div>
                 </header>
 
-                {/* ── Quick Nav (mobile horizontal scroll, desktop grid) ── */}
-                <nav className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-6 -mx-4 px-4 md:mx-0 md:px-0" aria-label="Purchase module navigation">
+                {/* ═══════════════════════════════════════════════════════════════
+                    KPI COMMAND STRIP — 4 premium stat cards
+                ═══════════════════════════════════════════════════════════════ */}
+                <section className="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Procurement statistics">
+                    {/* Drafts */}
+                    <div className="group relative overflow-hidden rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-400/30">
+                        <div className="flex items-start justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center">
+                                <FileText size={18} className="text-gray-500" />
+                            </div>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 px-2 py-0.5 rounded-full bg-gray-500/10">
+                                {rfqCount > 0 ? 'Active' : 'Clear'}
+                            </span>
+                        </div>
+                        <div className="mt-4">
+                            <p className="text-3xl font-black text-app-foreground tracking-tight">{rfqCount}</p>
+                            <p className="text-[10px] font-bold text-app-muted-foreground mt-0.5">Draft Orders</p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-gray-400/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+
+                    {/* Pending Approval */}
+                    <div className="group relative overflow-hidden rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-amber-400/30">
+                        <div className="flex items-start justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                <Clock size={18} className="text-amber-500" />
+                            </div>
+                            {pendingApproval > 0 && (
+                                <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 px-2 py-0.5 rounded-full bg-amber-500/10 animate-pulse">
+                                    Action Required
+                                </span>
+                            )}
+                        </div>
+                        <div className="mt-4">
+                            <p className="text-3xl font-black text-app-foreground tracking-tight">{pendingApproval}</p>
+                            <p className="text-[10px] font-bold text-app-muted-foreground mt-0.5">Pending Approval</p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+
+                    {/* Incoming Stock */}
+                    <div className="group relative overflow-hidden rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-400/30">
+                        <div className="flex items-start justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                                <Truck size={18} className="text-blue-500" />
+                            </div>
+                            {awaitingReceipt > 0 && (
+                                <span className="text-[8px] font-black uppercase tracking-widest text-blue-500 px-2 py-0.5 rounded-full bg-blue-500/10">
+                                    In Pipeline
+                                </span>
+                            )}
+                        </div>
+                        <div className="mt-4">
+                            <p className="text-3xl font-black text-app-foreground tracking-tight">{awaitingReceipt}</p>
+                            <p className="text-[10px] font-bold text-app-muted-foreground mt-0.5">Incoming Stock</p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+
+                    {/* Total Procurement */}
+                    <div className="group relative overflow-hidden rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-sm p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-emerald-400/30">
+                        <div className="flex items-start justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                <CircleDollarSign size={18} className="text-emerald-500" />
+                            </div>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 px-2 py-0.5 rounded-full bg-emerald-500/10">
+                                Volume
+                            </span>
+                        </div>
+                        <div className="mt-4">
+                            <p className="text-2xl md:text-3xl font-black text-emerald-500 tracking-tight">
+                                {Number(totalValue).toLocaleString()} <span className="text-xs font-bold text-app-muted-foreground">{currency}</span>
+                            </p>
+                            <p className="text-[10px] font-bold text-app-muted-foreground mt-0.5">Total Procurement</p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                </section>
+
+                {/* ═══════════════════════════════════════════════════════════════
+                    QUICK NAV — Module pill navigation
+                ═══════════════════════════════════════════════════════════════ */}
+                <nav className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" aria-label="Purchase module navigation">
                     {navLinks.map(link => (
                         <Link key={link.href} href={link.href}
-                            className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider whitespace-nowrap min-h-[44px] md:min-h-[36px] transition-all theme-surface hover:opacity-80"
-                            style={{ border: '1px solid var(--theme-border)' }}
+                            className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all border shrink-0 ${link.primary
+                                    ? 'bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-md hover:shadow-indigo-500/10'
+                                    : 'bg-app-surface/60 border-app-border/40 hover:border-app-border hover:bg-app-surface hover:shadow-md'
+                                }`}
                         >
-                            <link.icon size={14} className="theme-primary shrink-0" />
-                            <span className="theme-text-muted">{link.label}</span>
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${link.primary ? 'bg-indigo-500/20' : 'bg-app-background/60'
+                                }`}>
+                                <link.icon size={13} className={link.primary ? 'text-indigo-500' : 'text-app-muted-foreground group-hover:text-app-foreground transition-colors'} />
+                            </div>
+                            <div>
+                                <div className={`text-[10px] font-black ${link.primary ? 'text-indigo-500' : 'text-app-foreground'}`}>
+                                    {link.label}
+                                </div>
+                                <div className="text-[8px] font-semibold text-app-muted-foreground hidden sm:block">
+                                    {link.desc}
+                                </div>
+                            </div>
+                            <ArrowUpRight size={10} className={`ml-1 opacity-0 group-hover:opacity-100 transition-opacity ${link.primary ? 'text-indigo-500' : 'text-app-muted-foreground'}`} />
                         </Link>
                     ))}
                 </nav>
 
-                {/* ── KPI Row (2-col mobile, 4-col desktop) ── */}
-                <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[var(--layout-element-gap)]" aria-label="Procurement statistics">
-                    {kpis.map((kpi, i) => (
-                        <div key={i}
-                            className="layout-card p-4 md:p-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg theme-surface"
-                            style={{ border: '1px solid var(--theme-border)', borderRadius: 'var(--layout-card-radius)' }}
-                        >
-                            <div className="flex items-start justify-between mb-3 md:mb-4">
-                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg}`}>
-                                    <kpi.icon size={20} className={kpi.accent} />
-                                </div>
-                            </div>
-                            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest theme-text-muted mb-1">
-                                {kpi.label}
-                            </p>
-                            <p className={`text-xl md:text-3xl font-black tracking-tight ${kpi.accent}`}>
-                                {kpi.value}
-                            </p>
-                        </div>
-                    ))}
-                </section>
+                {/* ═══════════════════════════════════════════════════════════════
+                    PIPELINE SUMMARY — Quick status strip
+                ═══════════════════════════════════════════════════════════════ */}
+                {allOrders.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mr-2">Pipeline</span>
+                        {[
+                            { label: 'Draft', status: 'DRAFT', count: rfqCount, color: 'text-gray-500 bg-gray-500/10 border-gray-500/20' },
+                            { label: 'Submitted', status: 'SUBMITTED', count: pendingApproval, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+                            { label: 'In Transit', status: 'IN_TRANSIT', count: normalizedAdvanced.filter((o: any) => o.status === 'IN_TRANSIT').length, color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
+                            { label: 'Received', status: 'RECEIVED', count: normalizedAdvanced.filter((o: any) => o.status === 'RECEIVED').length, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+                            { label: 'Completed', status: 'COMPLETED', count: completedCount, color: 'text-violet-500 bg-violet-500/10 border-violet-500/20' },
+                        ].filter(s => s.count > 0).map(s => (
+                            <Link key={s.status} href={`/purchases?status=${s.status}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black border transition-all hover:scale-105 ${s.color}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                {s.label}: {s.count}
+                            </Link>
+                        ))}
+                        <span className="text-[9px] font-bold text-app-muted-foreground ml-auto">
+                            {allOrders.length} total orders
+                        </span>
+                    </div>
+                )}
 
-                {/* ── Registry Table ────────────────────── */}
-                <section className="theme-surface p-4 md:p-6"
-                    style={{ border: '1px solid var(--theme-border)', borderRadius: 'var(--layout-card-radius)' }}
+                {/* ═══════════════════════════════════════════════════════════════
+                    REGISTRY TABLE — Wrapped in premium card
+                ═══════════════════════════════════════════════════════════════ */}
+                <section className="rounded-2xl border border-app-border/60 bg-app-surface/80 backdrop-blur-sm overflow-hidden"
                     aria-label="Purchase order registry"
                 >
-                    <PurchasesRegistryClient
-                        orders={allOrders}
-                        currency={currency}
-                        tradeSubTypesEnabled={tradeSubTypesEnabled}
-                    />
+                    {/* Card header */}
+                    <div className="flex items-center justify-between px-5 py-3 border-b border-app-border/40 bg-app-background/20">
+                        <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                <ScrollText size={13} className="text-indigo-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-xs font-black text-app-foreground">Order Registry</h2>
+                                <p className="text-[8px] font-semibold text-app-muted-foreground">All purchase orders and legacy transactions</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold text-app-muted-foreground px-2.5 py-1 rounded-lg bg-app-background/60 border border-app-border/40">
+                                {normalizedAdvanced.length} POs · {normalizedLegacy.length} Legacy
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="p-4 md:p-5">
+                        <PurchasesRegistryClient
+                            orders={allOrders}
+                            currency={currency}
+                            tradeSubTypesEnabled={tradeSubTypesEnabled}
+                        />
+                    </div>
                 </section>
             </div>
         </main>
