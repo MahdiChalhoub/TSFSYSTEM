@@ -92,56 +92,59 @@ export default function PostingRulesForm({
             const acc = accounts.find(a => a.code === code)
             return acc ? acc.id : null
         }
+        const findByType = (type: string, nameMatch: string) => {
+            const acc = accounts.find(a => a.type === type && a.name.toLowerCase().includes(nameMatch.toLowerCase()))
+            return acc ? acc.id : null
+        }
 
-        // Sales
-        newConfig.sales.receivable = find('1110') || find('1300') || find('411')
-        newConfig.sales.revenue = find('4100') || find('4101') || find('701')
-        newConfig.sales.cogs = find('5100') || find('5101') || find('6000') || find('601')
-        newConfig.sales.inventory = find('1121') || find('1120') || find('31')
-        newConfig.sales.round_off = find('6589') || find('7589') || find('758')
-        newConfig.sales.discount = find('6190') || find('709')
-        newConfig.sales.vat_collected = find('2111') || find('4457') || find('443')
+        // Sales — IFRS → USA GAAP → SYSCOHADA/PCG/PCN → name fallback
+        newConfig.sales.receivable = find('1110') || find('1200') || find('411') || find('41') || findByType('ASSET', 'receivable')
+        newConfig.sales.revenue = find('4100') || find('4101') || find('701') || find('70') || findByType('INCOME', 'sales')
+        newConfig.sales.cogs = find('5100') || find('5101') || find('5000') || find('601') || find('60') || findByType('EXPENSE', 'cost')
+        newConfig.sales.inventory = find('1120') || find('1300') || find('31') || find('37') || findByType('ASSET', 'inventory')
+        newConfig.sales.round_off = find('9002') || find('6589') || find('7589') || find('758')
+        newConfig.sales.discount = find('6190') || find('709') || findByType('EXPENSE', 'discount')
+        newConfig.sales.vat_collected = find('2111') || find('4457') || find('443') || find('44') || findByType('LIABILITY', 'vat')
 
         // Purchases
-        newConfig.purchases.payable = find('2100.1') || find('2100') || find('401') || find('2101')
-        newConfig.purchases.inventory = find('5101') || find('6011') || find('607') || find('1121')
-        newConfig.purchases.expense = find('6011') || find('601') || find('60')
-        newConfig.purchases.vat_recoverable = find('2112') || find('4456') || find('445')
-        newConfig.purchases.vat_suspense = find('2113') || find('4458') || find('44586')
+        newConfig.purchases.payable = find('2101') || find('2100') || find('401') || find('40') || findByType('LIABILITY', 'payable')
+        newConfig.purchases.inventory = find('1120') || find('1300') || find('31') || find('37') || find('607') || findByType('ASSET', 'inventory')
+        newConfig.purchases.expense = find('5101') || find('6011') || find('5000') || find('601') || find('60') || findByType('EXPENSE', 'purchase')
+        newConfig.purchases.vat_recoverable = find('2112') || find('4456') || find('445') || find('44') || findByType('ASSET', 'vat')
+        newConfig.purchases.vat_suspense = find('2116') || find('4458') || find('44586')
         newConfig.purchases.airsi_payable = find('2113') || find('4471')
-        newConfig.purchases.reverse_charge_vat = find('2114') || find('4452')
-        newConfig.purchases.discount_earned = find('7190') || find('609')
-        newConfig.purchases.delivery_fees = find('6241') || find('624')
-        newConfig.purchases.airsi = find('2113') || find('4471')
+        newConfig.purchases.reverse_charge_vat = find('2114') || find('4452') || findByType('LIABILITY', 'reverse')
+        newConfig.purchases.discount_earned = find('4201') || find('7190') || find('609') || find('77') || findByType('INCOME', 'discount')
+        newConfig.purchases.delivery_fees = find('5102') || find('6241') || find('624') || find('61') || findByType('EXPENSE', 'freight')
 
         // Inventory
-        newConfig.inventory.adjustment = find('9001') || find('5104') || find('709')
-        newConfig.inventory.transfer = find('9002') || find('1120')
+        newConfig.inventory.adjustment = find('9001') || find('5104') || find('708') || find('709') || findByType('EXPENSE', 'adjustment')
+        newConfig.inventory.transfer = find('9002') || find('1120') || find('31')
 
         // Automation
-        newConfig.automation.customerRoot = find('1111') || find('1110') || find('1200') || find('411')
-        newConfig.automation.supplierRoot = find('2101') || find('2100.1') || find('2100') || find('401')
-        newConfig.automation.payrollRoot = find('2200') || find('421')
+        newConfig.automation.customerRoot = find('1111') || find('1110') || find('1200') || find('411') || find('41') || findByType('ASSET', 'receivable')
+        newConfig.automation.supplierRoot = find('2101') || find('2100') || find('401') || find('40') || findByType('LIABILITY', 'payable')
+        newConfig.automation.payrollRoot = find('2200') || find('2121') || find('421') || find('42') || findByType('LIABILITY', 'salary')
 
         // Fixed Assets
-        newConfig.fixedAssets.depreciationExpense = find('681') || find('6109') || find('6302')
-        newConfig.fixedAssets.accumulatedDepreciation = find('1210') || find('1211') || find('281')
+        newConfig.fixedAssets.depreciationExpense = find('6303') || find('681') || find('6109') || find('6302') || find('68') || findByType('EXPENSE', 'depreciation')
+        newConfig.fixedAssets.accumulatedDepreciation = find('1210') || find('1211') || find('281') || find('28') || findByType('ASSET', 'accumulated')
 
         // Suspense
-        newConfig.suspense.reception = find('3800') || find('380') || find('471')
+        newConfig.suspense.reception = find('2102') || find('9004') || find('3800') || find('380') || find('471')
 
         // Partners
-        newConfig.partners.capital = find('3100') || find('101')
-        newConfig.partners.loan = find('1680') || find('168')
-        newConfig.partners.withdrawal = find('3200') || find('108')
+        newConfig.partners.capital = find('3001') || find('3100') || find('101') || find('10') || findByType('EQUITY', 'capital')
+        newConfig.partners.loan = find('2201') || find('1680') || find('168') || find('16') || findByType('LIABILITY', 'loan')
+        newConfig.partners.withdrawal = find('3005') || find('3200') || find('108') || find('12') || findByType('EQUITY', 'draw')
 
         // Equity
-        newConfig.equity.capital = find('3100') || find('101')
-        newConfig.equity.draws = find('3200') || find('108') || find('129')
+        newConfig.equity.capital = find('3001') || find('3100') || find('101') || find('10') || findByType('EQUITY', 'capital')
+        newConfig.equity.draws = find('3005') || find('3200') || find('108') || find('129') || find('12') || findByType('EQUITY', 'draw')
 
         // Tax
-        newConfig.tax.vat_payable = find('2110') || find('4455') || find('443')
-        newConfig.tax.vat_refund_receivable = find('2115') || find('4458')
+        newConfig.tax.vat_payable = find('2110') || find('2111') || find('4455') || find('443') || find('44') || findByType('LIABILITY', 'vat payable')
+        newConfig.tax.vat_refund_receivable = find('2115') || find('4458') || findByType('ASSET', 'vat refund')
 
         setConfig(newConfig)
 
@@ -433,16 +436,16 @@ export default function PostingRulesForm({
                             <div className="space-y-3">
                                 {impactDialog.impacts.map((impact, i) => (
                                     <div key={i} className={`p-4 rounded-2xl border ${impact.risk === 'HIGH'
-                                            ? 'border-app-error/30 bg-app-error-bg'
-                                            : 'border-app-border bg-app-background'
+                                        ? 'border-app-error/30 bg-app-error-bg'
+                                        : 'border-app-border bg-app-background'
                                         }`}>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="font-bold text-xs text-app-muted-foreground uppercase tracking-widest">
                                                 {impact.rule}
                                             </span>
                                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${impact.risk === 'HIGH'
-                                                    ? 'bg-app-error text-white'
-                                                    : 'bg-app-surface-2 text-app-muted-foreground'
+                                                ? 'bg-app-error text-white'
+                                                : 'bg-app-surface-2 text-app-muted-foreground'
                                                 }`}>
                                                 {impact.risk} risk
                                             </span>
