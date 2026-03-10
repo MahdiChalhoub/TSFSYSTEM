@@ -11,7 +11,7 @@ import {
     ArrowRight, Package, Truck, Loader2,
     ChevronDown, ChevronUp, BookOpen,
     ArrowLeftRight, Settings2, ShoppingCart,
-    AlertCircle, ExternalLink
+    AlertCircle, ExternalLink, DollarSign
 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -245,22 +245,22 @@ export default function FormalOrderForm({
 
                     {configOpen && (
                         <div className="px-5 pb-5 space-y-4 border-t border-app-border/40 pt-4">
-                            {/* Row 1: Site + Warehouse + Supplier */}
+                            {/* Row 1: Branch + Site + Supplier */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
-                                    <label className={labelClass}>Site</label>
+                                    <label className={labelClass}>Branch</label>
                                     <select className={selectClass} value={selectedSiteId}
                                         onChange={e => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
-                                        <option value="">Select site...</option>
+                                        <option value="">Select branch...</option>
                                         {safeSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Warehouse</label>
+                                    <label className={labelClass}>Site <span className="text-app-muted-foreground/50 font-normal">[Store / Warehouse]</span></label>
                                     <select className={selectClass} name="warehouseId" required
                                         value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(Number(e.target.value))}>
-                                        <option value="">Select warehouse...</option>
-                                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                        <option value="">Select site...</option>
+                                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}{w.location_type ? ` (${w.location_type})` : ''}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -311,10 +311,10 @@ export default function FormalOrderForm({
                                     </select>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Driver</label>
+                                    <label className={labelClass}>Assigned Driver <span className="text-app-muted-foreground/50 font-normal">(Goods Receiver)</span></label>
                                     <select className={selectClass} name="driverId"
                                         value={selectedDriverId} onChange={e => setSelectedDriverId(Number(e.target.value))}>
-                                        <option value="">None</option>
+                                        <option value="">No driver assigned</option>
                                         {safeDrivers.map(d => <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>)}
                                     </select>
                                 </div>
@@ -410,18 +410,62 @@ export default function FormalOrderForm({
                 </div>
 
                 {/* ═══ SUBMIT FOOTER ═══ */}
-                <div className={`${cardClass} p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4`}>
-                    <div className="flex-1 flex items-center gap-6 text-xs text-app-muted-foreground">
-                        <span><b className="text-app-foreground">{lines.length}</b> products</span>
-                        <span><b className="text-app-foreground">{totalQty}</b> units</span>
-                        <span className="text-app-primary font-black text-sm">{totalCost.toLocaleString(undefined, { minimumFractionDigits: 0 })} CFA</span>
+                <div className={`${cardClass} overflow-hidden`}>
+                    {/* Gradient accent strip */}
+                    <div className="h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-app-primary" />
+                    <div className="p-5">
+                        {/* Stats row */}
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-indigo-500/10 to-indigo-500/5 border border-indigo-500/20">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                                    <ShoppingCart size={14} className="text-indigo-500" />
+                                </div>
+                                <div>
+                                    <div className="text-[8px] font-bold uppercase tracking-wider text-indigo-500/70">Products</div>
+                                    <div className="text-lg font-black text-indigo-500 leading-tight">{lines.length}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
+                                <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                                    <Package size={14} className="text-violet-500" />
+                                </div>
+                                <div>
+                                    <div className="text-[8px] font-bold uppercase tracking-wider text-violet-500/70">Total Units</div>
+                                    <div className="text-lg font-black text-violet-500 leading-tight">{totalQty.toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-app-primary/10 to-app-primary/5 border border-app-primary/20">
+                                <div className="w-8 h-8 rounded-lg bg-app-primary/20 flex items-center justify-center">
+                                    <DollarSign size={14} className="text-app-primary" />
+                                </div>
+                                <div>
+                                    <div className="text-[8px] font-bold uppercase tracking-wider text-app-primary/70">Estimated Cost</div>
+                                    <div className="text-lg font-black text-app-primary leading-tight">{totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })} <span className="text-[10px] font-bold">CFA</span></div>
+                                </div>
+                            </div>
+                            {riskyCount > 0 && (
+                                <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-500/5 border border-rose-500/20">
+                                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center">
+                                        <AlertTriangle size={14} className="text-rose-500" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[8px] font-bold uppercase tracking-wider text-rose-500/70">Risky Items</div>
+                                        <div className="text-lg font-black text-rose-500 leading-tight">{riskyCount}</div>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex-1" />
+                            <Button type="submit" disabled={isPending || lines.length === 0}
+                                className="h-12 bg-gradient-to-r from-indigo-500 via-violet-500 to-app-primary hover:shadow-xl hover:shadow-app-primary/25 text-white font-black text-sm shadow-lg shadow-app-primary/15 px-10 rounded-xl transition-all disabled:opacity-40">
+                                {isPending
+                                    ? <><Loader2 size={16} className="mr-2 animate-spin" /> Creating PO...</>
+                                    : <><ArrowRight size={16} className="mr-2" /> Create Purchase Order</>}
+                            </Button>
+                        </div>
+                        {lines.length === 0 && (
+                            <p className="text-[10px] text-app-muted-foreground text-center">Add products above to create a purchase order</p>
+                        )}
                     </div>
-                    <Button type="submit" disabled={isPending || lines.length === 0}
-                        className="h-11 bg-gradient-to-r from-app-primary to-app-primary/90 hover:from-app-primary/90 hover:to-app-primary text-white font-bold text-xs shadow-lg shadow-app-primary/20 px-8 rounded-xl transition-all">
-                        {isPending
-                            ? <><Loader2 size={14} className="mr-2 animate-spin" /> Creating PO...</>
-                            : <><ArrowRight size={14} className="mr-2" /> Create Purchase Order</>}
-                    </Button>
                 </div>
 
                 {state.message && (
@@ -501,7 +545,7 @@ export default function FormalOrderForm({
 
             {/* ═══ CATALOGUE MODAL ═══ */}
             {catalogueOpen && (
-                <CatalogueModal onSelect={addProduct} onClose={() => setCatalogueOpen(false)} siteId={Number(selectedSiteId)} />
+                <CatalogueModal onSelect={addProduct} onClose={() => setCatalogueOpen(false)} siteId={Number(selectedSiteId)} supplierId={Number(selectedSupplierId)} />
             )}
         </>
     );
@@ -804,9 +848,10 @@ function Stat({ label, value, className = 'text-app-foreground' }: { label: stri
 // CATALOGUE MODAL
 // ═══════════════════════════════════════════════════════════════════
 
-function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => void, onClose: () => void, siteId: number }) {
+function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (p: any) => void, onClose: () => void, siteId: number, supplierId?: number }) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
+    const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
     const [products, setProducts] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -830,6 +875,11 @@ function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => v
             if (query) params.query = query;
             if (category) params.category = category;
             if (siteId) params.site_id = siteId.toString();
+            if (supplierId) params.supplier = supplierId.toString();
+            // Stock filters
+            if (stockFilter === 'in_stock') params.min_stock = '1';
+            if (stockFilter === 'out_of_stock') { params.min_stock = '0'; params.max_stock = '0'; }
+            if (stockFilter === 'low_stock') { params.min_stock = '1'; params.max_stock = '10'; }
             const data = await getCatalogueProducts(params);
             const results = data?.results || [];
             setProducts(prev => append ? [...prev, ...results] : results);
@@ -837,12 +887,12 @@ function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => v
             setPage(pageNum);
         } catch { /* ignore */ }
         setLoading(false);
-    }, [query, category, siteId]);
+    }, [query, category, siteId, supplierId, stockFilter]);
 
     useEffect(() => {
         const t = setTimeout(() => loadProducts(1), 300);
         return () => clearTimeout(t);
-    }, [query, category, loadProducts]);
+    }, [query, category, stockFilter, loadProducts]);
 
     const handleScroll = useCallback(() => {
         const el = scrollRef.current;
@@ -858,12 +908,13 @@ function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => v
                 <div className="flex items-center justify-between p-4 border-b border-app-border">
                     <h3 className="font-black text-sm text-app-foreground flex items-center gap-2">
                         <BookOpen size={16} className="text-app-primary" /> Product Catalogue
+                        {supplierId > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-app-primary/10 text-app-primary">Supplier filtered</span>}
                     </h3>
                     <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-app-background flex items-center justify-center text-app-muted-foreground hover:text-app-foreground transition-colors">×</button>
                 </div>
 
-                <div className="flex items-center gap-2 p-3 border-b border-app-border bg-app-background/30">
-                    <div className="flex-1 relative">
+                <div className="flex flex-wrap items-center gap-2 p-3 border-b border-app-border bg-app-background/30">
+                    <div className="flex-1 relative min-w-[180px]">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground/50" />
                         <input type="text" className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-app-surface rounded-lg border border-app-border/60 outline-none text-app-foreground focus:ring-2 focus:ring-app-primary/20"
                             placeholder="Search products..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
@@ -872,6 +923,13 @@ function CatalogueModal({ onSelect, onClose, siteId }: { onSelect: (p: any) => v
                         value={category} onChange={e => setCategory(e.target.value)}>
                         <option value="">All Categories</option>
                         {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <select className="text-xs font-semibold bg-app-surface rounded-lg px-3 py-2.5 border border-app-border/60 text-app-foreground"
+                        value={stockFilter} onChange={e => setStockFilter(e.target.value as any)}>
+                        <option value="all">All Stock</option>
+                        <option value="in_stock">✅ In Stock</option>
+                        <option value="low_stock">⚠️ Low Stock (&le;10)</option>
+                        <option value="out_of_stock">🔴 Out of Stock</option>
                     </select>
                 </div>
 

@@ -30,6 +30,7 @@ class Contact(TenantModel):
     TYPES = (
         ('SUPPLIER', 'Supplier'),
         ('CUSTOMER', 'Customer'),
+        ('BOTH', 'Customer & Supplier'),
         ('LEAD', 'Lead'),
         ('PARTNER', 'Partner'),
         ('CREDITOR', 'Creditor'),

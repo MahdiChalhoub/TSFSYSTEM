@@ -172,6 +172,9 @@ const IFRS_COA: TemplateAccount[] = [
                             { code: '2111', name: 'VAT Payable', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                             { code: '2112', name: 'Income Tax Payable', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                             { code: '2113', name: 'Payroll Tax Payable', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2114', name: 'Reverse Charge VAT', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2115', name: 'VAT Refund Receivable', type: 'ASSET', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2116', name: 'VAT Suspense (Cash-Basis)', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                         ]
                     },
                     {
@@ -193,10 +196,11 @@ const IFRS_COA: TemplateAccount[] = [
     },
     {
         code: '3000', name: 'EQUITY', type: 'EQUITY', children: [
-            { code: '3001', name: 'Capital', type: 'EQUITY', syscohadaCode: '10', syscohadaClass: 'Class 1' },
+            { code: '3001', name: 'Owner Capital', type: 'EQUITY', syscohadaCode: '10', syscohadaClass: 'Class 1' },
             { code: '3002', name: 'Additional Capital', type: 'EQUITY', syscohadaCode: '10', syscohadaClass: 'Class 1' },
             { code: '3003', name: 'Retained Earnings', type: 'EQUITY', syscohadaCode: '11', syscohadaClass: 'Class 1' },
             { code: '3004', name: 'Current Year Profit / Loss', type: 'EQUITY', syscohadaCode: '13', syscohadaClass: 'Class 1' },
+            { code: '3005', name: 'Owner Draws / Withdrawals', type: 'EQUITY', syscohadaCode: '10', syscohadaClass: 'Class 1' },
         ]
     },
     {
