@@ -679,8 +679,8 @@ class DashboardViewSet(viewsets.ViewSet):
             })
         
         return Response({
-            'results': results,
-            'count': total_count,
+            'items': results,
+            'total': total_count,
             'page': page,
             'page_size': page_size,
         })

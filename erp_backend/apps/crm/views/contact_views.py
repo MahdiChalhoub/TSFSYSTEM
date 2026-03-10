@@ -11,8 +11,8 @@ from erp.middleware import get_current_tenant_id
 from erp.models import Organization
 from erp.services import ConfigurationService
 
-from apps.crm.models import Contact, ContactTag
-from apps.crm.serializers import ContactSerializer, ContactTagSerializer
+from apps.crm.models import Contact, ContactTag, ContactPerson
+from apps.crm.serializers import ContactSerializer, ContactTagSerializer, ContactPersonSerializer
 from apps.finance.models import ChartOfAccount
 from apps.finance.services import LedgerService
 from erp.permissions import HasPermission
@@ -24,6 +24,19 @@ class ContactTagViewSet(TenantModelViewSet):
     queryset = ContactTag.objects.all()
     serializer_class = ContactTagSerializer
 
+
+class ContactPersonViewSet(TenantModelViewSet):
+    """CRUD for people within a business contact (Contact Book)."""
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = ContactPerson.objects.all()
+    serializer_class = ContactPersonSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        contact_id = self.request.query_params.get('contact')
+        if contact_id:
+            qs = qs.filter(contact_id=contact_id)
+        return qs
 
 
 class ContactViewSet(TenantModelViewSet):
@@ -43,16 +56,16 @@ class ContactViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         # 🛡️ AUDITOR CALIBRATION: Direct ID lookups should check ALL scopes
-        # to prevent 404s on historical/internal records when accessed via direct URL.
         if self.action in ['retrieve', 'detail_summary', 'loyalty_analytics', 'supplier_scorecard']:
             return Contact.original_objects.filter(organization_id=get_current_tenant_id())
-            
+
         qs = super().get_queryset()
-        # Filter by contact type (e.g. type=CUSTOMER from POS client search)
         contact_type = self.request.query_params.get('type')
         if contact_type:
             qs = qs.filter(type=contact_type.upper())
-        # Full-text search on name / phone / address
+        entity_type = self.request.query_params.get('entity_type')
+        if entity_type:
+            qs = qs.filter(entity_type=entity_type.upper())
         search = self.request.query_params.get('search')
         if search:
             from django.db.models import Q
@@ -62,61 +75,98 @@ class ContactViewSet(TenantModelViewSet):
                 Q(address__icontains=search) |
                 Q(company_name__icontains=search)
             )
-        # Optional result count limit
         limit = self.request.query_params.get('limit')
         if limit and limit.isdigit():
             qs = qs[:int(limit)]
         return qs
 
+    def _resolve_coa_parent(self, rules, contact_type, organization):
+        """
+        Resolve the parent COA account for auto-linking using Contact.COA_MAPPING.
+        Returns (parent_account, sub_type) or (None, None) if no COA link needed.
+        """
+        mapping = Contact.COA_MAPPING.get(contact_type)
+        if mapping is None:
+            return None, None  # LEAD, CONTACT — no COA
+
+        rule_cat, rule_key, fallback_cat, fallback_key, sub_type = mapping
+        parent_account_id = (
+            rules.get(rule_cat, {}).get(rule_key) or
+            rules.get(fallback_cat, {}).get(fallback_key)
+        )
+
+        if not parent_account_id:
+            return None, sub_type  # Signal: mapping exists but rule not configured
+
+        parent = ChartOfAccount.objects.filter(id=parent_account_id, organization=organization).first()
+        return parent, sub_type
+
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
-        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
         organization = Organization.objects.get(id=organization_id)
-        
+
         data = request.data.copy()
+        contact_type = data.get('type', 'CUSTOMER')
 
         with transaction.atomic():
             rules = ConfigurationService.get_posting_rules(organization)
-            contact_type = data.get('type')
-            
-            # Resolve parent COA dynamically from posting rules (NO hardcoded codes)
-            # Priority: automation roots → receivable/payable rule
-            parent_account_id = None
-            if contact_type == 'CUSTOMER':
-                parent_account_id = (
-                    rules.get('automation', {}).get('customerRoot') or
-                    rules.get('sales', {}).get('receivable')
+
+            if contact_type == 'BOTH':
+                # ── Special: BOTH creates TWO sub-accounts (AR + AP) ──
+                ar_parent, _ = self._resolve_coa_parent(rules, 'CUSTOMER', organization)
+                ap_parent, _ = self._resolve_coa_parent(rules, 'SUPPLIER', organization)
+
+                if not ar_parent or not ap_parent:
+                    return Response(
+                        {"error": "Cannot create BOTH contact: Need both Customer Root (Receivable) and "
+                                  "Supplier Root (Payable) configured in posting rules."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                ar_acc = LedgerService.create_linked_account(
+                    organization=organization,
+                    name=f"{data.get('name')} (AR)",
+                    type=ar_parent.type,
+                    sub_type='RECEIVABLE',
+                    parent_id=ar_parent.id
                 )
+                ap_acc = LedgerService.create_linked_account(
+                    organization=organization,
+                    name=f"{data.get('name')} (AP)",
+                    type=ap_parent.type,
+                    sub_type='PAYABLE',
+                    parent_id=ap_parent.id
+                )
+                # Store AR as primary linked account; AP stored in notes for now
+                data['linked_account_id'] = ar_acc.id
+                # TODO: Add linked_account_ap_id field for dual-account contacts
+
             else:
-                parent_account_id = (
-                    rules.get('automation', {}).get('supplierRoot') or
-                    rules.get('purchases', {}).get('payable')
-                )
-            
-            if not parent_account_id:
-                rule_label = 'Customer Root Account (or Accounts Receivable)' if contact_type == 'CUSTOMER' else 'Supplier Root Account (or Accounts Payable)'
-                return Response(
-                    {"error": f"Cannot create {contact_type.lower()}: No '{rule_label}' configured in posting rules. "
-                              f"Go to Finance → Settings → Posting Rules and configure the Partner Automation section."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                parent, sub_type = self._resolve_coa_parent(rules, contact_type, organization)
 
-            parent = ChartOfAccount.objects.filter(id=parent_account_id, organization=organization).first()
-            if not parent:
-                return Response(
-                    {"error": f"Posting rule references COA id={parent_account_id} which does not exist. "
-                              f"Please update your posting rules."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                if sub_type and not parent:
+                    # Mapping exists but rule not configured
+                    type_label = dict(Contact.TYPES).get(contact_type, contact_type)
+                    return Response(
+                        {"error": f"Cannot create {type_label}: No parent COA account configured. "
+                                  f"Go to Finance → Settings → Posting Rules and configure the "
+                                  f"Partner Automation section."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-            linked_acc = LedgerService.create_linked_account(
-                organization=organization,
-                name=f"{data.get('name')} ({'AR' if contact_type == 'CUSTOMER' else 'AP'})",
-                type=parent.type,
-                sub_type='RECEIVABLE' if contact_type == 'CUSTOMER' else 'PAYABLE',
-                parent_id=parent.id
-            )
-            data['linked_account_id'] = linked_acc.id
+                if parent:
+                    label = 'AR' if sub_type == 'RECEIVABLE' else 'AP'
+                    linked_acc = LedgerService.create_linked_account(
+                        organization=organization,
+                        name=f"{data.get('name')} ({label})",
+                        type=parent.type,
+                        sub_type=sub_type,
+                        parent_id=parent.id
+                    )
+                    data['linked_account_id'] = linked_acc.id
+                # else: LEAD/CONTACT — no account created
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -125,14 +175,14 @@ class ContactViewSet(TenantModelViewSet):
             # ── Auto-Task: NEW_CLIENT / NEW_SUPPLIER ──
             try:
                 contact_name = data.get('name', '')
-                if contact_type == 'CUSTOMER':
+                if contact_type in ('CUSTOMER', 'DEBTOR'):
                     from apps.workspace.signals import trigger_crm_event
                     trigger_crm_event(
                         organization, 'NEW_CLIENT',
                         reference=contact_name,
                         client_id=serializer.instance.id,
                     )
-                else:
+                elif contact_type in ('SUPPLIER', 'SERVICE', 'CREDITOR'):
                     from apps.workspace.signals import trigger_purchasing_event
                     trigger_purchasing_event(
                         organization, 'NEW_SUPPLIER',
@@ -142,6 +192,39 @@ class ContactViewSet(TenantModelViewSet):
                 pass
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # ── Contact Book (people within a business) ──
+
+    @action(detail=True, methods=['get', 'post'], url_path='people')
+    def people_list(self, request, pk=None):
+        """List or add people to a business contact's contact book."""
+        contact = self.get_object()
+
+        if request.method == 'GET':
+            people = ContactPerson.objects.filter(
+                contact=contact,
+                organization_id=get_current_tenant_id(),
+                is_active=True
+            )
+            return Response(ContactPersonSerializer(people, many=True).data)
+
+        # POST — add a person
+        data = request.data.copy()
+        data['contact'] = contact.id
+        data['organization'] = get_current_tenant_id()
+
+        # If setting as primary, unset existing primary
+        if data.get('is_primary'):
+            ContactPerson.objects.filter(
+                contact=contact,
+                organization_id=get_current_tenant_id(),
+                is_primary=True
+            ).update(is_primary=False)
+
+        serializer = ContactPersonSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'], url_path='summary')
     def detail_summary(self, request, pk=None):
@@ -158,7 +241,7 @@ class ContactViewSet(TenantModelViewSet):
             from apps.pos.models import Order
             from django.db.models import Sum, Count, Q
 
-            order_type = 'SALE' if contact.type == 'CUSTOMER' else 'PURCHASE'
+            order_type = 'SALE' if contact.type in ('CUSTOMER', 'DEBTOR') else 'PURCHASE'
             orders = Order.objects.filter(
                 organization_id=organization_id,
                 contact=contact,
@@ -179,7 +262,7 @@ class ContactViewSet(TenantModelViewSet):
 
             # Payments
             from apps.finance.payment_models import Payment
-            payment_type = 'CUSTOMER_RECEIPT' if contact.type == 'CUSTOMER' else 'SUPPLIER_PAYMENT'
+            payment_type = 'CUSTOMER_RECEIPT' if contact.type in ('CUSTOMER', 'DEBTOR') else 'SUPPLIER_PAYMENT'
             payments = Payment.objects.filter(
                 tenant_id=organization_id,
                 contact=contact,
@@ -196,7 +279,7 @@ class ContactViewSet(TenantModelViewSet):
             )
 
             # Balance
-            if contact.type == 'CUSTOMER':
+            if contact.type in ('CUSTOMER', 'DEBTOR'):
                 from apps.finance.payment_models import CustomerBalance
                 bal_obj = CustomerBalance.objects.filter(
                     tenant_id=organization_id, contact=contact
@@ -231,6 +314,13 @@ class ContactViewSet(TenantModelViewSet):
                     'credit': float(jl.credit),
                 } for jl in journal_lines]
 
+            # Contact book (people within business)
+            people = []
+            if contact.entity_type == 'BUSINESS':
+                people = ContactPersonSerializer(
+                    contact.people.filter(is_active=True), many=True
+                ).data
+
             return Response({
                 'contact': ContactSerializer(contact).data,
                 'orders': {
@@ -251,6 +341,7 @@ class ContactViewSet(TenantModelViewSet):
                 },
                 'balance': balance_data,
                 'journal_entries': recent_journal,
+                'people': people,
                 'analytics': self._build_analytics(contact, orders, order_stats),
                 'pricing_rules': self._get_pricing_rules(contact, organization_id),
             })
@@ -262,7 +353,7 @@ class ContactViewSet(TenantModelViewSet):
 
     def _build_analytics(self, contact, orders, order_stats):
         """Build purchase/sales analytics for the contact."""
-        from django.db.models import Avg, F
+        from django.db.models import Sum, F
         from django.utils import timezone
         import datetime
 
@@ -277,12 +368,10 @@ class ContactViewSet(TenantModelViewSet):
             'monthly_frequency': 0,
         }
 
-        # Monthly frequency (orders per month over last 12 months)
         twelve_months_ago = timezone.now() - datetime.timedelta(days=365)
         recent_count = orders.filter(created_at__gte=twelve_months_ago).count()
         analytics['monthly_frequency'] = round(recent_count / 12, 1)
 
-        # Top products by revenue
         try:
             from apps.pos.models import OrderLine
             top_products = OrderLine.objects.filter(
@@ -305,14 +394,11 @@ class ContactViewSet(TenantModelViewSet):
             from apps.crm.models import ClientPriceRule, PriceGroupMember
             from apps.crm.serializers import ClientPriceRuleSerializer
 
-            # Direct rules
             direct = ClientPriceRule.objects.filter(
                 contact_id=contact.id,
                 organization_id=organization_id,
                 is_active=True
             )
-
-            # Group-based rules
             group_ids = PriceGroupMember.objects.filter(
                 contact_id=contact.id,
                 organization_id=organization_id
@@ -394,5 +480,5 @@ class ContactViewSet(TenantModelViewSet):
         contact = self.get_object()
         on_time = request.data.get('on_time', True)
         lead_time = request.data.get('lead_time_days')
-        LoyaltyService.record_delivery(contact, on_time=on_time, lead_time_days=lead_time)
+        LedgerService.record_delivery(contact, on_time=on_time, lead_time_days=lead_time)
         return Response({"message": "Delivery recorded"})

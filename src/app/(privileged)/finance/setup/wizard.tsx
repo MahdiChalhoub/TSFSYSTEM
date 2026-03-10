@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { COASetupState, updateCOASetupStatus, completeCOASetup } from '@/app/actions/finance/coa-setup'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
-import { applySmartPostingRules } from '@/app/actions/finance/posting-rules'
 
 const STEPS = [
     { id: 'template', label: 'Select Template', icon: BookOpen, description: 'Choose your Chart of Accounts standard' },
@@ -80,11 +79,8 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                     return
                 }
 
-                try {
-                    await applySmartPostingRules()
-                } catch {
-                    console.warn('Smart posting rules auto-apply failed, user can configure manually')
-                }
+                // Note: applySmartPostingRules is already called inside importChartOfAccountsTemplate
+                // so we do NOT call it again here.
 
                 await updateCOASetupStatus({
                     status: 'TEMPLATE_IMPORTED',

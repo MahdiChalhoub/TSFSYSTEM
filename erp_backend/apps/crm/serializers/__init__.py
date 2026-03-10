@@ -1,4 +1,4 @@
-from .contact_serializers import ContactSerializer, ContactTagSerializer
+from .contact_serializers import ContactSerializer, ContactTagSerializer, ContactPersonSerializer
 from .pricing_serializers import (
     PriceGroupSerializer,
     PriceGroupMemberSerializer,

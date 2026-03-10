@@ -56,12 +56,29 @@ export async function deleteProduct(id: number) {
 export async function getCatalogueProducts(params: Record<string, string>) {
     try {
         const q = new URLSearchParams(params).toString()
-        return await erpFetch(`dashboard/catalogue_list/?${q}`)
-    } catch { return { results: [], count: 0 } }
+        const data = await erpFetch(`dashboard/catalogue_list/?${q}`)
+        // Backend returns {items, total, page, page_size} — NOT {results, count}
+        // to avoid erpFetch auto-unwrap of DRF-style pagination
+        if (data && data.items) {
+            return { results: data.items, count: data.total || data.items.length }
+        }
+        // Fallback if auto-unwrap happened or unexpected shape
+        if (Array.isArray(data)) {
+            return { results: data, count: data.length }
+        }
+        return { results: [], count: 0 }
+    } catch (e) {
+        console.error('[getCatalogueProducts] Error:', e)
+        return { results: [], count: 0 }
+    }
 }
 
 export async function getCatalogueFilters() {
     try {
-        return await erpFetch('dashboard/catalogue_filters/')
-    } catch { return { categories: [], types: [] } }
+        const data = await erpFetch('dashboard/catalogue_filters/')
+        return data || { categories: [], brands: [], types: [] }
+    } catch (e) {
+        console.error('[getCatalogueFilters] Error:', e)
+        return { categories: [], brands: [], types: [] }
+    }
 }

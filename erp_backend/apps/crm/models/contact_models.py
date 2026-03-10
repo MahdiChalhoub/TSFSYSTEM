@@ -14,7 +14,6 @@ class ContactTag(TenantModel):
         ('SUPPLIER', 'Supplier'),
         ('BOTH', 'Customer & Supplier'),
         ('LEAD', 'Lead'),
-        ('PARTNER', 'Partner'),
         ('CREDITOR', 'Creditor'),
         ('DEBTOR', 'Debtor'),
         ('CONTACT', 'Contact'),
@@ -47,11 +46,14 @@ class Contact(TenantModel):
         ('CUSTOMER', 'Customer'),
         ('BOTH', 'Customer & Supplier'),
         ('LEAD', 'Lead'),
-        ('PARTNER', 'Partner'),
         ('CREDITOR', 'Creditor'),
         ('DEBTOR', 'Debtor'),
         ('CONTACT', 'Contact'),
         ('SERVICE', 'Service Provider'),
+    )
+    ENTITY_TYPES = (
+        ('INDIVIDUAL', 'Individual'),
+        ('BUSINESS', 'Business / Company'),
     )
     SUPPLIER_CATEGORIES = (
         ('REGULAR', 'Regular'),
@@ -64,7 +66,25 @@ class Contact(TenantModel):
         ('WHOLESALE', 'Wholesale'),
         ('RETAIL', 'Retail'),
     )
+
+    # ── COA Mapping: which posting rule path resolves each type's parent account ──
+    # Format: { type: (rule_category, rule_key, fallback_category, fallback_key, sub_type_label) }
+    COA_MAPPING = {
+        'CUSTOMER': ('automation', 'customerRoot', 'sales',     'receivable', 'RECEIVABLE'),
+        'SUPPLIER': ('automation', 'supplierRoot', 'purchases', 'payable',    'PAYABLE'),
+        'BOTH':     None,  # Special: creates 2 sub-accounts (AR + AP)
+        'SERVICE':  ('automation', 'serviceRoot',  'purchases', 'payable',    'PAYABLE'),
+        'CREDITOR': ('automation', 'supplierRoot', 'purchases', 'payable',    'PAYABLE'),
+        'DEBTOR':   ('automation', 'customerRoot', 'sales',     'receivable', 'RECEIVABLE'),
+        'LEAD':     None,  # No COA link
+        'CONTACT':  None,  # No COA link
+    }
+
     type = models.CharField(max_length=20, choices=TYPES)
+    entity_type = models.CharField(
+        max_length=20, choices=ENTITY_TYPES, default='INDIVIDUAL',
+        help_text='Individual person or Business/Company entity'
+    )
     name = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
@@ -268,3 +288,56 @@ class Contact(TenantModel):
         else:
             self.overall_rating = Decimal('0.0')
 
+
+class ContactPerson(TenantModel):
+    """
+    People within a Business contact — the Contact Book.
+    Each person has a role (CEO, Accountant, Sales Rep, etc.)
+    Used for: PO routing, invoice sending, WhatsApp notifications.
+    """
+    ROLES = (
+        ('PRIMARY',     'Primary Contact'),
+        ('CEO',         'CEO / Director'),
+        ('MANAGER',     'Manager'),
+        ('ACCOUNTANT',  'Accountant / Finance'),
+        ('SALES',       'Sales Representative'),
+        ('PURCHASING',  'Purchasing / Procurement'),
+        ('LOGISTICS',   'Logistics / Delivery'),
+        ('TECHNICAL',   'Technical / IT'),
+        ('LEGAL',       'Legal / Compliance'),
+        ('OTHER',       'Other'),
+    )
+    contact = models.ForeignKey(
+        Contact, on_delete=models.CASCADE,
+        related_name='people',
+        help_text='Parent business contact'
+    )
+    name = models.CharField(max_length=255, help_text='Full name of the person')
+    role = models.CharField(
+        max_length=20, choices=ROLES, default='OTHER',
+        help_text='Role within the organization'
+    )
+    department = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Department: Finance, IT, Operations, etc.'
+    )
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    whatsapp = models.CharField(
+        max_length=50, null=True, blank=True,
+        help_text='WhatsApp number (for direct notifications)'
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        help_text='Is this the main point of contact for this business?'
+    )
+    notes = models.TextField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'contact_person'
+        ordering = ['-is_primary', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_role_display()}) @ {self.contact.name}"
