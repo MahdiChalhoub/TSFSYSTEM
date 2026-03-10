@@ -181,6 +181,7 @@ const defaultNav = [
         url: "#",
         icon: Landmark,
         items: [
+            { title: "⚡ COA Setup", url: "/finance/setup" },
             { title: "Dashboard", url: "/finance/dashboard" },
             { title: "Chart of Accounts", url: "/finance/chart-of-accounts" },
             { title: "General Ledger", url: "/finance/ledger" },

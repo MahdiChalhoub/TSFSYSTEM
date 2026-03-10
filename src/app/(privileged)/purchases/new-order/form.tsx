@@ -225,22 +225,31 @@ export default function FormalOrderForm({
     return (
         <>
             <form action={formAction} className="space-y-4">
-                {/* ═══ CONFIGURATION PANEL ═══ */}
+                {/* ═══ CONFIGURATION PANEL (with integrated page title) ═══ */}
                 <div className={cardClass}>
                     <button type="button" onClick={() => setConfigOpen(!configOpen)}
-                        className="w-full flex items-center justify-between px-5 py-3 hover:bg-app-background/30 transition-colors rounded-t-2xl">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-app-primary/20 to-app-primary/5 flex items-center justify-center">
-                                <Settings2 size={14} className="text-app-primary" />
+                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-app-background/30 transition-colors rounded-t-2xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/10 flex items-center justify-center border border-indigo-500/15">
+                                <Settings2 size={18} className="text-indigo-500" />
                             </div>
                             <div className="text-left">
-                                <div className="text-xs font-black text-app-foreground">Order Configuration</div>
+                                <div className="text-sm font-black text-app-foreground tracking-tight">
+                                    New Purchase Order
+                                </div>
                                 <div className="text-[9px] text-app-muted-foreground mt-0.5">
-                                    {supplierName ? `${supplierName} • ${scope}` : 'Select site, warehouse & supplier'}
+                                    {supplierName
+                                        ? <span>{supplierName} <span className="text-app-primary font-bold">• {scope}</span></span>
+                                        : 'Configure branch, site & supplier to begin'}
                                 </div>
                             </div>
                         </div>
-                        {configOpen ? <ChevronUp size={14} className="text-app-muted-foreground" /> : <ChevronDown size={14} />}
+                        <div className="flex items-center gap-2">
+                            {!configOpen && supplierName && (
+                                <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 px-2 py-0.5 rounded-full bg-emerald-500/10 hidden sm:block">Ready</span>
+                            )}
+                            {configOpen ? <ChevronUp size={14} className="text-app-muted-foreground" /> : <ChevronDown size={14} />}
+                        </div>
                     </button>
 
                     {configOpen && (

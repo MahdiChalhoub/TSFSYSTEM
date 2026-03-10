@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Save, Info, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3, Shield, Landmark, Receipt, Truck, AlertTriangle, ArrowRight, X } from 'lucide-react'
+import { Save, Info, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3, Shield, Landmark, Receipt, Truck, AlertTriangle, ArrowRight, ArrowLeft, X } from 'lucide-react'
 import { savePostingRules, savePostingRulesWithReclassification, analyzePostingRulesImpact, PostingRulesConfig, PostingRuleImpact } from '@/app/actions/finance/posting-rules'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 
 export default function PostingRulesForm({
@@ -42,6 +42,8 @@ export default function PostingRulesForm({
     })
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const fromSetup = searchParams.get('from') === 'setup'
     const [impactDialog, setImpactDialog] = useState<{ impacts: PostingRuleImpact[], hasHighRisk: boolean } | null>(null)
 
     const handleSave = () => {
@@ -199,6 +201,22 @@ export default function PostingRulesForm({
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            {/* Return to Setup Wizard banner */}
+            {fromSetup && (
+                <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: 'var(--app-info)10', border: '1px solid var(--app-info)30' }}>
+                    <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--app-foreground)' }}>
+                        <Info size={18} style={{ color: 'var(--app-info)' }} />
+                        <span>You&apos;re configuring posting rules as part of the <strong>COA Setup Wizard</strong>. Save your changes, then return to the wizard.</span>
+                    </div>
+                    <button
+                        onClick={() => router.push('/finance/setup')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all"
+                        style={{ background: 'var(--app-primary)', color: 'white' }}
+                    >
+                        <ArrowLeft size={14} /> Return to Wizard
+                    </button>
+                </div>
+            )}
             {/* Header */}
             <div className="bg-app-surface rounded-3xl p-8 text-app-foreground flex justify-between items-center shadow-2xl">
                 <div className="flex items-center gap-4">

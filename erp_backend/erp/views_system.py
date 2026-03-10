@@ -407,6 +407,38 @@ class SettingsViewSet(viewsets.ViewSet):
         return Response(config)
 
     @action(detail=False, methods=['get', 'post'])
+    def coa_setup(self, request):
+        """COA Setup Wizard status tracker."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        if request.method == 'POST':
+            current = ConfigurationService.get_setting(organization, 'coa_setup', {})
+            if not isinstance(current, dict):
+                current = {}
+            current.update(request.data)
+            ConfigurationService.save_setting(organization, 'coa_setup', current)
+            return Response({"message": "COA setup status updated", **current})
+        
+        # GET
+        default = {
+            'status': 'NOT_STARTED',
+            'selectedTemplate': None,
+            'importedAt': None,
+            'postingRulesConfigured': False,
+            'migrationNeeded': False,
+            'migrationCompleted': False,
+            'completedAt': None,
+        }
+        stored = ConfigurationService.get_setting(organization, 'coa_setup', {})
+        if isinstance(stored, dict):
+            default.update(stored)
+        return Response(default)
+
+    @action(detail=False, methods=['get', 'post'])
     def global_financial(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id:
