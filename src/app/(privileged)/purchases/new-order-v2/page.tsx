@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 async function getSitesAndWarehouses() {
     try {
-        const data = await erpFetch('erp/sites/?include_warehouses=true');
+        const data = await erpFetch('sites/?include_warehouses=true');
         return Array.isArray(data) ? data : (data?.results ?? []);
     } catch (e) {
         console.error("Failed to fetch sites", e);
@@ -29,9 +29,8 @@ async function getPaymentTerms() {
 
 async function getDrivers() {
     try {
-        const data = await erpFetch('users/');
-        const users = Array.isArray(data) ? data : (data?.results ?? []);
-        return users;
+        const data = await erpFetch('users/?is_driver=true');
+        return Array.isArray(data) ? data : (data?.results ?? []);
     } catch {
         return [];
     }
