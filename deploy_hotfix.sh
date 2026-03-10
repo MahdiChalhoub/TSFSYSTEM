@@ -11,6 +11,22 @@ SSH_KEY="~/.ssh/id_deploy"
 SSH="ssh -i $SSH_KEY $REMOTE_HOST"
 REMOTE_DIR="/root/TSFSYSTEM"
 LOCAL_DIR="/root/.gemini/antigravity/scratch/TSFSYSTEM"
+LOCK_FILE="/tmp/tsf_deploy.lock"
+
+# ── Deploy Lock: Prevent 2 concurrent deploys ──
+if [ -f "$LOCK_FILE" ]; then
+    LOCK_PID=$(cat "$LOCK_FILE")
+    if kill -0 "$LOCK_PID" 2>/dev/null; then
+        echo "❌ Another deploy is in progress (PID: $LOCK_PID). Wait or kill it first."
+        echo "   To force: rm $LOCK_FILE"
+        exit 1
+    else
+        echo "⚠️  Stale lock found (PID $LOCK_PID dead). Cleaning up..."
+        rm -f "$LOCK_FILE"
+    fi
+fi
+echo $$ > "$LOCK_FILE"
+trap 'rm -f $LOCK_FILE' EXIT INT TERM
 
 RSYNC_EXCLUDES=(
     --exclude 'node_modules'
@@ -129,7 +145,17 @@ $SSH "cd $REMOTE_DIR && docker-compose build --no-cache frontend"
 # ─────────────────────────────────────────────────────────
 echo ""
 echo "🚀 Step 8: Deploying New Frontend & Agent Pulse..."
-$SSH "cd $REMOTE_DIR && docker-compose up -d frontend mcp_agent_pulse"
+
+# Kill orphan containers BEFORE deploying to prevent 'name conflict'
+$SSH "docker ps -a --filter 'name=tsfsystem-frontend' --format '{{.ID}} {{.Names}}' | while read id name; do
+    if [[ \"\$name\" == *_tsfsystem-frontend* ]]; then
+        echo \"  Removing orphan container: \$name (\$id)\"
+        docker rm -f \"\$id\" 2>/dev/null || true
+    fi
+done" 2>/dev/null || true
+
+# Force remove + recreate to avoid rename conflicts
+$SSH "cd $REMOTE_DIR && docker-compose up -d --force-recreate --remove-orphans frontend mcp_agent_pulse"
 
 echo "🔄 Restarting Nginx Gateway..."
 $SSH "docker restart tsf_gateway"
