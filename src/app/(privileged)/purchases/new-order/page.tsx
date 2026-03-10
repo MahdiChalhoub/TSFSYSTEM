@@ -25,8 +25,15 @@ async function getPaymentTerms() {
 
 async function getDrivers() {
     try {
-        const data = await erpFetch('users/?is_driver=true');
-        return Array.isArray(data) ? data : (data?.results ?? []);
+        // Fetch drivers first, fallback to all active users if none marked
+        let data = await erpFetch('users/?is_driver=true');
+        let drivers = Array.isArray(data) ? data : (data?.results ?? []);
+        if (drivers.length === 0) {
+            // No one marked as driver → show all active users as candidates
+            data = await erpFetch('users/?is_active=true');
+            drivers = Array.isArray(data) ? data : (data?.results ?? []);
+        }
+        return drivers;
     } catch { return []; }
 }
 

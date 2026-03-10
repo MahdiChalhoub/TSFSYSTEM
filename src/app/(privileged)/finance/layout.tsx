@@ -6,15 +6,22 @@ export default async function FinanceLayout({
 }: {
     children: React.ReactNode
 }) {
-    let setupState = { status: 'COMPLETED' }
+    // Default to COMPLETED so finance is fully accessible if status check fails.
+    // This is the safe default — it never blocks users unnecessarily.
+    let setupStatus = 'COMPLETED'
+
     try {
-        setupState = await getCOASetupStatus()
+        const state = await getCOASetupStatus()
+        if (state && state.status) {
+            setupStatus = state.status
+        }
     } catch {
-        // If we can't fetch setup state, assume completed to avoid blocking
+        // Backend not ready, no tenant context, or new endpoint not deployed yet.
+        // Default to COMPLETED to avoid blocking the entire finance module.
     }
 
     return (
-        <FinanceSetupGuard setupState={setupState}>
+        <FinanceSetupGuard setupState={{ status: setupStatus }}>
             {children}
         </FinanceSetupGuard>
     )

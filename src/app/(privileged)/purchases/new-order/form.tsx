@@ -860,9 +860,11 @@ function Stat({ label, value, className = 'text-app-foreground' }: { label: stri
 function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (p: any) => void, onClose: () => void, siteId: number, supplierId?: number }) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
+    const [brand, setBrand] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
     const [products, setProducts] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -873,6 +875,7 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
             try {
                 const data = await getCatalogueFilters();
                 setCategories(data?.categories || []);
+                setBrands(data?.brands || []);
             } catch { /* ignore */ }
         })();
     }, []);
@@ -883,6 +886,7 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
             const params: Record<string, string> = { page: String(pageNum), page_size: '30' };
             if (query) params.query = query;
             if (category) params.category = category;
+            if (brand) params.brand = brand;
             if (siteId) params.site_id = siteId.toString();
             if (supplierId) params.supplier = supplierId.toString();
             // Stock filters
@@ -896,12 +900,12 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
             setPage(pageNum);
         } catch { /* ignore */ }
         setLoading(false);
-    }, [query, category, siteId, supplierId, stockFilter]);
+    }, [query, category, brand, siteId, supplierId, stockFilter]);
 
     useEffect(() => {
         const t = setTimeout(() => loadProducts(1), 300);
         return () => clearTimeout(t);
-    }, [query, category, stockFilter, loadProducts]);
+    }, [query, category, brand, stockFilter, loadProducts]);
 
     const handleScroll = useCallback(() => {
         const el = scrollRef.current;
@@ -918,6 +922,7 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
                     <h3 className="font-black text-sm text-app-foreground flex items-center gap-2">
                         <BookOpen size={16} className="text-app-primary" /> Product Catalogue
                         {supplierId > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-app-primary/10 text-app-primary">Supplier filtered</span>}
+                        {totalCount > 0 && <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500">{totalCount} products</span>}
                     </h3>
                     <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-app-background flex items-center justify-center text-app-muted-foreground hover:text-app-foreground transition-colors">×</button>
                 </div>
@@ -926,7 +931,7 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
                     <div className="flex-1 relative min-w-[180px]">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground/50" />
                         <input type="text" className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-app-surface rounded-lg border border-app-border/60 outline-none text-app-foreground focus:ring-2 focus:ring-app-primary/20"
-                            placeholder="Search products..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+                            placeholder="Search by name, SKU, or barcode..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
                     </div>
                     <select className="text-xs font-semibold bg-app-surface rounded-lg px-3 py-2.5 border border-app-border/60 text-app-foreground"
                         value={category} onChange={e => setCategory(e.target.value)}>
@@ -934,10 +939,15 @@ function CatalogueModal({ onSelect, onClose, siteId, supplierId }: { onSelect: (
                         {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                     <select className="text-xs font-semibold bg-app-surface rounded-lg px-3 py-2.5 border border-app-border/60 text-app-foreground"
+                        value={brand} onChange={e => setBrand(e.target.value)}>
+                        <option value="">All Brands</option>
+                        {brands.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                    <select className="text-xs font-semibold bg-app-surface rounded-lg px-3 py-2.5 border border-app-border/60 text-app-foreground"
                         value={stockFilter} onChange={e => setStockFilter(e.target.value as any)}>
                         <option value="all">All Stock</option>
                         <option value="in_stock">✅ In Stock</option>
-                        <option value="low_stock">⚠️ Low Stock (&le;10)</option>
+                        <option value="low_stock">⚠️ Low Stock (≤10)</option>
                         <option value="out_of_stock">🔴 Out of Stock</option>
                     </select>
                 </div>

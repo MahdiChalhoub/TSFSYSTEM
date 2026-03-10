@@ -603,11 +603,11 @@ class DashboardViewSet(viewsets.ViewSet):
         if category:
             qs = qs.filter(category_id=category)
         if brand:
-            qs = qs.filter(brand__icontains=brand) if hasattr(Product, 'brand') else qs
+            qs = qs.filter(brand_id=brand)
         if product_type:
             qs = qs.filter(product_type=product_type) if hasattr(Product, 'product_type') else qs
         if tax_rate:
-            qs = qs.filter(tax_rate=tax_rate) if hasattr(Product, 'tax_rate') else qs
+            qs = qs.filter(tva_rate=tax_rate)
         
         # Annotate stock from Inventory
         stock_subquery = Inventory.objects.filter(
@@ -692,10 +692,14 @@ class DashboardViewSet(viewsets.ViewSet):
         if not organization_id:
             return Response({})
         
-        from apps.inventory.models import Category
+        from apps.inventory.models import Category, Brand
         
         categories = list(Category.objects.filter(
             organization_id=organization_id
+        ).values('id', 'name').order_by('name')[:100])
+        
+        brands = list(Brand.objects.filter(
+            tenant_id=organization_id
         ).values('id', 'name').order_by('name')[:100])
         
         # Product types
@@ -705,5 +709,6 @@ class DashboardViewSet(viewsets.ViewSet):
         
         return Response({
             'categories': categories,
+            'brands': brands,
             'types': [t for t in types if t],
         })
