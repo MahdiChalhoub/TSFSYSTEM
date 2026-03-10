@@ -9,10 +9,25 @@ from erp.models import TenantModel
 
 class ContactTag(TenantModel):
     """User-defined contact categories: Wholesale, Retail, Family, Friends, VIP, etc."""
+    SCOPE_TYPES = (
+        ('CUSTOMER', 'Customer'),
+        ('SUPPLIER', 'Supplier'),
+        ('BOTH', 'Customer & Supplier'),
+        ('LEAD', 'Lead'),
+        ('PARTNER', 'Partner'),
+        ('CREDITOR', 'Creditor'),
+        ('DEBTOR', 'Debtor'),
+        ('CONTACT', 'Contact'),
+        ('SERVICE', 'Service Provider'),
+    )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=20, default='#6366F1', help_text='Hex color for the badge')
     icon = models.CharField(max_length=50, null=True, blank=True, help_text='Lucide icon name')
     description = models.TextField(null=True, blank=True)
+    contact_type = models.CharField(
+        max_length=20, choices=SCOPE_TYPES, null=True, blank=True,
+        help_text='Scope this category to a specific contact type. Null = applies to all types.'
+    )
     is_active = models.BooleanField(default=True)
     sort_order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)

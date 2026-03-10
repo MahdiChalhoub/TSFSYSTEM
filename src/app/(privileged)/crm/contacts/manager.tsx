@@ -1,15 +1,15 @@
 // @ts-nocheck
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/lib/utils/currency';
 import { toast } from 'sonner';
 import {
   Search, User, Briefcase, Building2, Phone, Mail, Plus,
-  TrendingUp, TrendingDown, Star, Users, MapPin, Filter, Trash2,
+  TrendingUp, TrendingDown, Star, Users, MapPin, Trash2,
   ChevronRight, Wrench, BookUser, X, RefreshCw,
-  CircleDot, ChevronDown, SlidersHorizontal, Tag
+  CircleDot, ChevronDown, Tag
 } from 'lucide-react';
 import ContactModal from './form';
 
@@ -35,9 +35,9 @@ const TYPE_MAP = Object.fromEntries(TYPES.map(t => [t.key, t]));
 const TIERS = [
   { value: '', label: 'All Tiers' },
   { value: 'STANDARD', label: 'Standard' },
-  { value: 'VIP', label: 'VIP', color: '#EAB308' },
-  { value: 'WHOLESALE', label: 'Wholesale', color: 'var(--app-info)' },
-  { value: 'RETAIL', label: 'Retail', color: 'var(--app-success)' },
+  { value: 'VIP', label: 'VIP' },
+  { value: 'WHOLESALE', label: 'Wholesale' },
+  { value: 'RETAIL', label: 'Retail' },
 ];
 
 const SUPPLIER_CATS = [
@@ -139,8 +139,11 @@ export default function ContactManager({
   const [showTagManager, setShowTagManager] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#6366F1');
+  const [newTagType, setNewTagType] = useState('');
   const [tagSaving, setTagSaving] = useState(false);
   const [managedTags, setManagedTags] = useState(contactTags);
+  const addBtnRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
   /* ── counts ── */
   const typeCounts = useMemo(() => {
@@ -172,11 +175,6 @@ export default function ContactManager({
     });
     return [{ value: '', label: 'All Sites' }, ...Array.from(map.entries()).map(([v, l]) => ({ value: v, label: l }))];
   }, [contacts, sites]);
-
-  const activeCount = useMemo(
-    () => contacts.filter(c => getActivityInfo(c).hasActivity).length,
-    [contacts]
-  );
 
   const hasActiveFilters = search || typeFilter !== 'ALL' || tierFilter || categoryFilter || zoneFilter || siteFilter || activityFilter !== 'all';
 
@@ -219,33 +217,70 @@ export default function ContactManager({
     setZoneFilter(''); setSiteFilter(''); setActivityFilter('all');
   }
 
+  function openAddMenu() {
+    if (addBtnRef.current) {
+      const rect = addBtnRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
+    setShowAddMenu(true);
+  }
+
   async function handleCreateTag() {
     if (!newTagName.trim()) return;
     setTagSaving(true);
     try {
+      const body: any = { name: newTagName.trim(), color: newTagColor };
+      if (newTagType) body.contact_type = newTagType;
       const res = await fetch('/api/erp/crm/contact-tags/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTagName.trim(), color: newTagColor }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
       const data = await res.json();
       setManagedTags(prev => [...prev, data]);
       setNewTagName('');
       setNewTagColor('#6366F1');
+      setNewTagType('');
       toast.success(`Category "${data.name}" created`);
-    } catch {
-      toast.error('Failed to create category');
+    } catch (e: any) {
+      toast.error(`Failed: ${e.message || 'Unknown error'}`);
     } finally {
       setTagSaving(false);
     }
   }
 
+  async function handleDeleteTag(tag: any) {
+    if (!confirm(`Delete category "${tag.name}"?`)) return;
+    try {
+      await fetch(`/api/erp/crm/contact-tags/${tag.id}/`, { method: 'DELETE' });
+      setManagedTags(prev => prev.filter((t: any) => t.id !== tag.id));
+      toast.success(`Deleted "${tag.name}"`);
+    } catch {
+      toast.error('Failed to delete');
+    }
+  }
+
+  /* Group tags by contact_type for display */
+  const tagsByType = useMemo(() => {
+    const groups: Record<string, any[]> = { '': [] };
+    TYPES.filter(t => t.key !== 'ALL').forEach(t => { groups[t.key] = []; });
+    managedTags.forEach((tag: any) => {
+      const k = tag.contact_type || '';
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(tag);
+    });
+    return groups;
+  }, [managedTags]);
+
   /* ═══════════════════════ RENDER ═══════════════════════════ */
   return (
     <div>
       {/* ══════════════════════════════════════════════
-                CONTROL PANEL
+                CONTROL PANEL — no overflow:hidden so dropdown works
             ══════════════════════════════════════════════ */}
       <div
         className="app-card"
@@ -253,7 +288,6 @@ export default function ContactManager({
           padding: '0',
           borderRadius: 'var(--app-radius)',
           marginBottom: '0.75rem',
-          overflow: 'hidden',
         }}
       >
         {/* ── Row 1: Type tabs + Add button ── */}
@@ -303,11 +337,12 @@ export default function ContactManager({
             );
           })}
 
-          {/* Add button + Category management */}
+          {/* Add + Categories buttons */}
           {can('crm.create_contact') && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', paddingLeft: '0.5rem', flexShrink: 0, position: 'relative' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', paddingLeft: '0.5rem', flexShrink: 0 }}>
               <button
-                onClick={() => setShowAddMenu(!showAddMenu)}
+                ref={addBtnRef}
+                onClick={openAddMenu}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '0.25rem',
                   padding: '0.3125rem 0.625rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
@@ -332,58 +367,6 @@ export default function ContactManager({
               >
                 <Tag size={11} /> Categories
               </button>
-
-              {/* Dropdown menu */}
-              {showAddMenu && (
-                <>
-                  <div
-                    onClick={() => setShowAddMenu(false)}
-                    style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute', top: '100%', right: 0, marginTop: '0.25rem',
-                      background: 'var(--app-surface)', border: '1px solid var(--app-border)',
-                      borderRadius: 'var(--app-radius)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                      minWidth: '12rem', zIndex: 50, overflow: 'hidden',
-                      padding: '0.25rem',
-                    }}
-                  >
-                    <div style={{ padding: '0.375rem 0.625rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Choose Contact Type
-                    </div>
-                    {TYPES.filter(t => t.key !== 'ALL').map(cfg => (
-                      <button
-                        key={cfg.key}
-                        onClick={() => {
-                          setShowAddMenu(false);
-                          setModalType(cfg.key);
-                          setIsModalOpen(true);
-                        }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.5rem',
-                          width: '100%', padding: '0.4375rem 0.625rem',
-                          borderRadius: 'calc(var(--app-radius) - 0.375rem)',
-                          fontSize: '0.75rem', fontWeight: 600,
-                          background: 'transparent', color: 'var(--app-text)',
-                          border: 'none', cursor: 'pointer', textAlign: 'left',
-                          transition: 'background 0.1s',
-                        }}
-                        onMouseOver={e => e.currentTarget.style.background = cfg.bg}
-                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div style={{
-                          width: '1.375rem', height: '1.375rem', borderRadius: '0.3125rem',
-                          background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                          <cfg.icon size={11} style={{ color: cfg.color }} />
-                        </div>
-                        <span>{cfg.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
             </div>
           )}
         </div>
@@ -395,6 +378,7 @@ export default function ContactManager({
             padding: '0.5rem 0.625rem',
             background: 'var(--app-bg)',
             alignItems: 'center',
+            borderRadius: '0 0 var(--app-radius) var(--app-radius)',
           }}
         >
           {/* Search */}
@@ -438,31 +422,19 @@ export default function ContactManager({
           <div style={{ width: '1px', height: '1.25rem', background: 'var(--app-border)', margin: '0 0.125rem' }} className="hidden sm:block" />
 
           {/* Tier filter */}
-          <FilterDropdown
-            label="Tier" icon={Star} value={tierFilter}
-            options={TIERS} onChange={setTierFilter}
-          />
+          <FilterDropdown label="Tier" icon={Star} value={tierFilter} options={TIERS} onChange={setTierFilter} />
 
           {/* Supplier Category filter */}
-          <FilterDropdown
-            label="Category" icon={Tag} value={categoryFilter}
-            options={SUPPLIER_CATS} onChange={setCategoryFilter}
-          />
+          <FilterDropdown label="Category" icon={Tag} value={categoryFilter} options={SUPPLIER_CATS} onChange={setCategoryFilter} />
 
           {/* Zone filter */}
           {zonesUsed.length > 1 && (
-            <FilterDropdown
-              label="Zone" icon={MapPin} value={zoneFilter}
-              options={zonesUsed} onChange={setZoneFilter}
-            />
+            <FilterDropdown label="Zone" icon={MapPin} value={zoneFilter} options={zonesUsed} onChange={setZoneFilter} />
           )}
 
           {/* Site filter */}
           {sitesUsed.length > 1 && (
-            <FilterDropdown
-              label="Site" icon={Building2} value={siteFilter}
-              options={sitesUsed} onChange={setSiteFilter}
-            />
+            <FilterDropdown label="Site" icon={Building2} value={siteFilter} options={sitesUsed} onChange={setSiteFilter} />
           )}
 
           {/* Divider */}
@@ -650,7 +622,7 @@ export default function ContactManager({
                       {/* Tags */}
                       <td className="app-td">
                         <div style={{ display: 'flex', gap: '0.1875rem', flexWrap: 'wrap' }}>
-                          {(c.tagNames || []).slice(0, 2).map((t: any) => (
+                          {(c.tagNames || c.tag_names || []).slice(0, 2).map((t: any) => (
                             <span key={t.id || t.name} style={{
                               padding: '0.0625rem 0.3125rem', borderRadius: '99px',
                               fontSize: '0.5rem', fontWeight: 600,
@@ -660,8 +632,8 @@ export default function ContactManager({
                               {t.name}
                             </span>
                           ))}
-                          {(c.tagNames || []).length > 2 && (
-                            <span style={{ fontSize: '0.5rem', color: 'var(--app-text-faint)' }}>+{c.tagNames.length - 2}</span>
+                          {(c.tagNames || c.tag_names || []).length > 2 && (
+                            <span style={{ fontSize: '0.5rem', color: 'var(--app-text-faint)' }}>+{(c.tagNames || c.tag_names).length - 2}</span>
                           )}
                         </div>
                       </td>
@@ -815,7 +787,62 @@ export default function ContactManager({
         )}
       </div>
 
-      {/* Contact Modal */}
+      {/* ══════════════════════════════════════════════
+                ADD CONTACT DROPDOWN (fixed position, not clipped)
+            ══════════════════════════════════════════════ */}
+      {showAddMenu && (
+        <>
+          <div
+            onClick={() => setShowAddMenu(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 90 }}
+          />
+          <div
+            style={{
+              position: 'fixed', top: menuPos.top, right: menuPos.right,
+              background: 'var(--app-surface)', border: '1px solid var(--app-border)',
+              borderRadius: 'var(--app-radius)', boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              minWidth: '13rem', zIndex: 100, padding: '0.25rem',
+            }}
+          >
+            <div style={{ padding: '0.375rem 0.625rem', fontSize: '0.5625rem', fontWeight: 700, color: 'var(--app-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Choose Contact Type
+            </div>
+            {TYPES.filter(t => t.key !== 'ALL').map(cfg => (
+              <button
+                key={cfg.key}
+                onClick={() => {
+                  setShowAddMenu(false);
+                  setModalType(cfg.key);
+                  setIsModalOpen(true);
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  width: '100%', padding: '0.4375rem 0.625rem',
+                  borderRadius: 'calc(var(--app-radius) - 0.375rem)',
+                  fontSize: '0.75rem', fontWeight: 600,
+                  background: 'transparent', color: 'var(--app-text)',
+                  border: 'none', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.1s',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = cfg.bg}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div style={{
+                  width: '1.375rem', height: '1.375rem', borderRadius: '0.3125rem',
+                  background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <cfg.icon size={11} style={{ color: cfg.color }} />
+                </div>
+                <span>{cfg.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════════
+                CONTACT CREATION MODAL
+            ══════════════════════════════════════════════ */}
       {isModalOpen && (
         <ContactModal
           sites={sites}
@@ -826,7 +853,9 @@ export default function ContactManager({
         />
       )}
 
-      {/* Tag Manager Modal */}
+      {/* ══════════════════════════════════════════════
+                TAG / CATEGORY MANAGER MODAL
+            ══════════════════════════════════════════════ */}
       {showTagManager && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
@@ -836,7 +865,7 @@ export default function ContactManager({
           <div
             className="app-card"
             style={{
-              width: '100%', maxWidth: '28rem', maxHeight: '80vh',
+              width: '100%', maxWidth: '32rem', maxHeight: '85vh',
               borderRadius: 'var(--app-radius)', overflow: 'hidden',
               boxShadow: '0 16px 64px rgba(0,0,0,0.2)',
             }}
@@ -852,23 +881,23 @@ export default function ContactManager({
                   Contact Categories
                 </h3>
                 <p style={{ fontSize: '0.6875rem', color: 'var(--app-text-muted)', marginTop: '0.125rem' }}>
-                  Define reusable tags for contacts (Wholesale, Retail, VIP...)
+                  Each parent type can have its own child categories
                 </p>
               </div>
               <button
                 onClick={() => setShowTagManager(false)}
                 style={{
                   background: 'var(--app-surface-2)', border: 'none', cursor: 'pointer',
-                  color: 'var(--app-text-muted)', padding: '0.375rem', borderRadius: 'var(--app-radius-sm)',
+                  color: 'var(--app-text-muted)', padding: '0.375rem', borderRadius: '0.375rem',
                 }}
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Create new */}
+            {/* Create new tag */}
             <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
-              <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
                   type="color"
                   value={newTagColor}
@@ -881,7 +910,7 @@ export default function ContactManager({
                 />
                 <input
                   type="text"
-                  placeholder="New category name..."
+                  placeholder="Category name..."
                   value={newTagName}
                   onChange={e => setNewTagName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && newTagName.trim() && handleCreateTag()}
@@ -890,9 +919,30 @@ export default function ContactManager({
                     background: 'var(--app-surface)', color: 'var(--app-text)',
                     border: '1px solid var(--app-border)',
                     borderRadius: 'calc(var(--app-radius) - 0.25rem)',
-                    padding: '0 0.625rem', outline: 'none',
+                    padding: '0 0.625rem', outline: 'none', minWidth: '100px',
                   }}
                 />
+                <select
+                  value={newTagType}
+                  onChange={e => setNewTagType(e.target.value)}
+                  style={{
+                    height: '2rem', fontSize: '0.6875rem', fontWeight: 600,
+                    background: 'var(--app-surface)', color: 'var(--app-text)',
+                    border: '1px solid var(--app-border)',
+                    borderRadius: 'calc(var(--app-radius) - 0.25rem)',
+                    padding: '0 0.5rem', outline: 'none', appearance: 'none',
+                    WebkitAppearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 0.375rem center',
+                    paddingRight: '1.25rem',
+                  }}
+                >
+                  <option value="">All Types</option>
+                  {TYPES.filter(t => t.key !== 'ALL').map(t => (
+                    <option key={t.key} value={t.key}>{t.shortLabel}</option>
+                  ))}
+                </select>
                 <button
                   onClick={handleCreateTag}
                   disabled={!newTagName.trim() || tagSaving}
@@ -910,65 +960,97 @@ export default function ContactManager({
               </div>
             </div>
 
-            {/* Tag list */}
-            <div style={{ padding: '0.5rem 0.75rem', overflowY: 'auto', maxHeight: '20rem' }}>
+            {/* Tag list grouped by parent type */}
+            <div style={{ overflowY: 'auto', maxHeight: '24rem' }}>
               {managedTags.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-                  <Tag size={24} style={{ color: 'var(--app-text-faint)', margin: '0 auto 0.5rem' }} />
-                  <p style={{ fontSize: '0.8125rem', color: 'var(--app-text-muted)' }}>No categories yet</p>
-                  <p style={{ fontSize: '0.6875rem', color: 'var(--app-text-faint)', marginTop: '0.25rem' }}>Create your first one above</p>
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                  <Tag size={28} style={{ color: 'var(--app-text-faint)', margin: '0 auto 0.5rem' }} />
+                  <p style={{ fontSize: '0.875rem', color: 'var(--app-text-muted)', fontWeight: 600 }}>No categories yet</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--app-text-faint)', marginTop: '0.25rem' }}>
+                    Create your first category above — pick a name, color, and parent type
+                  </p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  {managedTags.map((tag: any) => (
-                    <div
-                      key={tag.id}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        padding: '0.4375rem 0.5rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
-                        background: 'var(--app-surface)',
-                        border: '1px solid var(--app-border)',
-                      }}
-                    >
+                <div style={{ padding: '0.5rem' }}>
+                  {/* Global categories (no parent type) */}
+                  {tagsByType['']?.length > 0 && (
+                    <div style={{ marginBottom: '0.5rem' }}>
                       <div style={{
-                        width: '1.125rem', height: '1.125rem', borderRadius: '0.25rem',
-                        background: tag.color || '#6366F1', flexShrink: 0,
-                      }} />
-                      <span style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--app-text)' }}>
-                        {tag.name}
-                      </span>
-                      {tag.description && (
-                        <span style={{ fontSize: '0.625rem', color: 'var(--app-text-faint)' }}>{tag.description}</span>
-                      )}
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`Delete category "${tag.name}"?`)) return;
-                          try {
-                            await fetch(`/api/erp/crm/contact-tags/${tag.id}/`, { method: 'DELETE' });
-                            setManagedTags(prev => prev.filter((t: any) => t.id !== tag.id));
-                            toast.success(`Deleted "${tag.name}"`);
-                          } catch {
-                            toast.error('Failed to delete');
-                          }
-                        }}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: 'var(--app-text-faint)', padding: '0.1875rem',
-                          borderRadius: '0.25rem', transition: 'color 0.1s',
-                        }}
-                        onMouseOver={e => e.currentTarget.style.color = 'var(--app-error)'}
-                        onMouseOut={e => e.currentTarget.style.color = 'var(--app-text-faint)'}
-                      >
-                        <Trash2 size={12} />
-                      </button>
+                        padding: '0.3125rem 0.5rem', fontSize: '0.5625rem', fontWeight: 700,
+                        color: 'var(--app-text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em',
+                      }}>
+                        ● Global (All Types)
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1875rem' }}>
+                        {tagsByType[''].map((tag: any) => (
+                          <TagRow key={tag.id} tag={tag} onDelete={handleDeleteTag} />
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Type-scoped categories */}
+                  {TYPES.filter(t => t.key !== 'ALL').map(typeCfg => {
+                    const tags = tagsByType[typeCfg.key] || [];
+                    if (tags.length === 0) return null;
+                    return (
+                      <div key={typeCfg.key} style={{ marginBottom: '0.5rem' }}>
+                        <div style={{
+                          padding: '0.3125rem 0.5rem', fontSize: '0.5625rem', fontWeight: 700,
+                          color: typeCfg.color, textTransform: 'uppercase', letterSpacing: '0.06em',
+                          display: 'flex', alignItems: 'center', gap: '0.3125rem',
+                        }}>
+                          <typeCfg.icon size={10} />
+                          {typeCfg.label}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1875rem' }}>
+                          {tags.map((tag: any) => (
+                            <TagRow key={tag.id} tag={tag} onDelete={handleDeleteTag} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Reusable tag row ── */
+function TagRow({ tag, onDelete }: { tag: any; onDelete: (t: any) => void }) {
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+        padding: '0.375rem 0.5rem', borderRadius: 'calc(var(--app-radius, 12px) - 0.25rem)',
+        background: 'var(--app-surface)',
+        border: '1px solid var(--app-border)',
+      }}
+    >
+      <div style={{
+        width: '1rem', height: '1rem', borderRadius: '0.25rem',
+        background: tag.color || '#6366F1', flexShrink: 0,
+      }} />
+      <span style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--app-text)' }}>
+        {tag.name}
+      </span>
+      <button
+        onClick={() => onDelete(tag)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--app-text-faint)', padding: '0.1875rem',
+          borderRadius: '0.25rem', transition: 'color 0.1s',
+        }}
+        onMouseOver={e => e.currentTarget.style.color = 'var(--app-error)'}
+        onMouseOut={e => e.currentTarget.style.color = 'var(--app-text-faint)'}
+      >
+        <Trash2 size={12} />
+      </button>
     </div>
   );
 }

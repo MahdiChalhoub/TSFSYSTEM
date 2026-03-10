@@ -324,13 +324,14 @@ export function COASetupWizard({ initialState, existingAccountCount = 0 }: { ini
                             </button>
                             <button onClick={handleImportTemplate} disabled={isPending}
                                 className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all"
-                                style={{ background: importMode === 'fresh' ? 'var(--app-destructive)' : 'var(--app-primary)', color: 'white', opacity: isPending ? 0.7 : 1 }}>
+                                style={{ background: (hasExistingAccounts && importMode === 'fresh') ? 'var(--app-destructive)' : 'var(--app-primary)', color: 'white', opacity: isPending ? 0.7 : 1 }}>
                                 {isPending ? <Loader2 size={16} className="animate-spin" /> :
                                     importMode === 'merge' ? <GitMerge size={16} /> :
                                         importMode === 'migrate' ? <RefreshCw size={16} /> : <Database size={16} />}
                                 {isPending ? 'Processing...' :
                                     importMode === 'merge' ? 'Merge & Auto-Map' :
-                                        importMode === 'migrate' ? 'Open Migration Tool' : 'Fresh Import & Auto-Map'}
+                                        importMode === 'migrate' ? 'Open Migration Tool' :
+                                            hasExistingAccounts ? 'Reset & Import' : 'Import & Auto-Map'}
                             </button>
                         </div>
                     </div>
