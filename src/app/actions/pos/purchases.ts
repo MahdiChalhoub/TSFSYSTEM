@@ -13,6 +13,10 @@ export async function fetchPurchaseOrder(id: number | string) {
     return erpFetch(`purchase-orders/${id}/`)
 }
 
+export async function deletePO(id: number | string) {
+    return erpFetch(`purchase-orders/${id}/`, { method: 'DELETE' })
+}
+
 export async function fetchPODashboard() {
     try { return await erpFetch('purchase-orders/dashboard/') } catch { return null }
 }

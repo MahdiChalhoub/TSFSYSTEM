@@ -15,13 +15,23 @@ from apps.crm.models import Contact
 from apps.crm.serializers import ContactSerializer
 from apps.finance.models import ChartOfAccount
 from apps.finance.services import LedgerService
-from erp.permissions import CRMReadOnlyOrManage
+from erp.permissions import HasPermission
 
 
 class ContactViewSet(TenantModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, CRMReadOnlyOrManage]
+    permission_classes = [permissions.IsAuthenticated, HasPermission]
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
+
+    # Granular RBAC — maps DRF actions to seeded permission codes
+    required_permissions = {
+        'list':           'crm.view_contact',
+        'retrieve':       'crm.view_contact',
+        'create':         'crm.create_contact',
+        'update':         'crm.edit_contact',
+        'partial_update': 'crm.edit_contact',
+        'destroy':        'crm.delete_contact',
+    }
 
     def get_queryset(self):
         # 🛡️ AUDITOR CALIBRATION: Direct ID lookups should check ALL scopes

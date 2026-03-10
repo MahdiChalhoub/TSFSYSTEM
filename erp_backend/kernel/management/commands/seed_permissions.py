@@ -52,6 +52,8 @@ class Command(BaseCommand):
             {'code': 'crm.delete_customer', 'name': 'Delete Customers', 'module': 'crm', 'is_dangerous': True},
             {'code': 'crm.view_contact', 'name': 'View Contacts', 'module': 'crm'},
             {'code': 'crm.create_contact', 'name': 'Create Contacts', 'module': 'crm'},
+            {'code': 'crm.edit_contact', 'name': 'Edit Contacts', 'module': 'crm'},
+            {'code': 'crm.delete_contact', 'name': 'Delete Contacts', 'module': 'crm', 'is_dangerous': True},
             {'code': 'crm.export_data', 'name': 'Export CRM Data', 'module': 'crm'},
 
             # HR Module

@@ -648,6 +648,219 @@
   transform: translateY(-2px);
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TYPOGRAPHY SCALE — Standardized sizes for ALL pages
+   Use these .theme-* classes instead of ad-hoc Tailwind sizes
+══════════════════════════════════════════════════════════════ */
+
+/* Page-level heading (h1) — ONE per page */
+.theme-heading {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 800;
+  font-family: var(--app-font-display, var(--app-font));
+  color: var(--app-text);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Section heading (h2) */
+.theme-heading-sm {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  font-weight: 700;
+  font-family: var(--app-font-display, var(--app-font));
+  color: var(--app-text);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+/* Card/subsection heading (h3) */
+.theme-heading-xs {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--app-font);
+  color: var(--app-text);
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+/* Standard body text */
+.theme-text {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--app-text);
+  line-height: 1.5;
+}
+
+/* Muted secondary text */
+.theme-text-muted {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--app-text-muted);
+  line-height: 1.5;
+}
+
+/* Small/fine print text */
+.theme-text-sm {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--app-text-muted);
+  line-height: 1.4;
+}
+
+/* Tiny text (badges, status labels) */
+.theme-text-xs {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  line-height: 1.3;
+}
+
+/* Metric/KPI number */
+.theme-metric {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 800;
+  font-family: var(--app-font-display, var(--app-font));
+  color: var(--app-text);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Metric label */
+.theme-metric-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-text-muted);
+}
+
+/* Section label (uppercase) — for form sections, table headers */
+.theme-section-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTON SIZES — Consistent sizing across all pages
+══════════════════════════════════════════════════════════════ */
+
+/* Extra small button (inline actions, table row actions) */
+.app-btn-xs {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  gap: 0.25rem;
+  border-radius: var(--app-radius-sm);
+}
+
+/* Small button (toolbar, filter bar) */
+.app-btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 0.3rem;
+  border-radius: var(--app-radius-sm);
+}
+
+/* Medium button (default — form submits, page actions) */
+/* already defined by .app-btn base */
+
+/* Large button (primary CTA, hero actions) */
+.app-btn-lg {
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  gap: 0.5rem;
+  border-radius: var(--app-radius);
+}
+
+/* Icon-only button (square) */
+.app-btn-icon {
+  padding: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-sm);
+}
+
+.app-btn-icon.app-btn-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.25rem;
+}
+
+.app-btn-icon.app-btn-lg {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.625rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLE TYPOGRAPHY — Consistent table text sizing
+══════════════════════════════════════════════════════════════ */
+
+/* Table header cell */
+.app-th {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-text-muted);
+  padding: 0.625rem 1rem;
+}
+
+/* Table body cell */
+.app-td {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--app-text);
+  padding: 0.75rem 1rem;
+}
+
+/* Table body cell - bold */
+.app-td-bold {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--app-text);
+  padding: 0.75rem 1rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM TYPOGRAPHY — Consistent form element sizing
+══════════════════════════════════════════════════════════════ */
+
+/* Form input standardized sizing */
+.app-input {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+/* Select dropdown */
+.app-select {
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  color: var(--app-text);
+  font-family: var(--app-font);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  min-height: 2.25rem;
+  cursor: pointer;
+  transition: border-color var(--app-transition-fast), box-shadow var(--app-transition-fast);
+}
+
+.app-select:focus {
+  outline: none;
+  border-color: var(--app-border-strong);
+  box-shadow: 0 0 0 3px var(--app-primary-light);
+}
+
 /* Smooth theme transition — only visual properties, NOT layout */
 *,
 *::before,
