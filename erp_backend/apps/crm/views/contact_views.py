@@ -71,27 +71,44 @@ class ContactViewSet(TenantModelViewSet):
             rules = ConfigurationService.get_posting_rules(organization)
             contact_type = data.get('type')
             
+            # Resolve parent COA dynamically from posting rules (NO hardcoded codes)
+            # Priority: automation roots → receivable/payable rule
             parent_account_id = None
             if contact_type == 'CUSTOMER':
-                parent_account_id = rules.get('sales', {}).get('receivable')
+                parent_account_id = (
+                    rules.get('automation', {}).get('customerRoot') or
+                    rules.get('sales', {}).get('receivable')
+                )
             else:
-                parent_account_id = rules.get('purchases', {}).get('payable')
+                parent_account_id = (
+                    rules.get('automation', {}).get('supplierRoot') or
+                    rules.get('purchases', {}).get('payable')
+                )
             
             if not parent_account_id:
-                fallback_code = '1110' if contact_type == 'CUSTOMER' else '2101'
-                parent = ChartOfAccount.objects.filter(organization=organization, code=fallback_code).first()
-                if parent: parent_account_id = parent.id
-            
-            if parent_account_id:
-                parent = ChartOfAccount.objects.get(id=parent_account_id)
-                linked_acc = LedgerService.create_linked_account(
-                    organization=organization,
-                    name=f"{data.get('name')} ({'AR' if contact_type == 'CUSTOMER' else 'AP'})",
-                    type=parent.type,
-                    sub_type='RECEIVABLE' if contact_type == 'CUSTOMER' else 'PAYABLE',
-                    parent_id=parent_account_id
+                rule_label = 'Customer Root Account (or Accounts Receivable)' if contact_type == 'CUSTOMER' else 'Supplier Root Account (or Accounts Payable)'
+                return Response(
+                    {"error": f"Cannot create {contact_type.lower()}: No '{rule_label}' configured in posting rules. "
+                              f"Go to Finance → Settings → Posting Rules and configure the Partner Automation section."},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-                data['linked_account_id'] = linked_acc.id
+
+            parent = ChartOfAccount.objects.filter(id=parent_account_id, organization=organization).first()
+            if not parent:
+                return Response(
+                    {"error": f"Posting rule references COA id={parent_account_id} which does not exist. "
+                              f"Please update your posting rules."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            linked_acc = LedgerService.create_linked_account(
+                organization=organization,
+                name=f"{data.get('name')} ({'AR' if contact_type == 'CUSTOMER' else 'AP'})",
+                type=parent.type,
+                sub_type='RECEIVABLE' if contact_type == 'CUSTOMER' else 'PAYABLE',
+                parent_id=parent.id
+            )
+            data['linked_account_id'] = linked_acc.id
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)

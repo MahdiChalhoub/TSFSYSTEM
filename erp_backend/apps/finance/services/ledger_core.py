@@ -58,15 +58,17 @@ class LedgerCoreMixin:
             for l in lines: 
                 acc_id = l.get('account_id')
                 if not acc_id:
-                    # FALLBACK: Use Suspense Account (Accrued Reception) code 2102
+                    # Resolve suspense account from posting rules (NO hardcoded codes)
+                    from erp.services import ConfigurationService
                     from apps.finance.models import ChartOfAccount
-                    suspense = ChartOfAccount.objects.filter(organization=organization, code='2102').first()
+                    rules = ConfigurationService.get_posting_rules(organization)
+                    suspense_id = rules.get('suspense', {}).get('reception')
+                    suspense = ChartOfAccount.objects.filter(id=suspense_id, organization=organization).first() if suspense_id else None
                     if not suspense:
-                        # SUPER FALLBACK: Use any Liability account or fail
                         suspense = ChartOfAccount.objects.filter(organization=organization, type='LIABILITY').first()
                     
                     if not suspense:
-                        raise ValidationError("Cannot create journal line: No account mapping provided and no suspense account exists.")
+                        raise ValidationError("Cannot create journal line: No account mapping provided and no suspense account exists. Configure posting rules first.")
                     acc_id = suspense.id
                     logger.warning(f"Unmapped ledger line redirected to suspense account {suspense.code} for entry {reference}")
 
@@ -200,10 +202,13 @@ class LedgerCoreMixin:
                 for l in lines:
                     acc_id = l.get('account_id')
                     if not acc_id:
+                        from erp.services import ConfigurationService
                         from apps.finance.models import ChartOfAccount
-                        suspense = ChartOfAccount.objects.filter(organization=organization, code='2102').first()
+                        rules = ConfigurationService.get_posting_rules(organization)
+                        suspense_id = rules.get('suspense', {}).get('reception')
+                        suspense = ChartOfAccount.objects.filter(id=suspense_id, organization=organization).first() if suspense_id else None
                         if not suspense: suspense = ChartOfAccount.objects.filter(organization=organization, type='LIABILITY').first()
-                        if not suspense: raise ValidationError("Missing account and no suspense account found.")
+                        if not suspense: raise ValidationError("Missing account and no suspense account in posting rules.")
                         acc_id = suspense.id
 
                     JournalEntryLine.objects.create(

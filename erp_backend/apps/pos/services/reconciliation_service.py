@@ -50,15 +50,33 @@ class PaymentReconciliationService:
             List of created SalesPaymentLeg instances.
         """
         from apps.pos.models.payment_models import SalesPaymentLeg
-        from apps.finance.models import ChartOfAccount
 
         created = []
         for method, amount in parsed_legs:
             try:
-                coa_code = cls._PM_TO_COA.get(method.upper(), '4718')
-                ledger_acc = ChartOfAccount.objects.filter(
-                    organization=order.organization, code=coa_code, is_active=True
-                ).first()
+                # Resolve ledger account dynamically from register's payment method config
+                ledger_acc = None
+
+                # Try to find account from register's payment_methods config
+                if hasattr(order, 'register') and order.register and order.register.payment_methods:
+                    for pm in order.register.payment_methods:
+                        if pm.get('key', '').upper() == method.upper() and pm.get('accountId'):
+                            from apps.finance.models import ChartOfAccount
+                            ledger_acc = ChartOfAccount.objects.filter(
+                                id=pm['accountId'], organization=order.organization
+                            ).first()
+                            break
+
+                # Fallback to sales.receivable from posting rules
+                if not ledger_acc:
+                    from erp.services import ConfigurationService
+                    from apps.finance.models import ChartOfAccount
+                    rules = ConfigurationService.get_posting_rules(order.organization)
+                    ar_id = rules.get('sales', {}).get('receivable')
+                    if ar_id:
+                        ledger_acc = ChartOfAccount.objects.filter(
+                            id=ar_id, organization=order.organization
+                        ).first()
 
                 leg = SalesPaymentLeg.objects.create(
                     organization=order.organization,
@@ -215,41 +233,52 @@ class PaymentReconciliationService:
 
     @classmethod
     def _post_write_off_je(cls, leg, amount: Decimal, reason: str, user=None):
-        """Dr Write-Off Expense (673) / Cr leg's receivable account (411)."""
-        try:
-            from apps.finance.services.ledger_service import LedgerService
-            from apps.finance.models import ChartOfAccount
+        """Dr Write-Off Expense / Cr leg's receivable account — resolved from posting rules."""
+        from apps.finance.services.ledger_service import LedgerService
+        from apps.finance.models import ChartOfAccount
+        from erp.services import ConfigurationService
+        from django.core.exceptions import ValidationError
 
-            wo_acc  = ChartOfAccount.objects.filter(
-                organization=leg.organization, code='673', is_active=True
-            ).first()
-            ar_acc  = leg.ledger_account or ChartOfAccount.objects.filter(
-                organization=leg.organization, code='411', is_active=True
-            ).first()
+        rules = ConfigurationService.get_posting_rules(leg.organization)
 
-            if not wo_acc or not ar_acc:
-                logger.warning(f"[PaymentReconciliation] Write-off accounts not found for leg {leg.id}")
-                return
+        # Write-off expense account from posting rules (round_off or discount)
+        wo_id = rules.get('sales', {}).get('round_off') or rules.get('sales', {}).get('discount')
+        wo_acc = ChartOfAccount.objects.filter(id=wo_id, organization=leg.organization).first() if wo_id else None
 
-            LedgerService.create_journal_entry(
-                organization=leg.organization,
-                transaction_date=timezone.now(),
-                description=f"Write-Off — Order #{leg.order.invoice_number or leg.order_id}: {reason or 'approved shortfall'}",
-                reference=f"WO-{leg.id}-{leg.order_id}",
-                status='POSTED',
-                scope=leg.order.scope or 'OFFICIAL',
-                site_id=leg.order.site_id,
-                user=user,
-                lines=[
-                    {'account_id': wo_acc.id, 'debit': amount, 'credit': Decimal('0'),
-                     'description': f"Write-off approved: {reason}"},
-                    {'account_id': ar_acc.id, 'debit': Decimal('0'), 'credit': amount,
-                     'description': f"Clear receivable — leg #{leg.id}"},
-                ],
-                internal_bypass=True,
+        # Receivable account: use the leg's own ledger_account, or sales.receivable from rules
+        ar_acc = leg.ledger_account
+        if not ar_acc:
+            ar_id = rules.get('sales', {}).get('receivable')
+            ar_acc = ChartOfAccount.objects.filter(id=ar_id, organization=leg.organization).first() if ar_id else None
+
+        if not wo_acc:
+            raise ValidationError(
+                "Cannot post write-off: No write-off/round-off account configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules and set 'Round-Off Account' or 'Sales Discount'."
             )
-        except Exception as exc:
-            logger.error(f"[PaymentReconciliation] Write-off JE failed for leg {leg.id}: {exc}")
+        if not ar_acc:
+            raise ValidationError(
+                "Cannot post write-off: No receivable account found for this payment leg. "
+                "Configure 'Accounts Receivable' in posting rules."
+            )
+
+        LedgerService.create_journal_entry(
+            organization=leg.organization,
+            transaction_date=timezone.now(),
+            description=f"Write-Off — Order #{leg.order.invoice_number or leg.order_id}: {reason or 'approved shortfall'}",
+            reference=f"WO-{leg.id}-{leg.order_id}",
+            status='POSTED',
+            scope=leg.order.scope or 'OFFICIAL',
+            site_id=leg.order.site_id,
+            user=user,
+            lines=[
+                {'account_id': wo_acc.id, 'debit': amount, 'credit': Decimal('0'),
+                 'description': f"Write-off approved: {reason}"},
+                {'account_id': ar_acc.id, 'debit': Decimal('0'), 'credit': amount,
+                 'description': f"Clear receivable — leg #{leg.id}"},
+            ],
+            internal_bypass=True,
+        )
 
     @classmethod
     def _post_refund_je(cls, leg, reason: str, user=None):

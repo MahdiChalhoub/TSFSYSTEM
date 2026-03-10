@@ -72,19 +72,26 @@ class StockService:
                 inv_acc = rules.get('sales', {}).get('inventory')
                 susp_acc = rules.get('suspense', {}).get('reception')
                 
-                if inv_acc and susp_acc:
-                    try:
-                        from apps.finance.services import LedgerService
-                        LedgerService.create_journal_entry(
-                            organization=organization, transaction_date=timezone.now(), 
-                            description=f"Stock Reception: {product.name}", reference=reference, 
-                            status='POSTED', scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=[
-                                {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
-                                {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
-                            ]
-                        )
-                    except (ImportError, Exception):
-                        logger.warning(f"Finance module integration failed for {reference}")
+                if not inv_acc:
+                    raise ValidationError(
+                        "Cannot post stock reception: 'Inventory Assets' account not configured in posting rules. "
+                        "Go to Finance → Settings → Posting Rules."
+                    )
+                if not susp_acc:
+                    raise ValidationError(
+                        "Cannot post stock reception: 'Goods Reception (In-Transit)' account not configured in posting rules. "
+                        "Go to Finance → Settings → Posting Rules."
+                    )
+
+                from apps.finance.services import LedgerService
+                LedgerService.create_journal_entry(
+                    organization=organization, transaction_date=timezone.now(), 
+                    description=f"Stock Reception: {product.name}", reference=reference, 
+                    status='POSTED', scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=[
+                        {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
+                        {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
+                    ]
+                )
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -165,28 +172,35 @@ class StockService:
                 inv_acc = rules.get('sales', {}).get('inventory')
                 adj_acc = rules.get('inventory', {}).get('adjustment')
                 
-                if inv_acc and adj_acc:
-                    try:
-                        from apps.finance.services import LedgerService
-                        desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
-                        if adj_qty > 0:
-                            lines = [
-                                {"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')},
-                                {"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value}
-                            ]
-                        else:
-                            lines = [
-                                {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
-                                {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
-                            ]
-                        
-                        LedgerService.create_journal_entry(
-                            organization=organization, transaction_date=timezone.now(),
-                            description=desc, reference=reference, status='POSTED',
-                            scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=lines
-                        )
-                    except (ImportError, Exception):
-                        pass
+                if not inv_acc:
+                    raise ValidationError(
+                        "Cannot post stock adjustment: 'Inventory Assets' account not configured in posting rules. "
+                        "Go to Finance → Settings → Posting Rules."
+                    )
+                if not adj_acc:
+                    raise ValidationError(
+                        "Cannot post stock adjustment: 'Stock Adjustment Account' not configured in posting rules. "
+                        "Go to Finance → Settings → Posting Rules."
+                    )
+
+                from apps.finance.services import LedgerService
+                desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
+                if adj_qty > 0:
+                    lines = [
+                        {"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')},
+                        {"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value}
+                    ]
+                else:
+                    lines = [
+                        {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
+                        {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
+                    ]
+                
+                LedgerService.create_journal_entry(
+                    organization=organization, transaction_date=timezone.now(),
+                    description=desc, reference=reference, status='POSTED',
+                    scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=lines
+                )
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -347,6 +361,39 @@ class StockService:
             InventoryValuationService.record_stock_in(
                 organization=organization, product=product, warehouse=destination_warehouse,
                 quantity=qty, unit_cost=current_cost, reference=reference
+            )
+
+            # Cross-module: Journal Entry for inter-warehouse transfer
+            from erp.services import ConfigurationService
+            from django.utils import timezone as tz
+            rules = ConfigurationService.get_posting_rules(organization)
+            inv_acc = rules.get('sales', {}).get('inventory')
+            trf_acc = rules.get('inventory', {}).get('transfer')
+
+            if not inv_acc:
+                raise ValidationError(
+                    "Cannot post stock transfer: 'Inventory Assets' account not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
+                )
+            if not trf_acc:
+                raise ValidationError(
+                    "Cannot post stock transfer: 'Inter-Warehouse Transfer' account not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
+                )
+
+            transfer_value = qty * current_cost
+            from apps.finance.services import LedgerService
+            LedgerService.create_journal_entry(
+                organization=organization, transaction_date=tz.now(),
+                description=f"Stock Transfer: {product.name} ({source_warehouse.name} → {destination_warehouse.name})",
+                reference=reference, status='POSTED', scope=scope,
+                site_id=source_warehouse.parent_id or source_warehouse.id, user=user,
+                lines=[
+                    {"account_id": trf_acc, "debit": transfer_value, "credit": Decimal('0'),
+                     "description": f"In-transit: {source_warehouse.name} → {destination_warehouse.name}"},
+                    {"account_id": trf_acc, "debit": Decimal('0'), "credit": transfer_value,
+                     "description": f"In-transit cleared: {destination_warehouse.name}"},
+                ]
             )
 
             ForensicAuditService.log_mutation(

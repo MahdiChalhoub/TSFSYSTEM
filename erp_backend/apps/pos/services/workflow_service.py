@@ -307,124 +307,119 @@ class SalesWorkflowService:
     def _post_cogs_on_delivery(cls, order, user=None) -> None:
         """
         Phase 2 — Gap 2: Post Dr COGS / Cr Inventory when delivery is confirmed.
-
         Uses effective_cost on each OrderLine (AMC captured at checkout time).
-        Safe: catches all exceptions — never blocks the delivery workflow.
+        Raises ValidationError if posting rules are not configured.
         """
-        try:
-            from decimal import Decimal
-            from erp.services import ConfigurationService
-            from apps.finance.services import LedgerService
+        from decimal import Decimal
+        from erp.services import ConfigurationService
+        from apps.finance.services import LedgerService
 
-            rules = ConfigurationService.get_posting_rules(order.organization)
-            cogs_acc = rules.get('sales', {}).get('cogs')
-            inv_acc  = rules.get('sales', {}).get('inventory')
+        rules = ConfigurationService.get_posting_rules(order.organization)
+        cogs_acc = rules.get('sales', {}).get('cogs')
+        inv_acc  = rules.get('sales', {}).get('inventory')
 
-            if not cogs_acc or not inv_acc:
-                # Posting rules not configured — silent skip
-                return
-
-            # Sum COGS from order lines using the cost captured at checkout
-            total_cogs = Decimal('0')
-            for line in order.lines.all():
-                cost = line.effective_cost or line.unit_cost_ht or Decimal('0')
-                total_cogs += (cost * line.quantity).quantize(Decimal('0.01'))
-
-            if total_cogs <= Decimal('0'):
-                return  # Nothing to post (e.g., service items with zero cost)
-
-            LedgerService.create_journal_entry(
-                organization=order.organization,
-                transaction_date=timezone.now(),
-                description=(
-                    f"COGS — Delivery: {order.invoice_number or f'ORD-{order.id}'}"
-                ),
-                reference=f"WF-COGS-{order.id}",
-                status='POSTED',
-                scope=order.scope or 'OFFICIAL',
-                site_id=order.site_id,
-                user=user,
-                lines=[
-                    # Dr COGS (expense increases)
-                    {'account_id': cogs_acc, 'debit': total_cogs,  'credit': Decimal('0'),
-                     'description': 'COGS — cost of delivered goods'},
-                    # Cr Inventory (asset decreases)
-                    {'account_id': inv_acc,  'debit': Decimal('0'), 'credit': total_cogs,
-                     'description': 'Inventory relief on delivery'},
-                ]
+        if not cogs_acc:
+            raise WorkflowError(
+                "Cannot post delivery: 'COGS (Cost of Goods Sold)' account not configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules."
             )
-        except Exception as exc:
-            # Log the failure but never block the delivery status change
-            import logging
-            logging.getLogger(__name__).warning(
-                "[WorkflowService] COGS posting failed for order %s: %s",
-                order.id, exc, exc_info=True
+        if not inv_acc:
+            raise WorkflowError(
+                "Cannot post delivery: 'Inventory Assets' account not configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules."
             )
+
+        # Sum COGS from order lines using the cost captured at checkout
+        total_cogs = Decimal('0')
+        for line in order.lines.all():
+            cost = line.effective_cost or line.unit_cost_ht or Decimal('0')
+            total_cogs += (cost * line.quantity).quantize(Decimal('0.01'))
+
+        if total_cogs <= Decimal('0'):
+            return  # Nothing to post (e.g., service items with zero cost)
+
+        LedgerService.create_journal_entry(
+            organization=order.organization,
+            transaction_date=timezone.now(),
+            description=(
+                f"COGS — Delivery: {order.invoice_number or f'ORD-{order.id}'}"
+            ),
+            reference=f"WF-COGS-{order.id}",
+            status='POSTED',
+            scope=order.scope or 'OFFICIAL',
+            site_id=order.site_id,
+            user=user,
+            lines=[
+                # Dr COGS (expense increases)
+                {'account_id': cogs_acc, 'debit': total_cogs,  'credit': Decimal('0'),
+                 'description': 'COGS — cost of delivered goods'},
+                # Cr Inventory (asset decreases)
+                {'account_id': inv_acc,  'debit': Decimal('0'), 'credit': total_cogs,
+                 'description': 'Inventory relief on delivery'},
+            ]
+        )
 
     @classmethod
     def _post_ar_adjustment_on_payment(cls, order, amount_paid, user=None) -> None:
         """
         Phase 2 — Gap 5: For orders paid via CREDIT method (A/R sale),
-        when the customer pays cash/Wave/bank: Dr Cash ’ Cr A/R.
-
-        This clears the receivable that was booked at checkout.
-        Safe: catches all exceptions — never blocks the payment workflow.
+        when the customer pays cash/Wave/bank: Dr Cash / Cr A/R.
+        Raises ValidationError if posting rules are not configured.
         """
-        try:
-            # Only post this for credit sales (A/R was debited at checkout)
-            if order.payment_method != 'CREDIT':
-                return
+        # Only post this for credit sales (A/R was debited at checkout)
+        if order.payment_method != 'CREDIT':
+            return
 
-            from decimal import Decimal
-            from erp.services import ConfigurationService
-            from apps.finance.services import LedgerService
-            from apps.finance.models import FinancialAccount
+        from decimal import Decimal
+        from erp.services import ConfigurationService
+        from apps.finance.services import LedgerService
+        from apps.finance.models import FinancialAccount
 
-            rules = ConfigurationService.get_posting_rules(order.organization)
-            receivable_acc = rules.get('sales', {}).get('receivable')
+        rules = ConfigurationService.get_posting_rules(order.organization)
+        receivable_acc = rules.get('sales', {}).get('receivable')
 
-            if not receivable_acc:
-                return
-
-            # Resolve the cash/bank account from the primary financial account
-            primary_fa = FinancialAccount.objects.filter(
-                organization=order.organization
-            ).first()
-            cash_acc = primary_fa.ledger_account_id if primary_fa else None
-
-            if not cash_acc:
-                return
-
-            amount = (amount_paid or order.total_amount or Decimal('0')).quantize(Decimal('0.01'))
-            if amount <= Decimal('0'):
-                return
-
-            LedgerService.create_journal_entry(
-                organization=order.organization,
-                transaction_date=timezone.now(),
-                description=(
-                    f"A/R Clearance — Payment: {order.invoice_number or f'ORD-{order.id}'}"
-                ),
-                reference=f"WF-PAY-{order.id}",
-                status='POSTED',
-                scope=order.scope or 'OFFICIAL',
-                site_id=order.site_id,
-                user=user,
-                lines=[
-                    # Dr Cash/Bank (asset increases)
-                    {'account_id': cash_acc,        'debit': amount,          'credit': Decimal('0'),
-                     'description': 'Cash received from client'},
-                    # Cr A/R (receivable cleared)
-                    {'account_id': receivable_acc,  'debit': Decimal('0'),    'credit': amount,
-                     'description': 'Accounts receivable — cleared on payment'},
-                ]
+        if not receivable_acc:
+            raise WorkflowError(
+                "Cannot post A/R clearance: 'Accounts Receivable' not configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules."
             )
-        except Exception as exc:
-            import logging
-            logging.getLogger(__name__).warning(
-                "[WorkflowService] A/R clearance posting failed for order %s: %s",
-                order.id, exc, exc_info=True
+
+        # Resolve the cash/bank account from the primary financial account
+        primary_fa = FinancialAccount.objects.filter(
+            organization=order.organization
+        ).first()
+        cash_acc = primary_fa.ledger_account_id if primary_fa else None
+
+        if not cash_acc:
+            raise WorkflowError(
+                "Cannot post A/R clearance: No financial account with a linked ledger account found. "
+                "Create a Cash or Bank financial account first."
             )
+
+        amount = (amount_paid or order.total_amount or Decimal('0')).quantize(Decimal('0.01'))
+        if amount <= Decimal('0'):
+            return
+
+        LedgerService.create_journal_entry(
+            organization=order.organization,
+            transaction_date=timezone.now(),
+            description=(
+                f"A/R Clearance — Payment: {order.invoice_number or f'ORD-{order.id}'}"
+            ),
+            reference=f"WF-PAY-{order.id}",
+            status='POSTED',
+            scope=order.scope or 'OFFICIAL',
+            site_id=order.site_id,
+            user=user,
+            lines=[
+                # Dr Cash/Bank (asset increases)
+                {'account_id': cash_acc,        'debit': amount,          'credit': Decimal('0'),
+                 'description': 'Cash received from client'},
+                # Cr A/R (receivable cleared)
+                {'account_id': receivable_acc,  'debit': Decimal('0'),    'credit': amount,
+                 'description': 'Accounts receivable — cleared on payment'},
+            ]
+        )
 
     @classmethod
     def _log(cls, order, user, action: str, note: str) -> None:

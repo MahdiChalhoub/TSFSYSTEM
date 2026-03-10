@@ -212,12 +212,17 @@ class MigrationFinanceMixin:
                 org = Organization.objects.get(id=self.organization_id)
                 org_currency = org.base_currency.code if org.base_currency_id else 'XOF'
 
+                # GUARD: Never create an account without a COA link
+                if not coa_match:
+                    self._log_error(f"Account {source_id} ({mapped['name']}): No COA parent found, skipping to prevent orphan")
+                    continue
+
                 account = FinancialAccount.objects.create(
                     organization_id=self.organization_id,
                     name=mapped['name'],
                     type=account_type,
                     currency=org_currency,
-                    ledger_account_id=coa_match.id if coa_match else None,
+                    ledger_account=coa_match,
                     description=f"Imported from UltimatePOS. Category: {at_name or 'N/A'}",
                 )
                 self.id_maps['ACCOUNT'][source_id] = account.id

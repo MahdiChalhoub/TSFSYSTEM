@@ -35,21 +35,30 @@ class DeferredExpenseService:
                 scope=scope,
             )
 
-            # Initial JE: Dr Deferred Expense (Asset) \u2192 Cr Cash/Bank
-            if expense.deferred_coa_id and source_acc.ledger_account_id:
-                LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=expense.start_date,
-                    description=f"Deferred Expense: {expense.name}",
-                    status='POSTED',
-                    scope=scope,
-                    user=user,
-                    lines=[
-                        {"account_id": expense.deferred_coa_id, "debit": amount, "credit": Decimal('0')},
-                        {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": amount},
-                    ],
-                    internal_bypass=True
+            # Initial JE: Dr Deferred Expense (Asset) → Cr Cash/Bank
+            if not expense.deferred_coa_id:
+                raise ValidationError(
+                    "Cannot create deferred expense: 'Deferred COA' account not specified. "
+                    "Select a prepaid/deferred expense account."
                 )
+            if not source_acc.ledger_account_id:
+                raise ValidationError(
+                    "Cannot create deferred expense: Source account has no linked ledger account. "
+                    "Ensure the financial account is linked to a Chart of Accounts entry."
+                )
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=expense.start_date,
+                description=f"Deferred Expense: {expense.name}",
+                status='POSTED',
+                scope=scope,
+                user=user,
+                lines=[
+                    {"account_id": expense.deferred_coa_id, "debit": amount, "credit": Decimal('0')},
+                    {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": amount},
+                ],
+                internal_bypass=True
+            )
 
             return expense
 
@@ -66,21 +75,28 @@ class DeferredExpenseService:
             is_last = (expense.months_recognized + 1) == expense.duration_months
             amount = expense.remaining_amount if is_last else expense.monthly_amount
 
-            # JE: Dr Expense \u2192 Cr Deferred Expense (no cash movement)
-            if expense.expense_coa_id and expense.deferred_coa_id:
-                LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=period_date,
-                    description=f"Monthly recognition: {expense.name} ({expense.months_recognized + 1}/{expense.duration_months})",
-                    status='POSTED',
-                    scope=expense.scope,
-                    user=user,
-                    lines=[
-                        {"account_id": expense.expense_coa_id, "debit": amount, "credit": Decimal('0')},
-                        {"account_id": expense.deferred_coa_id, "debit": Decimal('0'), "credit": amount},
-                    ],
-                    internal_bypass=True
+            # JE: Dr Expense → Cr Deferred Expense (no cash movement)
+            if not expense.expense_coa_id:
+                raise ValidationError(
+                    "Cannot recognize deferred expense: 'Expense COA' not configured on this deferred expense."
                 )
+            if not expense.deferred_coa_id:
+                raise ValidationError(
+                    "Cannot recognize deferred expense: 'Deferred COA' not configured on this deferred expense."
+                )
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=period_date,
+                description=f"Monthly recognition: {expense.name} ({expense.months_recognized + 1}/{expense.duration_months})",
+                status='POSTED',
+                scope=expense.scope,
+                user=user,
+                lines=[
+                    {"account_id": expense.expense_coa_id, "debit": amount, "credit": Decimal('0')},
+                    {"account_id": expense.deferred_coa_id, "debit": Decimal('0'), "credit": amount},
+                ],
+                internal_bypass=True
+            )
 
             expense.months_recognized += 1
             expense.remaining_amount -= amount
@@ -116,22 +132,30 @@ class AssetService:
                 scope=scope,
             )
 
-            # JE: Dr Fixed Asset \u2192 Cr Cash/Bank
+            # JE: Dr Fixed Asset → Cr Cash/Bank
             source_acc = FinancialAccount.objects.filter(id=data.get('source_account_id'), organization=organization).first()
-            if asset.asset_coa_id and source_acc and source_acc.ledger_account_id:
-                LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=asset.purchase_date,
-                    description=f"Asset Acquisition: {asset.name}",
-                    status='POSTED',
-                    scope=scope,
-                    user=user,
-                    lines=[
-                        {"account_id": asset.asset_coa_id, "debit": value, "credit": Decimal('0')},
-                        {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": value},
-                    ],
-                    internal_bypass=True
+            if not asset.asset_coa_id:
+                raise ValidationError(
+                    "Cannot acquire asset: 'Asset COA' not specified. Select the fixed asset account."
                 )
+            if not source_acc or not source_acc.ledger_account_id:
+                raise ValidationError(
+                    "Cannot acquire asset: Source payment account has no linked ledger account. "
+                    "Ensure the financial account is linked to a Chart of Accounts entry."
+                )
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=asset.purchase_date,
+                description=f"Asset Acquisition: {asset.name}",
+                status='POSTED',
+                scope=scope,
+                user=user,
+                lines=[
+                    {"account_id": asset.asset_coa_id, "debit": value, "credit": Decimal('0')},
+                    {"account_id": source_acc.ledger_account_id, "debit": Decimal('0'), "credit": value},
+                ],
+                internal_bypass=True
+            )
 
             # Generate depreciation schedule
             AssetService.generate_schedule(asset)

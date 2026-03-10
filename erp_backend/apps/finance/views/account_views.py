@@ -73,6 +73,7 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         
         try:
             from apps.finance.models import ChartOfAccount
+            from erp.services import ConfigurationService
             from decimal import Decimal
             from django.db import transaction as db_transaction
             
@@ -82,67 +83,106 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
             site_id = request.data.get('site_id')
             is_pos_enabled = request.data.get('is_pos_enabled', False)
             
-            # ledger_account = the COA parent under which to create a child
+            if not name or not acct_type:
+                return Response({"error": "name and type are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # ─── STEP 1: Resolve parent COA ───────────────────────────────
+            # Priority: explicit request param > posting rules > sub_type match
             parent_coa_id = request.data.get('ledger_account') or request.data.get('parent_coa_id')
-            
+            parent_coa = None
+
             if parent_coa_id:
-                # Validate the selected COA is an ASSET type for POS/cash accounts
-                parent_coa = ChartOfAccount.objects.get(id=parent_coa_id, organization=organization)
-                if is_pos_enabled and parent_coa.type not in ('ASSET',):
+                # Explicit parent provided — validate it
+                parent_coa = ChartOfAccount.objects.filter(
+                    id=parent_coa_id, organization=organization
+                ).first()
+                if not parent_coa:
                     return Response(
-                        {"error": f"POS accounts must be linked to ASSET-type COA entries, not '{parent_coa.type}'. "
-                                  f"Please select a Cash, Bank, or similar asset account."},
+                        {"error": f"Selected parent COA (id={parent_coa_id}) not found in this organization."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
-                # Create a CHILD COA entry under the selected parent
-                with db_transaction.atomic():
-                    last_child = ChartOfAccount.objects.filter(
-                        organization=organization,
-                        code__startswith=f"{parent_coa.code}."
-                    ).order_by('-code').first()
-                    
-                    suffix = (int(last_child.code.split('.')[-1]) + 1) if last_child else 1
-                    child_code = f"{parent_coa.code}.{str(suffix).zfill(3)}"
-                    
-                    child_coa = ChartOfAccount.objects.create(
-                        organization=organization,
-                        code=child_code,
-                        name=name,
-                        type=parent_coa.type,
-                        sub_type=acct_type,
-                        parent=parent_coa,
-                        is_system_only=True,
-                        is_active=True,
-                        balance=Decimal('0.00')
-                    )
-                    
-                    account = FinancialAccount.objects.create(
-                        organization=organization,
-                        name=name,
-                        type=acct_type,
-                        currency=currency,
-                        site_id=site_id,
-                        is_pos_enabled=is_pos_enabled,
-                        ledger_account=child_coa
-                    )
             else:
-                account = FinancialAccountService.create_account(
+                # Resolve from posting rules based on account type (NO hardcoded codes)
+                rules = ConfigurationService.get_posting_rules(organization)
+
+                # Map account types to posting-rule keys (section, key)
+                ACCOUNT_TYPE_TO_RULE = {
+                    'CASH':       [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'PETTY_CASH': [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'MOBILE':     [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'BANK':       [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'SAVINGS':    [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'FOREIGN':    [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'ESCROW':     [('automation', 'customerRoot'), ('sales', 'receivable')],
+                    'INVESTMENT': [('automation', 'customerRoot'), ('sales', 'receivable')],
+                }
+
+                rule_chain = ACCOUNT_TYPE_TO_RULE.get(acct_type, [])
+                for rule_section, rule_key in rule_chain:
+                    parent_id_from_rules = rules.get(rule_section, {}).get(rule_key)
+                    if parent_id_from_rules:
+                        parent_coa = ChartOfAccount.objects.filter(
+                            id=parent_id_from_rules, organization=organization
+                        ).first()
+                        if parent_coa:
+                            break
+
+                # Last resort: match by sub_type
+                if not parent_coa:
+                    parent_coa = ChartOfAccount.objects.filter(
+                        organization=organization, sub_type=acct_type
+                    ).first()
+
+            # ─── GUARD: No parent = no account ────────────────────────────
+            if not parent_coa:
+                return Response(
+                    {"error": f"Cannot create account: no parent COA found for type '{acct_type}'. "
+                              f"Please configure your Chart of Accounts and posting rules first."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ─── STEP 2: Validate POS constraint ─────────────────────────
+            if is_pos_enabled and parent_coa.type not in ('ASSET',):
+                return Response(
+                    {"error": f"POS accounts must be linked to ASSET-type COA entries, not '{parent_coa.type}'. "
+                              f"Please select a Cash, Bank, or similar asset account."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ─── STEP 3: Create child COA + Financial Account (atomic) ───
+            with db_transaction.atomic():
+                last_child = ChartOfAccount.objects.filter(
+                    organization=organization,
+                    code__startswith=f"{parent_coa.code}."
+                ).order_by('-code').first()
+                
+                suffix = (int(last_child.code.split('.')[-1]) + 1) if last_child else 1
+                child_code = f"{parent_coa.code}.{str(suffix).zfill(3)}"
+                
+                child_coa = ChartOfAccount.objects.create(
+                    organization=organization,
+                    code=child_code,
+                    name=name,
+                    type=parent_coa.type,
+                    sub_type=acct_type,
+                    parent=parent_coa,
+                    is_system_only=True,
+                    is_active=True,
+                    balance=Decimal('0.00')
+                )
+                
+                account = FinancialAccount.objects.create(
                     organization=organization,
                     name=name,
                     type=acct_type,
                     currency=currency,
                     site_id=site_id,
-                    parent_coa_id=None
+                    is_pos_enabled=is_pos_enabled,
+                    ledger_account=child_coa
                 )
-                if is_pos_enabled:
-                    account.is_pos_enabled = True
-                    account.save(update_fields=['is_pos_enabled'])
 
             serializer = self.get_serializer(account)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ChartOfAccount.DoesNotExist:
-            return Response({"error": "Selected COA account not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

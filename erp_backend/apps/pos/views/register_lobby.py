@@ -165,25 +165,29 @@ class RegisterLobbyMixin:
             else:
                 # Auto-create a dedicated cash account under RegisterCash parent
                 try:
-                    from apps.finance.models import FinancialAccount
-                    # Find or create the RegisterCash parent account
-                    parent = FinancialAccount.objects.filter(
-                        organization=organization, name__iexact='RegisterCash'
-                    ).first()
-                    if not parent:
-                        parent = FinancialAccount.objects.filter(
-                            organization=organization, name__icontains='Register Cash'
-                        ).first()
-                    # Build the new account
+                    from apps.finance.services import FinancialAccountService
+                    from apps.finance.models import ChartOfAccount
+                    from erp.services import ConfigurationService
+
                     acct_name = f'{name} Cash'
-                    new_account = FinancialAccount.objects.create(
+
+                    # Resolve parent COA from posting rules (NO hardcoded codes)
+                    rules = ConfigurationService.get_posting_rules(organization)
+                    parent_coa_id = (
+                        rules.get('automation', {}).get('customerRoot') or
+                        rules.get('sales', {}).get('receivable')
+                    )
+
+                    new_account = FinancialAccountService.create_account(
                         organization=organization,
                         name=acct_name,
                         type='CASH',
-                        parent=parent,
-                        currency=organization.currency or 'USD',
-                        is_active=True,
+                        currency=organization.base_currency.code if organization.base_currency_id else 'USD',
+                        site_id=None,
+                        parent_coa_id=parent_coa_id,
                     )
+                    new_account.is_pos_enabled = True
+                    new_account.save(update_fields=['is_pos_enabled'])
                     cash_account_id = new_account.id
                 except Exception as e:
                     import logging

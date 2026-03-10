@@ -173,8 +173,16 @@ class PaymentService:
         vat_suspense = rules.get('purchases', {}).get('vat_suspense')
         vat_payable = rules.get('purchases', {}).get('tax')
 
-        if not vat_suspense or not vat_payable:
-            return None
+        if not vat_suspense:
+            raise ValidationError(
+                "Cannot release cash-basis VAT: 'VAT Suspense' account not configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules."
+            )
+        if not vat_payable:
+            raise ValidationError(
+                "Cannot release cash-basis VAT: 'VAT Payable' account not configured in posting rules. "
+                "Go to Finance → Settings → Posting Rules."
+            )
 
         # Calculate proportional VAT (simplified: assume tax is standard rate)
         from apps.finance.tax_calculator import TaxCalculator
