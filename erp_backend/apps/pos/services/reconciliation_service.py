@@ -19,21 +19,6 @@ logger = logging.getLogger('erp.payment_reconciliation')
 
 class PaymentReconciliationService:
 
-    # ── Map from payment method key to SYSCOHADA COA code ─────────────────────
-    _PM_TO_COA = {
-        'CASH':         '571',
-        'WAVE':         '562',
-        'ORANGE_MONEY': '562',
-        'MTN_MOBILE':   '562',
-        'MOBILE':       '562',
-        'BANK':         '521',
-        'CREDIT':       '411',
-        'REWARD_POINTS': '411',
-        'WALLET_DEBIT':  '411',
-        'ROUND_OFF':     '673',
-        'OTHER':         '4718',
-    }
-
     @classmethod
     def persist_legs(cls, order, parsed_legs: list, journal_entry=None, user=None) -> list:
         """

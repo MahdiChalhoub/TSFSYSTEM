@@ -56,12 +56,12 @@ export async function deleteProduct(id: number) {
 export async function getCatalogueProducts(params: Record<string, string>) {
     try {
         const q = new URLSearchParams(params).toString()
-        return await erpFetch(`products/catalogue_list/?${q}`)
+        return await erpFetch(`dashboard/catalogue_list/?${q}`)
     } catch { return { results: [], count: 0 } }
 }
 
 export async function getCatalogueFilters() {
     try {
-        return await erpFetch('products/catalogue_filters/')
+        return await erpFetch('dashboard/catalogue_filters/')
     } catch { return { categories: [], types: [] } }
 }

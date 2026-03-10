@@ -23,7 +23,9 @@ export type PostingRulesConfig = {
     purchases: {
         payable: number | null
         inventory: number | null
+        expense: number | null
         vat_recoverable: number | null
+        vat_suspense: number | null
         airsi_payable: number | null
         reverse_charge_vat: number | null
         discount_earned: number | null
@@ -63,7 +65,7 @@ export type PostingRulesConfig = {
 
 const EMPTY_CONFIG: PostingRulesConfig = {
     sales: { receivable: null, revenue: null, cogs: null, inventory: null, round_off: null, discount: null, vat_collected: null },
-    purchases: { payable: null, inventory: null, vat_recoverable: null, airsi_payable: null, reverse_charge_vat: null, discount_earned: null, delivery_fees: null, airsi: null },
+    purchases: { payable: null, inventory: null, expense: null, vat_recoverable: null, vat_suspense: null, airsi_payable: null, reverse_charge_vat: null, discount_earned: null, delivery_fees: null, airsi: null },
     inventory: { adjustment: null, transfer: null },
     automation: { customerRoot: null, supplierRoot: null, payrollRoot: null },
     fixedAssets: { depreciationExpense: null, accumulatedDepreciation: null },
@@ -82,17 +84,72 @@ export async function getPostingRules(): Promise<PostingRulesConfig> {
     }
 }
 
-export async function savePostingRules(config: PostingRulesConfig) {
+export type PostingRuleImpact = {
+    rule: string
+    old_account: string
+    new_account: string
+    journal_entries: number
+    balance: number
+    risk: 'HIGH' | 'LOW'
+}
+
+export type PostingRulesResponse = {
+    success: boolean
+    message?: string
+    changes?: number
+    impact?: PostingRuleImpact[]
+    has_high_risk?: boolean
+    reclassifications?: Array<{
+        rule: string
+        status: string
+        je_id?: string
+        amount?: number
+        error?: string
+        reason?: string
+    }>
+}
+
+export async function analyzePostingRulesImpact(config: PostingRulesConfig): Promise<PostingRulesResponse> {
     try {
-        await erpFetch('settings/posting_rules/', {
+        const result = await erpFetch('settings/posting_rules/?dry_run=true', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        })
+        return { success: true, ...result }
+    } catch (error) {
+        console.error("Failed to analyze posting rules impact:", error)
+        return { success: false }
+    }
+}
+
+export async function savePostingRules(config: PostingRulesConfig): Promise<PostingRulesResponse> {
+    try {
+        const result = await erpFetch('settings/posting_rules/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         })
         revalidatePath('/finance/settings/posting-rules')
-        return { success: true }
+        return { success: true, ...result }
     } catch (error) {
         console.error("Failed to save posting rules:", error)
+        return { success: false }
+    }
+}
+
+export async function savePostingRulesWithReclassification(config: PostingRulesConfig): Promise<PostingRulesResponse> {
+    try {
+        const result = await erpFetch('settings/posting_rules/?reclassify=true', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        })
+        revalidatePath('/finance/settings/posting-rules')
+        revalidatePath('/finance/ledger')
+        return { success: true, ...result }
+    } catch (error) {
+        console.error("Failed to save posting rules with reclassification:", error)
         return { success: false }
     }
 }

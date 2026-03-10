@@ -49,6 +49,7 @@ Before touching any file, you MUST:
    - `security-audit.md` — Security vulnerability scanning and audit
    - `cleanup-project.md` — Tech debt and cleanup
    - `branching-strategy.md` — Git branching rules
+   - `posting-rules-enforcement.md` — **Any code creating journal entries, financial accounts, or ledger postings**
 
 ### Phase 1: Codebase Research (10 min)
 For EVERY file you plan to edit:
@@ -144,6 +145,8 @@ You must always announce which specialist mindset you are applying and what rese
 | Adding CSS/styling changes in isolation | Cross-reference `DESIGN_CRITERIA.md` |
 | Creating new state when one already exists | Search existing hooks/context first |
 | Editing only the component, not its parent/children | Trace the full prop chain |
+| Hardcoding COA codes like `'411'` or `'1110'` | Use `ConfigurationService.get_posting_rules()` — run `/posting-rules-enforcement` |
+| Silently skipping journal entries on missing config | Raise `ValidationError` with actionable message |
 
 ---
 

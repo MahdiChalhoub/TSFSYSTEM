@@ -70,12 +70,28 @@ class OrganizationSerializer(serializers.ModelSerializer):
         return obj.base_currency.symbol if obj.base_currency else '$'
 
 
+class WarehouseChildSerializer(serializers.ModelSerializer):
+    """Minimal serializer for child warehouses nested inside a Site/Branch."""
+    class Meta:
+        from apps.inventory.models import Warehouse
+        model = Warehouse
+        fields = ['id', 'name', 'code', 'location_type', 'is_active']
+
+
 class SiteSerializer(serializers.ModelSerializer):
-    """Backward-compat: now uses Warehouse model for branches/sites."""
+    """Backward-compat: now uses Warehouse model for branches/sites.
+    Includes nested child warehouses for the Site→Warehouse cascade."""
+    warehouses = serializers.SerializerMethodField()
+
     class Meta:
         from apps.inventory.models import Warehouse
         model = Warehouse
         fields = '__all__'
+
+    def get_warehouses(self, obj):
+        """Return child locations (STORE/WAREHOUSE/VIRTUAL) under this branch."""
+        children = obj.children.filter(is_active=True).order_by('name')
+        return WarehouseChildSerializer(children, many=True).data
 
 
 class BusinessTypeSerializer(serializers.ModelSerializer):

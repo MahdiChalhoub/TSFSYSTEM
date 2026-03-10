@@ -37,6 +37,7 @@ The POS system has a complex data flow. Before ANY POS edit:
 2. **Pricing Logic**: Apply discounts, price lists, and promotions correctly.
 3. **Closing the Loop**: Ensure every order results in either a payment or a receivable.
 4. **CRM Sync**: Update customer history after every successful sale.
+5. **Dynamic COA Resolution** *(CRITICAL)*: POS checkout, COGS posting, and A/R clearance all create journal entries. **NEVER** hardcode COA codes — always resolve from `ConfigurationService.get_posting_rules()`. Missing rules must raise `WorkflowError` or `ValidationError`. Run `/posting-rules-enforcement` workflow before any POS financial code change.
 
 ## Interactions
 - **Connects with**: `InventoryMaster` (to deduct stock), `FinanceCustodian` (to record revenue).

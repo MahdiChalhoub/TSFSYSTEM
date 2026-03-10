@@ -18,6 +18,7 @@
 3. **Category Hierarchy**: Categories support parent-child nesting. Respect the tree structure.
 4. **Barcode Compliance**: Products can have barcodes — ensure uniqueness per organization.
 5. **Negative Stock**: Controlled by the `allowNegativeStockRef` setting. Always check before allowing a deduction.
+6. **Dynamic COA Resolution** *(CRITICAL)*: Stock operations (receive, adjust, transfer) post journal entries. **NEVER** hardcode COA codes — always resolve from `ConfigurationService.get_posting_rules()`. Run `/posting-rules-enforcement` workflow before modifying any service that calls `LedgerService.create_journal_entry()`.
 
 ## ⚠️ Known Gotchas
 1. **BarcodeSettings model**: Lives in `apps/finance/models.py` but belongs to inventory (historical).

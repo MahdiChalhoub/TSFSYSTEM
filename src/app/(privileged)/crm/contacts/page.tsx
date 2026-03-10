@@ -2,7 +2,7 @@
 import { erpFetch } from '@/lib/erp-api';
 import ContactManager from './manager';
 import Link from 'next/link';
-import { Users, Building2, TrendingUp, ArrowLeft, CreditCard, ShieldCheck } from 'lucide-react';
+import { Users, Building2, TrendingUp, ArrowLeft, Phone, UserPlus, Tag } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +26,7 @@ async function getContacts() {
             companyName: c.company_name,
             paymentTermsDays: c.payment_terms_days,
             loyaltyPoints: c.loyalty_points,
+            tagNames: c.tag_names || [],
         }));
     } catch { return []; }
 }
@@ -44,128 +45,97 @@ async function getTaxProfiles() {
     } catch { return []; }
 }
 
+async function getContactTags() {
+    try {
+        const data = await erpFetch('crm/contact-tags/');
+        return Array.isArray(data) ? data : (data?.results || []);
+    } catch { return []; }
+}
+
 export default async function ContactsPage() {
-    const [contacts, sites, deliveryZones, taxProfiles] = await Promise.all([
+    const [contacts, sites, deliveryZones, taxProfiles, contactTags] = await Promise.all([
         getContacts(),
         getSites(),
         getDeliveryZones(),
         getTaxProfiles(),
+        getContactTags(),
     ]);
 
     const customers = contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length;
     const suppliers = contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length;
-    const leads = contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length;
+    const addressBook = contacts.filter((c: Record<string, any>) => c.type === 'CONTACT' || c.type === 'SERVICE').length;
+    const totalActive = contacts.filter((c: Record<string, any>) => c.is_active !== false).length;
 
     const kpis = [
-        { label: 'Active Clients', value: customers, icon: Users, accent: 'var(--app-primary)' },
-        { label: 'Suppliers', value: suppliers, icon: Building2, accent: 'var(--app-info)' },
-        { label: 'Total Leads', value: leads, icon: TrendingUp, accent: 'var(--app-warning)' },
-    ];
-
-    const features = [
-        {
-            icon: Building2,
-            title: 'Site Attribution',
-            desc: "Distinguish between a contact's Home Site and their Transaction Site.",
-        },
-        {
-            icon: CreditCard,
-            title: 'Ledger Precision',
-            desc: 'Every contact has a direct 1:1 link to the General Ledger with live balances.',
-        },
-        {
-            icon: ShieldCheck,
-            title: 'Trusted Data',
-            desc: 'Contact information stays consistent across all modules.',
-        },
+        { label: 'Active Contacts', value: totalActive, icon: Users, accent: 'var(--app-primary)' },
+        { label: 'Customers', value: customers, icon: TrendingUp, accent: 'var(--app-info)' },
+        { label: 'Suppliers', value: suppliers, icon: Building2, accent: 'var(--app-warning)' },
+        { label: 'Address Book', value: addressBook, icon: Phone, accent: 'var(--app-success)' },
     ];
 
     return (
         <div
-            className="min-h-screen p-5 md:p-6 space-y-5 max-w-7xl mx-auto"
-            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font)' }}
+            className="app-page"
+            style={{ padding: 'clamp(0.75rem, 2vw, 1.5rem)' }}
         >
             {/* ── Header ──────────────────────────────────── */}
-            <header className="flex flex-col md:flex-row justify-between items-center gap-4 fade-in-up">
-                <div className="flex items-center gap-4">
-                    <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-                        style={{ background: 'var(--app-primary)', boxShadow: '0 8px 24px var(--app-primary-glow)' }}
-                    >
-                        <Users size={26} color="#fff" />
+            <header className="app-page-header" style={{ marginBottom: '1rem' }}>
+                <div className="flex items-center gap-3">
+                    <div className="app-icon-badge" style={{ width: '2.75rem', height: '2.75rem', borderRadius: 'var(--app-radius-sm)' }}>
+                        <Users size={20} color="#fff" />
                     </div>
                     <div>
-                        <h1
-                            className="text-3xl font-black tracking-tight"
-                            style={{ color: 'var(--app-text)', fontFamily: 'var(--app-font-display)' }}
-                        >
+                        <h1 className="theme-heading">
                             Contact <span style={{ color: 'var(--app-primary)' }}>Center</span>
                         </h1>
-                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
-                            Unified Client & Supplier Registry
+                        <p className="theme-text-muted" style={{ marginTop: '0.125rem' }}>
+                            Unified Client, Supplier & Address Book Registry
                         </p>
                     </div>
                 </div>
-                <Link
-                    href="/crm"
-                    className="flex items-center gap-1.5 px-4 h-9 rounded-xl font-bold text-sm transition-all"
-                    style={{
-                        background: 'var(--app-surface)',
-                        border: '1px solid var(--app-border)',
-                        color: 'var(--app-text-muted)',
-                        boxShadow: 'var(--app-shadow-sm)',
-                    }}
-                >
-                    <ArrowLeft size={14} /> Back
-                </Link>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <Link
+                        href="/crm/contacts/new"
+                        className="app-btn app-btn-primary"
+                    >
+                        <UserPlus size={14} /> New Contact
+                    </Link>
+                    <Link
+                        href="/crm"
+                        className="app-btn app-btn-ghost"
+                    >
+                        <ArrowLeft size={14} /> Back
+                    </Link>
+                </div>
             </header>
 
             {/* ── KPI Row ─────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in-up" style={{ animationDelay: '60ms' }}>
+            <div
+                className="grid gap-3 fade-in-up"
+                style={{
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    marginBottom: '1rem',
+                    animationDelay: '60ms',
+                }}
+            >
                 {kpis.map((kpi, i) => (
-                    <div key={i} className="app-kpi-card">
-                        <div className="flex items-center gap-4">
+                    <div key={i} className="app-kpi-card" style={{ padding: '0.875rem' }}>
+                        <div className="flex items-center gap-3">
                             <div
-                                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                                style={{ background: kpi.accent + '22', boxShadow: `0 4px 12px ${kpi.accent}33` }}
+                                className="flex items-center justify-center shrink-0"
+                                style={{
+                                    width: '2.25rem', height: '2.25rem',
+                                    borderRadius: 'var(--app-radius-sm)',
+                                    background: kpi.accent + '22',
+                                }}
                             >
-                                <kpi.icon size={20} style={{ color: kpi.accent }} />
+                                <kpi.icon size={16} style={{ color: kpi.accent }} />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: 'var(--app-text-muted)' }}>
-                                    {kpi.label}
-                                </p>
-                                <p className="text-2xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
-                                    {kpi.value}
-                                </p>
+                                <p className="theme-metric-label">{kpi.label}</p>
+                                <p className="theme-heading-sm" style={{ margin: 0 }}>{kpi.value}</p>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* ── Feature Grid ────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 fade-in-up" style={{ animationDelay: '100ms' }}>
-                {features.map((f, i) => (
-                    <div
-                        key={i}
-                        className="app-card app-card-hover p-4 transition-all duration-300"
-                    >
-                        <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                            style={{ background: 'var(--app-primary-light)' }}
-                        >
-                            <f.icon size={18} style={{ color: 'var(--app-primary)' }} />
-                        </div>
-                        <h4
-                            className="text-sm font-black uppercase tracking-tight mb-1.5"
-                            style={{ color: 'var(--app-text)' }}
-                        >
-                            {f.title}
-                        </h4>
-                        <p className="text-xs leading-relaxed" style={{ color: 'var(--app-text-muted)' }}>
-                            {f.desc}
-                        </p>
                     </div>
                 ))}
             </div>
@@ -176,6 +146,7 @@ export default async function ContactsPage() {
                 sites={sites}
                 deliveryZones={deliveryZones}
                 taxProfiles={taxProfiles}
+                contactTags={contactTags}
             />
         </div>
     );

@@ -7,6 +7,25 @@ from decimal import Decimal
 from erp.models import TenantModel
 
 
+class ContactTag(TenantModel):
+    """User-defined contact categories: Wholesale, Retail, Family, Friends, VIP, etc."""
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=20, default='#6366F1', help_text='Hex color for the badge')
+    icon = models.CharField(max_length=50, null=True, blank=True, help_text='Lucide icon name')
+    description = models.TextField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'contact_tag'
+        ordering = ['sort_order', 'name']
+        unique_together = ['organization', 'name']
+
+    def __str__(self):
+        return self.name
+
+
 class Contact(TenantModel):
     TYPES = (
         ('SUPPLIER', 'Supplier'),
@@ -15,6 +34,8 @@ class Contact(TenantModel):
         ('PARTNER', 'Partner'),
         ('CREDITOR', 'Creditor'),
         ('DEBTOR', 'Debtor'),
+        ('CONTACT', 'Contact'),
+        ('SERVICE', 'Service Provider'),
     )
     SUPPLIER_CATEGORIES = (
         ('REGULAR', 'Regular'),
@@ -195,6 +216,12 @@ class Contact(TenantModel):
         null=True, blank=True,
         db_column='tax_profile_id',
         help_text='FK to CounterpartyTaxProfile (IntegerField avoids circular import)'
+    )
+
+    # Tags (user-defined categories)
+    tags = models.ManyToManyField(
+        'ContactTag', blank=True, related_name='contacts',
+        help_text='User-defined categories: Wholesale, Retail, Family, VIP, etc.'
     )
 
     # Metadata

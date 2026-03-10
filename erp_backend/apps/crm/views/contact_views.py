@@ -11,11 +11,19 @@ from erp.middleware import get_current_tenant_id
 from erp.models import Organization
 from erp.services import ConfigurationService
 
-from apps.crm.models import Contact
-from apps.crm.serializers import ContactSerializer
+from apps.crm.models import Contact, ContactTag
+from apps.crm.serializers import ContactSerializer, ContactTagSerializer
 from apps.finance.models import ChartOfAccount
 from apps.finance.services import LedgerService
 from erp.permissions import HasPermission
+
+
+class ContactTagViewSet(TenantModelViewSet):
+    """CRUD for user-defined contact categories (tags)."""
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = ContactTag.objects.all()
+    serializer_class = ContactTagSerializer
+
 
 
 class ContactViewSet(TenantModelViewSet):

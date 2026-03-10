@@ -185,11 +185,23 @@ class MigrationFinanceMixin:
                 if not coa_match:
                     parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, sub_type=account_type).first()
                     if not parent:
-                        # Fallback to general Assets (1000) or Liabilities (2000) if no sub_type match
+                        # Resolve from posting rules instead of hardcoded codes
+                        from erp.services import ConfigurationService
+                        from erp.models import Organization
+                        org = Organization.objects.get(id=self.organization_id)
+                        rules = ConfigurationService.get_posting_rules(org)
                         if account_type in ['BANK', 'CASH', 'MOBILE', 'PETTY_CASH']:
-                            parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, code='1000').first()
+                            root_id = rules.get('automation', {}).get('customerRoot') or rules.get('sales', {}).get('receivable')
                         else:
-                            parent = ChartOfAccount.objects.filter(organization_id=self.organization_id, code='2000').first()
+                            root_id = rules.get('automation', {}).get('supplierRoot') or rules.get('purchases', {}).get('payable')
+                        if root_id:
+                            parent = ChartOfAccount.objects.filter(id=root_id, organization_id=self.organization_id).first()
+                        if not parent:
+                            # Last resort: find any root-level COA of the appropriate type
+                            parent_type = 'ASSET' if account_type in ['BANK', 'CASH', 'MOBILE', 'PETTY_CASH'] else 'LIABILITY'
+                            parent = ChartOfAccount.objects.filter(
+                                organization_id=self.organization_id, type=parent_type, parent__isnull=True
+                            ).first()
                     
                     if parent:
                         # Find next available code
@@ -323,37 +335,48 @@ class MigrationFinanceMixin:
         # Initialize JOURNAL_ENTRY map
         self.id_maps.setdefault('JOURNAL_ENTRY', {})
 
-        # Ensure we have default CoA accounts for journal entries
-        default_coa, _ = ChartOfAccount.objects.get_or_create(
-            organization_id=self.organization_id,
-            code='5700',
-            defaults={
-                'name': 'Cash & Bank (Migration)',
-                'type': 'ASSET',
-                'sub_type': 'CASH',
-                'description': 'Auto-created during migration for account transaction entries',
-            }
-        )
+        # Resolve COA accounts from posting rules instead of hardcoding
+        from erp.services import ConfigurationService
+        from erp.models import Organization
+        org = Organization.objects.get(id=self.organization_id)
+        rules = ConfigurationService.get_posting_rules(org)
 
-        revenue_coa, _ = ChartOfAccount.objects.get_or_create(
-            organization_id=self.organization_id,
-            code='7000',
-            defaults={
-                'name': 'Revenue (Migration)',
-                'type': 'REVENUE',
-                'description': 'Auto-created during migration for income entries',
-            }
-        )
+        # Cash/Bank default COA
+        cash_coa_id = rules.get('sales', {}).get('receivable')  # fallback for cash-side
+        if not cash_coa_id:
+            # Try to find any ASSET root
+            default_coa = ChartOfAccount.objects.filter(
+                organization_id=self.organization_id, type='ASSET', parent__isnull=True
+            ).first()
+            if not default_coa:
+                self._log_error("Migration journal entries require at least one ASSET COA. Configure posting rules.")
+                return
+        else:
+            default_coa = ChartOfAccount.objects.filter(id=cash_coa_id, organization_id=self.organization_id).first()
 
-        expense_coa, _ = ChartOfAccount.objects.get_or_create(
-            organization_id=self.organization_id,
-            code='6000',
-            defaults={
-                'name': 'Expenses (Migration)',
-                'type': 'EXPENSE',
-                'description': 'Auto-created during migration for expense entries',
-            }
-        )
+        # Revenue COA
+        revenue_coa_id = rules.get('sales', {}).get('revenue')
+        if revenue_coa_id:
+            revenue_coa = ChartOfAccount.objects.filter(id=revenue_coa_id, organization_id=self.organization_id).first()
+        else:
+            revenue_coa = ChartOfAccount.objects.filter(
+                organization_id=self.organization_id, type='REVENUE', parent__isnull=True
+            ).first()
+        if not revenue_coa:
+            self._log_error("Migration journal entries require a Revenue COA. Configure sales.revenue in posting rules.")
+            return
+
+        # Expense COA
+        expense_coa_id = rules.get('purchases', {}).get('inventory')  # closest match for expense
+        if expense_coa_id:
+            expense_coa = ChartOfAccount.objects.filter(id=expense_coa_id, organization_id=self.organization_id).first()
+        else:
+            expense_coa = ChartOfAccount.objects.filter(
+                organization_id=self.organization_id, type='EXPENSE', parent__isnull=True
+            ).first()
+        if not expense_coa:
+            self._log_error("Migration journal entries require an Expense COA. Configure purchases.inventory in posting rules.")
+            return
 
         # Build account → CoA mapping
         # Each FinancialAccount might have a ledger_account, use it; otherwise use default

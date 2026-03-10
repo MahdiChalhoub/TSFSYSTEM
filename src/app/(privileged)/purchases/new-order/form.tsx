@@ -152,7 +152,11 @@ export default function FormalOrderForm({
     useEffect(() => {
         if (selectedSiteId) {
             const site = safeSites.find(s => s.id === Number(selectedSiteId));
-            const whs = Array.isArray(site?.warehouses) ? site.warehouses : [];
+            const children = Array.isArray(site?.warehouses) ? site.warehouses : [];
+            // If branch has children, show them; otherwise fall back to the site itself
+            const whs = children.length > 0
+                ? children
+                : (site ? [{ id: site.id, name: `${site.name} (Main)` }] : []);
             setAvailableWarehouses(whs);
             if (whs.length > 0) setSelectedWarehouseId(whs[0].id);
             else setSelectedWarehouseId('');

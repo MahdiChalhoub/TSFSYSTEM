@@ -188,8 +188,210 @@ class SettingsViewSet(viewsets.ViewSet):
         organization = Organization.objects.get(id=organization_id)
         
         if request.method == 'POST':
-            ConfigurationService.save_posting_rules(organization, request.data)
-            return Response({"message": "Posting rules saved successfully"})
+            new_config = request.data
+            old_config = ConfigurationService.get_posting_rules(organization)
+            reclassify = request.query_params.get('reclassify', 'false').lower() == 'true'
+            dry_run = request.query_params.get('dry_run', 'false').lower() == 'true'
+
+            # ── Change Impact Analysis ──
+            changes = []
+            for section_key, section_fields in new_config.items():
+                if not isinstance(section_fields, dict):
+                    continue
+                old_section = old_config.get(section_key, {})
+                if not isinstance(old_section, dict):
+                    old_section = {}
+                for field_key, new_val in section_fields.items():
+                    old_val = old_section.get(field_key)
+                    # Normalize: treat empty string and None as equal
+                    n = new_val if new_val else None
+                    o = old_val if old_val else None
+                    if n != o and o is not None:
+                        changes.append({
+                            'section': section_key,
+                            'field': field_key,
+                            'old_account_id': o,
+                            'new_account_id': n,
+                        })
+
+            # Build impact report for each change
+            impact = []
+            if changes:
+                try:
+                    from apps.finance.models import ChartOfAccount, JournalEntryLine
+                    for change in changes:
+                        old_id = change['old_account_id']
+                        new_id = change['new_account_id']
+                        old_acc = ChartOfAccount.objects.filter(id=old_id, organization=organization).first()
+                        new_acc = ChartOfAccount.objects.filter(id=new_id, organization=organization).first() if new_id else None
+
+                        # Special handling for automation root accounts
+                        if change['field'] in ('customerRoot', 'supplierRoot', 'payrollRoot'):
+                            child_count = ChartOfAccount.objects.filter(
+                                parent=old_acc, organization=organization
+                            ).count() if old_acc else 0
+                            entry = {
+                                'rule': f"{change['section']}.{change['field']}",
+                                'old_account': f"{old_acc.code} — {old_acc.name}" if old_acc else str(old_id),
+                                'new_account': f"{new_acc.code} — {new_acc.name}" if new_acc else '(unmapped)',
+                                'journal_entries': 0,
+                                'balance': 0,
+                                'child_accounts': child_count,
+                                'risk': 'HIGH' if child_count > 0 else 'LOW',
+                            }
+                            impact.append(entry)
+                            continue
+
+                        # Count JE lines on old account
+                        je_count = JournalEntryLine.objects.filter(
+                            account_id=old_id,
+                            journal_entry__organization=organization
+                        ).count()
+
+                        # Get balance
+                        from django.db.models import Sum as _Sum
+                        from decimal import Decimal
+                        agg = JournalEntryLine.objects.filter(
+                            account_id=old_id,
+                            journal_entry__organization=organization
+                        ).aggregate(
+                            total_debit=_Sum('debit'),
+                            total_credit=_Sum('credit')
+                        )
+                        balance = (agg['total_debit'] or Decimal('0')) - (agg['total_credit'] or Decimal('0'))
+
+                        entry = {
+                            'rule': f"{change['section']}.{change['field']}",
+                            'old_account': f"{old_acc.code} — {old_acc.name}" if old_acc else str(old_id),
+                            'new_account': f"{new_acc.code} — {new_acc.name}" if new_acc else '(unmapped)',
+                            'journal_entries': je_count,
+                            'balance': float(balance),
+                            'risk': 'HIGH' if je_count > 0 and abs(balance) > 0.01 else 'LOW',
+                        }
+                        impact.append(entry)
+                except ImportError:
+                    pass  # Finance module not installed
+
+            # Dry run: return impact analysis without saving
+            if dry_run:
+                return Response({
+                    'changes': len(changes),
+                    'impact': impact,
+                    'has_high_risk': any(i['risk'] == 'HIGH' for i in impact),
+                    'message': 'Dry run — no changes saved. Review impact before confirming.',
+                })
+
+            # ── Reclassification JEs ──
+            reclass_results = []
+            if reclassify and changes:
+                try:
+                    from apps.finance.models import ChartOfAccount, JournalEntryLine
+                    from apps.finance.services import LedgerService
+                    from django.db.models import Sum as _Sum
+                    from decimal import Decimal
+
+                    for change in changes:
+                        old_id = change['old_account_id']
+                        new_id = change['new_account_id']
+                        if not new_id:
+                            continue
+
+                        # ── Special: Parent account re-linking for automation roots ──
+                        if change['field'] in ('customerRoot', 'supplierRoot', 'payrollRoot'):
+                            try:
+                                old_parent = ChartOfAccount.objects.filter(id=old_id, organization=organization).first()
+                                new_parent = ChartOfAccount.objects.filter(id=new_id, organization=organization).first()
+                                if old_parent and new_parent:
+                                    children = ChartOfAccount.objects.filter(parent=old_parent, organization=organization)
+                                    moved = 0
+                                    for idx, child in enumerate(children):
+                                        child.parent = new_parent
+                                        child.code = f"{new_parent.code}-{(idx + 1):04d}"
+                                        child.save(update_fields=['parent', 'code'])
+                                        moved += 1
+                                    reclass_results.append({
+                                        'rule': f"{change['section']}.{change['field']}",
+                                        'status': 'relinked',
+                                        'message': f"Moved {moved} sub-account(s) from {old_parent.code} to {new_parent.code}",
+                                    })
+                            except Exception as e:
+                                reclass_results.append({
+                                    'rule': f"{change['section']}.{change['field']}",
+                                    'status': 'error',
+                                    'error': f"Parent re-link failed: {e}",
+                                })
+                            continue  # No JE needed for parent re-linking
+
+                        agg = JournalEntryLine.objects.filter(
+                            account_id=old_id,
+                            journal_entry__organization=organization
+                        ).aggregate(
+                            total_debit=_Sum('debit'),
+                            total_credit=_Sum('credit')
+                        )
+                        balance = (agg['total_debit'] or Decimal('0')) - (agg['total_credit'] or Decimal('0'))
+
+                        if abs(balance) < Decimal('0.01'):
+                            reclass_results.append({
+                                'rule': f"{change['section']}.{change['field']}",
+                                'status': 'skipped',
+                                'reason': 'Zero balance — no reclassification needed.',
+                            })
+                            continue
+
+                        # Post reclassification: move balance from old to new
+                        lines = []
+                        if balance > 0:
+                            lines = [
+                                {'account_id': new_id, 'debit': balance, 'credit': Decimal('0'),
+                                 'description': f"Reclassification from {change['section']}.{change['field']}"},
+                                {'account_id': old_id, 'debit': Decimal('0'), 'credit': balance,
+                                 'description': f"Reclassification to new posting rule account"},
+                            ]
+                        else:
+                            abs_bal = abs(balance)
+                            lines = [
+                                {'account_id': new_id, 'debit': Decimal('0'), 'credit': abs_bal,
+                                 'description': f"Reclassification from {change['section']}.{change['field']}"},
+                                {'account_id': old_id, 'debit': abs_bal, 'credit': Decimal('0'),
+                                 'description': f"Reclassification to new posting rule account"},
+                            ]
+
+                        try:
+                            je = LedgerService.create_journal_entry(
+                                organization=organization,
+                                transaction_date=timezone.now().date(),
+                                description=f"Posting Rule Reclassification: {change['section']}.{change['field']}",
+                                lines=lines,
+                                reference=f"RECLASS-{change['section']}-{change['field']}",
+                                status='POSTED',
+                                scope='OFFICIAL',
+                                internal_bypass=True,
+                            )
+                            reclass_results.append({
+                                'rule': f"{change['section']}.{change['field']}",
+                                'status': 'posted',
+                                'je_id': str(je.id) if je else None,
+                                'amount': float(abs(balance)),
+                            })
+                        except Exception as e:
+                            reclass_results.append({
+                                'rule': f"{change['section']}.{change['field']}",
+                                'status': 'error',
+                                'error': str(e),
+                            })
+                except ImportError:
+                    pass  # Finance module not installed
+
+            # ── Save ──
+            ConfigurationService.save_posting_rules(organization, new_config)
+
+            response = {"message": "Posting rules saved successfully"}
+            if impact:
+                response['impact'] = impact
+            if reclass_results:
+                response['reclassifications'] = reclass_results
+            return Response(response)
         
         rules = ConfigurationService.get_posting_rules(organization)
         return Response(rules)

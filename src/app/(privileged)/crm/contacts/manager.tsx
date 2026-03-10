@@ -35,11 +35,13 @@ export default function RelationshipMasterList({
   sites,
   deliveryZones = [],
   taxProfiles = [],
+  contactTags = [],
 }: {
   contacts: Contact[],
   sites: Record<string, any>[],
   deliveryZones?: Record<string, any>[],
   taxProfiles?: Record<string, any>[],
+  contactTags?: Record<string, any>[],
 }) {
   const { fmt } = useCurrency();
   const router = useRouter();
@@ -317,9 +319,12 @@ export default function RelationshipMasterList({
             {
               key: 'type', label: 'Classification', type: 'select', options: [
                 { value: 'ALL', label: 'All Segments' },
-                { value: 'CUSTOMER', label: 'Customer Base' },
-                { value: 'SUPPLIER', label: 'Supply Chain' },
-                { value: 'LEAD', label: 'Potential Leads' },
+                { value: 'CUSTOMER', label: 'Customers' },
+                { value: 'SUPPLIER', label: 'Suppliers' },
+                { value: 'LEAD', label: 'Leads' },
+                { value: 'CONTACT', label: 'Address Book' },
+                { value: 'SERVICE', label: 'Service Providers' },
+                { value: 'PARTNER', label: 'Partners' },
               ]
             },
             {

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Save, Info, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3, Shield, Landmark, Receipt, Truck } from 'lucide-react'
-import { savePostingRules, PostingRulesConfig } from '@/app/actions/finance/posting-rules'
+import { Save, Info, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3, Shield, Landmark, Receipt, Truck, AlertTriangle, ArrowRight, X } from 'lucide-react'
+import { savePostingRules, savePostingRulesWithReclassification, analyzePostingRulesImpact, PostingRulesConfig, PostingRuleImpact } from '@/app/actions/finance/posting-rules'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -16,7 +16,7 @@ export default function PostingRulesForm({
     const [config, setConfig] = useState<PostingRulesConfig>(() => {
         const defaults: PostingRulesConfig = {
             sales: { receivable: null, revenue: null, cogs: null, inventory: null, round_off: null, discount: null, vat_collected: null },
-            purchases: { payable: null, inventory: null, vat_recoverable: null, airsi_payable: null, reverse_charge_vat: null, discount_earned: null, delivery_fees: null, airsi: null },
+            purchases: { payable: null, inventory: null, expense: null, vat_recoverable: null, vat_suspense: null, airsi_payable: null, reverse_charge_vat: null, discount_earned: null, delivery_fees: null, airsi: null },
             inventory: { adjustment: null, transfer: null },
             automation: { customerRoot: null, supplierRoot: null, payrollRoot: null },
             fixedAssets: { depreciationExpense: null, accumulatedDepreciation: null },
@@ -42,12 +42,46 @@ export default function PostingRulesForm({
     })
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
+    const [impactDialog, setImpactDialog] = useState<{ impacts: PostingRuleImpact[], hasHighRisk: boolean } | null>(null)
 
     const handleSave = () => {
         startTransition(async () => {
-            await savePostingRules(config)
+            // Step 1: Analyze impact (dry run)
+            const analysis = await analyzePostingRulesImpact(config)
+
+            if (analysis.has_high_risk && analysis.impact && analysis.impact.length > 0) {
+                // Show impact dialog for user decision
+                setImpactDialog({
+                    impacts: analysis.impact,
+                    hasHighRisk: true,
+                })
+                return
+            }
+
+            // No risky changes — save directly
+            const result = await savePostingRules(config)
             router.refresh()
-            toast.success('Posting rules updated successfully!')
+            if (result.impact && result.impact.length > 0) {
+                toast.success(`Posting rules updated! ${result.impact.length} account(s) changed (no balance impact).`)
+            } else {
+                toast.success('Posting rules updated successfully!')
+            }
+        })
+    }
+
+    const handleConfirmSave = (reclassify: boolean) => {
+        setImpactDialog(null)
+        startTransition(async () => {
+            if (reclassify) {
+                const result = await savePostingRulesWithReclassification(config)
+                router.refresh()
+                const posted = result.reclassifications?.filter(r => r.status === 'posted').length || 0
+                toast.success(`Posting rules saved! ${posted} reclassification JE(s) posted to sweep balances.`)
+            } else {
+                await savePostingRules(config)
+                router.refresh()
+                toast.warning('Posting rules saved WITHOUT reclassification. Old balances remain on previous accounts.')
+            }
         })
     }
 
@@ -71,7 +105,9 @@ export default function PostingRulesForm({
         // Purchases
         newConfig.purchases.payable = find('2100.1') || find('2100') || find('401') || find('2101')
         newConfig.purchases.inventory = find('5101') || find('6011') || find('607') || find('1121')
+        newConfig.purchases.expense = find('6011') || find('601') || find('60')
         newConfig.purchases.vat_recoverable = find('2112') || find('4456') || find('445')
+        newConfig.purchases.vat_suspense = find('2113') || find('4458') || find('44586')
         newConfig.purchases.airsi_payable = find('2113') || find('4471')
         newConfig.purchases.reverse_charge_vat = find('2114') || find('4452')
         newConfig.purchases.discount_earned = find('7190') || find('609')
@@ -245,6 +281,12 @@ export default function PostingRulesForm({
                         <AccountSelect label="Delivery Fees" value={config.purchases.delivery_fees}
                             onChange={(id) => set('purchases', 'delivery_fees', id)}
                             description="Freight and transport costs on purchases." />
+                        <AccountSelect label="Purchase Expense" value={config.purchases.expense}
+                            onChange={(id) => set('purchases', 'expense', id)}
+                            description="General purchase expense account for non-inventory items." />
+                        <AccountSelect label="VAT Suspense (Cash-Basis)" value={config.purchases.vat_suspense}
+                            onChange={(id) => set('purchases', 'vat_suspense', id)}
+                            description="Holds VAT until payment is made (cash-basis accounting only)." />
                     </div>
                 </section>
 
@@ -363,6 +405,106 @@ export default function PostingRulesForm({
                     </p>
                 </div>
             </div>
+
+            {/* ═══════ Impact Analysis Dialog ═══════ */}
+            {impactDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-app-surface rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border border-app-border">
+                        {/* Header */}
+                        <div className="p-6 border-b border-app-border bg-app-warning-bg flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-app-warning/20 p-2 rounded-xl">
+                                    <AlertTriangle className="text-app-warning" size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-app-foreground text-lg">Account Change Detected</h3>
+                                    <p className="text-xs text-app-muted-foreground mt-0.5">
+                                        {impactDialog.impacts.filter(i => i.risk === 'HIGH').length} rule(s) have existing journal entries and balances that will be affected.
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => setImpactDialog(null)} className="p-1 hover:bg-app-surface rounded-lg transition-colors">
+                                <X size={18} className="text-app-muted-foreground" />
+                            </button>
+                        </div>
+
+                        {/* Impact Table */}
+                        <div className="overflow-y-auto flex-1 p-6">
+                            <div className="space-y-3">
+                                {impactDialog.impacts.map((impact, i) => (
+                                    <div key={i} className={`p-4 rounded-2xl border ${impact.risk === 'HIGH'
+                                            ? 'border-app-error/30 bg-app-error-bg'
+                                            : 'border-app-border bg-app-background'
+                                        }`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-bold text-xs text-app-muted-foreground uppercase tracking-widest">
+                                                {impact.rule}
+                                            </span>
+                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${impact.risk === 'HIGH'
+                                                    ? 'bg-app-error text-white'
+                                                    : 'bg-app-surface-2 text-app-muted-foreground'
+                                                }`}>
+                                                {impact.risk} risk
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-sm">
+                                            <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
+                                                <span className="text-[10px] text-app-muted-foreground uppercase block">Old</span>
+                                                <span className="font-medium text-app-foreground text-xs">{impact.old_account}</span>
+                                            </div>
+                                            <ArrowRight size={16} className="text-app-muted-foreground flex-shrink-0" />
+                                            <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
+                                                <span className="text-[10px] text-app-muted-foreground uppercase block">New</span>
+                                                <span className="font-medium text-app-foreground text-xs">{impact.new_account}</span>
+                                            </div>
+                                        </div>
+                                        {impact.risk === 'HIGH' && (
+                                            <div className="mt-3 flex items-center gap-4 text-xs">
+                                                <span className="text-app-error font-bold">
+                                                    {impact.journal_entries} journal entries on old account
+                                                </span>
+                                                <span className="text-app-error font-bold">
+                                                    Balance: {impact.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-6 border-t border-app-border bg-app-background space-y-3">
+                            <button
+                                onClick={() => handleConfirmSave(true)}
+                                disabled={isPending}
+                                className="w-full bg-app-primary text-white py-3 rounded-2xl font-bold text-sm hover:bg-app-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                <Save size={16} />
+                                Save &amp; Reclassify Balances (Recommended)
+                            </button>
+                            <p className="text-[10px] text-app-muted-foreground text-center leading-relaxed">
+                                This will post reclassification journal entries to sweep existing balances from the old accounts to the new ones.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => handleConfirmSave(false)}
+                                    disabled={isPending}
+                                    className="flex-1 bg-app-surface border border-app-border text-app-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all disabled:opacity-50"
+                                >
+                                    Save Without Reclassify
+                                </button>
+                                <button
+                                    onClick={() => setImpactDialog(null)}
+                                    className="flex-1 bg-app-surface border border-app-border text-app-muted-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

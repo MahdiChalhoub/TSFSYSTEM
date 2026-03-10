@@ -299,15 +299,11 @@ class MigrationReviewMixin:
                                 rules.get('sales', {}).get('receivable')
         
         if not parent_account_id:
-            # Fallback to well-known codes
-            fallback_code = '1110' if contact_type == 'CUSTOMER' else '2101'
-            parent = ChartOfAccount.objects.filter(organization=organization, code=fallback_code).first()
-            if parent:
-                parent_account_id = parent.id
-        
-        if not parent_account_id:
-            return Response({'error': 'Cannot determine COA parent. Configure posting rules first.'}, 
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': f'Cannot determine COA parent for {contact_type}. '
+                         f'Configure posting rules first: automation.customerRoot / automation.supplierRoot '
+                         f'(Finance → Settings → Posting Rules).'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             parent_coa = ChartOfAccount.objects.get(id=parent_account_id)

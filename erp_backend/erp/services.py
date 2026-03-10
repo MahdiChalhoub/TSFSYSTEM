@@ -144,7 +144,7 @@ class ConfigurationService:
         """Read posting rules from Organization.settings JSON."""
         default_config = {
             "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None, "vat_collected": None},
-            "purchases": {"payable": None, "inventory": None, "vat_recoverable": None, "airsi_payable": None, "reverse_charge_vat": None, "discount_earned": None, "delivery_fees": None, "airsi": None},
+            "purchases": {"payable": None, "inventory": None, "expense": None, "vat_recoverable": None, "vat_suspense": None, "airsi_payable": None, "reverse_charge_vat": None, "discount_earned": None, "delivery_fees": None, "airsi": None},
             "inventory": {"adjustment": None, "transfer": None},
             "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},
             "fixedAssets": {"depreciationExpense": None, "accumulatedDepreciation": None},
@@ -218,22 +218,56 @@ class ConfigurationService:
         def find(code):
             acc = accounts.filter(code=code).first()
             return acc.id if acc else None
+
+        # ── Sales ──
         config['sales']['receivable'] = find('1110') or find('1300') or find('411') or find('41') or config['sales']['receivable']
         config['sales']['revenue'] = find('4100') or find('701') or find('70') or config['sales']['revenue']
         config['sales']['cogs'] = find('5100') or find('601') or find('60') or config['sales']['cogs']
         config['sales']['inventory'] = find('1120') or find('31') or find('37') or config['sales']['inventory']
+        config['sales']['round_off'] = find('6589') or find('7589') or find('758') or config['sales']['round_off']
+        config['sales']['discount'] = find('6190') or find('709') or config['sales']['discount']
+        config['sales']['vat_collected'] = find('2111') or find('4457') or find('443') or config['sales']['vat_collected']
+
+        # ── Purchases ──
         config['purchases']['payable'] = find('2101') or find('401') or find('40') or config['purchases']['payable']
         config['purchases']['inventory'] = find('1120') or find('31') or find('37') or find('607') or config['purchases']['inventory']
-        config['purchases']['vat_recoverable'] = find('2111') or find('4456') or find('445') or config['purchases']['vat_recoverable']
+        config['purchases']['expense'] = find('6011') or find('601') or find('60') or config['purchases']['expense']
+        config['purchases']['vat_recoverable'] = find('2112') or find('4456') or find('445') or config['purchases']['vat_recoverable']
+        config['purchases']['vat_suspense'] = find('2113') or find('4458') or find('44586') or config['purchases']['vat_suspense']
+        config['purchases']['airsi_payable'] = find('2113') or find('4471') or config['purchases']['airsi_payable']
+        config['purchases']['reverse_charge_vat'] = find('2114') or find('4452') or config['purchases']['reverse_charge_vat']
+        config['purchases']['discount_earned'] = find('7190') or find('609') or config['purchases']['discount_earned']
+        config['purchases']['delivery_fees'] = find('6241') or find('624') or config['purchases']['delivery_fees']
+
+        # ── Inventory ──
         config['inventory']['adjustment'] = find('5104') or find('708') or find('709') or config['inventory']['adjustment']
         config['inventory']['transfer'] = find('1120') or find('31') or config['inventory']['transfer']
-        config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
-        config['tax']['vat_payable'] = find('2111') or find('4457') or config['tax']['vat_payable']
-        
+
+        # ── Suspense ──
+        config['suspense']['reception'] = find('2102') or find('9004') or find('380') or find('471') or config['suspense']['reception']
+
+        # ── Tax ──
+        config['tax']['vat_payable'] = find('2110') or find('4455') or find('443') or config['tax']['vat_payable']
+        config['tax']['vat_refund_receivable'] = find('2115') or find('4458') or config['tax']['vat_refund_receivable']
+
+        # ── Automation ──
         config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or find('41') or config['automation']['customerRoot']
         config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or find('40') or config['automation']['supplierRoot']
         config['automation']['payrollRoot'] = find('2200') or find('421') or find('42') or config['automation']['payrollRoot']
-        
+
+        # ── Fixed Assets ──
+        config['fixedAssets']['depreciationExpense'] = find('681') or find('6109') or find('6302') or config['fixedAssets']['depreciationExpense']
+        config['fixedAssets']['accumulatedDepreciation'] = find('1210') or find('1211') or find('281') or config['fixedAssets']['accumulatedDepreciation']
+
+        # ── Partners ──
+        config['partners']['capital'] = find('3100') or find('101') or config['partners']['capital']
+        config['partners']['loan'] = find('1680') or find('168') or config['partners']['loan']
+        config['partners']['withdrawal'] = find('3200') or find('108') or config['partners']['withdrawal']
+
+        # ── Equity ──
+        config['equity']['capital'] = find('3100') or find('101') or config['equity']['capital']
+        config['equity']['draws'] = find('3200') or find('108') or find('129') or config['equity']['draws']
+
         ConfigurationService.save_posting_rules(organization, config)
         return config
 

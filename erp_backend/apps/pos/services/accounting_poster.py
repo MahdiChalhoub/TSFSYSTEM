@@ -9,66 +9,81 @@ Transitions handled:
   post_payment()       → On PAID (CREDIT):   Dr Cash/Bank, Cr A/R
   post_return()        → On RETURN:          Full reversal of confirmation + re-stock COGS
 
-All postings are wrapped in try/except so they NEVER block workflow transitions.
-Call them from SalesWorkflowService._log() or action methods.
-
-SYSCOHADA GL Account Codes:
-  411  Clients (Accounts Receivable)
-  701  Ventes de marchandises (Revenue — COGS items)
-  443  TVA facturée sur ventes (VAT Payable)
-  601  Achats / Coût des marchandises vendues (COGS)
-  311  Marchandises (Inventory)
-  521  Banque / Caisse (Cash/Bank — resolved from payment method)
+All COA accounts are resolved dynamically from posting rules.
 """
 from decimal import Decimal
 import logging
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger('erp.sales_accounting')
 
-# ── SYSCOHADA code registry ────────────────────────────────────────────────────
-# All codes below must exist in ChartOfAccount for the org (applied via COA template).
-_COA = {
-    'AR':            '411',   # Accounts Receivable — Clients
-    'REVENUE':       '701',   # Ventes de marchandises HT
-    'VAT_PAYABLE':   '443',   # TVA collectée sur ventes
-    'COGS':          '601',   # Coût des marchandises vendues
-    'INVENTORY':     '311',   # Marchandises en stock
-    'CASH':          '571',   # Caisse (cash drawer)
-    'BANK':          '521',   # Banque
-    'MOBILE':        '562',   # Portefeuille mobile (Wave, Orange Money)
-    'AIRSI_PAYABLE': '447',   # AIRSI collecté à reverser
-}
 
-# Payment method → COA code
-_PM_TO_COA = {
-    'CASH':         '571',
-    'WAVE':         '562',
-    'ORANGE_MONEY': '562',
-    'MTN_MOBILE':   '562',
-    'MOBILE':       '562',
-    'BANK':         '521',
-    'CREDIT':       '411',   # On credit → stays in A/R until reconciled
-}
+def _resolve_accounts(organization):
+    """
+    Resolve all required COA account IDs from posting rules.
+    Returns a dict with resolved IDs. Raises ValidationError for missing critical rules.
+    """
+    from erp.services import ConfigurationService
+    rules = ConfigurationService.get_posting_rules(organization)
+
+    sales = rules.get('sales', {})
+    purchases = rules.get('purchases', {})
+    tax = rules.get('tax', {})
+
+    resolved = {
+        'AR':            sales.get('receivable'),
+        'REVENUE':       sales.get('revenue'),
+        'VAT_PAYABLE':   sales.get('vat_collected') or tax.get('vat_payable'),
+        'COGS':          sales.get('cogs'),
+        'INVENTORY':     sales.get('inventory'),
+        'AIRSI_PAYABLE': purchases.get('airsi_payable'),
+    }
+    return resolved
 
 
-def _get_account(organization, code: str):
-    """Return ChartOfAccount for this org by code. Returns None if not found."""
-    from apps.finance.models import ChartOfAccount
-    return ChartOfAccount.objects.filter(
-        organization=organization, code=code, is_active=True
+def _resolve_payment_account(organization, payment_method):
+    """
+    Resolve the cash/bank ledger account for a given payment method.
+    Uses the organization's financial accounts and posting rules.
+    """
+    from erp.services import ConfigurationService
+    from apps.finance.models import FinancialAccount
+
+    method_upper = (payment_method or 'CASH').upper()
+
+    # CREDIT method → use A/R (receivable)
+    if method_upper == 'CREDIT':
+        rules = ConfigurationService.get_posting_rules(organization)
+        return rules.get('sales', {}).get('receivable')
+
+    # Try to match a financial account by name/type
+    type_map = {
+        'CASH': 'CASH',
+        'BANK': 'BANK',
+        'WAVE': 'MOBILE',
+        'ORANGE_MONEY': 'MOBILE',
+        'MTN_MOBILE': 'MOBILE',
+        'MOBILE': 'MOBILE',
+    }
+    account_type = type_map.get(method_upper, 'CASH')
+
+    fa = FinancialAccount.objects.filter(
+        organization=organization, type=account_type
     ).first()
+    if fa and fa.ledger_account_id:
+        return fa.ledger_account_id
 
-
-def _acc_id(organization, code: str):
-    """Return account.id or None."""
-    acc = _get_account(organization, code)
-    return acc.id if acc else None
+    # Ultimate fallback: use first available financial account
+    fa = FinancialAccount.objects.filter(
+        organization=organization, ledger_account_id__isnull=False
+    ).first()
+    return fa.ledger_account_id if fa else None
 
 
 class SalesAccountingPoster:
     """
     Stateless service. All methods are class methods.
-    Each method is independently safe — exceptions are logged, never re-raised.
+    All COA accounts are resolved dynamically from posting rules.
     """
 
     @classmethod
@@ -77,10 +92,10 @@ class SalesAccountingPoster:
         On ORDER_CONFIRMED / checkout:
 
         Official scope only (INTERNAL orders use TTC cost — no customer AR posting):
-          Dr  411 Clients (A/R)       ← total_amount (TTC)
-            Cr  701 Ventes HT           ← subtotal_ht
-            Cr  443 TVA facturée         ← tax_amount
-            Cr  447 AIRSI collecté       ← sum of airsi_withheld per line (if any)
+          Dr  A/R (Receivable)        ← total_amount (TTC)
+            Cr  Revenue (HT)            ← subtotal_ht
+            Cr  VAT Payable             ← tax_amount
+            Cr  AIRSI Payable           ← sum of airsi_withheld per line (if any)
 
         If INTERNAL scope: skip (cost handled via inventory deduction at checkout).
         """
@@ -90,13 +105,14 @@ class SalesAccountingPoster:
         organization = order.organization
         try:
             from apps.finance.services.ledger_service import LedgerService
-            from apps.finance.services.base_services import SequenceService
             from django.utils import timezone
+
+            accounts = _resolve_accounts(organization)
 
             total_ttc  = Decimal(str(order.total_amount  or '0'))
             tax_amt    = Decimal(str(order.tax_amount   or '0'))
-            # HT = TTC - VAT  (Order has no subtotal_ht field)
             subtotal_ht = (total_ttc - tax_amt).quantize(Decimal('0.01'))
+
             # AIRSI: sum per line
             airsi_total = Decimal('0')
             try:
@@ -108,17 +124,21 @@ class SalesAccountingPoster:
             if total_ttc <= Decimal('0'):
                 return False
 
-            ar_id       = _acc_id(organization, _COA['AR'])
-            revenue_id  = _acc_id(organization, _COA['REVENUE'])
-            vat_id      = _acc_id(organization, _COA['VAT_PAYABLE'])
-            airsi_id    = _acc_id(organization, _COA['AIRSI_PAYABLE']) if airsi_total else None
+            ar_id       = accounts['AR']
+            revenue_id  = accounts['REVENUE']
+            vat_id      = accounts['VAT_PAYABLE']
+            airsi_id    = accounts['AIRSI_PAYABLE'] if airsi_total else None
 
-            if not ar_id or not revenue_id:
-                logger.warning(
-                    f"[SalesAccountingPoster] Skipping confirmation posting for order {order.id}: "
-                    f"411 or 701 account not found in COA."
+            if not ar_id:
+                raise ValidationError(
+                    "Cannot post order confirmation: 'Accounts Receivable' not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
                 )
-                return False
+            if not revenue_id:
+                raise ValidationError(
+                    "Cannot post order confirmation: 'Revenue' account not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
+                )
 
             lines = [
                 # Dr A/R for full TTC
@@ -129,33 +149,33 @@ class SalesAccountingPoster:
                 # Cr Revenue (HT)
                 {'account_id': revenue_id,
                  'debit': Decimal('0'), 'credit': subtotal_ht,
-                 'description': f"Ventes HT — {order.invoice_number or order.ref_code}"},
+                 'description': f"Revenue HT — {order.invoice_number or order.ref_code}"},
             ]
 
             # Cr VAT Payable
             if vat_id and tax_amt > Decimal('0'):
                 lines.append({'account_id': vat_id,
                                'debit': Decimal('0'), 'credit': tax_amt,
-                               'description': f"TVA collectée — {order.invoice_number or order.ref_code}"})
+                               'description': f"VAT collected — {order.invoice_number or order.ref_code}"})
             elif tax_amt > Decimal('0'):
-                # No VAT account — add to revenue credit to balance
+                # No VAT account — fold into revenue to balance
                 lines[1]['credit'] += tax_amt
-                logger.warning(f"[SalesAccountingPoster] 443 account missing — VAT folded into revenue for order {order.id}")
+                logger.warning(f"[SalesAccountingPoster] VAT account missing — VAT folded into revenue for order {order.id}")
 
             # Cr AIRSI Payable
             if airsi_id and airsi_total > Decimal('0'):
                 lines.append({'account_id': airsi_id,
                                'debit': Decimal('0'), 'credit': airsi_total,
-                               'description': f"AIRSI collecté — {order.invoice_number or order.ref_code}"})
+                               'description': f"AIRSI collected — {order.invoice_number or order.ref_code}"})
 
-            # Balance check — top up or trim last credit line to guarantee balance
+            # Balance check
             cls._ensure_balance(lines)
 
             ref = f"CONF-{order.invoice_number or order.id}-{order.scope}"
             LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=order.confirmed_at or timezone.now(),
-                description=f"Vente confirmée — {order.invoice_number or order.ref_code}",
+                description=f"Sale confirmed — {order.invoice_number or order.ref_code}",
                 lines=lines,
                 reference=ref,
                 status='POSTED',
@@ -164,11 +184,12 @@ class SalesAccountingPoster:
                 user=user,
                 internal_bypass=True,
             )
-            # Store reference on order for later reversal
             cls._store_je_ref(order, 'confirmation_ref', ref)
             logger.info(f"[SalesAccountingPoster] Confirmation JE posted for order {order.id}: {ref}")
             return True
 
+        except ValidationError:
+            raise  # Let validation errors propagate — these are configuration issues
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_confirmation failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -177,11 +198,8 @@ class SalesAccountingPoster:
     def post_delivery_cogs(cls, order, user=None) -> bool:
         """
         On DELIVERED:
-          Dr  601 COGS           ← sum of effective_cost × qty per line
-            Cr  311 Inventory      ← same amount
-
-        Already partially handled by workflow_service._post_cogs_on_delivery().
-        This version uses the same pattern but via LedgerService for consistency.
+          Dr  COGS             ← sum of effective_cost × qty per line
+            Cr  Inventory        ← same amount
         """
         organization = order.organization
         try:
@@ -189,6 +207,8 @@ class SalesAccountingPoster:
             from django.utils import timezone
             from django.db.models import F, Sum as _Sum, ExpressionWrapper
             from django.db.models import DecimalField as _DjDecF
+
+            accounts = _resolve_accounts(organization)
 
             cost_expr = ExpressionWrapper(F('effective_cost') * F('quantity'), output_field=_DjDecF(max_digits=18, decimal_places=4))
             cogs_total = (
@@ -200,22 +220,30 @@ class SalesAccountingPoster:
             if cogs_total <= Decimal('0'):
                 return False
 
-            cogs_id  = _acc_id(organization, _COA['COGS'])
-            inv_id   = _acc_id(organization, _COA['INVENTORY'])
-            if not cogs_id or not inv_id:
-                logger.warning(f"[SalesAccountingPoster] 601 or 311 missing — COGS posting skipped for order {order.id}")
-                return False
+            cogs_id  = accounts['COGS']
+            inv_id   = accounts['INVENTORY']
+
+            if not cogs_id:
+                raise ValidationError(
+                    "Cannot post delivery COGS: 'COGS' account not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
+                )
+            if not inv_id:
+                raise ValidationError(
+                    "Cannot post delivery COGS: 'Inventory Assets' account not configured in posting rules. "
+                    "Go to Finance → Settings → Posting Rules."
+                )
 
             ref = f"COGS-{order.invoice_number or order.id}"
             LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=order.delivered_at or timezone.now(),
-                description=f"COGS livraison — {order.invoice_number or order.ref_code}",
+                description=f"COGS delivery — {order.invoice_number or order.ref_code}",
                 lines=[
                     {'account_id': cogs_id,  'debit': cogs_total, 'credit': Decimal('0'),
                      'description': f"COGS — {order.invoice_number or order.ref_code}"},
                     {'account_id': inv_id,   'debit': Decimal('0'), 'credit': cogs_total,
-                     'description': f"Sortie stock — {order.invoice_number or order.ref_code}"},
+                     'description': f"Inventory relief — {order.invoice_number or order.ref_code}"},
                 ],
                 reference=ref,
                 status='POSTED',
@@ -228,6 +256,8 @@ class SalesAccountingPoster:
             logger.info(f"[SalesAccountingPoster] COGS JE posted for order {order.id}: {ref}")
             return True
 
+        except ValidationError:
+            raise
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_delivery_cogs failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -236,11 +266,10 @@ class SalesAccountingPoster:
     def post_payment(cls, order, user=None) -> bool:
         """
         On PAID (cash/mobile reconciliation):
-          Dr  571/562/521 Cash/Mobile/Bank   ← amount paid
-            Cr  411 A/R                        ← clears receivable
+          Dr  Cash/Mobile/Bank   ← amount paid
+            Cr  A/R                ← clears receivable
 
-        Skipped for non-CREDIT orders (cash was already received at checkout
-        — the A/R entry clears immediately via confirmation line swap).
+        Skipped for non-CREDIT orders (cash was already received at checkout).
         """
         organization = order.organization
         try:
@@ -248,23 +277,34 @@ class SalesAccountingPoster:
                 from apps.finance.services.ledger_service import LedgerService
                 from django.utils import timezone
 
+                accounts = _resolve_accounts(organization)
+
                 amount = Decimal(str(order.total_amount or '0'))
-                pm_code = _PM_TO_COA.get((order.payment_method or '').upper(), _COA['CASH'])
-                cash_id = _acc_id(organization, pm_code)
-                ar_id   = _acc_id(organization, _COA['AR'])
-                if not cash_id or not ar_id:
-                    return False
+                ar_id = accounts['AR']
+
+                if not ar_id:
+                    raise ValidationError(
+                        "Cannot post payment: 'Accounts Receivable' not configured in posting rules. "
+                        "Go to Finance → Settings → Posting Rules."
+                    )
+
+                cash_id = _resolve_payment_account(organization, order.payment_method)
+                if not cash_id:
+                    raise ValidationError(
+                        "Cannot post payment: No cash/bank financial account found. "
+                        "Create a Cash or Bank financial account first."
+                    )
 
                 ref = f"PAY-{order.invoice_number or order.id}"
                 LedgerService.create_journal_entry(
                     organization=organization,
                     transaction_date=timezone.now(),
-                    description=f"Encaissement — {order.invoice_number or order.ref_code}",
+                    description=f"Payment received — {order.invoice_number or order.ref_code}",
                     lines=[
                         {'account_id': cash_id, 'debit': amount, 'credit': Decimal('0'),
-                         'description': f"Encaissement {order.payment_method}"},
+                         'description': f"Payment {order.payment_method}"},
                         {'account_id': ar_id,   'debit': Decimal('0'), 'credit': amount,
-                         'description': f"Apurement A/R — {order.invoice_number or order.ref_code}"},
+                         'description': f"A/R cleared — {order.invoice_number or order.ref_code}"},
                     ],
                     reference=ref,
                     status='POSTED',
@@ -276,6 +316,8 @@ class SalesAccountingPoster:
                 logger.info(f"[SalesAccountingPoster] Payment JE posted for order {order.id}: {ref}")
             return True
 
+        except ValidationError:
+            raise
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_payment failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -330,7 +372,6 @@ class SalesAccountingPoster:
         total_cr = sum(Decimal(str(l['credit'])) for l in lines)
         diff = total_dr - total_cr
         if abs(diff) > Decimal('0') and abs(diff) <= Decimal('1'):
-            # Find last credit line and adjust
             for l in reversed(lines):
                 if l['credit'] > Decimal('0'):
                     l['credit'] = Decimal(str(l['credit'])) + diff
