@@ -74,7 +74,7 @@ class MigrationSetupMixin:
         from apps.storage.models import StoredFile
         # Create StoredFile record
         stored_file = StoredFile.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             original_filename=uploaded_file.name,
             storage_key=storage_key,
             bucket=bucket,
@@ -87,7 +87,7 @@ class MigrationSetupMixin:
 
         # Create migration job linked to stored_file
         job = MigrationJob.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             name=name,
             source_type='SQL_DUMP',
             stored_file=stored_file,
@@ -129,7 +129,7 @@ class MigrationSetupMixin:
 
         # Create migration job
         job = MigrationJob.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             name=name,
             source_type='SQL_DUMP',
             stored_file=stored_file,
@@ -153,7 +153,7 @@ class MigrationSetupMixin:
             org_id = request.headers.get('X-Tenant-Id') or org_id
 
         job = MigrationJob.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             name=serializer.validated_data.get('name', 'UltimatePOS Migration'),
             source_type='DIRECT_DB',
             db_host=serializer.validated_data['db_host'],

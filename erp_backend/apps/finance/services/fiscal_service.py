@@ -63,20 +63,18 @@ class FiscalYearService:
             return fiscal_year
 
     @staticmethod
-    def close_fiscal_year(organization, fiscal_year):
-        from apps.finance.services.ledger_service import LedgerService
-        
-        if fiscal_year.is_closed:
-            return fiscal_year
-            
-        # 1. Validate all control accounts
-        LedgerService.validate_closure(organization, fiscal_year=fiscal_year)
-        
-        # 2. Ensure all periods are closed
-        unclosed_periods = fiscal_year.periods.filter(is_closed=False)
-        if unclosed_periods.exists():
-            raise ValidationError(f"Cannot close year. {unclosed_periods.count()} periods are still open.")
-        
-        fiscal_year.is_closed = True
-        fiscal_year.save()
-        return fiscal_year
+    def close_fiscal_year(organization, fiscal_year, user=None, retained_earnings_account_id=None):
+        """
+        Close a fiscal year. Delegates to ClosingService for the full
+        SAP/Odoo-standard year-end close sequence:
+          1. Verify all periods are closed
+          2. Close P&L into retained earnings
+          3. Generate opening balances for next year
+          4. Lock fiscal year
+        """
+        from apps.finance.services.closing_service import ClosingService
+        return ClosingService.close_fiscal_year(
+            organization, fiscal_year,
+            user=user,
+            retained_earnings_account_id=retained_earnings_account_id,
+        )

@@ -30,31 +30,39 @@ from apps.inventory.services.goods_receipt_service import GoodsReceiptService
 # ═══════════════════════════════════════════════════════════════════════════
 
 class GoodsReceiptLineSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    product_barcode = serializers.CharField(source='product.barcode', read_only=True, default='')
-    product_sku = serializers.CharField(source='product.sku', read_only=True, default='')
+    # Aliases for 11/10 Enterprise Design
+    sell_through_safe_qty = serializers.DecimalField(source='safe_qty', max_digits=15, decimal_places=2, read_only=True)
+    remaining_safe_capacity = serializers.DecimalField(source='safe_qty_after_receipt', max_digits=15, decimal_places=2, read_only=True)
+    safety_ratio = serializers.DecimalField(source='receipt_coverage_pct', max_digits=8, decimal_places=2, read_only=True)
 
     class Meta:
         model = GoodsReceiptLine
         fields = [
-            'id', 'product', 'product_name', 'product_barcode', 'product_sku',
-            'po_line', 'qty_ordered', 'qty_received', 'qty_rejected',
+            'id', 'product', 'product_name', 'barcode',
+            'po_line', 'qty_ordered', 'qty_received', 'qty_rejected', 'qty_returned',
             'expiry_date', 'batch_number',
             'line_status', 'rejection_reason', 'rejection_notes',
             'is_unexpected', 'approval_status', 'transfer_requirement',
             # Decision engine outputs
             'stock_on_location', 'total_stock', 'avg_daily_sales',
-            'remaining_shelf_life_days', 'safe_qty', 'safe_qty_after_receipt',
-            'receipt_coverage_pct', 'sales_performance_score', 'adjustment_risk_score',
+            'remaining_shelf_life_days', 
+            'safe_qty', 'sell_through_safe_qty',
+            'safe_qty_after_receipt', 'remaining_safe_capacity',
+            'receipt_coverage_pct', 'safety_ratio',
+            'shelf_pressure', 'coverage_days',
+            'predicted_expiry_loss', 'batch_priority_index',
+            'supplier_reliability_score',
+            'sales_performance_score', 'adjustment_risk_score',
             'recommended_action', 'decision_warnings',
             'evidence_attachment',
             'processed_by', 'processed_at', 'created_at',
         ]
         read_only_fields = [
-            'product_name', 'product_barcode', 'product_sku',
             'stock_on_location', 'total_stock', 'avg_daily_sales',
             'remaining_shelf_life_days', 'safe_qty', 'safe_qty_after_receipt',
             'receipt_coverage_pct', 'sales_performance_score', 'adjustment_risk_score',
+            'shelf_pressure', 'coverage_days', 'predicted_expiry_loss',
+            'batch_priority_index', 'supplier_reliability_score',
             'recommended_action', 'decision_warnings',
             'processed_by', 'processed_at', 'created_at',
         ]
@@ -124,8 +132,9 @@ class RejectLineSerializer(serializers.Serializer):
     line_id = serializers.IntegerField()
     qty_rejected = serializers.DecimalField(max_digits=15, decimal_places=2)
     rejection_reason = serializers.ChoiceField(choices=[
-        'DAMAGED', 'EXPIRED', 'SHORT_SHELF_LIFE', 'QUALITY_ISSUE',
-        'NOT_ORDERED', 'WRONG_PRODUCT', 'OTHER'
+        'DAMAGED', 'EXPIRED', 'NEAR_EXPIRY', 'WRONG_PRODUCT', 'WRONG_QUANTITY',
+        'WRONG_PACKAGING', 'WRONG_BATCH', 'PRICE_DISCREPANCY', 'QUALITY_ISSUE',
+        'NO_APPROVAL', 'NOT_IN_PO', 'SUPPLIER_ERROR', 'INTERNAL_REFUSAL', 'OTHER'
     ])
     rejection_notes = serializers.CharField(required=False, allow_blank=True, default='')
     evidence_attachment = serializers.URLField(required=False, allow_blank=True, default='')
@@ -192,7 +201,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             warehouse = Warehouse.objects.get(
                 id=data['warehouse_id'],
-                organization=request.user.organization
+                tenant=request.user.organization
             )
         except Warehouse.DoesNotExist:
             return Response({'error': 'Warehouse not found'}, status=status.HTTP_400_BAD_REQUEST)
@@ -213,7 +222,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
             try:
                 po = PurchaseOrder.objects.get(
                     id=data['purchase_order_id'],
-                    organization=request.user.organization,
+                    tenant=request.user.organization,
                 )
                 receipt.purchase_order = po
                 receipt.supplier = po.supplier
@@ -224,7 +233,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
             try:
                 receipt.supplier = Contact.objects.get(
                     id=data['supplier_id'],
-                    organization=request.user.organization,
+                    tenant=request.user.organization,
                 )
             except Contact.DoesNotExist:
                 pass
@@ -268,7 +277,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             product = Product.objects.get(
                 id=data['product_id'],
-                organization=request.user.organization,
+                tenant=request.user.organization,
             )
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -445,7 +454,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             product = Product.objects.get(
                 id=data['product_id'],
-                organization=request.user.organization,
+                tenant=request.user.organization,
             )
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)

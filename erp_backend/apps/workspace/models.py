@@ -445,8 +445,57 @@ class Task(TenantOwnedModel):
         self.status = 'COMPLETED'
         self.completed_at = timezone.now()
         self.save(update_fields=['status', 'completed_at', 'updated_at'])
+        # ── WISE Integration: Score the assignee based on timeliness ─────────
+        self._score_completion()
         # ── Task Chain: Fire child rules when this task's rule has chain children ──
         self._fire_chain_children()
+
+    def _score_completion(self):
+        """
+        Emit a WISE score event for the assigned user on task completion.
+        Timeliness is judged against the due_date.
+        """
+        try:
+            if not self.assigned_to:
+                return
+            employee = getattr(self.assigned_to, 'employee', None)
+
+            if self.due_date and self.completed_at:
+                if self.completed_at <= self.due_date:
+                    event_code  = 'task_completed_early'
+                    is_on_time  = True
+                else:
+                    event_code  = 'task_overdue'
+                    is_on_time  = False
+            else:
+                event_code  = 'task_completed_early'
+                is_on_time  = True
+
+            # 1. Emit the kernel event for any cross-module subscribers
+            from kernel.events import emit_event
+            emit_event('task.completed', {
+                'task_id':          self.id,
+                'task_title':       self.title,
+                'assignee_user_id': self.assigned_to_id,
+                'employee_id':      employee.id if employee else None,
+                'is_on_time':       is_on_time,
+                'due_date':         self.due_date.isoformat() if self.due_date else None,
+                'completed_at':     self.completed_at.isoformat() if self.completed_at else None,
+                'tenant_id':        self.tenant_id,
+            }, aggregate_type='task', aggregate_id=self.id)
+
+            # 2. Direct WISE score (fast path — avoids event roundtrip for the user's own score)
+            if employee:
+                from apps.workforce.services import WorkforceScoreEngine
+                WorkforceScoreEngine.record_event(
+                    employee=employee,
+                    event_code=event_code,
+                    module='workspace',
+                    reference_obj=self,
+                    metadata={'task_title': self.title, 'task_id': self.id}
+                )
+        except Exception:
+            pass  # WISE scoring must never crash the caller
 
     def cancel(self):
         self.status = 'CANCELLED'

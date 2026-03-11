@@ -86,7 +86,7 @@ def _on_payroll_processed(payload: dict, organization_id: int) -> dict:
                 'total_amount': str(total_amount),
                 'organization_id': str(organization_id),
             },
-            organization_id=str(organization_id)
+            tenant_id=str(organization_id)
         )
     except Exception as e:
         logger.warning(f"HR: Failed to dispatch payroll event: {e}")

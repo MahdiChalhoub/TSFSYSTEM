@@ -252,22 +252,22 @@ class MCPDashboardView(APIView):
         org_id = request.user.organization_id
         
         # Get connection status
-        connection = MCPConnection.objects.filter(organization_id=org_id).first()
+        connection = MCPConnection.objects.filter(tenant_id=org_id).first()
         
         # Get provider count
         providers = MCPProvider.objects.filter(
-            organization_id=org_id, is_active=True
+            tenant_id=org_id, is_active=True
         ).count()
         
         # Get tool count
         tools = MCPTool.objects.filter(
-            organization_id=org_id, is_active=True
+            tenant_id=org_id, is_active=True
         ).count()
         
         # Usage stats (last 30 days)
         thirty_days_ago = timezone.now() - timedelta(days=30)
         usage = MCPUsageLog.objects.filter(
-            organization_id=org_id,
+            tenant_id=org_id,
             created_at__gte=thirty_days_ago
         ).aggregate(
             total_requests=Count('id'),
@@ -277,12 +277,12 @@ class MCPDashboardView(APIView):
         
         # Recent conversations
         recent_conversations = MCPConversation.objects.filter(
-            organization_id=org_id
+            tenant_id=org_id
         ).order_by('-updated_at')[:5]
         
         # Get agents count
         agents_count = MCPAgent.objects.filter(
-            organization_id=org_id, is_active=True
+            tenant_id=org_id, is_active=True
         ).count()
         
         return Response({

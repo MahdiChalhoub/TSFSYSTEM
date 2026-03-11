@@ -20,22 +20,24 @@ Movement types:
 """
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.config import get_config
 
 
-class StockLedger(TenantModel):
+class StockLedger(AuditLogMixin, TenantOwnedModel):
     """
     Append-only double-entry ledger for stock reservation movements.
     Never update or delete rows — always append new correcting entries.
     """
 
-    MOVEMENT_TYPES = [
+    MOVEMENT_TYPES = get_config('inventory_movement_types', default=(
         ('RESERVATION',         'Reservation — stock committed on confirm'),
         ('RESERVATION_RELEASE', 'Reservation Release — order cancelled'),
         ('DELIVERY_DEDUCTION',  'Delivery Deduction — stock physically removed'),
         ('RETURN',              'Return — stock returned to warehouse'),
         ('ADJUSTMENT',          'Manual Adjustment'),
-    ]
+    ))
 
     product    = models.ForeignKey(
         'inventory.Product', on_delete=models.PROTECT, related_name='stock_ledger'
@@ -52,13 +54,13 @@ class StockLedger(TenantModel):
     movement_type  = models.CharField(max_length=30, choices=MOVEMENT_TYPES, db_index=True)
 
     # ── Reservation Source Tracking ──────────────────────────────────────────
-    RESERVATION_SOURCE_TYPES = [
+    RESERVATION_SOURCE_TYPES = get_config('inventory_reservation_source_types', default=(
         ('SALES_ORDER', 'Sales Order'),
         ('TRANSFER_ORDER', 'Transfer Order'),
         ('PRODUCTION_ORDER', 'Production Order'),
         ('PICK_LIST', 'Pick List'),
         ('MANUAL', 'Manual Reservation'),
-    ]
+    ))
     reservation_source_type = models.CharField(
         max_length=30, choices=RESERVATION_SOURCE_TYPES,
         null=True, blank=True,
@@ -95,7 +97,7 @@ class StockLedger(TenantModel):
         db_table = 'stock_ledger'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['organization', 'product', 'warehouse', 'created_at']),
+            models.Index(fields=['tenant', 'product', 'warehouse', 'created_at']),
             models.Index(fields=['order', 'movement_type']),
         ]
 

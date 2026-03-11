@@ -41,7 +41,7 @@ class InventorySessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventorySession
         fields = '__all__'
-        read_only_fields = ['organization', 'created_by']
+        read_only_fields = ['tenant', 'created_by']
 
     def get_products_count(self, obj):
         return obj.lines.count()

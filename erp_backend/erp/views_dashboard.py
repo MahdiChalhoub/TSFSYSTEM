@@ -377,6 +377,12 @@ class DashboardViewSet(viewsets.ViewSet):
         data = []
         thirty_days_ago = timezone.now() - timedelta(days=30)
         ninety_days_ago = timezone.now() - timedelta(days=90)
+
+        # Core context for dynamic costing (Outside loop for performance)
+        from apps.finance.tax_calculator import TaxEngineContext
+        from erp.services import ConfigurationService
+        tax_ctx = TaxEngineContext.from_org(organization)
+        settings = ConfigurationService.get_global_settings(organization)
         
         for p in products_qs:
             # ── Stock ──
@@ -518,6 +524,11 @@ class DashboardViewSet(viewsets.ViewSet):
             lead_time = getattr(p, 'shipping_duration_days', None) or 14
             proposed_qty = max(0, int(daily_sales * lead_time - float(stock_in_location)))
             
+            # Resolve Effective Cost from Model Property (Single Source of Truth)
+            resolved_cost = p.get_effective_cost(tax_ctx=tax_ctx, last_pp_fallback=best_supplier_price, settings=settings)
+            if supplier_id and best_supplier_price > 0:
+                resolved_cost = best_supplier_price
+
             data.append({
                 "id": p.id,
                 "name": p.name,
@@ -527,7 +538,8 @@ class DashboardViewSet(viewsets.ViewSet):
                 "is_active": p.status == 'ACTIVE',
                 
                 # Pricing
-                "cost_price": float(p.cost_price or 0),
+                "cost_price": float(resolved_cost),
+                "effective_cost": float(resolved_cost),
                 "costPriceHT": float(p.cost_price_ht or 0),
                 "selling_price_ht": float(p.selling_price_ht or 0),
                 "selling_price": float(p.selling_price_ttc or 0),
@@ -554,6 +566,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 "sales_performance_score": financial_score,
                 "adjustment_score": adjustment_score,
                 "adjustment_risk_score": adjustment_score,
+                "margin_pct": p.margin_pct,
                 
                 # Best Supplier
                 "best_supplier_name": best_supplier_name,
@@ -581,11 +594,11 @@ class DashboardViewSet(viewsets.ViewSet):
         
         from django.utils import timezone
         from datetime import timedelta
-        from django.db.models import Subquery, OuterRef, DecimalField
+        from django.db.models import Subquery, OuterRef, DecimalField, FloatField, ExpressionWrapper
         from django.db.models.functions import Coalesce
         
         organization = Organization.objects.get(id=organization_id)
-        qs = Product.objects.filter(organization=organization, status='ACTIVE')
+        qs = Product.objects.filter(organization=organization)
         
         # Apply filters
         category = request.query_params.get('category')
@@ -596,8 +609,15 @@ class DashboardViewSet(viewsets.ViewSet):
         min_stock = request.query_params.get('min_stock')
         max_stock = request.query_params.get('max_stock')
         min_margin = request.query_params.get('min_margin')
+        rotation = request.query_params.get('rotation')
+        status_filter = request.query_params.get('status', 'ACTIVE')
         query = request.query_params.get('query', '')
         
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        else:
+            qs = qs.filter(status='ACTIVE')
+
         if query:
             qs = qs.filter(Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query))
         if category:
@@ -608,21 +628,98 @@ class DashboardViewSet(viewsets.ViewSet):
             qs = qs.filter(product_type=product_type) if hasattr(Product, 'product_type') else qs
         if tax_rate:
             qs = qs.filter(tva_rate=tax_rate)
+        if supplier:
+            qs = qs.filter(qualified_suppliers__supplier_id=supplier)
         
-        # Annotate stock from Inventory
+        # Annotate stock
         stock_subquery = Inventory.objects.filter(
             organization=organization, product=OuterRef('pk')
         ).values('product').annotate(total=Sum('quantity')).values('total')
         
         qs = qs.annotate(
-            stock_level=Coalesce(Subquery(stock_subquery, output_field=DecimalField()), 0)
+            stock_level=Coalesce(Subquery(stock_subquery, output_field=DecimalField()), Decimal('0'), output_field=DecimalField())
         )
         
-        # Stock filter
+        # Annotate Global Last Purchase Price (Needed for margin fallback)
+        from apps.pos.models import ProductSupplier
+        last_price_subquery = ProductSupplier.objects.filter(
+            organization=organization, product=OuterRef('pk')
+        ).order_by('-last_purchased_date').values('last_purchased_price')[:1]
+
+        # Annotate sales (30 days) - REQUIRED for rotation filters
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        sales_subquery = OrderLine.objects.filter(
+            order__organization=organization, product=OuterRef('pk'),
+            order__created_at__gte=thirty_days_ago,
+            order__status='COMPLETED', order__type='SALE'
+        ).values('product').annotate(total_qty=Sum('quantity')).values('total_qty')
+        
+        qs = qs.annotate(
+            daily_sales=ExpressionWrapper(
+                Coalesce(Subquery(sales_subquery, output_field=DecimalField()), Decimal('0.0'), output_field=DecimalField()) / Decimal('30.0'),
+                output_field=FloatField()
+            )
+        )
+
+        # Resolve Org Tax Policy for SQL Annotation (Best guess for filtering)
+        from apps.finance.tax_calculator import TaxEngineContext
+        tax_ctx = TaxEngineContext.from_org(organization)
+        vat_impact = tax_ctx.get_vat_cost_impact_ratio()
+
+        # Annotate Margin using Effective Cost Fallback (Approximate in SQL)
+        qs = qs.annotate(
+            effective_cost_sql=Case(
+                When(cost_price__gt=0, then=F('cost_price')),
+                When(cost_price_ht__gt=0, then=ExpressionWrapper(
+                    F('cost_price_ht') * (Value(1.0) + (F('tva_rate') / Value(100.0) * Value(float(vat_impact)))),
+                    output_field=DecimalField()
+                )),
+                default=Coalesce(
+                    Subquery(last_price_subquery, output_field=DecimalField()),
+                    Decimal('0.00'),
+                    output_field=DecimalField()
+                ),
+                output_field=DecimalField()
+            )
+        ).annotate(
+            margin_pct=Case(
+                When(effective_cost_sql__gt=0, then=ExpressionWrapper(
+                    (F('selling_price_ht') - F('effective_cost_sql')) / F('effective_cost_sql') * 100.0,
+                    output_field=FloatField()
+                )),
+                default=Value(0.0),
+                output_field=FloatField()
+            )
+        )
+        
+        # Apply Computed Filters
         if min_stock is not None:
             qs = qs.filter(stock_level__gte=float(min_stock))
         if max_stock is not None:
             qs = qs.filter(stock_level__lte=float(max_stock))
+        if min_margin:
+            qs = qs.filter(margin_pct__gte=float(min_margin))
+        
+        if rotation == 'fast':
+            qs = qs.filter(daily_sales__gte=5.0)
+        elif rotation == 'medium':
+            qs = qs.filter(daily_sales__gte=1.0, daily_sales__lt=5.0)
+        elif rotation == 'slow':
+            qs = qs.filter(daily_sales__gt=0, daily_sales__lt=1.0)
+        elif rotation == 'dead':
+            qs = qs.filter(daily_sales=0)
+            
+        supplier_specific_subquery = None
+        if supplier:
+            qs = qs.filter(qualified_suppliers__supplier_id=supplier)
+            supplier_specific_subquery = ProductSupplier.objects.filter(
+                organization=organization, supplier_id=supplier, product=OuterRef('pk')
+            ).values('last_purchased_price')[:1]
+
+        qs = qs.annotate(
+            last_pp=Coalesce(Subquery(last_price_subquery, output_field=DecimalField()), Decimal('0'), output_field=DecimalField()),
+            supplier_pp=Coalesce(Subquery(supplier_specific_subquery, output_field=DecimalField()), Decimal('0'), output_field=DecimalField()) if supplier_specific_subquery else Value(Decimal('0'), output_field=DecimalField())
+        )
         
         # Pagination
         page = int(request.query_params.get('page', 1))
@@ -631,26 +728,23 @@ class DashboardViewSet(viewsets.ViewSet):
         offset = (page - 1) * page_size
         products_page = qs.order_by('name')[offset:offset + page_size]
         
-        # Sales subquery (30 days)
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        
+        # Resolve Org Tax Policy for Effective Cost calculation (Efficient caching for loop)
+        from apps.finance.tax_calculator import TaxEngineContext
+        from erp.services import ConfigurationService
+        tax_ctx = TaxEngineContext.from_org(organization)
+        settings = ConfigurationService.get_global_settings(organization)
+
+        # Resolve Cost using Product.get_effective_cost (One Source of Truth)
         results = []
         for p in products_page:
-            stock = float(getattr(p, 'stock_level', 0))
-            
-            # Quick sales query
-            sales_qty = OrderLine.objects.filter(
-                order__organization=organization, product=p,
-                order__created_at__gte=thirty_days_ago,
-                order__status='COMPLETED', order__type='SALE'
-            ).aggregate(total=Sum('quantity'))['total'] or 0
-            daily_sales = float(sales_qty) / 30.0
-            
-            # Safety tag
-            shelf_life = getattr(p, 'manufacturer_shelf_life_days', None) or 0
+            resolved_cost = p.get_effective_cost(tax_ctx=tax_ctx, last_pp_fallback=p.last_pp, settings=settings)
+            if supplier and (p.supplier_pp or 0) > 0:
+                resolved_cost = p.supplier_pp
+
+            # Expiry / Safety (too complex for annotation, but fine in loop for 30)
             avg_expiry = getattr(p, 'avg_available_expiry_days', None) or 0
             is_expiry = getattr(p, 'is_expiry_tracked', False)
-            days_to_sell = round(stock / daily_sales) if daily_sales > 0 else 0
+            days_to_sell = round(float(p.stock_level) / p.daily_sales) if p.daily_sales > 0 else 0
             safety_tag = 'SAFE'
             if is_expiry and avg_expiry > 0:
                 if days_to_sell >= avg_expiry:
@@ -658,22 +752,20 @@ class DashboardViewSet(viewsets.ViewSet):
                 elif days_to_sell >= avg_expiry * 0.6:
                     safety_tag = 'CAUTION'
             
-            # Margin
-            cost = float(p.cost_price or 0)
-            sell = float(p.selling_price_ht or 0)
-            margin_pct = round(((sell - cost) / cost * 100) if cost > 0 else 0, 1)
-            
             results.append({
                 'id': p.id,
                 'name': p.name,
                 'sku': p.sku,
                 'barcode': p.barcode or '',
                 'category_name': getattr(p.category, 'name', '') if hasattr(p, 'category') and p.category else '',
-                'stock': stock,
-                'daily_sales': round(daily_sales, 2),
-                'cost_price': cost,
-                'selling_price': sell,
-                'margin_pct': margin_pct,
+                'stock': float(p.stock_level),
+                'daily_sales': round(p.daily_sales, 2),
+                'cost_price': float(resolved_cost),
+                'effective_cost': float(resolved_cost),
+                'cost_price_ht': float(p.cost_price_ht or 0),
+                'cost_price_ttc': float(p.cost_price_ttc or 0),
+                'selling_price': float(p.selling_price_ht or 0),
+                'margin_pct': round(p.margin_pct, 1),
                 'safety_tag': safety_tag,
                 'is_expiry_tracked': is_expiry,
             })
@@ -695,7 +787,7 @@ class DashboardViewSet(viewsets.ViewSet):
         from apps.inventory.models import Category, Brand
         
         categories = list(Category.objects.filter(
-            organization_id=organization_id
+            tenant_id=organization_id
         ).values('id', 'name').order_by('name')[:100])
         
         brands = list(Brand.objects.filter(
@@ -704,7 +796,7 @@ class DashboardViewSet(viewsets.ViewSet):
         
         # Product types
         types = list(Product.objects.filter(
-            organization_id=organization_id, status='ACTIVE'
+            tenant_id=organization_id, status='ACTIVE'
         ).values_list('product_type', flat=True).distinct()[:20]) if hasattr(Product, 'product_type') else []
         
         return Response({

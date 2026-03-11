@@ -7,10 +7,11 @@ Hierarchical warehouse structure:
 Full location code format: {zone}-{aisle}-{rack}-{shelf}-{bin}
 """
 from django.db import models
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 
 
-class WarehouseZone(TenantModel):
+class WarehouseZone(AuditLogMixin, TenantOwnedModel):
     """Top-level warehouse zone (e.g. STORAGE, RECEIVING, SHIPPING, FROZEN)."""
     ZONE_TYPES = (
         ('STORAGE', 'Storage'),
@@ -35,14 +36,14 @@ class WarehouseZone(TenantModel):
 
     class Meta:
         db_table = 'warehouse_zone'
-        unique_together = ['warehouse', 'code', 'organization']
+        unique_together = ['warehouse', 'code', 'tenant']
         ordering = ['code']
 
     def __str__(self):
         return f"{self.code} - {self.name} ({self.get_zone_type_display()})"
 
 
-class WarehouseAisle(TenantModel):
+class WarehouseAisle(AuditLogMixin, TenantOwnedModel):
     """Aisle within a zone."""
     zone = models.ForeignKey(WarehouseZone, on_delete=models.CASCADE, related_name='aisles')
     code = models.CharField(max_length=10, help_text='Aisle code, e.g. "01", "A1"')
@@ -57,7 +58,7 @@ class WarehouseAisle(TenantModel):
         return f"{self.zone.code}-{self.code}"
 
 
-class WarehouseRack(TenantModel):
+class WarehouseRack(AuditLogMixin, TenantOwnedModel):
     """Rack within an aisle."""
     aisle = models.ForeignKey(WarehouseAisle, on_delete=models.CASCADE, related_name='racks')
     code = models.CharField(max_length=10, help_text='Rack code, e.g. "R01"')
@@ -73,7 +74,7 @@ class WarehouseRack(TenantModel):
         return f"{self.aisle}-{self.code}"
 
 
-class WarehouseShelf(TenantModel):
+class WarehouseShelf(AuditLogMixin, TenantOwnedModel):
     """Shelf within a rack."""
     rack = models.ForeignKey(WarehouseRack, on_delete=models.CASCADE, related_name='shelves')
     code = models.CharField(max_length=10, help_text='Shelf code, e.g. "S01"')
@@ -88,7 +89,7 @@ class WarehouseShelf(TenantModel):
         return f"{self.rack}-{self.code}"
 
 
-class WarehouseBin(TenantModel):
+class WarehouseBin(AuditLogMixin, TenantOwnedModel):
     """
     Smallest unit of warehouse storage.
     Products are placed in bins.
@@ -116,7 +117,7 @@ class WarehouseBin(TenantModel):
         return f"{zone.code}-{aisle.code}-{rack.code}-{shelf.code}-{self.code}"
 
 
-class ProductLocation(TenantModel):
+class ProductLocation(AuditLogMixin, TenantOwnedModel):
     """
     Maps a product to a specific warehouse bin with quantity.
     A product can exist in multiple bins.

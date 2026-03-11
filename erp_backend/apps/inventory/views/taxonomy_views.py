@@ -65,7 +65,7 @@ class BrandViewSet(TenantModelViewSet):
         brands = Brand.objects.filter(tenant=organization)
         if category_id:
             product_brand_ids = Product.objects.filter(
-                organization=organization,
+                tenant=organization,
                 category_id=category_id
             ).values_list('brand_id', flat=True).distinct()
             brands = brands.filter(id__in=product_brand_ids)
@@ -84,7 +84,7 @@ class BrandViewSet(TenantModelViewSet):
             return Response({"error": "Brand not found"}, status=status.HTTP_404_NOT_FOUND)
 
         all_products = list(Product.objects.filter(
-            organization=organization, brand=brand
+            tenant=organization, brand=brand
         ).select_related('category', 'unit', 'parfum', 'country', 'size_unit', 'product_group'))
 
         parfum_groups = {}
@@ -209,7 +209,7 @@ class CategoryViewSet(TenantModelViewSet):
 
         products = Product.objects.filter(
             category=category,
-            organization=organization,
+            tenant=organization,
             is_active=True
         ).select_related('brand', 'parfum', 'unit')
 
@@ -260,7 +260,7 @@ class CategoryViewSet(TenantModelViewSet):
         product_ids = request.data.get('product_ids', [])
         target_category_id = request.data.get('target_category_id')
 
-        Product.objects.filter(id__in=product_ids, organization=organization).update(category_id=target_category_id)
+        Product.objects.filter(id__in=product_ids, tenant=organization).update(category_id=target_category_id)
         return Response({"success": True})
 
 
@@ -305,7 +305,7 @@ class ParfumViewSet(TenantModelViewSet):
             return Response({"error": "Parfum not found"}, status=404)
 
         all_products = list(Product.objects.filter(
-            organization=organization, parfum=parfum
+            tenant=organization, parfum=parfum
         ).select_related('brand', 'category', 'unit', 'country'))
 
         brand_groups = {}
@@ -355,7 +355,7 @@ class ProductGroupViewSet(TenantModelViewSet):
                 variants = request.data.get('variants', [])
                 for v in variants:
                     Product.objects.create(
-                        organization=organization,
+                        tenant=organization,
                         name=v.get('name'),
                         sku=v.get('sku'),
                         barcode=v.get('barcode'),
@@ -398,7 +398,7 @@ class ProductGroupViewSet(TenantModelViewSet):
                 for v in variants:
                     vid = v.get('id')
                     if vid:
-                        product = Product.objects.get(id=vid, organization=organization)
+                        product = Product.objects.get(id=vid, tenant=organization)
                         product.name = v.get('name', product.name)
                         product.sku = v.get('sku', product.sku)
                         product.barcode = v.get('barcode', product.barcode)
@@ -410,7 +410,7 @@ class ProductGroupViewSet(TenantModelViewSet):
                         existing_ids.add(vid)
                     else:
                         new_product = Product.objects.create(
-                            organization=organization,
+                            tenant=organization,
                             name=v.get('name'),
                             sku=v.get('sku'),
                             barcode=v.get('barcode'),
@@ -429,7 +429,7 @@ class ProductGroupViewSet(TenantModelViewSet):
 
                 if request.data.get('removeOrphans'):
                     Product.objects.filter(
-                        product_group=group, organization=organization
+                        product_group=group, tenant=organization
                     ).exclude(id__in=existing_ids).update(product_group=None)
 
                 return Response(ProductGroupSerializer(group).data)
@@ -446,7 +446,7 @@ class ProductGroupViewSet(TenantModelViewSet):
         try:
             group = ProductGroup.objects.get(id=pk, tenant=organization)
             product_ids = request.data.get('product_ids', [])
-            Product.objects.filter(id__in=product_ids, organization=organization).update(product_group=group)
+            Product.objects.filter(id__in=product_ids, tenant=organization).update(product_group=group)
             return Response({"success": True})
         except ProductGroup.DoesNotExist:
             return Response({"error": "Product Group not found"}, status=status.HTTP_404_NOT_FOUND)

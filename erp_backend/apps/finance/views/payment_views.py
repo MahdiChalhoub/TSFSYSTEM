@@ -87,7 +87,7 @@ class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         if not invoice_id or not amount:
             return Response({'error': 'invoice_id and amount are required'}, status=400)
         try:
-            invoice = Invoice.objects.get(id=invoice_id, organization_id=payment.organization_id)
+            invoice = Invoice.objects.get(id=invoice_id, tenant_id=payment.organization_id)
             from apps.finance.invoice_service import InvoiceService
             allocation = InvoiceService.allocate_payment(payment, invoice, amount)
             return Response({
@@ -141,7 +141,7 @@ class CustomerBalanceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(organization_id=org_id)
+        return super().get_queryset().filter(tenant_id=org_id)
 
 class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SupplierBalance.objects.all()
@@ -149,7 +149,7 @@ class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(organization_id=org_id)
+        return super().get_queryset().filter(tenant_id=org_id)
 
 
 # =============================================================================
@@ -222,7 +222,7 @@ class FlutterwaveWebhookView(APIView):
         try:
             from apps.finance.gateway_models import GatewayConfig
             cfg = GatewayConfig.objects.filter(
-                organization_id=order.organization_id,
+                tenant_id=order.organization_id,
                 gateway_type='FLUTTERWAVE',
                 is_active=True,
             ).first()

@@ -14,9 +14,9 @@ class WarehouseSerializer(serializers.ModelSerializer):
             'address', 'city', 'phone', 'vat_number',
             'can_sell', 'is_active',
             'site_name', 'parent_name', 'inventory_count', 'children_count',
-            'organization', 'created_at', 'updated_at',
+            'tenant', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['organization', 'created_at', 'updated_at']
+        read_only_fields = ['tenant', 'created_at', 'updated_at']
 
     def get_inventory_count(self, obj):
         return obj.inventory_set.count()
@@ -41,9 +41,9 @@ class InventorySerializer(serializers.ModelSerializer):
             'id', 'warehouse', 'product', 'quantity',
             'expiry_date', 'batch_number', 'batch',
             'product_name', 'warehouse_name',
-            'organization',
+            'tenant',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']
 
 
 class InventoryMovementSerializer(serializers.ModelSerializer):
@@ -57,6 +57,6 @@ class InventoryMovementSerializer(serializers.ModelSerializer):
             'quantity', 'reference', 'reason',
             'cost_price', 'cost_price_ht', 'created_at',
             'product_name', 'warehouse_name',
-            'organization',
+            'tenant',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']

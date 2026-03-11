@@ -315,6 +315,23 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def finalize_setup(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            from django.core.exceptions import ValidationError
+            LedgerService.validate_finance_readiness(organization)
+            return Response({"message": "Finance module activated successfully"})
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['get'])
     def statement(self, request, pk=None):
         organization_id = get_current_tenant_id()

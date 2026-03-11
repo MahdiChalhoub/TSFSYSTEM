@@ -161,7 +161,7 @@ def handle_order_status_change(sender, instance, **kwargs):
             source_module='pos',
             event_name='order:completed',
             payload=payload,
-            organization_id=str(instance.organization_id)
+            tenant_id=str(instance.organization_id)
         )
         logger.info(f"[SIGNAL] Dispatched order:completed for {instance.type} #{instance.id}")
 

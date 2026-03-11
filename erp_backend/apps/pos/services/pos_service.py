@@ -132,6 +132,24 @@ class POSService:
             ).order_by('-created_at', '-id').first()
             prev_hash = last_order.receipt_hash if last_order else "GENESIS"
 
+            # 2.5 Strict Accounting Link Check (§19)
+            contact = None
+            if contact_id:
+                (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+                if Contact:
+                    contact = Contact.objects.filter(id=contact_id, organization=organization).first()
+                    if contact:
+                        # Safety Gate: Block if contact is transactional but missing ledger links
+                        is_credit_checkout = (
+                            payment_method == 'CREDIT' or 
+                            (payment_legs and any(l.get('method') == 'CREDIT' for l in payment_legs))
+                        )
+                        if is_credit_checkout and not (contact.linked_account_id or contact.linked_payable_account_id):
+                            raise ValidationError(
+                                f"Capture Failure: Contact '{contact.name}' has no linked accounting ledger. "
+                                "Go to CRM > Contact Details > Accounting to synchronize first."
+                            )
+
             order = Order.objects.create(
                 organization=organization,
                 user=user,
@@ -142,7 +160,7 @@ class POSService:
                 invoice_number=invoice_num,
                 previous_hash=prev_hash,
                 payment_method=payment_method,
-                contact_id=contact_id,
+                contact=contact,
                 discount_amount=Decimal(str(global_discount or 0)),
                 notes=notes or ''
             )
@@ -669,5 +687,12 @@ class POSService:
                     )
             except Exception:
                 pass
+
+            # ── WISE / Global Scoring Engine: Emit Domain Event ──────────────
+            try:
+                from apps.pos.events import emit_order_completed
+                emit_order_completed(order)
+            except Exception as e:
+                logger.warning(f"POS: Failed to emit order.completed event: {e}")
 
             return order

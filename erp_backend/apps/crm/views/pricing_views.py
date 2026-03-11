@@ -26,7 +26,7 @@ class PriceGroupViewSet(TenantModelViewSet):
         if request.method == 'GET':
             members = PriceGroupMember.objects.filter(
                 price_group=price_group,
-                organization_id=organization_id
+                tenant_id=organization_id
             )
             serializer = PriceGroupMemberSerializer(members, many=True)
             return Response(serializer.data)
@@ -44,7 +44,7 @@ class PriceGroupViewSet(TenantModelViewSet):
             member, created = PriceGroupMember.objects.get_or_create(
                 price_group=price_group,
                 contact_id=contact_id,
-                organization_id=organization_id
+                tenant_id=organization_id
             )
             if not created:
                 return Response({"message": "Contact already in this group"}, status=200)
@@ -61,7 +61,7 @@ class PriceGroupViewSet(TenantModelViewSet):
             deleted, _ = PriceGroupMember.objects.filter(
                 price_group=price_group,
                 contact_id=contact_id,
-                organization_id=organization_id
+                tenant_id=organization_id
             ).delete()
             return Response({"deleted": deleted > 0})
 
@@ -90,7 +90,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
         product_id = data.get('product_id')
         if product_id:
             from apps.inventory.models import Product
-            if not Product.objects.filter(id=product_id, organization_id=org_id).exists():
+            if not Product.objects.filter(id=product_id, tenant_id=org_id).exists():
                 raise ValidationError("Cross-tenant product assignment blocked.")
         price_group = data.get('price_group')
         if price_group and hasattr(price_group, 'organization_id') and price_group.organization_id != org_id:
@@ -121,7 +121,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
         # Group-based rules
         group_ids = PriceGroupMember.objects.filter(
             contact_id=contact_id,
-            organization_id=organization_id
+            tenant_id=organization_id
         ).values_list('price_group_id', flat=True)
 
         group_rules = ClientPriceRule.objects.filter(

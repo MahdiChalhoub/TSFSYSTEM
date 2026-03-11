@@ -1,11 +1,64 @@
 from rest_framework import serializers
 from apps.finance.models import ChartOfAccount, FinancialAccount
 
+
 class ChartOfAccountSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    # Computed properties from model
+    effective_normal_balance = serializers.CharField(read_only=True)
+    is_debit_normal = serializers.BooleanField(read_only=True)
+    level = serializers.SerializerMethodField()
+    children_count = serializers.SerializerMethodField()
+
     class Meta:
         model = ChartOfAccount
         fields = '__all__'
+        read_only_fields = [
+            'path', 'class_name', 'normal_balance',
+            'balance', 'balance_official',
+            'created_by', 'updated_by', 'locked_at', 'locked_by',
+        ]
+
+    def get_level(self, obj):
+        """Compute depth from materialized path."""
+        if obj.path:
+            return obj.path.count('.') + 1
+        return 1
+
+    def get_children_count(self, obj):
+        """Number of direct child accounts."""
+        if hasattr(obj, '_children_count'):
+            return obj._children_count
+        return obj.children.count()
+
+
+class ChartOfAccountTreeSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for tree/dropdown views."""
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    level = serializers.SerializerMethodField()
+    is_debit_normal = serializers.BooleanField(read_only=True)
+    has_children = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChartOfAccount
+        fields = [
+            'id', 'organization', 'code', 'name', 'type', 'sub_type',
+            'class_code', 'class_name', 'normal_balance',
+            'allow_posting', 'is_active', 'is_system_only',
+            'parent', 'path', 'level', 'is_debit_normal',
+            'has_children', 'balance', 'balance_official',
+        ]
+
+    def get_level(self, obj):
+        if obj.path:
+            return obj.path.count('.') + 1
+        return 1
+
+    def get_has_children(self, obj):
+        if hasattr(obj, '_has_children'):
+            return obj._has_children
+        return obj.children.exists()
+
 
 class FinancialAccountSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -16,7 +69,12 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
     def get_ledgerAccount(self, obj):
         if obj.ledger_account:
-            return {'id': obj.ledger_account.id, 'code': obj.ledger_account.code, 'name': obj.ledger_account.name, 'type': obj.ledger_account.type}
+            return {
+                'id': obj.ledger_account.id,
+                'code': obj.ledger_account.code,
+                'name': obj.ledger_account.name,
+                'type': obj.ledger_account.type,
+            }
         return None
     def get_assignedUsers(self, obj):
         from erp.models import User

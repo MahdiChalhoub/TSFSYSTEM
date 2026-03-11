@@ -8,3 +8,4 @@ class WorkspaceConfig(AppConfig):
 
     def ready(self):
         import apps.workspace.signals  # noqa: F401
+        import apps.workspace.events   # noqa: F401

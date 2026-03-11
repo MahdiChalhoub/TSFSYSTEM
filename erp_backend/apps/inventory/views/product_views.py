@@ -67,7 +67,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             from apps.pos.models import PurchaseOrderLine
             po_lines = PurchaseOrderLine.objects.filter(
                 product=product,
-                organization=product.organization,
+                tenant=product.tenant,
                 order__status__in=['SUBMITTED', 'APPROVED', 'ORDERED', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'REJECTED', 'CANCELLED']
             ).select_related('order', 'order__supplier', 'order__warehouse', 'order__site', 'warehouse', 'order__rejected_by', 'order__cancelled_by')
 
@@ -126,7 +126,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             from apps.inventory.models import StockTransferLine
             manifest_lines = StockTransferLine.objects.filter(
                 product=product,
-                organization=product.organization,
+                tenant=product.tenant,
                 order__lifecycle_status__in=['OPEN', 'APPROVED', 'CANCELLED']
             ).select_related('order', 'from_warehouse', 'to_warehouse')
 
@@ -150,7 +150,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             from apps.inventory.models import StockMoveLine
             move_lines = StockMoveLine.objects.filter(
                 product=product,
-                organization=product.organization,
+                tenant=product.tenant,
                 move__status__in=['DRAFT', 'PENDING', 'IN_TRANSIT', 'CANCELLED']
             ).select_related('move', 'move__from_warehouse', 'move__to_warehouse')
 

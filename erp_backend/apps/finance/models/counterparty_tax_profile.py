@@ -71,6 +71,16 @@ class CounterpartyTaxProfile(TenantModel):
         help_text='Scopes allowed when transacting with this counterparty'
     )
 
+    # ── Compliance ────────────────────────────────────────────────────
+    required_documents = models.JSONField(
+        default=list, blank=True,
+        help_text='List of required document types (e.g. ["NCC", "RCCM", "DFE"])'
+    )
+    enforce_compliance = models.BooleanField(
+        default=False,
+        help_text='If True, block transactions if required documents are missing or expired'
+    )
+
     # ── Audit ─────────────────────────────────────────────────────────
     is_system_preset = models.BooleanField(
         default=False,

@@ -120,7 +120,7 @@ class StockAlertViewSet(TenantModelViewSet):
             return Response({'error': 'No organization context'}, status=400)
 
         from django.db.models import Count
-        qs = StockAlert.objects.filter(organization_id=organization_id)
+        qs = StockAlert.objects.filter(tenant_id=organization_id)
 
         stats = {
             'total': qs.count(),

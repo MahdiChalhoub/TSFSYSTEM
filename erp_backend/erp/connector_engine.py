@@ -130,7 +130,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
                 source_module='finance',
                 target_module='inventory',
                 endpoint='products/cost/',
-                organization_id=org.id,
+                tenant_id=org.id,
                 user=request.user
             )
             
@@ -140,7 +140,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
                 target_module='inventory',
                 endpoint='stock/update/',
                 data={'product_id': 123, 'quantity': -1},
-                organization_id=org.id,
+                tenant_id=org.id,
                 user=request.user
             )
         """
@@ -162,7 +162,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
             buffered = self._BufferedRequest.objects.create(
                 target_module=target_module,
                 target_endpoint=endpoint,
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 source_module=source_module or '',
                 method=method,
                 payload=data,

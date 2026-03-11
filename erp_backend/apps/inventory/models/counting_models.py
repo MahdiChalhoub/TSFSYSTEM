@@ -8,14 +8,15 @@ Session flow: IN_PROGRESS → WAITING_VERIFICATION → VERIFIED → ADJUSTED
 """
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 
 
 # =============================================================================
 # INVENTORY SESSION
 # =============================================================================
 
-class InventorySession(TenantModel):
+class InventorySession(AuditLogMixin, TenantOwnedModel):
     """
     Physical inventory counting session.
     Each session targets a specific warehouse and optional category/supplier filters.
@@ -75,7 +76,7 @@ class InventorySession(TenantModel):
 # INVENTORY SESSION LINE
 # =============================================================================
 
-class InventorySessionLine(models.Model):
+class InventorySessionLine(AuditLogMixin, TenantOwnedModel):
     """
     Per-product counting line. Tracks system qty, person 1 & 2 physical counts,
     differences, and whether adjustment is needed.
@@ -134,7 +135,7 @@ class InventorySessionLine(models.Model):
 # CYCLE COUNT POLICY (ABC Classification)
 # =============================================================================
 
-class CycleCountPolicy(TenantModel):
+class CycleCountPolicy(AuditLogMixin, TenantOwnedModel):
     """
     ABC classification-based counting strategy.
     Determines how frequently products should be counted
@@ -183,7 +184,7 @@ class CycleCountPolicy(TenantModel):
         db_table = 'cycle_count_policy'
         ordering = ['classification', 'name']
         indexes = [
-            models.Index(fields=['organization', 'classification', 'is_active']),
+            models.Index(fields=['tenant', 'classification', 'is_active']),
         ]
 
     def __str__(self):

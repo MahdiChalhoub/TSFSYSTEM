@@ -189,7 +189,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
         if hasattr(model, 'tenant'):
             serializer.save(tenant_id=organization_id)
         else:
-            serializer.save(organization_id=organization_id)
+            serializer.save(tenant_id=organization_id)
 
     def perform_update(self, serializer):
         if 'organization' in self.request.data or 'organization_id' in self.request.data:

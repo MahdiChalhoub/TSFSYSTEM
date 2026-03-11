@@ -166,6 +166,11 @@ class Organization(models.Model):
     encryption_key = models.CharField(max_length=64, null=True, blank=True, help_text='Base64-encoded AES-256 key (per-org)')
     encryption_enabled = models.BooleanField(default=False, help_text='Whether field-level encryption is active')
 
+    # Finance Engine Lifecycle
+    finance_setup_completed = models.BooleanField(default=False, help_text='Set to True when the COA Setup Wizard is finalized')
+    finance_hard_locked_at = models.DateTimeField(null=True, blank=True, help_text='Timestamp when the first journal entry was posted')
+    finance_hard_locked_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='locked_organizations')
+
     class Meta:
         db_table = 'organization'
 
@@ -177,7 +182,7 @@ class TenantManager(models.Manager):
     def get_queryset(self):
         tenant_id = get_current_tenant_id()
         if tenant_id:
-            return super().get_queryset().filter(organization_id=tenant_id)
+            return super().get_queryset().filter(tenant_id=tenant_id)
         return super().get_queryset()
 
 

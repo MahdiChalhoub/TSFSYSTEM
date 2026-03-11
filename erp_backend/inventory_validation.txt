@@ -1,0 +1,456 @@
+]633;E;for f in apps/inventory/models/*.py\x3b do echo "FILE: $f"\x3b python3 ../.ai/scripts/validate_architecture.py $f\x3b echo "--------------------------------------------------------------------------------"\x3b done > inventory_validation.txt;70bb171a-c8d2-4f3d-a08f-3192318d37b5]633;CFILE: apps/inventory/models/advanced_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/advanced_models.py
+================================================================================
+
+❌ ERRORS (5):
+--------------------------------------------------------------------------------
+
+1. Line 18: Model 'ProductBatch' must inherit from TenantOwnedModel
+  Fix: class ProductBatch(AuditLogMixin, TenantOwnedModel):
+
+2. Line 56: Model 'ProductSerial' must inherit from TenantOwnedModel
+  Fix: class ProductSerial(AuditLogMixin, TenantOwnedModel):
+
+3. Line 94: Model 'SerialLog' must inherit from TenantOwnedModel
+  Fix: class SerialLog(AuditLogMixin, TenantOwnedModel):
+
+4. Line 114: Model 'ExpiryAlert' must inherit from TenantOwnedModel
+  Fix: class ExpiryAlert(AuditLogMixin, TenantOwnedModel):
+
+5. Line 146: Model 'StockValuationEntry' must inherit from TenantOwnedModel
+  Fix: class StockValuationEntry(AuditLogMixin, TenantOwnedModel):
+
+⚠️  WARNINGS (5):
+--------------------------------------------------------------------------------
+
+1. Line 18: Model 'ProductBatch' should include AuditLogMixin for audit logging
+  Recommended: class ProductBatch(AuditLogMixin, TenantOwnedModel):
+
+2. Line 56: Model 'ProductSerial' should include AuditLogMixin for audit logging
+  Recommended: class ProductSerial(AuditLogMixin, TenantOwnedModel):
+
+3. Line 94: Model 'SerialLog' should include AuditLogMixin for audit logging
+  Recommended: class SerialLog(AuditLogMixin, TenantOwnedModel):
+
+4. Line 114: Model 'ExpiryAlert' should include AuditLogMixin for audit logging
+  Recommended: class ExpiryAlert(AuditLogMixin, TenantOwnedModel):
+
+5. Line 146: Model 'StockValuationEntry' should include AuditLogMixin for audit logging
+  Recommended: class StockValuationEntry(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 5 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/alert_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/alert_models.py
+================================================================================
+
+❌ ERRORS (4):
+--------------------------------------------------------------------------------
+
+1. Line 22: Model 'StockAlert' must inherit from TenantOwnedModel
+  Fix: class StockAlert(AuditLogMixin, TenantOwnedModel):
+
+2. Line 134: Cross-module import from 'apps.inventory'
+  Importing: Product, Inventory
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+3. Line 150: Cross-module import from 'apps.inventory'
+  Importing: Inventory
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+4. Line 246: Cross-module import from 'apps.workspace'
+  Importing: trigger_inventory_event
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+⚠️  WARNINGS (1):
+--------------------------------------------------------------------------------
+
+1. Line 22: Model 'StockAlert' should include AuditLogMixin for audit logging
+  Recommended: class StockAlert(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 4 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/cost_layer_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/cost_layer_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/counting_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/counting_models.py
+================================================================================
+
+❌ ERRORS (3):
+--------------------------------------------------------------------------------
+
+1. Line 18: Model 'InventorySession' must inherit from TenantOwnedModel
+  Fix: class InventorySession(AuditLogMixin, TenantOwnedModel):
+
+2. Line 78: Model 'InventorySessionLine' must inherit from TenantOwnedModel
+  Fix: class InventorySessionLine(AuditLogMixin, TenantOwnedModel):
+
+3. Line 137: Model 'CycleCountPolicy' must inherit from TenantOwnedModel
+  Fix: class CycleCountPolicy(AuditLogMixin, TenantOwnedModel):
+
+⚠️  WARNINGS (3):
+--------------------------------------------------------------------------------
+
+1. Line 18: Model 'InventorySession' should include AuditLogMixin for audit logging
+  Recommended: class InventorySession(AuditLogMixin, TenantOwnedModel):
+
+2. Line 78: Model 'InventorySessionLine' should include AuditLogMixin for audit logging
+  Recommended: class InventorySessionLine(AuditLogMixin, TenantOwnedModel):
+
+3. Line 137: Model 'CycleCountPolicy' should include AuditLogMixin for audit logging
+  Recommended: class CycleCountPolicy(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 3 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/fulfillment_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/fulfillment_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/goods_receipt_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/goods_receipt_models.py
+================================================================================
+
+❌ ERRORS (1):
+--------------------------------------------------------------------------------
+
+1. Line 126: Cross-module import from 'apps.finance'
+  Importing: TransactionSequence
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+❌ VALIDATION FAILED - 1 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/__init__.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/__init__.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/location_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/location_models.py
+================================================================================
+
+❌ ERRORS (6):
+--------------------------------------------------------------------------------
+
+1. Line 13: Model 'WarehouseZone' must inherit from TenantOwnedModel
+  Fix: class WarehouseZone(AuditLogMixin, TenantOwnedModel):
+
+2. Line 45: Model 'WarehouseAisle' must inherit from TenantOwnedModel
+  Fix: class WarehouseAisle(AuditLogMixin, TenantOwnedModel):
+
+3. Line 60: Model 'WarehouseRack' must inherit from TenantOwnedModel
+  Fix: class WarehouseRack(AuditLogMixin, TenantOwnedModel):
+
+4. Line 76: Model 'WarehouseShelf' must inherit from TenantOwnedModel
+  Fix: class WarehouseShelf(AuditLogMixin, TenantOwnedModel):
+
+5. Line 91: Model 'WarehouseBin' must inherit from TenantOwnedModel
+  Fix: class WarehouseBin(AuditLogMixin, TenantOwnedModel):
+
+6. Line 119: Model 'ProductLocation' must inherit from TenantOwnedModel
+  Fix: class ProductLocation(AuditLogMixin, TenantOwnedModel):
+
+⚠️  WARNINGS (6):
+--------------------------------------------------------------------------------
+
+1. Line 13: Model 'WarehouseZone' should include AuditLogMixin for audit logging
+  Recommended: class WarehouseZone(AuditLogMixin, TenantOwnedModel):
+
+2. Line 45: Model 'WarehouseAisle' should include AuditLogMixin for audit logging
+  Recommended: class WarehouseAisle(AuditLogMixin, TenantOwnedModel):
+
+3. Line 60: Model 'WarehouseRack' should include AuditLogMixin for audit logging
+  Recommended: class WarehouseRack(AuditLogMixin, TenantOwnedModel):
+
+4. Line 76: Model 'WarehouseShelf' should include AuditLogMixin for audit logging
+  Recommended: class WarehouseShelf(AuditLogMixin, TenantOwnedModel):
+
+5. Line 91: Model 'WarehouseBin' should include AuditLogMixin for audit logging
+  Recommended: class WarehouseBin(AuditLogMixin, TenantOwnedModel):
+
+6. Line 119: Model 'ProductLocation' should include AuditLogMixin for audit logging
+  Recommended: class ProductLocation(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 6 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/order_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/order_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/product_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/product_models.py
+================================================================================
+
+❌ ERRORS (9):
+--------------------------------------------------------------------------------
+
+1. Line 141: Model 'Product' must inherit from TenantOwnedModel
+  Fix: class Product(AuditLogMixin, TenantOwnedModel):
+
+2. Line 391: Model 'ProductAttribute' must inherit from TenantOwnedModel
+  Fix: class ProductAttribute(AuditLogMixin, TenantOwnedModel):
+
+3. Line 405: Model 'ProductAttributeValue' must inherit from TenantOwnedModel
+  Fix: class ProductAttributeValue(AuditLogMixin, TenantOwnedModel):
+
+4. Line 418: Model 'ProductVariant' must inherit from TenantOwnedModel
+  Fix: class ProductVariant(AuditLogMixin, TenantOwnedModel):
+
+5. Line 436: Model 'ComboComponent' must inherit from TenantOwnedModel
+  Fix: class ComboComponent(AuditLogMixin, TenantOwnedModel):
+
+6. Line 449: Model 'ProductPackaging' must inherit from TenantOwnedModel
+  Fix: class ProductPackaging(AuditLogMixin, TenantOwnedModel):
+
+7. Line 192: Cross-module import from 'apps.finance'
+  Importing: TaxEngineContext, TaxCalculator
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+8. Line 291: Cross-module import from 'apps.pos'
+  Importing: ProductSupplier
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+9. Line 223: Cross-module import from 'apps.inventory'
+  Importing: StockValuationEntry
+  Fix: Use events for cross-module communication:
+    from kernel.events import emit_event
+    emit_event('module.event_name', {'data': ...})
+
+⚠️  WARNINGS (11):
+--------------------------------------------------------------------------------
+
+1. Line 9: Model 'Unit' should include AuditLogMixin for audit logging
+  Recommended: class Unit(AuditLogMixin, TenantOwnedModel):
+
+2. Line 31: Model 'Category' should include AuditLogMixin for audit logging
+  Recommended: class Category(AuditLogMixin, TenantOwnedModel):
+
+3. Line 72: Model 'Brand' should include AuditLogMixin for audit logging
+  Recommended: class Brand(AuditLogMixin, TenantOwnedModel):
+
+4. Line 91: Model 'Parfum' should include AuditLogMixin for audit logging
+  Recommended: class Parfum(AuditLogMixin, TenantOwnedModel):
+
+5. Line 107: Model 'ProductGroup' should include AuditLogMixin for audit logging
+  Recommended: class ProductGroup(AuditLogMixin, TenantOwnedModel):
+
+6. Line 141: Model 'Product' should include AuditLogMixin for audit logging
+  Recommended: class Product(AuditLogMixin, TenantOwnedModel):
+
+7. Line 391: Model 'ProductAttribute' should include AuditLogMixin for audit logging
+  Recommended: class ProductAttribute(AuditLogMixin, TenantOwnedModel):
+
+8. Line 405: Model 'ProductAttributeValue' should include AuditLogMixin for audit logging
+  Recommended: class ProductAttributeValue(AuditLogMixin, TenantOwnedModel):
+
+9. Line 418: Model 'ProductVariant' should include AuditLogMixin for audit logging
+  Recommended: class ProductVariant(AuditLogMixin, TenantOwnedModel):
+
+10. Line 436: Model 'ComboComponent' should include AuditLogMixin for audit logging
+  Recommended: class ComboComponent(AuditLogMixin, TenantOwnedModel):
+
+11. Line 449: Model 'ProductPackaging' should include AuditLogMixin for audit logging
+  Recommended: class ProductPackaging(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 9 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/product_models_v2.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/product_models_v2.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/reason_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/reason_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/replenishment_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/replenishment_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/request_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/request_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/snapshot_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/snapshot_models.py
+================================================================================
+
+⚠️  WARNINGS (2):
+--------------------------------------------------------------------------------
+
+1. Line 16: Model 'InventoryBalance' should include AuditLogMixin for audit logging
+  Recommended: class InventoryBalance(AuditLogMixin, TenantOwnedModel):
+
+2. Line 67: Model 'InventoryBalanceHistory' should include AuditLogMixin for audit logging
+  Recommended: class InventoryBalanceHistory(AuditLogMixin, TenantOwnedModel):
+
+✅ VALIDATION PASSED - 2 warning(s) to review
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/stock_ledger_model.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/stock_ledger_model.py
+================================================================================
+
+❌ ERRORS (3):
+--------------------------------------------------------------------------------
+
+1. Line 26: Model 'StockLedger' must inherit from TenantOwnedModel
+  Fix: class StockLedger(AuditLogMixin, TenantOwnedModel):
+
+2. Line 32: Hardcoded list constant: MOVEMENT_TYPES
+  Fix: Use get_config('movement_types', default=...)
+
+3. Line 55: Hardcoded list constant: RESERVATION_SOURCE_TYPES
+  Fix: Use get_config('reservation_source_types', default=...)
+
+⚠️  WARNINGS (1):
+--------------------------------------------------------------------------------
+
+1. Line 26: Model 'StockLedger' should include AuditLogMixin for audit logging
+  Recommended: class StockLedger(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 3 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/stock_move_model.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/stock_move_model.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/unit_conversion_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/unit_conversion_models.py
+================================================================================
+
+✅ PASS - No architecture violations found
+
+--------------------------------------------------------------------------------
+FILE: apps/inventory/models/warehouse_models.py
+
+================================================================================
+Architecture Validation: apps/inventory/models/warehouse_models.py
+================================================================================
+
+❌ ERRORS (3):
+--------------------------------------------------------------------------------
+
+1. Line 8: Model 'Warehouse' must inherit from TenantOwnedModel
+  Fix: class Warehouse(AuditLogMixin, TenantOwnedModel):
+
+2. Line 163: Model 'Inventory' must inherit from TenantOwnedModel
+  Fix: class Inventory(AuditLogMixin, TenantOwnedModel):
+
+3. Line 192: Model 'InventoryMovement' must inherit from TenantOwnedModel
+  Fix: class InventoryMovement(AuditLogMixin, TenantOwnedModel):
+
+⚠️  WARNINGS (3):
+--------------------------------------------------------------------------------
+
+1. Line 8: Model 'Warehouse' should include AuditLogMixin for audit logging
+  Recommended: class Warehouse(AuditLogMixin, TenantOwnedModel):
+
+2. Line 163: Model 'Inventory' should include AuditLogMixin for audit logging
+  Recommended: class Inventory(AuditLogMixin, TenantOwnedModel):
+
+3. Line 192: Model 'InventoryMovement' should include AuditLogMixin for audit logging
+  Recommended: class InventoryMovement(AuditLogMixin, TenantOwnedModel):
+
+❌ VALIDATION FAILED - 3 error(s) must be fixed
+
+================================================================================
+
+--------------------------------------------------------------------------------

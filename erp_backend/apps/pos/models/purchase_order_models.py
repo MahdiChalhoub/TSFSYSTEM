@@ -139,6 +139,8 @@ class PurchaseOrder(TenantModel):
                                      related_name='cancelled_pos')
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancellation_reason = models.TextField(null=True, blank=True, help_text="Reason for supplier cancellation")
+    
+    invoiced_at = models.DateTimeField(null=True, blank=True)
 
     # Invoice & Payment
     invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,

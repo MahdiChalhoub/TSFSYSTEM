@@ -100,7 +100,7 @@ class OrgSaasSitesMixin:
             return Response({'error': 'site_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            site = Warehouse.objects.get(id=site_id, organization_id=pk, location_type='BRANCH')
+            site = Warehouse.objects.get(id=site_id, tenant_id=pk, location_type='BRANCH')
             site.is_active = not site.is_active
             site.save(update_fields=['is_active'])
             status_text = 'activated' if site.is_active else 'deactivated'

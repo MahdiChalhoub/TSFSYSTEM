@@ -172,7 +172,7 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         from django.db.models import Sum
         from django.utils import timezone
 
-        qs = Invoice.objects.filter(organization_id=organization_id)
+        qs = Invoice.objects.filter(tenant_id=organization_id)
         
         return Response({
             'total_invoices': qs.count(),
@@ -208,14 +208,14 @@ class InvoiceLineViewSet(TenantModelViewSet):
         invoice = serializer.validated_data.get('invoice')
         if invoice and invoice.organization_id != org_id:
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
         invoice = serializer.validated_data.get('invoice')
         if invoice and invoice.organization_id != org_id:
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
 
 class PaymentAllocationViewSet(TenantModelViewSet):
@@ -230,7 +230,7 @@ class PaymentAllocationViewSet(TenantModelViewSet):
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
         if payment and payment.organization_id != org_id:
             raise ValidationError("Cross-tenant Payment assignment blocked.")
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -240,4 +240,4 @@ class PaymentAllocationViewSet(TenantModelViewSet):
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
         if payment and payment.organization_id != org_id:
             raise ValidationError("Cross-tenant Payment assignment blocked.")
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)

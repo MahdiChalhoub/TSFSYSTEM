@@ -25,6 +25,40 @@ def check_overdue_invoices():
     return {'overdue_count': count}
 
 
+# ── CRM Compliance Batch Scan (11/10 Enterprise) ──────────────
+
+@shared_task(name='erp.tasks.scan_contacts_compliance')
+def scan_contacts_compliance():
+    """
+    Nightly scan of all active contacts to update compliance status,
+    detect upcoming expiries, and generate renewal tasks. (§Missing 8)
+    """
+    from erp.models import Organization
+    from apps.crm.models import Contact
+    from apps.crm.services.compliance_service import ComplianceService
+    
+    contacts_processed = 0
+    orgs = Organization.objects.all()
+    
+    for org in orgs:
+        # Check only contacts that are commercially active
+        contacts = Contact.objects.filter(
+            organization=org,
+            status__in=['ACTIVE', 'ON_HOLD', 'DRAFT']
+        )
+        for contact in contacts:
+            try:
+                ComplianceService.recompute_compliance(contact)
+                # Process escalations (Missing 18)
+                ComplianceService.process_escalations(contact)
+                contacts_processed += 1
+            except Exception as e:
+                logger.error(f"[Task] Compliance recompute failed for contact {contact.id}: {e}")
+                
+    logger.info(f"[Task] scan_contacts_compliance: {contacts_processed} contacts scanned across {orgs.count()} organizations.")
+    return {'processed': contacts_processed}
+
+
 # ── Stock Level Monitoring ────────────────────────────────────
 
 @shared_task(name='erp.tasks.check_low_stock')
@@ -293,7 +327,7 @@ def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'
         # Record execution
         ReportExecution.objects.create(
             report=report_def,
-            organization_id=organization_id,
+            tenant_id=organization_id,
             status='SUCCESS' if 'file_path' in result else 'FAILED',
             row_count=result.get('row_count', 0),
             file_path=result.get('file_path', ''),
@@ -309,7 +343,7 @@ def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'
             from apps.finance.report_models import ReportDefinition, ReportExecution
             ReportExecution.objects.create(
                 report_id=report_def_id,
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 status='FAILED',
                 error_message=str(exc),
             )

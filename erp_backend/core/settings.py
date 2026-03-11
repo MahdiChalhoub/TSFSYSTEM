@@ -414,6 +414,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'erp.tasks_domains.warm_domain_cache',
         'schedule': crontab(minute=0, hour='*/4'),    # Every 4 hours
     },
+    'scan-contacts-compliance': {
+        'task': 'erp.tasks.scan_contacts_compliance',
+        'schedule': crontab(minute=0, hour=0),        # Daily at midnight
+    },
 }
 
 # ── Email Configuration (for notifications) ──────────────────

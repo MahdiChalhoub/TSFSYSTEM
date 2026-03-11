@@ -51,12 +51,12 @@ class AuditLog(models.Model):
 
     # Map from AuditLogMixin field names to actual DB columns
     @classmethod
-    def create_from_mixin(cls, organization_id=None, user=None, action='', 
+    def create_from_mixin(cls, tenant_id=None, user=None, action='', 
                           entity_type='', entity_id='', new_data=None, 
                           old_data=None, ip_address=None, user_agent=''):
         """Create entry using the field names from AuditLogMixin."""
         return cls.objects.create(
-            organization_id=organization_id,
+            tenant_id=organization_id,
             actor=user,
             action=action,
             table_name=entity_type,

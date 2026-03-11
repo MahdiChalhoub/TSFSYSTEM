@@ -53,7 +53,7 @@ class StockReservationService:
                     .filter(
                         product=line.product,
                         warehouse=warehouse,
-                        organization=order.organization,
+                        tenant=order.tenant,
                     )
                     .first()
                 )
@@ -74,7 +74,7 @@ class StockReservationService:
                 # Append reservation entry
                 prev = cls._latest_entry(line.product, warehouse, order.organization)
                 StockLedger.objects.create(
-                    organization=order.organization,
+                    tenant=order.tenant,
                     product=line.product,
                     warehouse=warehouse,
                     order=order,
@@ -103,7 +103,7 @@ class StockReservationService:
                 reserved_for_order = (
                     StockLedger.objects
                     .filter(
-                        organization=order.organization,
+                        tenant=order.tenant,
                         product=line.product,
                         warehouse=warehouse,
                         order=order,
@@ -119,12 +119,12 @@ class StockReservationService:
                 Inventory.objects.select_for_update().filter(
                     product=line.product,
                     warehouse=warehouse,
-                    organization=order.organization,
+                    tenant=order.tenant,
                 ).first()
 
                 prev = cls._latest_entry(line.product, warehouse, order.organization)
                 StockLedger.objects.create(
-                    organization=order.organization,
+                    tenant=order.tenant,
                     product=line.product,
                     warehouse=warehouse,
                     order=order,
@@ -159,7 +159,7 @@ class StockReservationService:
                 Inventory.objects.select_for_update().filter(
                     product=line.product,
                     warehouse=warehouse,
-                    organization=order.organization,
+                    tenant=order.tenant,
                 ).first()
 
                 prev = cls._latest_entry(line.product, warehouse, order.organization)
@@ -168,7 +168,7 @@ class StockReservationService:
                 reserved_for_order = (
                     StockLedger.objects
                     .filter(
-                        organization=order.organization,
+                        tenant=order.tenant,
                         product=line.product,
                         warehouse=warehouse,
                         order=order,
@@ -179,7 +179,7 @@ class StockReservationService:
                 release_qty = min(qty, reserved_for_order)
 
                 StockLedger.objects.create(
-                    organization=order.organization,
+                    tenant=order.tenant,
                     product=line.product,
                     warehouse=warehouse,
                     order=order,
@@ -201,7 +201,7 @@ class StockReservationService:
         """
         from apps.inventory.models import Inventory
         inv = Inventory.objects.filter(
-            product=product, warehouse=warehouse, organization=organization
+            product=product, warehouse=warehouse, tenant=organization
         ).first()
         on_hand  = inv.quantity if inv else Decimal('0')
         reserved = cls._get_reserved(product, warehouse, organization)
@@ -220,7 +220,7 @@ class StockReservationService:
         from django.db.models import Sum
         total = (
             StockLedger.objects
-            .filter(organization=organization, product=product, warehouse=warehouse)
+            .filter(tenant=organization, product=product, warehouse=warehouse)
             .aggregate(total=Sum('reserved_delta'))['total']
         )
         return max(Decimal('0'), total or Decimal('0'))
@@ -231,7 +231,7 @@ class StockReservationService:
         from apps.inventory.models import Inventory, StockLedger
         last = (
             StockLedger.objects
-            .filter(organization=organization, product=product, warehouse=warehouse)
+            .filter(tenant=organization, product=product, warehouse=warehouse)
             .order_by('-created_at')
             .first()
         )
@@ -239,7 +239,7 @@ class StockReservationService:
             return {'on_hand': last.running_on_hand, 'reserved': last.running_reserved}
         # Bootstrap from raw Inventory quantity
         inv = Inventory.objects.filter(
-            product=product, warehouse=warehouse, organization=organization
+            product=product, warehouse=warehouse, tenant=organization
         ).first()
         return {'on_hand': inv.quantity if inv else Decimal('0'), 'reserved': Decimal('0')}
 

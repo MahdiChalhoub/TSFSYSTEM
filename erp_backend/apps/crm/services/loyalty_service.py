@@ -187,25 +187,8 @@ class LoyaltyService:
 
     @staticmethod
     def get_supplier_scorecard(contact):
-        """Return performance scorecard for a supplier contact."""
-        total = contact.supplier_total_orders
-        delivery_pct = (contact.on_time_deliveries / total * 100) if total > 0 else 0
-
-        return {
-            'name': contact.name,
-            'overall_rating': float(contact.overall_rating),
-            'quality_rating': float(contact.quality_rating),
-            'delivery_rating': float(contact.delivery_rating),
-            'pricing_rating': float(contact.pricing_rating),
-            'service_rating': float(contact.service_rating),
-            'total_ratings': contact.total_ratings,
-            'total_orders': total,
-            'on_time_pct': round(delivery_pct, 1),
-            'on_time': contact.on_time_deliveries,
-            'late': contact.late_deliveries,
-            'total_purchase_amount': float(contact.total_purchase_amount),
-            'avg_lead_time_days': float(contact.avg_lead_time_days),
-        }
+        """Return performance scorecard for a supplier contact (§24)."""
+        return contact.supplier_scorecard
 
 
 def _running_avg(old_avg, new_val, count):

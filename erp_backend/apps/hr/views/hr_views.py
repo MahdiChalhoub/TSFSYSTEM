@@ -37,7 +37,7 @@ class AttendanceViewSet(TenantModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         self._validate_employee_ownership(serializer.validated_data, org_id)
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -48,10 +48,42 @@ class AttendanceViewSet(TenantModelViewSet):
     def check_in(self, request, pk=None):
         from django.utils import timezone
         record = self.get_object()
-        record.check_in = timezone.now()
+        now = timezone.now()
+        record.check_in = now
         record.status = 'PRESENT'
+        
+        # Late detection logic
+        if record.shift and now.time() > record.shift.start_time:
+            record.status = 'LATE'
+            try:
+                from kernel.events import emit_event
+                emit_event('hr.attendance.late', {
+                    'employee_id': record.employee_id,
+                    'check_in': now.isoformat(),
+                    'shift_start': record.shift.start_time.isoformat(),
+                    'minutes_late': int((now - now.replace(
+                        hour=record.shift.start_time.hour,
+                        minute=record.shift.start_time.minute,
+                        second=0, microsecond=0
+                    )).total_seconds() / 60),
+                    'tenant_id': record.organization_id
+                }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
+            except Exception:
+                pass
+        else:
+            # On-time or early arrival — reward
+            try:
+                from kernel.events import emit_event
+                emit_event('hr.attendance.on_time', {
+                    'employee_id': record.employee_id,
+                    'check_in': now.isoformat(),
+                    'tenant_id': record.organization_id
+                }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
+            except Exception:
+                pass
+
         record.save(update_fields=['check_in', 'status'])
-        return Response({"message": "Checked in", "check_in": record.check_in.isoformat()})
+        return Response({"message": "Checked in", "check_in": record.check_in.isoformat(), "status": record.status})
     @action(detail=True, methods=['post'], url_path='check-out')
     def check_out(self, request, pk=None):
         from django.utils import timezone
@@ -72,7 +104,7 @@ class LeaveViewSet(TenantModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         self._validate_employee_ownership(serializer.validated_data, org_id)
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -90,4 +122,15 @@ class LeaveViewSet(TenantModelViewSet):
         leave = self.get_object()
         if leave.status != 'PENDING': return Response({"error": "Only pending leaves can be rejected"}, status=400)
         leave.reject(request.user)
+        # Rejected leave = unexcused absence signal
+        try:
+            from kernel.events import emit_event
+            emit_event('hr.absence.unexcused', {
+                'employee_id': leave.employee_id,
+                'leave_date': str(leave.start_date),
+                'reason': 'Leave request rejected',
+                'tenant_id': leave.organization_id
+            }, aggregate_type='leave', aggregate_id=leave.id, triggered_by=request.user)
+        except Exception:
+            pass
         return Response({"message": f"Leave rejected for {leave.employee}"})

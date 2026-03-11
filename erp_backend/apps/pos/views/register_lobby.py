@@ -102,7 +102,7 @@ class RegisterLobbyMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         site_id = request.query_params.get('site_id')
-        qs = POSRegister.objects.filter(organization_id=org_id)
+        qs = POSRegister.objects.filter(tenant_id=org_id)
         if site_id:
             qs = qs.filter(branch_id=site_id)
 
@@ -236,7 +236,7 @@ class RegisterLobbyMixin:
 
         register_id = request.data.get('id')
         try:
-            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
+            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -271,10 +271,10 @@ class RegisterLobbyMixin:
         if 'cash_account_id' in request.data and request.data['cash_account_id']:
             # Validate uniqueness on update too
             from apps.pos.models.register_models import POSSettings
-            settings_obj, _ = POSSettings.objects.get_or_create(organization_id=org_id)
+            settings_obj, _ = POSSettings.objects.get_or_create(tenant_id=org_id)
             if settings_obj.restrict_unique_cash_account:
                 conflict = POSRegister.objects.filter(
-                    organization_id=org_id, cash_account_id=register.cash_account_id
+                    tenant_id=org_id, cash_account_id=register.cash_account_id
                 ).exclude(id=register_id).first()
                 if conflict:
                     return Response({
@@ -301,7 +301,7 @@ class RegisterLobbyMixin:
             return Response({"error": "register_id required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
+            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -322,7 +322,7 @@ class RegisterLobbyMixin:
             })
 
         entries = CashierAddressBook.objects.filter(
-            organization_id=org_id, session=session, is_deleted=False
+            tenant_id=org_id, session=session, is_deleted=False
         )
 
         from decimal import Decimal
@@ -358,7 +358,7 @@ class RegisterLobbyMixin:
 
         try:
             register = POSRegister.objects.select_related('cash_account').prefetch_related('allowed_accounts').get(
-                id=register_id, organization_id=org_id
+                id=register_id, tenant_id=org_id
             )
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -376,7 +376,7 @@ class RegisterLobbyMixin:
                 from apps.finance.models import JournalLine
                 from django.db.models import Sum
                 agg = JournalLine.objects.filter(
-                    organization_id=org_id, account=acc
+                    tenant_id=org_id, account=acc
                 ).aggregate(
                     total_debit=Sum('debit_amount'),
                     total_credit=Sum('credit_amount'),
@@ -424,7 +424,7 @@ class RegisterLobbyMixin:
             return Response({"error": "register_id and pin are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
+            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 

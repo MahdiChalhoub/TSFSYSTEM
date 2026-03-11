@@ -68,7 +68,7 @@ class AuditLogMixin:
             # and doesn't poison the outer transaction.
             with db_transaction.atomic():
                 AuditLog.objects.create(
-                    organization_id=org_id,
+                    tenant_id=org_id,
                     actor=user,
                     action=action,
                     table_name=self.audit_model_name or instance.__class__.__name__,
@@ -150,7 +150,7 @@ class ConnectorAwareMixin:
             module=self.connector_module,
             action=action_name,
             data=request_data,
-            organization_id=org_id
+            tenant_id=org_id
         )
 
         return Response({
@@ -208,14 +208,14 @@ class TenantFilterMixin:
         org_id = getattr(self.request, 'org_id', None)
 
         if org_id and hasattr(qs.model, 'organization_id'):
-            return qs.filter(organization_id=org_id)
+            return qs.filter(tenant_id=org_id)
         return qs
 
     def perform_create(self, serializer):
         """Automatically set organization on create."""
         org_id = getattr(self.request, 'org_id', None)
         if org_id and 'organization_id' not in serializer.validated_data:
-            serializer.save(organization_id=org_id)
+            serializer.save(tenant_id=org_id)
         else:
             serializer.save()
 

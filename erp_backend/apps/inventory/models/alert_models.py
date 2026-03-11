@@ -12,14 +12,16 @@ Integrates with:
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+from kernel.events import emit_event
 
 
 # =============================================================================
 # STOCK ALERT
 # =============================================================================
 
-class StockAlert(TenantModel):
+class StockAlert(AuditLogMixin, TenantOwnedModel):
     """
     Alert generated when stock levels breach configured thresholds.
     Created by the Stock Alert Service (manual trigger or Celery periodic task).
@@ -83,9 +85,9 @@ class StockAlert(TenantModel):
         db_table = 'stock_alert'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['organization', 'status']),
-            models.Index(fields=['organization', 'alert_type']),
-            models.Index(fields=['organization', 'product']),
+            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['tenant', 'alert_type']),
+            models.Index(fields=['tenant', 'product']),
         ]
 
     def __str__(self):
@@ -126,15 +128,15 @@ class StockAlertService:
         alerts = service.scan_all()
     """
     
-    def __init__(self, organization):
-        self.organization = organization
+    def __init__(self, tenant):
+        self.tenant = tenant
 
     def scan_all(self):
         """Scan all products and create alerts for threshold breaches."""
         from apps.inventory.models import Product, Inventory
         
         products = Product.objects.filter(
-            organization=self.organization,
+            tenant=self.tenant,
             is_active=True
         ).select_related('category', 'unit')
 
@@ -154,7 +156,7 @@ class StockAlertService:
         
         # Get total stock across all warehouses
         total_stock = Inventory.objects.filter(
-            organization=self.organization,
+            tenant=self.tenant,
             product=product
         ).aggregate(total=Sum('quantity'))['total'] or Decimal('0.00')
 
@@ -221,7 +223,7 @@ class StockAlertService:
                                      threshold, message, reorder_qty=Decimal('0')):
         """Create alert only if no active alert of same type exists for this product."""
         existing = StockAlert.objects.filter(
-            organization=self.organization,
+            tenant=self.tenant,
             product=product,
             alert_type=alert_type,
             status__in=['ACTIVE', 'ACKNOWLEDGED']
@@ -231,7 +233,7 @@ class StockAlertService:
             return None
 
         alert = StockAlert.objects.create(
-            organization=self.organization,
+            tenant=self.tenant,
             product=product,
             alert_type=alert_type,
             severity=severity,
@@ -243,21 +245,31 @@ class StockAlertService:
 
         # ── Auto-Task: fire inventory triggers ──
         try:
-            from apps.workspace.signals import trigger_inventory_event
             if alert_type in ('LOW_STOCK', 'REORDER'):
-                trigger_inventory_event(
-                    self.organization, 'LOW_STOCK',
-                    product_name=str(product),
-                    product_id=product.id,
-                    amount=float(current_stock),
-                    extra={'threshold': float(threshold), 'reorder_qty': float(reorder_qty)},
+                emit_event(
+                    event_type='inventory.low_stock',
+                    payload={
+                        'product_id': product.id,
+                        'product_name': str(product),
+                        'amount': float(current_stock),
+                        'threshold': float(threshold),
+                        'reorder_qty': float(reorder_qty),
+                        'tenant_id': self.tenant.id if hasattr(self.tenant, 'id') else self.tenant
+                    },
+                    aggregate_type='inventory.product',
+                    aggregate_id=product.id
                 )
             elif alert_type == 'OUT_OF_STOCK':
-                trigger_inventory_event(
-                    self.organization, 'NEGATIVE_STOCK',
-                    product_name=str(product),
-                    product_id=product.id,
-                    amount=float(current_stock),
+                emit_event(
+                    event_type='inventory.negative_stock',
+                    payload={
+                        'product_id': product.id,
+                        'product_name': str(product),
+                        'amount': float(current_stock),
+                        'tenant_id': self.tenant.id if hasattr(self.tenant, 'id') else self.tenant
+                    },
+                    aggregate_type='inventory.product',
+                    aggregate_id=product.id
                 )
         except Exception:
             pass

@@ -519,7 +519,7 @@ class RecordHistoryViewSet(viewsets.ViewSet):
         tenant_id = get_current_tenant_id()
         qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
         if tenant_id:
-            qs = qs.filter(organization_id=tenant_id)
+            qs = qs.filter(tenant_id=tenant_id)
         
         # --- STRICT SCOPE ISOLATION ---
         from .middleware import get_authorized_scope
@@ -565,13 +565,13 @@ class EntityGraphViewSet(viewsets.ViewSet):
         # Audit entries for this entity
         audit_qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
         if tenant_id:
-            audit_qs = audit_qs.filter(organization_id=tenant_id)
+            audit_qs = audit_qs.filter(tenant_id=tenant_id)
         audit_ids = list(audit_qs.values_list('id', flat=True)[:50])
 
         # Approval requests linked to this entity
         approval_qs = ApprovalRequest.objects.filter(target_table=table, target_id=record_id)
         if tenant_id:
-            approval_qs = approval_qs.filter(organization_id=tenant_id)
+            approval_qs = approval_qs.filter(tenant_id=tenant_id)
         approvals = [{
             "id": str(a.id),
             "status": a.status,

@@ -418,7 +418,7 @@ def register_default_tools(organization_id: int):
     
     for tool_data in DEFAULT_TOOLS:
         MCPTool.objects.update_or_create(
-            organization_id=organization_id,
+            tenant_id=organization_id,
             name=tool_data['name'],
             defaults={
                 'description': tool_data['description'],

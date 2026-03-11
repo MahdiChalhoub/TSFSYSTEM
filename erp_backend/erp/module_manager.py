@@ -309,7 +309,7 @@ class ModuleManager:
             
         # 2. Org-specific check
         return OrganizationModule.objects.filter(
-            organization_id=organization_id,
+            tenant_id=organization_id,
             module_name=module_name,
             is_enabled=True
         ).exists()
@@ -330,7 +330,7 @@ class ModuleManager:
         default_features = [f['code'] for f in features if f.get('default', False)]
 
         OrganizationModule.objects.update_or_create(
-            organization_id=organization_id,
+            tenant_id=organization_id,
             module_name=module_name,
             defaults={
                 'is_enabled': True,

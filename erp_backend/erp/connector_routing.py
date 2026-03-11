@@ -231,11 +231,11 @@ class ConnectorRoutingMixin:
             
             if hasattr(models_module, model_name):
                 model = getattr(models_module, model_name)
-                qs = model.objects.filter(organization_id=organization_id)
+                qs = model.objects.filter(tenant_id=organization_id)
                 # handle detail
                 parts = endpoint.strip('/').split('/')
                 if len(parts) > 1 and parts[1].isdigit():
-                    return model.objects.filter(organization_id=organization_id, id=parts[1]).values().first()
+                    return model.objects.filter(tenant_id=organization_id, id=parts[1]).values().first()
                 return list(qs.values()[:100]) # Safety limit
             return None
         except Exception:
@@ -293,7 +293,7 @@ class ConnectorRoutingMixin:
                 module_state=state.value,
                 decision=decision,
                 policy_applied=policy,
-                organization_id=org_id,
+                tenant_id=org_id,
                 user_id=user_id,
                 success=success,
                 response_time_ms=latency

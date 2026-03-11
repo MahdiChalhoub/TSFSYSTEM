@@ -1,4 +1,5 @@
 from .coa_models import ChartOfAccount, FinancialAccount
+from .coa_models import NORMAL_BALANCE_MAP, ACCOUNT_CLASS_MAP, ACCOUNT_CLASS_NAMES
 from .fiscal_models import FiscalYear, FiscalPeriod
 from .ledger_models import JournalEntry, JournalEntryLine
 from .transaction_models import Transaction, TransactionSequence
@@ -18,6 +19,19 @@ from apps.finance.invoice_models import Invoice, InvoiceLine
 from apps.finance.zatca_config import ZATCAConfig
 from apps.finance.report_models import ReportDefinition, ReportExecution
 from apps.finance.gateway_models import GatewayConfig
+# ── Engine Models (v2.0) ───────────────────────────────────────
+from .opening_balance import OpeningBalance
+from .balance_snapshot import AccountBalanceSnapshot
+from .reconciliation_models import ReconciliationMatch, ReconciliationLine
+# ── Phase 3: Enterprise Models ─────────────────────────────────
+from .currency_models import Currency, ExchangeRate, CurrencyRevaluation, CurrencyRevaluationLine
+from .recurring_journal_models import RecurringJournalTemplate, RecurringJournalLine, RecurringJournalExecution
+from .budget_models import Budget, BudgetLine
+from .consolidation_models import (
+    ConsolidationGroup, ConsolidationEntity, IntercompanyRule,
+    ConsolidationRun, ConsolidationLine,
+)
+
 
 __all__ = [
     'ChartOfAccount', 'FinancialAccount', 'FiscalYear', 'FiscalPeriod',
@@ -28,5 +42,17 @@ __all__ = [
     'CustomTaxRule',
     'Payment', 'CustomerBalance', 'SupplierBalance',
     'Invoice', 'InvoiceLine', 'ZATCAConfig', 'ReportDefinition', 'ReportExecution',
-    'GatewayConfig'
+    'GatewayConfig',
+    # v2.0 Engine Models
+    'OpeningBalance', 'AccountBalanceSnapshot',
+    'ReconciliationMatch', 'ReconciliationLine',
+    'NORMAL_BALANCE_MAP', 'ACCOUNT_CLASS_MAP', 'ACCOUNT_CLASS_NAMES',
+    'FinanceDailySummary',
+    # Phase 3: Enterprise
+    'Currency', 'ExchangeRate', 'CurrencyRevaluation', 'CurrencyRevaluationLine',
+    'RecurringJournalTemplate', 'RecurringJournalLine', 'RecurringJournalExecution',
+    'Budget', 'BudgetLine',
+    'ConsolidationGroup', 'ConsolidationEntity', 'IntercompanyRule',
+    'ConsolidationRun', 'ConsolidationLine',
 ]
+

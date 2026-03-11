@@ -36,7 +36,7 @@ class TenantAuthBackend(ModelBackend):
             # Query Logic
             query = Q(username=username)
             if org_id:
-                query &= Q(organization_id=org_id)
+                query &= Q(tenant_id=org_id)
             else:
                 # If no tenant context is found:
                 # OPTION A: Only match root users (org=None)

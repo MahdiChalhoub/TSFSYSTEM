@@ -75,13 +75,13 @@ class ProductSerializer(serializers.ModelSerializer):
             'min_stock_level', 'max_stock_level', 'reorder_point', 'reorder_quantity',
             'is_expiry_tracked', 'tracks_serials',
             'status', 'is_active', 'created_at', 'updated_at',
-            'organization',
+            'tenant',
             # Gap 3 stock fields
             'on_hand_qty', 'reserved_qty', 'available_qty',
             # Gap 6 transfer fields
             'incoming_transfer_qty', 'outgoing_transfer_qty',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']
 
     def _resolve_warehouse(self, obj):
         """Resolve warehouse from request query param ?warehouse=<id>."""
@@ -92,7 +92,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 try:
                     from apps.inventory.models import Warehouse
                     return Warehouse.objects.filter(
-                        id=int(wh_id), organization=obj.organization
+                        id=int(wh_id), tenant=obj.tenant
                     ).first()
                 except (ValueError, TypeError):
                     pass
@@ -102,12 +102,12 @@ class ProductSerializer(serializers.ModelSerializer):
         warehouse = self._resolve_warehouse(obj)
         if warehouse:
             inv = Inventory.objects.filter(
-                product=obj, warehouse=warehouse, organization=obj.organization
+                product=obj, warehouse=warehouse, tenant=obj.tenant
             ).first()
             return float(inv.quantity if inv else Decimal('0'))
         # Fallback: sum across all warehouses
         return float(
-            Inventory.objects.filter(product=obj, organization=obj.organization)
+            Inventory.objects.filter(product=obj, tenant=obj.tenant)
             .aggregate(t=Sum('quantity'))['t'] or 0
         )
 
@@ -139,7 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.inventory.models import StockMoveLine
         qs = StockMoveLine.objects.filter(
             product=obj,
-            tenant=obj.organization,
+            tenant=obj.tenant,
             move__status__in=['PENDING', 'IN_TRANSIT']
         )
         if warehouse:
@@ -151,7 +151,7 @@ class ProductSerializer(serializers.ModelSerializer):
         from apps.inventory.models import StockMoveLine
         qs = StockMoveLine.objects.filter(
             product=obj,
-            tenant=obj.organization,
+            tenant=obj.tenant,
             move__status__in=['PENDING', 'IN_TRANSIT']
         )
         if warehouse:
@@ -171,7 +171,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'is_expiry_tracked',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']
 
 
 class StorefrontProductSerializer(serializers.ModelSerializer):
@@ -201,9 +201,9 @@ class ComboComponentSerializer(serializers.ModelSerializer):
             'id', 'combo_product', 'component_product',
             'component_name', 'component_sku', 'component_price',
             'quantity', 'price_override', 'sort_order',
-            'organization',
+            'tenant',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']
 
 
 class ProductAnalyticsSerializer(serializers.Serializer):

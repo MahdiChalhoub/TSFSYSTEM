@@ -110,7 +110,7 @@ class CustomDomainViewSet(viewsets.ModelViewSet):
                 "Maximum of 5 custom domains per organization. Remove one to add another."
             )
 
-        instance = serializer.save(organization_id=org_id)
+        instance = serializer.save(tenant_id=org_id)
         logger.info(f"[DOMAIN] Added: {domain} → org={org_id} type={instance.domain_type}")
 
     def perform_destroy(self, instance):

@@ -215,7 +215,7 @@ def _on_order_completed(payload: dict, organization_id: int):
         return {'success': True, 'skipped': True}
         
     try:
-        contact = Contact.objects.get(pk=contact_id, organization_id=organization_id)
+        contact = Contact.objects.get(pk=contact_id, tenant_id=organization_id)
         
         # Update analytics fields
         contact.total_orders += 1
@@ -262,7 +262,7 @@ def _on_purchase_order_completed(payload: dict, organization_id: int):
         return {'success': True, 'skipped': True}
         
     try:
-        supplier = Contact.objects.get(pk=supplier_id, organization_id=organization_id)
+        supplier = Contact.objects.get(pk=supplier_id, tenant_id=organization_id)
         
         supplier.supplier_total_orders += 1
         supplier.total_purchase_amount += total_amount

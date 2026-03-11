@@ -10,12 +10,12 @@ class InventoryValuationService:
     @staticmethod
     def get_inventory_valuation(organization):
         from apps.inventory.models import Inventory
-        result = Inventory.objects.filter(organization=organization).aggregate(
+        result = Inventory.objects.filter(tenant=organization).aggregate(
             total_value=Sum(F('quantity') * F('product__cost_price'))
         )
         return {
             "total_value": Decimal(str(result['total_value'] or '0')),
-            "item_count": Inventory.objects.filter(organization=organization).count(),
+            "item_count": Inventory.objects.filter(tenant=organization).count(),
             "timestamp": timezone.now(),
         }
 
@@ -24,7 +24,7 @@ class InventoryValuationService:
         from apps.inventory.models import Inventory, InventoryMovement, Product
         from datetime import timedelta
 
-        inv_qs = Inventory.objects.filter(organization=organization)
+        inv_qs = Inventory.objects.filter(tenant=organization)
 
         agg = inv_qs.aggregate(
             total_cost_value=Sum(F('quantity') * F('product__cost_price')),
@@ -42,7 +42,7 @@ class InventoryValuationService:
 
         thirty_days_ago = timezone.now() - timedelta(days=30)
         movement_agg = InventoryMovement.objects.filter(
-            organization=organization,
+            tenant=organization,
             created_at__gte=thirty_days_ago,
         ).values('type').annotate(
             total_qty=Sum('quantity'),
@@ -62,7 +62,7 @@ class InventoryValuationService:
             "potential_margin": float(total_retail - total_cost),
             "total_items": float(total_items),
             "low_stock_count": low_stock_count,
-            "sku_count": Product.objects.filter(organization=organization, status='ACTIVE').count(),
+            "sku_count": Product.objects.filter(tenant=organization, status='ACTIVE').count(),
             "movements_30d": movements,
             "timestamp": timezone.now().isoformat(),
         }
@@ -76,7 +76,7 @@ class InventoryValuationService:
         except ImportError:
             return {"status": "ERROR", "message": "Finance module required for reconciliation."}
 
-        physical_valuation = Inventory.objects.filter(organization=organization).aggregate(
+        physical_valuation = Inventory.objects.filter(tenant=organization).aggregate(
             total=Sum(F('quantity') * F('product__cost_price'))
         )['total'] or Decimal('0.00')
 
@@ -140,7 +140,7 @@ class InventoryValuationService:
                 ]
 
             LedgerService.create_journal_entry(
-                organization=organization, transaction_date=timezone.now(),
+                tenant=organization, transaction_date=timezone.now(),
                 description=desc, reference="SYNC-AUTO", status='POSTED',
                 user=user, lines=lines
             )
@@ -159,7 +159,7 @@ class InventoryValuationService:
 
         with transaction.atomic():
             last_entry = StockValuationEntry.objects.filter(
-                organization=organization, product=product, warehouse=warehouse
+                tenant=organization, product=product, warehouse=warehouse
             ).order_by('-movement_date', '-created_at').first()
 
             prev_qty = last_entry.running_quantity if last_entry else Decimal('0')
@@ -170,7 +170,7 @@ class InventoryValuationService:
             new_avg = (new_val / new_qty).quantize(Decimal('0.01')) if new_qty > 0 else Decimal('0')
 
             return StockValuationEntry.objects.create(
-                organization=organization, product=product, warehouse=warehouse,
+                tenant=organization, product=product, warehouse=warehouse,
                 movement_type='IN', movement_date=timezone.now(),
                 quantity=quantity, unit_cost=unit_cost, total_value=total_value,
                 valuation_method=valuation_method, reference=reference, batch=batch,
@@ -185,7 +185,7 @@ class InventoryValuationService:
 
         with transaction.atomic():
             last_entry = StockValuationEntry.objects.filter(
-                organization=organization, product=product, warehouse=warehouse
+                tenant=organization, product=product, warehouse=warehouse
             ).order_by('-movement_date', '-created_at').first()
 
             if not allow_negative and (not last_entry or last_entry.running_quantity < quantity):
@@ -195,13 +195,13 @@ class InventoryValuationService:
                 unit_cost = last_entry.running_avg_cost if last_entry else Decimal('0')
             elif valuation_method == 'FIFO':
                 oldest = StockValuationEntry.objects.filter(
-                    organization=organization, product=product, warehouse=warehouse,
+                    tenant=organization, product=product, warehouse=warehouse,
                     movement_type='IN', running_quantity__gt=0
                 ).order_by('movement_date').first()
                 unit_cost = oldest.unit_cost if oldest else (last_entry.running_avg_cost if last_entry else Decimal('0'))
             elif valuation_method == 'LIFO':
                 newest = StockValuationEntry.objects.filter(
-                    organization=organization, product=product, warehouse=warehouse,
+                    tenant=organization, product=product, warehouse=warehouse,
                     movement_type='IN'
                 ).order_by('-movement_date').first()
                 unit_cost = newest.unit_cost if newest else (last_entry.running_avg_cost if last_entry else Decimal('0'))
@@ -214,7 +214,7 @@ class InventoryValuationService:
             new_avg = (new_val / new_qty).quantize(Decimal('0.01')) if new_qty > 0 else Decimal('0')
 
             return StockValuationEntry.objects.create(
-                organization=organization, product=product, warehouse=warehouse,
+                tenant=organization, product=product, warehouse=warehouse,
                 movement_type='OUT', movement_date=timezone.now(),
                 quantity=quantity, unit_cost=unit_cost, total_value=total_value,
                 valuation_method=valuation_method, reference=reference,
@@ -228,7 +228,7 @@ class InventoryValuationService:
         alerts_created = []
 
         batches = ProductBatch.objects.filter(
-            organization=organization, status='ACTIVE',
+            tenant=organization, status='ACTIVE',
             expiry_date__isnull=False, quantity__gt=0
         )
 
@@ -244,13 +244,13 @@ class InventoryValuationService:
             else: severity = 'WARNING'
 
             if ExpiryAlert.objects.filter(
-                organization=organization, batch=batch,
+                tenant=organization, batch=batch,
                 severity=severity, is_acknowledged=False
             ).exists(): continue
 
             value_at_risk = (batch.quantity * batch.cost_price).quantize(Decimal('0.01'))
             alert = ExpiryAlert.objects.create(
-                organization=organization, batch=batch, product=batch.product,
+                tenant=organization, batch=batch, product=batch.product,
                 severity=severity, days_until_expiry=days_until,
                 quantity_at_risk=batch.quantity, value_at_risk=value_at_risk
             )
@@ -286,7 +286,7 @@ class InventoryValuationService:
         filters = {'organization': organization}
         if warehouse_id: filters['warehouse_id'] = warehouse_id
 
-        products = Product.objects.filter(organization=organization, is_active=True)
+        products = Product.objects.filter(tenant=organization, is_active=True)
         summary = []
         for product in products:
             last_entry = StockValuationEntry.objects.filter(

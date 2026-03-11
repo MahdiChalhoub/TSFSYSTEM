@@ -297,6 +297,15 @@ class Invoice(AuditLogMixin, TenantOwnedModel, PostableMixin):
         if self.exchange_rate and self.total_amount:
             self.total_in_functional_currency = self.total_amount * self.exchange_rate
 
+        # CRM Compliance Block (User Request)
+        # Block transition from DRAFT if compliance is enforced and contact is non-compliant
+        if self.pk:
+            original = Invoice.objects.get(pk=self.pk)
+            if original.status == LifecycleStatus.DRAFT and self.status != LifecycleStatus.DRAFT:
+                is_compliant, missing, expired, msg = self.contact.check_compliance()
+                if not is_compliant:
+                    raise ValidationError(f"Compliance Block: {msg}")
+
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

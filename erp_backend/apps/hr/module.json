@@ -6,7 +6,10 @@
   "author": "TSFSYSTEM Team",
   "license": "Proprietary",
   "category": "hr",
-  "depends_on": ["core", "finance"],
+  "depends_on": [
+    "core",
+    "finance"
+  ],
   "permissions": [
     "hr.view_employee",
     "hr.create_employee",
@@ -22,16 +25,25 @@
     "hr.employee_updated",
     "hr.payroll_processed",
     "hr.leave_approved",
-    "hr.attendance_marked"
+    "hr.leave_rejected",
+    "hr.attendance_marked",
+    "hr.attendance.late",
+    "hr.attendance.on_time",
+    "hr.absence.unexcused"
   ],
   "events_consumed": [
-    "finance.payment_created"
+    "finance.payment_created",
+    "workforce.risk_increased"
   ],
   "config_schema": {
     "payroll_frequency": {
       "type": "string",
       "default": "monthly",
-      "enum": ["weekly", "biweekly", "monthly"],
+      "enum": [
+        "weekly",
+        "biweekly",
+        "monthly"
+      ],
       "description": "Payroll processing frequency"
     },
     "auto_approve_leave": {

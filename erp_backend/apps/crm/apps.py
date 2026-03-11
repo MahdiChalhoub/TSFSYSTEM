@@ -7,4 +7,5 @@ class CrmConfig(AppConfig):
     verbose_name = 'CRM Module'
 
     def ready(self):
-        import apps.crm.events  # noqa: F401 - registers @subscribe_to_event handlers
+        import apps.crm.events  # noqa: F401
+        import apps.crm.signals # noqa: F401

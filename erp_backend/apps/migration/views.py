@@ -66,7 +66,7 @@ class MigrationViewSet(MigrationSetupMixin, MigrationExecutionMixin, MigrationRe
         org_id = getattr(self.request.user, 'organization_id', None)
         if self.request.user.is_superuser:
             org_id = self.request.headers.get('X-Tenant-Id') or org_id
-        return MigrationJob.objects.filter(organization_id=org_id).exclude(status='HIDDEN')
+        return MigrationJob.objects.filter(tenant_id=org_id).exclude(status='HIDDEN')
 
 
     def get_serializer_class(self):

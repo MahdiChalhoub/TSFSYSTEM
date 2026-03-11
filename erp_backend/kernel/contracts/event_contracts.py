@@ -500,6 +500,51 @@ def register_crm_contracts():
         consumers=['finance']
     )
 
+    ContractRegistry.register(
+        name='contact.interaction_recorded',
+        schema={
+            'type': 'object',
+            'required': ['contact_id', 'user_id', 'outcome', 'channel', 'tenant_id'],
+            'properties': {
+                'contact_id': {'type': 'integer'},
+                'user_id': {'type': 'integer'},
+                'outcome': {'type': 'string'},
+                'channel': {'type': 'string'},
+                'contact_name': {'type': 'string'},
+                'outcome_label': {'type': 'string'},
+                'tenant_id': {'type': 'integer'}
+            }
+        },
+        category='EVENT',
+        owner_module='crm',
+        version='1.0.0',
+        description='Emitted when an interaction (call, visit, etc.) is recorded',
+        producer='crm',
+        consumers=['hr', 'notifications', 'reporting']
+    )
+
+    ContractRegistry.register(
+        name='contact.type_converted',
+        schema={
+            'type': 'object',
+            'required': ['contact_id', 'old_type', 'new_type', 'tenant_id'],
+            'properties': {
+                'contact_id': {'type': 'integer'},
+                'old_type': {'type': 'string'},
+                'new_type': {'type': 'string'},
+                'user_id': {'type': 'integer'},
+                'contact_name': {'type': 'string'},
+                'tenant_id': {'type': 'integer'}
+            }
+        },
+        category='EVENT',
+        owner_module='crm',
+        version='1.0.0',
+        description='Emitted when a contact type is converted (e.g. Lead -> Customer)',
+        producer='crm',
+        consumers=['finance', 'hr', 'reporting']
+    )
+
 
 # =============================================================================
 # SUBSCRIPTION / SAAS EVENTS
@@ -572,6 +617,47 @@ def register_all_contracts():
 
     Call this during application startup (e.g., in AppConfig.ready())
     """
+    ContractRegistry.register(
+        name='inventory.low_stock',
+        schema={
+            'type': 'object',
+            'required': ['product_id', 'tenant_id'],
+            'properties': {
+                'product_id': {'type': 'integer'},
+                'product_name': {'type': 'string'},
+                'amount': {'type': 'number'},
+                'threshold': {'type': 'number'},
+                'reorder_qty': {'type': 'number'},
+                'tenant_id': {'type': 'integer'}
+            }
+        },
+        category='EVENT',
+        owner_module='inventory',
+        version='1.0.0',
+        description='Emitted when stock level falls below threshold',
+        producer='inventory',
+        consumers=['procurement', 'notifications', 'reporting']
+    )
+
+    ContractRegistry.register(
+        name='inventory.negative_stock',
+        schema={
+            'type': 'object',
+            'required': ['product_id', 'tenant_id'],
+            'properties': {
+                'product_id': {'type': 'integer'},
+                'product_name': {'type': 'string'},
+                'amount': {'type': 'number'},
+                'tenant_id': {'type': 'integer'}
+            }
+        },
+        category='EVENT',
+        owner_module='inventory',
+        version='1.0.0',
+        description='Emitted when stock level becomes zero or negative',
+        producer='inventory',
+        consumers=['procurement', 'notifications', 'reporting']
+    )
     register_provisioning_contracts()
     register_finance_contracts()
     register_inventory_contracts()

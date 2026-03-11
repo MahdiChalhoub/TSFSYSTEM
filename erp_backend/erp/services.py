@@ -119,7 +119,7 @@ class ProvisioningService:
                 source_module='kernel',
                 event_name='org:provisioned',
                 payload=event_payload,
-                organization_id=str(org.id)
+                tenant_id=str(org.id)
             )
             
             logger.info(
@@ -193,7 +193,7 @@ class ConfigurationService:
             response = connector.route_read(
                 target_module='finance',
                 endpoint='coa',
-                organization_id=str(organization.id),
+                tenant_id=str(organization.id),
                 source_module='kernel',
                 params={'is_active': True}
             )

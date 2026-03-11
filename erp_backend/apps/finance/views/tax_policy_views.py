@@ -37,7 +37,7 @@ class OrgTaxPolicyViewSet(TenantModelViewSet):
         """Return the default tax policy for current org."""
         org_id = get_current_tenant_id()
         policy = OrgTaxPolicy.objects.filter(
-            organization_id=org_id, is_default=True
+            tenant_id=org_id, is_default=True
         ).first()
         if not policy:
             return Response({'detail': 'No default tax policy configured.'}, status=404)
@@ -53,7 +53,7 @@ class CounterpartyTaxProfileViewSet(TenantModelViewSet):
         org_id = get_current_tenant_id()
         from django.db.models import Q
         return CounterpartyTaxProfile.objects.filter(
-            Q(organization_id=org_id) | Q(organization_id__isnull=True)
+            Q(tenant_id=org_id) | Q(organization_id__isnull=True)
         )
 
     @action(detail=False, methods=['post'], url_path='seed-presets')

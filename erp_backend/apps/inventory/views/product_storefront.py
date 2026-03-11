@@ -56,7 +56,7 @@ class ProductStorefrontMixin:
         try:
             org = Organization.objects.get(slug=slug)
             products = Product.objects.filter(
-                organization=org, status='ACTIVE'
+                tenant=org, status='ACTIVE'
             ).select_related('brand', 'category', 'unit').prefetch_related(
                 'variants__attribute_values__attribute'
             )[:100]

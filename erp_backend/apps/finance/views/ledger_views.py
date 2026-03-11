@@ -141,7 +141,7 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
         
         entries = JournalEntry.objects.filter(
-            organization_id=organization_id,
+            tenant_id=organization_id,
             reference__startswith='OPEN-'
         )
         serializer = self.get_serializer(entries, many=True)
@@ -500,7 +500,7 @@ class TransactionSequenceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(organization_id=org_id)
+        return super().get_queryset().filter(tenant_id=org_id)
 
 
 class ForensicAuditLogViewSet(TenantModelViewSet):

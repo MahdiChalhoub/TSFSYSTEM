@@ -23,7 +23,7 @@ class StockService:
             # Professional Audit: Lock product for AMC calculation integrity
             product = Product.objects.select_for_update().get(id=product.id)
             
-            agg = Inventory.objects.filter(organization=organization, product=product).aggregate(total=Sum('quantity'))['total']
+            agg = Inventory.objects.filter(tenant=organization, product=product).aggregate(total=Sum('quantity'))['total']
             current_total_qty = Decimal(str(agg or '0'))
             current_avg_cost = Decimal(str(product.cost_price))
             current_total_value = current_total_qty * current_avg_cost
@@ -37,12 +37,12 @@ class StockService:
             product.cost_price_ttc = Decimal(str(cost_price_ht)) * (Decimal('1') + (Decimal(str(product.tva_rate)) / Decimal('100')))
             product.save()
             
-            inventory, _ = Inventory.objects.get_or_create(organization=organization, warehouse=warehouse, product=product)
+            inventory, _ = Inventory.objects.get_or_create(tenant=organization, warehouse=warehouse, product=product)
             inventory.quantity = Decimal(str(inventory.quantity)) + inbound_qty
             inventory.save()
             
             InventoryMovement.objects.create(
-                organization=organization, product=product, warehouse=warehouse, 
+                tenant=organization, product=product, warehouse=warehouse,
                 type='IN', quantity=inbound_qty, cost_price=effective_cost, 
                 reference=reference, scope=scope
             )
@@ -50,7 +50,7 @@ class StockService:
             # Valuation Integration (FIFO/LIFO/AMC)
             from .valuation_service import InventoryValuationService
             InventoryValuationService.record_stock_in(
-                organization=organization, product=product, warehouse=warehouse,
+                tenant=organization, product=product, warehouse=warehouse,
                 quantity=inbound_qty, unit_cost=effective_cost, reference=reference
             )
 
@@ -85,7 +85,7 @@ class StockService:
 
                 from apps.finance.services import LedgerService
                 LedgerService.create_journal_entry(
-                    organization=organization, transaction_date=timezone.now(), 
+                    tenant=organization, transaction_date=timezone.now(),
                     description=f"Stock Reception: {product.name}", reference=reference, 
                     status='POSTED', scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=[
                         {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
@@ -94,7 +94,7 @@ class StockService:
                 )
 
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockReception",
                 object_id=product.id,
@@ -121,7 +121,7 @@ class StockService:
             product = Product.objects.select_for_update().get(id=product.id)
             
             inventory, _ = Inventory.objects.get_or_create(
-                organization=organization,
+                tenant=organization,
                 warehouse=warehouse,
                 product=product,
             )
@@ -140,7 +140,7 @@ class StockService:
             adj_value = abs(adj_qty * cost_basis)
 
             InventoryMovement.objects.create(
-                organization=organization,
+                tenant=organization,
                 product=product,
                 warehouse=warehouse,
                 type='ADJUSTMENT',
@@ -156,12 +156,12 @@ class StockService:
             from .valuation_service import InventoryValuationService
             if adj_qty > 0:
                 InventoryValuationService.record_stock_in(
-                    organization=organization, product=product, warehouse=warehouse,
+                    tenant=organization, product=product, warehouse=warehouse,
                     quantity=adj_qty, unit_cost=cost_basis, reference=reference
                 )
             else:
                 InventoryValuationService.record_stock_out(
-                    organization=organization, product=product, warehouse=warehouse,
+                    tenant=organization, product=product, warehouse=warehouse,
                     quantity=abs(adj_qty), reference=reference
                 )
 
@@ -197,13 +197,13 @@ class StockService:
                     ]
                 
                 LedgerService.create_journal_entry(
-                    organization=organization, transaction_date=timezone.now(),
+                    tenant=organization, transaction_date=timezone.now(),
                     description=desc, reference=reference, status='POSTED',
                     scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=lines
                 )
 
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockAdjustment",
                 object_id=product.id,
@@ -228,7 +228,7 @@ class StockService:
             product = Product.objects.select_for_update().get(id=product.id)
             current_amc = Decimal(str(product.cost_price))
             inventory, _ = Inventory.objects.get_or_create(
-                organization=organization,
+                tenant=organization,
                 warehouse=warehouse,
                 product=product,
                 defaults={'quantity': Decimal('0.00')}
@@ -240,23 +240,32 @@ class StockService:
             inventory.quantity = Decimal(str(inventory.quantity)) - qty_to_reduce
             inventory.save()
 
+            # 4. Determine Valuation Strategy for COGS
+            valuation_method = getattr(product, 'cost_valuation_method', 'WAVG')
+            v_map = {'WAVG': 'WEIGHTED_AVG', 'FIFO': 'FIFO', 'LIFO': 'LIFO'}
+            method_key = v_map.get(valuation_method, 'WEIGHTED_AVG')
+
+            # Valuation Integration (Capture Layered Cost)
+            from .valuation_service import InventoryValuationService
+            val_entry = InventoryValuationService.record_stock_out(
+                tenant=organization, product=product, warehouse=warehouse,
+                quantity=qty_to_reduce, reference=reference,
+                valuation_method=method_key,
+                allow_negative=allow_negative
+            )
+            
+            # The actual cost captured by the valuation engine (FIFO layer or AMC)
+            resolved_cogs_unit = val_entry.unit_cost if val_entry else current_amc
+
             InventoryMovement.objects.create(
-                organization=organization,
+                tenant=organization,
                 product=product,
                 warehouse=warehouse,
                 type='OUT',
                 quantity=qty_to_reduce,
-                cost_price=current_amc,
+                cost_price=resolved_cogs_unit,
                 reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}",
                 scope=scope
-            )
-        
-            # Valuation Integration
-            from .valuation_service import InventoryValuationService
-            InventoryValuationService.record_stock_out(
-                organization=organization, product=product, warehouse=warehouse,
-                quantity=qty_to_reduce, reference=reference,
-                allow_negative=allow_negative
             )
 
             # Serial Tracking Integration
@@ -272,15 +281,15 @@ class StockService:
                     )
 
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockReduction",
                 object_id=product.id,
                 change_type="UPDATE",
-                payload={"qty": str(qty_to_reduce), "ref": reference}
+                payload={"qty": str(qty_to_reduce), "ref": reference, "cogs": str(resolved_cogs_unit)}
             )
 
-            return current_amc
+            return resolved_cogs_unit
 
     @staticmethod
     def transfer_stock(organization, product, source_warehouse, destination_warehouse, 
@@ -303,7 +312,7 @@ class StockService:
             current_cost = Decimal(str(product.cost_price))
             # Deduct from source
             source_inv = Inventory.objects.filter(
-                organization=organization,
+                tenant=organization,
                 warehouse=source_warehouse,
                 product=product,
             ).first()
@@ -319,7 +328,7 @@ class StockService:
 
             # Add to destination
             dest_inv, _ = Inventory.objects.get_or_create(
-                organization=organization,
+                tenant=organization,
                 warehouse=destination_warehouse,
                 product=product,
             )
@@ -328,7 +337,7 @@ class StockService:
 
             # Create paired movements
             InventoryMovement.objects.create(
-                organization=organization,
+                tenant=organization,
                 product=product,
                 warehouse=source_warehouse,
                 type='TRANSFER',
@@ -340,7 +349,7 @@ class StockService:
                 reason=f"Transfer OUT to {destination_warehouse.name}",
             )
             InventoryMovement.objects.create(
-                organization=organization,
+                tenant=organization,
                 product=product,
                 warehouse=destination_warehouse,
                 type='TRANSFER',
@@ -355,11 +364,11 @@ class StockService:
             # Valuation Integration
             from .valuation_service import InventoryValuationService
             InventoryValuationService.record_stock_out(
-                organization=organization, product=product, warehouse=source_warehouse,
+                tenant=organization, product=product, warehouse=source_warehouse,
                 quantity=qty, reference=reference
             )
             InventoryValuationService.record_stock_in(
-                organization=organization, product=product, warehouse=destination_warehouse,
+                tenant=organization, product=product, warehouse=destination_warehouse,
                 quantity=qty, unit_cost=current_cost, reference=reference
             )
 
@@ -384,7 +393,7 @@ class StockService:
             transfer_value = qty * current_cost
             from apps.finance.services import LedgerService
             LedgerService.create_journal_entry(
-                organization=organization, transaction_date=tz.now(),
+                tenant=organization, transaction_date=tz.now(),
                 description=f"Stock Transfer: {product.name} ({source_warehouse.name} → {destination_warehouse.name})",
                 reference=reference, status='POSTED', scope=scope,
                 site_id=source_warehouse.parent_id or source_warehouse.id, user=user,
@@ -397,7 +406,7 @@ class StockService:
             )
 
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockTransfer",
                 object_id=product.id,

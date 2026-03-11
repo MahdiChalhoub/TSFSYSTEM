@@ -2,10 +2,12 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal
-from erp.models import TenantModel
+from django.utils.translation import gettext_lazy as _
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 
 
-class Warehouse(TenantModel):
+class Warehouse(AuditLogMixin, TenantOwnedModel):
     """
     Unified location model — replaces both Site and Warehouse.
     A Warehouse can be a Branch/Site (top-level), a Store, a Warehouse, or Virtual.
@@ -45,7 +47,7 @@ class Warehouse(TenantModel):
 
     class Meta:
         db_table = 'warehouse'
-        unique_together = ('code', 'organization')
+        unique_together = ('code', 'tenant')
 
     def __str__(self):
         prefix = dict(self.LOCATION_TYPES).get(self.location_type, '')
@@ -129,13 +131,13 @@ def auto_create_branch_children(sender, instance, created, **kwargs):
         return
 
     # Avoid recursion — children are not BRANCH type
-    org = instance.organization
+    tenant = instance.tenant
 
     # Generate codes based on branch code
     branch_code = instance.code or f'BR{instance.id}'
 
     Warehouse.objects.create(
-        organization=org,
+        tenant=tenant,
         parent=instance,
         name=f'{instance.name} — Main Store',
         code=f'{branch_code}-STORE',
@@ -147,7 +149,7 @@ def auto_create_branch_children(sender, instance, created, **kwargs):
     )
 
     Warehouse.objects.create(
-        organization=org,
+        tenant=tenant,
         parent=instance,
         name=f'{instance.name} — Main Warehouse',
         code=f'{branch_code}-WH',
@@ -160,7 +162,7 @@ def auto_create_branch_children(sender, instance, created, **kwargs):
 
 
 
-class Inventory(TenantModel):
+class Inventory(AuditLogMixin, TenantOwnedModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
     branch = models.ForeignKey(
         Warehouse, on_delete=models.SET_NULL, null=True, blank=True,
@@ -183,13 +185,13 @@ class Inventory(TenantModel):
 
     class Meta:
         db_table = 'inventory'
-        unique_together = ('warehouse', 'product', 'variant', 'organization')
+        unique_together = ('warehouse', 'product', 'variant', 'tenant')
         indexes = [
-            models.Index(fields=['organization', 'branch'], name='inv_org_branch_idx'),
+            models.Index(fields=['tenant', 'branch'], name='inv_tenant_branch_idx'),
         ]
 
 
-class InventoryMovement(TenantModel):
+class InventoryMovement(AuditLogMixin, TenantOwnedModel):
     MOVEMENT_TYPES = (
         ('IN', 'Stock In'),
         ('OUT', 'Stock Out'),
@@ -215,7 +217,7 @@ class InventoryMovement(TenantModel):
     class Meta:
         db_table = 'inventorymovement'
         indexes = [
-            models.Index(fields=['organization', 'branch'], name='invmov_org_branch_idx'),
+            models.Index(fields=['tenant', 'branch'], name='invmov_tenant_branch_idx'),
         ]
 
 

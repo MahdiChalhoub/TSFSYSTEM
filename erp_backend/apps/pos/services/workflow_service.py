@@ -18,6 +18,7 @@ Never raises silently — always raises WorkflowError with a user-readable messa
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from apps.crm.services import ComplianceService
 
 
 class WorkflowError(ValidationError):
@@ -77,12 +78,15 @@ class SalesWorkflowService:
 
     @classmethod
     def confirm_order(cls, order, user=None, warehouse_id=None) -> None:
-        """
-        DRAFT / PENDING → CONFIRMED
-        Sets confirmed_at, optionally updates fulfillment warehouse.
-        Also reserves stock per line (Gap 3).
-        """
         _assert_transition('order_status', ORDER_TRANSITIONS, order.order_status, 'CONFIRMED')
+
+        # CRM Compliance Guard (11/10 Enterprise Layer)
+        if order.contact_id:
+            # We pass order.site_id as the branch_id for multi-entity resolver
+            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'CONFIRM_ORDER', branch_id=order.site_id)
+            if not is_ok:
+                raise WorkflowError(msg)
+
         with transaction.atomic():
             if warehouse_id:
                 order.site_id = warehouse_id
@@ -187,6 +191,13 @@ class SalesWorkflowService:
         NOT_GENERATED → GENERATED
         """
         _assert_transition('invoice_status', INVOICE_TRANSITIONS, order.invoice_status, 'GENERATED')
+
+        # CRM Compliance Guard (11/10 Enterprise Layer)
+        if order.contact_id:
+            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'GENERATE_INVOICE', branch_id=order.site_id)
+            if not is_ok:
+                raise WorkflowError(msg)
+
         with transaction.atomic():
             order.invoice_status = 'GENERATED'
             order.invoiced_at = timezone.now()

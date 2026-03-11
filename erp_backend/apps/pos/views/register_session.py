@@ -369,6 +369,21 @@ class RegisterSessionMixin:
         session.total_cash_in = total_cash_in
         session.save()
 
+        # ── WISE: Score cashier's financial discipline ──────────────────────
+        try:
+            from kernel.events import emit_event
+            emit_event('pos.session.closed', {
+                'cashier_user_id':    session.cashier_id,
+                'session_id':         session.id,
+                'discrepancy_amount': float(difference),
+                'total_sales':        float(total_sales),
+                'total_transactions': total_transactions,
+                'tenant_id':          org_id,
+            }, aggregate_type='register_session', aggregate_id=session.id,
+               triggered_by=request.user)
+        except Exception:
+            pass
+
         # Duration
         duration_secs = int((session.closed_at - session.opened_at).total_seconds())
         hours = duration_secs // 3600
@@ -407,14 +422,14 @@ class RegisterSessionMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         open_sessions = RegisterSession.objects.filter(
-            organization_id=org_id, status='OPEN'
+            tenant_id=org_id, status='OPEN'
         ).select_related('register', 'register__site', 'cashier')
 
         data = []
         for s in open_sessions:
             # Live sales count since session opened
             live_orders = Order.objects.filter(
-                organization_id=org_id,
+                tenant_id=org_id,
                 site=s.register.site,
                 user=s.cashier,
                 type='SALE',
@@ -450,7 +465,7 @@ class RegisterSessionMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         qs = RegisterSession.objects.filter(
-            organization_id=org_id,
+            tenant_id=org_id,
             status__in=['CLOSED', 'FORCE_CLOSED']
         ).select_related('register', 'register__site', 'cashier', 'closed_by').order_by('-opened_at')
 
@@ -471,7 +486,7 @@ class RegisterSessionMixin:
         for s in sessions:
             # Per-method breakdown from orders during that session
             session_orders = Order.objects.filter(
-                organization_id=org_id,
+                tenant_id=org_id,
                 site=s.register.site,
                 user=s.cashier,
                 type='SALE',

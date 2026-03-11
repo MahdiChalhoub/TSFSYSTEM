@@ -149,7 +149,7 @@ class ConnectorEventsMixin:
             target_module=module_code,
             event_name=event_name,
             payload=payload,
-            organization_id=organization_id
+            tenant_id=organization_id
         )
         # return first non-None response
         for receiver, response in responses:
@@ -200,7 +200,7 @@ class ConnectorEventsMixin:
                 target_module=module_code,
                 endpoint=f'_event/{event_name}',
                 data={'event_name': event_name, 'payload': payload},
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 source_module='kernel',
                 method='EVENT',
                 ttl_seconds=86400  # 24h TTL for events

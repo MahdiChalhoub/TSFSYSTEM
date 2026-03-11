@@ -17,6 +17,9 @@ from apps.pos.views import (
     POSAuditEventViewSet, POSAuditRuleViewSet,
     POSSettingsViewSet,
     ManagerAddressBookViewSet,
+    PurchaseRequisitionViewSet, SupplierQuotationViewSet,
+    ThreeWayMatchResultViewSet, DisputeCaseViewSet,
+    ProcurementBudgetViewSet, SupplierPerformanceViewSet,
 )
 from apps.pos.views.purchase_views import ProcurementRequestViewSet
 
@@ -44,11 +47,34 @@ router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
 router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
 router.register(r'procurement-requests', ProcurementRequestViewSet, basename='procurement-requests')
 
+# Enterprise procurement governance
+router.register(r'purchase-requisitions', PurchaseRequisitionViewSet, basename='purchase-requisitions')
+router.register(r'supplier-quotations', SupplierQuotationViewSet, basename='supplier-quotations')
+router.register(r'three-way-match', ThreeWayMatchResultViewSet, basename='three-way-match')
+router.register(r'disputes', DisputeCaseViewSet, basename='disputes')
+router.register(r'procurement-budgets', ProcurementBudgetViewSet, basename='procurement-budgets')
+router.register(r'supplier-performance', SupplierPerformanceViewSet, basename='supplier-performance')
+
 from apps.pos.views.analytics_views import SalesDailySummaryListView, SalesDailyRollupView  # noqa: E402
+from apps.pos.views.procurement_analytics_views import (  # noqa: E402
+    ProcurementDashboardView, POAgingView, CycleTimesView,
+    SpendBySupplierView, MonthlySpendTrendView, SupplierIntelligenceView,
+    BudgetUtilizationView, RequisitionPipelineView,
+)
 
 urlpatterns = [
     path('', include(router.urls)),
     # Gap 9: Analytics pre-aggregated endpoints
     path('analytics/daily/', SalesDailySummaryListView.as_view(), name='analytics-daily'),
     path('analytics/daily/summary/', SalesDailyRollupView.as_view(), name='analytics-daily-summary'),
+    # Phase 5: Procurement Intelligence Analytics
+    path('analytics/procurement/dashboard/', ProcurementDashboardView.as_view(), name='procurement-dashboard'),
+    path('analytics/procurement/aging/', POAgingView.as_view(), name='procurement-aging'),
+    path('analytics/procurement/cycle-times/', CycleTimesView.as_view(), name='procurement-cycle-times'),
+    path('analytics/procurement/spend-by-supplier/', SpendBySupplierView.as_view(), name='procurement-spend-by-supplier'),
+    path('analytics/procurement/monthly-trend/', MonthlySpendTrendView.as_view(), name='procurement-monthly-trend'),
+    path('analytics/procurement/supplier-intelligence/', SupplierIntelligenceView.as_view(), name='procurement-supplier-intelligence'),
+    path('analytics/procurement/budget-utilization/', BudgetUtilizationView.as_view(), name='procurement-budget-utilization'),
+    path('analytics/procurement/requisition-pipeline/', RequisitionPipelineView.as_view(), name='procurement-requisition-pipeline'),
 ]
+

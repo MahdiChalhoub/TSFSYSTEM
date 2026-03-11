@@ -55,7 +55,7 @@ class ReportViewSet(TenantModelViewSet):
 
         # Synchronous execution
         execution = ReportExecution.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             report=report_def,
             executed_by=request.user,
             export_format=export_format or report_def.default_export_format,

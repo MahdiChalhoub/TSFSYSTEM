@@ -57,7 +57,7 @@ class ProductGroupPricingService:
         # Update all member products
         members = Product.objects.filter(
             product_group=group,
-            organization=group.tenant
+            tenant=group.tenant
         )
         count = members.update(
             selling_price_ttc=new_base_price_ttc,
@@ -205,7 +205,7 @@ class ProductGroupPricingService:
 
         # 2. PriceGroup rules
         member_group_ids = PriceGroupMember.objects.filter(
-            organization=product.organization,
+            tenant=product.tenant,
             contact_id=contact.id
         ).values_list('price_group_id', flat=True)
 
@@ -228,7 +228,7 @@ class ProductGroupPricingService:
         if hasattr(contact, 'customer_tier') and contact.customer_tier:
             from apps.crm.models.pricing_models import PriceGroup
             tier_groups = PriceGroup.objects.filter(
-                organization=product.organization,
+                tenant=product.tenant,
                 name__iexact=contact.customer_tier,
                 is_active=True
             ).values_list('id', flat=True)

@@ -36,6 +36,7 @@ FILE_CATEGORIES = (
     ('LOGO', 'Company Logo'),
     ('USER_ATTACHMENT', 'User Attachment'),
     ('MIGRATION', 'Migration Source File'),
+    ('COMPLIANCE_DOC', 'Compliance Document'),
     ('OTHER', 'Other'),
 )
 

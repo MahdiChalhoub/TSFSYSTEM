@@ -95,7 +95,7 @@ class ConnectorStateMixin:
         # Check 3: Is module enabled for this tenant?
         try:
             org_module = self._OrganizationModule.objects.get(
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 module_name=module_code
             )
             if not org_module.is_enabled:

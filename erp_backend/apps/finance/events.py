@@ -54,11 +54,11 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 @enforce_contract('order.completed')
 def on_order_completed(event):
     """EventBus handler wrapper for order.completed"""
-    handle_order_completed(event.payload, event.tenant_id)
+    handle_order_completed(event.payload, event.tenant_id, triggered_by=event.triggered_by)
 
 
 @transaction.atomic
-def handle_order_completed(payload: dict, tenant_id: int):
+def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
     """
     Handle order.completed event from POS module
 
@@ -107,7 +107,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
             'total_amount': float(total_amount),
             'currency': currency,
             'tenant_id': tenant_id
-        })
+        }, aggregate_type='invoice', aggregate_id=invoice.id, triggered_by=triggered_by)
 
         # Emit invoice.paid event (since POS orders are paid immediately)
         emit_event('invoice.paid', {
@@ -116,7 +116,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
             'amount_paid': float(total_amount),
             'payment_date': timezone.now().isoformat(),
             'tenant_id': tenant_id
-        })
+        }, aggregate_type='invoice', aggregate_id=invoice.id, triggered_by=triggered_by)
 
         logger.info(f"[Finance] Created invoice {invoice.id} for order {order_id}")
 

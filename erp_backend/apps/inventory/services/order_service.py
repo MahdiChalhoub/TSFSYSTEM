@@ -27,7 +27,7 @@ class OrderService:
             
             for line in lines:
                 StockService.adjust_stock(
-                    organization=organization,
+                    tenant=organization,
                     product=line.product,
                     warehouse=line.warehouse,
                     quantity=line.qty_adjustment,
@@ -51,7 +51,7 @@ class OrderService:
                 try:
                     from apps.finance.services import LedgerService
                     LedgerService.create_journal_entry(
-                        organization=organization, transaction_date=timezone.now(),
+                        tenant=organization, transaction_date=timezone.now(),
                         description=f"Bulk Stock Adjustment: {order.reference}",
                         reference=order.reference, status='POSTED',
                         user=user, lines=finance_lines
@@ -65,7 +65,7 @@ class OrderService:
             
             from apps.finance.services import ForensicAuditService
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockAdjustmentOrder",
                 object_id=order.id,
@@ -91,7 +91,7 @@ class OrderService:
             
             for line in lines:
                 StockService.transfer_stock(
-                    organization=organization,
+                    tenant=organization,
                     product=line.product,
                     source_warehouse=line.from_warehouse,
                     destination_warehouse=line.to_warehouse,
@@ -106,7 +106,7 @@ class OrderService:
 
             from apps.finance.services import ForensicAuditService
             ForensicAuditService.log_mutation(
-                organization=organization,
+                tenant=organization,
                 user=user,
                 model_name="StockTransferOrder",
                 object_id=order.id,

@@ -76,7 +76,7 @@ class ContactViewSet(TenantModelViewSet):
     def get_queryset(self):
         # 🛡️ AUDITOR CALIBRATION: Direct ID lookups should check ALL scopes
         if self.action in ['retrieve', 'detail_summary', 'loyalty_analytics', 'supplier_scorecard']:
-            return Contact.original_objects.filter(tenant_id=get_current_tenant_id())
+            return Contact.objects.filter(tenant_id=get_current_tenant_id())
 
         qs = super().get_queryset()
         contact_type = self.request.query_params.get('type')
@@ -132,7 +132,7 @@ class ContactViewSet(TenantModelViewSet):
     def sync_accounting(self, request, pk=None):
         """Force generation/linking of COA account if missing (§19)."""
         contact = self.get_object()
-        organization = contact.organization
+        organization = contact.tenant
         
         if contact.finance_link_status == 'LINKED':
             return Response({'message': 'Already synchronized.'})
@@ -188,7 +188,7 @@ class ContactViewSet(TenantModelViewSet):
         try:
             from apps.crm.services.duplicate_service import DuplicateDetectionService
             dup_check = DuplicateDetectionService.check_for_duplicates(
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 name=data.get('name'),
                 email=data.get('email'),
                 phone=data.get('phone'),
@@ -383,7 +383,7 @@ class ContactViewSet(TenantModelViewSet):
         if request.method == 'GET':
             people = ContactPerson.objects.filter(
                 contact=contact,
-                organization_id=get_current_tenant_id(),
+                tenant_id=get_current_tenant_id(),
                 is_active=True
             )
             return Response(ContactPersonSerializer(people, many=True).data)
@@ -397,7 +397,7 @@ class ContactViewSet(TenantModelViewSet):
         if data.get('is_primary'):
             ContactPerson.objects.filter(
                 contact=contact,
-                organization_id=get_current_tenant_id(),
+                tenant_id=get_current_tenant_id(),
                 is_primary=True
             ).update(is_primary=False)
 
@@ -433,7 +433,7 @@ class ContactViewSet(TenantModelViewSet):
 
                 order_type = 'SALE' if contact.type in ('CUSTOMER', 'DEBTOR') else 'PURCHASE'
                 orders = Order.objects.filter(
-                    organization_id=organization_id,
+                    tenant_id=organization_id,
                     contact=contact,
                     type=order_type
                 ).order_by('-created_at')
@@ -532,7 +532,7 @@ class ContactViewSet(TenantModelViewSet):
                 linked_payable_meta = None
                 
                 if contact.linked_account_id:
-                    acc = ChartOfAccount.objects.filter(id=contact.linked_account_id, organization_id=organization_id).first()
+                    acc = ChartOfAccount.objects.filter(id=contact.linked_account_id, tenant_id=organization_id).first()
                     if acc:
                         linked_account_meta = {
                             'id': acc.id,
@@ -544,7 +544,7 @@ class ContactViewSet(TenantModelViewSet):
                         }
                 
                 if contact.linked_payable_account_id:
-                    acc = ChartOfAccount.objects.filter(id=contact.linked_payable_account_id, organization_id=organization_id).first()
+                    acc = ChartOfAccount.objects.filter(id=contact.linked_payable_account_id, tenant_id=organization_id).first()
                     if acc:
                         linked_payable_meta = {
                             'id': acc.id,
@@ -565,7 +565,7 @@ class ContactViewSet(TenantModelViewSet):
                     # Fetching a larger window to calculate running solde if needed, 
                     # but here we'll just return the entries with their natural Dr/Cr
                     journal_lines = JournalEntryLine.objects.filter(
-                        organization_id=organization_id,
+                        tenant_id=organization_id,
                         account_id__in=[contact.linked_account_id, contact.linked_payable_account_id] if contact.linked_payable_account_id else [contact.linked_account_id]
                     ).select_related('journal_entry').order_by('-journal_entry__transaction_date', '-id')[:50]
                     
@@ -605,7 +605,7 @@ class ContactViewSet(TenantModelViewSet):
                 # For BOTH, we check if they have more legacy as customer or supplier
                 # Check for existing purchase orders to see if we should pivot
                 from apps.pos.models import Order
-                if Order.objects.filter(contact=contact, type='PURCHASE', organization_id=organization_id).exists():
+                if Order.objects.filter(contact=contact, type='PURCHASE', tenant_id=organization_id).exists():
                     # If they have purchases, prioritize purchase analytics if requested or by default
                     order_type_for_analytics = 'PURCHASE'
             else:
@@ -651,7 +651,7 @@ class ContactViewSet(TenantModelViewSet):
         try:
             from apps.pos.models import Order
             orders = Order.objects.filter(
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 contact=contact,
                 type=order_type
             )
@@ -705,17 +705,17 @@ class ContactViewSet(TenantModelViewSet):
 
             direct = ClientPriceRule.objects.filter(
                 contact_id=contact.id,
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 is_active=True
             )
             group_ids = PriceGroupMember.objects.filter(
                 contact_id=contact.id,
-                organization_id=organization_id
+                tenant_id=organization_id
             ).values_list('price_group_id', flat=True)
 
             group_rules = ClientPriceRule.objects.filter(
                 price_group_id__in=group_ids,
-                organization_id=organization_id,
+                tenant_id=organization_id,
                 is_active=True
             )
 
@@ -865,7 +865,7 @@ class ContactViewSet(TenantModelViewSet):
         contact = self.get_object()
         logs = ContactAuditLog.objects.filter(
             contact=contact,
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
         ).order_by('-created_at')[:50]
         return Response(ContactAuditLogSerializer(logs, many=True).data)
 
@@ -875,7 +875,7 @@ class ContactViewSet(TenantModelViewSet):
         contact = self.get_object()
         from apps.crm.services.duplicate_service import DuplicateDetectionService
         result = DuplicateDetectionService.check_for_duplicates(
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             name=contact.name,
             email=contact.email,
             phone=contact.phone,
@@ -1059,7 +1059,7 @@ class ContactViewSet(TenantModelViewSet):
         contact = self.get_object()
         
         result = DuplicateDetectionService.check_for_duplicates(
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             name=contact.name,
             email=contact.email,
             phone=contact.phone,
@@ -1092,7 +1092,7 @@ class ContactViewSet(TenantModelViewSet):
         try:
             target = Contact.objects.get(
                 pk=target_id,
-                organization_id=get_current_tenant_id()
+                tenant_id=get_current_tenant_id()
             )
         except Contact.DoesNotExist:
             return Response(
@@ -1136,7 +1136,7 @@ class ContactViewSet(TenantModelViewSet):
         try:
             target = Contact.objects.get(
                 pk=target_id,
-                organization_id=get_current_tenant_id()
+                tenant_id=get_current_tenant_id()
             )
         except Contact.DoesNotExist:
             return Response({'error': 'Target contact not found.'}, status=404)
@@ -1317,7 +1317,7 @@ class ContactViewSet(TenantModelViewSet):
             return Response({'error': 'csv_content is required.'}, status=400)
 
         result = ContactBulkService.dry_run_import(
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             csv_content=csv_content,
             mode=mode,
         )
@@ -1338,7 +1338,7 @@ class ContactViewSet(TenantModelViewSet):
             return Response({'error': 'csv_content is required.'}, status=400)
 
         result = ContactBulkService.execute_import(
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             csv_content=csv_content,
             mode=mode,
             force_create=request.data.get('force_create', False),
@@ -1368,7 +1368,7 @@ class ContactViewSet(TenantModelViewSet):
         mask_pii = request.query_params.get('mask_pii', 'false').lower() == 'true'
 
         csv_content = ContactBulkService.export_contacts(
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             filters=filters,
             mask_pii=mask_pii,
         )

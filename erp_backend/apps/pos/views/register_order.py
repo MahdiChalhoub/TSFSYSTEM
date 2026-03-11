@@ -143,7 +143,7 @@ class RegisterOrderMixin:
 
         try:
             order = Order.objects.select_related('user', 'site').prefetch_related('lines__product').get(
-                organization_id=org_id,
+                tenant_id=org_id,
                 invoice_number__iexact=ref,
                 type='SALE',
                 status='COMPLETED',
@@ -188,7 +188,7 @@ class RegisterOrderMixin:
             return Response({'error': 'No org context'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            order = Order.objects.get(id=pk, organization_id=org_id)
+            order = Order.objects.get(id=pk, tenant_id=org_id)
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -198,7 +198,7 @@ class RegisterOrderMixin:
 
         # Create a PENDING record first so the caller gets an ID immediately
         doc = GeneratedDocument.objects.create(
-            organization_id=org_id,
+            tenant_id=org_id,
             order_id=order.id,
             doc_type=doc_type,
             status='PENDING',
@@ -229,7 +229,7 @@ class RegisterOrderMixin:
 
         try:
             doc = GeneratedDocument.objects.filter(
-                organization_id=org_id,
+                tenant_id=org_id,
                 order_id=pk,
                 doc_type=doc_type,
             ).latest('generated_at')

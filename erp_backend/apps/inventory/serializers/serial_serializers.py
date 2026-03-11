@@ -8,11 +8,11 @@ class ProductSerialSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductSerial
         fields = '__all__'
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']
 
 
 class SerialLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SerialLog
         fields = '__all__'
-        read_only_fields = ['organization']
+        read_only_fields = ['tenant']

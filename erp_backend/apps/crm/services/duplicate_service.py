@@ -13,7 +13,7 @@ Usage:
     from apps.crm.services.duplicate_service import DuplicateDetectionService
 
     result = DuplicateDetectionService.check_for_duplicates(
-        organization_id=org.id,
+        tenant_id=org.id,
         name='Acme Corp',
         email='acme@example.com',
         phone='+2250700001122',

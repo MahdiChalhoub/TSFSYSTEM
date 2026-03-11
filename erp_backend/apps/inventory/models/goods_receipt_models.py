@@ -88,6 +88,15 @@ class GoodsReceipt(AuditLogMixin, TenantOwnedModel):
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='goods_receipts_received'
     )
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='goods_receipts_approved'
+    )
+    assigned_to = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='goods_receipts_assigned',
+        help_text='User assigned to follow up on this receipt'
+    )
 
     # Metadata
     supplier_ref = models.CharField(
@@ -114,8 +123,9 @@ class GoodsReceipt(AuditLogMixin, TenantOwnedModel):
     def save(self, *args, **kwargs):
         # Auto-generate receipt number on first save
         if not self.receipt_number:
-            from apps.finance.models import TransactionSequence
-            self.receipt_number = TransactionSequence.next_value(
+            # Refactored: Avoid direct cross-module import from apps.finance
+            from erp.services import SequenceService
+            self.receipt_number = SequenceService.generate_next_value(
                 self.tenant, 'GOODS_RECEIPT'
             )
         # Auto-set started_at when moving to IN_PROGRESS
@@ -159,29 +169,34 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
     Captures receiving decisions, rejection reasons, and decision engine outputs.
     """
     LINE_STATUS_CHOICES = (
-        ('PENDING', 'Pending — awaiting processing'),
-        ('SCANNED', 'Scanned — identified but not yet decided'),
-        ('UNDER_REVIEW', 'Under Review — needs manager input'),
-        ('RECEIVED', 'Received — accepted into stock'),
-        ('PARTIALLY_RECEIVED', 'Partially Received — partial acceptance'),
-        ('REJECTED', 'Rejected — refused'),
-        ('APPROVAL_REQUIRED', 'Approval Required — unexpected item'),
-        ('APPROVED_EXTRA', 'Approved Extra Item'),
-        ('REFUSED_EXTRA', 'Refused Extra Item'),
-        ('RETURN_PENDING', 'Return Pending'),
-        ('TRANSFER_REQUIRED', 'Transfer Required'),
-        ('VERIFIED', 'Verified — quality check passed'),
-        ('CLOSED', 'Closed'),
+        ('PENDING', 'Pending'),
+        ('RECEIVED_SAFE', 'Received Safe'),
+        ('RECEIVED_CAUTION', 'Received With Caution'),
+        ('RECEIVED_RISKY', 'Received Risky'),
+        ('REJECTED', 'Rejected'),
+        ('PARTIALLY_RECEIVED', 'Partially Received'),
+        ('NEEDS_APPROVAL', 'Needs Approval'),
+        ('NEEDS_RETURN', 'Needs Return'),
+        ('NEEDS_TRANSFER', 'Needs Transfer'),
+        ('NEEDS_ROTATION', 'Needs Shelf Rotation'),
+        ('NEEDS_EXPIRY_VERIF', 'Needs Expiry Verification'),
+        ('DISCREPANCY', 'Discrepancy Detected'),
     )
 
     REJECTION_REASON_CHOICES = (
-        ('NOT_REJECTED', 'Not Rejected'),
         ('DAMAGED', 'Damaged'),
         ('EXPIRED', 'Expired'),
-        ('SHORT_SHELF_LIFE', 'Short Shelf Life'),
-        ('QUALITY_ISSUE', 'Quality Issue'),
-        ('NOT_ORDERED', 'Not Ordered'),
+        ('NEAR_EXPIRY', 'Near Expiry'),
         ('WRONG_PRODUCT', 'Wrong Product'),
+        ('WRONG_QUANTITY', 'Wrong Quantity'),
+        ('WRONG_PACKAGING', 'Wrong Packaging'),
+        ('WRONG_BATCH', 'Wrong Batch'),
+        ('PRICE_DISCREPANCY', 'Price Discrepancy'),
+        ('QUALITY_ISSUE', 'Quality Issue'),
+        ('NO_APPROVAL', 'No Approval'),
+        ('NOT_IN_PO', 'Not in PO'),
+        ('SUPPLIER_ERROR', 'Supplier Error'),
+        ('INTERNAL_REFUSAL', 'Internal Refusal'),
         ('OTHER', 'Other'),
     )
 
@@ -228,6 +243,13 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
     qty_rejected = models.DecimalField(
         max_digits=15, decimal_places=2, default=Decimal('0.00')
     )
+    qty_returned = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00')
+    )
+
+    # Denormalized identity
+    product_name = models.CharField(max_length=255, null=True, blank=True)
+    barcode = models.CharField(max_length=100, null=True, blank=True)
 
     # Product details at time of receipt
     expiry_date = models.DateField(null=True, blank=True)
@@ -276,15 +298,15 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
     # Safety metrics
     safe_qty = models.DecimalField(
         max_digits=15, decimal_places=2, default=Decimal('0.00'),
-        help_text='(avg_daily_sales × shelf_life_days) - current_stock'
+        help_text='Sell-Through Safe Qty: (avg_daily_sales × shelf_life_days) - current_stock'
     )
     safe_qty_after_receipt = models.DecimalField(
         max_digits=15, decimal_places=2, default=Decimal('0.00'),
-        help_text='safe_qty - qty_received'
+        help_text='Remaining Safe Capacity: Sell-Through Safe Qty - Qty Received'
     )
     receipt_coverage_pct = models.DecimalField(
         max_digits=8, decimal_places=2, default=Decimal('0.00'),
-        help_text='(qty_received / max(safe_qty, 1)) × 100'
+        help_text='Receipt Safety Ratio %: (qty_received / max(safe_qty, 1)) × 100'
     )
 
     # Business scores
@@ -313,6 +335,54 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
         help_text='Photo/document evidence URL (for rejections)'
     )
 
+    # ── Operational Intelligence & KPIs (Enterprise Layer) ──────────
+    
+    # Audit & Accountability Chain
+    qc_checked_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='qc_checked_receipt_lines'
+    )
+    putaway_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='putaway_receipt_lines'
+    )
+    handled_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='handled_receipt_lines'
+    )
+    verified_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='verified_receipt_lines'
+    )
+
+    # Velocity KPIs
+    rts_minutes = models.IntegerField(
+        null=True, blank=True,
+        help_text='Receive-To-Shelf (RTS): Time from physical receipt to putaway (minutes)'
+    )
+
+    # Strategic Metrics
+    shelf_pressure = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
+        help_text='Incoming Qty / Display Capacity (if >100% suggests overstock)'
+    )
+    coverage_days = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
+        help_text='Network stock coverage days after this receipt'
+    )
+    predicted_expiry_loss = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Predicted financial loss due to remaining stock at expiry'
+    )
+    batch_priority_index = models.DecimalField(
+        max_digits=10, decimal_places=4, default=Decimal('0.0000'),
+        help_text='Expiry Date / Sales Velocity (priority for exposure)'
+    )
+    supplier_reliability_score = models.DecimalField(
+        max_digits=7, decimal_places=2, null=True, blank=True,
+        help_text='Snapshot of supplier score at time of receipt'
+    )
+
     # Audit
     processed_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
@@ -329,6 +399,12 @@ class GoodsReceiptLine(AuditLogMixin, TenantOwnedModel):
             models.Index(fields=['receipt', 'line_status']),
             models.Index(fields=['product']),
         ]
+
+    def get_effective_cost(self):
+        """Return the cost per unit for this line, fallback to product AMC."""
+        if self.po_line and self.po_line.unit_price:
+            return self.po_line.unit_price
+        return getattr(self.product, 'avg_cost_price', Decimal('0.00'))
 
     def __str__(self):
         return f"{self.product} × {self.qty_received} ({self.get_line_status_display()})"

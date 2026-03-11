@@ -67,13 +67,13 @@ class ProductBulkMixin:
             if not Country.objects.filter(id=target_id).exists():
                 return Response({"error": f"Country with id {target_id} not found"}, status=404)
         elif target_model:
-            if not target_model.objects.filter(id=target_id, organization=organization).exists():
+            if not target_model.objects.filter(id=target_id, tenant=organization).exists():
                 return Response({"error": f"{move_type.title()} with id {target_id} not found"}, status=404)
         else:
             return Response({"error": f"Unknown move type: {move_type}"}, status=400)
 
         with transaction.atomic():
-            products = Product.objects.filter(id__in=product_ids, organization=organization)
+            products = Product.objects.filter(id__in=product_ids, tenant=organization)
 
             updates = {}
             if move_type == 'category':
@@ -131,7 +131,7 @@ class ProductBulkMixin:
                 if not product_id:
                     continue
                 try:
-                    product = Product.objects.get(id=product_id, organization=organization)
+                    product = Product.objects.get(id=product_id, tenant=organization)
                 except Product.DoesNotExist:
                     errors.append(f"Product {product_id} not found")
                     continue
@@ -168,14 +168,14 @@ class ProductBulkMixin:
 
         if all_missing:
             products = Product.objects.filter(
-                organization=organization,
+                tenant=organization,
                 is_active=True,
             ).filter(
                 Q(barcode__isnull=True) | Q(barcode='')
             )
         elif product_ids:
             products = Product.objects.filter(
-                id__in=product_ids, organization=organization
+                id__in=product_ids, tenant=organization
             ).filter(
                 Q(barcode__isnull=True) | Q(barcode='')
             )

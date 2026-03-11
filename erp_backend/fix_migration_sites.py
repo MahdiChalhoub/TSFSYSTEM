@@ -34,7 +34,7 @@ def run_fix():
         name = row.get('name')
         
         # Check if a warehouse with this name already exists for the org
-        w = Warehouse.objects.filter(organization_id=org_id, name=name).first()
+        w = Warehouse.objects.filter(tenant_id=org_id, name=name).first()
         if not w:
             print(f"Creating Warehouse: {name}")
             w = Warehouse.objects.create(

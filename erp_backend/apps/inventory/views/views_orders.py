@@ -228,7 +228,7 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         order = self.get_object()
         try:
             InventoryService.process_transfer_order(
-                organization=order.tenant,
+                tenant=order.tenant,
                 order=order,
                 user=request.user
             )

@@ -1,6 +1,6 @@
 from .pos_models import Order, OrderLine, PosTicket
 from .register_models import POSRegister, RegisterSession, CashierAddressBook, SessionAccountReconciliation, POSSettings, DailyAddressBookSnapshot
-from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
+from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine, SupplierCreditNote
 from .quotation_models import Quotation, QuotationLine
 from .delivery_models import DeliveryZone, DeliveryOrder
 from .discount_models import DiscountRule, DiscountUsageLog
@@ -15,11 +15,18 @@ from .payment_models import SalesPaymentLeg
 from .generated_document import GeneratedDocument
 from .purchase_enhancement_models import LandedCost, LandedCostLine, PurchaseAttachment
 from .procurement_request_models import ProcurementRequest
+from .procurement_governance_models import (
+    ThreeWayMatchResult, ThreeWayMatchLine, DisputeCase,
+    PurchaseRequisition, PurchaseRequisitionLine,
+    SupplierQuotation, SupplierQuotationLine,
+    ProcurementBudget, BudgetCommitment,
+    SupplierPerformanceSnapshot,
+)
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
     'POSRegister', 'RegisterSession', 'CashierAddressBook', 'SessionAccountReconciliation', 'POSSettings', 'DailyAddressBookSnapshot',
-    'SalesReturn', 'SalesReturnLine', 'CreditNote', 'PurchaseReturn', 'PurchaseReturnLine',
+    'SalesReturn', 'SalesReturnLine', 'CreditNote', 'PurchaseReturn', 'PurchaseReturnLine', 'SupplierCreditNote',
     'Quotation', 'QuotationLine',
     'DeliveryZone', 'DeliveryOrder',
     'DiscountRule', 'DiscountUsageLog',
@@ -33,5 +40,10 @@ __all__ = [
     'LandedCost', 'LandedCostLine', 'PurchaseAttachment',
     'PaymentTerm',
     'ProcurementRequest',
+    'ThreeWayMatchResult', 'ThreeWayMatchLine', 'DisputeCase',
+    'PurchaseRequisition', 'PurchaseRequisitionLine',
+    'SupplierQuotation', 'SupplierQuotationLine',
+    'ProcurementBudget', 'BudgetCommitment',
+    'SupplierPerformanceSnapshot',
 ]
 

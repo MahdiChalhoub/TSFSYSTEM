@@ -4,10 +4,11 @@ Enables per-client, per-tier, and per-group price rules for products.
 """
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
 
 
-class PriceGroup(TenantModel):
+class PriceGroup(AuditLogMixin, TenantOwnedModel):
     """
     Named pricing group. Contacts can belong to groups (e.g., VIP, Wholesale, Seasonal).
     Products can have different prices per group.
@@ -32,7 +33,7 @@ class PriceGroup(TenantModel):
         return self.name
 
 
-class PriceGroupMember(TenantModel):
+class PriceGroupMember(AuditLogMixin, TenantOwnedModel):
     """
     Assigns a Contact to a PriceGroup.
     A contact can belong to multiple groups; the highest-priority group wins.
@@ -46,13 +47,13 @@ class PriceGroupMember(TenantModel):
 
     class Meta:
         db_table = 'price_group_member'
-        unique_together = ('price_group', 'contact_id', 'organization')
+        unique_together = ('price_group', 'contact_id', 'tenant')
 
     def __str__(self):
         return f"Contact #{self.contact_id} → {self.price_group.name}"
 
 
-class ClientPriceRule(TenantModel):
+class ClientPriceRule(AuditLogMixin, TenantOwnedModel):
     """
     Individual price override for a specific product-contact or product-group combination.
     Either contact_id OR price_group must be set (not both).

@@ -195,7 +195,7 @@ class PaymentGatewayService:
             try:
                 from apps.finance.gateway_models import GatewayConfig
                 config = GatewayConfig.objects.filter(
-                    organization_id=order.organization_id,
+                    tenant_id=order.organization_id,
                     gateway_type='BANK_TRANSFER',
                     is_active=True,
                 ).first()

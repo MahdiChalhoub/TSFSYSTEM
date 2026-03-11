@@ -83,11 +83,21 @@ class TaxEngineContext:
             ).first()
 
             if policy:
+                # ── Scope-Aware Recoverability Resolution ──
+                # If the treatment for the current scope is CAPITALIZE or EXPENSE,
+                # then VAT is NOT recovered from the state (recoverability = 0).
+                # If RECOVERABLE, we use the policy's defined ratio.
+                treatment = policy.official_vat_treatment if scope == 'OFFICIAL' else policy.internal_vat_treatment
+                
+                recoverability = policy.vat_input_recoverability
+                if treatment in ('CAPITALIZE', 'EXPENSE'):
+                    recoverability = Decimal('0.000')
+
                 return cls(
                     scope=scope,
                     is_export=is_export,
                     vat_output_enabled=policy.vat_output_enabled,
-                    vat_input_recoverability=policy.vat_input_recoverability,
+                    vat_input_recoverability=recoverability,
                     airsi_treatment=policy.airsi_treatment,
                     purchase_tax_rate=policy.purchase_tax_rate,
                     purchase_tax_mode=policy.purchase_tax_mode,

@@ -47,6 +47,15 @@ class PostableMixin(models.Model):
         related_name='reversals'
     )
 
+    # ── Ledger Link ──────────────────────────────────────────────
+    posted_journal_entry = models.ForeignKey(
+        'finance.JournalEntry',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='%(app_label)s_%(class)s_source_docs',
+        help_text='The JournalEntry generated when this document was posted'
+    )
+
     class Meta:
         abstract = True
 

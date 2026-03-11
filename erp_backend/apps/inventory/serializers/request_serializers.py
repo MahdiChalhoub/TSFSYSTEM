@@ -30,9 +30,9 @@ class OperationalRequestSerializer(serializers.ModelSerializer):
             'converted_to_type', 'converted_to_id',
             'rejection_reason', 'notes',
             'created_at', 'updated_at',
-            'lines', 'line_count', 'organization',
+            'lines', 'line_count', 'tenant',
         ]
-        read_only_fields = ['organization', 'reference', 'approved_by',
+        read_only_fields = ['tenant', 'reference', 'approved_by',
                             'approved_at', 'converted_to_type', 'converted_to_id']
 
     def get_line_count(self, obj):

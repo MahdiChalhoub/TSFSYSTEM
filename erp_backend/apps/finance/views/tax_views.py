@@ -20,8 +20,8 @@ class TaxGroupViewSet(TenantModelViewSet):
         if not tax_group_id:
             return Response({"error": "tax_group_id required"}, status=400)
         try:
-            TaxGroup.objects.filter(organization_id=organization_id).update(is_default=False)
-            tg = TaxGroup.objects.get(id=tax_group_id, organization_id=organization_id)
+            TaxGroup.objects.filter(tenant_id=organization_id).update(is_default=False)
+            tg = TaxGroup.objects.get(id=tax_group_id, tenant_id=organization_id)
             tg.is_default = True
             tg.save()
             return Response(TaxGroupSerializer(tg).data)

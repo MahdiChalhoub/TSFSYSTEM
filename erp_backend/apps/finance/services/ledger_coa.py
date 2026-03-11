@@ -30,6 +30,10 @@ class LedgerCOAMixin:
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
+        """
+        Enterprise-grade COA implementation.
+        Populates system roles, financial sections, and performs validation.
+        """
         from apps.finance.models import ChartOfAccount, JournalEntry
         from erp.coa_templates import TEMPLATES
         from erp.services import ConfigurationService
@@ -42,68 +46,140 @@ class LedgerCOAMixin:
         if not accounts_data:
             raise ValidationError(f"Template {template_key} has no accounts")
 
+        # ── Smart Registry: Enterprise Role & Section Detection ──────────
+        ROLE_MAP = {
+            'RECEIVABLE': 'AR_CONTROL',
+            'PAYABLE': 'AP_CONTROL',
+            'CASH': 'CASH_ACCOUNT',
+            'BANK': 'BANK_ACCOUNT',
+            'INVENTORY': 'INVENTORY_ASSET',
+        }
+        NAME_ROLE_MAP = {
+            'RETAINED EARNINGS': 'RETAINED_EARNINGS',
+            'CURRENT YEAR PROFIT': 'P_L_SUMMARY',
+            'VAT PAYABLE': 'TAX_PAYABLE',
+            'VAT RECEIVABLE': 'TAX_RECEIVABLE',
+            'ROUNDING': 'ROUNDING_DIFF',
+            'EXCHANGE': 'EXCHANGE_DIFF',
+            'REVENUE': 'REVENUE_CONTROL',
+            'SALES': 'REVENUE_CONTROL',
+            'COGS': 'COGS_CONTROL',
+            'COST OF GOODS': 'COGS_CONTROL',
+            'INVENTORY': 'INVENTORY_ASSET',
+            'STOCK': 'INVENTORY_ASSET',
+        }
+        
+        SECTION_MAP = {
+            'ASSET': 'BS_ASSET',
+            'LIABILITY': 'BS_LIABILITY',
+            'EQUITY': 'BS_EQUITY',
+            'INCOME': 'IS_REVENUE',
+            'EXPENSE': 'IS_EXPENSE',
+        }
+
+        parent_codes = {item.get('parent_code') for item in accounts_data if item.get('parent_code')}
+
         with transaction.atomic():
             has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()
 
             if reset:
                 if has_journal_entries:
-                    # Deactivate old accounts instead of deleting (journal entries reference them)
                     ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
                 else:
-                    # Safe to delete \u2014 no transactions reference these accounts
                     ChartOfAccount.objects.filter(organization=organization).delete()
 
-            # Collect all codes from the new template
-            new_template_codes = set()
-            for item in accounts_data:
-                new_template_codes.add(item['code'])
-
-            # Build accounts from template \u2014 supports flat (parent_code) format
+            # ── High Performance First Pass (using update_or_create logic but collecting for bulk if possible) ──
+            # For simplicity in multi-tenancy we still use update_or_create to handle re-runs gracefully
             code_to_account = {}
-
-            # First pass: create/update all accounts without parent relationships
             for item in accounts_data:
+                sub_type = item.get('subType') or item.get('sub_type')
+                name_upper = item['name'].upper()
+                is_header = item['code'] in parent_codes
+                
+                # Resolve System Role
+                system_role = ROLE_MAP.get(sub_type)
+                if not system_role:
+                    for key, role in NAME_ROLE_MAP.items():
+                        if key in name_upper:
+                            system_role = role
+                            break
+
                 defaults = {
                     "name": item['name'],
                     "type": item['type'],
-                    "sub_type": item.get('subType') or item.get('sub_type'),
+                    "sub_type": sub_type,
                     "syscohada_code": item.get('syscohadaCode') or item.get('syscohada_code'),
                     "syscohada_class": item.get('syscohadaClass') or item.get('syscohada_class'),
                     "is_active": True,
                     "is_system_only": item.get('isSystemOnly', False) or item.get('is_system_only', False),
                     "is_hidden": item.get('isHidden', False) or item.get('is_hidden', False),
                     "requires_zero_balance": item.get('requiresZeroBalance', False) or item.get('requires_zero_balance', False),
+                    # ── Enterprise Metadata ──
+                    "system_role": system_role,
+                    "financial_section": SECTION_MAP.get(item['type']),
+                    "template_origin": template_key,
+                    "template_version": "2.2",
+                    "allow_posting": item.get('allow_posting', not is_header),
+                    "is_control_account": item.get('is_control_account', sub_type in ['RECEIVABLE', 'PAYABLE']),
+                    "subledger_type": item.get('subledger_type', 'CUSTOMER' if sub_type == 'RECEIVABLE' else 'SUPPLIER' if sub_type == 'PAYABLE' else None),
+                    "allow_reconciliation": item.get('allow_reconciliation', sub_type in ['RECEIVABLE', 'PAYABLE', 'BANK']),
+                    "currency": item.get('currency'),
                 }
 
-                acc, created = ChartOfAccount.objects.update_or_create(
-                    organization=organization,
-                    code=item['code'],
-                    defaults=defaults
+                acc, _ = ChartOfAccount.objects.update_or_create(
+                    organization=organization, code=item['code'], defaults=defaults
                 )
                 code_to_account[item['code']] = acc
 
-            # Second pass: set parent relationships using parent_code
+            # ── Link Parents ──
             for item in accounts_data:
-                parent_code = item.get('parent_code')
-                if parent_code and parent_code in code_to_account:
+                if item.get('parent_code') and item['parent_code'] in code_to_account:
                     acc = code_to_account[item['code']]
-                    acc.parent = code_to_account[parent_code]
+                    acc.parent = code_to_account[item['parent_code']]
                     acc.save(update_fields=['parent'])
 
-            # If reset but couldn't delete, deactivate accounts NOT in the new template
-            if reset and has_journal_entries:
-                ChartOfAccount.objects.filter(
-                    organization=organization,
-                    is_active=True
-                ).exclude(
-                    code__in=new_template_codes
-                ).update(is_active=False)
+            # ── Rebuild Paths (Root First) ──
+            def rebuild_paths_recursive(accounts, parent_path=None):
+                for acc in accounts:
+                    acc.path = f"{parent_path}.{acc.code}" if parent_path else acc.code
+                    acc.save(update_fields=['path'])
+                    children = [a for a in code_to_account.values() if a.parent_id == acc.id]
+                    if children: rebuild_paths_recursive(children, acc.path)
+            
+            rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
+            # Apply Smart Posting Rules
             try:
                 ConfigurationService.apply_smart_posting_rules(organization)
-            except (AttributeError, Exception):
-                pass  # Smart posting rules not available yet
+            except Exception: pass
+
             return True
+
+    @staticmethod
+    def validate_finance_readiness(organization):
+        """
+        Verify that all critical enterprise roles are mapped to active accounts.
+        Mandatory for 'COMPLETED' status in the wizard.
+        """
+        from apps.finance.models import ChartOfAccount
+        MANDATORY_ROLES = [
+            'AR_CONTROL', 'AP_CONTROL', 'CASH_ACCOUNT', 
+            'REVENUE_CONTROL', 'COGS_CONTROL', 'INVENTORY_ASSET',
+            'RETAINED_EARNINGS', 'P_L_SUMMARY'
+        ]
+        
+        missing = []
+        for role in MANDATORY_ROLES:
+            if not ChartOfAccount.objects.filter(organization=organization, system_role=role, is_active=True).exists():
+                missing.append(role)
+        
+        if missing:
+            raise ValidationError(f"Missing mandatory accounts for roles: {', '.join(missing)}")
+        
+        # Mark Org Setup as Completed
+        organization.finance_setup_completed = True
+        organization.save(update_fields=['finance_setup_completed'])
+        return True
 
 
     @staticmethod

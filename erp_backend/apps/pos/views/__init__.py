@@ -11,6 +11,11 @@ from .sourcing_views import ProductSupplierViewSet, SupplierPriceHistoryViewSet
 from .audit_views import POSAuditRuleViewSet, POSAuditEventViewSet
 from .settings_views import POSSettingsViewSet
 from .manager_address_book import ManagerAddressBookViewSet
+from .procurement_governance_views import (
+    PurchaseRequisitionViewSet, SupplierQuotationViewSet,
+    ThreeWayMatchResultViewSet, DisputeCaseViewSet,
+    ProcurementBudgetViewSet, SupplierPerformanceViewSet,
+)
 
 __all__ = [
     'POSViewSet', 'PosTicketViewSet', 'POSRegisterViewSet',
@@ -25,4 +30,7 @@ __all__ = [
     'POSAuditRuleViewSet', 'POSAuditEventViewSet',
     'POSSettingsViewSet',
     'ManagerAddressBookViewSet',
+    'PurchaseRequisitionViewSet', 'SupplierQuotationViewSet',
+    'ThreeWayMatchResultViewSet', 'DisputeCaseViewSet',
+    'ProcurementBudgetViewSet', 'SupplierPerformanceViewSet',
 ]

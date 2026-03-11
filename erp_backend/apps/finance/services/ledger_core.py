@@ -15,7 +15,6 @@ class LedgerCoreMixin:
     @staticmethod
     def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None, user=None, **kwargs):
         from apps.finance.models import FiscalPeriod, JournalEntry, JournalEntryLine
-        # Import internally to avoid circular dependency
         from apps.finance.services.base_services import SequenceService
         
         total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
@@ -24,25 +23,106 @@ class LedgerCoreMixin:
             raise ValidationError("Journal entry is out of balance.")
 
         with transaction.atomic():
-            fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=transaction_date, end_date__gte=transaction_date).first()
-            if not fp: raise ValidationError(f"No fiscal period found for date {transaction_date}")
-            if fp.is_closed: raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")
-            if fp.fiscal_year.is_hard_locked: raise ValidationError(f"Fiscal year {fp.fiscal_year.name} is hard-locked.")
+            # ── Step 1: Fiscal Period Enforcement ──────────────────────
+            fp = FiscalPeriod.objects.filter(
+                organization=organization,
+                start_date__lte=transaction_date,
+                end_date__gte=transaction_date
+            ).first()
+            if not fp:
+                raise ValidationError(f"No fiscal period found for date {transaction_date}")
+            if fp.status == 'CLOSED' or fp.is_closed:
+                raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")
+            if fp.status == 'HARD_LOCKED':
+                raise ValidationError(f"Fiscal period {fp.name} is hard-locked. Cannot post.")
+            if fp.status == 'FUTURE':
+                raise ValidationError(f"Fiscal period {fp.name} is a future period. Cannot post yet.")
+            if fp.status == 'SOFT_LOCKED':
+                # Soft-locked: only supervisors can post
+                is_supervisor = kwargs.get('supervisor_override', False)
+                if user and hasattr(user, 'is_superuser') and user.is_superuser:
+                    is_supervisor = True
+                if not is_supervisor:
+                    raise ValidationError(
+                        f"Fiscal period {fp.name} is soft-locked. Only supervisors can post. "
+                        f"Contact your finance administrator."
+                    )
+            if fp.fiscal_year.is_hard_locked:
+                raise ValidationError(f"Fiscal year {fp.fiscal_year.name} is hard-locked.")
             
-            # Use gapless sequence for references if none provided
+            # ── Step 2: Gapless Reference Sequence ────────────────────
             if not reference:
                 reference = SequenceService.get_next_number(organization, f"JOURNAL_{scope}")
+
+            # ── Step 3: Source Document Duplicate Check ───────────────
+            source_module = kwargs.get('source_module')
+            source_model = kwargs.get('source_model')
+            source_id = kwargs.get('source_id')
+            if source_module and source_id:
+                existing = JournalEntry.objects.filter(
+                    organization=organization,
+                    source_module=source_module,
+                    source_model=source_model or '',
+                    source_id=source_id,
+                    scope=scope,
+                    status='POSTED'
+                ).first()
+                if existing:
+                    raise ValidationError(
+                        f"Duplicate posting detected: {source_module}/{source_model}#{source_id} "
+                        f"already posted as {existing.reference}. Use reversal to correct."
+                    )
             
-            # Enforcement: System-only accounts check
+            # ── Step 4: Account Validation ────────────────────────────
             internal_bypass = kwargs.get('internal_bypass', False)
-            if not internal_bypass:
-                from apps.finance.models import ChartOfAccount
-                account_ids = [l['account_id'] for l in lines]
-                system_accounts = ChartOfAccount.objects.filter(id__in=account_ids, is_system_only=True)
-                if system_accounts.exists():
-                    codes = ", ".join([acc.code for acc in system_accounts])
-                    raise ValidationError(f"Manual posting to system-only accounts is forbidden: {codes}")
+            account_ids = [l.get('account_id') for l in lines if l.get('account_id')]
             
+            if account_ids and not internal_bypass:
+                from apps.finance.models import ChartOfAccount
+                accounts = {acc.id: acc for acc in ChartOfAccount.objects.filter(
+                    id__in=account_ids, organization=organization
+                )}
+                
+                for l in lines:
+                    acc_id = l.get('account_id')
+                    if not acc_id:
+                        continue
+                    acc = accounts.get(acc_id)
+                    if not acc:
+                        continue
+                    
+                    # 4a. System-only accounts: no manual posting
+                    if acc.is_system_only:
+                        raise ValidationError(
+                            f"Manual posting to system-only account '{acc.code} - {acc.name}' is forbidden."
+                        )
+                    
+                    # 4b. allow_posting check: header/parent accounts blocked
+                    if not acc.allow_posting:
+                        raise ValidationError(
+                            f"Account '{acc.code} - {acc.name}' does not allow direct posting. "
+                            f"Post to a child account instead."
+                        )
+                    
+                    # 4c. Control accounts require partner_type
+                    if acc.is_control_account:
+                        if not l.get('partner_type') and not l.get('contact_id'):
+                            logger.warning(
+                                f"Posting to control account {acc.code} without partner_type. "
+                                f"Subledger reporting may be incomplete for JE {reference}."
+                            )
+                    
+                    # 4d. Account active check
+                    if not acc.is_active:
+                        raise ValidationError(
+                            f"Account '{acc.code} - {acc.name}' is deactivated. Cannot post."
+                        )
+            
+            # ── Step 5: Create Journal Entry ──────────────────────────
+            journal_type = kwargs.get('journal_type', 'GENERAL')
+            currency = kwargs.get('currency')
+            exchange_rate = kwargs.get('exchange_rate')
+
             entry = JournalEntry.objects.create(
                 organization=organization, 
                 transaction_date=transaction_date, 
@@ -50,27 +130,47 @@ class LedgerCoreMixin:
                 reference=reference, 
                 fiscal_year=fp.fiscal_year, 
                 fiscal_period=fp, 
-                status='DRAFT', # Always create as DRAFT initially
+                status='DRAFT',
                 scope=scope, 
                 site_id=site_id,
-                created_by=user
+                created_by=user,
+                # New fields
+                journal_type=journal_type,
+                source_module=source_module or '',
+                source_model=source_model or '',
+                source_id=source_id,
+                currency=currency,
+                exchange_rate=exchange_rate,
+                total_debit=total_debit,
+                total_credit=total_credit,
             )
+
+            # ── Step 6: Create Journal Entry Lines ────────────────────
             for l in lines: 
                 acc_id = l.get('account_id')
                 if not acc_id:
-                    # Resolve suspense account from posting rules (NO hardcoded codes)
+                    # Resolve suspense account from posting rules
                     from erp.services import ConfigurationService
                     from apps.finance.models import ChartOfAccount
                     rules = ConfigurationService.get_posting_rules(organization)
                     suspense_id = rules.get('suspense', {}).get('reception')
-                    suspense = ChartOfAccount.objects.filter(id=suspense_id, organization=organization).first() if suspense_id else None
+                    suspense = ChartOfAccount.objects.filter(
+                        id=suspense_id, organization=organization
+                    ).first() if suspense_id else None
                     if not suspense:
-                        suspense = ChartOfAccount.objects.filter(organization=organization, type='LIABILITY').first()
-                    
+                        suspense = ChartOfAccount.objects.filter(
+                            organization=organization, type='LIABILITY'
+                        ).first()
                     if not suspense:
-                        raise ValidationError("Cannot create journal line: No account mapping provided and no suspense account exists. Configure posting rules first.")
+                        raise ValidationError(
+                            "Cannot create journal line: No account mapping provided "
+                            "and no suspense account exists. Configure posting rules first."
+                        )
                     acc_id = suspense.id
-                    logger.warning(f"Unmapped ledger line redirected to suspense account {suspense.code} for entry {reference}")
+                    logger.warning(
+                        f"Unmapped ledger line redirected to suspense {suspense.code} "
+                        f"for entry {reference}"
+                    )
 
                 JournalEntryLine.objects.create(
                     organization=organization, 
@@ -80,9 +180,20 @@ class LedgerCoreMixin:
                     credit=Decimal(str(l['credit'])), 
                     description=l.get('description', description),
                     contact_id=l.get('contact_id'),
-                    employee_id=l.get('employee_id')
+                    employee_id=l.get('employee_id'),
+                    # New fields pass-through
+                    partner_type=l.get('partner_type'),
+                    partner_id=l.get('partner_id'),
+                    currency=l.get('currency') or currency,
+                    exchange_rate=l.get('exchange_rate') or exchange_rate,
+                    amount_currency=l.get('amount_currency'),
+                    financial_account_id=l.get('financial_account_id'),
+                    product_id=l.get('product_id'),
+                    cost_center=l.get('cost_center'),
+                    tax_line_id=l.get('tax_line_id'),
                 )
             
+            # ── Step 7: Post if requested ─────────────────────────────
             if status == 'POSTED': 
                 LedgerCoreMixin.post_journal_entry(entry, user=user)
 
@@ -92,7 +203,12 @@ class LedgerCoreMixin:
                 model_name="JournalEntry",
                 object_id=entry.id,
                 change_type="CREATE",
-                payload={"reference": reference, "total_amount": str(total_debit)},
+                payload={
+                    "reference": reference,
+                    "total_amount": str(total_debit),
+                    "journal_type": journal_type,
+                    "source": f"{source_module}/{source_model}#{source_id}" if source_module else None,
+                },
                 scope=scope
             )
             return entry
@@ -106,7 +222,7 @@ class LedgerCoreMixin:
         from apps.finance.models import ChartOfAccount, JournalEntry
         
         with transaction.atomic():
-            # Final integrity check: Double-Entry Proof
+            # ── Final integrity check: Double-Entry Proof ─────────────
             totals = entry.lines.aggregate(
                 total_debit=Sum('debit'),
                 total_credit=Sum('credit')
@@ -117,30 +233,38 @@ class LedgerCoreMixin:
             if abs(debit - credit) > Decimal('0.001'):
                 raise ValidationError(f"Cannot post unbalanced journal entry (Dr: {debit}, Cr: {credit})")
 
-            # Final check: Period lockdown on post bit
-            if entry.fiscal_period.is_closed:
+            # ── Final Period + Account Checks ─────────────────────────
+            if entry.fiscal_period and entry.fiscal_period.is_closed:
                 raise ValidationError(f"Cannot post to closed period {entry.fiscal_period.name}.")
 
-            # Professional Audit: Serializability via select_for_update
-            # We lock all affected accounts in a consistent order (by ID) to prevent deadlocks
-            account_ids = entry.lines.values_list('account_id', flat=True).distinct().order_by('id')
-            accounts_map = {acc.id: acc for acc in ChartOfAccount.objects.select_for_update().filter(id__in=account_ids)}
+            # ── Serializability: Lock accounts in ID order ────────────
+            account_ids = list(
+                entry.lines.values_list('account_id', flat=True).distinct().order_by('account_id')
+            )
+            accounts_map = {
+                acc.id: acc for acc in
+                ChartOfAccount.objects.select_for_update().filter(id__in=account_ids)
+            }
 
             lines = entry.lines.all()
             for line in lines:
                 acc = accounts_map.get(line.account_id)
-                if not acc: continue
+                if not acc:
+                    continue
                 
                 net = line.debit - line.credit
                 
-                # Update account instance (in-memory lock and subsequent save)
+                # Update account balances
                 acc.balance += net
                 if entry.scope == 'OFFICIAL':
                     acc.balance_official += net
                 acc.save()
 
-            # \u2500\u2500 Quantum Audit: Cryptographic Hash Chain \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-            # 1. Fetch the hash of the last POSTED entry in this organization
+            # ── Store Denormalized Totals ──────────────────────────────
+            entry.total_debit = debit
+            entry.total_credit = credit
+
+            # ── Cryptographic Hash Chain ──────────────────────────────
             last_entry = JournalEntry.objects.filter(
                 organization=entry.organization,
                 status='POSTED'
@@ -148,16 +272,27 @@ class LedgerCoreMixin:
             
             entry.previous_hash = last_entry.entry_hash if last_entry else "GENESIS"
 
-            # 2. Transition status
+            # Transition status
             entry.status = 'POSTED'
             entry.posted_at = timezone.now()
             entry.posted_by = user
 
-            # 3. Calculate and seal the entry's unique SHA-256 signature
+            # Calculate and seal SHA-256 signature
             entry.entry_hash = entry.calculate_hash()
             
-            # 4. Save with immutability bypass (we are THE posting service)
+            # Save with immutability bypass
             entry.save(force_audit_bypass=True)
+
+            # ── Mark Balance Snapshots Stale ──────────────────────────
+            try:
+                from apps.finance.models import AccountBalanceSnapshot
+                AccountBalanceSnapshot.objects.filter(
+                    organization=entry.organization,
+                    fiscal_period=entry.fiscal_period,
+                    account_id__in=account_ids
+                ).update(is_stale=True)
+            except Exception:
+                pass  # Snapshots may not exist yet — that's OK
 
             ForensicAuditService.log_mutation(
                 organization=entry.organization,
@@ -165,7 +300,12 @@ class LedgerCoreMixin:
                 model_name="JournalEntry",
                 object_id=entry.id,
                 change_type="POST",
-                payload={"reference": entry.reference, "hash": entry.entry_hash}
+                payload={
+                    "reference": entry.reference,
+                    "hash": entry.entry_hash,
+                    "total_debit": str(debit),
+                    "total_credit": str(credit),
+                }
             )
 
 

@@ -294,7 +294,7 @@ class OrgSaasBillingMixin:
                         'target_org_id': str(org.id),
                         'target_org_name': org.name
                     },
-                    organization_id=saas_org_id
+                    tenant_id=saas_org_id
                 )
         except Exception as e:
             logger.error(f"Failed to dispatch subscription event: {e}")

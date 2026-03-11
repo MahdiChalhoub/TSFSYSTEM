@@ -18,7 +18,7 @@ class AnalysisService:
 
         # 1. Calculate sales velocity per product
         sales_data = InventoryMovement.objects.filter(
-            organization=organization,
+            tenant=organization,
             type='OUT',
             created_at__gte=cutoff
         ).values('product_id').annotate(
@@ -27,10 +27,10 @@ class AnalysisService:
         velocity_map = {item['product_id']: Decimal(str(item['total_sold'])) / Decimal(str(days)) for item in sales_data}
 
         # 2. Analyze all active products
-        products = Product.objects.filter(organization=organization, status='ACTIVE', is_active=True)
+        products = Product.objects.filter(tenant=organization, status='ACTIVE', is_active=True)
         
         for p in products:
-            agg_stock = Inventory.objects.filter(product=p, organization=organization).aggregate(total=Sum('quantity'))['total']
+            agg_stock = Inventory.objects.filter(product=p, tenant=organization).aggregate(total=Sum('quantity'))['total']
             current_stock = Decimal(str(agg_stock or '0'))
             
             daily_velocity = velocity_map.get(p.id, Decimal('0'))

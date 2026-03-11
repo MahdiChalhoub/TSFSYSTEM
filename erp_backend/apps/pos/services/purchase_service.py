@@ -5,13 +5,16 @@ from erp.services import ConfigurationService
 class PurchaseService:
     @staticmethod
     def authorize_po(organization, order_id):
-        with transaction.atomic():
-            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
-            if order.status != 'DRAFT':
-                raise ValidationError(f"Cannot authorize order in status {order.status}")
-            order.status = 'AUTHORIZED'
-            order.save()
-            return order
+        ...
+    
+    @staticmethod
+    def get_last_purchase_price(tenant, product):
+        """Retrieve the last recorded purchase price for a product across all suppliers."""
+        from apps.pos.models.sourcing_models import ProductSupplier
+        return ProductSupplier.objects.filter(
+            tenant=tenant,
+            product=product
+        ).order_by('-last_purchased_date').values_list('last_purchased_price', flat=True).first()
 
     @staticmethod
     def receive_po(organization, order_id, warehouse_id, receptions=None, is_tax_recoverable=True, scope='OFFICIAL', user=None):
@@ -129,8 +132,15 @@ class PurchaseService:
         if not Product: raise ValidationError("Inventory module required.")
         if not Contact: raise ValidationError("CRM module required.")
 
+        from apps.crm.services.compliance_service import ComplianceService
+
         with transaction.atomic():
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
+
+            # Compliance Guard
+            is_ok, msg = ComplianceService.transaction_guard(supplier, 'PURCHASE_ORDER', branch_id=site_id)
+            if not is_ok:
+                raise ValidationError(msg)
 
             order = Order.objects.create(
                 organization=organization,
@@ -192,6 +202,12 @@ class PurchaseService:
             pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
 
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
+
+            # Compliance Guard
+            from apps.crm.services.compliance_service import ComplianceService
+            is_ok, msg = ComplianceService.transaction_guard(supplier, 'PURCHASE_ORDER', branch_id=site_id)
+            if not is_ok:
+                raise ValidationError(msg)
 
             # ── New Tax Engine Context (scope guard + OrgTaxPolicy) ───────────
             from apps.finance.tax_calculator import TaxEngineContext, TaxCalculator, _SupplierProfile
@@ -554,8 +570,15 @@ class PurchaseService:
         if not LedgerService or not Invoice or not InvoiceLine:
             raise ValidationError("Finance module is required for invoice processing.")
 
+        from apps.crm.services.compliance_service import ComplianceService
+
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
+
+            # Compliance Guard
+            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'SUPPLIER_INVOICE', branch_id=order.site_id)
+            if not is_ok:
+                raise ValidationError(msg)
 
             # 1. Create the Backend Invoice record
             invoice = Invoice.objects.create(

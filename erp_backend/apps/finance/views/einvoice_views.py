@@ -17,7 +17,7 @@ class EInvoiceViewSet(viewsets.ViewSet):
         org_id = get_current_tenant_id()
 
         try:
-            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+            invoice = Invoice.objects.get(pk=invoice_id, tenant_id=org_id)
         except Invoice.DoesNotExist:
             return Response({'error': 'Invoice not found'}, status=404)
 
@@ -27,7 +27,7 @@ class EInvoiceViewSet(viewsets.ViewSet):
         # Auto-detect provider
         if not provider:
             from apps.finance.zatca_config import ZATCAConfig
-            if ZATCAConfig.objects.filter(organization_id=org_id, is_active=True).exists():
+            if ZATCAConfig.objects.filter(tenant_id=org_id, is_active=True).exists():
                 provider = 'zatca'
             else:
                 org = invoice.organization
@@ -53,7 +53,7 @@ class EInvoiceViewSet(viewsets.ViewSet):
         """Get e-invoicing status of an invoice."""
         org_id = get_current_tenant_id()
         try:
-            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+            invoice = Invoice.objects.get(pk=invoice_id, tenant_id=org_id)
         except Invoice.DoesNotExist:
             return Response({'error': 'Invoice not found'}, status=404)
 
@@ -74,7 +74,7 @@ class EInvoiceViewSet(viewsets.ViewSet):
         from apps.finance.einvoicing_service import ZATCAService
         org_id = get_current_tenant_id()
         try:
-            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+            invoice = Invoice.objects.get(pk=invoice_id, tenant_id=org_id)
         except Invoice.DoesNotExist:
             return Response({'error': 'Invoice not found'}, status=404)
 
