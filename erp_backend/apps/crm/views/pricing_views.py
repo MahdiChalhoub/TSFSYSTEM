@@ -38,7 +38,7 @@ class PriceGroupViewSet(TenantModelViewSet):
 
             # Cross-tenant guard: ensure contact belongs to this org
             from apps.crm.models import Contact
-            if not Contact.objects.filter(id=contact_id, organization_id=organization_id).exists():
+            if not Contact.objects.filter(id=contact_id, tenant_id=organization_id).exists():
                 return Response({"error": "Contact not found or access denied."}, status=403)
 
             member, created = PriceGroupMember.objects.get_or_create(
@@ -71,7 +71,7 @@ class PriceGroupViewSet(TenantModelViewSet):
         price_group = self.get_object()
         rules = ClientPriceRule.objects.filter(
             price_group=price_group,
-            organization_id=get_current_tenant_id()
+            tenant_id=get_current_tenant_id()
         )
         return Response(ClientPriceRuleSerializer(rules, many=True).data)
 
@@ -85,7 +85,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
         from rest_framework.exceptions import ValidationError
         from apps.crm.models import Contact
         contact_id = data.get('contact_id')
-        if contact_id and not Contact.objects.filter(id=contact_id, organization_id=org_id).exists():
+        if contact_id and not Contact.objects.filter(id=contact_id, tenant_id=org_id).exists():
             raise ValidationError("Cross-tenant contact assignment blocked.")
         product_id = data.get('product_id')
         if product_id:
@@ -99,7 +99,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         self._validate_fk_ownership(serializer.validated_data, org_id)
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -114,7 +114,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
         # Direct rules for this contact
         direct_rules = ClientPriceRule.objects.filter(
             contact_id=contact_id,
-            organization_id=organization_id,
+            tenant_id=organization_id,
             is_active=True
         )
 
@@ -126,7 +126,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
 
         group_rules = ClientPriceRule.objects.filter(
             price_group_id__in=group_ids,
-            organization_id=organization_id,
+            tenant_id=organization_id,
             is_active=True
         )
 
@@ -141,7 +141,7 @@ class ClientPriceRuleViewSet(TenantModelViewSet):
         """Get all price rules for a specific product."""
         rules = ClientPriceRule.objects.filter(
             product_id=product_id,
-            organization_id=get_current_tenant_id(),
+            tenant_id=get_current_tenant_id(),
             is_active=True
         )
         return Response(ClientPriceRuleSerializer(rules, many=True).data)

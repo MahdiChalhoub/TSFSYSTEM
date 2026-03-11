@@ -399,7 +399,7 @@ class SiteViewSet(TenantModelViewSet):
         if not tenant_id:
             return Warehouse.objects.none()
         return Warehouse.objects.filter(
-            organization_id=tenant_id,
+            tenant_id=tenant_id,
             location_type='BRANCH'
         )
 
@@ -415,7 +415,7 @@ class CountryViewSet(viewsets.ModelViewSet):
         
         brands = Brand.objects.filter(
             products__country_id=pk,
-            organization_id=organization_id
+            tenant_id=organization_id
         ).distinct().prefetch_related(
             'products', 'products__inventory', 'products__unit'
         )
@@ -518,13 +518,13 @@ class PaymentTermViewSet(TenantModelViewSet):
         org_id = tenant_id or getattr(user, 'organization_id', None)
         if not org_id:
             return PaymentTerm.objects.none()
-        return PaymentTerm.objects.filter(organization_id=org_id).order_by('sort_order', 'name')
+        return PaymentTerm.objects.filter(tenant_id=org_id).order_by('sort_order', 'name')
 
     def perform_create(self, serializer):
         user = self.request.user
         tenant_id = get_current_tenant_id()
         org_id = tenant_id or user.organization_id
-        serializer.save(organization_id=org_id)
+        serializer.save(tenant_id=org_id)
 
     @action(detail=False, methods=['post'], url_path='seed-defaults')
     def seed_defaults(self, request):
@@ -551,7 +551,7 @@ class PaymentTermViewSet(TenantModelViewSet):
         created = []
         for d in defaults:
             term, was_created = PaymentTerm.objects.get_or_create(
-                organization_id=org_id,
+                tenant_id=org_id,
                 code=d['code'],
                 defaults={k: v for k, v in d.items() if k != 'code'}
             )
