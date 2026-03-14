@@ -68,8 +68,12 @@ router.register(r'kernel', KernelViewSet, basename='kernel')
 router.register(r'packages', PackageViewSet, basename='packages')
 router.register(r'domains', CustomDomainViewSet, basename='domains')
 
+from core.health import health_check as health_basic, health_db, health_full
+
 urlpatterns = [
-    path('health/', health_check),
+    path('health/', health_basic),
+    path('health/db/', health_db),
+    path('health/full/', health_full),
     path('auth/login/', login_view, name='auth_login'),
     path('auth/logout/', logout_view, name='auth_logout'),
     path('auth/me/', me_view, name='auth_me'),

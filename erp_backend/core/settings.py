@@ -91,6 +91,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # SaaS Tenant Isolation
     'erp.middleware.TenantMiddleware',
+    # Observability — request tracing with correlation IDs
+    'core.middleware_tracing.RequestTracingMiddleware',
 ]
 
 # CORS — HARD FALSE, never allow all origins regardless of env
@@ -293,6 +295,16 @@ LOGGING = {
         'apps': {
             'handlers': ['console'],
             'level': 'INFO',
+            'propagate': False,
+        },
+        'tsfsystem.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'tsfsystem.health': {
+            'handlers': ['console'],
+            'level': 'WARNING',
             'propagate': False,
         },
     },
