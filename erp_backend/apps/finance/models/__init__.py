@@ -14,6 +14,7 @@ from .counterparty_tax_profile import CounterpartyTaxProfile
 from .periodic_tax_models import PeriodicTaxAccrual
 from .custom_tax_rule import CustomTaxRule
 from .tax_jurisdiction_rule import TaxJurisdictionRule
+from .tax_account_mapping import TaxAccountMapping
 from .posting_rule import PostingRule
 from .posting_event import PostingEvent, PostingRuleHistory
 from .contextual_posting_rule import ContextualPostingRule
@@ -45,7 +46,7 @@ __all__ = [
     'Asset', 'AmortizationSchedule', 'Voucher', 'ProfitDistribution', 'ForensicAuditLog',
     'TaxGroup', 'BarcodeSettings', 'OrgTaxPolicy', 'CounterpartyTaxProfile', 'PeriodicTaxAccrual',
     'CustomTaxRule', 'TaxJurisdictionRule', 'PostingRule', 'PostingEvent', 'PostingRuleHistory',
-    'ContextualPostingRule',
+    'ContextualPostingRule', 'TaxAccountMapping',
     'Payment', 'CustomerBalance', 'SupplierBalance',
     'Invoice', 'InvoiceLine', 'ZATCAConfig', 'ReportDefinition', 'ReportExecution',
     'GatewayConfig',

@@ -1,213 +1,162 @@
-# TSFSYSTEM Platform
+# TSFSYSTEM — Enterprise Resource Planning System
 
-A modern, full-stack Enterprise Resource Planning (ERP), Point of Sale (POS), and eCommerce Suite built for performance and scale.
+> Multi-tenant, modular ERP built with **Next.js 15** (frontend) and **Django REST Framework** (backend).  
+> Finance-grade accounting, POS terminal orchestration, inventory management, CRM, procurement, and HR — in a single monorepo.
 
-## 🏗️ Architecture & Tech Stack
+---
 
-TSFSYSTEM is structured as a decoupled architecture:
-- **Frontend**: Next.js 15 (App Router), React, TailwindCSS
-- **Backend**: Django 4, Django REST Framework
-- **Database**: PostgreSQL 16
-- **Cache & Async queues**: Redis + Celery
-- **Infrastructure**: Docker, Nginx, Certbot
+## Tech Stack
 
-## 📦 Core Modules
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 15 (App Router), React 19, TypeScript |
+| **Backend** | Django 5, DRF, Celery, PostgreSQL |
+| **Styling** | CSS Variables (400+ `--app-*` tokens), 7 themes |
+| **Auth** | JWT + session-based, multi-tenant middleware |
+| **Infra** | Docker, Gunicorn, Nginx, Cloudflare |
 
-The platform is divided into specialized modules managed by a rigorous Role-Based Access Control (RBAC) engine:
-- **Finance & Accounting**: Chart of accounts, universal tax engine, VAT settlement, journal entries. 
-- **Sales & POS**: Orchestrated multi-terminal POS system, omnichannel order tracking, physical register hardware support.
-- **Inventory & Procurement**: Multi-warehouse transfers, DRAFT PO automated replenishment (Min/Max rules), stock ledger.
-- **eCommerce (Supermarché)**: Multi-theme storefront engine with headless carts, client portal, quotes inbox, and webhook integrations.
-- **CRM**: B2B and B2C contact management, pricing tiers.
+---
 
-## 🚀 Local Development Setup
+## Monorepo Map
 
-### 1. Prerequisites
-- Docker & Docker Compose
-- Node.js 20+
-- Python 3.10+
-- PostgreSQL client tools (optional, for local DB inspection)
-
-### 2. Environment Variables
-Copy the example environment file and customize it. Never commit `.env` or `.env.production` keys!
-```bash
-cp .env.example .env
 ```
-Ensure your database credentials and secret keys are securely configured.
-
-### 3. Running via Docker (Recommended)
-You can start the entire infrastructure (DB, Redis, Backend, Frontend) with one command.
-It may take 2-5 minutes to build images on the first run.
-```bash
-docker-compose up -d --build
+TSFSYSTEM/
+├── src/                          ← Frontend source of truth
+│   ├── app/(privileged)/         ← Admin pages (200+)
+│   ├── app/actions/              ← Server actions (V2 standard)
+│   ├── components/               ← Shared UI components
+│   ├── contexts/                 ← Theme/auth/design providers
+│   ├── hooks/                    ← Custom hooks
+│   ├── lib/                      ← API client (erpFetch), utilities
+│   ├── styles/                   ← Global CSS + layout system
+│   └── types/                    ← TypeScript definitions
+│
+├── erp_backend/                  ← Backend source of truth
+│   ├── apps/                     ← Django modules
+│   │   ├── finance/              ← Accounting, tax, ledger
+│   │   ├── pos/                  ← POS terminal + orders
+│   │   ├── inventory/            ← Stock, warehouse, movements
+│   │   ├── crm/                  ← Contacts, pricing, loyalty
+│   │   ├── hr/                   ← Employees, WISE scoring
+│   │   ├── sales/                ← Quotations, sales pipeline
+│   │   ├── ecommerce/            ← Client-facing storefront
+│   │   └── saas/                 ← Multi-tenancy engine
+│   ├── core/                     ← Settings, middleware, auth
+│   ├── erp/                      ← URL routing, ASGI
+│   └── kernel/                   ← ConnectorEngine, events
+│
+├── docs/                         ← Documentation
+│   ├── architecture/             ← System design docs
+│   ├── deployment/               ← Deploy guides, infra docs
+│   ├── audits/                   ← Audit reports, checklists
+│   └── runbooks/                 ← Module-specific guides
+│
+├── tools/                        ← Operational scripts
+│   ├── deploy/                   ← Deploy/sync scripts
+│   ├── recovery/                 ← Migration fixes, schema repair
+│   ├── debug/                    ← Diagnostic utilities
+│   ├── seeding/                  ← Sample data injection
+│   └── refactors/                ← One-time refactoring scripts
+│
+├── scripts/                      ← CI/CD and automation
+├── .agents/workflows/            ← Agent workflow definitions
+└── tests/                        ← Integration tests
 ```
 
-### 4. Running Locally (Alternative)
-First, start PostgreSQL and Redis via Docker or locally. Then:
+### Source of Truth
+- **`src/`** — all frontend code lives here, nowhere else
+- **`erp_backend/apps/`** — all backend logic lives here
+- **`erp_backend/kernel/`** — ConnectorEngine + event system
+- Everything outside these is tooling, documentation, or infrastructure
 
-**Backend:**
-```bash
-cd erp_backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+---
 
-**Frontend:**
+## Quick Start
+
+### Prerequisites
+- Node.js 20+, Python 3.12+, PostgreSQL 16+
+
+### Frontend
 ```bash
 npm install
-npm run dev
+npm run dev          # → http://localhost:3000
 ```
 
-The frontend will be available at [http://localhost:3000](http://localhost:3000).
-The backend API and Django Admin will be available at [http://localhost:8000](http://localhost:8000).
-
-## 🛡️ Security & Roles
-The application uses session-based and token-based authentication. Role Base Access Control (RBAC) is enforced simultaneously via React layout guards on the client and strictly inside Django viewsets on the server. Do not execute destructive operations without acquiring the appropriate `erp.Role`. 
-
-## 🚢 Deployment
-All deployments use strict Docker orchestration and require atomic migrations. See `PRODUCTION_DEPLOYMENT.md` for the official rollback procedures, database resilience instructions, and safe deployment guides.
-
----
-
-## 🧪 Testing & Validation
-
-TSFSYSTEM includes comprehensive testing infrastructure:
-
-### **Quick Start**
+### Backend
 ```bash
-# Run integration tests
-python manage.py test tests.integration
-
-# Run performance tests
-python manage.py test tests.performance
-
-# Run load tests
-python scripts/load_test.py --users 50 --duration 120
+cd erp_backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver  # → http://localhost:8000
 ```
 
-### **Documentation**
-- **[QUICK_START.md](QUICK_START.md)** - 5-minute quick start guide
-- **[INTEGRATION_TESTING_GUIDE.md](INTEGRATION_TESTING_GUIDE.md)** - Complete testing guide
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment procedures
-- **[TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)** - Problem resolution guide
-- **[SYSTEM_VALIDATION_CHECKLIST.md](SYSTEM_VALIDATION_CHECKLIST.md)** - Production readiness checklist
-
-### **Architecture Documentation**
-- **[KERNEL_OS_V2_COMPLETE.md](KERNEL_OS_V2_COMPLETE.md)** - Kernel OS v2.0 architecture
-- **[ENFORCEMENT_COMPLETE.md](ENFORCEMENT_COMPLETE.md)** - Module boundaries enforcement
-- **[EVENT_CONTRACTS_COMPLETE.md](EVENT_CONTRACTS_COMPLETE.md)** - Event-driven architecture
-
-### **Test Coverage**
-- ✅ **Integration Tests**: 8 test classes covering all Kernel OS components
-- ✅ **Performance Tests**: 10+ test classes with performance benchmarks
-- ✅ **Load Tests**: Multi-user simulation with detailed metrics
-- ✅ **Architecture Enforcement**: Automated violation detection
-
----
-
-## 🏛️ Kernel OS v2.0
-
-TSFSYSTEM is built on **Kernel OS v2.0**, a sophisticated ERP kernel providing:
-
-### **Core Subsystems**
-1. **Tenancy System** - Multi-tenant isolation with automatic query filtering
-2. **RBAC Engine** - Role-based access control with permission inheritance
-3. **Audit System** - Comprehensive change tracking and audit trails
-4. **Event Bus** - Event-driven architecture with outbox pattern
-5. **Configuration Engine** - Dynamic per-tenant configuration
-6. **Contract System** - Event schema validation and documentation
-7. **Module Loader** - Dynamic module enable/disable
-8. **Observability** - Metrics collection and performance monitoring
-
-### **Key Features**
-- ✅ Multi-tenant data isolation
-- ✅ Event-driven inter-module communication
-- ✅ Automatic audit logging
-- ✅ Dynamic module loading
-- ✅ Contract-based event validation
-- ✅ Performance monitoring
-- ✅ Architecture enforcement
-
-### **Architecture Enforcement**
+### Both (Docker)
 ```bash
-# Check for architecture violations
-python3 .ai/enforcement/enforce.py check
-
-# Install pre-commit hook
-bash .ai/enforcement/install.sh
+docker-compose up
 ```
 
 ---
 
-## 📊 Performance Benchmarks
+## Module Communication Law
 
-TSFSYSTEM meets strict performance targets:
+> **No module may directly import from another module.**
 
-| Operation | Target | Status |
-|-----------|--------|--------|
-| Tenant isolation query | <10ms | ✅ Tested |
-| Event emission | <20ms | ✅ Tested |
-| Permission check | <10ms | ✅ Tested |
-| Audit log write | <10ms | ✅ Tested |
-| Contract validation | <5ms | ✅ Tested |
-| API endpoint | <200ms | ✅ Load tested |
+All cross-module communication goes through the **ConnectorEngine** (`erp_backend/kernel/`):
 
-Run benchmarks:
+```python
+# ✅ CORRECT — use ConnectorEngine
+from kernel.connector_engine import ConnectorEngine
+ConnectorEngine.route("finance.post_journal_entry", data)
+
+# ❌ FORBIDDEN — direct cross-module import
+from apps.finance.services import post_entry
+```
+
+See [/connector-governance](/.agents/workflows/connector-governance.md) workflow for full rules.
+
+---
+
+## Testing
+
 ```bash
-./scripts/benchmark.sh
+# Backend tests
+cd erp_backend
+python -m pytest --cov=apps --cov-report=term-missing
+
+# Frontend build check
+npm run build
 ```
 
----
-
-## 🎯 Production Readiness
-
-Before production deployment:
-
-1. ✅ Run all integration tests
-2. ✅ Run performance tests
-3. ✅ Run load tests
-4. ✅ Complete [SYSTEM_VALIDATION_CHECKLIST.md](SYSTEM_VALIDATION_CHECKLIST.md)
-5. ✅ Follow [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-6. ✅ Configure monitoring
-7. ✅ Set up backup procedures
+**Coverage targets:**
+- Finance/posting/tax: 80%+ (P1)
+- All other modules: 60%+ (current: 50% minimum)
 
 ---
 
-## 🆘 Troubleshooting
+## Deployment
 
-Having issues? Check:
-1. **[TROUBLESHOOTING_GUIDE.md](TROUBLESHOOTING_GUIDE.md)** - Common problems and solutions
-2. **Test logs** - `python manage.py test tests.integration -v 2`
-3. **Architecture violations** - `python3 .ai/enforcement/enforce.py check`
-4. **Event contracts** - `python manage.py register_contracts`
+See the [/deploy-dev](/.agents/workflows/deploy-dev.md) workflow for the standard deployment process.
+
+**Production:** `deploy_hotfix.sh` (root) — the active deployment script.
 
 ---
 
-## 📈 System Status
+## Active vs Legacy Policy
 
-```
-Kernel OS v2.0:          ✅ Complete
-Module Enforcement:      ✅ Complete
-Event Contracts:         ✅ Complete (19 contracts)
-Integration Testing:     ✅ Complete
-Performance Testing:     ✅ Complete
-Documentation:          ✅ Complete
-Production Ready:       ✅ YES
-```
+| Directory | Status | Description |
+|-----------|--------|-------------|
+| `src/`, `erp_backend/apps/` | **Active** | Source of truth |
+| `docs/` | **Active** | Maintained documentation |
+| `tools/` | **Active** | Operational scripts |
+| `scripts/` | **Active** | CI/CD automation |
+| `_quarantine/` | **Legacy** | Under review for deletion |
+| `_quarantine/uncertain/` | **Review** | Session docs, may be deleted |
 
----
-
-## 🚀 Getting Started
-
-**New to TSFSYSTEM?**
-1. Read [QUICK_START.md](QUICK_START.md) (5 minutes)
-2. Follow [INTEGRATION_TESTING_GUIDE.md](INTEGRATION_TESTING_GUIDE.md)
-3. Review [KERNEL_OS_V2_COMPLETE.md](KERNEL_OS_V2_COMPLETE.md)
-
-**Ready to deploy?**
-1. Complete [SYSTEM_VALIDATION_CHECKLIST.md](SYSTEM_VALIDATION_CHECKLIST.md)
-2. Follow [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-3. Monitor and celebrate! 🎉
+### Repo Hygiene Rules
+1. No file > 10MB committed without explicit approval
+2. No `.env`, `.sqlite3`, `.sql`, media in git
+3. Root file count must stay ≤ 25
+4. Backend root file count must stay ≤ 15
+5. All new documentation goes to `docs/`
+6. All scripts go to `tools/` or `scripts/`

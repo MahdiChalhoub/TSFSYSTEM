@@ -1,7 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ═══════════════════════════════════════════════════════════════
+# TSFSYSTEM .gitignore — Enterprise-grade exclusion rules
+# ═══════════════════════════════════════════════════════════════
 
-# dependencies
-/node_modules
+# ── Dependencies ──────────────────────────────────────────────
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,106 +12,169 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files
-.env
-.env.*
-!.env.example
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# database
-/pg_data/
-/pgdata/
-*.sqlite
-*.sqlite-journal
-
-# django migrations (optional, usually kept, but for this project we might want to ignore local ones if they conflict)
-# actually, keep migrations but ignore __pycache__
+# ── Python ────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Python virtual environment (CRITICAL: protects server venv from git clean)
+*.egg-info/
+.eggs/
 venv/
 */venv/
 .venv/
+*/.venv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
 
-# local development
-.agent/
-.gemini/
-# Engine Guard Scripts are essential
-!scripts/
+# ── Next.js / Frontend builds ─────────────────────────────────
+/.next/
+/out/
+/build/
+/dist/
+*/dist/
+/coverage/
+*.tsbuildinfo
+next-env.d.ts
+prerender-manifest.json
+.deploy-package-lock.md5
 
-# Heavy data and backups
+# ── Env & Secrets ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+SSH_PUBLIC_KEY.txt
+
+# ── Database ──────────────────────────────────────────────────
+*.sqlite3
+*.sqlite
+*.sqlite-journal
+*.db
+*.sql
+*.sql.gz
+/pg_data/
+/pgdata/
 pg_data_bak_*/
-*_backup*/
-*.bak
-*.log
-tmp/
-temp/
-/media/
+
+# ── Media & static (runtime-generated) ────────────────────────
 media/
 erp_backend/media/
+erp_backend/staticfiles/
+erp_backend/logos/
 /static/root/
 
-# Temp scripts
-erp_backend/rename_tables.py
-erp_backend/rename_kernel_tables.py
-erp_backend/rename_remaining_tables.py
-erp_backend/test_coa_visibility.py
-erp_backend/test_registration.py
-erp_backend/check_tables.py
-erp_backend/clear_migrations.py
-erp_backend/list_applied_migrations.py
-erp_backend/list_all_migrations.py
+# ── Logs & runtime output ────────────────────────────────────
+*.log
+*.log.*
+*.pid
+*.out
+*.err
+*.stackdump
+logs/
+erp_backend/celerybeat-schedule
+erp_backend/gunicorn.ctl
 
-# Debug output files (root junk)
-*_output.txt
-*_logs.txt
-*_logs_long.txt
-*_schema.txt
-*_cols.txt
-*_err*.txt
-*_check*.txt
-*.diff
-django_*.txt
-server_*.txt
-frontend_*.log
-deploy.log
-
-# Sensitive data files
-*.sql
-u739151801_dataPOS.*
-
-# Session artifacts (agent-generated docs)
-CRM_*.md
-EXCELLENCE_PLAN.md
-SESSION_COMPLETE_SUMMARY.md
+# ── Temporary / build artifacts ───────────────────────────────
+tmp/
+temp/
+*.bak
 *.backup
+*.tar.gz
 *.tsx.new
 *.tsx.backup
+*.swp
+*~
+
+# ── Legacy / recovery directories (NEVER track) ──────────────
+ARCHIVE/
+restored/
+_inventory_mode_src/
+.backups/
+releases/
+_quarantine/
+erp_backend/_quarantine/
+
+# ── Agent / AI session artifacts ──────────────────────────────
+.ai/
+.agent/
+.gemini/
+.claude/
+.cursor/
+
+# ── OS / editor ──────────────────────────────────────────────
+.DS_Store
+.vscode/
+.vercel
+
+# ── Specific debug/dump files at root ─────────────────────────
+# (targeted patterns, NOT broad *.txt/*.html/*.pdf)
+/access.log
+/error.log
+/stash_content.diff
+/out.html
+/error_dump.html
+/temp_app.html
+/test_api.html
+/ea42fe6626db811e.js
+/gunicorn-access.log
+/gunicorn-error.log
+/gunicorn.log
+/hotfix.tar.gz
+/deploy.log
+/frontend_debug.log
+/dev_frontend.log
+/build-retry.log
+/build.log
+/deploy_output.log
+/deploy_output_latest.log
+/prod_test.txt
+/ts_errors.txt
+/backend_logs.txt
+/backend_logs_long.txt
+/frontend_logs.txt
+/frontend_logs_long.txt
+/check_output.txt
+/audit_output.txt
+/audit_output_utf8.txt
+/docs_output.txt
+/docs_output_utf8.txt
+/pos_docs_output.txt
+/pos_new_folder_output.txt
+/pos_schema.txt
+/pos_schema_full.txt
+/business_cols.txt
+/business_full_cols.txt
+/business_schema.txt
+/frontend_audit_output.txt
+/full_err.txt
+/build_log.txt
+/build_output.txt
+/nextjs_err.txt
+/django_err2.txt
+/django_fy.txt
+/django_logs.txt
+/djerr.txt
+/dump_analysis.txt
+/finance_files.txt
+/server_check*.txt
+/server_error.txt
+/migration-shared-dryrun.log
+/migration-ui-dryrun.log
+/u739151801_dataPOS.*
+
+# ── Backend-specific debug/output files ───────────────────────
+erp_backend/access.log
+erp_backend/error.log
+erp_backend/backend_debug.log
+erp_backend/dev_backend.log
+erp_backend/frontend_debug.log
+erp_backend/check_output.txt
+erp_backend/check_results.txt
+erp_backend/check_stderr.txt
+erp_backend/check_stdout.txt
+erp_backend/system_check_errors.txt
+erp_backend/inventory_validation.txt
+erp_backend/user_fields.txt
+erp_backend/migration_*.sql
+erp_backend/update.json

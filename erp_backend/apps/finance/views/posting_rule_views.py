@@ -251,3 +251,39 @@ class PostingRuleViewSet(TenantModelViewSet):
                 'base_event_code': rule.base_rule.event_code if rule.base_rule else '',
             })
         return Response(data)
+
+    @action(detail=False, methods=['get'], url_path='tax-account-mappings')
+    def tax_account_mappings(self, request):
+        """List tax account mappings for the default OrgTaxPolicy."""
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'Tenant context missing'}, status=400)
+
+        from apps.finance.models import OrgTaxPolicy, TaxAccountMapping
+        policy = OrgTaxPolicy.objects.filter(
+            organization_id=org_id, is_default=True
+        ).first() or OrgTaxPolicy.objects.filter(
+            organization_id=org_id
+        ).first()
+
+        if not policy:
+            return Response({'error': 'No tax policy found'}, status=404)
+
+        mappings = TaxAccountMapping.objects.filter(
+            policy=policy
+        ).select_related('account').order_by('tax_type')
+
+        data = []
+        for m in mappings:
+            data.append({
+                'id': m.id,
+                'tax_type': m.tax_type,
+                'tax_type_display': m.get_tax_type_display(),
+                'account_id': m.account_id,
+                'account_code': m.account.code if m.account else '',
+                'account_name': m.account.name if m.account else '',
+                'description': m.description,
+                'policy_id': m.policy_id,
+                'policy_name': policy.name,
+            })
+        return Response(data)

@@ -276,9 +276,55 @@ class PostingResolver:
 
     # ── Internal Resolution Methods ───────────────────────────────────
 
+    # ── Event code → TaxAccountMapping.tax_type ──────────────────────
+    TAX_TYPE_MAP = {
+        'sales.invoice.vat_output':           'VAT_OUTPUT',
+        'sales.vat_collected':                'VAT_OUTPUT',
+        'purchases.invoice.vat_input':        'VAT_INPUT',
+        'purchases.vat_recoverable':          'VAT_INPUT',
+        'tax.vat.output':                     'VAT_OUTPUT',
+        'tax.vat.input':                      'VAT_INPUT',
+        'tax.vat.payable':                    'VAT_PAYABLE',
+        'tax.vat.recoverable':                'VAT_REFUND',
+        'tax.vat.suspense':                   'VAT_SUSPENSE',
+        'tax.airsi.payable':                  'AIRSI',
+        'tax.airsi.purchases':                'AIRSI',
+        'tax.settlement.reverse_charge':      'REVERSE_CHARGE',
+        'tax.withholding.sales':              'WHT_SALES',
+        'tax.withholding.purchases':          'WHT_PURCHASES',
+        'tax.withholding.payable':            'WHT_PAYABLE',
+        'tax.settlement.vat_payable':         'VAT_PAYABLE',
+        'tax.settlement.vat_recoverable':     'VAT_REFUND',
+    }
+
+    # Per-request cache for TaxAccountMapping
+    _tax_mapping_cache = {}  # keyed by org.id → {tax_type: account_id}
+
     @classmethod
     def _resolve_from_tax_policy(cls, organization, field_name):
-        """Resolve from OrgTaxPolicy (Tax Engine)."""
+        """
+        Resolve from tax accounts. Dual-read:
+          1. TaxAccountMapping rows (new, normalized)
+          2. OrgTaxPolicy FK column (legacy fallback)
+        """
+        # 1. Try TaxAccountMapping first
+        # Reverse-lookup: field_name → tax_type
+        FK_TO_TYPE = {
+            'vat_collected_account_id':        'VAT_OUTPUT',
+            'vat_recoverable_account_id':      'VAT_INPUT',
+            'vat_payable_account_id':          'VAT_PAYABLE',
+            'vat_refund_receivable_account_id': 'VAT_REFUND',
+            'vat_suspense_account_id':         'VAT_SUSPENSE',
+            'airsi_account_id':                'AIRSI',
+            'reverse_charge_account_id':       'REVERSE_CHARGE',
+        }
+        tax_type = FK_TO_TYPE.get(field_name)
+        if tax_type:
+            account_id = cls._resolve_from_tax_mapping(organization, tax_type)
+            if account_id:
+                return account_id
+
+        # 2. Fallback to OrgTaxPolicy FK columns (legacy)
         try:
             policy = cls._get_policy(organization)
             return getattr(policy, field_name, None) if policy else None
@@ -292,6 +338,31 @@ class PostingResolver:
                 extra={'organization_id': getattr(organization, 'id', None)}
             )
             return None
+
+    @classmethod
+    def _resolve_from_tax_mapping(cls, organization, tax_type):
+        """Resolve from TaxAccountMapping rows (cached per-request)."""
+        org_id = organization.id
+
+        if org_id not in cls._tax_mapping_cache:
+            try:
+                from apps.finance.models import TaxAccountMapping
+                policy = cls._get_policy(organization)
+                if not policy:
+                    cls._tax_mapping_cache[org_id] = {}
+                    return None
+
+                mappings = dict(
+                    TaxAccountMapping.objects.filter(
+                        policy=policy, account__isnull=False
+                    ).values_list('tax_type', 'account_id')
+                )
+                cls._tax_mapping_cache[org_id] = mappings
+            except Exception as exc:
+                logger.warning("Could not load TaxAccountMapping: %s", exc)
+                cls._tax_mapping_cache[org_id] = {}
+
+        return cls._tax_mapping_cache.get(org_id, {}).get(tax_type)
 
     @classmethod
     def _get_policy(cls, organization):
@@ -374,10 +445,12 @@ class PostingResolver:
             cls._policy_cache.pop(organization_id, None)
             cls._rules_cache.pop(organization_id, None)
             cls._ctx_cache.pop(organization_id, None)
+            cls._tax_mapping_cache.pop(organization_id, None)
         else:
             cls._policy_cache.clear()
             cls._rules_cache.clear()
             cls._ctx_cache.clear()
+            cls._tax_mapping_cache.clear()
 
     @classmethod
     def _resolve_contextual(cls, organization, event_code, context):
