@@ -48,25 +48,53 @@ class LedgerCOAMixin:
 
         # ── Smart Registry: Enterprise Role & Section Detection ──────────
         ROLE_MAP = {
-            'RECEIVABLE': 'AR_CONTROL',
-            'PAYABLE': 'AP_CONTROL',
+            'RECEIVABLE': 'RECEIVABLE',
+            'PAYABLE': 'PAYABLE',
             'CASH': 'CASH_ACCOUNT',
             'BANK': 'BANK_ACCOUNT',
-            'INVENTORY': 'INVENTORY_ASSET',
+            'INVENTORY': 'INVENTORY',
         }
         NAME_ROLE_MAP = {
+            # ── Equity ──
             'RETAINED EARNINGS': 'RETAINED_EARNINGS',
             'CURRENT YEAR PROFIT': 'P_L_SUMMARY',
-            'VAT PAYABLE': 'TAX_PAYABLE',
-            'VAT RECEIVABLE': 'TAX_RECEIVABLE',
+            'OWNER CAPITAL': 'CAPITAL',
+            'CAPITAL': 'CAPITAL',
+            'DRAWS': 'WITHDRAWAL',
+            'WITHDRAWAL': 'WITHDRAWAL',
+            # ── Revenue / COGS ──
+            'REVENUE': 'REVENUE',
+            'SALES REVENUE': 'REVENUE',
+            'COST OF GOODS': 'COGS',
+            'COGS': 'COGS',
+            # ── Tax ──
+            'VAT COLLECTED': 'VAT_OUTPUT',
+            'VAT PAYABLE': 'VAT_OUTPUT',
+            'VAT DEDUCTIBLE': 'VAT_INPUT',
+            'VAT RECOVERABLE': 'VAT_INPUT',
+            'VAT REFUND': 'VAT_INPUT',
+            'VAT SUSPENSE': 'VAT_OUTPUT',
+            'AIRSI': 'WITHHOLDING',
+            'WITHHOLDING': 'WITHHOLDING',
+            'REVERSE CHARGE': 'VAT_OUTPUT',
+            # ── Financial ──
+            'EXCHANGE GAIN': 'FX_GAIN',
+            'EXCHANGE LOSS': 'FX_LOSS',
+            'FOREIGN EXCHANGE GAIN': 'FX_GAIN',
+            'FOREIGN EXCHANGE LOSS': 'FX_LOSS',
+            'BAD DEBT': 'BAD_DEBT',
             'ROUNDING': 'ROUNDING_DIFF',
-            'EXCHANGE': 'EXCHANGE_DIFF',
-            'REVENUE': 'REVENUE_CONTROL',
-            'SALES': 'REVENUE_CONTROL',
-            'COGS': 'COGS_CONTROL',
-            'COST OF GOODS': 'COGS_CONTROL',
-            'INVENTORY': 'INVENTORY_ASSET',
-            'STOCK': 'INVENTORY_ASSET',
+            # ── Inventory ──
+            'GOODS RECEIVED NOT INVOICED': 'GRNI',
+            'INVENTORY': 'INVENTORY',
+            'STOCK': 'INVENTORY',
+            # ── Assets ──
+            'DEPRECIATION': 'DEPRECIATION_EXP',
+            'ACCUMULATED DEPRECIATION': 'ACCUM_DEPRECIATION',
+            'ACCUMULATED AMORTIZATION': 'ACCUM_DEPRECIATION',
+            # ── Other ──
+            'DISCOUNT RECEIVED': 'DISCOUNT_RECEIVED',
+            'FREIGHT': 'DELIVERY_FEES',
         }
         
         SECTION_MAP = {
@@ -163,8 +191,8 @@ class LedgerCOAMixin:
         """
         from apps.finance.models import ChartOfAccount
         MANDATORY_ROLES = [
-            'AR_CONTROL', 'AP_CONTROL', 'CASH_ACCOUNT', 
-            'REVENUE_CONTROL', 'COGS_CONTROL', 'INVENTORY_ASSET',
+            'RECEIVABLE', 'PAYABLE', 'CASH_ACCOUNT', 
+            'REVENUE', 'COGS', 'INVENTORY',
             'RETAINED_EARNINGS', 'P_L_SUMMARY'
         ]
         

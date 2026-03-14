@@ -175,6 +175,9 @@ const IFRS_COA: TemplateAccount[] = [
                             { code: '2114', name: 'Reverse Charge VAT', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                             { code: '2115', name: 'VAT Refund Receivable', type: 'ASSET', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                             { code: '2116', name: 'VAT Suspense (Cash-Basis)', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2117', name: 'VAT Collected (Output)', type: 'LIABILITY', subType: 'TAX', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2118', name: 'VAT Deductible (Input)', type: 'ASSET', subType: 'TAX', syscohadaCode: '44', syscohadaClass: 'Class 4' },
+                            { code: '2119', name: 'Withholding Tax – AIRSI', type: 'LIABILITY', subType: 'TAX', syscohadaCode: '44', syscohadaClass: 'Class 4' },
                         ]
                     },
                     {
@@ -216,6 +219,8 @@ const IFRS_COA: TemplateAccount[] = [
                 code: '4200', name: 'Other Income', type: 'INCOME', children: [
                     { code: '4201', name: 'Discount Received', type: 'INCOME', syscohadaCode: '77', syscohadaClass: 'Class 7' },
                     { code: '4202', name: 'Interest Income', type: 'INCOME', syscohadaCode: '77', syscohadaClass: 'Class 7' },
+                    { code: '4203', name: 'Inventory Adjustment Gain', type: 'INCOME', syscohadaCode: '75', syscohadaClass: 'Class 7' },
+                    { code: '4204', name: 'Foreign Exchange Gain', type: 'INCOME', syscohadaCode: '76', syscohadaClass: 'Class 7' },
                 ]
             }
         ]
@@ -258,6 +263,8 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '6301', name: 'Bank Charges', type: 'EXPENSE', syscohadaCode: '67', syscohadaClass: 'Class 6' },
                     { code: '6302', name: 'Interest Expense', type: 'EXPENSE', syscohadaCode: '67', syscohadaClass: 'Class 6' },
                     { code: '6303', name: 'Depreciation & Amortization Expense', type: 'EXPENSE', syscohadaCode: '68', syscohadaClass: 'Class 6' },
+                    { code: '6304', name: 'Bad Debt Expense', type: 'EXPENSE', syscohadaCode: '65', syscohadaClass: 'Class 6' },
+                    { code: '6305', name: 'Foreign Exchange Loss', type: 'EXPENSE', syscohadaCode: '66', syscohadaClass: 'Class 6' },
                 ]
             }
         ]

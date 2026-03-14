@@ -1,8 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { AlertCircle, RotateCcw, Wallet } from "lucide-react"
+import { reportError } from "@/lib/error-reporting"
 
 export default function FinanceError({
     error,
@@ -11,6 +12,9 @@ export default function FinanceError({
     error: Error & { digest?: string }
     reset: () => void
 }) {
+    useEffect(() => {
+        reportError(error, 'error-boundary', { scope: 'finance' })
+    }, [error])
     return (
         <div className="flex flex-col items-center justify-center p-8 text-center bg-app-background min-h-[60vh] rounded-2xl border border-app-border/50 shadow-sm relative overflow-hidden">
             {/* Background elements */}

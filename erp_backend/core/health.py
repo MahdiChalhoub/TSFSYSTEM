@@ -117,3 +117,26 @@ def health_full(request):
         'checks': checks,
         'timestamp': time.time(),
     }, status=status_code)
+
+
+def error_report(request):
+    """Receive frontend error reports (fire-and-forget from client)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'method_not_allowed'}, status=405)
+
+    try:
+        import json
+        data = json.loads(request.body)
+        logger.warning(
+            'Frontend error: %(message)s [%(source)s] %(url)s digest=%(digest)s',
+            {
+                'message': data.get('message', 'unknown'),
+                'source': data.get('source', 'unknown'),
+                'url': data.get('url', ''),
+                'digest': data.get('digest', ''),
+            }
+        )
+    except Exception:
+        pass  # Never fail on malformed reports
+
+    return JsonResponse({'status': 'received'}, status=204)
