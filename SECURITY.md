@@ -38,4 +38,25 @@ Our platform operates on a multi-tenant SaaS architecture. To ensure robust secu
 
 Please respect our systems during testing. Do not execute destructive actions, access data belonging to other organizations, or attempt Denial of Service (DoS) attacks.
 
+## OWASP Top 10 Compliance (2021)
+
+| # | Risk | Status | Mitigation |
+|---|---|---|---|
+| A01 | Broken Access Control | ✅ | RBAC + tenant middleware + organization FK on every model |
+| A02 | Cryptographic Failures | ✅ | HTTPS enforced (Cloudflare), JWT rotation, `AES_SECRET_KEY` for field-level encryption |
+| A03 | Injection | ✅ | Django ORM (parameterized queries), DRF serializer validation |
+| A04 | Insecure Design | ✅ | ConnectorEngine architecture, ADRs, 13 fitness tests |
+| A05 | Security Misconfiguration | ✅ | `DEBUG=False` in prod, `SECRET_KEY` from env, `ALLOWED_HOSTS` restricted |
+| A06 | Vulnerable Components | ⚠️ | `npm audit` + `pip-audit` recommended in CI (not yet automated) |
+| A07 | Authentication Failures | ✅ | Token-based auth, session timeout, rate limiting on login |
+| A08 | Data Integrity Failures | ✅ | Signed cookies, CSRF protection, `internal_bypass` guard on system accounts |
+| A09 | Logging & Monitoring | ✅ | Structured JSON logging, request logger middleware, AuditLog mixin |
+| A10 | Server-Side Request Forgery | ✅ | No user-controlled URL fetching, Cloudflare WAF |
+
+## Content Security Policy
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.stripe.com; frame-src https://js.stripe.com;
+```
+
 *Thank you for helping keep TSF ERP safe.*

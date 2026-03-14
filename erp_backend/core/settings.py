@@ -93,6 +93,8 @@ MIDDLEWARE = [
     'erp.middleware.TenantMiddleware',
     # Observability — request tracing with correlation IDs
     'core.middleware_tracing.RequestTracingMiddleware',
+    # Observability — structured request/response logging
+    'erp.middleware.request_logger.RequestLoggingMiddleware',
 ]
 
 # CORS — HARD FALSE, never allow all origins regardless of env
@@ -154,8 +156,32 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '2.9.2',
     'SERVE_INCLUDE_SCHEMA': False,
     'CONTACT': {'name': 'TSF Engineering', 'url': 'https://tsf.ci'},
+    'LICENSE': {'name': 'Proprietary', 'url': 'https://tsf.ci/license'},
     'SCHEMA_PATH_PREFIX': '/api/',
     'COMPONENT_SPLIT_REQUEST': True,
+    'SERVERS': [
+        {'url': 'https://developos.shop', 'description': 'Development'},
+    ],
+    'TAGS': [
+        {'name': 'Auth', 'description': 'Authentication & user management'},
+        {'name': 'Finance', 'description': 'Chart of accounts, ledger, journal entries'},
+        {'name': 'POS', 'description': 'Point of sale, orders, registers'},
+        {'name': 'CRM', 'description': 'Contacts, customers, suppliers'},
+        {'name': 'Inventory', 'description': 'Products, stock, warehouses'},
+        {'name': 'HR', 'description': 'Employees, attendance, payroll'},
+        {'name': 'SaaS', 'description': 'Multi-tenant management'},
+    ],
+    'SECURITY': [{'TokenAuth': []}],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'TokenAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': 'Token-based authentication. Format: `Token <your-token>`',
+            }
+        }
+    },
     # Gracefully handle serializer introspection errors
     'ENUM_NAME_OVERRIDES': {},
     'PREPROCESSING_HOOKS': [],
