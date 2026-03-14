@@ -176,6 +176,65 @@ else
     echo -e "${GREEN}OK — no forbidden files tracked${NC}"
 fi
 
+# ── 11. ConfigurationService.get_posting_rules outside finance ─
+echo -n "11. Posting rules access: "
+# POS currently uses get_posting_rules to feed PostingResolver — track count as a baseline.
+# It's acceptable when the result feeds into PostingResolver.resolve(), but we track regression.
+RULES_OUTSIDE=$(grep -rn "get_posting_rules" erp_backend/apps/ --include="*.py" 2>/dev/null \
+    | grep -v "erp_backend/apps/finance/" \
+    | grep -v "__pycache__" | grep -v "migrations/" \
+    | grep -v "test_" || true)
+RULES_COUNT=0
+if [ -n "$RULES_OUTSIDE" ]; then
+    RULES_COUNT=$(echo "$RULES_OUTSIDE" | wc -l)
+fi
+# Baseline is 23 (measured 2026-03-14) — if it goes up, someone is adding new direct access
+if [ "$RULES_COUNT" -gt 25 ]; then
+    echo -e "${YELLOW}WARN ($RULES_COUNT calls, baseline: 23 — regression detected)${NC}"
+    echo "$RULES_OUTSIDE" | head -3 | sed 's/^/  /'
+    WARNINGS=$((WARNINGS + 1))
+else
+    echo -e "${GREEN}OK ($RULES_COUNT calls, baseline ≤ 25)${NC}"
+fi
+
+# ── 12. Cross-module imports between non-finance apps ─────────
+echo -n "12. App isolation: "
+# Check for direct imports between apps (excluding finance→any, migration, connectors, tests)
+CROSS_MODULE=""
+for pair in "pos:crm" "pos:inventory" "pos:hr" "crm:pos" "crm:inventory" "inventory:pos" "inventory:crm" "sales:pos" "sales:crm" "hr:pos" "hr:crm"; do
+    SRC="${pair%%:*}"
+    TGT="${pair##*:}"
+    HITS=$(grep -rn "from apps\\.${TGT}" "erp_backend/apps/${SRC}/" --include="*.py" 2>/dev/null \
+        | grep -v "__pycache__" | grep -v "migrations/" | grep -v "connector" | grep -v "test" || true)
+    if [ -n "$HITS" ]; then
+        CROSS_MODULE="$CROSS_MODULE\n  $SRC → $TGT ($(echo "$HITS" | wc -l))"
+    fi
+done
+if [ -n "$CROSS_MODULE" ]; then
+    echo -e "${YELLOW}WARN — cross-app imports detected:${NC}"
+    echo -e "$CROSS_MODULE"
+    WARNINGS=$((WARNINGS + 1))
+else
+    echo -e "${GREEN}OK — apps communicate via ConnectorEngine${NC}"
+fi
+
+# ── 13. Supplier portal uses portalFetch ──────────────────────
+echo -n "13. Portal fetch discipline: "
+PORTAL_RAW=$(grep -rn "fetch(" src/app/supplier-portal/ --include="*.tsx" 2>/dev/null \
+    | grep -v "portalFetch" | grep -v "node_modules" | grep -v ".next" || true)
+PORTAL_COUNT=0
+if [ -n "$PORTAL_RAW" ]; then
+    PORTAL_COUNT=$(echo "$PORTAL_RAW" | wc -l)
+fi
+# 1 exception: login page (pre-auth, no token)
+if [ "$PORTAL_COUNT" -gt 1 ]; then
+    echo -e "${YELLOW}WARN ($PORTAL_COUNT raw fetch in supplier-portal, expected ≤ 1)${NC}"
+    echo "$PORTAL_RAW" | head -3 | sed 's/^/  /'
+    WARNINGS=$((WARNINGS + 1))
+else
+    echo -e "${GREEN}OK — supplier portal uses portalFetch ($PORTAL_COUNT exception)${NC}"
+fi
+
 # ── Summary ───────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

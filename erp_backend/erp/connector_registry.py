@@ -3,16 +3,20 @@ Connector Capability Registry
 ================================
 The brain of the Connector Governance Layer.
 
-Instead of:
-    from apps.crm.models import Contact
-    contact = Contact.objects.get(id=x)
+Instead of direct imports:
+    # ❌ WRONG: Direct cross-module import
+    # from apps.crm.models import Contact
+    # contact = Contact.objects.get(id=x)
 
 Modules declare capabilities:
     @connector.capability('crm.contacts.get_detail')
     def get_contact_detail(org_id, contact_id): ...
 
-And callers use:
-    contact = connector.require('crm.contacts.get_detail', org_id, contact_id=5)
+And callers use connector.require():
+    # ✅ CORRECT: Use connector pattern
+    from erp.connector_registry import connector
+    Contact = connector.require('crm.contacts.get_model', org_id=org.id)
+    contact = Contact.objects.get(id=x, organization=org)
 
 When CRM is deleted → connector returns None, applies policy, logs it.
 When CRM is disabled → connector returns cached value or empty.

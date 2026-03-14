@@ -398,12 +398,12 @@ class PurchaseService:
             rules = ConfigurationService.get_posting_rules(organization)
             PostingResolver = connector.require('finance.services.get_posting_resolver', org_id=0, source='pos')
 
-            ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
-            stock_account_id = rules['purchases']['inventory']
+            ap_account_id = supplier.linked_account_id or (PostingResolver.resolve(organization, 'purchases.payable', required=False) if PostingResolver else None)
+            stock_account_id = PostingResolver.resolve(organization, 'purchases.inventory', required=False) if PostingResolver else None
             tax_account_id = PostingResolver.resolve(organization, 'purchases.vat_recoverable', required=False) if PostingResolver else None
             airsi_account_id = PostingResolver.resolve(organization, 'purchases.airsi', required=False) if PostingResolver else None
             airsi_payable_acc = PostingResolver.resolve(organization, 'purchases.airsi_payable', required=False) if PostingResolver else None
-            discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
+            discount_earned_account_id = PostingResolver.resolve(organization, 'purchases.discount_earned', required=False) if PostingResolver else None
 
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
@@ -449,7 +449,7 @@ class PurchaseService:
 
             # Extra Fees
             for fee in extra_fees:
-                fee_acc = fee.get('accountId') or rules['purchases'].get('delivery_fees') or stock_account_id
+                fee_acc = fee.get('accountId') or (PostingResolver.resolve(organization, 'purchases.delivery_fees', required=False) if PostingResolver else None) or stock_account_id
                 posting_lines.append({
                     "account_id": fee_acc, "debit": Decimal(str(fee['amount'])), "credit": Decimal('0'),
                     "description": f"Fee: {fee['name']}"

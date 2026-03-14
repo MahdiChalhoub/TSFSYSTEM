@@ -6,7 +6,7 @@ import {
     ChevronRight, CheckCircle2, RefreshCw, Filter, Search,
     User, Phone, Mail, ArrowRight, Activity, TrendingUp, TrendingDown,
     Plus, ExternalLink, Zap, CalendarDays, MoreHorizontal,
-    PhoneCall, Globe, Eye, Send, ListTodo, History, Settings
+    PhoneCall, Globe, Eye, Send, ListTodo, History, Settings, UserCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCurrency } from '@/lib/utils/currency';

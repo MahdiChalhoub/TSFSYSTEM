@@ -94,20 +94,23 @@ class ContactViewSet(TenantModelViewSet):
 
             # ── Auto-Task: NEW_CLIENT / NEW_SUPPLIER ──
             try:
+                from erp.connector_registry import connector
                 contact_name = data.get('name', '')
                 if contact_type == 'CUSTOMER':
-                    from apps.workspace.signals import trigger_crm_event
-                    trigger_crm_event(
-                        organization, 'NEW_CLIENT',
-                        reference=contact_name,
-                        client_id=serializer.instance.id,
-                    )
+                    trigger_crm_event = connector.require('workspace.events.trigger_crm', org_id=organization.id)
+                    if trigger_crm_event:
+                        trigger_crm_event(
+                            organization=organization, event='NEW_CLIENT',
+                            reference=contact_name,
+                            client_id=serializer.instance.id,
+                        )
                 else:
-                    from apps.workspace.signals import trigger_purchasing_event
-                    trigger_purchasing_event(
-                        organization, 'NEW_SUPPLIER',
-                        reference=contact_name,
-                    )
+                    trigger_purchasing_event = connector.require('workspace.events.trigger_purchasing', org_id=organization.id)
+                    if trigger_purchasing_event:
+                        trigger_purchasing_event(
+                            organization=organization, event='NEW_SUPPLIER',
+                            reference=contact_name,
+                        )
             except Exception:
                 pass
 

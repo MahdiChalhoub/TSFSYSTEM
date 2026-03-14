@@ -136,10 +136,23 @@ const IFRS_COA: TemplateAccount[] = [
                         ]
                     },
                     { code: '1110', name: 'Accounts Receivable', type: 'ASSET', subType: 'RECEIVABLE', syscohadaCode: '41', syscohadaClass: 'Class 4' },
-                    { code: '1120', name: 'Inventory', type: 'ASSET', syscohadaCode: '31', syscohadaClass: 'Class 3' },
-                    { code: '1130', name: 'Prepaid Expenses', type: 'ASSET', syscohadaCode: '47', syscohadaClass: 'Class 4' },
+                    {
+                        code: '1120', name: 'Inventory', type: 'ASSET', syscohadaCode: '31', syscohadaClass: 'Class 3', children: [
+                            { code: '1121', name: 'Raw Materials', type: 'ASSET', subType: 'INVENTORY', syscohadaCode: '31', syscohadaClass: 'Class 3' },
+                            { code: '1122', name: 'Finished Goods', type: 'ASSET', subType: 'INVENTORY', syscohadaCode: '31', syscohadaClass: 'Class 3' },
+                            { code: '1123', name: 'Work in Progress', type: 'ASSET', subType: 'INVENTORY', syscohadaCode: '31', syscohadaClass: 'Class 3' },
+                            { code: '1124', name: 'Goods in Transit', type: 'ASSET', subType: 'INVENTORY', syscohadaCode: '31', syscohadaClass: 'Class 3' },
+                        ]
+                    },
+                    {
+                        code: '1130', name: 'Prepaid Expenses', type: 'ASSET', syscohadaCode: '47', syscohadaClass: 'Class 4', children: [
+                            { code: '1131', name: 'Prepaid Insurance', type: 'ASSET', syscohadaCode: '47', syscohadaClass: 'Class 4' },
+                            { code: '1132', name: 'Prepaid Rent', type: 'ASSET', syscohadaCode: '47', syscohadaClass: 'Class 4' },
+                        ]
+                    },
                     { code: '1140', name: 'Employee Advances', type: 'ASSET', subType: 'RECEIVABLE', syscohadaCode: '42', syscohadaClass: 'Class 4' },
                     { code: '1150', name: 'Deposits & Guarantees', type: 'ASSET', syscohadaCode: '27', syscohadaClass: 'Class 2' },
+                    { code: '1160', name: 'Short-Term Investments', type: 'ASSET', syscohadaCode: '50', syscohadaClass: 'Class 5' },
                 ]
             },
             {
@@ -150,6 +163,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '1204', name: 'Equipment', type: 'ASSET', syscohadaCode: '24', syscohadaClass: 'Class 2' },
                     { code: '1205', name: 'Vehicles', type: 'ASSET', syscohadaCode: '25', syscohadaClass: 'Class 2' },
                     { code: '1206', name: 'Software / Intangible Assets', type: 'ASSET', syscohadaCode: '21', syscohadaClass: 'Class 2' },
+                    { code: '1207', name: 'Leasehold Improvements', type: 'ASSET', syscohadaCode: '23', syscohadaClass: 'Class 2' },
                 ]
             },
             {
@@ -166,7 +180,9 @@ const IFRS_COA: TemplateAccount[] = [
             {
                 code: '2100', name: 'Current Liabilities', type: 'LIABILITY', children: [
                     { code: '2101', name: 'Accounts Payable', type: 'LIABILITY', subType: 'PAYABLE', syscohadaCode: '40', syscohadaClass: 'Class 4' },
-                    { code: '2102', name: 'Accrued Liabilities (Goods Received Not Invoiced)', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
+                    { code: '2102', name: 'Accrued Liabilities', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
+                    { code: '2103', name: 'Customer Deposits', type: 'LIABILITY', syscohadaCode: '41', syscohadaClass: 'Class 4' },
+                    { code: '2104', name: 'Goods Received Not Invoiced', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
                     {
                         code: '2110', name: 'Taxes Payable', type: 'LIABILITY', children: [
                             { code: '2111', name: 'VAT Payable', type: 'LIABILITY', syscohadaCode: '44', syscohadaClass: 'Class 4' },
@@ -185,8 +201,10 @@ const IFRS_COA: TemplateAccount[] = [
                             { code: '2121', name: 'Salaries Payable', type: 'LIABILITY', syscohadaCode: '42', syscohadaClass: 'Class 4' },
                             { code: '2122', name: 'Rent Payable', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
                             { code: '2123', name: 'Utilities Payable', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
+                            { code: '2124', name: 'Accrued Interest', type: 'LIABILITY', syscohadaCode: '40', syscohadaClass: 'Class 4' },
                         ]
-                    }
+                    },
+                    { code: '2130', name: 'Deferred Revenue', type: 'LIABILITY', syscohadaCode: '47', syscohadaClass: 'Class 4' }
                 ]
             },
             {
@@ -204,6 +222,7 @@ const IFRS_COA: TemplateAccount[] = [
             { code: '3003', name: 'Retained Earnings', type: 'EQUITY', syscohadaCode: '11', syscohadaClass: 'Class 1' },
             { code: '3004', name: 'Current Year Profit / Loss', type: 'EQUITY', syscohadaCode: '13', syscohadaClass: 'Class 1' },
             { code: '3005', name: 'Owner Draws / Withdrawals', type: 'EQUITY', syscohadaCode: '10', syscohadaClass: 'Class 1' },
+            { code: '3006', name: 'Reserves', type: 'EQUITY', syscohadaCode: '11', syscohadaClass: 'Class 1' },
         ]
     },
     {
@@ -213,6 +232,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '4101', name: 'Sales ΓÇô Cash', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
                     { code: '4102', name: 'Sales ΓÇô Credit', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
                     { code: '4103', name: 'Sales ΓÇô Online', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
+                    { code: '4104', name: 'Sales Returns & Allowances', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
                 ]
             },
             {
@@ -221,6 +241,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '4202', name: 'Interest Income', type: 'INCOME', syscohadaCode: '77', syscohadaClass: 'Class 7' },
                     { code: '4203', name: 'Inventory Adjustment Gain', type: 'INCOME', syscohadaCode: '75', syscohadaClass: 'Class 7' },
                     { code: '4204', name: 'Foreign Exchange Gain', type: 'INCOME', syscohadaCode: '76', syscohadaClass: 'Class 7' },
+                    { code: '4205', name: 'Commission Income', type: 'INCOME', syscohadaCode: '75', syscohadaClass: 'Class 7' },
                 ]
             }
         ]
@@ -233,6 +254,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '5102', name: 'Freight In', type: 'EXPENSE', syscohadaCode: '60', syscohadaClass: 'Class 6' },
                     { code: '5103', name: 'Import Duties', type: 'EXPENSE', syscohadaCode: '60', syscohadaClass: 'Class 6' },
                     { code: '5104', name: 'Inventory Adjustment', type: 'EXPENSE', syscohadaCode: '60', syscohadaClass: 'Class 6' },
+                    { code: '5105', name: 'Packaging & Materials', type: 'EXPENSE', syscohadaCode: '60', syscohadaClass: 'Class 6' },
                 ]
             }
         ]
@@ -256,6 +278,9 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '6201', name: 'Office Supplies', type: 'EXPENSE', syscohadaCode: '60', syscohadaClass: 'Class 6' },
                     { code: '6202', name: 'Software / POS Subscription', type: 'EXPENSE', syscohadaCode: '62', syscohadaClass: 'Class 6' },
                     { code: '6203', name: 'Professional Fees', type: 'EXPENSE', syscohadaCode: '62', syscohadaClass: 'Class 6' },
+                    { code: '6204', name: 'Travel & Entertainment', type: 'EXPENSE', syscohadaCode: '62', syscohadaClass: 'Class 6' },
+                    { code: '6205', name: 'Marketing & Advertising', type: 'EXPENSE', syscohadaCode: '62', syscohadaClass: 'Class 6' },
+                    { code: '6206', name: 'Legal Fees', type: 'EXPENSE', syscohadaCode: '62', syscohadaClass: 'Class 6' },
                 ]
             },
             {
@@ -265,6 +290,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '6303', name: 'Depreciation & Amortization Expense', type: 'EXPENSE', syscohadaCode: '68', syscohadaClass: 'Class 6' },
                     { code: '6304', name: 'Bad Debt Expense', type: 'EXPENSE', syscohadaCode: '65', syscohadaClass: 'Class 6' },
                     { code: '6305', name: 'Foreign Exchange Loss', type: 'EXPENSE', syscohadaCode: '66', syscohadaClass: 'Class 6' },
+                    { code: '6306', name: 'Discount Given', type: 'EXPENSE', syscohadaCode: '65', syscohadaClass: 'Class 6' },
                 ]
             }
         ]

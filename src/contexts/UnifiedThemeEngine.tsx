@@ -204,6 +204,52 @@ export function UnifiedThemeEngineProvider({
           h3Size: '1.25rem',
           bodySize: '0.875rem',
           smallSize: '0.75rem',
+          fontWeight: 'normal',
+          lineHeight: 'normal',
+          letterSpacing: 'normal',
+        },
+        tables: {
+          rowHeight: '2.5rem',
+          headerStyle: 'bold',
+          borderStyle: 'rows',
+          striped: false,
+          hoverEffect: true,
+          density: 'comfortable',
+        },
+        modals: {
+          maxWidth: '32rem',
+          borderRadius: '0.75rem',
+          padding: '1.5rem',
+          backdrop: 'blur',
+          animation: 'scale',
+          shadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+        },
+        forms: {
+          labelPosition: 'top',
+          labelStyle: 'normal',
+          fieldSpacing: '1rem',
+          groupSpacing: '1.5rem',
+          validationStyle: 'inline',
+        },
+        tabs: {
+          style: 'underline',
+          size: 'md',
+          spacing: '0.5rem',
+          activeIndicator: 'underline',
+        },
+        badges: {
+          size: 'md',
+          style: 'soft',
+          borderRadius: '0.375rem',
+          fontWeight: '600',
+          textTransform: 'none',
+        },
+        alerts: {
+          style: 'soft',
+          borderRadius: '0.5rem',
+          padding: '1rem',
+          iconSize: '1.25rem',
+          showIcon: true,
         },
       },
     [currentTheme]
@@ -357,6 +403,52 @@ export function UnifiedThemeEngineProvider({
                     h3Size: apiTheme.preset_data?.components?.typography?.h3Size || '1.25rem',
                     bodySize: apiTheme.preset_data?.components?.typography?.bodySize || '0.875rem',
                     smallSize: apiTheme.preset_data?.components?.typography?.smallSize || '0.75rem',
+                    fontWeight: apiTheme.preset_data?.components?.typography?.fontWeight || 'normal',
+                    lineHeight: apiTheme.preset_data?.components?.typography?.lineHeight || 'normal',
+                    letterSpacing: apiTheme.preset_data?.components?.typography?.letterSpacing || 'normal',
+                  },
+                  tables: {
+                    rowHeight: apiTheme.preset_data?.components?.tables?.rowHeight || '2.5rem',
+                    headerStyle: apiTheme.preset_data?.components?.tables?.headerStyle || 'bold',
+                    borderStyle: apiTheme.preset_data?.components?.tables?.borderStyle || 'rows',
+                    striped: apiTheme.preset_data?.components?.tables?.striped ?? false,
+                    hoverEffect: apiTheme.preset_data?.components?.tables?.hoverEffect ?? true,
+                    density: apiTheme.preset_data?.components?.tables?.density || 'comfortable',
+                  },
+                  modals: {
+                    maxWidth: apiTheme.preset_data?.components?.modals?.maxWidth || '32rem',
+                    borderRadius: apiTheme.preset_data?.components?.modals?.borderRadius || '0.75rem',
+                    padding: apiTheme.preset_data?.components?.modals?.padding || '1.5rem',
+                    backdrop: apiTheme.preset_data?.components?.modals?.backdrop || 'blur',
+                    animation: apiTheme.preset_data?.components?.modals?.animation || 'scale',
+                    shadow: apiTheme.preset_data?.components?.modals?.shadow || '0 20px 25px -5px rgba(0,0,0,0.1)',
+                  },
+                  forms: {
+                    labelPosition: apiTheme.preset_data?.components?.forms?.labelPosition || 'top',
+                    labelStyle: apiTheme.preset_data?.components?.forms?.labelStyle || 'normal',
+                    fieldSpacing: apiTheme.preset_data?.components?.forms?.fieldSpacing || '1rem',
+                    groupSpacing: apiTheme.preset_data?.components?.forms?.groupSpacing || '1.5rem',
+                    validationStyle: apiTheme.preset_data?.components?.forms?.validationStyle || 'inline',
+                  },
+                  tabs: {
+                    style: apiTheme.preset_data?.components?.tabs?.style || 'underline',
+                    size: apiTheme.preset_data?.components?.tabs?.size || 'md',
+                    spacing: apiTheme.preset_data?.components?.tabs?.spacing || '0.5rem',
+                    activeIndicator: apiTheme.preset_data?.components?.tabs?.activeIndicator || 'underline',
+                  },
+                  badges: {
+                    size: apiTheme.preset_data?.components?.badges?.size || 'md',
+                    style: apiTheme.preset_data?.components?.badges?.style || 'soft',
+                    borderRadius: apiTheme.preset_data?.components?.badges?.borderRadius || '0.375rem',
+                    fontWeight: apiTheme.preset_data?.components?.badges?.fontWeight || '600',
+                    textTransform: apiTheme.preset_data?.components?.badges?.textTransform || 'none',
+                  },
+                  alerts: {
+                    style: apiTheme.preset_data?.components?.alerts?.style || 'soft',
+                    borderRadius: apiTheme.preset_data?.components?.alerts?.borderRadius || '0.5rem',
+                    padding: apiTheme.preset_data?.components?.alerts?.padding || '1rem',
+                    iconSize: apiTheme.preset_data?.components?.alerts?.iconSize || '1.25rem',
+                    showIcon: apiTheme.preset_data?.components?.alerts?.showIcon ?? true,
                   },
                 },
                 navigation: {
@@ -482,7 +574,7 @@ export function UnifiedThemeEngineProvider({
     root.style.setProperty('--app-border-strong', activeColors.border)
 
     // Sidebar colors — active must be a SUBTLE tint, never the solid primary
-    root.style.setProperty('--app-sidebar-bg', activeColors.background || activeColors.surface)
+    root.style.setProperty('--app-sidebar-bg', activeColors.bg || activeColors.surface)
     root.style.setProperty('--app-sidebar-surface', `color-mix(in srgb, ${activeColors.primary} 5%, ${activeColors.surface})`)
     root.style.setProperty('--app-sidebar-text', activeColors.text)
     root.style.setProperty('--app-sidebar-muted', activeColors.textMuted)

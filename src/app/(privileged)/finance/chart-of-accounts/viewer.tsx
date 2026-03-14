@@ -20,11 +20,11 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
  *  TYPE CONSTANTS
  * ═══════════════════════════════════════════════════════════ */
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
-    ASSET: { label: 'Asset', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: <TrendingUp size={11} /> },
-    LIABILITY: { label: 'Liability', color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', icon: <TrendingDown size={11} /> },
-    EQUITY: { label: 'Equity', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', icon: <Layers size={11} /> },
-    INCOME: { label: 'Income', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: <ArrowUpRight size={11} /> },
-    EXPENSE: { label: 'Expense', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: <Activity size={11} /> },
+    ASSET: { label: 'Asset', color: 'var(--app-info)', bg: 'color-mix(in srgb, var(--app-info) 10%, transparent)', border: 'color-mix(in srgb, var(--app-info) 20%, transparent)', icon: <TrendingUp size={11} /> },
+    LIABILITY: { label: 'Liability', color: 'var(--app-error)', bg: 'color-mix(in srgb, var(--app-error) 10%, transparent)', border: 'color-mix(in srgb, var(--app-error) 20%, transparent)', icon: <TrendingDown size={11} /> },
+    EQUITY: { label: 'Equity', color: '#8b5cf6', bg: 'color-mix(in srgb, #8b5cf6 10%, transparent)', border: 'color-mix(in srgb, #8b5cf6 20%, transparent)', icon: <Layers size={11} /> },
+    INCOME: { label: 'Income', color: 'var(--app-success)', bg: 'color-mix(in srgb, var(--app-success) 10%, transparent)', border: 'color-mix(in srgb, var(--app-success) 20%, transparent)', icon: <ArrowUpRight size={11} /> },
+    EXPENSE: { label: 'Expense', color: 'var(--app-warning)', bg: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', border: 'color-mix(in srgb, var(--app-warning) 20%, transparent)', icon: <Activity size={11} /> },
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -76,11 +76,23 @@ const AccountNode = ({
           group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-default
           border-b border-app-border/30
           ${level === 0
-                        ? 'bg-app-surface/80 hover:bg-app-surface py-2.5 md:py-3'
+                        ? 'hover:bg-app-surface py-2.5 md:py-3'
                         : 'hover:bg-app-surface/40 py-1.5 md:py-2'
                     }
         `}
-                style={{ paddingLeft: `${12 + level * 20}px`, paddingRight: '12px' }}
+                style={{
+                    paddingLeft: `${12 + level * 20}px`,
+                    paddingRight: '12px',
+                    background: level === 0
+                        ? `color-mix(in srgb, ${typeConf.color} 4%, var(--app-surface))`
+                        : undefined,
+                    borderLeft: level === 0
+                        ? `3px solid ${typeConf.color}`
+                        : level > 0
+                            ? `1px solid color-mix(in srgb, var(--app-border) 40%, transparent)`
+                            : undefined,
+                    marginLeft: level > 0 ? `${12 + (level - 1) * 20 + 10}px` : undefined,
+                }}
             >
                 {/* Toggle */}
                 <button
@@ -91,20 +103,34 @@ const AccountNode = ({
                     {isParent ? (
                         isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />
                     ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-app-border" />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: typeConf.color }} />
                     )}
                 </button>
 
                 {/* Icon */}
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isParent ? 'bg-amber-500/10 text-amber-400' : 'bg-app-border/30 text-app-text-muted'
-                    }`}>
+                <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: isParent
+                            ? `color-mix(in srgb, ${typeConf.color} 12%, transparent)`
+                            : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                        color: isParent ? typeConf.color : 'var(--app-muted-foreground)',
+                    }}
+                >
                     {isParent ? (isOpen ? <FolderOpen size={14} /> : <Folder size={14} />) : <FileText size={13} />}
                 </div>
 
                 {/* Code + Name */}
                 <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-                    <span className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-app-bg/60 flex-shrink-0 ${level === 0 ? 'text-app-primary' : 'text-app-text'
-                        }`}>
+                    <span
+                        className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                            background: level === 0
+                                ? `color-mix(in srgb, ${typeConf.color} 10%, transparent)`
+                                : 'color-mix(in srgb, var(--app-background) 60%, transparent)',
+                            color: level === 0 ? typeConf.color : 'var(--app-foreground)',
+                        }}
+                    >
                         {node.code}
                     </span>
                     <span className={`truncate text-[13px] ${level === 0 ? 'font-bold text-app-text' : 'font-medium text-app-text'
@@ -116,8 +142,22 @@ const AccountNode = ({
                             {node.subType}
                         </span>
                     )}
+                    {node.systemRole && (
+                        <span
+                            className="hidden lg:inline text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                            style={{
+                                background: `color-mix(in srgb, var(--app-primary) 10%, transparent)`,
+                                color: 'var(--app-primary)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                            }}
+                        >
+                            {node.systemRole}
+                        </span>
+                    )}
                     {!node.isActive && (
-                        <span className="text-[8px] font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded uppercase flex-shrink-0">OFF</span>
+                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase flex-shrink-0"
+                            style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 10%, transparent)' }}
+                        >OFF</span>
                     )}
                 </div>
 
@@ -132,15 +172,30 @@ const AccountNode = ({
 
                 {/* Type Badge */}
                 <div className="hidden sm:flex w-24 flex-shrink-0">
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${typeConf.color} ${typeConf.bg} ${typeConf.border}`}>
+                    <span
+                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                            color: typeConf.color,
+                            background: typeConf.bg,
+                            border: `1px solid ${typeConf.border}`,
+                        }}
+                    >
                         {typeConf.icon}
                         <span className="hidden xl:inline">{typeConf.label}</span>
                     </span>
                 </div>
 
                 {/* Balance */}
-                <div className={`w-28 text-right font-mono text-[12px] font-bold flex-shrink-0 tabular-nums ${isNegative ? 'text-rose-400' : displayBalance > 0 ? 'text-app-text' : 'text-app-text-faint'
-                    }`}>
+                <div
+                    className="w-28 text-right font-mono text-[12px] font-bold flex-shrink-0 tabular-nums"
+                    style={{
+                        color: isNegative
+                            ? 'var(--app-error)'
+                            : displayBalance > 0
+                                ? 'var(--app-foreground)'
+                                : 'var(--app-muted-foreground)',
+                    }}
+                >
                     {displayBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
 
@@ -248,7 +303,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
         const dataMap: Record<string, TreeNode> = {}
         filtered.forEach(acc => {
-            dataMap[acc.id] = { ...acc, children: [] } as TreeNode
+            dataMap[acc.id] = { ...acc, children: [] as TreeNode[] } as TreeNode
         })
 
         const rootNodes: TreeNode[] = []
@@ -536,16 +591,24 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                                     <button
                                         key={type}
                                         onClick={() => setActiveTypeFilter(isActive ? null : type)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-left ${isActive
-                                            ? `${conf.bg} ${conf.border} border-2 shadow-sm`
-                                            : 'bg-app-surface/50 border-app-border/50 hover:bg-app-surface hover:border-app-border'
-                                            }`}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left hover:border-app-border"
+                                        style={{
+                                            background: isActive ? conf.bg : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                            border: isActive ? `2px solid ${conf.border}` : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                            boxShadow: isActive ? `0 2px 8px ${conf.bg}` : 'none',
+                                        }}
                                     >
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${conf.bg} ${conf.color}`}>
+                                        <div
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                            style={{ background: conf.bg, color: conf.color }}
+                                        >
                                             {conf.icon}
                                         </div>
                                         <div className="min-w-0">
-                                            <div className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? conf.color : 'text-app-text-faint'}`}>
+                                            <div
+                                                className="text-[10px] font-bold uppercase tracking-wider"
+                                                style={{ color: isActive ? conf.color : 'var(--app-muted-foreground)' }}
+                                            >
                                                 {conf.label}
                                             </div>
                                             <div className="text-sm font-black text-app-text tabular-nums">{count}</div>
@@ -586,10 +649,16 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                             {stats.inactiveCount > 0 && (
                                 <button
                                     onClick={() => setShowInactive(!showInactive)}
-                                    className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0 ${showInactive
-                                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                        : 'bg-app-surface/50 text-app-text-faint border-app-border/50 hover:text-app-text-muted'
-                                        }`}
+                                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl border transition-all flex-shrink-0"
+                                    style={showInactive ? {
+                                        background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)',
+                                        color: 'var(--app-warning)',
+                                        borderColor: 'color-mix(in srgb, var(--app-warning) 20%, transparent)',
+                                    } : {
+                                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                        color: 'var(--app-muted-foreground)',
+                                        borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                    }}
                                 >
                                     {showInactive ? <Eye size={13} /> : <EyeOff size={13} />}
                                     <span className="hidden sm:inline">{showInactive ? 'Hiding' : 'Show'} Inactive</span>
@@ -600,7 +669,12 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                             {(searchQuery || activeTypeFilter) && (
                                 <button
                                     onClick={() => { setSearchQuery(''); setActiveTypeFilter(null) }}
-                                    className="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-2 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 transition-all flex-shrink-0"
+                                    className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
+                                    style={{
+                                        color: 'var(--app-error)',
+                                        borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)',
+                                        background: 'color-mix(in srgb, var(--app-error) 5%, transparent)',
+                                    }}
                                 >
                                     <X size={13} />
                                 </button>
@@ -613,7 +687,12 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
        *  ADD FORM (inline)
        * ═══════════════════════════════════════════════════════ */}
             {isAdding && (
-                <div className="flex-shrink-0 mb-3 p-4 bg-app-surface border border-app-border rounded-2xl animate-in slide-in-from-top-2 duration-200" style={{ borderLeft: '3px solid var(--app-primary)' }}>
+                <div className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
+                        borderColor: 'var(--app-border)',
+                        borderLeft: '3px solid var(--app-primary)',
+                    }}>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-[12px] font-black text-app-text uppercase tracking-wider">
                             {preselectedParentId ? 'New Sub-Account' : 'New Root Account'}
@@ -704,25 +783,43 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                             />
                         ))
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                            <div className="w-14 h-14 rounded-2xl bg-app-border/20 flex items-center justify-center mb-4">
-                                <BookOpen size={24} className="text-app-text-faint" />
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                                style={{
+                                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 15%, transparent), color-mix(in srgb, var(--app-primary) 5%, transparent))',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                }}
+                            >
+                                <BookOpen size={28} style={{ color: 'var(--app-primary)', opacity: 0.7 }} />
                             </div>
-                            <p className="text-sm font-bold text-app-text-muted mb-1">
-                                {searchQuery || activeTypeFilter ? 'No matching accounts' : 'No accounts defined'}
+                            <p className="text-base font-bold text-app-text-muted mb-1">
+                                {searchQuery || activeTypeFilter ? 'No matching accounts' : 'No accounts defined yet'}
                             </p>
-                            <p className="text-[11px] text-app-text-faint mb-4">
+                            <p className="text-xs text-app-text-faint mb-6 max-w-xs">
                                 {searchQuery || activeTypeFilter
                                     ? 'Try adjusting your search or filter criteria.'
-                                    : 'Start building your chart of accounts.'}
+                                    : 'Your chart of accounts is the backbone of your financial reporting. Start by importing a standard template or creating accounts manually.'}
                             </p>
                             {!searchQuery && !activeTypeFilter && (
-                                <button
-                                    onClick={() => openAddModal()}
-                                    className="text-[11px] font-bold bg-app-primary text-white px-4 py-2 rounded-xl hover:brightness-110 transition-all"
-                                >
-                                    <Plus size={13} className="inline mr-1" /> Create First Account
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => router.push('/finance/chart-of-accounts/templates')}
+                                        className="flex items-center gap-2 text-[11px] font-bold bg-app-primary text-white px-5 py-2.5 rounded-xl hover:brightness-110 transition-all"
+                                        style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                                    >
+                                        <Library size={14} />
+                                        Import Standard Template
+                                    </button>
+                                    <span className="text-[10px] font-bold text-app-text-faint">or</span>
+                                    <button
+                                        onClick={() => openAddModal()}
+                                        className="flex items-center gap-2 text-[11px] font-bold text-app-text-muted border border-app-border px-4 py-2.5 rounded-xl hover:bg-app-surface transition-all"
+                                    >
+                                        <Plus size={13} />
+                                        Create Manually
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -749,10 +846,14 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                     <div className="flex items-center gap-4">
                         <div className="text-right">
                             <span className="text-[9px] font-black text-app-text-faint uppercase tracking-wider mr-2">Total Balance</span>
-                            <span className={`font-mono text-[13px] font-black tabular-nums ${(searchQuery || activeTypeFilter ? stats.filteredBalance : stats.totalBalance) < 0
-                                ? 'text-rose-400'
-                                : 'text-app-text'
-                                }`}>
+                            <span
+                                className="font-mono text-[13px] font-black tabular-nums"
+                                style={{
+                                    color: (searchQuery || activeTypeFilter ? stats.filteredBalance : stats.totalBalance) < 0
+                                        ? 'var(--app-error)'
+                                        : 'var(--app-foreground)'
+                                }}
+                            >
                                 {(searchQuery || activeTypeFilter ? stats.filteredBalance : stats.totalBalance)
                                     .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>

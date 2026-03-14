@@ -42,29 +42,31 @@ def fire_audit_event(organization, user, event_type, event_name, details, refere
 
             if rule and rule.create_task:
                 try:
-                    from apps.workspace.models import Task
+                    from erp.connector_registry import connector
                     from erp.models import Role
-                    manager_role = Role.objects.filter(
-                        organization=organization,
-                        name__icontains='manager'
-                    ).first()
-                    Task.objects.create(
-                        organization=organization,
-                        title=f'⚠️ POS Alert: {event_name}',
-                        description=(
-                            f"Event Type: {event_type}\n"
-                            f"Reference: {reference_id or 'N/A'}\n"
-                            f"Cashier: {user.get_full_name() or user.username if user else 'Unknown'}\n\n"
-                            f"Details: {details}"
-                        ),
-                        priority='URGENT',
-                        status='PENDING',
-                        source='SYSTEM',
-                        assigned_to_group=manager_role,
-                        related_object_type='POSAuditEvent',
-                        related_object_id=event.id,
-                        related_object_label=event_name,
-                    )
+                    Task = connector.require('workspace.tasks.get_model', org_id=organization.id)
+                    if Task:
+                        manager_role = Role.objects.filter(
+                            organization=organization,
+                            name__icontains='manager'
+                        ).first()
+                        Task.objects.create(
+                            organization=organization,
+                            title=f'⚠️ POS Alert: {event_name}',
+                            description=(
+                                f"Event Type: {event_type}\n"
+                                f"Reference: {reference_id or 'N/A'}\n"
+                                f"Cashier: {user.get_full_name() or user.username if user else 'Unknown'}\n\n"
+                                f"Details: {details}"
+                            ),
+                            priority='URGENT',
+                            status='PENDING',
+                            source='SYSTEM',
+                            assigned_to_group=manager_role,
+                            related_object_type='POSAuditEvent',
+                            related_object_id=event.id,
+                            related_object_label=event_name,
+                        )
                 except Exception:
                     pass
 
@@ -75,18 +77,20 @@ def fire_audit_event(organization, user, event_type, event_name, details, refere
         try:
             trigger = EVENT_TO_TRIGGER.get(event_type)
             if trigger:
-                from apps.workspace.auto_task_service import fire_auto_tasks
-                fire_auto_tasks(
-                    organization=organization,
-                    trigger_event=trigger,
-                    context={
-                        'user': user,
-                        'amount': details.get('total') or details.get('discount_amount') or 0,
-                        'reference': reference_id,
-                        'cashier_id': user.id if user else None,
-                        'extra': details,
-                    }
-                )
+                from erp.connector_registry import connector
+                fire_auto_tasks = connector.require('workspace.auto_tasks.fire', org_id=organization.id)
+                if fire_auto_tasks:
+                    fire_auto_tasks(
+                        organization=organization,
+                        event=trigger,
+                        context={
+                            'user': user,
+                            'amount': details.get('total') or details.get('discount_amount') or 0,
+                            'reference': reference_id,
+                            'cashier_id': user.id if user else None,
+                            'extra': details,
+                        }
+                    )
         except Exception:
             pass
 
@@ -657,28 +661,30 @@ class POSService:
 
             # ── Auto-Task: ORDER_COMPLETED & HIGH_VALUE_SALE ─────────────────
             try:
-                from apps.workspace.signals import trigger_finance_event
-                trigger_finance_event(
-                    organization, 'ORDER_COMPLETED',
-                    amount=float(order.total_amount),
-                    client_id=contact_id,
-                    cashier_id=user.id if user else None,
-                    site_id=warehouse.id if warehouse else None,
-                    payment_method=payment_method,
-                    user=user,
-                    reference=invoice_num or f'POS-{order.id}',
-                )
-                # High-value sale threshold (configurable, default 500k)
-                hv_threshold = ConfigurationService.get_setting(organization, 'high_value_sale_threshold', 500000)
-                if order.total_amount >= Decimal(str(hv_threshold)):
+                from erp.connector_registry import connector
+                trigger_finance_event = connector.require('workspace.events.trigger_finance', org_id=organization.id)
+                if trigger_finance_event:
                     trigger_finance_event(
-                        organization, 'HIGH_VALUE_SALE',
+                        organization=organization, event='ORDER_COMPLETED',
                         amount=float(order.total_amount),
                         client_id=contact_id,
                         cashier_id=user.id if user else None,
+                        site_id=warehouse.id if warehouse else None,
+                        payment_method=payment_method,
                         user=user,
                         reference=invoice_num or f'POS-{order.id}',
                     )
+                    # High-value sale threshold (configurable, default 500k)
+                    hv_threshold = ConfigurationService.get_setting(organization, 'high_value_sale_threshold', 500000)
+                    if order.total_amount >= Decimal(str(hv_threshold)):
+                        trigger_finance_event(
+                            organization=organization, event='HIGH_VALUE_SALE',
+                            amount=float(order.total_amount),
+                            client_id=contact_id,
+                            cashier_id=user.id if user else None,
+                            user=user,
+                            reference=invoice_num or f'POS-{order.id}',
+                        )
             except Exception:
                 pass
 

@@ -186,12 +186,12 @@ export default function ContactDetailPage() {
                         <h1 style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', fontWeight: 800, color: 'var(--app-text)', letterSpacing: '-0.03em', lineHeight: 1.15 }}>{contact.name}</h1>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
                             <span style={{ padding: '0.125rem 0.5rem', borderRadius: '99px', fontSize: '0.625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', background: typeBg, color: typeColor }}>{typeLabel}</span>
-                            {contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
+                            {contact.customer_tier && contact.customer_tier !== 'STANDARD' ? (
                                 <span style={{ padding: '0.125rem 0.4375rem', borderRadius: '99px', fontSize: '0.5625rem', fontWeight: 700, background: contact.customer_tier === 'VIP' ? '#FEF3C7' : 'var(--app-surface-2)', color: contact.customer_tier === 'VIP' ? '#B45309' : 'var(--app-text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
-                                    {contact.customer_tier === 'VIP' && <Star size={8} style={{ fill: '#EAB308', color: '#EAB308' }} />}{contact.customer_tier}
+                                    {contact.customer_tier === 'VIP' ? <Star size={8} style={{ fill: '#EAB308', color: '#EAB308' }} /> : null}{contact.customer_tier}
                                 </span>
-                            )}
-                            {contact.company_name && <span style={{ fontSize: '0.75rem', color: 'var(--app-text-muted)' }}>{contact.company_name}</span>}
+                            ) : null}
+                            {contact.company_name ? <span style={{ fontSize: '0.75rem', color: 'var(--app-text-muted)' }}>{String(contact.company_name)}</span> : <></>}
                         </div>
                     </div>
                 </div>
@@ -438,14 +438,14 @@ export default function ContactDetailPage() {
                                     { label: 'Composite Score', value: contact.composite_score ?? '—', desc: '50% obj + 50% subj', icon: Zap, color: 'var(--app-primary)' },
                                     { label: 'Lead Time (avg)', value: contact.avg_lead_time_days ? `${contact.avg_lead_time_days}d` : '—', desc: 'Average delivery days', icon: Clock, color: 'var(--app-success)' },
                                     { label: 'Total POs', value: contact.supplier_total_orders ?? 0, desc: 'Purchase orders placed', icon: ShoppingCart, color: '#8B5CF6' },
-                                    { label: 'On-Time Rate', value: contact.on_time_deliveries && contact.supplier_total_orders ? `${Math.round(contact.on_time_deliveries / contact.supplier_total_orders * 100)}%` : '—', desc: 'Deliveries on schedule', icon: CheckCircle2, color: 'var(--app-success)' },
+                                    { label: 'On-Time Rate', value: (contact.on_time_deliveries && contact.supplier_total_orders) ? `${Math.round((Number(contact.on_time_deliveries) / Number(contact.supplier_total_orders)) * 100)}%` : '—', desc: 'Deliveries on schedule', icon: CheckCircle2, color: 'var(--app-success)' },
                                 ].map((m, i) => (
                                     <div key={i} style={{ padding: '1rem', borderRadius: 'var(--app-radius-sm)', background: `${m.color}08`, border: `1px solid ${m.color}20` }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
                                             <m.icon size={14} style={{ color: m.color }} />
                                             <span style={{ fontSize: '0.5625rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: m.color }}>{m.label}</span>
                                         </div>
-                                        <p style={{ fontSize: '1.5rem', fontWeight: 800, color: m.color, lineHeight: 1.1 }}>{m.value}</p>
+                                        <p style={{ fontSize: '1.5rem', fontWeight: 800, color: m.color, lineHeight: 1.1 }}>{String(m.value)}</p>
                                         <p style={{ fontSize: '0.625rem', color: 'var(--app-text-faint)', marginTop: '0.25rem' }}>{m.desc}</p>
                                     </div>
                                 ))}

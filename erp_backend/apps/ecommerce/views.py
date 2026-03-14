@@ -230,33 +230,37 @@ class OrderViewSet(TenantModelViewSet):
         )
 
         # ── Top Products ─────────────────────────────────────────────────────
-        from apps.client_portal.models import ClientOrderLine
-        top_products_qs = (
-            ClientOrderLine.objects
-            .filter(
-                order__organization=org,
-                order__status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'],
-                order__placed_at__date__gte=date_from,
-                order__placed_at__date__lte=date_to,
+        from erp.connector_registry import connector
+        ClientOrderLine = connector.require('client_portal.orders.get_line_model', org_id=org.id)
+        if not ClientOrderLine:
+            top_products = []
+        else:
+            top_products_qs = (
+                ClientOrderLine.objects
+                .filter(
+                    order__organization=org,
+                    order__status__in=['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'],
+                    order__placed_at__date__gte=date_from,
+                    order__placed_at__date__lte=date_to,
+                )
+                .values('product_id', 'product_name')
+                .annotate(
+                    revenue=Sum(F('quantity') * F('unit_price')),
+                    qty_sold=Sum('quantity'),
+                    orders_count=Count('order_id', distinct=True),
+                )
+                .order_by('-revenue')[:10]
             )
-            .values('product_id', 'product_name')
-            .annotate(
-                revenue=Sum(F('quantity') * F('unit_price')),
-                qty_sold=Sum('quantity'),
-                orders_count=Count('order_id', distinct=True),
-            )
-            .order_by('-revenue')[:10]
-        )
-        top_products = [
-            {
-                'product_id': r['product_id'],
-                'name': r['product_name'],
-                'revenue': str(r['revenue'] or '0.00'),
-                'qty_sold': str(r['qty_sold'] or '0'),
-                'orders_count': r['orders_count'],
-            }
-            for r in top_products_qs
-        ]
+            top_products = [
+                {
+                    'product_id': r['product_id'],
+                    'name': r['product_name'],
+                    'revenue': str(r['revenue'] or '0.00'),
+                    'qty_sold': str(r['qty_sold'] or '0'),
+                    'orders_count': r['orders_count'],
+                }
+                for r in top_products_qs
+            ]
 
         # ── Date Series ──────────────────────────────────────────────────────
         period = request.query_params.get('period', 'daily')
@@ -337,14 +341,16 @@ class OrderViewSet(TenantModelViewSet):
         # On DELIVERED: post loyalty points to customer wallet
         if new_status == 'DELIVERED' and order.contact:
             try:
-                from apps.client_portal.models import ClientPortalConfig
-                config = ClientPortalConfig.get_config(order.organization)
-                if config.loyalty_enabled:
-                    points = config.get_points_for_amount(order.total_amount)
-                    if points > 0:
-                        wallet = order.contact.wallet
-                        wallet.add_loyalty_points(points)
-                        logger.info(f"[eCommerce] +{points} loyalty points posted for order {order.order_number}")
+                from erp.connector_registry import connector
+                ClientPortalConfig = connector.require('client_portal.config.get_model', org_id=order.organization.id)
+                if ClientPortalConfig:
+                    config = ClientPortalConfig.get_config(order.organization)
+                    if config.loyalty_enabled:
+                        points = config.get_points_for_amount(order.total_amount)
+                        if points > 0:
+                            wallet = order.contact.wallet
+                            wallet.add_loyalty_points(points)
+                            logger.info(f"[eCommerce] +{points} loyalty points posted for order {order.order_number}")
             except Exception as exc:
                 logger.warning(f"[eCommerce] Loyalty post failed on delivery: {exc}")
 

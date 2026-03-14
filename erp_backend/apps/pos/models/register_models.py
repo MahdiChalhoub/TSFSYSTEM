@@ -462,9 +462,73 @@ class POSSettings(TenantModel):
         )
     )
 
+    # ── Authentication Rules ──
+    require_pin_for_login = models.BooleanField(
+        default=True, help_text='Users must enter PIN to access POS.')
+    allow_cashier_switch = models.BooleanField(
+        default=True, help_text='Allow switching cashier without closing register.')
+    auto_lock_idle_minutes = models.IntegerField(
+        default=15, help_text='Auto-lock POS after this many idle minutes.')
+
+    # ── Manager Override Rules ──
+    require_manager_for_void = models.BooleanField(
+        default=True, help_text='Require manager PIN to void/cancel an order.')
+    require_manager_for_discount = models.BooleanField(
+        default=False, help_text='Require manager PIN to apply any discount.')
+    require_manager_for_price_override = models.BooleanField(
+        default=True, help_text='Require manager PIN to override item price.')
+    require_manager_for_refund = models.BooleanField(
+        default=True, help_text='Require manager PIN for refunds.')
+    require_manager_for_clear_cart = models.BooleanField(
+        default=False, help_text='Require manager PIN to clear the cart.')
+    require_manager_for_delete_item = models.BooleanField(
+        default=False, help_text='Require manager PIN to delete a line item.')
+    max_discount_percent = models.IntegerField(
+        default=20, help_text='Max discount percentage allowed without manager approval.')
+
+    # ── Register Close Rules ──
+    lock_register_on_close = models.BooleanField(
+        default=False, help_text='Lock register after closing, preventing re-open.')
+    print_receipt_on_close = models.BooleanField(
+        default=True, help_text='Auto-print Z-Report on session close.')
+    require_count_on_close = models.BooleanField(
+        default=True, help_text='Require physical cash count on close.')
+
+    # ── Reconciliation Rules ──
+    enable_reconciliation = models.BooleanField(
+        default=True, help_text='Enable full reconciliation process on close.')
+    controlled_accounts_are_truth = models.BooleanField(
+        default=True, help_text='Wave/OM/Bank statement amounts are the source of truth.')
+    auto_calibrate_to_close = models.BooleanField(
+        default=True, help_text='Auto-calibrate mismatches to cash account.')
+    require_statement_on_close = models.BooleanField(
+        default=True, help_text='Cashier must enter provider statement amounts on close.')
+    enable_account_book = models.BooleanField(
+        default=True, help_text='Enable the Livre de Caisse (cashier daily ledger).')
+    auto_transfer_excess_to_reserve = models.BooleanField(
+        default=False, help_text='Auto-transfer cash surplus to reserve account on close.')
+    auto_deduct_shortage_from_cashier = models.BooleanField(
+        default=False, help_text='Auto-debit cashier for cash shortage on close.')
+
+    # ── Delivery Code Configuration ──
+    delivery_code_mode = models.CharField(
+        max_length=20, default='auto',
+        help_text='Delivery code generation mode: auto, manual, or disabled.')
+    delivery_code_digits = models.IntegerField(
+        default=6, help_text='Number of digits in auto-generated delivery codes.')
+    delivery_code_expiry_hours = models.IntegerField(
+        default=72, help_text='Hours before a delivery code expires.')
+
+    # ── SMS Notification Triggers ──
+    sms_on_order_confirm = models.BooleanField(
+        default=False, help_text='Send SMS to client when order is confirmed.')
+    sms_on_delivery_assign = models.BooleanField(
+        default=False, help_text='Send SMS to client when delivery is assigned.')
+    sms_on_delivery_complete = models.BooleanField(
+        default=False, help_text='Send SMS to client when delivery is completed.')
+
     class Meta:
         db_table = 'pos_settings'
-
 
     def __str__(self):
         return f"POS Settings ({self.organization})"

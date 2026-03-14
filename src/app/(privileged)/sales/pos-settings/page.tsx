@@ -139,7 +139,7 @@ function RegistersView({ sites, accounts, warehouses, users, selected, setSelect
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', siteId: 0, warehouseId: 0, cashAccountId: 0, accountBookId: 0 });
+  const [form, setForm] = useState({ name: '', siteId: 0, warehouseId: 0, cashAccountId: 0, enableAccountBook: true });
   const allRegisters = sites.flatMap(s => s.registers);
   // FinancialAccount types: CASH, BANK, MOBILE, PETTY_CASH, SAVINGS, FOREIGN, ESCROW, INVESTMENT
   // For cash drawer we show CASH and PETTY_CASH primarily, but allow all
@@ -158,12 +158,13 @@ function RegistersView({ sites, accounts, warehouses, users, selected, setSelect
       await erpFetch('pos-registers/create-register/', {
         method: 'POST', body: JSON.stringify({
           name: form.name, site_id: form.siteId, warehouse_id: form.warehouseId || undefined,
-          cash_account_id: form.cashAccountId || undefined, account_book_id: form.accountBookId || undefined,
+          cash_account_id: form.cashAccountId || undefined,
+          account_book_id: form.enableAccountBook && form.cashAccountId ? form.cashAccountId : undefined,
         })
       });
       toast.success('Register created!');
       setShowCreate(false);
-      setForm({ name: '', siteId: 0, warehouseId: 0, cashAccountId: 0, accountBookId: 0 });
+      setForm({ name: '', siteId: 0, warehouseId: 0, cashAccountId: 0, enableAccountBook: true });
       onRefresh();
     } catch (e: any) { toast.error(e?.message || 'Failed'); }
     setSaving(false);
@@ -204,11 +205,13 @@ function RegistersView({ sites, accounts, warehouses, users, selected, setSelect
                 {cashAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
               </select>
             </div>
-            <div><label className={label}>Account Book</label>
-              <select value={form.accountBookId} onChange={e => setForm(f => ({ ...f, accountBookId: +e.target.value }))} className={input}>
-                <option value={0}>Select account book…</option>
-                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+            <div className="flex items-center gap-3 pt-2">
+              <label className={label + ' mb-0'}>Activate Account Book</label>
+              <button type="button" onClick={() => setForm(f => ({ ...f, enableAccountBook: !f.enableAccountBook }))}
+                className={clsx('w-10 h-5 rounded-full relative transition-all shrink-0', form.enableAccountBook ? 'bg-[var(--app-primary)]' : 'bg-[var(--app-surface)]')}>
+                <span className={clsx('w-3.5 h-3.5 rounded-full bg-white shadow absolute top-0.5 transition-all', form.enableAccountBook ? 'left-5' : 'left-0.5')} />
+              </button>
+              <span className="text-[10px] text-[var(--app-text-muted)]">{form.enableAccountBook ? 'Linked to cash account' : 'Disabled'}</span>
             </div>
             <div className="flex gap-2 pt-1">
               <button onClick={handleCreate} disabled={saving} className={btnPrimary}>{saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}Create</button>
@@ -272,7 +275,7 @@ function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefresh, onCl
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: reg.name, warehouseId: reg.warehouseId || 0, cashAccountId: reg.cashAccountId || 0,
-    accountBookId: reg.accountBookId || 0, openingMode: reg.openingMode || 'standard',
+    enableAccountBook: !!(reg.accountBookId), openingMode: reg.openingMode || 'standard',
     allowedAccountIds: reg.allowedAccounts.map((a: any) => a.id) as number[],
     authorizedUserIds: reg.authorizedUsers.map((u: any) => u.id) as number[],
     paymentMethods: reg.paymentMethods || [],
@@ -283,13 +286,14 @@ function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefresh, onCl
 
   const handleSave = async () => {
     if (!form.cashAccountId) { toast.error('Cash Account is required'); return; }
-    if (!form.accountBookId) { toast.error('Account Book is required'); return; }
+    if (form.enableAccountBook && !form.cashAccountId) { toast.error('Cash Account required to enable Account Book'); return; }
     setSaving(true);
     try {
       await erpFetch('pos-registers/update-register/', {
         method: 'POST', body: JSON.stringify({
           id: reg.id, name: form.name, warehouse_id: form.warehouseId || null,
-          cash_account_id: form.cashAccountId || null, account_book_id: form.accountBookId || null,
+          cash_account_id: form.cashAccountId || null,
+          account_book_id: form.enableAccountBook && form.cashAccountId ? form.cashAccountId : null,
           opening_mode: form.openingMode.toUpperCase(),
           allowed_account_ids: form.allowedAccountIds,
           authorized_user_ids: form.authorizedUserIds,
@@ -369,13 +373,23 @@ function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefresh, onCl
         </select>
       </div>
 
-      {/* Account Book (REQUIRED) */}
+      {/* Account Book (toggle — linked to cash account) */}
       <div className={card + ' p-5'}>
-        <p className={sectionHead}><Hash size={10} className="text-blue-400" />Account Book <span className="text-red-400 ml-1 text-[9px]">REQUIRED</span></p>
-        <select value={form.accountBookId} onChange={e => set('accountBookId', +e.target.value)} className={input}>
-          <option value={0}>⚠ Select account book…</option>
-          {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
+        <p className={sectionHead}><Hash size={10} className="text-blue-400" />Account Book</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold text-[var(--app-text)]">Activate Account Book for this register</p>
+            <p className="text-[10px] text-[var(--app-text-muted)] mt-0.5">
+              {form.enableAccountBook
+                ? form.cashAccountId ? 'Linked to the selected cash account' : '⚠ Select a cash account first'
+                : 'Disabled — no daily ledger will be created'}
+            </p>
+          </div>
+          <button onClick={() => set('enableAccountBook', !form.enableAccountBook)}
+            className={clsx('w-10 h-5 rounded-full relative transition-all ml-4 shrink-0', form.enableAccountBook ? 'bg-[var(--app-primary)]' : 'bg-[var(--app-surface)]')}>
+            <span className={clsx('w-3.5 h-3.5 rounded-full bg-white shadow absolute top-0.5 transition-all', form.enableAccountBook ? 'left-5' : 'left-0.5')} />
+          </button>
+        </div>
       </div>
 
       {/* Allowed Payment Accounts */}
@@ -629,8 +643,8 @@ function DeliverySettings() {
   const handleSave = async () => { setSaving(true); try { await erpFetch('pos/pos-settings/', { method: 'PATCH', body: JSON.stringify(s) }); toast.success('Saved!'); } catch { toast.error('Failed'); } setSaving(false); };
   const testSMS = async () => { if (!testPhone) { toast.error('Enter phone'); return; } setTesting(true); try { await erpFetch('pos/pos-settings/test_sms/', { method: 'POST', body: JSON.stringify({ phone: testPhone }) }); toast.success('Test sent!'); } catch (e: any) { toast.error(e?.message || 'Failed'); } setTesting(false); };
 
-  const PROVIDERS = [{ key: 'none', label: 'Disabled', icon: X }, { key: 'twilio', label: 'Twilio', icon: Phone }, { key: 'orange', label: 'Orange', icon: Smartphone }, { key: 'whatsapp', label: 'WhatsApp', icon: Zap }];
-  const FIELDS: Record<string, string[]> = { twilio: ['twilio_account_sid', 'twilio_auth_token', 'twilio_from_number'], orange: ['orange_api_key', 'orange_sender_id'], whatsapp: ['whatsapp_token', 'whatsapp_phone_id'] };
+  const PROVIDERS = [{ key: 'none', label: 'Disabled', icon: X }, { key: 'twilio', label: 'Twilio', icon: Phone }, { key: 'africas_talking', label: "Africa's Talking", icon: Smartphone }, { key: 'infobip', label: 'Infobip', icon: Zap }, { key: 'webhook', label: 'Webhook', icon: Zap }];
+  const FIELDS: Record<string, string[]> = { twilio: ['sms_account_sid', 'sms_api_key', 'sms_sender_id'], africas_talking: ['sms_account_sid', 'sms_api_key', 'sms_sender_id'], infobip: ['sms_api_key', 'sms_sender_id', 'sms_webhook_url'], webhook: ['sms_webhook_url'] };
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-[var(--app-text-muted)]" /></div>;
   return (
@@ -690,13 +704,13 @@ function UsersView({ users, onRefresh }: { users: UD[]; onRefresh: () => void })
   const setPin = async (uid: number) => {
     if (!pinVal || pinVal.length < 4) { toast.error('PIN must be 4+ digits'); return; }
     setSaving(true);
-    try { await erpFetch('erp/users/set-pos-pin/', { method: 'POST', body: JSON.stringify({ user_id: uid, pin: pinVal }) }); toast.success('PIN set!'); setPinFor(null); setPinVal(''); onRefresh(); } catch (e: any) { toast.error(e?.message || 'Failed'); }
+    try { await erpFetch('pos-registers/set-pin/', { method: 'POST', body: JSON.stringify({ user_id: uid, pin: pinVal }) }); toast.success('PIN set!'); setPinFor(null); setPinVal(''); onRefresh(); } catch (e: any) { toast.error(e?.message || 'Failed'); }
     setSaving(false);
   };
   const setOverride = async (uid: number) => {
     if (!overrideVal || overrideVal.length < 4) { toast.error('Override PIN must be 4+ digits'); return; }
     setSaving(true);
-    try { await erpFetch('erp/users/set-override-pin/', { method: 'POST', body: JSON.stringify({ user_id: uid, pin: overrideVal }) }); toast.success('Override PIN set!'); setOverrideFor(null); setOverrideVal(''); onRefresh(); } catch (e: any) { toast.error(e?.message || 'Failed'); }
+    try { await erpFetch('pos-registers/set-override-pin/', { method: 'POST', body: JSON.stringify({ user_id: uid, pin: overrideVal }) }); toast.success('Override PIN set!'); setOverrideFor(null); setOverrideVal(''); onRefresh(); } catch (e: any) { toast.error(e?.message || 'Failed'); }
     setSaving(false);
   };
 
