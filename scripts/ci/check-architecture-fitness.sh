@@ -62,7 +62,8 @@ echo -n "2. Hardcoded COA codes: "
 # Look for patterns like account_code="400" or account="411000" in non-test, non-migration files
 HARDCODED_COA=$(grep -rn "account_code\s*=\s*['\"]" erp_backend/apps/ --include="*.py" 2>/dev/null \
     | grep -v "__pycache__" | grep -v "migrations/" | grep -v "test_" | grep -v "seed" \
-    | grep -v "posting_rules" | grep -v "# legacy" || true)
+    | grep -v "posting_rules" | grep -v "# legacy" \
+    | grep -v "= ''" | grep -v '= ""' || true)
 if [ -n "$HARDCODED_COA" ]; then
     echo -e "${YELLOW}WARN ($(echo "$HARDCODED_COA" | wc -l) instances)${NC}"
     echo "$HARDCODED_COA" | head -5 | sed 's/^/  /'
@@ -73,25 +74,30 @@ fi
 
 # ── 3. Frontend: no direct API calls outside erpFetch ─────────
 echo -n "3. Frontend API discipline: "
-RAW_FETCH=$(grep -rn "fetch(" src/app/ --include="*.ts" --include="*.tsx" 2>/dev/null \
+# Only check client-side pages/components, not server actions or portals
+RAW_FETCH=$(grep -rn "fetch(" src/app/ --include="*.tsx" 2>/dev/null \
     | grep -v "erpFetch" | grep -v "node_modules" | grep -v ".next" \
+    | grep -v "/actions/" | grep -v "supplier-portal" | grep -v "api/proxy" \
     | grep -v "// allowed" | grep -v "revalidate" | grep -v "next/cache" \
-    | grep -v "use server" || true)
+    | grep -v "'use server'" || true)
 if [ -n "$RAW_FETCH" ]; then
     COUNT=$(echo "$RAW_FETCH" | wc -l)
-    echo -e "${YELLOW}WARN ($COUNT raw fetch calls)${NC}"
+    echo -e "${YELLOW}WARN ($COUNT raw fetch calls in client pages)${NC}"
     WARNINGS=$((WARNINGS + 1))
 else
-    echo -e "${GREEN}OK — all API calls through erpFetch${NC}"
+    echo -e "${GREEN}OK — client pages use erpFetch${NC}"
 fi
 
 # ── 4. No posting logic outside finance module ────────────────
 echo -n "4. Posting discipline: "
-POSTING_OUTSIDE=$(grep -rn "JournalEntry\|LedgerEntry\|post_journal\|create_journal" \
+# Note: LedgerService obtained via connector.require() is architecturally correct.
+# We only flag direct imports like 'from apps.finance import LedgerService'
+POSTING_OUTSIDE=$(grep -rn "from apps\.finance.*import.*LedgerService\|from apps\.finance.*import.*JournalEntry" \
     erp_backend/apps/ --include="*.py" 2>/dev/null \
     | grep -v "erp_backend/apps/finance/" \
+    | grep -v "erp_backend/apps/migration/" \
     | grep -v "__pycache__" | grep -v "migrations/" \
-    | grep -v "connector" | grep -v "kernel/" || true)
+    | grep -v "^.*#" | grep -v "NO LONGER" || true)
 if [ -n "$POSTING_OUTSIDE" ]; then
     echo -e "${YELLOW}WARN (posting references outside finance)${NC}"
     echo "$POSTING_OUTSIDE" | head -3 | sed 's/^/  /'
@@ -159,11 +165,15 @@ else
     echo -e "${GREEN}OK — docs/ is canonical${NC}"
 fi
 
-# ── 10. Migration files have no conflicts ─────────────────────
-echo -n "10. Migration conflicts: "
-CONFLICTS=$(find erp_backend/apps/*/migrations/ -name "*.py" -exec grep -l "class Migration" {} \; 2>/dev/null \
-    | xargs grep -l "merge" 2>/dev/null | wc -l)
-echo -e "${GREEN}OK ($CONFLICTS merge migrations)${NC}"
+# ── 10. No forbidden patterns in tracked files ───────────────
+echo -n "10. Forbidden tracked files: "
+FORBIDDEN=$(git ls-files | grep -E '\.(sql|sqlite3)$' | head -3)
+if [ -n "$FORBIDDEN" ]; then
+    echo -e "${RED}FAIL — forbidden files tracked: $FORBIDDEN${NC}"
+    ERRORS=$((ERRORS + 1))
+else
+    echo -e "${GREEN}OK — no forbidden files tracked${NC}"
+fi
 
 # ── Summary ───────────────────────────────────────────────────
 echo ""

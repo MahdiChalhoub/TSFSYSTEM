@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True, null=True)),
                 ('organization', models.ForeignKey(
                     blank=True, null=True, on_delete=models.deletion.CASCADE,
-                    to='saas.organization', related_name='tax_jurisdiction_rules')),
+                    to='erp.organization', related_name='tax_jurisdiction_rules')),
             ],
             options={
                 'db_table': 'tax_jurisdiction_rule',

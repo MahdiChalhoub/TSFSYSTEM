@@ -42,7 +42,7 @@ class COAIndexCache:
         accounts = list(
             ChartOfAccount.objects.filter(
                 organization=organization,
-                is_archived=False,
+                is_active=True,
             ).values('id', 'code', 'name', 'type', 'sub_type', 'system_role')
         )
 
