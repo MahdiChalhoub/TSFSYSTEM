@@ -396,13 +396,13 @@ class PurchaseService:
             order.save(force_audit_bypass=True)
 
             rules = ConfigurationService.get_posting_rules(organization)
-            from apps.finance.services.posting_resolver import PostingResolver
+            PostingResolver = connector.require('finance.services.get_posting_resolver', org_id=0, source='pos')
 
             ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
             stock_account_id = rules['purchases']['inventory']
-            tax_account_id = PostingResolver.resolve(organization, 'purchases.vat_recoverable', required=False)
-            airsi_account_id = PostingResolver.resolve(organization, 'purchases.airsi', required=False)
-            airsi_payable_acc = PostingResolver.resolve(organization, 'purchases.airsi_payable', required=False)
+            tax_account_id = PostingResolver.resolve(organization, 'purchases.vat_recoverable', required=False) if PostingResolver else None
+            airsi_account_id = PostingResolver.resolve(organization, 'purchases.airsi', required=False) if PostingResolver else None
+            airsi_payable_acc = PostingResolver.resolve(organization, 'purchases.airsi_payable', required=False) if PostingResolver else None
             discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
 
             if not ap_account_id or not stock_account_id:
