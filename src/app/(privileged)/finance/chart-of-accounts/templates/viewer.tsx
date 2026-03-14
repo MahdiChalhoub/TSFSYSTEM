@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ChevronRight, ChevronDown, CheckCircle2, LayoutGrid, Columns, Undo2, Library, Zap, FileText, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
-import { applySmartPostingRules } from '@/app/actions/finance/posting-rules'
+import { applyAutoDetect } from '@/app/actions/finance/posting-rules'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 export default function CoaTemplatesLibrary({ templates, currentAccounts = [] }: { templates: Record<string, any>, currentAccounts?: any[] }) {
@@ -43,7 +43,7 @@ export default function CoaTemplatesLibrary({ templates, currentAccounts = [] }:
             await importChartOfAccountsTemplate(key as any, { reset })
             // Auto-apply smart posting rules after clean import
             // (safe because old accounts are gone after reset)
-            try { await applySmartPostingRules() } catch { /* non-critical */ }
+            try { await applyAutoDetect(70) } catch { /* non-critical */ }
             toast.success(`Successfully imported ${key.replace('_', ' ')} — Posting rules auto-configured.`)
             router.push('/finance/settings/posting-rules')
         } catch (e: unknown) {

@@ -3,7 +3,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { getTenantContext } from '@/lib/erp-api'
-import { applySmartPostingRules } from './posting-rules'
+import { applyAutoDetect } from './posting-rules'
 
 type TemplateAccount = {
     code: string
@@ -407,7 +407,7 @@ export async function migrateBalances(data: { mappings: Record<string, any>[], d
         // Auto-apply smart posting rules after migration
         // so the posting rules page is pre-populated for the new standard
         try {
-            await applySmartPostingRules()
+            await applyAutoDetect(70)
         } catch {
             // Non-critical — user can still manually map on the posting rules page
         }

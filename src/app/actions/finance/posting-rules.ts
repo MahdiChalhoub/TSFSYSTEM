@@ -132,7 +132,7 @@ export type PostingRulesResponse = {
 
 export async function getPostingRulesByModule(): Promise<PostingRulesByModule> {
     try {
-        return await erpFetch('api/finance/posting-rules/by-module/')
+        return await erpFetch('finance/posting-rules/by-module/')
     } catch (error) {
         console.error("Failed to fetch posting rules by module:", error)
         return {}
@@ -141,7 +141,7 @@ export async function getPostingRulesByModule(): Promise<PostingRulesByModule> {
 
 export async function getPostingRulesList(): Promise<PostingRuleEntry[]> {
     try {
-        return await erpFetch('api/finance/posting-rules/')
+        return await erpFetch('finance/posting-rules/')
     } catch (error) {
         console.error("Failed to fetch posting rules:", error)
         return []
@@ -150,7 +150,7 @@ export async function getPostingRulesList(): Promise<PostingRuleEntry[]> {
 
 export async function updatePostingRule(id: number, data: { account: number }): Promise<{ success: boolean }> {
     try {
-        await erpFetch(`api/finance/posting-rules/${id}/`, {
+        await erpFetch(`finance/posting-rules/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -165,7 +165,7 @@ export async function updatePostingRule(id: number, data: { account: number }): 
 
 export async function getCompletenessReport(): Promise<CompletenessReport | null> {
     try {
-        return await erpFetch('api/finance/posting-rules/completeness/')
+        return await erpFetch('finance/posting-rules/completeness/')
     } catch (error) {
         console.error("Failed to fetch completeness report:", error)
         return null
@@ -174,7 +174,7 @@ export async function getCompletenessReport(): Promise<CompletenessReport | null
 
 export async function getCompletenessByModule(): Promise<ModuleCoverage | null> {
     try {
-        return await erpFetch('api/finance/posting-rules/completeness/by-module/')
+        return await erpFetch('finance/posting-rules/completeness/by-module/')
     } catch (error) {
         console.error("Failed to fetch module coverage:", error)
         return null
@@ -184,8 +184,8 @@ export async function getCompletenessByModule(): Promise<ModuleCoverage | null> 
 export async function getPostingRuleHistory(eventCode?: string): Promise<HistoryEntry[]> {
     try {
         const url = eventCode
-            ? `api/finance/posting-rules/history/?event_code=${encodeURIComponent(eventCode)}`
-            : 'api/finance/posting-rules/history/'
+            ? `finance/posting-rules/history/?event_code=${encodeURIComponent(eventCode)}`
+            : 'finance/posting-rules/history/'
         return await erpFetch(url)
     } catch (error) {
         console.error("Failed to fetch posting rule history:", error)
@@ -195,7 +195,7 @@ export async function getPostingRuleHistory(eventCode?: string): Promise<History
 
 export async function syncFromJson(): Promise<{ success: boolean; synced?: number }> {
     try {
-        const result = await erpFetch('api/finance/posting-rules/sync-from-json/', {
+        const result = await erpFetch('finance/posting-rules/sync-from-json/', {
             method: 'POST'
         })
         revalidatePath('/finance/settings/posting-rules')
@@ -208,7 +208,7 @@ export async function syncFromJson(): Promise<{ success: boolean; synced?: numbe
 
 export async function runAutoDetect(): Promise<AutoDetectResponse | null> {
     try {
-        return await erpFetch('api/finance/posting-rules/auto-detect/')
+        return await erpFetch('finance/posting-rules/auto-detect/')
     } catch (error) {
         console.error("Failed to run auto-detect:", error)
         return null
@@ -217,7 +217,7 @@ export async function runAutoDetect(): Promise<AutoDetectResponse | null> {
 
 export async function applyAutoDetect(minConfidence: number = 70): Promise<AutoDetectApplyResponse | null> {
     try {
-        const result = await erpFetch('api/finance/posting-rules/auto-detect-apply/', {
+        const result = await erpFetch('finance/posting-rules/auto-detect-apply/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ min_confidence: minConfidence })

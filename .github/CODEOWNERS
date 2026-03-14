@@ -1,0 +1,45 @@
+# ═══════════════════════════════════════════════════════════════
+# TSFSYSTEM CODEOWNERS — Path-based ownership & review routing
+# ═══════════════════════════════════════════════════════════════
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ── Global default ────────────────────────────────────────────
+*                                   @MahdiChalhoub
+
+# ── CI / Deployment (requires explicit review) ───────────────
+.github/                            @MahdiChalhoub
+deploy_hotfix.sh                    @MahdiChalhoub
+docker-compose.yml                  @MahdiChalhoub
+Dockerfile.frontend                 @MahdiChalhoub
+scripts/                            @MahdiChalhoub
+
+# ── Finance Engine (critical — posting, tax, ledger) ─────────
+erp_backend/apps/finance/           @MahdiChalhoub
+src/app/actions/finance/            @MahdiChalhoub
+src/components/finance/             @MahdiChalhoub
+
+# ── Connector Engine (module communication law) ──────────────
+erp_backend/kernel/                 @MahdiChalhoub
+
+# ── Core Infrastructure ──────────────────────────────────────
+erp_backend/core/                   @MahdiChalhoub
+erp_backend/erp/                    @MahdiChalhoub
+
+# ── Database Migrations ──────────────────────────────────────
+erp_backend/apps/*/migrations/      @MahdiChalhoub
+
+# ── SaaS / Multi-tenancy ─────────────────────────────────────
+erp_backend/apps/saas/              @MahdiChalhoub
+
+# ── Frontend Shell & Auth ────────────────────────────────────
+src/app/layout.tsx                  @MahdiChalhoub
+src/contexts/                       @MahdiChalhoub
+src/lib/erp-api.ts                  @MahdiChalhoub
+
+# ── Architecture Docs ────────────────────────────────────────
+docs/                               @MahdiChalhoub
+README.md                           @MahdiChalhoub
+
+# ── Agent Workflows ──────────────────────────────────────────
+.agents/                            @MahdiChalhoub
+.cursorrules                        @MahdiChalhoub
