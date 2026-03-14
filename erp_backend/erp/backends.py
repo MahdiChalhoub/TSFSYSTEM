@@ -8,7 +8,7 @@ User = get_user_model()
 class TenantAuthBackend(ModelBackend):
     """
     Authenticates against settings.AUTH_USER_MODEL.
-    Uses the organization (tenant) context to distinguish users with the same username.
+    Uses the organization (organization) context to distinguish users with the same username.
     """
 
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -16,7 +16,7 @@ class TenantAuthBackend(ModelBackend):
             username = kwargs.get(User.USERNAME_FIELD)
         
         try:
-            # Try to fetch user based on username AND active tenant
+            # Try to fetch user based on username AND active organization
             # We defer to the middleware's thread-local storage or request headers
             
             # 1. Check if we have an explicit organization in kwargs (optional)
@@ -36,16 +36,16 @@ class TenantAuthBackend(ModelBackend):
             # Query Logic
             query = Q(username=username)
             if org_id:
-                query &= Q(tenant_id=org_id)
+                query &= Q(organization_id=org_id)
             else:
-                # If no tenant context is found:
+                # If no organization context is found:
                 # OPTION A: Only match root users (org=None)
                 # OPTION B: Match ANY user (but this is dangerous if multiple exist)
                 # We'll go with OPTION A for security, or try to be smart.
                 # However, for the specific case of a USER logging in to a specific business,
-                # the frontend MUST send the tenant context (slug/id).
+                # the frontend MUST send the organization context (slug/id).
                 
-                # If the user is trying to login to "root" (no tenant), look for:
+                # If the user is trying to login to "root" (no organization), look for:
                 # - org=None (legacy root users)
                 # - org.slug='saas' (SaaS Federation panel users)
                 query &= (Q(organization__isnull=True) | Q(organization__slug='saas'))

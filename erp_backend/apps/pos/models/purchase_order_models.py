@@ -139,8 +139,6 @@ class PurchaseOrder(TenantModel):
                                      related_name='cancelled_pos')
     cancelled_at = models.DateTimeField(null=True, blank=True)
     cancellation_reason = models.TextField(null=True, blank=True, help_text="Reason for supplier cancellation")
-    
-    invoiced_at = models.DateTimeField(null=True, blank=True)
 
     # Invoice & Payment
     invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
@@ -154,18 +152,6 @@ class PurchaseOrder(TenantModel):
     invoice_policy = models.CharField(
         max_length=15, choices=INVOICE_POLICY_CHOICES, default='RECEIVED_QTY',
         help_text='Which qty the invoice is validated against'
-    )
-
-    # Payment Terms & Logistics
-    payment_term = models.ForeignKey(
-        'pos.PaymentTerm', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='purchase_orders',
-        help_text='Payment conditions (Net 30, 60/90, etc.)'
-    )
-    assigned_driver = models.ForeignKey(
-        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='assigned_po_deliveries',
-        help_text='Driver assigned for pickup/delivery coordination'
     )
 
     # Notes
@@ -199,8 +185,18 @@ class PurchaseOrder(TenantModel):
     def save(self, *args, **kwargs):
         # Auto-generate PO number on first transition out of DRAFT
         if not self.po_number and self.status != 'DRAFT':
-            from apps.finance.models import TransactionSequence
-            self.po_number = TransactionSequence.next_value(self.organization, 'PURCHASE_ORDER')
+            try:
+                from erp.connector_registry import connector
+                TransactionSequence = connector.require(
+                    'finance.sequences.get_model',
+                    org_id=self.organization_id,
+                    source='pos.purchase_order',
+                )
+                if TransactionSequence:
+                    self.po_number = TransactionSequence.next_value(self.organization, 'PURCHASE_ORDER')
+            except (ImportError, Exception):
+                import random
+                self.po_number = f"PO-{random.randint(10000, 99999)}"
 
         # Snapshot supplier name
         if self.supplier_id and not self.supplier_name:

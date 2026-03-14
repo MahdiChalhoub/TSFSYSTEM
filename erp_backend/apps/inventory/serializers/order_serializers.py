@@ -39,9 +39,9 @@ class StockAdjustmentOrderSerializer(serializers.ModelSerializer):
             'notes', 'status', 'is_locked', 'locked_by', 'locked_by_name',
             'locked_at', 'created_by', 'created_by_name',
             'created_at', 'updated_at',
-            'lines', 'line_count', 'tenant',
+            'lines', 'line_count', 'organization',
         ]
-        read_only_fields = ['tenant', 'reference', 'status', 'is_locked', 
+        read_only_fields = ['organization', 'reference', 'status', 'is_locked', 
                             'locked_by', 'locked_at', 'total_qty_adjustment',
                             'total_amount_adjustment']
 
@@ -88,9 +88,9 @@ class StockTransferOrderSerializer(serializers.ModelSerializer):
             'locked_by', 'locked_by_name', 'locked_at',
             'created_by', 'created_by_name',
             'created_at', 'updated_at',
-            'lines', 'line_count', 'tenant',
+            'lines', 'line_count', 'organization',
         ]
-        read_only_fields = ['tenant', 'reference', 'status', 'is_locked', 
+        read_only_fields = ['organization', 'reference', 'status', 'is_locked', 
                             'locked_by', 'locked_at', 'total_qty_transferred']
 
     def get_line_count(self, obj):

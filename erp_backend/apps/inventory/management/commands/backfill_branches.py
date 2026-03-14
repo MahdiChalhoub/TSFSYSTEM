@@ -25,7 +25,8 @@ class Command(BaseCommand):
         from apps.inventory.models import Warehouse, Inventory, InventoryMovement
         from apps.inventory.models.goods_receipt_models import GoodsReceipt
         from apps.inventory.models.stock_move_model import StockMove
-        from apps.pos.models import Order
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=0, source='inventory')
         from erp.models import Organization
 
         for org in Organization.objects.all():

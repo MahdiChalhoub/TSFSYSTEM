@@ -1,4 +1,4 @@
-import { getCOASetupStatus } from '@/app/actions/finance/coa-setup'
+import { getCOASetupStatus, COASetupState } from '@/app/actions/finance/coa-setup'
 import { COASetupWizard } from './wizard'
 
 async function getAccountCount(): Promise<number> {
@@ -16,7 +16,7 @@ async function getAccountCount(): Promise<number> {
 }
 
 export default async function COASetupPage() {
-    let setupState = { status: 'NOT_STARTED' as const, selectedTemplate: null, importedAt: null, postingRulesConfigured: false, migrationNeeded: false, migrationCompleted: false, completedAt: null }
+    let setupState: COASetupState = { status: 'NOT_STARTED', selectedTemplate: null, importedAt: null, postingRulesConfigured: false, migrationNeeded: false, migrationCompleted: false, completedAt: null }
     let accountCount = 0
 
     try {

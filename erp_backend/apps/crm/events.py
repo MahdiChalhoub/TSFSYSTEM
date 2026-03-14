@@ -22,17 +22,17 @@ from kernel.contracts.decorators import enforce_contract
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """
     Main event handler for CRM module (Kernel OS v2.0)
 
     Routes events to appropriate handlers based on event name.
-    Compatible with both old (organization_id) and new (tenant_id) signatures.
+    Compatible with both old (organization_id) and new (organization_id) signatures.
 
     Args:
         event_name: The event identifier (e.g., 'contact.created')
         payload: Event data dictionary
-        tenant_id: The tenant context (replaces organization_id)
+        organization_id: The organization context (replaces organization_id)
     """
     logger.info(f"[CRM] Received event: {event_name}")
 
@@ -53,7 +53,7 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 
     if handler:
         try:
-            result = handler(payload, tenant_id)
+            result = handler(payload, organization_id)
             logger.info(f"[CRM] Successfully handled {event_name}")
             return result
         except Exception as e:
@@ -69,7 +69,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
     React to a new organization being provisioned.
     
     Creates a client Contact in the SaaS master org's CRM
-    so the new tenant can be billed and managed.
+    so the new organization can be billed and managed.
     
     Flow:
         1. Kernel emits 'org:provisioned' with new org details
@@ -121,7 +121,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
         # No direct field 'billing_contact_id' exists on Organization.
         logger.info(
             f"✅ CRM: Created billing contact '{client_contact.name}' "
-            f"(id={client_contact.id}) in SaaS org for tenant '{org_slug}'"
+            f"(id={client_contact.id}) in SaaS org for organization '{org_slug}'"
         )
         
         # Return result for chained events (Finance will use contact_id)
@@ -141,7 +141,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
 def _on_subscription_updated(payload: dict, organization_id: int):
     """
     React to subscription updates — update Contact balance.
-    Triggered by SaaS layer when a tenant changes their plan.
+    Triggered by SaaS layer when a organization changes their plan.
     """
     from .models import Contact
     from erp.models import Organization
@@ -160,10 +160,10 @@ def _on_subscription_updated(payload: dict, organization_id: int):
             logger.error("CRM: SaaS master org not found.")
             return {'success': False, 'error': "SaaS org not found"}
 
-        # 2. Find tenant organization and its client
+        # 2. Find organization organization and its client
         target_org = Organization.objects.filter(id=target_org_id).select_related('client').first()
         if not target_org or not target_org.client:
-            logger.warning(f"CRM: No client found for tenant {target_org_id}. Balance sync skipped.")
+            logger.warning(f"CRM: No client found for organization {target_org_id}. Balance sync skipped.")
             return {'success': True, 'skipped': True, 'reason': 'No client linked'}
 
         # 3. Resolve Contact via Client email
@@ -215,7 +215,7 @@ def _on_order_completed(payload: dict, organization_id: int):
         return {'success': True, 'skipped': True}
         
     try:
-        contact = Contact.objects.get(pk=contact_id, tenant_id=organization_id)
+        contact = Contact.objects.get(pk=contact_id, organization_id=organization_id)
         
         # Update analytics fields
         contact.total_orders += 1
@@ -262,7 +262,7 @@ def _on_purchase_order_completed(payload: dict, organization_id: int):
         return {'success': True, 'skipped': True}
         
     try:
-        supplier = Contact.objects.get(pk=supplier_id, tenant_id=organization_id)
+        supplier = Contact.objects.get(pk=supplier_id, organization_id=organization_id)
         
         supplier.supplier_total_orders += 1
         supplier.total_purchase_amount += total_amount
@@ -305,11 +305,11 @@ def _on_purchase_order_completed(payload: dict, organization_id: int):
 @subscribe_to_event('user.created')
 def on_user_created(event):
     """EventBus handler wrapper for user.created"""
-    handle_user_created(event.payload, event.tenant_id)
+    handle_user_created(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_user_created(payload: dict, tenant_id: int):
+def handle_user_created(payload: dict, organization_id: int):
     """
     Handle user.created event (Kernel OS v2.0)
 
@@ -328,7 +328,7 @@ def handle_user_created(payload: dict, tenant_id: int):
         # Check if contact already exists
         existing = Contact.objects.filter(
             email=email,
-            tenant_id=tenant_id
+            organization_id=organization_id
         ).first()
 
         if existing:
@@ -340,7 +340,7 @@ def handle_user_created(payload: dict, tenant_id: int):
             name=f"{first_name} {last_name}".strip(),
             email=email,
             type='CUSTOMER',
-            tenant_id=tenant_id
+            organization_id=organization_id
         )
 
         # Emit contact.created event
@@ -348,7 +348,7 @@ def handle_user_created(payload: dict, tenant_id: int):
             'contact_id': contact.id,
             'email': email,
             'contact_type': 'CUSTOMER',
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         })
 
         logger.info(f"[CRM] Created contact {contact.id} for user {user_id}")
@@ -364,11 +364,11 @@ def handle_user_created(payload: dict, tenant_id: int):
 @enforce_contract('invoice.created')
 def on_invoice_created(event):
     """EventBus handler wrapper for invoice.created"""
-    handle_invoice_created(event.payload, event.tenant_id)
+    handle_invoice_created(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_invoice_created(payload: dict, tenant_id: int):
+def handle_invoice_created(payload: dict, organization_id: int):
     """
     Handle invoice.created event (Kernel OS v2.0)
 
@@ -383,7 +383,7 @@ def handle_invoice_created(payload: dict, tenant_id: int):
         return {'success': True, 'skipped': True}
 
     try:
-        contact = Contact.objects.get(id=customer_id, tenant_id=tenant_id)
+        contact = Contact.objects.get(id=customer_id, organization_id=organization_id)
 
         # Update analytics if fields exist
         if hasattr(contact, 'total_orders'):
@@ -411,11 +411,11 @@ def handle_invoice_created(payload: dict, tenant_id: int):
 @enforce_contract('invoice.paid')
 def on_invoice_paid(event):
     """EventBus handler wrapper for invoice.paid"""
-    handle_invoice_paid(event.payload, event.tenant_id)
+    handle_invoice_paid(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_invoice_paid(payload: dict, tenant_id: int):
+def handle_invoice_paid(payload: dict, organization_id: int):
     """
     Handle invoice.paid event (Kernel OS v2.0)
 
@@ -430,7 +430,7 @@ def handle_invoice_paid(payload: dict, tenant_id: int):
         return {'success': True, 'skipped': True}
 
     try:
-        contact = Contact.objects.get(id=customer_id, tenant_id=tenant_id)
+        contact = Contact.objects.get(id=customer_id, organization_id=organization_id)
 
         # Update payment stats if fields exist
         if hasattr(contact, 'balance'):
@@ -454,7 +454,7 @@ def handle_invoice_paid(payload: dict, tenant_id: int):
 
 # Utility functions for CRM operations
 
-def create_contact_from_event(email: str, name: str, contact_type: str, tenant_id: int, **kwargs):
+def create_contact_from_event(email: str, name: str, contact_type: str, organization_id: int, **kwargs):
     """
     Create a new contact and emit event.
 
@@ -467,7 +467,7 @@ def create_contact_from_event(email: str, name: str, contact_type: str, tenant_i
             email=email,
             name=name,
             type=contact_type,
-            tenant_id=tenant_id,
+            organization_id=organization_id,
             **kwargs
         )
 
@@ -476,7 +476,7 @@ def create_contact_from_event(email: str, name: str, contact_type: str, tenant_i
             'contact_id': contact.id,
             'email': email,
             'contact_type': contact_type,
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         })
 
         logger.info(f"[CRM] Created contact {contact.id}: {email}")

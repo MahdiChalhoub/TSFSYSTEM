@@ -20,7 +20,7 @@ class ComplianceResolver:
         """
         # Base filter: Active rules for this org
         qs = ComplianceRule.objects.filter(
-            tenant_id=contact.organization_id,
+            organization_id=contact.organization_id,
             is_active=True,
             country_code=contact.country_code or 'CI'
         )
@@ -158,6 +158,14 @@ class ComplianceService:
         Compliance Guard (§Missing 16).
         Checks if the contact is allowed to perform action_type.
         """
+        # Feature flag: tenants can disable compliance enforcement
+        try:
+            from kernel.config import is_feature_enabled
+            if not is_feature_enabled('crm.compliance_engine', organization=contact.organization):
+                return True, ""
+        except Exception:
+            pass  # Fail-open: if flag check fails, proceed with compliance check
+
         if contact.status == 'BLOCKED':
             return False, "Contact is manually blocked via lifecycle status."
 
@@ -199,7 +207,7 @@ class ComplianceService:
                     reason = f"Compliance Block ({action_type}): Document '{rule.name}' is {'MISSING' if is_missing else 'EXPIRED'}."
                     # Log Event
                     ComplianceEvent.objects.create(
-                        tenant_id=contact.organization_id,
+                        organization_id=contact.organization_id,
                         contact=contact,
                         event_type='VIOLATION_BLOCK',
                         risk_level='HIGH',
@@ -235,7 +243,7 @@ class ComplianceService:
 
             # 2. Create new version
             new_doc = ContactComplianceDocument.objects.create(
-                tenant_id=contact.organization_id,
+                organization_id=contact.organization_id,
                 contact=contact,
                 type=doc_type,
                 document_number=doc_number,
@@ -249,7 +257,7 @@ class ComplianceService:
             
             # 3. Log Event
             ComplianceEvent.objects.create(
-                tenant_id=contact.organization_id,
+                organization_id=contact.organization_id,
                 contact=contact,
                 event_type='DOC_UPLOADED',
                 document=new_doc,
@@ -275,7 +283,7 @@ class ComplianceService:
             doc.save()
             
             ComplianceEvent.objects.create(
-                tenant_id=doc.organization_id,
+                organization_id=doc.organization_id,
                 contact=doc.contact,
                 event_type='STATUS_CHANGE',
                 document=doc,
@@ -289,7 +297,7 @@ class ComplianceService:
     def grant_override(contact, rule, user, expiry_date, reason):
         """Manual bypass."""
         override = ComplianceOverride.objects.create(
-            tenant_id=contact.organization_id,
+            organization_id=contact.organization_id,
             contact=contact,
             rule=rule,
             granted_by=user,
@@ -297,7 +305,7 @@ class ComplianceService:
             expiry_date=expiry_date
         )
         ComplianceEvent.objects.create(
-            tenant_id=contact.organization_id,
+            organization_id=contact.organization_id,
             contact=contact,
             event_type='MANUAL_OVERRIDE',
             actor=user,
@@ -339,7 +347,7 @@ class ComplianceService:
         notify_role = step.get('notify', 'OWNER')
         # Logic to notify via Task/Notification
         ContactTask.objects.get_or_create(
-            tenant_id=contact.organization_id,
+            organization_id=contact.organization_id,
             contact=contact,
             type='COMPLIANCE_RENEWAL',
             status='OPEN',

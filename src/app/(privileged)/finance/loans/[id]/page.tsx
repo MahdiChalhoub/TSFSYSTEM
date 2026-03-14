@@ -2,10 +2,12 @@ import { getLoan } from "@/app/actions/finance/loans"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { format } from "date-fns"
-import { ArrowLeft, Wallet , Landmark } from "lucide-react"
+import { ArrowLeft, Wallet, Landmark, Calendar, Calculator, DollarSign } from "lucide-react"
 import { DisburseButton } from "./disburse-button" // Client component for action
+import { EarlyPayoffCalculator } from "./early-payoff-calculator" // Client component for calculator
 
 import { serialize } from "@/lib/utils/serialization"
 
@@ -39,6 +41,12 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  <p className="text-muted-foreground">{loan.contact.name}</p>
  </div>
  <div className="ml-auto flex gap-2">
+ <Link href={`/finance/loans/${id}/schedule`}>
+ <Button variant="outline" size="sm" className="rounded-xl gap-2">
+ <Calendar size={16} />
+ View Schedule
+ </Button>
+ </Link>
  {!isDisbursed && (
  <DisburseButton loanId={loan.id} amount={Number(loan.principalAmount)} />
  )}
@@ -84,7 +92,14 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
 
  <Card className="md:col-span-2">
  <CardHeader>
- <CardTitle>Repayment Schedule</CardTitle>
+ <div className="flex items-center justify-between">
+ <CardTitle>Repayment Schedule (Next 5 Payments)</CardTitle>
+ <Link href={`/finance/loans/${id}/schedule`}>
+ <Button variant="ghost" size="sm" className="text-app-primary hover:text-app-primary/80">
+ View Full Schedule →
+ </Button>
+ </Link>
+ </div>
  </CardHeader>
  <CardContent>
  <Table>
@@ -98,7 +113,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  </TableRow>
  </TableHeader>
  <TableBody>
- {loan.installments.map((inst: Record<string, any>) => (
+ {loan.installments.slice(0, 5).map((inst: Record<string, any>) => (
  <TableRow key={inst.id}>
  <TableCell>{format(inst.dueDate, "PPP")}</TableCell>
  <TableCell className="text-right text-muted-foreground">{Number(inst.principalAmount).toLocaleString()}</TableCell>
@@ -119,6 +134,24 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
  </CardContent>
  </Card>
  </div>
+
+ {/* Early Payoff Calculator */}
+ <Card className="rounded-2xl border-2 border-app-primary/20 bg-gradient-to-br from-app-primary/5 to-transparent">
+ <CardHeader>
+ <div className="flex items-center gap-3">
+ <div className="w-12 h-12 rounded-xl bg-app-primary/10 flex items-center justify-center">
+ <Calculator size={24} className="text-app-primary" />
+ </div>
+ <div>
+ <CardTitle>Early Payoff Calculator</CardTitle>
+ <CardDescription>Calculate savings by paying off your loan early</CardDescription>
+ </div>
+ </div>
+ </CardHeader>
+ <CardContent>
+ <EarlyPayoffCalculator loanId={parseInt(id)} />
+ </CardContent>
+ </Card>
  </div>
  )
 }

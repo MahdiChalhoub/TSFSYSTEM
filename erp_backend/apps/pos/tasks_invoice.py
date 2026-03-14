@@ -51,7 +51,7 @@ def generate_invoice_pdf(self, doc_id: int):
             'organization', 'contact'
         ).prefetch_related('lines').get(
             id=doc.order_id,
-            tenant_id=doc.organization_id
+            organization_id=doc.organization_id
         )
         lines = OrderLine.objects.filter(order=order).select_related('product')
         tax_entries = OrderLineTaxEntry.objects.filter(

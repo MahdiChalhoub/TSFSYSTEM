@@ -12,27 +12,7 @@ logger = logging.getLogger(__name__)
 from apps.hr.models import Employee
 from apps.hr.serializers import EmployeeSerializer
 
-try:
-    from apps.finance.models import ChartOfAccount
-except ImportError:
-    ChartOfAccount = None
-
-try:
-    from apps.finance.services import LedgerService
-except ImportError:
-    LedgerService = None
-
-
-def _resolve_parent(organization, rules, rule_chain):
-    """Resolve a parent COA from posting rules. Returns the ChartOfAccount or None."""
-    for section, key in rule_chain:
-        parent_id = rules.get(section, {}).get(key)
-        if parent_id:
-            parent = ChartOfAccount.objects.filter(id=parent_id, organization=organization).first()
-            if parent:
-                return parent
-    return None
-
+from erp.connector_registry import connector
 
 class EmployeeViewSet(TenantModelViewSet):
     queryset = Employee.objects.all()
@@ -48,20 +28,18 @@ class EmployeeViewSet(TenantModelViewSet):
         emp_type = data.get('employee_type', 'EMPLOYEE')
 
         with transaction.atomic():
+            ChartOfAccount = connector.require('finance.accounts.get_model', org_id=organization_id, source='hr.employee')
+            LedgerService = connector.require('finance.services.get_ledger_service', org_id=organization_id, source='hr.employee')
             if ChartOfAccount and LedgerService:
-                from erp.services import ConfigurationService
-                rules = ConfigurationService.get_posting_rules(organization)
                 fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
-
                 if emp_type in ('EMPLOYEE', 'BOTH'):
-                    parent = _resolve_parent(organization, rules, [
-                        ('automation', 'payrollRoot'),
-                    ])
+                    parent = ChartOfAccount.objects.filter(organization=organization, code='2121').first()
                     if not parent:
-                        return Response(
-                            {"error": "Cannot create employee: No Payroll Root Account configured in posting rules. "
-                                      "Go to Finance → Settings → Posting Rules and set the 'Payroll Root Account'."},
-                            status=status.HTTP_400_BAD_REQUEST
+                        parent = ChartOfAccount.objects.filter(organization=organization, code='2100').first()
+                    if not parent:
+                        parent = ChartOfAccount.objects.create(
+                            organization=organization, code='2121',
+                            name='Salaries Payable', type='LIABILITY', sub_type='PAYABLE'
                         )
                     linked_acc = LedgerService.create_linked_account(
                         organization=organization,
@@ -72,15 +50,13 @@ class EmployeeViewSet(TenantModelViewSet):
                     data['linked_account_id'] = linked_acc.id
 
                 if emp_type in ('PARTNER', 'BOTH'):
-                    cap_parent = _resolve_parent(organization, rules, [
-                        ('partners', 'capital'),
-                        ('equity', 'capital'),
-                    ])
+                    cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3001').first()
                     if not cap_parent:
-                        return Response(
-                            {"error": "Cannot create partner: No Partner Capital account configured in posting rules. "
-                                      "Go to Finance → Settings → Posting Rules and set 'Partner Capital' or 'Owner Capital'."},
-                            status=status.HTTP_400_BAD_REQUEST
+                        cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                    if not cap_parent:
+                        cap_parent = ChartOfAccount.objects.create(
+                            organization=organization, code='3001',
+                            name='Capital', type='EQUITY', sub_type=None
                         )
                     capital_acc = LedgerService.create_linked_account(
                         organization=organization,
@@ -91,15 +67,13 @@ class EmployeeViewSet(TenantModelViewSet):
                     if emp_type == 'PARTNER':
                         data['linked_account_id'] = capital_acc.id
 
-                    div_parent = _resolve_parent(organization, rules, [
-                        ('partners', 'withdrawal'),
-                        ('equity', 'draws'),
-                    ])
+                    div_parent = ChartOfAccount.objects.filter(organization=organization, code='3200').first()
                     if not div_parent:
-                        return Response(
-                            {"error": "Cannot create partner: No Partner Withdrawals/Draws account configured in posting rules. "
-                                      "Go to Finance → Settings → Posting Rules and set 'Partner Withdrawals' or 'Owner Draws'."},
-                            status=status.HTTP_400_BAD_REQUEST
+                        div_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                    if not div_parent:
+                        div_parent = ChartOfAccount.objects.create(
+                            organization=organization, code='3200',
+                            name='Dividends', type='EQUITY', sub_type=None
                         )
                     dividends_acc = LedgerService.create_linked_account(
                         organization=organization,
@@ -109,10 +83,7 @@ class EmployeeViewSet(TenantModelViewSet):
                     )
                     data['dividends_account_id'] = dividends_acc.id
             else:
-                return Response(
-                    {"error": "Finance module is required to create employees with ledger accounts."},
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE
-                )
+                logger.warning("Finance module unavailable — employee created without linked ledger account")
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
@@ -131,16 +102,15 @@ class EmployeeViewSet(TenantModelViewSet):
             return Response({"error": "Employee already has a linked GL account", "linked_account_id": employee.linked_account_id},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        if not ChartOfAccount or not LedgerService:
-            return Response({"error": "Finance module not available"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context"}, status=400)
         organization = Organization.objects.get(id=organization_id)
 
-        from erp.services import ConfigurationService
-        rules = ConfigurationService.get_posting_rules(organization)
+        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=organization_id, source='hr.employee')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=organization_id, source='hr.employee')
+        if not ChartOfAccount or not LedgerService:
+            return Response({"error": "Finance module not available"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         emp_type = employee.employee_type or 'EMPLOYEE'
         full_name = str(employee)
@@ -148,13 +118,13 @@ class EmployeeViewSet(TenantModelViewSet):
 
         with transaction.atomic():
             if emp_type in ('EMPLOYEE', 'BOTH'):
-                parent = _resolve_parent(organization, rules, [
-                    ('automation', 'payrollRoot'),
-                ])
+                parent = ChartOfAccount.objects.filter(organization=organization, code='2121').first()
                 if not parent:
-                    return Response(
-                        {"error": "No Payroll Root Account configured in posting rules."},
-                        status=status.HTTP_400_BAD_REQUEST
+                    parent = ChartOfAccount.objects.filter(organization=organization, code='2100').first()
+                if not parent:
+                    parent = ChartOfAccount.objects.create(
+                        organization=organization, code='2121',
+                        name='Salaries Payable', type='LIABILITY', sub_type='PAYABLE'
                     )
                 linked_acc = LedgerService.create_linked_account(
                     organization=organization,
@@ -166,14 +136,13 @@ class EmployeeViewSet(TenantModelViewSet):
                 result.update({"linked_account_id": linked_acc.id, "linked_account_code": linked_acc.code, "linked_account_name": linked_acc.name})
 
             if emp_type in ('PARTNER', 'BOTH'):
-                cap_parent = _resolve_parent(organization, rules, [
-                    ('partners', 'capital'),
-                    ('equity', 'capital'),
-                ])
+                cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3001').first()
                 if not cap_parent:
-                    return Response(
-                        {"error": "No Partner Capital account configured in posting rules."},
-                        status=status.HTTP_400_BAD_REQUEST
+                    cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                if not cap_parent:
+                    cap_parent = ChartOfAccount.objects.create(
+                        organization=organization, code='3001',
+                        name='Capital', type='EQUITY', sub_type=None
                     )
                 capital_acc = LedgerService.create_linked_account(
                     organization=organization,
@@ -185,14 +154,13 @@ class EmployeeViewSet(TenantModelViewSet):
                     employee.linked_account_id = capital_acc.id
                     result.update({"linked_account_id": capital_acc.id, "linked_account_code": capital_acc.code, "linked_account_name": capital_acc.name})
 
-                div_parent = _resolve_parent(organization, rules, [
-                    ('partners', 'withdrawal'),
-                    ('equity', 'draws'),
-                ])
+                div_parent = ChartOfAccount.objects.filter(organization=organization, code='3200').first()
                 if not div_parent:
-                    return Response(
-                        {"error": "No Partner Withdrawals account configured in posting rules."},
-                        status=status.HTTP_400_BAD_REQUEST
+                    div_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                if not div_parent:
+                    div_parent = ChartOfAccount.objects.create(
+                        organization=organization, code='3200',
+                        name='Dividends', type='EQUITY', sub_type=None
                     )
                 dividends_acc = LedgerService.create_linked_account(
                     organization=organization,

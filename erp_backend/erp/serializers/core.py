@@ -20,6 +20,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
     client_name = serializers.SerializerMethodField()
     currency_code = serializers.SerializerMethodField()
     currency_symbol = serializers.SerializerMethodField()
+    country_name = serializers.SerializerMethodField()
+    country_iso2 = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -27,14 +29,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'id', 'name', 'slug', 'is_active', 'created_at', 'updated_at',
             'logo', 'business_email', 'phone', 'website',
             'address', 'city', 'state', 'zip_code', 'country', 'timezone',
-            'business_type', 'base_currency', 'settings',
+            'business_type', 'base_currency', 'base_country', 'settings',
             'site_count', 'user_count', 'module_count',
             'current_plan_name', 'business_type_name', 'client_name',
             'currency_code', 'currency_symbol',
+            'country_name', 'country_iso2',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count',
                             'current_plan_name', 'business_type_name', 'client_name',
-                            'currency_code', 'currency_symbol']
+                            'currency_code', 'currency_symbol',
+                            'country_name', 'country_iso2']
 
     def get_site_count(self, obj):
         try:
@@ -68,6 +72,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     def get_currency_symbol(self, obj):
         return obj.base_currency.symbol if obj.base_currency else '$'
+
+    def get_country_name(self, obj):
+        return obj.base_country.name if obj.base_country else None
+
+    def get_country_iso2(self, obj):
+        return obj.base_country.iso2 if obj.base_country else None
 
 
 class WarehouseChildSerializer(serializers.ModelSerializer):

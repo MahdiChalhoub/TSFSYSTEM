@@ -44,7 +44,7 @@ API_KEY = os.getenv("DAJINGO_API_KEY", "")
 # =============================================================================
 
 class DajingoClient:
-    """Multi-tenant HTTP client for Dajingo Django API."""
+    """Multi-organization HTTP client for Dajingo Django API."""
     
     def __init__(self, base_url: str, org_slug: str, api_key: str = ""):
         self.base_url = base_url.rstrip("/")
@@ -55,10 +55,10 @@ class DajingoClient:
         self.client = httpx.AsyncClient(timeout=30.0)
     
     def _get_headers(self) -> dict:
-        """Build request headers with tenant context."""
+        """Build request headers with organization context."""
         headers = {
             "Content-Type": "application/json",
-            "X-Tenant-Slug": self.org_slug,  # Multi-tenant header
+            "X-Tenant-Slug": self.org_slug,  # Multi-organization header
         }
         if self.org_id:
             headers["X-Organization-ID"] = str(self.org_id)
@@ -69,7 +69,7 @@ class DajingoClient:
     async def initialize(self) -> bool:
         """Resolve organization and verify access."""
         try:
-            url = f"{self.base_url}/tenant/resolve/?slug={self.org_slug}"
+            url = f"{self.base_url}/organization/resolve/?slug={self.org_slug}"
             response = await self.client.get(url, headers=self._get_headers())
             response.raise_for_status()
             data = response.json()
@@ -81,14 +81,14 @@ class DajingoClient:
             return False
     
     async def get(self, endpoint: str, params: dict = None) -> dict:
-        """GET request to API with tenant context."""
+        """GET request to API with organization context."""
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = await self.client.get(url, headers=self._get_headers(), params=params)
         response.raise_for_status()
         return response.json()
     
     async def post(self, endpoint: str, data: dict = None) -> dict:
-        """POST request to API with tenant context."""
+        """POST request to API with organization context."""
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         response = await self.client.post(url, headers=self._get_headers(), json=data)
         response.raise_for_status()

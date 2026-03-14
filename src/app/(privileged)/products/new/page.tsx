@@ -9,7 +9,8 @@ export const dynamic = 'force-dynamic';
 
 async function getCategories() {
     try {
-        return await erpFetch('inventory/categories/');
+        const d = await erpFetch('inventory/categories/');
+        return Array.isArray(d) ? d : (d?.results ?? []);
     } catch (e) {
         console.warn("Error fetching categories:", e);
         return [];
@@ -18,7 +19,8 @@ async function getCategories() {
 
 async function getUnits() {
     try {
-        return await erpFetch('units/');
+        const d = await erpFetch('units/');
+        return Array.isArray(d) ? d : (d?.results ?? []);
     } catch (e) {
         console.warn("Error fetching units:", e);
         return [];
@@ -27,7 +29,8 @@ async function getUnits() {
 
 async function getBrands() {
     try {
-        return await erpFetch('inventory/brands/');
+        const d = await erpFetch('inventory/brands/');
+        return Array.isArray(d) ? d : (d?.results ?? []);
     } catch (e) {
         console.warn("Error fetching brands:", e);
         return [];
@@ -36,7 +39,8 @@ async function getBrands() {
 
 async function getCountries() {
     try {
-        return await erpFetch('countries/');
+        const d = await erpFetch('countries/');
+        return Array.isArray(d) ? d : (d?.results ?? []);
     } catch (e) {
         console.warn("Error fetching countries:", e);
         return [];

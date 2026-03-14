@@ -2,31 +2,93 @@
 set -e
 
 # ╔════════════════════════════════════════════════════════════╗
+# ║  ⚠️  DEPRECATED — Use deploy_safe.sh instead               ║
+# ║                                                            ║
+# ║  deploy_safe.sh provides:                                  ║
+# ║  • Atomic server-side locking (prevents concurrent builds) ║
+# ║  • Queue system for multi-agent coordination               ║
+# ║  • Auto-batching of queued deploys                         ║
+# ║  • Memory protection (stops celery before build)           ║
+# ║  • rsync --update (prevents file overwrites)               ║
+# ╚════════════════════════════════════════════════════════════╝
+
+echo ""
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║  ⚠️  WARNING: deploy_hotfix.sh is DEPRECATED              ║"
+echo "║                                                            ║"
+echo "║  Use ./deploy_safe.sh instead!                             ║"
+echo "║                                                            ║"
+echo "║  deploy_safe.sh prevents server crashes from concurrent    ║"
+echo "║  deploys by multiple agents.                               ║"
+echo "╚════════════════════════════════════════════════════════════╝"
+echo ""
+echo "Continuing with legacy deploy in 5 seconds... (Ctrl+C to abort)"
+sleep 5
+echo ""
+
+# ╔════════════════════════════════════════════════════════════╗
 # ║  TSFSYSTEM Deploy Script with GitHub Backup               ║
 # ║  Every deploy creates a versioned backup on GitHub FIRST   ║
 # ╚════════════════════════════════════════════════════════════╝
 
 REMOTE_HOST="root@91.99.186.183"
 SSH_KEY="~/.ssh/id_deploy"
-SSH="ssh -i $SSH_KEY $REMOTE_HOST"
+SSH="ssh -i $SSH_KEY -o ConnectTimeout=15 $REMOTE_HOST"
 REMOTE_DIR="/root/TSFSYSTEM"
 LOCAL_DIR="/root/.gemini/antigravity/scratch/TSFSYSTEM"
 LOCK_FILE="/tmp/tsf_deploy.lock"
+REMOTE_LOCK="/tmp/tsf_deploy.lock"
 
-# ── Deploy Lock: Prevent 2 concurrent deploys ──
+# ── Local Deploy Lock ──
 if [ -f "$LOCK_FILE" ]; then
     LOCK_PID=$(cat "$LOCK_FILE")
     if kill -0 "$LOCK_PID" 2>/dev/null; then
-        echo "❌ Another deploy is in progress (PID: $LOCK_PID). Wait or kill it first."
+        echo "❌ Another LOCAL deploy is in progress (PID: $LOCK_PID). Wait or kill it first."
         echo "   To force: rm $LOCK_FILE"
         exit 1
     else
-        echo "⚠️  Stale lock found (PID $LOCK_PID dead). Cleaning up..."
+        echo "⚠️  Stale local lock found (PID $LOCK_PID dead). Cleaning up..."
         rm -f "$LOCK_FILE"
     fi
 fi
 echo $$ > "$LOCK_FILE"
-trap 'rm -f $LOCK_FILE' EXIT INT TERM
+trap 'rm -f $LOCK_FILE; $SSH "rm -f $REMOTE_LOCK" 2>/dev/null || true' EXIT INT TERM
+
+# ── Server-Side Deploy Lock (prevents 3 agents from deploying simultaneously) ──
+echo "🔒 Checking server-side deploy lock..."
+LOCK_CHECK=$($SSH "
+    if [ -f $REMOTE_LOCK ]; then
+        LOCK_AGE=\$(( \$(date +%s) - \$(stat -c %Y $REMOTE_LOCK 2>/dev/null || echo 0) ))
+        LOCK_CONTENT=\$(cat $REMOTE_LOCK 2>/dev/null || echo 'unknown')
+        if [ \$LOCK_AGE -gt 900 ]; then
+            echo 'STALE'
+            rm -f $REMOTE_LOCK
+        else
+            echo \"LOCKED|\$LOCK_CONTENT|\$LOCK_AGE\"
+        fi
+    else
+        echo 'FREE'
+    fi
+" 2>/dev/null || echo "SSH_FAIL")
+
+if echo "$LOCK_CHECK" | grep -q "^LOCKED"; then
+    LOCK_INFO=$(echo "$LOCK_CHECK" | cut -d'|' -f2)
+    LOCK_AGE=$(echo "$LOCK_CHECK" | cut -d'|' -f3)
+    echo "❌ Another deploy is running on the SERVER!"
+    echo "   Started by: $LOCK_INFO"
+    echo "   Running for: ${LOCK_AGE}s"
+    echo "   To force: ssh -i $SSH_KEY $REMOTE_HOST 'rm -f $REMOTE_LOCK'"
+    rm -f "$LOCK_FILE"
+    exit 1
+elif echo "$LOCK_CHECK" | grep -q "STALE"; then
+    echo "⚠️  Stale server lock found (>15min). Cleaned up."
+elif echo "$LOCK_CHECK" | grep -q "SSH_FAIL"; then
+    echo "⚠️  Could not check server lock (SSH failed). Proceeding cautiously..."
+fi
+
+# Acquire server lock
+$SSH "echo 'agent-$$-$(date +%H:%M:%S)' > $REMOTE_LOCK" 2>/dev/null || true
+echo "🔓 Server lock acquired."
 
 RSYNC_EXCLUDES=(
     --exclude 'node_modules'
@@ -125,6 +187,13 @@ echo ""
 echo "📊 Step 5: Applying Database Migrations..."
 $SSH "docker exec tsfsystem-backend-1 python manage.py makemigrations --noinput" || true
 $SSH "docker exec tsfsystem-backend-1 python manage.py migrate --noinput"
+
+# ─────────────────────────────────────────────────────────
+# STEP 5b: Seed Unified Theme Engine (20 themes)
+# ─────────────────────────────────────────────────────────
+echo ""
+echo "🎨 Step 5b: Seeding Unified Theme Engine..."
+$SSH "docker exec tsfsystem-backend-1 python manage.py seed_themes" || echo "⚠️  Theme seeding skipped (may already exist)"
 
 # ─────────────────────────────────────────────────────────
 # STEP 6: Restart Backend Services

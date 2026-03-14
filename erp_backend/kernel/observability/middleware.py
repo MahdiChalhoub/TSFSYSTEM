@@ -40,12 +40,12 @@ class ObservabilityMiddleware(MiddlewareMixin):
                 'email': request.user.email,
             })
 
-        # Set tenant context for Sentry
-        if hasattr(request, 'tenant'):
-            set_context('tenant', {
-                'id': request.tenant.id,
-                'name': request.tenant.name,
-                'slug': request.tenant.slug,
+        # Set organization context for Sentry
+        if hasattr(request, 'organization'):
+            set_context('organization', {
+                'id': request.organization.id,
+                'name': request.organization.name,
+                'slug': request.organization.slug,
             })
 
         # Set request context
@@ -94,7 +94,7 @@ class ObservabilityMiddleware(MiddlewareMixin):
                 'request_path': request.path,
                 'request_method': request.method,
                 'user_id': request.user.id if hasattr(request, 'user') and request.user.is_authenticated else None,
-                'tenant_id': request.tenant.id if hasattr(request, 'tenant') else None,
+                'organization_id': request.organization.id if hasattr(request, 'organization') else None,
             },
             tags={
                 'module': 'web',

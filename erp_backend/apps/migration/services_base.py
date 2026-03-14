@@ -248,7 +248,7 @@ class MigrationBaseMixin:
         if self.job.migration_mode == 'SYNC':
             try:
                 previous = MigrationMapping.objects.filter(
-                    job__organization_id=self.organization_id,
+                    job__tenant_id=self.organization_id,
                     job__status__in=['COMPLETED', 'RUNNING'],
                     entity_type=entity_type,
                     source_id=source_id,

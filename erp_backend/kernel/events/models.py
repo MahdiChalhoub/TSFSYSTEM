@@ -78,8 +78,8 @@ class DomainEvent(TenantOwnedModel):
         app_label = 'erp'
         ordering = ['created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status', 'created_at']),
-            models.Index(fields=['tenant', 'event_type', 'created_at']),
+            models.Index(fields=['organization', 'status', 'created_at']),
+            models.Index(fields=['organization', 'event_type', 'created_at']),
             models.Index(fields=['aggregate_type', 'aggregate_id', 'created_at']),
             models.Index(fields=['status', 'next_retry_at']),
         ]

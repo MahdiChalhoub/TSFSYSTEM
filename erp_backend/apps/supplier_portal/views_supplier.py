@@ -25,6 +25,11 @@ from .serializers import (
 )
 from .permissions import IsSupplierUser, HasSupplierPermission
 
+logger = logging.getLogger(__name__)
+
+# Connector Governance Layer — all cross-module access goes through here
+from erp.connector_registry import connector
+
 
 # =============================================================================
 # SUPPLIER-SIDE: Dashboard
@@ -39,7 +44,9 @@ class SupplierDashboardViewSet(viewsets.ViewSet):
         contact = access.contact
         org = contact.organization
 
-        from apps.pos.purchase_order_models import PurchaseOrder
+        PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=org.id, source='supplier_portal')
+        if not PurchaseOrder:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
 
         pos = PurchaseOrder.objects.filter(organization=org, supplier=contact)
         total_orders = pos.count()
@@ -76,7 +83,7 @@ class SupplierDashboardViewSet(viewsets.ViewSet):
         # Product/stock counts if permission granted
         if access.has_permission('VIEW_OWN_STOCK'):
             try:
-                from apps.inventory.models import Product
+                Product = connector.require('inventory.products.get_model', org_id=org.id, source='supplier_portal')
                 products = Product.objects.filter(
                     organization=org, supplier=contact
                 )
@@ -104,7 +111,9 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
         access = request.user.supplier_access
         contact = access.contact
 
-        from apps.pos.purchase_order_models import PurchaseOrder
+        PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=contact.organization_id, source='supplier_portal')
+        if not PurchaseOrder:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
 
         pos = PurchaseOrder.objects.filter(
             organization=contact.organization, supplier=contact
@@ -134,8 +143,12 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         access = request.user.supplier_access
         contact = access.contact
-        from apps.pos.purchase_order_models import PurchaseOrder
-        from apps.pos.purchase_order_serializers import PurchaseOrderSerializer
+        PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=contact.organization_id, source='supplier_portal')
+        if not PurchaseOrder:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
+        PurchaseOrderSerializer = connector.require('pos.purchase_orders.get_serializer', org_id=contact.organization_id, source='supplier_portal')
+        if not PurchaseOrderSerializer:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
 
         try:
             po = PurchaseOrder.objects.prefetch_related('lines__product').get(
@@ -150,7 +163,9 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
     def acknowledge(self, request, pk=None):
         access = request.user.supplier_access
         contact = access.contact
-        from apps.pos.purchase_order_models import PurchaseOrder
+        PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=contact.organization_id, source='supplier_portal')
+        if not PurchaseOrder:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
         from django.utils import timezone
 
         try:
@@ -169,7 +184,9 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
     def dispatch_order(self, request, pk=None):
         access = request.user.supplier_access
         contact = access.contact
-        from apps.pos.purchase_order_models import PurchaseOrder
+        PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=contact.organization_id, source='supplier_portal')
+        if not PurchaseOrder:
+            return Response({'error': 'POS module is required for this operation.'}, status=503)
         from django.utils import timezone
 
         try:
@@ -207,7 +224,7 @@ class SupplierStockViewSet(viewsets.ViewSet):
         contact = access.contact
 
         try:
-            from apps.inventory.models import Product
+            Product = connector.require('inventory.products.get_model', org_id=contact.organization_id, source='supplier_portal')
 
             products = Product.objects.filter(
                 organization=contact.organization, supplier=contact

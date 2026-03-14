@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                 ('completed_at', models.DateTimeField(blank=True, null=True)),
                 ('source_file', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='migration_jobs_v2', to='storage.storedfile')),
                 ('target_organization', models.ForeignKey(help_text='Organization where data will be migrated', on_delete=django.db.models.deletion.CASCADE, related_name='migrations_v2', to='erp.organization')),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
             ],
             options={
                 'db_table': 'migration_v2_job',

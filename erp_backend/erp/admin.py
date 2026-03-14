@@ -12,7 +12,7 @@ try:
 except ImportError:
     _has_transaction_sequence = False
 
-# User — show organization for tenant isolation visibility
+# User — show organization for organization isolation visibility
 class TenantUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'organization', 'is_staff', 'is_superuser', 'is_active')
     list_filter = ('organization', 'is_staff', 'is_superuser', 'is_active')
@@ -33,8 +33,8 @@ class SiteAdmin(admin.ModelAdmin):
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tenant')
-    list_filter = ('tenant',)
+    list_display = ('name', 'organization')
+    list_filter = ('organization',)
 
 @admin.register(Permission)
 class PermissionAdmin(admin.ModelAdmin):

@@ -21,7 +21,7 @@ import {
 } from 'recharts';
 import { useCurrency } from '@/lib/utils/currency';
 import { useAdmin } from '@/context/AdminContext';
-import { useAppTheme } from '@/components/app/AppThemeProvider';
+import { useUnifiedThemeEngine } from '@/contexts/UnifiedThemeEngine';
 
 // ── Animated counter hook ─────────────────────────────────────
 function useCountUp(target: number, duration = 1200) {
@@ -130,7 +130,7 @@ function KPICard({
 export default function DashboardPage() {
     const { viewScope } = useAdmin();
     const { fmt } = useCurrency();
-    const { themeInfo } = useAppTheme();
+    const { currentTheme } = useUnifiedThemeEngine();
 
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -228,7 +228,7 @@ export default function DashboardPage() {
 
     if (loading || !metrics) return <DashboardSkeleton />;
 
-    const primary = themeInfo.primary;
+    const primary = currentTheme?.presetData?.colors?.dark?.primary || '#6366F1';
 
     return (
         <div className="app-page">

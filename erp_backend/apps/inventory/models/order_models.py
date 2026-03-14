@@ -30,8 +30,8 @@ class StockAdjustmentOrder(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'stock_adjustment_order'
         ordering = ['-date', '-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'date']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'date']),
         ]
 
     def __str__(self):
@@ -98,8 +98,8 @@ class StockTransferOrder(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'stock_transfer_order'
         ordering = ['-date', '-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'date']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'date']),
         ]
 
     def __str__(self):

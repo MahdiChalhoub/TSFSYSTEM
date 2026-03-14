@@ -7,7 +7,7 @@ Auto-generates DRAFT Purchase Orders mapped to preferred suppliers.
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Sum
-from apps.inventory.models import Product, Inventory, StockLedger
+
 from apps.pos.models import PurchaseOrder, PurchaseOrderLine, ProductSupplier
 
 class AutomatedReplenishmentService:
@@ -18,6 +18,15 @@ class AutomatedReplenishmentService:
         Scans all active products. If (available_qty + incoming_qty) < min_stock_level,
         groups them by the preferred supplier and creates DRAFT Purchase Orders.
         """
+        from erp.connector_registry import connector
+        org_id = organization.id if hasattr(organization, 'id') else organization
+        Product = connector.require('inventory.products.get_model', org_id=org_id, source='pos.replenishment')
+        Inventory = connector.require('inventory.inventory.get_model', org_id=org_id, source='pos.replenishment')
+        StockLedger = connector.require('inventory.stock_ledger.get_model', org_id=org_id, source='pos.replenishment', fallback=None)
+
+        if not Product or not Inventory:
+            return {'products_scanned': 0, 'pos_created': 0, 'po_ids': [], 'error': 'Inventory module unavailable'}
+
         products = Product.objects.filter(is_active=True, organization=organization)
         
         # Group needed items by supplier: { supplier_id: [ {product, qty_needed}, ... ] }

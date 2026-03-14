@@ -64,7 +64,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         """Returns current inventory items that are marked as consignment."""
         organization_id = get_current_tenant_id()
         stock = Inventory.objects.filter(
-            tenant_id=organization_id,
+            organization_id=organization_id,
             is_consignment=True,
             quantity__gt=0
         ).select_related('product', 'warehouse', 'supplier')
@@ -81,7 +81,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         return Response(data)
 
-    # --- H4: cross-tenant validation ---
+    # --- H4: cross-organization validation ---
     @action(detail=False, methods=['post'])
     @permission_required('inventory.manage')
     def receive_stock(self, request):
@@ -90,14 +90,14 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         try:
             product = Product.objects.get(
-                id=request.data.get('product_id'), tenant=organization
+                id=request.data.get('product_id'), organization=organization
             )
             warehouse = Warehouse.objects.get(
-                id=request.data.get('warehouse_id'), tenant=organization
+                id=request.data.get('warehouse_id'), organization=organization
             )
 
             InventoryService.receive_stock(
-                tenant=organization,
+                organization=organization,
                 product=product,
                 warehouse=warehouse,
                 quantity=request.data.get('quantity'),
@@ -118,14 +118,14 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         try:
             product = Product.objects.get(
-                id=request.data.get('product_id'), tenant=organization
+                id=request.data.get('product_id'), organization=organization
             )
             warehouse = Warehouse.objects.get(
-                id=request.data.get('warehouse_id'), tenant=organization
+                id=request.data.get('warehouse_id'), organization=organization
             )
 
             InventoryService.adjust_stock(
-                tenant=organization,
+                organization=organization,
                 product=product,
                 warehouse=warehouse,
                 quantity=request.data.get('quantity'),
@@ -155,7 +155,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         warehouse_id = request.query_params.get('warehouse_id')
         try:
             products = InventoryService.get_stock_valuation_summary(
-                tenant=organization,
+                organization=organization,
                 warehouse_id=request.query_params.get('warehouse_id')
             )
 
@@ -172,7 +172,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
             })
         except Exception:
             inventories = Inventory.objects.filter(
-                tenant=organization,
+                organization=organization,
                 quantity__gt=0,
             ).select_related('product', 'warehouse').annotate(
                 item_value=F('quantity') * F('product__cost_price')
@@ -219,7 +219,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         severity = request.query_params.get('severity')
         show_acknowledged = request.query_params.get('acknowledged', 'false').lower() == 'true'
 
-        qs = ExpiryAlert.objects.filter(tenant=organization)
+        qs = ExpiryAlert.objects.filter(organization=organization)
         if not show_acknowledged:
             qs = qs.filter(is_acknowledged=False)
         if severity:
@@ -244,7 +244,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         from django.db.models import Count, Sum
         stats = ExpiryAlert.objects.filter(
-            tenant=organization, is_acknowledged=False
+            organization=organization, is_acknowledged=False
         ).aggregate(
             expired=Count('id', filter=Q(severity='EXPIRED')),
             critical=Count('id', filter=Q(severity='CRITICAL')),
@@ -281,7 +281,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         if err: return err
         from apps.inventory.models import ExpiryAlert
         try:
-            alert = ExpiryAlert.objects.get(id=alert_id, tenant=organization)
+            alert = ExpiryAlert.objects.get(id=alert_id, organization=organization)
             alert.is_acknowledged = True
             alert.acknowledged_by = request.user if request.user.is_authenticated else None
             alert.save()
@@ -296,13 +296,13 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         if err: return err
 
         products = Product.objects.filter(
-            tenant=organization, is_active=True
+            organization=organization, is_active=True
         )
 
         alerts = []
         for product in products:
             total_qty = Inventory.objects.filter(
-                tenant=organization, product=product
+                organization=organization, product=product
             ).aggregate(total=Sum('quantity'))['total'] or 0
 
             if total_qty <= product.min_stock_level:
@@ -347,17 +347,17 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         try:
             product = Product.objects.get(
-                id=request.data.get('product_id'), tenant=organization
+                id=request.data.get('product_id'), organization=organization
             )
             source_warehouse = Warehouse.objects.get(
-                id=request.data.get('source_warehouse_id'), tenant=organization
+                id=request.data.get('source_warehouse_id'), organization=organization
             )
             destination_warehouse = Warehouse.objects.get(
-                id=request.data.get('destination_warehouse_id'), tenant=organization
+                id=request.data.get('destination_warehouse_id'), organization=organization
             )
 
             result = InventoryService.transfer_stock(
-                tenant=organization,
+                organization=organization,
                 product=product,
                 source_warehouse=source_warehouse,
                 destination_warehouse=destination_warehouse,
@@ -385,7 +385,7 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
         offset = int(request.query_params.get('offset', 0))
 
         products_qs = Product.objects.filter(
-            tenant=organization
+            organization=organization
         ).select_related('brand', 'category', 'unit')
 
         if search:
@@ -402,11 +402,11 @@ class InventoryViewSet(BranchScopedMixin, TenantModelViewSet):
 
         from apps.inventory.serializers import WarehouseSerializer
         # Use BRANCH-type warehouses as "sites" for the viewer
-        sites = Warehouse.objects.filter(tenant=organization, location_type='BRANCH', is_active=True)
+        sites = Warehouse.objects.filter(organization=organization, location_type='BRANCH', is_active=True)
         product_ids = [p.id for p in products_qs]
 
         stock_rows = Inventory.objects.filter(
-            tenant=organization,
+            organization=organization,
             product_id__in=product_ids,
         ).select_related('warehouse').values(
             'product_id', 'warehouse__parent_id'
@@ -469,7 +469,7 @@ class InventoryMovementViewSet(BranchScopedMixin, UDLEViewSetMixin, TenantModelV
             return Response({"error": "product_id required"}, status=400)
 
         movements = InventoryMovement.objects.filter(
-            tenant=organization, product_id=product_id
+            organization=organization, product_id=product_id
         ).select_related('product', 'warehouse').order_by('-created_at')[:100]
 
         return Response(InventoryMovementSerializer(movements, many=True).data)

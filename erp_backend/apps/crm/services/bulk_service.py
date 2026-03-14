@@ -134,7 +134,7 @@ class ContactBulkService:
             # Check duplicates
             if not errors:
                 dup = DuplicateDetectionService.check_for_duplicates(
-                    tenant_id=organization_id,
+                    organization_id=organization_id,
                     name=data.get('name'),
                     email=data.get('email'),
                     phone=data.get('phone'),
@@ -184,7 +184,7 @@ class ContactBulkService:
             try:
                 if mode == 'INSERT_ONLY':
                     Contact.objects.create(
-                        tenant_id=organization_id,
+                        organization_id=organization_id,
                         status='DRAFT',  # New imports start as DRAFT
                         **data,
                     )
@@ -193,7 +193,7 @@ class ContactBulkService:
                 elif mode == 'UPSERT_SAFE':
                     # Match on name + type + organization
                     existing = Contact.objects.filter(
-                        tenant_id=organization_id,
+                        organization_id=organization_id,
                         name=data['name'],
                         type=data['type'],
                     ).first()
@@ -206,7 +206,7 @@ class ContactBulkService:
                         results['updated'] += 1
                     else:
                         Contact.objects.create(
-                            tenant_id=organization_id,
+                            organization_id=organization_id,
                             status='DRAFT',
                             **data,
                         )
@@ -241,7 +241,7 @@ class ContactBulkService:
         """
         from apps.crm.models import Contact
 
-        qs = Contact.objects.filter(tenant_id=organization_id)
+        qs = Contact.objects.filter(organization_id=organization_id)
 
         # Apply filters
         if filters:

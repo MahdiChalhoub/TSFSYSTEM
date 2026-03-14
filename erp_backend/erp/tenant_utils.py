@@ -2,7 +2,7 @@ import uuid
 
 def resolve_tenant_header(header_value):
     """
-    Normalizes a tenant header value (UUID or slug) into a string UUID.
+    Normalizes a organization header value (UUID or slug) into a string UUID.
     If it's already a valid UUID, returns it. If it's a slug, looks up
     the active Organization and returns its UUID. 
     Otherwise, returns the original value to fail gracefully downstream.

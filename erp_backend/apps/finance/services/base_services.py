@@ -84,8 +84,11 @@ class BarcodeService:
     def generate_barcode(organization):
         from apps.finance.models import BarcodeSettings
         try:
-            from apps.inventory.models import Product
-        except ImportError:
+            from erp.connector_registry import connector
+            Product = connector.require('inventory.products.get_model', org_id=organization.id if hasattr(organization, 'id') else organization, source='finance.barcode')
+            if not Product:
+                raise ImportError("Product model not available")
+        except (ImportError, Exception):
             raise ValidationError("Inventory module is required for barcode generation.")
         with transaction.atomic():
             settings, created = BarcodeSettings.objects.get_or_create(

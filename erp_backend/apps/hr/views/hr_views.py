@@ -32,12 +32,12 @@ class AttendanceViewSet(TenantModelViewSet):
     def _validate_employee_ownership(self, data, org_id):
         employee = data.get('employee')
         if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
-            raise ValidationError("Cross-tenant employee assignment blocked.")
+            raise ValidationError("Cross-organization employee assignment blocked.")
 
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         self._validate_employee_ownership(serializer.validated_data, org_id)
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -66,7 +66,7 @@ class AttendanceViewSet(TenantModelViewSet):
                         minute=record.shift.start_time.minute,
                         second=0, microsecond=0
                     )).total_seconds() / 60),
-                    'tenant_id': record.organization_id
+                    'organization_id': record.organization_id
                 }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
             except Exception:
                 pass
@@ -77,7 +77,7 @@ class AttendanceViewSet(TenantModelViewSet):
                 emit_event('hr.attendance.on_time', {
                     'employee_id': record.employee_id,
                     'check_in': now.isoformat(),
-                    'tenant_id': record.organization_id
+                    'organization_id': record.organization_id
                 }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
             except Exception:
                 pass
@@ -99,12 +99,12 @@ class LeaveViewSet(TenantModelViewSet):
     def _validate_employee_ownership(self, data, org_id):
         employee = data.get('employee')
         if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
-            raise ValidationError("Cross-tenant employee assignment blocked.")
+            raise ValidationError("Cross-organization employee assignment blocked.")
 
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         self._validate_employee_ownership(serializer.validated_data, org_id)
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -129,7 +129,7 @@ class LeaveViewSet(TenantModelViewSet):
                 'employee_id': leave.employee_id,
                 'leave_date': str(leave.start_date),
                 'reason': 'Leave request rejected',
-                'tenant_id': leave.organization_id
+                'organization_id': leave.organization_id
             }, aggregate_type='leave', aggregate_id=leave.id, triggered_by=request.user)
         except Exception:
             pass

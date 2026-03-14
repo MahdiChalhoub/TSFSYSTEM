@@ -96,19 +96,19 @@ class LifecycleService:
         return target_status in allowed
 
     @classmethod
-    def get_policy(cls, txn_type, tenant):
-        """Get the ApprovalPolicy for a given txn_type + tenant."""
+    def get_policy(cls, txn_type, organization):
+        """Get the ApprovalPolicy for a given txn_type + organization."""
         return ApprovalPolicy.objects.filter(
-            tenant=tenant, txn_type=txn_type
+            organization=organization, txn_type=txn_type
         ).first()
 
     @classmethod
-    def get_required_approvals(cls, txn_type, tenant):
+    def get_required_approvals(cls, txn_type, organization):
         """
         How many approval levels are required for this transaction type?
         Returns 0 if no policy exists (auto-approve).
         """
-        policy = cls.get_policy(txn_type, tenant)
+        policy = cls.get_policy(txn_type, organization)
         if not policy:
             return 0
         return policy.min_level_required
@@ -128,7 +128,7 @@ class LifecycleService:
             )
 
         txn_type = cls.get_txn_type(instance)
-        policy = cls.get_policy(txn_type, instance.tenant)
+        policy = cls.get_policy(txn_type, instance.organization)
 
         instance.status = LifecycleStatus.SUBMITTED
         instance.submitted_at = timezone.now()
@@ -145,7 +145,7 @@ class LifecycleService:
             cls._record(instance, user, level=0, action=LifecycleAction.APPROVE, note="AUTO_APPROVED: No policy")
 
         emit_event(f"{txn_type}.submitted", {
-            'id': instance.id, 'tenant_id': instance.tenant_id, 'user_id': user.id
+            'id': instance.id, 'organization_id': instance.organization_id, 'user_id': user.id
         })
         return instance
 
@@ -162,7 +162,7 @@ class LifecycleService:
         txn_type = cls.get_txn_type(instance)
 
         # Check permission for this level
-        cls._check_level_permission(txn_type, instance.tenant, user, level)
+        cls._check_level_permission(txn_type, instance.organization, user, level)
 
         # Check if this level was already verified
         existing = TxnApproval.objects.filter(
@@ -176,7 +176,7 @@ class LifecycleService:
         cls._record(instance, user, level=level, action=LifecycleAction.VERIFY, note=note)
 
         # Check if all verification levels are complete
-        policy = cls.get_policy(txn_type, instance.tenant)
+        policy = cls.get_policy(txn_type, instance.organization)
         if policy:
             verify_steps = ApprovalPolicyStep.objects.filter(
                 policy=policy, required=True
@@ -204,7 +204,7 @@ class LifecycleService:
             )
 
         txn_type = cls.get_txn_type(instance)
-        policy = cls.get_policy(txn_type, instance.tenant)
+        policy = cls.get_policy(txn_type, instance.organization)
 
         if level is None:
             level = policy.min_level_required if policy else 1
@@ -219,14 +219,14 @@ class LifecycleService:
                 for i in range(1, level):
                     if i not in existing:
                         TxnApproval.objects.create(
-                            tenant=instance.tenant, txn_type=txn_type,
+                            organization=instance.organization, txn_type=txn_type,
                             txn_id=instance.id, level=i,
                             action=LifecycleAction.APPROVE, actor=user,
                             note="BYPASSED_BY_MANAGER"
                         )
 
         # Check permission
-        cls._check_level_permission(txn_type, instance.tenant, user, level)
+        cls._check_level_permission(txn_type, instance.organization, user, level)
 
         instance.status = LifecycleStatus.APPROVED
         instance.save(update_fields=['status'])
@@ -234,7 +234,7 @@ class LifecycleService:
         cls._record(instance, user, level=level, action=LifecycleAction.APPROVE, note=note)
 
         emit_event(f"{txn_type}.approved", {
-            'id': instance.id, 'tenant_id': instance.tenant_id, 'user_id': user.id
+            'id': instance.id, 'organization_id': instance.organization_id, 'user_id': user.id
         })
         return instance
 
@@ -254,7 +254,7 @@ class LifecycleService:
 
         txn_type = cls.get_txn_type(instance)
         emit_event(f"{txn_type}.rejected", {
-            'id': instance.id, 'tenant_id': instance.tenant_id, 'user_id': user.id,
+            'id': instance.id, 'organization_id': instance.organization_id, 'user_id': user.id,
             'reason': note
         })
         return instance
@@ -278,7 +278,7 @@ class LifecycleService:
         txn_type = cls.get_txn_type(instance)
 
         # Verify minimum approval level is met
-        policy = cls.get_policy(txn_type, instance.tenant)
+        policy = cls.get_policy(txn_type, instance.organization)
         if policy:
             approved_levels = TxnApproval.objects.filter(
                 txn_type=txn_type, txn_id=instance.id,
@@ -304,7 +304,7 @@ class LifecycleService:
         cls._record(instance, user, level=99, action=LifecycleAction.POST, note=note)
 
         emit_event(f"{txn_type}.posted", {
-            'id': instance.id, 'tenant_id': instance.tenant_id, 'posted_by_id': user.id
+            'id': instance.id, 'organization_id': instance.organization_id, 'posted_by_id': user.id
         })
         return instance
 
@@ -328,7 +328,7 @@ class LifecycleService:
 
         txn_type = cls.get_txn_type(instance)
         emit_event(f"{txn_type}.locked", {
-            'id': instance.id, 'tenant_id': instance.tenant_id
+            'id': instance.id, 'organization_id': instance.organization_id
         })
         return instance
 
@@ -362,7 +362,7 @@ class LifecycleService:
 
         emit_event(f"{txn_type}.reversed", {
             'original_id': instance.id,
-            'tenant_id': instance.tenant_id,
+            'organization_id': instance.organization_id,
             'actor_id': user.id,
             'reason': reason
         })
@@ -384,7 +384,7 @@ class LifecycleService:
 
         txn_type = cls.get_txn_type(instance)
         emit_event(f"{txn_type}.cancelled", {
-            'id': instance.id, 'tenant_id': instance.tenant_id, 'reason': reason
+            'id': instance.id, 'organization_id': instance.organization_id, 'reason': reason
         })
         return instance
 
@@ -447,7 +447,7 @@ class LifecycleService:
         """Create an immutable audit record."""
         txn_type = LifecycleService.get_txn_type(instance)
         TxnApproval.objects.create(
-            tenant=instance.tenant,
+            organization=instance.organization,
             txn_type=txn_type,
             txn_id=instance.id,
             level=level,
@@ -457,10 +457,10 @@ class LifecycleService:
         )
 
     @staticmethod
-    def _check_level_permission(txn_type, tenant, user, level):
+    def _check_level_permission(txn_type, organization, user, level):
         """Check if user has the required role for a given approval level."""
         policy = ApprovalPolicy.objects.filter(
-            tenant=tenant, txn_type=txn_type
+            organization=organization, txn_type=txn_type
         ).first()
         if not policy:
             return  # No policy = anyone can act

@@ -8,10 +8,10 @@ class TaxService:
         """
         Generates the 'Virtual Reclassification' Report for Mixed/Regular modes.
         """
-        # Gated cross-module import
-        try:
-            from apps.pos.models import Order, OrderLine
-        except ImportError:
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=0, source='finance')
+        if not Order:
             raise ValidationError("POS module is required for tax reports.")
         from erp.services import ConfigurationService
         from django.db.models import Sum

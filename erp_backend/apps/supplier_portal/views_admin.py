@@ -136,7 +136,11 @@ class SupplierProformaAdminViewSet(TenantModelViewSet):
             return Response({'error': 'Proforma must be APPROVED to convert'}, status=400)
 
         try:
-            from apps.pos.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+            from erp.connector_registry import connector
+            PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=0, source='supplier_portal')
+            PurchaseOrderLine = connector.require('pos.purchase_order_lines.get_model', org_id=0, source='supplier_portal')
+            if not PurchaseOrder or not PurchaseOrderLine:
+                return Response({'error': 'Purchase module not available.'}, status=503)
 
             po = PurchaseOrder.objects.create(
                 organization=proforma.organization,

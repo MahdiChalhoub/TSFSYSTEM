@@ -12,14 +12,14 @@ from kernel.tenancy.middleware import get_current_tenant
 User = get_user_model()
 
 
-def check_permission(user, permission_code: str, tenant=None) -> bool:
+def check_permission(user, permission_code: str, organization=None) -> bool:
     """
-    Check if user has a specific permission in current/specified tenant.
+    Check if user has a specific permission in current/specified organization.
 
     Args:
         user: User instance
         permission_code: Permission code (e.g., 'finance.create_invoice')
-        tenant: Optional tenant (defaults to current tenant)
+        organization: Optional organization (defaults to current organization)
 
     Returns:
         bool
@@ -31,17 +31,17 @@ def check_permission(user, permission_code: str, tenant=None) -> bool:
     if user.is_superuser:
         return True
 
-    # Get tenant
-    if tenant is None:
-        tenant = get_current_tenant()
+    # Get organization
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
+    if not organization:
         return False
 
-    # Get user's roles in this tenant
+    # Get user's roles in this organization
     user_roles = UserRole.objects.filter(
         user=user,
-        tenant=tenant
+        organization=organization
     ).select_related('role').prefetch_related('role__permissions')
 
     # Check permissions in each role
@@ -60,7 +60,7 @@ def check_resource_permission(
     permission_code: str,
     resource_type: str,
     resource_id: int,
-    tenant=None
+    organization=None
 ) -> bool:
     """
     Check if user has permission on a specific resource.
@@ -70,20 +70,20 @@ def check_resource_permission(
         permission_code: Permission code
         resource_type: Type of resource (e.g., 'invoice', 'product')
         resource_id: ID of resource
-        tenant: Optional tenant
+        organization: Optional organization
 
     Returns:
         bool
     """
     # First check general permission
-    if check_permission(user, permission_code, tenant):
+    if check_permission(user, permission_code, organization):
         return True
 
     # Then check resource-specific permission
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
+    if not organization:
         return False
 
     try:
@@ -92,7 +92,7 @@ def check_resource_permission(
             permission__code=permission_code,
             resource_type=resource_type,
             resource_id=resource_id,
-            tenant=tenant,
+            organization=organization,
             granted=True
         )
         return True
@@ -100,13 +100,13 @@ def check_resource_permission(
         return False
 
 
-def get_user_permissions(user, tenant=None) -> list:
+def get_user_permissions(user, organization=None) -> list:
     """
-    Get all permission codes for a user in tenant.
+    Get all permission codes for a user in organization.
 
     Args:
         user: User instance
-        tenant: Optional tenant
+        organization: Optional organization
 
     Returns:
         List of permission codes
@@ -118,15 +118,15 @@ def get_user_permissions(user, tenant=None) -> list:
         from .models import Permission
         return list(Permission.objects.values_list('code', flat=True))
 
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
+    if not organization:
         return []
 
     user_roles = UserRole.objects.filter(
         user=user,
-        tenant=tenant
+        organization=organization
     ).select_related('role').prefetch_related('role__permissions')
 
     perms = set()
@@ -138,31 +138,31 @@ def get_user_permissions(user, tenant=None) -> list:
     return list(perms)
 
 
-def has_any_permission(user, permission_codes: list, tenant=None) -> bool:
+def has_any_permission(user, permission_codes: list, organization=None) -> bool:
     """
     Check if user has ANY of the specified permissions.
 
     Args:
         user: User instance
         permission_codes: List of permission codes
-        tenant: Optional tenant
+        organization: Optional organization
 
     Returns:
         bool
     """
-    return any(check_permission(user, code, tenant) for code in permission_codes)
+    return any(check_permission(user, code, organization) for code in permission_codes)
 
 
-def has_all_permissions(user, permission_codes: list, tenant=None) -> bool:
+def has_all_permissions(user, permission_codes: list, organization=None) -> bool:
     """
     Check if user has ALL of the specified permissions.
 
     Args:
         user: User instance
         permission_codes: List of permission codes
-        tenant: Optional tenant
+        organization: Optional organization
 
     Returns:
         bool
     """
-    return all(check_permission(user, code, tenant) for code in permission_codes)
+    return all(check_permission(user, code, organization) for code in permission_codes)

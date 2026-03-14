@@ -12,6 +12,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Connector Governance: workspace events via connector
+from erp.connector_registry import connector
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stock Adjustment / Transfer Orders
@@ -36,12 +39,13 @@ if StockAdjustmentOrder:
         logger.info(f"[SIGNAL] StockAdjustmentOrder #{instance.id} confirmed — inventory adjusted")
         # ── Auto-Task: STOCK_ADJUSTMENT ──
         try:
-            from apps.workspace.signals import trigger_inventory_event
-            trigger_inventory_event(
-                instance.organization, 'STOCK_ADJUSTMENT',
-                reference=f'ADJ-{instance.id}',
-                extra={'type': 'adjustment'},
-            )
+            trigger_inv = connector.require('workspace.events.trigger_inventory', org_id=0, source='inventory')
+            if trigger_inv:
+                trigger_inv(
+                    org_id=instance.organization_id, organization=instance.organization, event='STOCK_ADJUSTMENT',
+                    reference=f'ADJ-{instance.id}',
+                    extra={'type': 'adjustment'},
+                )
         except Exception:
             pass
 
@@ -58,12 +62,13 @@ if StockTransferOrder:
         logger.info(f"[SIGNAL] StockTransferOrder #{instance.id} confirmed — stock transferred")
         # ── Auto-Task: TRANSFER_CREATED ──
         try:
-            from apps.workspace.signals import trigger_purchasing_event
-            trigger_purchasing_event(
-                instance.organization, 'TRANSFER_CREATED',
-                reference=f'TRF-{instance.id}',
-                extra={'type': 'transfer'},
-            )
+            trigger_pur = connector.require('workspace.events.trigger_purchasing', org_id=0, source='inventory')
+            if trigger_pur:
+                trigger_pur(
+                    org_id=instance.organization_id, organization=instance.organization, event='TRANSFER_CREATED',
+                    reference=f'TRF-{instance.id}',
+                    extra={'type': 'transfer'},
+                )
         except Exception:
             pass
 
@@ -94,13 +99,14 @@ if Product:
         # ── New Product ──
         if created:
             try:
-                from apps.workspace.signals import trigger_inventory_event
-                trigger_inventory_event(
-                    org, 'PRODUCT_CREATED',
-                    product_name=str(instance.name),
-                    product_id=instance.id,
-                    reference=instance.sku or instance.barcode or f'PROD-{instance.id}',
-                )
+                trigger_inv = connector.require('workspace.events.trigger_inventory', org_id=0, source='inventory')
+                if trigger_inv:
+                    trigger_inv(
+                        org_id=org.id, organization=org, event='PRODUCT_CREATED',
+                        product_name=str(instance.name),
+                        product_id=instance.id,
+                        reference=instance.sku or instance.barcode or f'PROD-{instance.id}',
+                    )
             except Exception:
                 pass
             return
@@ -122,16 +128,17 @@ if Product:
 
         if price_changed:
             try:
-                from apps.workspace.signals import trigger_inventory_event
-                trigger_inventory_event(
-                    org, 'PRICE_CHANGE',
-                    product_name=str(instance.name),
-                    product_id=instance.id,
-                    reference=instance.sku or instance.barcode or f'PROD-{instance.id}',
-                    extra={
-                        'new_price': str(instance.selling_price_ttc),
-                    },
-                )
+                trigger_inv = connector.require('workspace.events.trigger_inventory', org_id=0, source='inventory')
+                if trigger_inv:
+                    trigger_inv(
+                        org_id=org.id, organization=org, event='PRICE_CHANGE',
+                        product_name=str(instance.name),
+                        product_id=instance.id,
+                        reference=instance.sku or instance.barcode or f'PROD-{instance.id}',
+                        extra={
+                            'new_price': str(instance.selling_price_ttc),
+                        },
+                    )
             except Exception:
                 pass
 

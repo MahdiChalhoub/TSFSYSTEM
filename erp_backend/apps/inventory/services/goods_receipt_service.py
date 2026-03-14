@@ -17,6 +17,8 @@ from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
+from erp.connector_registry import connector
+
 ZERO = Decimal('0.00')
 ONE = Decimal('1.00')
 
@@ -43,12 +45,12 @@ class GoodsReceiptService:
         # ── Stock Positioning ──
         # Current Location stock
         stock_on_location = Inventory.objects.filter(
-            product=product, warehouse=warehouse, tenant=org
+            product=product, warehouse=warehouse, organization=org
         ).aggregate(total=Sum('quantity'))['total'] or ZERO
 
         # Total Network Stock
         total_stock = Inventory.objects.filter(
-            product=product, tenant=org
+            product=product, organization=org
         ).aggregate(total=Sum('quantity'))['total'] or ZERO
 
         # ── Relevant Stock Calculation ──
@@ -58,7 +60,7 @@ class GoodsReceiptService:
         elif context_mode == 'BRANCH':
             branch = getattr(warehouse, 'branch', warehouse)
             relevant_stock = Inventory.objects.filter(
-                product=product, warehouse__branch=branch, tenant=org
+                product=product, warehouse__branch=branch, organization=org
             ).aggregate(total=Sum('quantity'))['total'] or ZERO
         else: # NETWORK
             relevant_stock = total_stock
@@ -68,7 +70,7 @@ class GoodsReceiptService:
         # We compute this across the organization for broad demand sensing
         total_sold = InventoryMovement.objects.filter(
             product=product,
-            tenant=org,
+            organization=org,
             type='OUT',
             created_at__gte=ninety_days_ago,
         ).aggregate(total=Sum('quantity'))['total'] or ZERO
@@ -106,7 +108,7 @@ class GoodsReceiptService:
         # Net Sales Value / Purchased Value (last 180 days)
         one_eighty_days = timezone.now() - timedelta(days=180)
         sales_data = InventoryMovement.objects.filter(
-            product=product, tenant=org, type='OUT',
+            product=product, organization=org, type='OUT',
             created_at__gte=one_eighty_days,
         ).aggregate(
             total_val=Sum(F('quantity') * F('cost_price_ht'))
@@ -114,7 +116,7 @@ class GoodsReceiptService:
         net_sales_val = sales_data['total_val'] or ZERO
 
         purchased_data = InventoryMovement.objects.filter(
-            product=product, tenant=org, type='IN',
+            product=product, organization=org, type='IN',
             created_at__gte=one_eighty_days,
         ).aggregate(
             total_val=Sum(F('quantity') * F('cost_price_ht'))
@@ -126,7 +128,7 @@ class GoodsReceiptService:
         # ── Adjustment Risk Score (Rule 6B) ──
         # Total Absolute Stock Adjustments Value / Total Purchased Value
         adj_data = InventoryMovement.objects.filter(
-            product=product, tenant=org, type='ADJUSTMENT',
+            product=product, organization=org, type='ADJUSTMENT',
             created_at__gte=one_eighty_days,
         ).aggregate(
             total_abs_qty=Sum(F('quantity')) # Note: Sum of absolute values would be better but requires Func('Abs')
@@ -136,12 +138,12 @@ class GoodsReceiptService:
         # We'll use a more precise query for absolute sum
         from django.db.models.functions import Abs
         total_abs_adj_qty = InventoryMovement.objects.filter(
-            product=product, tenant=org, type='ADJUSTMENT',
+            product=product, organization=org, type='ADJUSTMENT',
             created_at__gte=one_eighty_days,
         ).annotate(abs_qty=Abs('quantity')).aggregate(total=Sum('abs_qty'))['total'] or ZERO
 
         total_purchased_qty = InventoryMovement.objects.filter(
-            product=product, tenant=org, type='IN',
+            product=product, organization=org, type='IN',
             created_at__gte=one_eighty_days,
         ).aggregate(total=Sum('quantity'))['total'] or ZERO
 
@@ -171,9 +173,11 @@ class GoodsReceiptService:
         if remaining_shelf_life_days and avg_daily_sales > 0:
             batch_priority = Decimal(remaining_shelf_life_days) / avg_daily_sales
 
-        from apps.pos.models.procurement_governance_models import SupplierPerformanceSnapshot
+        SupplierPerformanceSnapshot = connector.require('pos.procurement.get_supplier_performance_model', org_id=0, source='inventory')
+        if not SupplierPerformanceSnapshot:
+            raise ValueError('POS module is required.')
         supplier_score = SupplierPerformanceSnapshot.objects.filter(
-            tenant=warehouse.tenant,
+            organization=warehouse.organization,
             supplier_id=OuterRef('order__supplier_id') if hasattr(product, 'supplier_id') else None
         ).order_by('-period_end').values_list('score', flat=True).first() or Decimal('100.00')
 
@@ -269,7 +273,7 @@ class GoodsReceiptService:
             store_stock = Inventory.objects.filter(
                 product_id=product_id,
                 warehouse__location_type='STORE',
-                warehouse__tenant=warehouse.tenant,
+                warehouse__tenant=warehouse.organization,
             ).aggregate(total=Sum('quantity'))['total'] or Decimal('0.00')
             
             if store_stock < (avg_daily * Decimal('3')): # Less than 3 days
@@ -379,7 +383,7 @@ class GoodsReceiptService:
             # We use the current effective cost for valuation anchoring
             cost = line.product.get_effective_cost()
             StockService.receive_stock(
-                tenant=goods_receipt.tenant,
+                organization=goods_receipt.organization,
                 product=line.product,
                 warehouse=goods_receipt.warehouse,
                 quantity=line.qty_received,
@@ -460,7 +464,9 @@ class GoodsReceiptService:
     @staticmethod
     def _create_supplier_claims(receipt, lines, user):
         """Auto-generate formal SupplierClaims for rejected goods."""
-        from apps.pos.models.procurement_governance_models import SupplierClaim
+        SupplierClaim = connector.require('pos.procurement.get_supplier_claim_model', org_id=0, source='inventory')
+        if not SupplierClaim:
+            return
         
         for line in lines:
             claim_type = 'QUALITY'
@@ -468,7 +474,7 @@ class GoodsReceiptService:
             elif line.rejection_reason == 'EXPIRED': claim_type = 'EXPIRED'
             elif line.rejection_reason == 'WRONG_PRODUCT': claim_type = 'WRONG_PRODUCT'
             
-            SupplierClaim.objects.create(                tenant=tenant,
+            SupplierClaim.objects.create(                organization=organization,
                 supplier=receipt.supplier,
                 receipt_line=line,
                 claim_type=claim_type,
@@ -481,7 +487,9 @@ class GoodsReceiptService:
     @staticmethod
     def _update_supplier_performance(receipt):
         """Update live supplier reliability scores based on receipt outcome."""
-        from apps.pos.models.procurement_governance_models import SupplierPerformanceSnapshot
+        SupplierPerformanceSnapshot = connector.require('pos.procurement.get_supplier_performance_model', org_id=0, source='inventory')
+        if not SupplierPerformanceSnapshot:
+            return
         from django.db.models import Count, Sum
         
         # This is a lightweight live update. Comprehensive scoring usually in background.
@@ -502,7 +510,7 @@ class GoodsReceiptService:
         start = now.replace(day=1)
         
         snap, _ = SupplierPerformanceSnapshot.objects.get_or_create(
-            tenant=receipt.tenant,
+            organization=receipt.organization,
             supplier=receipt.supplier,
             period_start=start,
             period_end=now, # Running snapshot
@@ -518,7 +526,9 @@ class GoodsReceiptService:
     @staticmethod
     def _create_draft_purchase_returns(receipt, lines, user):
         """Auto-draft a purchase return for rejected items in the session."""
-        from apps.pos.services.returns_service import ReturnsService
+        ReturnsService = connector.require('pos.services.get_returns_service', org_id=0, source='inventory')
+        if not ReturnsService:
+            return
         
         return_lines = []
         for line in lines:
@@ -533,7 +543,7 @@ class GoodsReceiptService:
         if return_lines:
             try:
                 ReturnsService.create_purchase_return_v2(
-                    tenant=receipt.tenant,
+                    organization=receipt.organization,
                     po_id=receipt.purchase_order_id,
                     return_date=timezone.now().date(),
                     lines=return_lines,
@@ -563,14 +573,14 @@ class GoodsReceiptService:
             dest_wh = None
             if req_type == 'TO_STORE':
                 dest_wh = Warehouse.objects.filter(
-                    tenant=receipt.tenant,
+                    organization=receipt.organization,
                     location_type='STORE',
                     is_active=True
                 ).first()
             elif req_type == 'TO_WAREHOUSE':
                 # Центральный склад или любой другой склад кроме текущего
                 dest_wh = Warehouse.objects.filter(
-                    tenant=receipt.tenant,
+                    organization=receipt.organization,
                     location_type='WAREHOUSE',
                     is_active=True
                 ).exclude(id=receipt.warehouse_id).first()
@@ -579,7 +589,7 @@ class GoodsReceiptService:
                 continue
                 
             # Create StockMove
-            move = StockMove.objects.create(                tenant=tenant,
+            move = StockMove.objects.create(                organization=organization,
                 from_warehouse=receipt.warehouse,
                 to_warehouse=dest_wh,
                 move_type='TRANSFER',
@@ -590,7 +600,7 @@ class GoodsReceiptService:
             
             # Create Lines and mark as created
             for line in group:
-                StockMoveLine.objects.create(                    tenant=tenant,
+                StockMoveLine.objects.create(                    organization=organization,
                     move=move,
                     product=line.product,
                     quantity=line.qty_received,
@@ -602,9 +612,11 @@ class GoodsReceiptService:
     @staticmethod
     def _create_task(receipt, title, desc, priority, user):
         """Internal helper to create follow-up tasks in the workspace cockpit."""
-        from apps.workspace.models import Task
+        Task = connector.require('workspace.tasks.get_model', org_id=0, source='inventory')
+        if not Task:
+            return
         try:
-            Task.objects.create(                tenant=tenant,
+            Task.objects.create(                organization=organization,
                 title=title,
                 description=desc,
                 priority=priority,

@@ -38,7 +38,7 @@ class AdjustmentReason(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'adjustment_reason'
-        unique_together = ('code', 'tenant')
+        unique_together = ('code', 'organization')
         ordering = ['category', 'name']
 
     def __str__(self):

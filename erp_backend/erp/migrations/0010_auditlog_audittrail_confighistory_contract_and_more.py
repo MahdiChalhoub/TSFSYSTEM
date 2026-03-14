@@ -356,12 +356,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='role',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AlterUniqueTogether(
             name='role',
-            unique_together={('tenant', 'name')},
+            unique_together={('organization', 'name')},
         ),
         migrations.AlterField(
             model_name='permission',
@@ -408,7 +408,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='role',
-            index=models.Index(fields=['tenant', 'name'], name='kernel_role_tenant__7d80c1_idx'),
+            index=models.Index(fields=['organization', 'name'], name='kernel_role_organization__7d80c1_idx'),
         ),
         migrations.AlterModelTable(
             name='permission',
@@ -420,7 +420,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='auditlog',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -435,7 +435,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='audittrail',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -445,7 +445,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='confighistory',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -470,7 +470,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='domainevent',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -489,7 +489,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='featureflag',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -504,7 +504,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='modulemigration',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -524,7 +524,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='orgmodule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -544,7 +544,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='resourcepermission',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -553,12 +553,12 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddIndex(
-            model_name='tenant',
-            index=models.Index(fields=['slug'], name='core_tenant_slug_bb8545_idx'),
+            model_name='organization',
+            index=models.Index(fields=['slug'], name='core_organization_slug_bb8545_idx'),
         ),
         migrations.AddIndex(
-            model_name='tenant',
-            index=models.Index(fields=['is_active'], name='core_tenant_is_acti_99418a_idx'),
+            model_name='organization',
+            index=models.Index(fields=['is_active'], name='core_organization_is_acti_99418a_idx'),
         ),
         migrations.AddField(
             model_name='tenantconfig',
@@ -567,7 +567,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='tenantconfig',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -587,7 +587,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='userrole',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -605,23 +605,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='auditlog',
-            index=models.Index(fields=['tenant', 'timestamp'], name='erp_auditlo_tenant__3bae30_idx'),
+            index=models.Index(fields=['organization', 'timestamp'], name='erp_auditlo_organization__3bae30_idx'),
         ),
         migrations.AddIndex(
             model_name='auditlog',
-            index=models.Index(fields=['tenant', 'user', 'timestamp'], name='erp_auditlo_tenant__7aa361_idx'),
+            index=models.Index(fields=['organization', 'user', 'timestamp'], name='erp_auditlo_organization__7aa361_idx'),
         ),
         migrations.AddIndex(
             model_name='auditlog',
-            index=models.Index(fields=['tenant', 'action', 'timestamp'], name='erp_auditlo_tenant__5422cf_idx'),
+            index=models.Index(fields=['organization', 'action', 'timestamp'], name='erp_auditlo_organization__5422cf_idx'),
         ),
         migrations.AddIndex(
             model_name='auditlog',
-            index=models.Index(fields=['tenant', 'resource_type', 'resource_id'], name='erp_auditlo_tenant__2245f0_idx'),
+            index=models.Index(fields=['organization', 'resource_type', 'resource_id'], name='erp_auditlo_organization__2245f0_idx'),
         ),
         migrations.AddIndex(
             model_name='audittrail',
-            index=models.Index(fields=['tenant', 'model_name', 'object_id'], name='erp_audittr_tenant__cab6d8_idx'),
+            index=models.Index(fields=['organization', 'model_name', 'object_id'], name='erp_audittr_organization__cab6d8_idx'),
         ),
         migrations.AddIndex(
             model_name='audittrail',
@@ -637,11 +637,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='domainevent',
-            index=models.Index(fields=['tenant', 'status', 'created_at'], name='erp_domaine_tenant__ff3bb3_idx'),
+            index=models.Index(fields=['organization', 'status', 'created_at'], name='erp_domaine_organization__ff3bb3_idx'),
         ),
         migrations.AddIndex(
             model_name='domainevent',
-            index=models.Index(fields=['tenant', 'event_type', 'created_at'], name='erp_domaine_tenant__c286e5_idx'),
+            index=models.Index(fields=['organization', 'event_type', 'created_at'], name='erp_domaine_organization__c286e5_idx'),
         ),
         migrations.AddIndex(
             model_name='domainevent',
@@ -653,7 +653,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='featureflag',
-            index=models.Index(fields=['tenant', 'key'], name='erp_feature_tenant__6b9fe1_idx'),
+            index=models.Index(fields=['organization', 'key'], name='erp_feature_organization__6b9fe1_idx'),
         ),
         migrations.AddIndex(
             model_name='featureflag',
@@ -661,7 +661,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='featureflag',
-            unique_together={('tenant', 'key')},
+            unique_together={('organization', 'key')},
         ),
         migrations.AlterUniqueTogether(
             name='moduledependency',
@@ -669,7 +669,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='orgmodule',
-            index=models.Index(fields=['tenant', 'status'], name='erp_orgmodu_tenant__e71a63_idx'),
+            index=models.Index(fields=['organization', 'status'], name='erp_orgmodu_organization__e71a63_idx'),
         ),
         migrations.AddIndex(
             model_name='orgmodule',
@@ -677,7 +677,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='orgmodule',
-            unique_together={('tenant', 'module')},
+            unique_together={('organization', 'module')},
         ),
         migrations.AlterUniqueTogether(
             name='modulemigration',
@@ -685,23 +685,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='resourcepermission',
-            index=models.Index(fields=['tenant', 'user', 'resource_type', 'resource_id'], name='kernel_reso_tenant__63236d_idx'),
+            index=models.Index(fields=['organization', 'user', 'resource_type', 'resource_id'], name='kernel_reso_organization__63236d_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='resourcepermission',
-            unique_together={('tenant', 'user', 'permission', 'resource_type', 'resource_id')},
+            unique_together={('organization', 'user', 'permission', 'resource_type', 'resource_id')},
         ),
         migrations.AddIndex(
             model_name='tenantconfig',
-            index=models.Index(fields=['tenant', 'key'], name='erp_tenantc_tenant__a104e6_idx'),
+            index=models.Index(fields=['organization', 'key'], name='erp_tenantc_organization__a104e6_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='tenantconfig',
-            unique_together={('tenant', 'key')},
+            unique_together={('organization', 'key')},
         ),
         migrations.AddIndex(
             model_name='userrole',
-            index=models.Index(fields=['tenant', 'user'], name='kernel_user_tenant__e61c89_idx'),
+            index=models.Index(fields=['organization', 'user'], name='kernel_user_organization__e61c89_idx'),
         ),
         migrations.AddIndex(
             model_name='userrole',
@@ -709,6 +709,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='userrole',
-            unique_together={('tenant', 'user', 'role', 'resource_type', 'resource_id')},
+            unique_together={('organization', 'user', 'role', 'resource_type', 'resource_id')},
         ),
     ]

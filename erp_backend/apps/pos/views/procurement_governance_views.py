@@ -51,7 +51,7 @@ class PurchaseRequisitionViewSet(viewsets.ModelViewSet):
         if not org_id:
             return PurchaseRequisition.objects.none()
         qs = PurchaseRequisition.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related(
             'site', 'requested_by', 'approved_by', 'converted_po'
         ).prefetch_related('lines', 'lines__product').order_by('-created_at')
@@ -76,13 +76,13 @@ class PurchaseRequisitionViewSet(viewsets.ModelViewSet):
         org_id = get_current_tenant_id()
         lines_data = self.request.data.get('lines', [])
         req = serializer.save(
-            tenant_id=org_id,
+            organization_id=org_id,
             requested_by=self.request.user if self.request.user.is_authenticated else None,
         )
         # Create lines from nested data
         for line_data in lines_data:
             PurchaseRequisitionLine.objects.create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 requisition=req,
                 product_id=line_data.get('product_id') or line_data.get('product'),
                 quantity=Decimal(str(line_data.get('quantity', 1))),
@@ -132,7 +132,7 @@ class PurchaseRequisitionViewSet(viewsets.ModelViewSet):
 
         for supplier_id in supplier_ids:
             sq = SupplierQuotation.objects.create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 requisition=req,
                 supplier_id=supplier_id,
                 status='REQUESTED',
@@ -141,7 +141,7 @@ class PurchaseRequisitionViewSet(viewsets.ModelViewSet):
             # Pre-populate lines from requisition
             for req_line in req.lines.all():
                 SupplierQuotationLine.objects.create(
-                    tenant_id=org_id,
+                    organization_id=org_id,
                     quotation=sq,
                     product=req_line.product,
                     requisition_line=req_line,
@@ -187,7 +187,7 @@ class SupplierQuotationViewSet(viewsets.ModelViewSet):
         if not org_id:
             return SupplierQuotation.objects.none()
         qs = SupplierQuotation.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related(
             'supplier', 'requisition', 'converted_po'
         ).prefetch_related('lines', 'lines__product').order_by('-created_at')
@@ -206,10 +206,10 @@ class SupplierQuotationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         lines_data = self.request.data.get('lines', [])
-        sq = serializer.save(tenant_id=org_id)
+        sq = serializer.save(organization_id=org_id)
         for line_data in lines_data:
             SupplierQuotationLine.objects.create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 quotation=sq,
                 product_id=line_data.get('product_id') or line_data.get('product'),
                 quantity=Decimal(str(line_data.get('quantity', 1))),
@@ -297,7 +297,7 @@ class SupplierQuotationViewSet(viewsets.ModelViewSet):
 
         org_id = get_current_tenant_id()
         quotations = SupplierQuotation.objects.filter(
-            tenant_id=org_id,
+            organization_id=org_id,
             requisition_id=requisition_id,
             status__in=('RECEIVED', 'UNDER_REVIEW', 'SELECTED'),
         ).select_related('supplier').prefetch_related('lines', 'lines__product')
@@ -344,7 +344,7 @@ class ThreeWayMatchResultViewSet(viewsets.ReadOnlyModelViewSet):
         if not org_id:
             return ThreeWayMatchResult.objects.none()
         qs = ThreeWayMatchResult.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related(
             'purchase_order', 'invoice', 'matched_by', 'resolved_by'
         ).prefetch_related('lines', 'lines__product').order_by('-matched_at')
@@ -392,7 +392,7 @@ class DisputeCaseViewSet(viewsets.ModelViewSet):
         if not org_id:
             return DisputeCase.objects.none()
         qs = DisputeCase.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related(
             'purchase_order', 'invoice', 'match_result',
             'opened_by', 'resolved_by'
@@ -412,7 +412,7 @@ class DisputeCaseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
         serializer.save(
-            tenant_id=org_id,
+            organization_id=org_id,
             opened_by=self.request.user if self.request.user.is_authenticated else None,
         )
 
@@ -473,7 +473,7 @@ class ProcurementBudgetViewSet(viewsets.ModelViewSet):
         if not org_id:
             return ProcurementBudget.objects.none()
         qs = ProcurementBudget.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related('site', 'category').prefetch_related(
             'commitments', 'commitments__purchase_order'
         ).order_by('-period_start')
@@ -488,7 +488,7 @@ class ProcurementBudgetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
 
 # =============================================================================
@@ -505,7 +505,7 @@ class SupplierPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
         if not org_id:
             return SupplierPerformanceSnapshot.objects.none()
         qs = SupplierPerformanceSnapshot.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).select_related('supplier').order_by('-period_end')
 
         supplier = self.request.query_params.get('supplier')
@@ -551,7 +551,7 @@ class SupplierPerformanceViewSet(viewsets.ReadOnlyModelViewSet):
         from django.db.models import Max, Subquery, OuterRef
 
         latest_ids = SupplierPerformanceSnapshot.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).values('supplier_id').annotate(
             latest_id=Max('id')
         ).values('latest_id')

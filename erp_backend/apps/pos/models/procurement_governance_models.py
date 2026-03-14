@@ -315,10 +315,22 @@ class PurchaseRequisition(TenantModel):
 
     def save(self, *args, **kwargs):
         if not self.req_number and self.status != 'DRAFT':
-            from apps.finance.models import TransactionSequence
-            self.req_number = TransactionSequence.next_value(
-                self.organization, 'PURCHASE_REQUISITION'
-            )
+            try:
+                from erp.connector_engine import connector_engine
+                result = connector_engine.route_read(
+                    target_module='finance',
+                    endpoint='generate_sequence',
+                    organization_id=self.organization_id,
+                    params={'sequence_type': 'PURCHASE_REQUISITION'},
+                )
+                if result and result.data and isinstance(result.data, dict):
+                    self.req_number = result.data.get('sequence_number', f'REQ-{self.pk}')
+                else:
+                    import uuid
+                    self.req_number = f'REQ-{uuid.uuid4().hex[:8].upper()}'
+            except Exception:
+                import uuid
+                self.req_number = f'REQ-{uuid.uuid4().hex[:8].upper()}'
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -675,10 +687,22 @@ class SupplierClaim(TenantModel):
 
     def save(self, *args, **kwargs):
         if not self.claim_number:
-            from apps.finance.models import TransactionSequence
-            self.claim_number = TransactionSequence.next_value(
-                self.organization, 'SUPPLIER_CLAIM'
-            )
+            try:
+                from erp.connector_engine import connector_engine
+                result = connector_engine.route_read(
+                    target_module='finance',
+                    endpoint='generate_sequence',
+                    organization_id=self.organization_id,
+                    params={'sequence_type': 'SUPPLIER_CLAIM'},
+                )
+                if result and result.data and isinstance(result.data, dict):
+                    self.claim_number = result.data.get('sequence_number', f'CLM-{self.pk}')
+                else:
+                    import uuid
+                    self.claim_number = f'CLM-{uuid.uuid4().hex[:8].upper()}'
+            except Exception:
+                import uuid
+                self.claim_number = f'CLM-{uuid.uuid4().hex[:8].upper()}'
         super().save(*args, **kwargs)
 
     def __str__(self):

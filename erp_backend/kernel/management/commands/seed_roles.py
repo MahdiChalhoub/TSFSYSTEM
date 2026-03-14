@@ -5,7 +5,7 @@ Creates default roles for all tenants.
 
 Usage:
     python manage.py seed_roles
-    python manage.py seed_roles --tenant=acme  # Specific tenant
+    python manage.py seed_roles --organization=acme  # Specific organization
 """
 
 from django.core.management.base import BaseCommand
@@ -18,13 +18,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--tenant',
+            '--organization',
             type=str,
-            help='Specific tenant slug (if not provided, seeds for all tenants)'
+            help='Specific organization slug (if not provided, seeds for all tenants)'
         )
 
     def handle(self, *args, **options):
-        tenant_slug = options.get('tenant')
+        tenant_slug = options.get('organization')
 
         if tenant_slug:
             tenants = Tenant.objects.filter(slug=tenant_slug, is_active=True)
@@ -34,18 +34,18 @@ class Command(BaseCommand):
         else:
             tenants = Tenant.objects.filter(is_active=True)
 
-        for tenant in tenants:
-            self.stdout.write(f"\n📊 Seeding roles for tenant: {tenant.name} ({tenant.slug})")
-            self.seed_tenant_roles(tenant)
+        for organization in tenants:
+            self.stdout.write(f"\n📊 Seeding roles for organization: {organization.name} ({organization.slug})")
+            self.seed_tenant_roles(organization)
 
-        self.stdout.write(self.style.SUCCESS(f"\n✅ Roles seeded for {tenants.count()} tenant(s)"))
+        self.stdout.write(self.style.SUCCESS(f"\n✅ Roles seeded for {tenants.count()} organization(s)"))
 
-    def seed_tenant_roles(self, tenant):
-        """Seed roles for a specific tenant."""
+    def seed_tenant_roles(self, organization):
+        """Seed roles for a specific organization."""
 
         # 1. System Administrator
         admin_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='System Administrator',
             defaults={
                 'description': 'Full system access - all permissions',
@@ -57,7 +57,7 @@ class Command(BaseCommand):
 
         # 2. Finance Manager
         finance_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Finance Manager',
             defaults={
                 'description': 'Full finance module access',
@@ -70,7 +70,7 @@ class Command(BaseCommand):
 
         # 3. Accountant
         accountant_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Accountant',
             defaults={
                 'description': 'Finance access without dangerous permissions',
@@ -86,7 +86,7 @@ class Command(BaseCommand):
 
         # 4. Inventory Manager
         inventory_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Inventory Manager',
             defaults={
                 'description': 'Full inventory module access',
@@ -99,7 +99,7 @@ class Command(BaseCommand):
 
         # 5. Sales Manager
         sales_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Sales Manager',
             defaults={
                 'description': 'Sales and CRM access',
@@ -112,7 +112,7 @@ class Command(BaseCommand):
 
         # 6. Cashier
         cashier_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Cashier',
             defaults={
                 'description': 'POS operations only',
@@ -132,7 +132,7 @@ class Command(BaseCommand):
 
         # 7. HR Manager
         hr_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='HR Manager',
             defaults={
                 'description': 'Human resources management',
@@ -145,7 +145,7 @@ class Command(BaseCommand):
 
         # 8. Procurement Manager
         procurement_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Procurement Manager',
             defaults={
                 'description': 'Purchase orders and supplier management',
@@ -158,7 +158,7 @@ class Command(BaseCommand):
 
         # 9. Store Clerk
         clerk_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Store Clerk',
             defaults={
                 'description': 'Basic inventory and POS access',
@@ -177,7 +177,7 @@ class Command(BaseCommand):
 
         # 10. Auditor (Read-Only)
         auditor_role, created = Role.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             name='Auditor',
             defaults={
                 'description': 'Read-only access to all modules',

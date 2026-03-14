@@ -6,8 +6,6 @@ from .permission_service import SalesPermissionService, SALES_PERMISSION_CODES
 from .analytics_service import SalesAnalyticsService
 from .accounting_poster import SalesAccountingPoster
 from .reconciliation_service import PaymentReconciliationService
-from .procurement_domain_service import ProcurementDomainService
-from .procurement_analytics_service import ProcurementAnalyticsService
 try:
     from .pdf_service import PDFService
 except ImportError:
@@ -17,5 +15,4 @@ __all__ = ['POSService', 'PurchaseService', 'ReturnsService', 'PDFService',
            'SalesWorkflowService', 'WorkflowError',
            'SalesPermissionService', 'SALES_PERMISSION_CODES',
            'SalesAnalyticsService', 'SalesAccountingPoster',
-           'PaymentReconciliationService', 'ProcurementDomainService',
-           'ProcurementAnalyticsService']
+           'PaymentReconciliationService']

@@ -20,11 +20,11 @@ class LoginSerializer(serializers.Serializer):
             user_obj = None
             try:
                 from erp.middleware import get_current_tenant_id
-                tenant_id = get_current_tenant_id()
+                organization_id = get_current_tenant_id()
                 
-                # Filter by tenant if present, otherwise assume root/null org
-                if tenant_id:
-                    user_obj = User.objects.filter(username=username, organization_id=tenant_id).first()
+                # Filter by organization if present, otherwise assume root/null org
+                if organization_id:
+                    user_obj = User.objects.filter(username=username, organization_id=organization_id).first()
                 else:
                     # ROOT LOGIN (SaaS Panel) - User must belong to 'saas' org
                     user_obj = User.objects.filter(username=username, organization__slug='saas').first()
@@ -49,13 +49,13 @@ class LoginSerializer(serializers.Serializer):
                 return attrs
 
             # 2. If main auth failed, check scope passwords
-            # SECURITY: scope PIN lookup must respect tenant isolation
+            # SECURITY: scope PIN lookup must respect organization isolation
             if not user_obj:
                 try:
                     from erp.middleware import get_current_tenant_id
-                    tenant_id = get_current_tenant_id()
-                    if tenant_id:
-                        user_obj = User.objects.filter(username=username, organization_id=tenant_id, is_active=True).first()
+                    organization_id = get_current_tenant_id()
+                    if organization_id:
+                        user_obj = User.objects.filter(username=username, organization_id=organization_id, is_active=True).first()
                     else:
                         user_obj = User.objects.filter(username=username, organization__slug='saas', is_active=True).first()
                 except Exception:
@@ -165,7 +165,7 @@ class BusinessRegistrationSerializer(serializers.Serializer):
     def validate_admin_username(self, value):
         # Username uniqueness is enforced per-org at the DB level,
         # but we provide a friendly error here for the global 'saas' scope.
-        # Cross-org uniqueness is NOT required (each tenant has its own namespace).
+        # Cross-org uniqueness is NOT required (each organization has its own namespace).
         if User.objects.filter(username=value, organization__slug='saas').exists():
             raise serializers.ValidationError('This username is already taken.')
         return value

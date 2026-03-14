@@ -93,7 +93,7 @@ class RegisterAddressBookMixin:
             return Response({"error": "session_id required"}, status=status.HTTP_400_BAD_REQUEST)
 
         qs = CashierAddressBook.objects.filter(
-            tenant_id=org_id, session_id=session_id, is_deleted=False
+            organization_id=org_id, session_id=session_id, is_deleted=False
         ).select_related('cashier', 'approved_by').order_by('created_at')
 
         # Cashiers don't see hidden entries (e.g., CASH_OVERAGE)
@@ -167,7 +167,7 @@ class RegisterAddressBookMixin:
             return Response({"error": "Amount must be > 0"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            session = RegisterSession.objects.get(id=session_id, tenant_id=org_id, status='OPEN')
+            session = RegisterSession.objects.get(id=session_id, organization_id=org_id, status='OPEN')
         except RegisterSession.DoesNotExist:
             return Response({"error": "Open session not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -179,7 +179,7 @@ class RegisterAddressBookMixin:
                 pass
 
         entry = CashierAddressBook.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             session=session,
             cashier=cashier or (request.user if not request.user.is_anonymous else session.cashier),
             entry_type=entry_type,
@@ -241,7 +241,7 @@ class RegisterAddressBookMixin:
             return Response({"error": f"action must be one of: {valid_actions}"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            entry = CashierAddressBook.objects.get(id=entry_id, tenant_id=org_id, is_deleted=False)
+            entry = CashierAddressBook.objects.get(id=entry_id, organization_id=org_id, is_deleted=False)
         except CashierAddressBook.DoesNotExist:
             return Response({"error": "Entry not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -302,7 +302,7 @@ class RegisterAddressBookMixin:
         response_text = request.data.get('response', '').strip()
 
         try:
-            entry = CashierAddressBook.objects.get(id=entry_id, tenant_id=org_id, is_deleted=False)
+            entry = CashierAddressBook.objects.get(id=entry_id, organization_id=org_id, is_deleted=False)
         except CashierAddressBook.DoesNotExist:
             return Response({"error": "Entry not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -360,7 +360,7 @@ class RegisterAddressBookMixin:
 
         entry_id = request.data.get('entry_id')
         try:
-            entry = CashierAddressBook.objects.get(id=entry_id, tenant_id=org_id, is_deleted=False)
+            entry = CashierAddressBook.objects.get(id=entry_id, organization_id=org_id, is_deleted=False)
         except CashierAddressBook.DoesNotExist:
             return Response({"error": "Entry not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -391,13 +391,13 @@ class RegisterAddressBookMixin:
         session_id = request.data.get('session_id')
         try:
             session = RegisterSession.objects.select_related('register').get(
-                id=session_id, tenant_id=org_id
+                id=session_id, organization_id=org_id
             )
         except RegisterSession.DoesNotExist:
             return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
 
         entries = CashierAddressBook.objects.filter(
-            tenant_id=org_id, session_id=session_id, is_deleted=False
+            organization_id=org_id, session_id=session_id, is_deleted=False
         ).select_related('cashier', 'approved_by').order_by('created_at')
 
         running = Decimal('0.00')
@@ -411,7 +411,7 @@ class RegisterAddressBookMixin:
         today = timezone.now().date()
 
         snapshot, created = DailyAddressBookSnapshot.objects.update_or_create(
-            tenant_id=org_id,
+            organization_id=org_id,
             session=session,
             date=today,
             defaults={

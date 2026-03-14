@@ -11,12 +11,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveIndex(
-            model_name='tenant',
-            name='core_tenant_slug_bb8545_idx',
+            model_name='organization',
+            name='core_organization_slug_bb8545_idx',
         ),
         migrations.RemoveIndex(
-            model_name='tenant',
-            name='core_tenant_is_acti_99418a_idx',
+            model_name='organization',
+            name='core_organization_is_acti_99418a_idx',
         ),
         migrations.DeleteModel(
             name='Tenant',

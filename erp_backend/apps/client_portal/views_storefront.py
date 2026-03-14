@@ -1,4 +1,8 @@
 import logging
+
+# Connector Governance Layer — all cross-module access goes through here
+from erp.connector_registry import connector
+
 from decimal import Decimal
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
@@ -167,7 +171,7 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         # If order is created as PLACED with CARD payment, trigger Stripe
         if order.status == 'PLACED' and order.payment_method == 'CARD':
             try:
-                from apps.finance.stripe_gateway import StripeGatewayService
+                StripeGatewayService = connector.require('finance.gateways.get_stripe_service', org_id=0, source='client_portal')
                 service = StripeGatewayService(order.organization_id)
                 
                 amount_to_charge = order.total_amount - order.wallet_amount
@@ -203,8 +207,8 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         pricing_breakdown = None
         if 'product' in line_data and not line_data.get('product_name'):
             try:
-                from apps.inventory.models import Product
-                from apps.crm.services.pricing_service import PricingService
+                Product = connector.require('inventory.products.get_model', org_id=0, source='client_portal')
+                PricingService = connector.require('crm.pricing.get_service', org_id=0, source='client_portal')
                 product = Product.objects.get(id=line_data['product'])
                 quantity = Decimal(str(line_data.get('quantity', '1')))
 
@@ -315,7 +319,8 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         config = ClientPortalConfig.get_config(order.organization)
         if getattr(config, 'inventory_check_mode', 'STRICT') != 'DISABLED':
             try:
-                from apps.inventory.services.reservation_service import StockReservationService, StockReservationError
+                StockReservationService = connector.require('inventory.services.get_reservation_service', org_id=0, source='client_portal')
+                StockReservationError = connector.require('inventory.services.get_reservation_error', org_id=0, source='client_portal')
                 from apps.client_portal.warehouse_router import WarehouseRouter
 
                 for line in order.lines.select_related('product').all():
@@ -347,7 +352,7 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         # Handle Stripe Card Payment
         if order.payment_method == 'CARD':
             try:
-                from apps.finance.stripe_gateway import StripeGatewayService
+                StripeGatewayService = connector.require('finance.gateways.get_stripe_service', org_id=0, source='client_portal')
                 service = StripeGatewayService(order.organization_id)
                 
                 amount_to_charge = order.total_amount - order.wallet_amount
@@ -779,15 +784,15 @@ class ClientPortalConfigViewSet(TenantModelViewSet):
         
         org = request.user.organization
         if not org:
-            tenant_id = get_current_tenant_id()
-            if tenant_id:
+            organization_id = get_current_tenant_id()
+            if organization_id:
                 try:
-                    org = Organization.objects.get(id=tenant_id)
+                    org = Organization.objects.get(id=organization_id)
                 except Organization.DoesNotExist:
                     pass
         
         if not org and (request.user.is_staff or request.user.is_superuser):
-            # SaaS Admin fallback: If no explicit tenant context, use the first available org.
+            # SaaS Admin fallback: If no explicit organization context, use the first available org.
             # This allows Platform Admins to access settings from the SaaS root.
             org = Organization.objects.first()
 
@@ -816,8 +821,8 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
         from erp.middleware import get_current_tenant_id
         from erp.models import Organization
         
-        tenant_id = get_current_tenant_id()
-        org = Organization.objects.get(id=tenant_id)
+        organization_id = get_current_tenant_id()
+        org = Organization.objects.get(id=organization_id)
         
         # Auto-assign contact if user is logged in
         contact = None
@@ -845,8 +850,8 @@ class WishlistItemViewSet(viewsets.ModelViewSet):
         from erp.middleware import get_current_tenant_id
         from erp.models import Organization
         
-        tenant_id = get_current_tenant_id()
-        org = Organization.objects.get(id=tenant_id)
+        organization_id = get_current_tenant_id()
+        org = Organization.objects.get(id=organization_id)
         
         if not hasattr(self.request.user, 'client_access'):
             raise serializers.ValidationError("Only customers with portal access can have a wishlist.")

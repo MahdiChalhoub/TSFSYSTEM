@@ -231,12 +231,15 @@ class SupplierProforma(TenantOwnedModel):
     def save(self, *args, **kwargs):
         if not self.proforma_number:
             # Auto-generate on first save
-            from apps.finance.models import TransactionSequence
             try:
-                self.proforma_number = TransactionSequence.next_value(
-                    self.organization, 'SUPPLIER_PROFORMA'
-                )
-            except Exception:
+                from erp.connector_registry import connector
+                sequence_service = connector.require('finance.sequences.next_value', org_id=0, source='supplier_portal')
+                if sequence_service:
+                    self.proforma_number = sequence_service(
+                        org_id=self.organization_id, organization=self.organization,
+                        prefix='SUPPLIER_PROFORMA'
+                    )
+            except (ImportError, Exception):
                 pass
         super().save(*args, **kwargs)
 

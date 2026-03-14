@@ -4,10 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft,  } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 export default function CreateProductsPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -30,7 +32,7 @@ export default function CreateProductsPage() {
       setSuccess(true)
       setTimeout(() => router.push('/inventory/products'), 500)
     } catch (err: any) {
-      setError(err.message || 'Failed to create item')
+      setError(err.message || t('inventory.failed_create'))
     } finally {
       setSubmitting(false)
     }
@@ -48,16 +50,16 @@ export default function CreateProductsPage() {
             className="h-9 px-3"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            {t('common.back')}
           </Button>
         </div>
 
         <div>
-          <h1 className="text-3xl md:text-4xl font-black theme-text">
-            Create Products
+          <h1 className="text-3xl md:text-4xl font-black theme-text text-app-foreground">
+            {t('inventory.create_products')}
           </h1>
-          <p className="theme-text-muted mt-1">
-            Add a new products to the system
+          <p className="theme-text-muted mt-1 text-app-muted-foreground">
+            {t('inventory.add_new_product')}
           </p>
         </div>
       </div>
@@ -73,13 +75,13 @@ export default function CreateProductsPage() {
 
           {success && (
             <div className="mb-6 p-4 rounded-2xl bg-green-50 text-green-800 border border-green-200">
-              Item created successfully! Redirecting...
+              {t('inventory.created_redirect')}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <p>No form fields available</p>
+              <p className="text-app-muted-foreground">{t('inventory.no_form_fields')}</p>
             </div>
 
             {/* Actions */}
@@ -91,7 +93,7 @@ export default function CreateProductsPage() {
                 disabled={submitting}
                 className="h-11 px-6 rounded-xl font-bold"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -101,10 +103,10 @@ export default function CreateProductsPage() {
                 {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-app-foreground border-t-transparent mr-2" />
-                    Creating...
+                    {t('inventory.creating')}
                   </>
                 ) : (
-                  <>Create Products</>
+                  <>{t('inventory.create_products')}</>
                 )}
               </Button>
             </div>

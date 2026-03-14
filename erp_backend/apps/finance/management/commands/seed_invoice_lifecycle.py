@@ -7,12 +7,12 @@ class Command(BaseCommand):
     help = 'Seeds default approval policy for Sales Invoices'
 
     def add_arguments(self, parser):
-        parser.add_argument('--tenant_id', type=int, help='Specific tenant ID to seed')
+        parser.add_argument('--organization_id', type=int, help='Specific organization ID to seed')
 
     def handle(self, *args, **options):
-        tenant_id = options.get('tenant_id')
-        if tenant_id:
-            orgs = Organization.objects.filter(id=tenant_id)
+        organization_id = options.get('organization_id')
+        if organization_id:
+            orgs = Organization.objects.filter(id=organization_id)
         else:
             orgs = Organization.objects.all()
 
@@ -20,7 +20,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Seeding Invoice Policy for Org: {org.name}...")
             with transaction.atomic():
                 policy, created = ApprovalPolicy.objects.get_or_create(
-                    tenant=org,
+                    organization=org,
                     txn_type='finance.invoice',
                     defaults={
                         'min_level_required': 2,

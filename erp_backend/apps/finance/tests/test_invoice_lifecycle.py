@@ -8,17 +8,17 @@ from kernel.tenancy.context import tenant_context
 
 class InvoiceLifecycleTests(APITestCase):
     def setUp(self):
-        self.tenant, _ = Organization.objects.get_or_create(
+        self.organization, _ = Organization.objects.get_or_create(
             name="Test Org", 
             defaults={'slug': 'test-org'}
         )
-        with tenant_context(self.tenant):
+        with tenant_context(self.organization):
             self.user, _ = User.objects.get_or_create(
                 username="tester", 
                 defaults={'is_staff': True, 'is_superuser': True}
             )
             self.user.set_password("password")
-            self.user.organization = self.tenant
+            self.user.organization = self.organization
             self.user.save()
             
             from rest_framework.authtoken.models import Token
@@ -28,24 +28,24 @@ class InvoiceLifecycleTests(APITestCase):
             # Seed Fiscal Year and Period
             from apps.finance.models import FiscalYear, FiscalPeriod
             fy, _ = FiscalYear.objects.get_or_create(
-                organization=self.tenant,
+                organization=self.organization,
                 name='FY2026',
                 defaults={'start_date': '2026-01-01', 'end_date': '2026-12-31', 'is_closed': False}
             )
             FiscalPeriod.objects.get_or_create(
                 fiscal_year=fy,
                 name='P3-2026',
-                defaults={'organization': self.tenant, 'start_date': '2026-03-01', 'end_date': '2026-03-31', 'status': 'OPEN'}
+                defaults={'organization': self.organization, 'start_date': '2026-03-01', 'end_date': '2026-03-31', 'status': 'OPEN'}
             )
         
         from apps.finance.models import ChartOfAccount
         from erp.services import ConfigurationService
-        with tenant_context(self.tenant):
-            self.acc_receivable, _ = ChartOfAccount.objects.get_or_create(id=1, defaults={'organization': self.tenant, 'name': 'Receivable', 'code': '1200', 'type': 'ASSET'})
-            self.acc_income, _ = ChartOfAccount.objects.get_or_create(id=2, defaults={'organization': self.tenant, 'name': 'Income', 'code': '4000', 'type': 'REVENUE'})
-            self.acc_tax, _ = ChartOfAccount.objects.get_or_create(id=3, defaults={'organization': self.tenant, 'name': 'VAT Payable', 'code': '2200', 'type': 'LIABILITY'})
+        with tenant_context(self.organization):
+            self.acc_receivable, _ = ChartOfAccount.objects.get_or_create(id=1, defaults={'organization': self.organization, 'name': 'Receivable', 'code': '1200', 'type': 'ASSET'})
+            self.acc_income, _ = ChartOfAccount.objects.get_or_create(id=2, defaults={'organization': self.organization, 'name': 'Income', 'code': '4000', 'type': 'REVENUE'})
+            self.acc_tax, _ = ChartOfAccount.objects.get_or_create(id=3, defaults={'organization': self.organization, 'name': 'VAT Payable', 'code': '2200', 'type': 'LIABILITY'})
 
-            ConfigurationService.save_posting_rules(self.tenant, {
+            ConfigurationService.save_posting_rules(self.organization, {
                 'sales': {
                     'receivable': self.acc_receivable.id, 
                     'revenue': self.acc_income.id,
@@ -64,7 +64,7 @@ class InvoiceLifecycleTests(APITestCase):
             # Seed Approval Policy for Invoices
             from kernel.lifecycle.models import ApprovalPolicy, ApprovalPolicyStep
             policy, _ = ApprovalPolicy.objects.get_or_create(
-                tenant=self.tenant,
+                organization=self.organization,
                 txn_type='SALES_INVOICE',
                 defaults={'min_level_required': 1}
             )
@@ -72,13 +72,13 @@ class InvoiceLifecycleTests(APITestCase):
             ApprovalPolicyStep.objects.get_or_create(policy=policy, level=1, defaults={'role_id': 'ADMIN', 'required': True})
 
     def test_full_sales_lifecycle(self):
-        with tenant_context(self.tenant):
+        with tenant_context(self.organization):
             # 1. Create Invoice
             from apps.crm.models import Contact
-            contact = Contact.objects.create(organization=self.tenant, name="Customer", type="CUSTOMER")
+            contact = Contact.objects.create(organization=self.organization, name="Customer", type="CUSTOMER")
             
             invoice = Invoice.objects.create(
-                tenant=self.tenant,
+                organization=self.organization,
                 contact=contact,
                 type='SALES',
                 issue_date='2026-03-01',
@@ -86,7 +86,7 @@ class InvoiceLifecycleTests(APITestCase):
                 created_by=self.user
             )
             InvoiceLine.objects.create(
-                tenant=self.tenant,
+                organization=self.organization,
                 invoice=invoice,
                 description="Item 1",
                 quantity=1,
@@ -96,7 +96,7 @@ class InvoiceLifecycleTests(APITestCase):
             invoice.recalculate_totals()
             
             # 2. Submit
-            headers = {'HTTP_X_TENANT_ID': str(self.tenant.id)}
+            headers = {'HTTP_X_TENANT_ID': str(self.organization.id)}
             url = f"/api/erp/finance/invoices/{invoice.pk}/submit/"
             print(f"DEBUG: Final Submit URL: {url}")
             response = self.client.post(url, **headers)

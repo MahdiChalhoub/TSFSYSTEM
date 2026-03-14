@@ -68,7 +68,7 @@ class AuditLogMixin:
             # and doesn't poison the outer transaction.
             with db_transaction.atomic():
                 AuditLog.objects.create(
-                    tenant_id=org_id,
+                    organization_id=org_id,
                     actor=user,
                     action=action,
                     table_name=self.audit_model_name or instance.__class__.__name__,
@@ -108,7 +108,7 @@ class AuditLogMixin:
 class ConnectorAwareMixin:
     """
     Mixin that routes requests through the Connector Engine
-    when the target module is not enabled for the tenant.
+    when the target module is not enabled for the organization.
     
     Usage:
         class ProductViewSet(ConnectorAwareMixin, viewsets.ModelViewSet):
@@ -118,7 +118,7 @@ class ConnectorAwareMixin:
     connector_bypass_actions = ['list', 'retrieve']  # Actions that don't need module check
 
     def _check_module_enabled(self):
-        """Returns True if module is enabled for this tenant."""
+        """Returns True if module is enabled for this organization."""
         if not self.connector_module:
             return True
 
@@ -150,7 +150,7 @@ class ConnectorAwareMixin:
             module=self.connector_module,
             action=action_name,
             data=request_data,
-            tenant_id=org_id
+            organization_id=org_id
         )
 
         return Response({
@@ -208,14 +208,14 @@ class TenantFilterMixin:
         org_id = getattr(self.request, 'org_id', None)
 
         if org_id and hasattr(qs.model, 'organization_id'):
-            return qs.filter(tenant_id=org_id)
+            return qs.filter(organization_id=org_id)
         return qs
 
     def perform_create(self, serializer):
         """Automatically set organization on create."""
         org_id = getattr(self.request, 'org_id', None)
         if org_id and 'organization_id' not in serializer.validated_data:
-            serializer.save(tenant_id=org_id)
+            serializer.save(organization_id=org_id)
         else:
             serializer.save()
 

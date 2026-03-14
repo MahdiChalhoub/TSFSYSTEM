@@ -1,630 +1,450 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect } from 'react'
-import { getOrgTaxPolicy, saveOrgTaxPolicy, getCounterpartyTaxProfiles, saveCounterpartyTaxProfile } from '@/app/actions/finance/tax-engine'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useRouter } from 'next/navigation'
+import { getOrgTaxPolicy, getCounterpartyTaxProfiles } from '@/app/actions/finance/tax-engine'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { Shield, CheckCircle, Users, Save, Plus, RefreshCw, Pencil, Info } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Shield, Users, FileText, TrendingUp, TrendingDown,
+  DollarSign, Calculator, Settings, ArrowRight,
+  CheckCircle2, Percent, Building2, List, BarChart3, FileCheck
+} from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Info } from 'lucide-react'
 
-const AIRSI_OPTIONS = [
-    { value: 'CAPITALIZE', label: 'Capitalize — add to inventory cost' },
-    { value: 'EXPENSE', label: 'Expense — post to P&L expense account' },
-    { value: 'RECOVER', label: 'Recover — deductible (REAL companies)' },
-]
+export default function TaxPolicyDashboard() {
+  const { fmt } = useCurrency()
+  const router = useRouter()
 
-const SCOPE_MODES = [
-    { value: 'TTC_ALWAYS', label: 'Always TTC (Internal scope = cost includes VAT)' },
-    { value: 'SAME_AS_OFFICIAL', label: 'Same as Official scope' },
-]
+  const [policy, setPolicy] = useState<any>(null)
+  const [profiles, setProfiles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-const PURCHASE_TAX_MODES = [
-    { value: 'CAPITALIZE', label: 'Capitalize into inventory cost' },
-    { value: 'EXPENSE', label: 'Expense to P&L' },
-]
+  useEffect(() => {
+    loadData()
+  }, [])
 
-const SALES_TAX_TRIGGERS = [
-    { value: 'ON_TURNOVER', label: 'Percentage of total revenue (period)' },
-    { value: 'ON_PROFIT', label: 'Percentage of gross profit (period)' },
-]
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [pol, profs] = await Promise.all([
+        getOrgTaxPolicy(),
+        getCounterpartyTaxProfiles(),
+      ])
 
-const PROFIT_TAX_MODES = [
-    { value: 'STANDARD', label: 'Standard corporate tax' },
-    { value: 'FORFAIT', label: 'Fixed / Forfait tax' },
-    { value: 'EXEMPT', label: 'Tax exempt' },
-]
-
-const PERIODIC_INTERVALS = [
-    { value: 'MONTHLY', label: 'Monthly' },
-    { value: 'ANNUAL', label: 'Annual' },
-]
-
-export default function TaxPolicyPage() {
-    const [policy, setPolicy] = useState<any>(null)
-    const [profiles, setProfiles] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState<Record<string, any>>({})
-    const [profileModalOpen, setProfileModalOpen] = useState(false)
-    const [editingProfile, setEditingProfile] = useState<Record<string, any> | null>(null)
-
-    useEffect(() => {
-        async function load() {
-            setLoading(true)
-            try {
-                const [pol, profs] = await Promise.all([
-                    getOrgTaxPolicy(),
-                    getCounterpartyTaxProfiles(),
-                ])
-                const p = Array.isArray(pol) ? pol[0] : pol?.results?.[0]
-                setPolicy(p || null)
-                setForm(p ? {
-                    vat_output_enabled: p.vat_output_enabled ?? true,
-                    vat_input_recoverability: p.vat_input_recoverability ?? '0.000',
-                    airsi_treatment: p.airsi_treatment ?? 'CAPITALIZE',
-                    internal_cost_mode: p.internal_cost_mode ?? 'TTC_ALWAYS',
-                    purchase_tax_rate: p.purchase_tax_rate ?? '0.0000',
-                    purchase_tax_mode: p.purchase_tax_mode ?? 'CAPITALIZE',
-                    sales_tax_rate: p.sales_tax_rate ?? '0.0000',
-                    sales_tax_trigger: p.sales_tax_trigger ?? 'ON_TURNOVER',
-                    periodic_amount: p.periodic_amount ?? '0.00',
-                    periodic_interval: p.periodic_interval ?? 'ANNUAL',
-                    profit_tax_mode: p.profit_tax_mode ?? 'STANDARD',
-                    name: p.name ?? '',
-                } : {
-                    vat_output_enabled: false,
-                    vat_input_recoverability: '0.000',
-                    airsi_treatment: 'CAPITALIZE',
-                    internal_cost_mode: 'TTC_ALWAYS',
-                    purchase_tax_rate: '0.0000',
-                    purchase_tax_mode: 'CAPITALIZE',
-                    sales_tax_rate: '0.0000',
-                    sales_tax_trigger: 'ON_TURNOVER',
-                    periodic_amount: '0.00',
-                    periodic_interval: 'ANNUAL',
-                    profit_tax_mode: 'STANDARD',
-                    name: '',
-                })
-                setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
-            } catch {
-                toast.error('Failed to load tax policy')
-            } finally {
-                setLoading(false)
-            }
-        }
-        load()
-    }, [])
-
-    const handleSave = async () => {
-        setSaving(true)
-        try {
-            await saveOrgTaxPolicy(policy?.id ?? null, { ...form, is_default: true })
-            toast.success('Tax policy saved')
-            // Reload
-            const pol = await getOrgTaxPolicy()
-            const p = Array.isArray(pol) ? pol[0] : pol?.results?.[0]
-            setPolicy(p)
-        } catch {
-            toast.error('Failed to save policy')
-        } finally {
-            setSaving(false)
-        }
+      const p = Array.isArray(pol) ? pol[0] : pol?.results?.[0]
+      setPolicy(p || null)
+      setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
+    } catch (error) {
+      toast.error('Failed to load tax policy')
+      console.error(error)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    const handleSaveProfile = async () => {
-        if (!editingProfile?.name) return toast.error('Name is required')
-        setSaving(true)
-        try {
-            await saveCounterpartyTaxProfile(editingProfile.id ?? null, editingProfile)
-            toast.success('Profile saved')
-            setProfileModalOpen(false)
-            const profs = await getCounterpartyTaxProfiles()
-            setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
-        } catch {
-            toast.error('Failed to save profile')
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    const f = (key: string) => form[key]
-    const set = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }))
-
+  if (loading) {
     return (
-        <div className="page-container">
-            <header>
-                <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                        <Shield size={28} className="text-app-text" />
-                    </div>
-                    Tax <span className="text-indigo-600">Policy</span>
-                </h1>
-                <p className="text-sm font-medium text-app-text-faint mt-2 uppercase tracking-widest">
-                    OrgTaxPolicy · CounterpartyTaxProfiles · AIRSI · VAT Rules
-                </p>
-            </header>
-
-            {loading ? (
-                <div className="space-y-4">
-                    <Skeleton className="h-64" />
-                    <Skeleton className="h-48" />
-                </div>
-            ) : (
-                <>
-                    {/* OrgTaxPolicy Form */}
-                    <Card>
-                        <CardHeader className="py-4 flex flex-row items-center justify-between">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                                <Shield size={16} className="text-indigo-400" />
-                                Organization Tax Policy
-                                {policy && <Badge className="bg-indigo-100 text-indigo-700 ml-2">ID #{policy.id}</Badge>}
-                            </CardTitle>
-                            {policy?.name && <span className="text-xs text-app-text-faint font-medium">{policy.name}</span>}
-                        </CardHeader>
-                        <CardContent className="space-y-5">
-                            {/* Policy Name */}
-                            <div>
-                                <label className="text-xs font-semibold text-app-text-muted uppercase mb-1 block">Policy Name</label>
-                                <Input
-                                    value={f('name')}
-                                    onChange={e => set('name', e.target.value)}
-                                    placeholder="e.g. TSF Global Demo — Policy (MIXED)"
-                                    className="max-w-md"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* VAT Output */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-black uppercase text-indigo-600 tracking-widest">VAT Output</h3>
-                                    <div className="flex items-center justify-between p-3 rounded-xl bg-app-bg border">
-                                        <div>
-                                            <p className="text-sm font-semibold">VAT Output Enabled</p>
-                                            <p className="text-xs text-app-text-faint">Org issues TVA invoices to clients</p>
-                                        </div>
-                                        <Switch
-                                            checked={!!f('vat_output_enabled')}
-                                            onCheckedChange={v => set('vat_output_enabled', v)}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-app-text-muted uppercase">VAT Input Recoverability</label>
-                                        <p className="text-[11px] text-app-text-faint">0 = fully capitalized, 1 = fully recoverable (REAL)</p>
-                                        <Input
-                                            type="number"
-                                            min="0" max="1" step="0.001"
-                                            value={f('vat_input_recoverability')}
-                                            onChange={e => set('vat_input_recoverability', e.target.value)}
-                                            className="max-w-[160px] font-mono"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* AIRSI + Internal Scope */}
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-black uppercase text-violet-600 tracking-widest">AIRSI & Purchase Tax</h3>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-app-text-muted uppercase">AIRSI Treatment</label>
-                                        <Select value={f('airsi_treatment')} onValueChange={v => set('airsi_treatment', v)}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {AIRSI_OPTIONS.map(o => (
-                                                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Purchase Tax Rate</label>
-                                        <p className="text-[11px] text-app-text-faint">e.g. 0.0300 = 3% on purchases</p>
-                                        <Input
-                                            type="number"
-                                            min="0" max="1" step="0.0001"
-                                            value={f('purchase_tax_rate')}
-                                            onChange={e => set('purchase_tax_rate', e.target.value)}
-                                            className="max-w-[160px] font-mono"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Purchase Tax Mode</label>
-                                        <Select value={f('purchase_tax_mode')} onValueChange={v => set('purchase_tax_mode', v)}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {PURCHASE_TAX_MODES.map(o => (
-                                                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* Periodic & Turnover Taxes */}
-                                <div className="space-y-4 md:col-span-2 pt-4 border-t">
-                                    <h3 className="text-xs font-black uppercase text-amber-600 tracking-widest">Periodic & Turnover Taxes</h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {/* Sales Tax / Turnover */}
-                                        <div className="space-y-4 p-4 rounded-xl bg-amber-50/50 border border-amber-100">
-                                            <h4 className="text-[11px] font-bold text-amber-800 uppercase">Sales / Turnover Tax</h4>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Tax Rate</label>
-                                                <p className="text-[10px] text-app-text-faint">e.g. 0.0500 = 5% micro tax</p>
-                                                <Input
-                                                    type="number"
-                                                    min="0" max="1" step="0.0001"
-                                                    value={f('sales_tax_rate')}
-                                                    onChange={e => set('sales_tax_rate', e.target.value)}
-                                                    className="font-mono bg-app-surface"
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Tax Trigger</label>
-                                                <Select value={f('sales_tax_trigger')} onValueChange={v => set('sales_tax_trigger', v)}>
-                                                    <SelectTrigger className="bg-app-surface"><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {SALES_TAX_TRIGGERS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-
-                                        {/* Periodic Forfait */}
-                                        <div className="space-y-4 p-4 rounded-xl bg-orange-50/50 border border-orange-100">
-                                            <h4 className="text-[11px] font-bold text-orange-800 uppercase">Fixed Periodic Tax</h4>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Amount (Forfait)</label>
-                                                <p className="text-[10px] text-app-text-faint">Fixed fee (e.g. minimum légal)</p>
-                                                <Input
-                                                    type="number"
-                                                    min="0" step="0.01"
-                                                    value={f('periodic_amount')}
-                                                    onChange={e => set('periodic_amount', e.target.value)}
-                                                    className="font-mono bg-app-surface"
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Interval</label>
-                                                <Select value={f('periodic_interval')} onValueChange={v => set('periodic_interval', v)}>
-                                                    <SelectTrigger className="bg-app-surface"><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {PERIODIC_INTERVALS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-
-                                        {/* Profit Tax Mode */}
-                                        <div className="space-y-4 p-4 rounded-xl bg-app-surface border">
-                                            <h4 className="text-[11px] font-bold text-app-text uppercase">Corporate Profit Tax</h4>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-semibold text-app-text-muted uppercase">Profit Tax Mode</label>
-                                                <p className="text-[10px] text-app-text-faint">Standard, Forfait, or Exempt</p>
-                                                <Select value={f('profit_tax_mode')} onValueChange={v => set('profit_tax_mode', v)}>
-                                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {PROFIT_TAX_MODES.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Dynamic Impact Summary for Org Policy */}
-                                    <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-4 mt-6 space-y-3">
-                                        <div className="flex items-center gap-2 text-amber-800">
-                                            <Info size={16} />
-                                            <h4 className="text-xs font-bold uppercase tracking-widest">Periodic Tax Impact Summary</h4>
-                                        </div>
-                                        <ul className="space-y-2 text-[11px] text-amber-900 leading-relaxed font-medium">
-                                            {(parseFloat(f('sales_tax_rate')) > 0 || parseFloat(f('periodic_amount')) > 0) ? (
-                                                <li className="flex gap-2">
-                                                    <span className="text-amber-400">•</span>
-                                                    <span>
-                                                        <strong>Accrual Engine:</strong> The background Periodic Tax Service will automatically
-                                                        generate ledger provisions ({f('periodic_interval') || 'MONTHLY'}):
-                                                    </span>
-                                                </li>
-                                            ) : (
-                                                <li className="flex gap-2">
-                                                    <span className="text-amber-400">•</span>
-                                                    <span><strong>Accrual Engine:</strong> No periodic turnover or forfait provisions are currently active.</span>
-                                                </li>
-                                            )}
-
-                                            {parseFloat(f('sales_tax_rate')) > 0 && (
-                                                <li className="flex gap-2 ml-4">
-                                                    <span className="text-amber-400">-</span>
-                                                    <span>
-                                                        A <strong>{parseFloat(f('sales_tax_rate')) * 100}%</strong> tax will be provisioned based on
-                                                        {f('sales_tax_trigger') === 'ON_PROFIT' ? ' gross profit' : ' total revenue'} generated during the period.
-                                                    </span>
-                                                </li>
-                                            )}
-
-                                            {parseFloat(f('periodic_amount')) > 0 && (
-                                                <li className="flex gap-2 ml-4">
-                                                    <span className="text-amber-400">-</span>
-                                                    <span>
-                                                        A fixed forfait charge of <strong>{f('periodic_amount')}</strong> will be provisioned directly to expenses.
-                                                    </span>
-                                                </li>
-                                            )}
-
-                                            <li className="flex gap-2 pt-2 border-t border-amber-200/50">
-                                                <span className="text-amber-400">•</span>
-                                                <span>
-                                                    <strong>Profit Tax:</strong> Set to <span className="uppercase font-bold">{f('profit_tax_mode') || 'STANDARD'}</span>.
-                                                    {f('profit_tax_mode') === 'EXEMPT' && ' Corporate income tax will not be calculated.'}
-                                                    {f('profit_tax_mode') === 'FORFAIT' && ' Income tax will be derived from the Fixed Forfait engine.'}
-                                                    {(!f('profit_tax_mode') || f('profit_tax_mode') === 'STANDARD') && ' Year-end corporate income tax applies to net profit.'}
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                {/* Internal Cost Mode */}
-                                <div className="space-y-2 md:col-span-2">
-                                    <h3 className="text-xs font-black uppercase text-app-text-muted tracking-widest">Internal Scope</h3>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-app-text-muted uppercase">Internal Cost Mode</label>
-                                        <Select value={f('internal_cost_mode')} onValueChange={v => set('internal_cost_mode', v)}>
-                                            <SelectTrigger className="max-w-md">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {SCOPE_MODES.map(o => (
-                                                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {/* Dynamic Impact Summary for Internal Scope */}
-                                    <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 mt-6 space-y-3">
-                                        <div className="flex items-center gap-2 text-indigo-800">
-                                            <Info size={16} />
-                                            <h4 className="text-xs font-bold uppercase tracking-widest">Dual View Impact Summary</h4>
-                                        </div>
-                                        <ul className="space-y-2 text-[11px] text-indigo-900 leading-relaxed font-medium">
-                                            <li className="flex gap-2">
-                                                <span className="text-indigo-400">•</span>
-                                                <span>
-                                                    <strong>Ledger Engine:</strong> The system always generates two parallel sets of journal entries:
-                                                    one for <span className="font-bold">OFFICIAL</span> scope and one for <span className="font-bold">INTERNAL</span> scope.
-                                                </span>
-                                            </li>
-                                            <li className="flex gap-2">
-                                                <span className="text-indigo-400">•</span>
-                                                <span>
-                                                    <strong>Official View:</strong> Will rigorously follow the VAT, AIRSI, and Purchase Tax rules configured above.
-                                                </span>
-                                            </li>
-
-                                            {f('internal_cost_mode') === 'TTC_ALWAYS' && (
-                                                <li className="flex gap-2">
-                                                    <span className="text-indigo-400">•</span>
-                                                    <span>
-                                                        <strong>Internal View (TTC Always):</strong> VAT and Purchase taxes are <strong>completely ignored</strong> and injected directly into the Base Cost (TTC). No tax recovery assets/liabilities are logged in the internal ledger. This shows pure cash-out cost.
-                                                    </span>
-                                                </li>
-                                            )}
-
-                                            {f('internal_cost_mode') === 'SAME_AS_OFFICIAL' && (
-                                                <li className="flex gap-2">
-                                                    <span className="text-indigo-400">•</span>
-                                                    <span>
-                                                        <strong>Internal View (Same As Official):</strong> The internal view will be an exact 1:1 mirror of the official view, separating recoverable VAT and taxes into assets/liabilities.
-                                                    </span>
-                                                </li>
-                                            )}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pt-2 border-t flex items-center gap-3">
-                                <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-app-text">
-                                    <Save size={14} className="mr-2" />
-                                    {saving ? 'Saving…' : policy ? 'Update Policy' : 'Create Policy'}
-                                </Button>
-                                {policy && (
-                                    <p className="text-xs text-app-text-faint">
-                                        Last updated: {policy.updated_at ? new Date(policy.updated_at).toLocaleString() : '—'}
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* CounterpartyTaxProfile Presets */}
-                    <Card>
-                        <CardHeader className="py-4 flex flex-row items-center justify-between">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                                <Users size={16} className="text-app-text-faint" /> Counterparty Tax Profiles
-                            </CardTitle>
-                            <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="text-xs">{profiles.length} profiles</Badge>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs h-8"
-                                    onClick={() => {
-                                        setEditingProfile({ vat_registered: false, reverse_charge: false, airsi_subject: false })
-                                        setProfileModalOpen(true)
-                                    }}
-                                >
-                                    <Plus size={14} className="mr-1" /> New Profile
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            {profiles.length === 0 ? (
-                                <div className="text-center py-10 text-app-text-faint text-sm">
-                                    <Users size={32} className="mx-auto mb-2 opacity-30" />
-                                    No profiles found. Run <code className="bg-app-surface-2 rounded px-1 text-xs">seed_tax_profiles</code> to create presets.
-                                </div>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="bg-app-bg border-b">
-                                        <tr>
-                                            <th className="text-left px-4 py-2 font-semibold text-app-text-muted">Profile Name</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">VAT Registered</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Reverse Charge</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">AIRSI Subject</th>
-                                            <th className="text-left px-4 py-2 font-semibold text-app-text-muted">Scopes</th>
-                                            <th className="text-center px-4 py-2 font-semibold text-app-text-muted">Type</th>
-                                            <th className="text-right px-4 py-2 font-semibold text-app-text-muted">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {profiles.map((p: any) => (
-                                            <tr key={p.id} className="border-b hover:bg-app-bg transition-colors">
-                                                <td className="px-4 py-2 font-semibold text-app-text">{p.name}</td>
-                                                <td className="px-4 py-2 text-center">
-                                                    {p.vat_registered
-                                                        ? <CheckCircle size={16} className="text-green-500 mx-auto" />
-                                                        : <span className="text-gray-300">—</span>}
-                                                </td>
-                                                <td className="px-4 py-2 text-center">
-                                                    {p.reverse_charge
-                                                        ? <CheckCircle size={16} className="text-amber-500 mx-auto" />
-                                                        : <span className="text-gray-300">—</span>}
-                                                </td>
-                                                <td className="px-4 py-2 text-center">
-                                                    {p.airsi_subject
-                                                        ? <CheckCircle size={16} className="text-violet-500 mx-auto" />
-                                                        : <span className="text-gray-300">—</span>}
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <div className="flex gap-1 flex-wrap">
-                                                        {(p.allowed_scopes || []).map((s: string) => (
-                                                            <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-2 text-center">
-                                                    {p.is_system_preset ? (
-                                                        <Badge className="bg-blue-100 text-blue-700 text-[10px]">System</Badge>
-                                                    ) : (
-                                                        <Badge className="bg-stone-100 text-stone-700 text-[10px]">Custom</Badge>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-2 text-right">
-                                                    {!p.is_system_preset && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-7 w-7 p-0"
-                                                            onClick={() => {
-                                                                setEditingProfile(p)
-                                                                setProfileModalOpen(true)
-                                                            }}
-                                                        >
-                                                            <Pencil size={14} className="text-app-text-muted hover:text-indigo-600" />
-                                                        </Button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Edit/Create Profile Modal */}
-                    <Dialog open={profileModalOpen} onOpenChange={setProfileModalOpen}>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>{editingProfile?.id ? 'Edit Profile' : 'Create Tax Profile'}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-6 pt-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-app-text-muted uppercase">Profile Name</label>
-                                    <Input
-                                        value={editingProfile?.name || ''}
-                                        onChange={e => setEditingProfile(prev => ({ ...prev!, name: e.target.value }))}
-                                        placeholder="e.g. Special Supplier (Exempt)"
-                                    />
-                                </div>
-
-                                <div className="space-y-4 bg-app-bg p-4 rounded-xl border">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold">VAT Registered</p>
-                                            <p className="text-xs text-app-text-faint">Client is registered / Supplier charges VAT</p>
-                                        </div>
-                                        <Switch
-                                            checked={!!editingProfile?.vat_registered}
-                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, vat_registered: v }))}
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold text-amber-700">Reverse Charge (Foreign B2B)</p>
-                                            <p className="text-xs text-amber-600/70">Inbound autoliquidation</p>
-                                        </div>
-                                        <Switch
-                                            checked={!!editingProfile?.reverse_charge}
-                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, reverse_charge: v }))}
-                                        />
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-semibold text-violet-700">AIRSI Subject</p>
-                                            <p className="text-xs text-violet-600/70">Buying triggers AIRSI withholding</p>
-                                        </div>
-                                        <Switch
-                                            checked={!!editingProfile?.airsi_subject}
-                                            onCheckedChange={v => setEditingProfile(prev => ({ ...prev!, airsi_subject: v }))}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Dynamic Impact Summary */}
-                                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 space-y-3">
-                                    <div className="flex items-center gap-2 text-blue-800">
-                                        <Info size={16} />
-                                        <h4 className="text-xs font-bold uppercase tracking-widest">Impact Summary</h4>
-                                    </div>
-                                    <ul className="space-y-2 text-[11px] text-blue-900 leading-relaxed font-medium">
-                                        {!!editingProfile?.vat_registered ? (
-                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Purchases:</strong> Cost = HT. VAT goes to Recoverable Asset account (if Org allows).<br /><strong>Sales:</strong> Invoice includes VAT (TTC).</li>
-                                        ) : (
-                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Purchases:</strong> Cost = TTC. No VAT is recovered.<br /><strong>Sales:</strong> Invoice is HT only.</li>
-                                        )}
-                                        {!!editingProfile?.reverse_charge && (
-                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>Reverse Charge:</strong> Triggers autoliquidation. VAT is self-assessed (net zero impact).</li>
-                                        )}
-                                        {!!editingProfile?.airsi_subject && (
-                                            <li className="flex gap-2"><span className="text-blue-400">•</span> <strong>AIRSI:</strong> Applicable percentage will be withheld from supplier payments and credited to Liability.</li>
-                                        )}
-                                    </ul>
-                                </div>
-
-                                <Button onClick={handleSaveProfile} disabled={saving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                                    {saving ? 'Saving…' : 'Save Profile'}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </>
-            )}
-        </div>
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
     )
+  }
+
+  return (
+    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-app-primary/10 border border-app-primary/20">
+              <Shield size={32} className="text-app-primary" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground">Finance</p>
+              <h1 className="text-4xl font-black tracking-tight text-app-foreground italic">
+                Tax Policy <span className="text-app-primary">Engine</span>
+              </h1>
+              <p className="text-sm text-app-muted-foreground mt-1">
+                Organization Tax Policy · Counterparty Profiles · AIRSI · VAT · Periodic Tax
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {policy && (
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="rounded-xl px-3 py-1.5">
+              <Building2 size={14} className="mr-2" />
+              Policy ID #{policy.id}
+            </Badge>
+            <Badge className="rounded-xl px-3 py-1.5 bg-app-success">
+              <CheckCircle2 size={14} className="mr-2" />
+              Active
+            </Badge>
+          </div>
+        )}
+      </header>
+
+      {/* 6 Tax Types Overview */}
+      {policy && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Tax Type 1: VAT (TVA) */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-600/10 flex items-center justify-center">
+                  <CheckCircle2 size={20} className="text-green-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-widest">1. VAT (TVA)</p>
+                  <p className="text-lg font-black text-green-900 mt-0.5">
+                    Out: {policy.vat_output_enabled ? 'YES' : 'NO'} · In: {(parseFloat(policy.vat_input_recoverability) * 100).toFixed(0)}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tax Type 2: AIRSI */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-600/10 flex items-center justify-center">
+                  <Shield size={20} className="text-purple-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-purple-700 uppercase tracking-widest">2. AIRSI</p>
+                  <p className="text-sm font-black text-purple-900 mt-0.5">
+                    {policy.airsi_treatment}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tax Type 3: Purchase Tax */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center">
+                  <TrendingDown size={20} className="text-blue-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">3. Purchase Tax</p>
+                  <p className="text-lg font-black text-blue-900 mt-0.5">
+                    {(parseFloat(policy.purchase_tax_rate) * 100).toFixed(2)}% · {policy.purchase_tax_mode}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tax Type 4: Sales/Turnover Tax */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-orange-50 to-orange-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-600/10 flex items-center justify-center">
+                  <TrendingUp size={20} className="text-orange-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-orange-700 uppercase tracking-widest">4. Sales/Turnover Tax</p>
+                  <p className="text-lg font-black text-orange-900 mt-0.5">
+                    {(parseFloat(policy.sales_tax_rate) * 100).toFixed(2)}% · {policy.sales_tax_trigger}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tax Type 5: Periodic/Forfait */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-600/10 flex items-center justify-center">
+                  <Calculator size={20} className="text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-widest">5. Periodic/Forfait</p>
+                  <p className="text-lg font-black text-amber-900 mt-0.5">
+                    {fmt(policy.periodic_amount)} {policy.periodic_interval}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tax Type 6: Profit Tax */}
+          <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-red-50 to-red-100/50">
+            <CardContent className="pt-5 pb-4 px-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-600/10 flex items-center justify-center">
+                  <DollarSign size={20} className="text-red-700" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-red-700 uppercase tracking-widest">6. Profit Tax</p>
+                  <p className="text-sm font-black text-red-900 mt-0.5">
+                    {policy.profit_tax_mode}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Tax Engine Management Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Organization Tax Policies */}
+        <Card className="rounded-2xl border-2 border-app-primary/20 hover:border-app-primary/40 transition-colors cursor-pointer" onClick={() => router.push('/finance/org-tax-policies')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-app-primary/10 flex items-center justify-center">
+                  <Building2 size={24} className="text-app-primary" />
+                </div>
+                <div>
+                  <CardTitle>Organization Tax Policies</CardTitle>
+                  <CardDescription className="mt-1">
+                    Configure how your organization handles all 6 tax types
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-xl bg-app-surface border">
+                <p className="text-xs text-app-muted-foreground uppercase font-bold">Active Policy</p>
+                <p className="text-xl font-black text-app-foreground mt-1">{policy ? policy.name : 'None'}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-app-surface border">
+                <p className="text-xs text-app-muted-foreground uppercase font-bold">Country</p>
+                <p className="text-xl font-black text-app-foreground mt-1">{policy ? policy.country_code : '—'}</p>
+              </div>
+            </div>
+            <Button className="w-full mt-4 rounded-xl gap-2" variant="outline">
+              <Settings size={16} />
+              Manage Policies
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Counterparty Tax Profiles */}
+        <Card className="rounded-2xl border-2 border-green-200 hover:border-green-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/counterparty-tax-profiles')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                  <Users size={24} className="text-green-700" />
+                </div>
+                <div>
+                  <CardTitle>Counterparty Tax Profiles</CardTitle>
+                  <CardDescription className="mt-1">
+                    Tax treatment presets for suppliers and customers
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-center">
+                <p className="text-2xl font-black text-green-900">{profiles.length}</p>
+                <p className="text-xs text-green-700 mt-1 uppercase font-bold">Total</p>
+              </div>
+              <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-center">
+                <p className="text-2xl font-black text-green-900">{profiles.filter(p => p.vat_registered).length}</p>
+                <p className="text-xs text-green-700 mt-1 uppercase font-bold">VAT Reg</p>
+              </div>
+              <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-center">
+                <p className="text-2xl font-black text-green-900">{profiles.filter(p => p.airsi_subject).length}</p>
+                <p className="text-xs text-green-700 mt-1 uppercase font-bold">AIRSI</p>
+              </div>
+            </div>
+            <Button className="w-full mt-4 rounded-xl gap-2 bg-green-600 hover:bg-green-700 text-white">
+              <List size={16} />
+              Manage Profiles
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Periodic Tax Accruals */}
+        <Card className="rounded-2xl border-2 border-amber-200 hover:border-amber-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/periodic-tax')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <Calculator size={24} className="text-amber-700" />
+                </div>
+                <div>
+                  <CardTitle>Periodic Tax Accruals</CardTitle>
+                  <CardDescription className="mt-1">
+                    Automated sales tax and forfait provisions
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert className="rounded-xl bg-amber-50 border-amber-200">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-900 text-sm">
+                Background service generates periodic tax provisions based on revenue/profit
+              </AlertDescription>
+            </Alert>
+            <Button className="w-full mt-4 rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white">
+              <BarChart3 size={16} />
+              View Accruals
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* VAT Returns & Settlement */}
+        <Card className="rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/vat-return')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <FileCheck size={24} className="text-blue-700" />
+                </div>
+                <div>
+                  <CardTitle>VAT Returns & Settlement</CardTitle>
+                  <CardDescription className="mt-1">
+                    VAT reports, returns, and settlement posting
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button
+                className="w-full rounded-xl gap-2"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  router.push('/finance/vat-return')
+                }}
+              >
+                <FileText size={16} />
+                VAT Return Reports
+              </Button>
+              <Button
+                className="w-full rounded-xl gap-2"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  router.push('/finance/vat-settlement')
+                }}
+              >
+                <DollarSign size={16} />
+                VAT Settlement
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Custom Tax Rules */}
+        <Card className="rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/custom-tax-rules')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <Settings size={24} className="text-purple-700" />
+                </div>
+                <div>
+                  <CardTitle>Custom Tax Rules</CardTitle>
+                  <CardDescription className="mt-1">
+                    Product/category-specific tax overrides
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert className="rounded-xl bg-purple-50 border-purple-200">
+              <Info className="h-4 w-4 text-purple-600" />
+              <AlertDescription className="text-purple-900 text-sm">
+                Override default tax rates for specific products or categories
+              </AlertDescription>
+            </Alert>
+            <Button className="w-full mt-4 rounded-xl gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+              <List size={16} />
+              Manage Rules
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Tax Groups */}
+        <Card className="rounded-2xl border-2 border-indigo-200 hover:border-indigo-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/tax-groups')}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                  <Percent size={24} className="text-indigo-700" />
+                </div>
+                <div>
+                  <CardTitle>Tax Groups</CardTitle>
+                  <CardDescription className="mt-1">
+                    Grouped tax rates for products (e.g. TVA 18%, TVA 0%)
+                  </CardDescription>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-app-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Alert className="rounded-xl bg-indigo-50 border-indigo-200">
+              <Info className="h-4 w-4 text-indigo-600" />
+              <AlertDescription className="text-indigo-900 text-sm">
+                Standard VAT rates applied to products and invoices
+              </AlertDescription>
+            </Alert>
+            <Button className="w-full mt-4 rounded-xl gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+              <List size={16} />
+              Manage Groups
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tax Reports */}
+      <Card className="rounded-2xl border-2 border-slate-200 hover:border-slate-400 transition-colors cursor-pointer" onClick={() => router.push('/finance/tax-reports')}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
+                <BarChart3 size={24} className="text-slate-700" />
+              </div>
+              <div>
+                <CardTitle>Tax Reports & Analytics</CardTitle>
+                <CardDescription className="mt-1">
+                  Comprehensive tax reports and analytics dashboard
+                </CardDescription>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-app-muted-foreground" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full rounded-xl gap-2 bg-slate-600 hover:bg-slate-700 text-white">
+            <BarChart3 size={16} />
+            View Tax Reports
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

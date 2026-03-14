@@ -65,7 +65,7 @@ class VoucherViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         voucher = self.get_object()
         try:
             from apps.finance.services import VoucherService
-            voucher = VoucherService.post_voucher(voucher.tenant, pk, user=request.user)
+            voucher = VoucherService.post_voucher(voucher.organization, pk, user=request.user)
             return Response(VoucherSerializer(voucher).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)

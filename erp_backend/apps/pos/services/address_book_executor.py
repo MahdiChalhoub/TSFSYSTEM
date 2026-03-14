@@ -5,19 +5,20 @@ When a manager approves an Address Book entry, this service
 executes the REAL action in the ERP — exactly like the user
 would do it in the full software, but automated.
 
-SUPPLIER_PAYMENT → PaymentService.record_supplier_payment()
-CLIENT_PAYMENT   → PaymentService.record_customer_receipt()
-EXPENSE          → LedgerService.create_journal_entry() (Dr Expense, Cr Cash)
-PARTNER_CAPITAL_IN  → LedgerService.create_journal_entry() (Dr Cash, Cr Owner Equity)
-PARTNER_CASH_IN     → LedgerService.create_journal_entry() (Dr Cash, Cr Partner Account)
-PARTNER_CAPITAL_OUT → LedgerService.create_journal_entry() (Dr Owner Drawing, Cr Cash)
-PARTNER_CASH_OUT    → LedgerService.create_journal_entry() (Dr Partner Account, Cr Cash)
-SALES_RETURN     → Creates credit note + GL entry
-CASH_SHORTAGE    → LedgerService.create_journal_entry() (Dr Cash Over/Short, Cr Cash)
-CASH_OVERAGE     → LedgerService.create_journal_entry() (Dr Cash, Cr Cash Over/Short)
+═══════════════════════════════════════════════════════════════════════════════
+  ARCHITECTURE NOTE (Phase 3A — Module Decoupling, Wave 2)
+  ─────────────────────────────────────────────────────────
+  This file NO LONGER imports from apps.finance directly.
+  All financial operations go through ConnectorEngine:
+    - Journal entry creation  → connector.route_write('finance', 'post_address_book_entry')
+    - Account resolution      → finance resolves COA codes internally
+    - Payment recording       → connector.route_write('finance', 'record_supplier_payment')
 
-The entry stays in the Address Book as audit trail.
-The generated transaction (payment/JE) is linked back to the entry.
+  POS sends BUSINESS INTENT (entry type + amounts), not journal lines.
+  Finance owns all accounting logic.
+
+  Ref: .ai/plans/module-decoupling-blueprint.md (Phase 3A)
+═══════════════════════════════════════════════════════════════════════════════
 """
 import logging
 from decimal import Decimal
@@ -28,17 +29,25 @@ from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
 
+def _get_connector():
+    """Get the ConnectorEngine singleton."""
+    from erp.connector_engine import connector_engine
+    return connector_engine
+
+
 class AddressBookExecutor:
     """
     Executes the real ERP action when an Address Book entry is approved.
     Called from the review endpoint after status → APPROVED.
+
+    All finance operations route through ConnectorEngine — no direct imports.
     """
 
     @staticmethod
     def execute(entry, manager=None):
         """
         Execute the real action for an approved entry.
-        Returns the created transaction/JE or None if type doesn't need posting.
+        Returns the result dict or None if type doesn't need posting.
         """
         handler_map = {
             'SUPPLIER_PAYMENT': AddressBookExecutor._exec_supplier_payment,
@@ -84,404 +93,175 @@ class AddressBookExecutor:
         from erp.models import Organization
         return Organization.objects.get(id=entry.organization_id)
 
+    # ── Shared connector helper ───────────────────────────────────────────
+    @staticmethod
+    def _post_via_connector(entry, manager, entry_type, amount, description,
+                            contact_id=None, invoice_id=None,
+                            target_account_code=None, extra_data=None):
+        """
+        Route an address book posting through ConnectorEngine.
+        Finance resolves all accounts internally.
+        """
+        connector = _get_connector()
+        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
+
+        result = connector.route_write(
+            target_module='finance',
+            endpoint='post_address_book_entry',
+            data={
+                'organization_id': entry.organization_id,
+                'entry_type': entry_type,
+                'entry_id': entry.id,
+                'amount': str(amount),
+                'description': description,
+                'contact_id': contact_id,
+                'invoice_id': invoice_id,
+                'cash_account_id': cash_acc_id,
+                'target_account_id': getattr(entry, 'target_account_id', None),
+                'target_account_code': target_account_code,
+                'site_id': getattr(entry, 'site_id', None),
+                'user_id': manager.id if manager else None,
+                'transaction_date': str(entry.created_at.date()),
+                'extra_data': extra_data or {},
+            },
+            organization_id=entry.organization_id,
+            source_module='pos',
+        )
+
+        if result and result.data and isinstance(result.data, dict):
+            return result.data
+        return None
+
     # ─── SUPPLIER PAYMENT ────────────────────────────────────────────
     @staticmethod
     def _exec_supplier_payment(entry, manager):
         """Dr. Accounts Payable → Cr. Cash"""
-        from apps.finance.payment_service import PaymentService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-
         if not entry.supplier_id:
             logger.warning(f"AddressBook #{entry.id}: No supplier linked — skipping GL post")
             return None
 
-        # Find the cash FinancialAccount (not COA account)
-        from apps.finance.models import FinancialAccount
-        cash_fin_acc = None
-        if cash_acc_id:
-            cash_fin_acc = FinancialAccount.objects.filter(
-                organization=org, ledger_account_id=cash_acc_id
-            ).first()
-        if not cash_fin_acc:
-            cash_fin_acc = FinancialAccount.objects.filter(
-                organization=org, name__icontains='cash'
-            ).first()
-        if not cash_fin_acc:
-            logger.warning(f"AddressBook #{entry.id}: No cash account found — skipping GL post")
-            return None
-
-        payment = PaymentService.record_supplier_payment(
-            organization=org,
-            contact_id=entry.supplier_id,
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='SUPPLIER_PAYMENT',
             amount=entry.amount_out,
-            payment_date=entry.created_at.date(),
-            payment_account_id=cash_fin_acc.id,
-            method='CASH',
             description=f"[AddressBook #{entry.id}] {entry.description}",
-            supplier_invoice_id=entry.supplier_invoice_id,
-            scope='OFFICIAL',
-            user=manager,
+            contact_id=entry.supplier_id,
+            invoice_id=getattr(entry, 'supplier_invoice_id', None),
         )
-
-        # If invoice linked, record the payment against it
-        if entry.supplier_invoice_id and payment:
-            try:
-                from apps.finance.invoice_models import Invoice
-                invoice = Invoice.objects.get(id=entry.supplier_invoice_id, organization=org)
-                invoice.record_payment(entry.amount_out)
-            except Exception as e:
-                logger.warning(f"AddressBook #{entry.id}: Invoice payment recording failed: {e}")
-
-        return payment
 
     # ─── CLIENT PAYMENT / PREPAYMENT ─────────────────────────────────
     @staticmethod
     def _exec_client_payment(entry, manager):
         """Dr. Cash → Cr. Accounts Receivable"""
-        from apps.finance.payment_service import PaymentService
-
-        org = AddressBookExecutor._get_organization(entry)
-
         if not entry.client_id:
             logger.warning(f"AddressBook #{entry.id}: No client linked — skipping GL post")
             return None
 
-        from apps.finance.models import FinancialAccount
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        cash_fin_acc = None
-        if cash_acc_id:
-            cash_fin_acc = FinancialAccount.objects.filter(
-                organization=org, ledger_account_id=cash_acc_id
-            ).first()
-        if not cash_fin_acc:
-            cash_fin_acc = FinancialAccount.objects.filter(
-                organization=org, name__icontains='cash'
-            ).first()
-        if not cash_fin_acc:
-            return None
-
-        payment = PaymentService.record_customer_receipt(
-            organization=org,
-            contact_id=entry.client_id,
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='CLIENT_PAYMENT',
             amount=entry.amount_in,
-            payment_date=entry.created_at.date(),
-            payment_account_id=cash_fin_acc.id,
-            method='CASH',
             description=f"[AddressBook #{entry.id}] {entry.description}",
-            scope='OFFICIAL',
-            user=manager,
+            contact_id=entry.client_id,
+            invoice_id=getattr(entry, 'client_invoice_id', None),
         )
-
-        # If invoice linked, record the payment against it
-        if entry.client_invoice_id and payment:
-            try:
-                from apps.finance.invoice_models import Invoice
-                invoice = Invoice.objects.get(id=entry.client_invoice_id, organization=org)
-                invoice.record_payment(entry.amount_in)
-            except Exception as e:
-                logger.warning(f"AddressBook #{entry.id}: Invoice payment recording failed: {e}")
-
-        return payment
 
     # ─── EXPENSE ─────────────────────────────────────────────────────
     @staticmethod
     def _exec_expense(entry, manager):
         """Dr. Expense Account → Cr. Cash"""
-        from apps.finance.services import LedgerService
-        from erp.services import ConfigurationService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        # Find expense account — use target_account_id if set, otherwise default
-        expense_acc_id = entry.target_account_id
-        if not expense_acc_id:
-            rules = ConfigurationService.get_posting_rules(org)
-            expense_acc_id = rules.get('expenses', {}).get('general') or rules.get('expenses', {}).get('operating')
-
-        if not expense_acc_id:
-            # Fallback: find general expense account
-            from apps.finance.models import ChartOfAccount
-            expense_acc = ChartOfAccount.objects.filter(
-                organization=org, type='EXPENSE'
-            ).first()
-            expense_acc_id = expense_acc.id if expense_acc else None
-
-        if not expense_acc_id:
-            logger.warning(f"AddressBook #{entry.id}: No expense account found")
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='EXPENSE',
+            amount=entry.amount_out,
             description=f"[AddressBook #{entry.id}] Expense: {entry.description}",
-            reference=f"AB-EXP-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": expense_acc_id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Expense: {entry.expense_category or entry.description}"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
-                 "description": "Cash outflow"},
-            ]
+            extra_data={
+                'expense_category': getattr(entry, 'expense_category', None),
+            },
         )
-        return je
 
     # ─── PARTNER CAPITAL IN ────────────────────────────────────────
     @staticmethod
     def _exec_partner_capital_in(entry, manager):
-        """
-        Partner injects capital into the business (Equity).
-        Dr. Cash, Cr. Owner's Equity (Capital)
-        """
-        from apps.finance.services import LedgerService
-        from apps.finance.models import ChartOfAccount
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        # Look for Equity Account directly
-        equity_acc = ChartOfAccount.objects.filter(
-            organization=org, type='EQUITY'
-        ).first()
-        if not equity_acc:
-            logger.warning(f"AddressBook #{entry.id}: No equity account found")
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        """Dr. Cash, Cr. Owner's Equity (Capital)"""
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='PARTNER_CAPITAL_IN',
+            amount=entry.amount_in,
             description=f"[AccountBook #{entry.id}] Partner Capital Injection: {entry.partner_name or entry.description}",
-            reference=f"AB-PCAPIN-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
-                 "description": f"Cash from partner: {entry.partner_name}"},
-                {"account_id": equity_acc.id, "debit": Decimal('0'), "credit": entry.amount_in,
-                 "description": f"Capital Injection: {entry.partner_name}"},
-            ]
+            extra_data={
+                'partner_name': getattr(entry, 'partner_name', None),
+                'partner_id': getattr(entry, 'partner_id', None),
+            },
         )
-        return je
 
     # ─── PARTNER CASH IN ───────────────────────────────────────────
     @staticmethod
     def _exec_partner_cash_in(entry, manager):
-        """
-        Partner transfers cash from their personal/linked account to the register.
-        Dr. Cash, Cr. Partner's Account
-        """
-        from apps.finance.services import LedgerService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
-        if not partner_acc_id:
-            logger.warning(f"AddressBook #{entry.id}: No partner account found for cash in")
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        """Dr. Cash, Cr. Partner's Account"""
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='PARTNER_CASH_IN',
+            amount=entry.amount_in,
             description=f"[AccountBook #{entry.id}] Partner Cash Transfer (In): {entry.partner_name or entry.description}",
-            reference=f"AB-PCASHIN-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
-                 "description": f"Cash transfer from partner: {entry.partner_name}"},
-                {"account_id": partner_acc_id, "debit": Decimal('0'), "credit": entry.amount_in,
-                 "description": f"Partner account: {entry.partner_name}"},
-            ]
+            extra_data={
+                'partner_name': getattr(entry, 'partner_name', None),
+                'partner_id': getattr(entry, 'partner_id', None),
+            },
         )
-        return je
 
     # ─── PARTNER CAPITAL OUT ───────────────────────────────────────
     @staticmethod
     def _exec_partner_capital_out(entry, manager):
-        """
-        Partner withdraws capital from the business (Drawing/Equity).
-        Dr. Owner's Drawing, Cr. Cash
-        """
-        from apps.finance.services import LedgerService
-        from apps.finance.models import ChartOfAccount
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        drawing_acc = ChartOfAccount.objects.filter(
-            organization=org, code__icontains='drawing'
-        ).first()
-        if not drawing_acc:
-            drawing_acc = ChartOfAccount.objects.filter(
-                organization=org, type='EQUITY'
-            ).first()
-        if not drawing_acc:
-            logger.warning(f"AddressBook #{entry.id}: No drawing/equity account found")
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        """Dr. Owner's Drawing, Cr. Cash"""
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='PARTNER_CAPITAL_OUT',
+            amount=entry.amount_out,
             description=f"[AccountBook #{entry.id}] Partner Capital Withdrawal: {entry.partner_name or entry.description}",
-            reference=f"AB-PCAPOUT-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": drawing_acc.id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Capital Withdrawal: {entry.partner_name}"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
-                 "description": "Cash outflow to partner"},
-            ]
+            extra_data={
+                'partner_name': getattr(entry, 'partner_name', None),
+                'partner_id': getattr(entry, 'partner_id', None),
+            },
         )
-        return je
 
     # ─── PARTNER CASH OUT ──────────────────────────────────────────
     @staticmethod
     def _exec_partner_cash_out(entry, manager):
-        """
-        Partner transfers cash from register to their personal account.
-        Dr. Partner's Account, Cr. Cash
-        """
-        from apps.finance.services import LedgerService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        partner_acc_id = AddressBookExecutor._get_partner_account(entry, org)
-        if not partner_acc_id:
-            logger.warning(f"AddressBook #{entry.id}: No partner account found for cash out")
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        """Dr. Partner's Account, Cr. Cash"""
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='PARTNER_CASH_OUT',
+            amount=entry.amount_out,
             description=f"[AccountBook #{entry.id}] Partner Cash Transfer (Out): {entry.partner_name or entry.description}",
-            reference=f"AB-PCASHOUT-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": partner_acc_id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Cash transfer to partner: {entry.partner_name}"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
-                 "description": "Cash outflow to partner"},
-            ]
+            extra_data={
+                'partner_name': getattr(entry, 'partner_name', None),
+                'partner_id': getattr(entry, 'partner_id', None),
+            },
         )
-        return je
-
-    @staticmethod
-    def _get_partner_account(entry, org):
-        """
-        Get the partner's linked financial account from their CRM Contact record.
-        Partners may have a linked_account_id pointing to their personal account in the COA.
-        """
-        partner_id = getattr(entry, 'partner_id', None)
-        if not partner_id:
-            return None
-
-        try:
-            from apps.crm.models import Contact
-            contact = Contact.objects.get(id=partner_id, organization=org)
-            # Contact may have a linked_account_id (their personal ledger account)
-            linked_acc_id = getattr(contact, 'linked_account_id', None)
-            if linked_acc_id:
-                return linked_acc_id
-
-            # Also check if there's a sub-account created for this contact
-            from apps.finance.models import ChartOfAccount
-            sub_acc = ChartOfAccount.objects.filter(
-                organization=org,
-                name__icontains=contact.name,
-                type='EQUITY'
-            ).first()
-            if sub_acc:
-                return sub_acc.id
-        except Exception as e:
-            logger.warning(f"AddressBook #{entry.id}: Partner account lookup failed: {e}")
-
-        return None
 
     # ─── SALES RETURN ────────────────────────────────────────────────
     @staticmethod
     def _exec_sales_return(entry, manager):
-        """Dr. Sales Returns → Cr. Cash (simplified)"""
-        from apps.finance.services import LedgerService
-        from apps.finance.models import ChartOfAccount
-        from erp.services import ConfigurationService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        # Find sales returns account
-        rules = ConfigurationService.get_posting_rules(org)
-        returns_acc_id = rules.get('sales', {}).get('returns')
-        if not returns_acc_id:
-            returns_acc = ChartOfAccount.objects.filter(
-                organization=org, name__icontains='return'
-            ).first()
-            returns_acc_id = returns_acc.id if returns_acc else None
-        if not returns_acc_id:
-            # Fallback to revenue contra
-            revenue_acc = ChartOfAccount.objects.filter(
-                organization=org, type='REVENUE'
-            ).first()
-            returns_acc_id = revenue_acc.id if revenue_acc else None
-        if not returns_acc_id:
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        """Dr. Sales Returns → Cr. Cash"""
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='SALES_RETURN',
+            amount=entry.amount_out,
             description=f"[AddressBook #{entry.id}] Sales Return: {entry.description}",
-            reference=f"AB-RET-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": returns_acc_id, "debit": entry.amount_out, "credit": Decimal('0'),
-                 "description": f"Sales Return: {entry.linked_order_ref or entry.description}"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": entry.amount_out,
-                 "description": "Cash refund to customer"},
-            ]
+            invoice_id=getattr(entry, 'client_invoice_id', None),
+            extra_data={
+                'linked_order_ref': getattr(entry, 'linked_order_ref', None),
+            },
         )
-
-        # Record against invoice if linked
-        if entry.client_invoice_id:
-            try:
-                from apps.finance.invoice_models import Invoice
-                invoice = Invoice.objects.get(id=entry.client_invoice_id, organization=org)
-                # Reduce paid amount (refund)
-                invoice.paid_amount -= entry.amount_out
-                invoice.balance_due = invoice.total_amount - invoice.paid_amount
-                if invoice.paid_amount <= 0:
-                    invoice.status = 'SENT'
-                elif invoice.balance_due > 0:
-                    invoice.status = 'PARTIAL_PAID'
-                invoice.save(update_fields=['paid_amount', 'balance_due', 'status'], force_audit_bypass=True)
-            except Exception as e:
-                logger.warning(f"AddressBook #{entry.id}: Invoice refund recording failed: {e}")
-
-        return je
 
     # ─── CASH VARIANCE ───────────────────────────────────────────────
     @staticmethod
@@ -490,145 +270,42 @@ class AddressBookExecutor:
         CASH_OVERAGE: Dr. Cash → Cr. Cash Over/Short (income)
         CASH_SHORTAGE: Dr. Cash Over/Short (expense) → Cr. Cash
         """
-        from apps.finance.services import LedgerService
-        from apps.finance.models import ChartOfAccount
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        # Find Cash Over/Short account
-        cos_acc = ChartOfAccount.objects.filter(
-            organization=org, name__icontains='over'
-        ).filter(name__icontains='short').first()
-        if not cos_acc:
-            cos_acc = ChartOfAccount.objects.filter(
-                organization=org, type='EXPENSE', name__icontains='cash'
-            ).first()
-        if not cos_acc:
-            return None
-
         is_overage = entry.entry_type == 'CASH_OVERAGE'
         amount = entry.amount_in if is_overage else entry.amount_out
 
-        lines = []
-        if is_overage:
-            lines = [
-                {"account_id": cash_acc_id, "debit": amount, "credit": Decimal('0'),
-                 "description": "Cash overage found"},
-                {"account_id": cos_acc.id, "debit": Decimal('0'), "credit": amount,
-                 "description": "Cash Over/Short (gain)"},
-            ]
-        else:
-            lines = [
-                {"account_id": cos_acc.id, "debit": amount, "credit": Decimal('0'),
-                 "description": "Cash Over/Short (loss)"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": amount,
-                 "description": "Cash shortage"},
-            ]
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type=entry.entry_type,
+            amount=amount,
             description=f"[AddressBook #{entry.id}] {'Cash Overage' if is_overage else 'Cash Shortage'}: {entry.description}",
-            reference=f"AB-{'COV' if is_overage else 'CSH'}-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=lines,
         )
-        return je
 
     # ─── MONEY TRANSFER ──────────────────────────────────────────────
     @staticmethod
     def _exec_money_transfer(entry, manager):
         """Dr. Target Account → Cr. Cash (or vice versa)"""
-        from apps.finance.services import LedgerService
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        target_acc_id = entry.target_account_id
-        if not target_acc_id:
-            logger.warning(f"AddressBook #{entry.id}: No target account for money transfer")
-            return None
-
         amount = entry.amount_out if entry.amount_out > 0 else entry.amount_in
-        is_out = entry.amount_out > 0
 
-        lines = []
-        if is_out:
-            # Cash moved OUT of register to another account
-            lines = [
-                {"account_id": target_acc_id, "debit": amount, "credit": Decimal('0'),
-                 "description": f"Transfer from POS register"},
-                {"account_id": cash_acc_id, "debit": Decimal('0'), "credit": amount,
-                 "description": "Cash transferred out"},
-            ]
-        else:
-            # Cash moved IN to register from another account
-            lines = [
-                {"account_id": cash_acc_id, "debit": amount, "credit": Decimal('0'),
-                 "description": "Cash transferred in"},
-                {"account_id": target_acc_id, "debit": Decimal('0'), "credit": amount,
-                 "description": f"Transfer to POS register"},
-            ]
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='MONEY_TRANSFER',
+            amount=amount,
             description=f"[AddressBook #{entry.id}] Money Transfer: {entry.description}",
-            reference=f"AB-TRF-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=lines,
+            extra_data={
+                'direction': 'OUT' if entry.amount_out > 0 else 'IN',
+            },
         )
-        return je
 
     # ─── SALE DEPOSIT ────────────────────────────────────────────────
     @staticmethod
     def _exec_sale_deposit(entry, manager):
         """Dr. Cash → Cr. Unearned Revenue / Customer Deposits"""
-        from apps.finance.services import LedgerService
-        from apps.finance.models import ChartOfAccount
-
-        org = AddressBookExecutor._get_organization(entry)
-        cash_acc_id = AddressBookExecutor._get_register_cash_account(entry)
-        if not cash_acc_id:
-            return None
-
-        # Find unearned revenue / customer deposits account
-        deposit_acc = ChartOfAccount.objects.filter(
-            organization=org, name__icontains='deposit'
-        ).first()
-        if not deposit_acc:
-            deposit_acc = ChartOfAccount.objects.filter(
-                organization=org, name__icontains='unearned'
-            ).first()
-        if not deposit_acc:
-            deposit_acc = ChartOfAccount.objects.filter(
-                organization=org, type='LIABILITY'
-            ).first()
-        if not deposit_acc:
-            return None
-
-        je = LedgerService.create_journal_entry(
-            organization=org,
-            transaction_date=entry.created_at.date(),
+        return AddressBookExecutor._post_via_connector(
+            entry=entry,
+            manager=manager,
+            entry_type='SALE_DEPOSIT',
+            amount=entry.amount_in,
             description=f"[AddressBook #{entry.id}] Sale Deposit: {entry.description}",
-            reference=f"AB-DEP-{entry.id}",
-            status='POSTED',
-            scope='OFFICIAL',
-            user=manager,
-            lines=[
-                {"account_id": cash_acc_id, "debit": entry.amount_in, "credit": Decimal('0'),
-                 "description": "Cash deposit received"},
-                {"account_id": deposit_acc.id, "debit": Decimal('0'), "credit": entry.amount_in,
-                 "description": f"Customer deposit: {entry.description}"},
-            ]
         )
-        return je

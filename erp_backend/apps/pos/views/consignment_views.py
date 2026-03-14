@@ -22,7 +22,7 @@ class ConsignmentSettlementViewSet(TenantModelViewSet):
         organization_id = get_current_tenant_id()
         # Find OrderLines that are marked as consignment but not settled
         pending = OrderLine.objects.filter(
-            tenant_id=organization_id,
+            organization_id=organization_id,
             is_consignment=True,
             consignment_settled=False,
             order__status='COMPLETED'
@@ -64,7 +64,7 @@ class ConsignmentSettlementViewSet(TenantModelViewSet):
         with transaction.atomic():
             # 1. Create settlement header
             settlement = ConsignmentSettlement.objects.create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 supplier_id=supplier_id,
                 performed_by=request.user if request.user.is_authenticated else None,
                 notes=notes,
@@ -73,14 +73,14 @@ class ConsignmentSettlementViewSet(TenantModelViewSet):
             
             # 2. Link lines and mark as settled
             total_amount = 0
-            lines_to_settle = OrderLine.objects.filter(id__in=line_ids, tenant_id=org_id)
+            lines_to_settle = OrderLine.objects.filter(id__in=line_ids, organization_id=org_id)
             for line in lines_to_settle:
                 amount = line.quantity * line.unit_cost_ht
                 ConsignmentSettlementLine.objects.create(
                     settlement=settlement,
                     order_line=line,
                     payout_amount=amount,
-                    tenant_id=org_id
+                    organization_id=org_id
                 )
                 line.consignment_settled = True
                 line.save(update_fields=['consignment_settled'])

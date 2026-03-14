@@ -2,7 +2,7 @@
 ERP Background Tasks
 ====================
 Celery tasks for automated background processing.
-All tasks are tenant-aware and use database transactions.
+All tasks are organization-aware and use database transactions.
 """
 from celery import shared_task
 from django.utils import timezone
@@ -327,7 +327,7 @@ def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'
         # Record execution
         ReportExecution.objects.create(
             report=report_def,
-            tenant_id=organization_id,
+            organization_id=organization_id,
             status='SUCCESS' if 'file_path' in result else 'FAILED',
             row_count=result.get('row_count', 0),
             file_path=result.get('file_path', ''),
@@ -343,7 +343,7 @@ def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'
             from apps.finance.report_models import ReportDefinition, ReportExecution
             ReportExecution.objects.create(
                 report_id=report_def_id,
-                tenant_id=organization_id,
+                organization_id=organization_id,
                 status='FAILED',
                 error_message=str(exc),
             )

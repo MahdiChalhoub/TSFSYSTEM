@@ -1,27 +1,63 @@
 {
-    "name": "TSF POS",
-    "short_name": "POS",
-    "description": "Point of Sale - TSF City Platform",
-    "start_url": "/sales",
+    "name": "TSFSYSTEM — Enterprise Platform",
+    "short_name": "TSFSYSTEM",
+    "description": "Enterprise Resource Planning — Finance, Inventory, POS, CRM, HR",
+    "start_url": "/dashboard",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#0a0a0f",
-    "theme_color": "#6366f1",
+    "background_color": "#09090B",
+    "theme_color": "#10B981",
     "orientation": "any",
     "icons": [
         {
             "src": "/icons/icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "/icons/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ],
     "categories": [
         "business",
-        "finance"
+        "finance",
+        "productivity"
     ],
-    "prefer_related_applications": false
+    "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Point of Sale",
+            "url": "/sales",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Inventory",
+            "url": "/inventory/products",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
 }

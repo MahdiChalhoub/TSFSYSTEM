@@ -325,4 +325,4 @@ class SupplierProductPolicy(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'crm_supplier_product_policy'
-        unique_together = ['tenant', 'supplier', 'product', 'branch']
+        unique_together = ['organization', 'supplier', 'product', 'branch']

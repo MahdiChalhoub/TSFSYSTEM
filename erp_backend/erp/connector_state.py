@@ -74,7 +74,7 @@ class ConnectorStateMixin:
         Decision tree:
         1. Is module installed on system? No → MISSING
         2. Is the circuit broken? Yes -> MISSING (Safe failure)
-        3. Is module enabled for this tenant? No → DISABLED
+        3. Is module enabled for this organization? No → DISABLED
         4. Does user have permission? No → UNAUTHORIZED
         5. All checks pass → AVAILABLE
         """
@@ -92,16 +92,24 @@ class ConnectorStateMixin:
         if self._is_circuit_broken(module_code, organization_id):
             return ModuleState.MISSING # Fail safe as if missing
 
-        # Check 3: Is module enabled for this tenant?
+        # Check 3: Is module enabled for this organization?
         try:
             org_module = self._OrganizationModule.objects.get(
-                tenant_id=organization_id,
+                organization_id=organization_id,
                 module_name=module_code
             )
             if not org_module.is_enabled:
                 return ModuleState.DISABLED
         except self._OrganizationModule.DoesNotExist:
-            return ModuleState.DISABLED
+            # Fallback: check kernel ModuleLoader (per-tenant module control)
+            try:
+                from kernel.modules import is_module_enabled
+                from .models import Organization
+                org = Organization.objects.filter(id=organization_id).first()
+                if org and not is_module_enabled(org, module_code):
+                    return ModuleState.DISABLED
+            except Exception:
+                pass  # If ModuleLoader not yet seeded, assume enabled
         
         # Check 4: Permission check
         if user_id:
@@ -117,7 +125,7 @@ class ConnectorStateMixin:
 
     
     def get_all_module_states(self, organization_id: int) -> Dict[str, ModuleState]:
-        """Get states of all registered modules for a tenant."""
+        """Get states of all registered modules for a organization."""
         self._load_models()
         
         states = {}

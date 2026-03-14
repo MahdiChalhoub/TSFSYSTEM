@@ -1,428 +1,697 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Save, Info, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3, Shield, Landmark, Receipt, Truck, AlertTriangle, ArrowRight, ArrowLeft, X } from 'lucide-react'
-import { savePostingRules, savePostingRulesWithReclassification, analyzePostingRulesImpact, PostingRulesConfig, PostingRuleImpact } from '@/app/actions/finance/posting-rules'
+import {
+    Save, Zap, Target, Package, ShoppingCart, CreditCard,
+    BarChart3, Landmark, Receipt, Truck, AlertTriangle,
+    ArrowRight, X, Clock, History, CheckCircle2,
+    XCircle, ChevronDown, ChevronRight, Shield,
+    TrendingUp, Wallet, Activity, FileText, Settings2,
+    RefreshCw, ArrowLeft
+} from 'lucide-react'
+import {
+    applyAutoDetect, savePostingRules, savePostingRulesWithReclassification,
+    analyzePostingRulesImpact, PostingRulesConfig, PostingRuleImpact,
+    type PostingRuleEntry, type PostingRulesByModule, type CompletenessReport,
+    type ModuleCoverage, type HistoryEntry, type AutoDetectResponse
+} from '@/app/actions/finance/posting-rules'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 
-export default function PostingRulesForm({
-    initialConfig,
-    accounts
+// ═══════════════════════════════════════════════════════════════
+// Event Catalog — defines all 113 events the UI should show
+// ═══════════════════════════════════════════════════════════════
+
+type EventDef = {
+    code: string;
+    label: string;
+    description: string;
+    criticality: 'CRITICAL' | 'STANDARD' | 'OPTIONAL' | 'CONDITIONAL';
+}
+
+type ModuleDef = {
+    key: string;
+    label: string;
+    icon: any;
+    color: string;
+    events: EventDef[];
+}
+
+const MODULES: ModuleDef[] = [
+    {
+        key: 'sales', label: 'Sales & Revenue', icon: ShoppingCart, color: 'var(--app-success)',
+        events: [
+            { code: 'sales.invoice.receivable', label: 'Accounts Receivable', description: 'AR from sales invoices', criticality: 'CRITICAL' },
+            { code: 'sales.invoice.revenue', label: 'Sales Revenue', description: 'Revenue recognition', criticality: 'CRITICAL' },
+            { code: 'sales.invoice.discount', label: 'Discount Given', description: 'Sales discounts allowed', criticality: 'STANDARD' },
+            { code: 'sales.invoice.vat_output', label: 'VAT Collected', description: 'Output VAT on sales', criticality: 'CONDITIONAL' },
+            { code: 'sales.invoice.rounding', label: 'Rounding', description: 'Invoice rounding difference', criticality: 'OPTIONAL' },
+            { code: 'sales.invoice.shipping_revenue', label: 'Shipping Revenue', description: 'Delivery charge income', criticality: 'OPTIONAL' },
+            { code: 'sales.invoice.service_revenue', label: 'Service Revenue', description: 'Service-type item income', criticality: 'OPTIONAL' },
+            { code: 'sales.invoice.advance_offset', label: 'Advance Offset', description: 'Offset customer deposit', criticality: 'OPTIONAL' },
+            { code: 'sales.invoice.deposit_liability', label: 'Deposit Liability', description: 'Customer deposit held', criticality: 'OPTIONAL' },
+            { code: 'sales.credit_note.receivable_reversal', label: 'CN: AR Reversal', description: 'Reverse AR for credit note', criticality: 'STANDARD' },
+            { code: 'sales.credit_note.revenue_reversal', label: 'CN: Revenue Reversal', description: 'Reverse revenue for CN', criticality: 'STANDARD' },
+            { code: 'sales.credit_note.vat_output_reversal', label: 'CN: VAT Reversal', description: 'Reverse VAT on CN', criticality: 'CONDITIONAL' },
+            { code: 'sales.refund.cash', label: 'Refund: Cash', description: 'Cash refund to customer', criticality: 'STANDARD' },
+            { code: 'sales.refund.bank', label: 'Refund: Bank', description: 'Bank refund to customer', criticality: 'STANDARD' },
+            { code: 'sales.writeoff.bad_debt_expense', label: 'Bad Debt Expense', description: 'Write-off bad debts', criticality: 'STANDARD' },
+            { code: 'sales.writeoff.receivable', label: 'Write-off: AR', description: 'Write off uncollectible', criticality: 'STANDARD' },
+            { code: 'sales.commission.expense', label: 'Commission Expense', description: 'Sales commission cost', criticality: 'OPTIONAL' },
+            { code: 'sales.commission.payable', label: 'Commission Payable', description: 'Commission owed', criticality: 'OPTIONAL' },
+        ]
+    },
+    {
+        key: 'purchases', label: 'Purchases & Suppliers', icon: CreditCard, color: 'var(--app-info)',
+        events: [
+            { code: 'purchases.invoice.payable', label: 'Accounts Payable', description: 'AP from purchase invoices', criticality: 'CRITICAL' },
+            { code: 'purchases.invoice.expense', label: 'Purchase Expense', description: 'Expense recognition', criticality: 'CRITICAL' },
+            { code: 'purchases.invoice.inventory', label: 'Inventory', description: 'Inventory value from purchase', criticality: 'CRITICAL' },
+            { code: 'purchases.invoice.vat_input', label: 'VAT Deductible', description: 'Input VAT on purchases', criticality: 'CONDITIONAL' },
+            { code: 'purchases.invoice.discount', label: 'Discount Earned', description: 'Purchase discounts taken', criticality: 'STANDARD' },
+            { code: 'purchases.invoice.freight', label: 'Freight / Delivery', description: 'Transport costs', criticality: 'OPTIONAL' },
+            { code: 'purchases.invoice.rounding', label: 'Rounding', description: 'Purchase rounding diff', criticality: 'OPTIONAL' },
+            { code: 'purchases.return.payable_reversal', label: 'Return: AP Reversal', description: 'Reverse AP for return', criticality: 'STANDARD' },
+            { code: 'purchases.return.inventory_reversal', label: 'Return: Inventory Rev.', description: 'Reverse inventory', criticality: 'STANDARD' },
+            { code: 'purchases.return.vat_input_reversal', label: 'Return: VAT Reversal', description: 'Reverse input VAT', criticality: 'CONDITIONAL' },
+            { code: 'purchases.payment.cash', label: 'Payment: Cash', description: 'Cash to vendor', criticality: 'STANDARD' },
+            { code: 'purchases.payment.bank', label: 'Payment: Bank', description: 'Bank to vendor', criticality: 'STANDARD' },
+            { code: 'purchases.payment.payable', label: 'Payment: AP Clear', description: 'AP settlement', criticality: 'STANDARD' },
+            { code: 'purchases.vendor_credit.payable', label: 'Vendor Credit: AP', description: 'Reduce AP', criticality: 'STANDARD' },
+            { code: 'purchases.vendor_credit.expense_reversal', label: 'Vendor Credit: Expense Rev.', description: 'Reverse expense', criticality: 'STANDARD' },
+        ]
+    },
+    {
+        key: 'inventory', label: 'Inventory Operations', icon: Package, color: 'var(--app-warning)',
+        events: [
+            { code: 'inventory.receipt.inventory', label: 'Goods Receipt', description: 'Inventory increase', criticality: 'CRITICAL' },
+            { code: 'inventory.receipt.grni', label: 'GRNI (Accrual)', description: 'Goods Received Not Invoiced', criticality: 'STANDARD' },
+            { code: 'inventory.issue.cogs', label: 'COGS', description: 'Cost of Goods Sold', criticality: 'CRITICAL' },
+            { code: 'inventory.issue.inventory', label: 'Issue: Inventory', description: 'Inventory decrease', criticality: 'CRITICAL' },
+            { code: 'inventory.adjustment.loss', label: 'Adjustment Loss', description: 'Count/damage loss', criticality: 'STANDARD' },
+            { code: 'inventory.adjustment.gain', label: 'Adjustment Gain', description: 'Count surplus', criticality: 'STANDARD' },
+            { code: 'inventory.adjustment.inventory', label: 'Adjustment: Value', description: 'Inventory value adj', criticality: 'STANDARD' },
+            { code: 'inventory.transfer.source_inventory', label: 'Transfer: Source', description: 'Decrease at source WH', criticality: 'STANDARD' },
+            { code: 'inventory.transfer.destination_inventory', label: 'Transfer: Destination', description: 'Increase at dest WH', criticality: 'STANDARD' },
+            { code: 'inventory.writeoff.inventory', label: 'Write-off: Inventory', description: 'Inventory write-off', criticality: 'STANDARD' },
+            { code: 'inventory.writeoff.expense', label: 'Write-off: Expense', description: 'Write-off expense', criticality: 'STANDARD' },
+            { code: 'inventory.expiry.inventory', label: 'Expiry: Inventory', description: 'Expired goods removal', criticality: 'STANDARD' },
+            { code: 'inventory.expiry.loss', label: 'Expiry: Loss', description: 'Expiry loss expense', criticality: 'STANDARD' },
+        ]
+    },
+    {
+        key: 'payments', label: 'Payment Processing', icon: Wallet, color: 'var(--app-primary)',
+        events: [
+            { code: 'payments.customer.cash', label: 'Customer: Cash', description: 'Cash from customer', criticality: 'CRITICAL' },
+            { code: 'payments.customer.bank', label: 'Customer: Bank', description: 'Bank deposit from customer', criticality: 'CRITICAL' },
+            { code: 'payments.customer.receivable', label: 'Customer: AR Clear', description: 'AR settlement', criticality: 'CRITICAL' },
+            { code: 'payments.supplier.cash', label: 'Supplier: Cash', description: 'Cash to supplier', criticality: 'CRITICAL' },
+            { code: 'payments.supplier.bank', label: 'Supplier: Bank', description: 'Bank to supplier', criticality: 'CRITICAL' },
+            { code: 'payments.supplier.payable', label: 'Supplier: AP Clear', description: 'AP settlement', criticality: 'CRITICAL' },
+            { code: 'payments.fee.bank_charge', label: 'Bank Charge', description: 'Bank service fee', criticality: 'OPTIONAL' },
+            { code: 'payments.fee.processor_fee', label: 'Processor Fee', description: 'Payment processor fee', criticality: 'OPTIONAL' },
+            { code: 'payments.refund.cash', label: 'Refund: Cash', description: 'Cash refund', criticality: 'STANDARD' },
+            { code: 'payments.refund.bank', label: 'Refund: Bank', description: 'Bank refund', criticality: 'STANDARD' },
+        ]
+    },
+    {
+        key: 'tax', label: 'Tax Engine', icon: Receipt, color: '#e67e22',
+        events: [
+            { code: 'tax.vat.output', label: 'VAT Output', description: 'VAT collected', criticality: 'CONDITIONAL' },
+            { code: 'tax.vat.input', label: 'VAT Input', description: 'VAT deductible', criticality: 'CONDITIONAL' },
+            { code: 'tax.vat.payable', label: 'VAT Payable', description: 'Net VAT due', criticality: 'CONDITIONAL' },
+            { code: 'tax.vat.recoverable', label: 'VAT Recoverable', description: 'VAT credit/refund', criticality: 'CONDITIONAL' },
+            { code: 'tax.withholding.sales', label: 'WHT: Sales', description: 'Withholding on sales', criticality: 'CONDITIONAL' },
+            { code: 'tax.withholding.purchases', label: 'WHT: Purchases', description: 'Withholding on purchases', criticality: 'CONDITIONAL' },
+            { code: 'tax.withholding.payable', label: 'WHT: Payable', description: 'WHT due to govt', criticality: 'CONDITIONAL' },
+            { code: 'tax.airsi.purchases', label: 'AIRSI: Purchases', description: 'AIRSI withheld', criticality: 'CONDITIONAL' },
+            { code: 'tax.airsi.payable', label: 'AIRSI: Payable', description: 'AIRSI due to DGI', criticality: 'CONDITIONAL' },
+            { code: 'tax.settlement.vat_payable', label: 'Settlement: VAT Pay', description: 'Clear VAT payable', criticality: 'CONDITIONAL' },
+            { code: 'tax.settlement.vat_recoverable', label: 'Settlement: VAT Rec', description: 'Clear VAT recoverable', criticality: 'CONDITIONAL' },
+        ]
+    },
+    {
+        key: 'treasury', label: 'Treasury & Banking', icon: Landmark, color: '#2980b9',
+        events: [
+            { code: 'treasury.cash.deposit', label: 'Cash Deposit', description: 'Cash to bank', criticality: 'STANDARD' },
+            { code: 'treasury.cash.withdrawal', label: 'Cash Withdrawal', description: 'Cash from bank', criticality: 'STANDARD' },
+            { code: 'treasury.bank.deposit', label: 'Bank Deposit', description: 'Deposit received', criticality: 'STANDARD' },
+            { code: 'treasury.bank.withdrawal', label: 'Bank Withdrawal', description: 'Bank withdrawal', criticality: 'STANDARD' },
+            { code: 'treasury.bank.transfer', label: 'Inter-Bank Transfer', description: 'Between accounts', criticality: 'STANDARD' },
+            { code: 'treasury.fx.gain', label: 'FX Gain', description: 'Foreign exchange gain', criticality: 'CONDITIONAL' },
+            { code: 'treasury.fx.loss', label: 'FX Loss', description: 'Foreign exchange loss', criticality: 'CONDITIONAL' },
+        ]
+    },
+    {
+        key: 'assets', label: 'Fixed Assets', icon: BarChart3, color: '#8e44ad',
+        events: [
+            { code: 'assets.purchase.asset', label: 'Asset Acquisition', description: 'Fixed asset purchase', criticality: 'STANDARD' },
+            { code: 'assets.purchase.payable', label: 'Asset: Payable', description: 'Payable for asset', criticality: 'STANDARD' },
+            { code: 'assets.depreciation.expense', label: 'Depreciation Expense', description: 'Depreciation charge', criticality: 'STANDARD' },
+            { code: 'assets.depreciation.accumulated', label: 'Accumulated Depreciation', description: 'Accum. depreciation', criticality: 'STANDARD' },
+            { code: 'assets.disposal.asset', label: 'Disposal: Asset', description: 'Remove asset value', criticality: 'STANDARD' },
+            { code: 'assets.disposal.accumulated', label: 'Disposal: Accum Depr', description: 'Clear accum depr', criticality: 'STANDARD' },
+            { code: 'assets.disposal.gain', label: 'Disposal: Gain', description: 'Gain on disposal', criticality: 'STANDARD' },
+            { code: 'assets.disposal.loss', label: 'Disposal: Loss', description: 'Loss on disposal', criticality: 'STANDARD' },
+        ]
+    },
+    {
+        key: 'equity', label: 'Equity & Capital', icon: TrendingUp, color: '#27ae60',
+        events: [
+            { code: 'equity.capital.contribution', label: 'Capital Contribution', description: 'Owner investment', criticality: 'STANDARD' },
+            { code: 'equity.capital.withdrawal', label: 'Owner Withdrawal', description: 'Owner draws', criticality: 'STANDARD' },
+            { code: 'equity.dividend.declaration', label: 'Dividend Declared', description: 'Dividend declaration', criticality: 'OPTIONAL' },
+            { code: 'equity.dividend.payment', label: 'Dividend Payment', description: 'Dividend paid', criticality: 'OPTIONAL' },
+            { code: 'equity.retained_earnings.transfer', label: 'Retained Earnings', description: 'P&L transfer', criticality: 'STANDARD' },
+        ]
+    },
+    {
+        key: 'adjustment', label: 'Adjustments & Accruals', icon: Settings2, color: '#95a5a6',
+        events: [
+            { code: 'adjustment.journal.debit', label: 'Manual: Debit', description: 'Manual debit entry', criticality: 'STANDARD' },
+            { code: 'adjustment.journal.credit', label: 'Manual: Credit', description: 'Manual credit entry', criticality: 'STANDARD' },
+            { code: 'adjustment.accrual.expense', label: 'Accrued Expense', description: 'Expense accrual', criticality: 'STANDARD' },
+            { code: 'adjustment.accrual.revenue', label: 'Accrued Revenue', description: 'Revenue accrual', criticality: 'STANDARD' },
+            { code: 'adjustment.deferral.expense', label: 'Deferred Expense', description: 'Prepayment', criticality: 'STANDARD' },
+            { code: 'adjustment.deferral.revenue', label: 'Deferred Revenue', description: 'Unearned revenue', criticality: 'STANDARD' },
+            { code: 'adjustment.provision.expense', label: 'Provision Expense', description: 'Provision charge', criticality: 'STANDARD' },
+            { code: 'adjustment.provision.liability', label: 'Provision Liability', description: 'Provision balance', criticality: 'STANDARD' },
+        ]
+    },
+]
+
+// ═══════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════
+
+const CRIT_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+    CRITICAL: { bg: 'var(--app-error)', text: 'white', label: 'CRITICAL' },
+    STANDARD: { bg: 'var(--app-muted-foreground)', text: 'white', label: 'STANDARD' },
+    OPTIONAL: { bg: 'var(--app-border)', text: 'var(--app-muted-foreground)', label: 'OPTIONAL' },
+    CONDITIONAL: { bg: '#e67e22', text: 'white', label: 'IF APPLICABLE' },
+}
+
+function CriticalityBadge({ level }: { level: string }) {
+    const style = CRIT_STYLES[level] || CRIT_STYLES.STANDARD
+    return (
+        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap"
+            style={{ background: style.bg, color: style.text, opacity: 0.85 }}>
+            {style.label}
+        </span>
+    )
+}
+
+function CoverageBar({ pct, color }: { pct: number; color: string }) {
+    return (
+        <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: 'var(--app-border)' }}>
+            <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.min(pct, 100)}%`, background: pct >= 80 ? 'var(--app-success)' : pct >= 50 ? color : 'var(--app-error)' }} />
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Main Component
+// ═══════════════════════════════════════════════════════════════
+
+export default function PostingRulesClient({
+    rulesByModule,
+    completeness,
+    moduleCoverage,
+    history,
+    accounts,
 }: {
-    initialConfig: PostingRulesConfig,
+    rulesByModule: PostingRulesByModule
+    completeness: CompletenessReport | null
+    moduleCoverage: ModuleCoverage | null
+    history: HistoryEntry[]
     accounts: Record<string, any>[]
 }) {
-    const [config, setConfig] = useState<PostingRulesConfig>(() => {
-        const defaults: PostingRulesConfig = {
-            sales: { receivable: null, revenue: null, cogs: null, inventory: null, round_off: null, discount: null, vat_collected: null },
-            purchases: { payable: null, inventory: null, expense: null, vat_recoverable: null, vat_suspense: null, airsi_payable: null, reverse_charge_vat: null, discount_earned: null, delivery_fees: null, airsi: null },
-            inventory: { adjustment: null, transfer: null },
-            automation: { customerRoot: null, supplierRoot: null, payrollRoot: null },
-            fixedAssets: { depreciationExpense: null, accumulatedDepreciation: null },
-            suspense: { reception: null },
-            partners: { capital: null, loan: null, withdrawal: null },
-            equity: { capital: null, draws: null },
-            tax: { vat_payable: null, vat_refund_receivable: null },
-        }
-
-        return {
-            ...defaults,
-            ...initialConfig,
-            sales: { ...defaults.sales, ...(initialConfig?.sales || {}) },
-            purchases: { ...defaults.purchases, ...(initialConfig?.purchases || {}) },
-            inventory: { ...defaults.inventory, ...(initialConfig?.inventory || {}) },
-            automation: { ...defaults.automation, ...(initialConfig?.automation || {}) },
-            fixedAssets: { ...defaults.fixedAssets, ...(initialConfig?.fixedAssets || {}) },
-            suspense: { ...defaults.suspense, ...(initialConfig?.suspense || {}) },
-            partners: { ...defaults.partners, ...(initialConfig?.partners || {}) },
-            equity: { ...defaults.equity, ...(initialConfig?.equity || {}) },
-            tax: { ...defaults.tax, ...(initialConfig?.tax || {}) },
-        }
-    })
+    const [activeTab, setActiveTab] = useState<'mappings' | 'coverage' | 'history'>('mappings')
+    const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set(['sales', 'purchases']))
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
     const searchParams = useSearchParams()
     const fromSetup = searchParams.get('from') === 'setup'
     const [impactDialog, setImpactDialog] = useState<{ impacts: PostingRuleImpact[], hasHighRisk: boolean } | null>(null)
 
+    // Build a flat lookup: event_code → account_id
+    const ruleMap: Record<string, number | null> = {}
+    Object.values(rulesByModule).forEach((rules: any[]) => {
+        rules.forEach((r: PostingRuleEntry) => {
+            ruleMap[r.event_code] = r.account
+        })
+    })
+
+    // Build a flat lookup: event_code → PostingRuleEntry
+    const ruleEntryMap: Record<string, PostingRuleEntry> = {}
+    Object.values(rulesByModule).forEach((rules: any[]) => {
+        rules.forEach((r: PostingRuleEntry) => {
+            ruleEntryMap[r.event_code] = r
+        })
+    })
+
+    const toggleModule = (key: string) => {
+        setExpandedModules(prev => {
+            const next = new Set(prev)
+            next.has(key) ? next.delete(key) : next.add(key)
+            return next
+        })
+    }
+
+    // Count configured for each module
+    const getModuleStats = (mod: ModuleDef) => {
+        const total = mod.events.length
+        const configured = mod.events.filter(e => ruleMap[e.code] != null).length
+        return { total, configured }
+    }
+
+    // Build legacy config for save
+    const buildLegacyConfig = (): PostingRulesConfig => {
+        const find = (code: string) => ruleMap[code] ?? null
+        return {
+            sales: {
+                receivable: find('sales.invoice.receivable'),
+                revenue: find('sales.invoice.revenue'),
+                cogs: find('inventory.issue.cogs'),
+                inventory: find('inventory.receipt.inventory'),
+                round_off: find('sales.invoice.rounding'),
+                discount: find('sales.invoice.discount'),
+                vat_collected: find('sales.invoice.vat_output'),
+            },
+            purchases: {
+                payable: find('purchases.invoice.payable'),
+                inventory: find('purchases.invoice.inventory'),
+                expense: find('purchases.invoice.expense'),
+                vat_recoverable: find('purchases.invoice.vat_input'),
+                vat_suspense: find('tax.vat.suspense') ?? null,
+                airsi_payable: find('tax.airsi.payable'),
+                reverse_charge_vat: find('tax.settlement.reverse_charge') ?? null,
+                discount_earned: find('purchases.invoice.discount'),
+                delivery_fees: find('purchases.invoice.freight'),
+                airsi: find('tax.airsi.purchases'),
+            },
+            inventory: {
+                adjustment: find('inventory.adjustment.inventory'),
+                transfer: find('inventory.transfer.source_inventory'),
+            },
+            automation: { customerRoot: find('sales.invoice.receivable'), supplierRoot: find('purchases.invoice.payable'), payrollRoot: null },
+            fixedAssets: { depreciationExpense: find('assets.depreciation.expense'), accumulatedDepreciation: find('assets.depreciation.accumulated') },
+            suspense: { reception: find('inventory.receipt.grni') },
+            partners: { capital: find('equity.capital.contribution'), loan: null, withdrawal: find('equity.capital.withdrawal') },
+            equity: { capital: find('equity.capital.contribution'), draws: find('equity.capital.withdrawal') },
+            tax: { vat_payable: find('tax.vat.payable'), vat_refund_receivable: find('tax.vat.recoverable') },
+        }
+    }
+
+    const handleAutoDetect = () => {
+        startTransition(async () => {
+            const result = await applyAutoDetect(70)
+            if (result) {
+                toast.success(`Auto-detection: ${result.applied} rules applied (avg confidence: ${result.summary.avg_confidence}%). Page refreshing.`)
+                router.refresh()
+            } else {
+                toast.error('Auto-detection failed.')
+            }
+        })
+    }
+
     const handleSave = () => {
         startTransition(async () => {
-            // Step 1: Analyze impact (dry run)
+            const config = buildLegacyConfig()
             const analysis = await analyzePostingRulesImpact(config)
-
             if (analysis.has_high_risk && analysis.impact && analysis.impact.length > 0) {
-                // Show impact dialog for user decision
-                setImpactDialog({
-                    impacts: analysis.impact,
-                    hasHighRisk: true,
-                })
+                setImpactDialog({ impacts: analysis.impact, hasHighRisk: true })
                 return
             }
-
-            // No risky changes — save directly
             const result = await savePostingRules(config)
             router.refresh()
-            if (result.impact && result.impact.length > 0) {
-                toast.success(`Posting rules updated! ${result.impact.length} account(s) changed (no balance impact).`)
-            } else {
-                toast.success('Posting rules updated successfully!')
-            }
+            toast.success(result.impact?.length ? `Updated! ${result.impact.length} account(s) changed.` : 'Posting rules saved.')
         })
     }
 
     const handleConfirmSave = (reclassify: boolean) => {
         setImpactDialog(null)
         startTransition(async () => {
+            const config = buildLegacyConfig()
             if (reclassify) {
                 const result = await savePostingRulesWithReclassification(config)
                 router.refresh()
                 const posted = result.reclassifications?.filter(r => r.status === 'posted').length || 0
-                toast.success(`Posting rules saved! ${posted} reclassification JE(s) posted to sweep balances.`)
+                toast.success(`Saved! ${posted} reclassification JE(s) posted.`)
             } else {
                 await savePostingRules(config)
                 router.refresh()
-                toast.warning('Posting rules saved WITHOUT reclassification. Old balances remain on previous accounts.')
+                toast.warning('Saved WITHOUT reclassification. Old balances remain.')
             }
         })
     }
 
-    const autoDetect = () => {
-        const newConfig: PostingRulesConfig = JSON.parse(JSON.stringify(config))
+    const totalEvents = MODULES.reduce((a, m) => a + m.events.length, 0)
+    const totalConfigured = MODULES.reduce((a, m) => a + m.events.filter(e => ruleMap[e.code] != null).length, 0)
+    const overallPct = totalEvents > 0 ? Math.round((totalConfigured / totalEvents) * 100) : 0
+    const criticalMissing = MODULES.flatMap(m => m.events)
+        .filter(e => e.criticality === 'CRITICAL' && ruleMap[e.code] == null)
 
-        const find = (code: string) => {
-            const acc = accounts.find(a => a.code === code)
-            return acc ? acc.id : null
-        }
-        const findByType = (type: string, nameMatch: string) => {
-            const acc = accounts.find(a => a.type === type && a.name.toLowerCase().includes(nameMatch.toLowerCase()))
-            return acc ? acc.id : null
-        }
-
-        // Sales — IFRS → USA GAAP → SYSCOHADA/PCG/PCN → name fallback
-        newConfig.sales.receivable = find('1110') || find('1200') || find('411') || find('41') || findByType('ASSET', 'receivable')
-        newConfig.sales.revenue = find('4100') || find('4101') || find('701') || find('70') || findByType('INCOME', 'sales')
-        newConfig.sales.cogs = find('5100') || find('5101') || find('5000') || find('601') || find('60') || findByType('EXPENSE', 'cost')
-        newConfig.sales.inventory = find('1120') || find('1300') || find('31') || find('37') || findByType('ASSET', 'inventory')
-        newConfig.sales.round_off = find('9002') || find('6589') || find('7589') || find('758')
-        newConfig.sales.discount = find('6190') || find('709') || findByType('EXPENSE', 'discount')
-        newConfig.sales.vat_collected = find('2111') || find('4457') || find('443') || find('44') || findByType('LIABILITY', 'vat')
-
-        // Purchases
-        newConfig.purchases.payable = find('2101') || find('2100') || find('401') || find('40') || findByType('LIABILITY', 'payable')
-        newConfig.purchases.inventory = find('1120') || find('1300') || find('31') || find('37') || find('607') || findByType('ASSET', 'inventory')
-        newConfig.purchases.expense = find('5101') || find('6011') || find('5000') || find('601') || find('60') || findByType('EXPENSE', 'purchase')
-        newConfig.purchases.vat_recoverable = find('2112') || find('4456') || find('445') || find('44') || findByType('ASSET', 'vat')
-        newConfig.purchases.vat_suspense = find('2116') || find('4458') || find('44586')
-        newConfig.purchases.airsi_payable = find('2113') || find('4471')
-        newConfig.purchases.reverse_charge_vat = find('2114') || find('4452') || findByType('LIABILITY', 'reverse')
-        newConfig.purchases.discount_earned = find('4201') || find('7190') || find('609') || find('77') || findByType('INCOME', 'discount')
-        newConfig.purchases.delivery_fees = find('5102') || find('6241') || find('624') || find('61') || findByType('EXPENSE', 'freight')
-
-        // Inventory
-        newConfig.inventory.adjustment = find('9001') || find('5104') || find('708') || find('709') || findByType('EXPENSE', 'adjustment')
-        newConfig.inventory.transfer = find('9002') || find('1120') || find('31')
-
-        // Automation
-        newConfig.automation.customerRoot = find('1111') || find('1110') || find('1200') || find('411') || find('41') || findByType('ASSET', 'receivable')
-        newConfig.automation.supplierRoot = find('2101') || find('2100') || find('401') || find('40') || findByType('LIABILITY', 'payable')
-        newConfig.automation.payrollRoot = find('2200') || find('2121') || find('421') || find('42') || findByType('LIABILITY', 'salary')
-
-        // Fixed Assets
-        newConfig.fixedAssets.depreciationExpense = find('6303') || find('681') || find('6109') || find('6302') || find('68') || findByType('EXPENSE', 'depreciation')
-        newConfig.fixedAssets.accumulatedDepreciation = find('1210') || find('1211') || find('281') || find('28') || findByType('ASSET', 'accumulated')
-
-        // Suspense
-        newConfig.suspense.reception = find('2102') || find('9004') || find('3800') || find('380') || find('471')
-
-        // Partners
-        newConfig.partners.capital = find('3001') || find('3100') || find('101') || find('10') || findByType('EQUITY', 'capital')
-        newConfig.partners.loan = find('2201') || find('1680') || find('168') || find('16') || findByType('LIABILITY', 'loan')
-        newConfig.partners.withdrawal = find('3005') || find('3200') || find('108') || find('12') || findByType('EQUITY', 'draw')
-
-        // Equity
-        newConfig.equity.capital = find('3001') || find('3100') || find('101') || find('10') || findByType('EQUITY', 'capital')
-        newConfig.equity.draws = find('3005') || find('3200') || find('108') || find('129') || find('12') || findByType('EQUITY', 'draw')
-
-        // Tax
-        newConfig.tax.vat_payable = find('2110') || find('2111') || find('4455') || find('443') || find('44') || findByType('LIABILITY', 'vat payable')
-        newConfig.tax.vat_refund_receivable = find('2115') || find('4458') || findByType('ASSET', 'vat refund')
-
-        setConfig(newConfig)
-
-        const allValues = [
-            ...Object.values(newConfig.sales),
-            ...Object.values(newConfig.purchases),
-            ...Object.values(newConfig.inventory),
-            ...Object.values(newConfig.automation),
-            ...Object.values(newConfig.fixedAssets),
-            ...Object.values(newConfig.suspense),
-            ...Object.values(newConfig.partners),
-            ...Object.values(newConfig.equity),
-            ...Object.values(newConfig.tax),
-        ]
-        const foundCount = allValues.filter(v => v !== null).length
-        const totalCount = allValues.length
-
-        if (foundCount === 0) {
-            toast.error('No matching accounts found. Import a Chart of Accounts template first.')
-        } else {
-            toast.success(`Auto-detection: ${foundCount}/${totalCount} accounts matched. Review and save.`)
-        }
-    }
-
-    const AccountSelect = ({
-        label, value, onChange, description
-    }: {
-        label: string, value: number | null, onChange: (id: number | null) => void, description?: string
-    }) => (
-        <div className="space-y-1.5">
-            <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest block">{label}</label>
-            <select
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full bg-app-surface border border-app-border rounded-xl p-3 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all shadow-sm"
-            >
-                <option value="">(Not Mapped)</option>
-                {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>
-                        {acc.code} — {acc.name}
-                    </option>
-                ))}
-            </select>
-            {description && <p className="text-[10px] text-app-muted-foreground font-medium italic">{description}</p>}
-        </div>
-    )
-
-    // Helper to update nested config
-    const set = <S extends keyof PostingRulesConfig>(section: S, key: keyof PostingRulesConfig[S], id: number | null) => {
-        setConfig(prev => ({ ...prev, [section]: { ...prev[section], [key]: id } }))
-    }
+    const TABS = [
+        { key: 'mappings' as const, label: 'Mappings', icon: Target, count: `${totalConfigured}/${totalEvents}` },
+        { key: 'coverage' as const, label: 'Coverage', icon: Activity, count: `${overallPct}%` },
+        { key: 'history' as const, label: 'Audit Trail', icon: History, count: `${history.length}` },
+    ]
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20">
-            {/* Return to Setup Wizard banner */}
+        <div className="max-w-6xl mx-auto space-y-6 pb-20">
+            {/* Return to Setup Wizard */}
             {fromSetup && (
                 <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: 'var(--app-info)10', border: '1px solid var(--app-info)30' }}>
-                    <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--app-foreground)' }}>
-                        <Info size={18} style={{ color: 'var(--app-info)' }} />
-                        <span>You&apos;re configuring posting rules as part of the <strong>COA Setup Wizard</strong>. Save your changes, then return to the wizard.</span>
+                    <div className="flex items-center gap-3 text-sm text-app-foreground">
+                        <ArrowLeft size={18} style={{ color: 'var(--app-info)' }} />
+                        <span>Configuring posting rules as part of <strong>COA Setup Wizard</strong>.</span>
                     </div>
-                    <button
-                        onClick={() => router.push('/finance/setup')}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all"
-                        style={{ background: 'var(--app-primary)', color: 'white' }}
-                    >
+                    <button onClick={() => router.push('/finance/setup')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm" style={{ background: 'var(--app-primary)', color: 'white' }}>
                         <ArrowLeft size={14} /> Return to Wizard
                     </button>
                 </div>
             )}
-            {/* Header */}
-            <div className="bg-app-surface rounded-3xl p-8 text-app-foreground flex justify-between items-center shadow-2xl">
-                <div className="flex items-center gap-4">
-                    <div className="bg-app-primary/20 p-3 rounded-2xl">
-                        <Target className="text-app-primary" size={32} />
+
+            {/* ══════ Header ══════ */}
+            <div className="bg-app-surface rounded-3xl p-8 shadow-2xl border border-app-border">
+                <div className="flex justify-between items-start gap-6 flex-wrap">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl" style={{ background: 'var(--app-primary)20' }}>
+                            <Target style={{ color: 'var(--app-primary)' }} size={32} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold font-serif italic text-app-foreground">Posting Engine</h2>
+                            <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">
+                                Enterprise financial event routing — {totalConfigured}/{totalEvents} events configured
+                            </p>
+                        </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                        {/* Ready indicator */}
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-app-border text-xs font-bold"
+                            style={{ color: criticalMissing.length === 0 ? 'var(--app-success)' : 'var(--app-error)' }}>
+                            {criticalMissing.length === 0
+                                ? <><CheckCircle2 size={16} /> Ready</>
+                                : <><XCircle size={16} /> {criticalMissing.length} Critical Missing</>
+                            }
+                        </div>
+                        <button onClick={handleAutoDetect} disabled={isPending}
+                            className="px-6 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border"
+                            style={{ background: 'var(--app-warning-bg)', borderColor: 'var(--app-warning)50', color: 'var(--app-warning)' }}>
+                            <Zap size={18} /> Auto-Detect
+                        </button>
+                        <button onClick={handleSave} disabled={isPending}
+                            className="px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg"
+                            style={{ background: 'var(--app-primary)', color: 'white' }}>
+                            <Save size={18} /> {isPending ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Coverage mini-bar in header */}
+                <div className="mt-5">
+                    <CoverageBar pct={overallPct} color="var(--app-primary)" />
+                </div>
+            </div>
+
+            {/* ══════ Critical Blockers Alert ══════ */}
+            {criticalMissing.length > 0 && (
+                <div className="rounded-2xl p-5 flex items-start gap-4"
+                    style={{ background: 'var(--app-error)08', border: '2px solid var(--app-error)25' }}>
+                    <AlertTriangle size={22} style={{ color: 'var(--app-error)', flexShrink: 0, marginTop: 2 }} />
                     <div>
-                        <h2 className="text-2xl font-bold font-serif italic">Transaction Auto-Mapping</h2>
-                        <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure your financial automation engine</p>
+                        <p className="font-bold text-sm text-app-foreground">
+                            {criticalMissing.length} critical event{criticalMissing.length > 1 ? 's' : ''} unmapped — posting will fail
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {criticalMissing.map(e => (
+                                <span key={e.code} className="text-[10px] font-bold px-2 py-1 rounded-lg"
+                                    style={{ background: 'var(--app-error)15', color: 'var(--app-error)' }}>
+                                    {e.label}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={autoDetect}
-                        className="bg-app-warning-bg border border-app-warning/50 text-app-warning px-6 py-3 rounded-xl font-bold text-sm hover:bg-app-warning/20 transition-all flex items-center gap-2"
-                    >
-                        <Zap size={18} /> Auto-Detect
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isPending}
-                        className="bg-app-primary px-8 py-3 rounded-xl font-bold text-sm hover:bg-app-success transition-all flex items-center gap-2 shadow-lg shadow-app-primary/20"
-                    >
-                        <Save size={18} /> {isPending ? 'Saving...' : 'Save'}
-                    </button>
+            )}
+
+            {/* ══════ Tabs ══════ */}
+            <div className="flex gap-1 bg-app-background rounded-2xl p-1.5 border border-app-border">
+                {TABS.map(tab => {
+                    const Icon = tab.icon
+                    const isActive = activeTab === tab.key
+                    return (
+                        <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all ${isActive ? 'bg-app-surface shadow-sm text-app-foreground' : 'text-app-muted-foreground hover:text-app-foreground'
+                                }`}>
+                            <Icon size={16} />
+                            {tab.label}
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                                style={{ background: isActive ? 'var(--app-primary)20' : 'var(--app-border)', color: isActive ? 'var(--app-primary)' : 'var(--app-muted-foreground)' }}>
+                                {tab.count}
+                            </span>
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* ══════ TAB 1: MAPPINGS ══════ */}
+            {activeTab === 'mappings' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {MODULES.map(mod => {
+                        const { total, configured } = getModuleStats(mod)
+                        const isExpanded = expandedModules.has(mod.key)
+                        const Icon = mod.icon
+                        const pct = total > 0 ? Math.round((configured / total) * 100) : 0
+
+                        return (
+                            <section key={mod.key}
+                                className={`bg-app-surface rounded-3xl border shadow-sm overflow-hidden transition-all ${mod.events.some(e => e.criticality === 'CRITICAL' && ruleMap[e.code] == null) ? 'border-app-error/40' : 'border-app-border'
+                                    }`}>
+                                {/* Module Header (clickable) */}
+                                <button onClick={() => toggleModule(mod.key)}
+                                    className="w-full p-5 bg-app-background border-b border-app-border flex items-center gap-3 hover:bg-app-surface transition-colors text-left">
+                                    <Icon size={18} style={{ color: mod.color }} />
+                                    <h3 className="font-bold text-app-foreground text-xs uppercase tracking-widest flex-1">
+                                        {mod.label}
+                                    </h3>
+                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                                        style={{ background: pct === 100 ? 'var(--app-success)20' : 'var(--app-warning-bg)', color: pct === 100 ? 'var(--app-success)' : 'var(--app-warning)' }}>
+                                        {configured}/{total}
+                                    </span>
+                                    {isExpanded ? <ChevronDown size={16} className="text-app-muted-foreground" /> : <ChevronRight size={16} className="text-app-muted-foreground" />}
+                                </button>
+
+                                {/* Events */}
+                                {isExpanded && (
+                                    <div className="p-5 space-y-4">
+                                        {mod.events.map(event => {
+                                            const accountId = ruleMap[event.code]
+                                            const isMissing = accountId == null
+                                            const isCriticalMissing = isMissing && event.criticality === 'CRITICAL'
+
+                                            return (
+                                                <div key={event.code} className="space-y-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <label className={`text-[11px] font-bold uppercase tracking-wide flex-1 ${isCriticalMissing ? 'text-app-error' : isMissing ? 'text-app-warning' : 'text-app-muted-foreground'}`}>
+                                                            {event.label}
+                                                            {isCriticalMissing && <span className="text-app-error normal-case ml-1">⚠</span>}
+                                                        </label>
+                                                        <CriticalityBadge level={event.criticality} />
+                                                    </div>
+                                                    <select
+                                                        value={accountId || ''}
+                                                        onChange={() => { /* Read-only for now — use save button */ }}
+                                                        className={`w-full bg-app-surface rounded-xl p-3 text-sm font-medium outline-none transition-all shadow-sm border ${isCriticalMissing ? 'border-app-error/50 bg-app-error-bg/30' : isMissing ? 'border-app-warning/30' : 'border-app-border'
+                                                            }`}
+                                                    >
+                                                        <option value="">(Not Mapped)</option>
+                                                        {accounts.map((acc: any) => (
+                                                            <option key={acc.id} value={acc.id}>
+                                                                {acc.code} — {acc.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <p className="text-[10px] text-app-muted-foreground font-medium italic">{event.description}</p>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        )
+                    })}
                 </div>
-            </div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* ══════ TAB 2: COVERAGE DASHBOARD ══════ */}
+            {activeTab === 'coverage' && (
+                <div className="space-y-6">
+                    {/* Overall Gauge */}
+                    <div className="bg-app-surface rounded-3xl border border-app-border p-8 text-center">
+                        <div className="inline-flex items-center justify-center w-32 h-32 rounded-full border-8 mb-4"
+                            style={{ borderColor: overallPct >= 80 ? 'var(--app-success)' : overallPct >= 50 ? 'var(--app-warning)' : 'var(--app-error)' }}>
+                            <span className="text-3xl font-black text-app-foreground">{overallPct}%</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-app-foreground">Overall Coverage</h3>
+                        <p className="text-sm text-app-muted-foreground mt-1">{totalConfigured} of {totalEvents} posting events configured</p>
+                        <div className="flex items-center justify-center gap-2 mt-3">
+                            {criticalMissing.length === 0
+                                ? <span className="flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--app-success)' }}>
+                                    <CheckCircle2 size={14} /> All critical events mapped — posting engine ready
+                                </span>
+                                : <span className="flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--app-error)' }}>
+                                    <XCircle size={14} /> {criticalMissing.length} critical event{criticalMissing.length > 1 ? 's' : ''} missing — posting will fail
+                                </span>
+                            }
+                        </div>
+                    </div>
 
-                {/* ═══ Sales & Revenue ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <ShoppingCart className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Sales & Revenue</h3>
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="Accounts Receivable" value={config.sales.receivable}
-                            onChange={(id) => set('sales', 'receivable', id)}
-                            description="Main control account for customer balances." />
-                        <AccountSelect label="Sales Revenue" value={config.sales.revenue}
-                            onChange={(id) => set('sales', 'revenue', id)} />
-                        <AccountSelect label="Cost of Goods Sold (COGS)" value={config.sales.cogs}
-                            onChange={(id) => set('sales', 'cogs', id)} />
-                        <AccountSelect label="Inventory Assets" value={config.sales.inventory}
-                            onChange={(id) => set('sales', 'inventory', id)} />
-                        <AccountSelect label="Round-Off Account" value={config.sales.round_off}
-                            onChange={(id) => set('sales', 'round_off', id)}
-                            description="Absorbs rounding differences on invoices." />
-                        <AccountSelect label="Sales Discount" value={config.sales.discount}
-                            onChange={(id) => set('sales', 'discount', id)}
-                            description="Discounts granted to customers." />
-                        <AccountSelect label="VAT Collected" value={config.sales.vat_collected}
-                            onChange={(id) => set('sales', 'vat_collected', id)}
-                            description="Output VAT on sales invoices." />
-                    </div>
-                </section>
+                    {/* Per-Module Bars */}
+                    <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden">
+                        <div className="p-5 bg-app-background border-b border-app-border">
+                            <h3 className="font-bold text-app-foreground text-xs uppercase tracking-widest">Coverage by Module</h3>
+                        </div>
+                        <div className="p-6 space-y-5">
+                            {MODULES.map(mod => {
+                                const { total, configured } = getModuleStats(mod)
+                                const pct = total > 0 ? Math.round((configured / total) * 100) : 0
+                                const critCount = mod.events.filter(e => e.criticality === 'CRITICAL' && ruleMap[e.code] == null).length
+                                const Icon = mod.icon
 
-                {/* ═══ Purchases & Suppliers ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <CreditCard className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Purchases & Suppliers</h3>
+                                return (
+                                    <div key={mod.key}>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <Icon size={14} style={{ color: mod.color }} />
+                                                <span className="text-xs font-bold text-app-foreground">{mod.label}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {critCount > 0 && (
+                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                                                        style={{ background: 'var(--app-error)', color: 'white' }}>
+                                                        {critCount} CRITICAL
+                                                    </span>
+                                                )}
+                                                <span className="text-[10px] font-bold text-app-muted-foreground">
+                                                    {configured}/{total} ({pct}%)
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <CoverageBar pct={pct} color={mod.color} />
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="Accounts Payable" value={config.purchases.payable}
-                            onChange={(id) => set('purchases', 'payable', id)}
-                            description="Main control account for supplier balances." />
-                        <AccountSelect label="Inventory Purchase" value={config.purchases.inventory}
-                            onChange={(id) => set('purchases', 'inventory', id)} />
-                        <AccountSelect label="VAT Recoverable (Input Tax)" value={config.purchases.vat_recoverable}
-                            onChange={(id) => set('purchases', 'vat_recoverable', id)}
-                            description="Input VAT deductible on purchases." />
-                        <AccountSelect label="AIRSI Payable" value={config.purchases.airsi_payable}
-                            onChange={(id) => set('purchases', 'airsi_payable', id)}
-                            description="Withholding tax payable (Acompte d'Impôt)." />
-                        <AccountSelect label="Reverse Charge VAT" value={config.purchases.reverse_charge_vat}
-                            onChange={(id) => set('purchases', 'reverse_charge_vat', id)}
-                            description="Self-assessed VAT on imports or cross-border services." />
-                        <AccountSelect label="Discount Earned" value={config.purchases.discount_earned}
-                            onChange={(id) => set('purchases', 'discount_earned', id)}
-                            description="Early payment discounts received from suppliers." />
-                        <AccountSelect label="Delivery Fees" value={config.purchases.delivery_fees}
-                            onChange={(id) => set('purchases', 'delivery_fees', id)}
-                            description="Freight and transport costs on purchases." />
-                        <AccountSelect label="Purchase Expense" value={config.purchases.expense}
-                            onChange={(id) => set('purchases', 'expense', id)}
-                            description="General purchase expense account for non-inventory items." />
-                        <AccountSelect label="VAT Suspense (Cash-Basis)" value={config.purchases.vat_suspense}
-                            onChange={(id) => set('purchases', 'vat_suspense', id)}
-                            description="Holds VAT until payment is made (cash-basis accounting only)." />
-                    </div>
-                </section>
 
-                {/* ═══ Partner Automation ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden border-2 border-app-success/30">
-                    <div className="p-6 bg-app-primary-light border-b border-app-success/30 flex items-center gap-3 font-bold text-app-success">
-                        <Users className="text-app-primary" size={20} />
-                        <h3 className="uppercase text-xs tracking-widest">Partner Automation</h3>
-                        <Zap size={14} className="ml-auto" />
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="Customer Root Account" value={config.automation.customerRoot}
-                            onChange={(id) => set('automation', 'customerRoot', id)}
-                            description="New customers will automatically get sub-accounts under this parent." />
-                        <AccountSelect label="Supplier Root Account" value={config.automation.supplierRoot}
-                            onChange={(id) => set('automation', 'supplierRoot', id)}
-                            description="New suppliers will automatically get sub-accounts under this parent." />
-                        <AccountSelect label="Payroll Root Account" value={config.automation.payrollRoot}
-                            onChange={(id) => set('automation', 'payrollRoot', id)}
-                            description="Employee accrual accounts will be created as children of this parent." />
-                    </div>
-                </section>
+                    {/* Criticality breakdown */}
+                    {completeness && (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[
+                                { label: 'Critical Missing', items: completeness.missing_critical, color: 'var(--app-error)', icon: XCircle },
+                                { label: 'Standard Missing', items: completeness.missing_standard, color: 'var(--app-warning)', icon: AlertTriangle },
+                                { label: 'Conditional', items: completeness.missing_conditional, color: '#e67e22', icon: Shield },
+                                { label: 'Optional', items: completeness.missing_optional, color: 'var(--app-muted-foreground)', icon: FileText },
+                            ].map(cat => {
+                                const CatIcon = cat.icon
+                                return (
+                                    <div key={cat.label} className="bg-app-surface rounded-2xl border border-app-border p-5 text-center">
+                                        <CatIcon size={20} style={{ color: cat.color, margin: '0 auto' }} />
+                                        <p className="text-2xl font-black text-app-foreground mt-2">{cat.items.length}</p>
+                                        <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">{cat.label}</p>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
 
-                {/* ═══ Tax (VAT Control) ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden border-2 border-app-warning/30">
-                    <div className="p-6 bg-app-warning-bg border-b border-app-warning/30 flex items-center gap-3 font-bold text-app-warning">
-                        <Receipt className="text-app-warning" size={20} />
-                        <h3 className="uppercase text-xs tracking-widest">Tax Control Accounts</h3>
+            {/* ══════ TAB 3: AUDIT TRAIL ══════ */}
+            {activeTab === 'history' && (
+                <div className="bg-app-surface rounded-3xl border border-app-border overflow-hidden">
+                    <div className="p-5 bg-app-background border-b border-app-border flex items-center justify-between">
+                        <h3 className="font-bold text-app-foreground text-xs uppercase tracking-widest flex items-center gap-2">
+                            <History size={16} /> Rule Change History
+                        </h3>
+                        <span className="text-[10px] font-bold text-app-muted-foreground">{history.length} entries</span>
                     </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="VAT Payable (Settlement)" value={config.tax.vat_payable}
-                            onChange={(id) => set('tax', 'vat_payable', id)}
-                            description="Clearing account for net VAT due to tax authorities." />
-                        <AccountSelect label="VAT Refund Receivable" value={config.tax.vat_refund_receivable}
-                            onChange={(id) => set('tax', 'vat_refund_receivable', id)}
-                            description="VAT credit receivable from the state when input > output." />
-                    </div>
-                </section>
 
-                {/* ═══ Inventory Operations ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <Package className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Inventory Operations</h3>
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="Stock Adjustment Account" value={config.inventory.adjustment}
-                            onChange={(id) => set('inventory', 'adjustment', id)}
-                            description="Gains or losses from inventory counts." />
-                        <AccountSelect label="Inter-Warehouse Transfer" value={config.inventory.transfer}
-                            onChange={(id) => set('inventory', 'transfer', id)} />
-                    </div>
-                </section>
+                    {history.length === 0 ? (
+                        <div className="p-12 text-center text-app-muted-foreground">
+                            <Clock size={32} className="mx-auto mb-3 opacity-40" />
+                            <p className="text-sm font-medium">No changes recorded yet</p>
+                            <p className="text-xs mt-1">Changes to posting rules will appear here automatically.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-app-border">
+                            {history.map((entry, i) => {
+                                const isCreate = entry.change_type === 'CREATE'
+                                const isDelete = entry.change_type === 'DELETE'
+                                const ts = new Date(entry.timestamp)
+                                const timeAgo = getTimeAgo(ts)
 
-                {/* ═══ Suspense ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <Truck className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Suspense & Transit</h3>
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <AccountSelect label="Goods Reception (In-Transit)" value={config.suspense.reception}
-                            onChange={(id) => set('suspense', 'reception', id)}
-                            description="Temporary holding account for goods received before invoice." />
-                    </div>
-                </section>
+                                return (
+                                    <div key={i} className="p-4 hover:bg-app-background transition-colors">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase"
+                                                        style={{
+                                                            background: isCreate ? 'var(--app-success)20' : isDelete ? 'var(--app-error)20' : 'var(--app-info)20',
+                                                            color: isCreate ? 'var(--app-success)' : isDelete ? 'var(--app-error)' : 'var(--app-info)',
+                                                        }}>
+                                                        {entry.change_type}
+                                                    </span>
+                                                    <span className="text-xs font-bold text-app-foreground font-mono">{entry.event_code}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
+                                                    {entry.old_account && (
+                                                        <span className="bg-app-background px-2 py-0.5 rounded text-[10px]">{entry.old_account}</span>
+                                                    )}
+                                                    {entry.old_account && entry.new_account && (
+                                                        <ArrowRight size={12} />
+                                                    )}
+                                                    {entry.new_account && (
+                                                        <span className="bg-app-background px-2 py-0.5 rounded text-[10px] font-medium">{entry.new_account}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-[10px] text-app-muted-foreground">{timeAgo}</p>
+                                                {entry.changed_by && (
+                                                    <p className="text-[10px] text-app-muted-foreground font-medium">by {entry.changed_by}</p>
+                                                )}
+                                                {entry.source && (
+                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase"
+                                                        style={{ background: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                                                        {entry.source}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
 
-                {/* ═══ Equity & Partners ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden md:col-span-2">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <Landmark className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Equity & Partners</h3>
-                    </div>
-                    <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <AccountSelect label="Owner Capital" value={config.equity.capital}
-                            onChange={(id) => set('equity', 'capital', id)}
-                            description="Owner equity / share capital." />
-                        <AccountSelect label="Owner Draws" value={config.equity.draws}
-                            onChange={(id) => set('equity', 'draws', id)}
-                            description="Owner withdrawals / dividends." />
-                        <AccountSelect label="Partner Capital" value={config.partners.capital}
-                            onChange={(id) => set('partners', 'capital', id)} />
-                        <AccountSelect label="Partner Loans" value={config.partners.loan}
-                            onChange={(id) => set('partners', 'loan', id)}
-                            description="Current account loans from partners." />
-                        <AccountSelect label="Partner Withdrawals" value={config.partners.withdrawal}
-                            onChange={(id) => set('partners', 'withdrawal', id)} />
-                    </div>
-                </section>
-
-                {/* ═══ Fixed Assets ═══ */}
-                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden md:col-span-2">
-                    <div className="p-6 bg-app-background border-b border-app-border flex items-center gap-3">
-                        <BarChart3 className="text-app-muted-foreground" size={20} />
-                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Fixed Assets & Depreciation</h3>
-                    </div>
-                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <AccountSelect label="Depreciation Expense" value={config.fixedAssets.depreciationExpense}
-                            onChange={(id) => set('fixedAssets', 'depreciationExpense', id)} />
-                        <AccountSelect label="Accumulated Depreciation" value={config.fixedAssets.accumulatedDepreciation}
-                            onChange={(id) => set('fixedAssets', 'accumulatedDepreciation', id)} />
-                    </div>
-                </section>
-            </div>
-
-            {/* Info */}
+            {/* Info footer */}
             <div className="bg-app-background p-6 rounded-3xl border border-app-border flex items-start gap-4">
-                <Info size={24} className="text-app-muted-foreground flex-shrink-0" />
+                <Shield size={24} className="text-app-muted-foreground flex-shrink-0" />
                 <div>
-                    <h4 className="font-bold text-sm text-app-foreground">How this works</h4>
+                    <h4 className="font-bold text-sm text-app-foreground">Posting Engine Architecture</h4>
                     <p className="text-xs text-app-muted-foreground mt-1 leading-relaxed">
-                        These mappings are used by the <strong>TSF Financial Engine</strong> to automatically generate double-entry journal records.
-                        When you create a Customer, their sub-account is created under the <em>Customer Root</em>.
-                        When you complete a Purchase Order, the system Credits <em>Accounts Payable</em> and Debits <em>Inventory Purchase</em>.
-                        All account resolution is dynamic — <strong>no hardcoded account codes</strong>.
+                        PostingRule is the <strong>single source of truth</strong> for all GL account mappings.
+                        Every financial service resolves accounts through <strong>PostingResolver</strong> — no hardcoded account codes.
+                        Changes are immutably tracked in the audit trail.
+                        Posted journal entries carry a frozen <strong>posting snapshot</strong> of the rules active at posting time.
                     </p>
                 </div>
             </div>
@@ -431,94 +700,67 @@ export default function PostingRulesForm({
             {impactDialog && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
                     <div className="bg-app-surface rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border border-app-border">
-                        {/* Header */}
-                        <div className="p-6 border-b border-app-border bg-app-warning-bg flex items-start justify-between">
+                        <div className="p-6 border-b border-app-border flex items-start justify-between" style={{ background: 'var(--app-warning-bg)' }}>
                             <div className="flex items-center gap-3">
-                                <div className="bg-app-warning/20 p-2 rounded-xl">
-                                    <AlertTriangle className="text-app-warning" size={24} />
+                                <div className="p-2 rounded-xl" style={{ background: 'var(--app-warning)20' }}>
+                                    <AlertTriangle style={{ color: 'var(--app-warning)' }} size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-app-foreground text-lg">Account Change Detected</h3>
+                                    <h3 className="font-bold text-app-foreground text-lg">Account Change Impact</h3>
                                     <p className="text-xs text-app-muted-foreground mt-0.5">
-                                        {impactDialog.impacts.filter(i => i.risk === 'HIGH').length} rule(s) have existing journal entries and balances that will be affected.
+                                        {impactDialog.impacts.filter(i => i.risk === 'HIGH').length} rule(s) affect existing balances.
                                     </p>
                                 </div>
                             </div>
-                            <button onClick={() => setImpactDialog(null)} className="p-1 hover:bg-app-surface rounded-lg transition-colors">
+                            <button onClick={() => setImpactDialog(null)} className="p-1 hover:bg-app-surface rounded-lg">
                                 <X size={18} className="text-app-muted-foreground" />
                             </button>
                         </div>
-
-                        {/* Impact Table */}
-                        <div className="overflow-y-auto flex-1 p-6">
-                            <div className="space-y-3">
-                                {impactDialog.impacts.map((impact, i) => (
-                                    <div key={i} className={`p-4 rounded-2xl border ${impact.risk === 'HIGH'
-                                        ? 'border-app-error/30 bg-app-error-bg'
-                                        : 'border-app-border bg-app-background'
-                                        }`}>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="font-bold text-xs text-app-muted-foreground uppercase tracking-widest">
-                                                {impact.rule}
-                                            </span>
-                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${impact.risk === 'HIGH'
-                                                ? 'bg-app-error text-white'
-                                                : 'bg-app-surface-2 text-app-muted-foreground'
-                                                }`}>
-                                                {impact.risk} risk
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
-                                                <span className="text-[10px] text-app-muted-foreground uppercase block">Old</span>
-                                                <span className="font-medium text-app-foreground text-xs">{impact.old_account}</span>
-                                            </div>
-                                            <ArrowRight size={16} className="text-app-muted-foreground flex-shrink-0" />
-                                            <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
-                                                <span className="text-[10px] text-app-muted-foreground uppercase block">New</span>
-                                                <span className="font-medium text-app-foreground text-xs">{impact.new_account}</span>
-                                            </div>
-                                        </div>
-                                        {impact.risk === 'HIGH' && (
-                                            <div className="mt-3 flex items-center gap-4 text-xs">
-                                                <span className="text-app-error font-bold">
-                                                    {impact.journal_entries} journal entries on old account
-                                                </span>
-                                                <span className="text-app-error font-bold">
-                                                    Balance: {impact.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                </span>
-                                            </div>
-                                        )}
+                        <div className="overflow-y-auto flex-1 p-6 space-y-3">
+                            {impactDialog.impacts.map((impact, i) => (
+                                <div key={i} className={`p-4 rounded-2xl border ${impact.risk === 'HIGH' ? 'border-app-error/30 bg-app-error-bg' : 'border-app-border bg-app-background'}`}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-bold text-xs text-app-muted-foreground uppercase tracking-widest">{impact.rule}</span>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${impact.risk === 'HIGH' ? 'bg-app-error text-white' : 'bg-app-surface-2 text-app-muted-foreground'}`}>
+                                            {impact.risk} risk
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
+                                            <span className="text-[10px] text-app-muted-foreground uppercase block">Old</span>
+                                            <span className="font-medium text-app-foreground text-xs">{impact.old_account}</span>
+                                        </div>
+                                        <ArrowRight size={16} className="text-app-muted-foreground flex-shrink-0" />
+                                        <div className="flex-1 bg-app-surface rounded-xl p-2 text-center">
+                                            <span className="text-[10px] text-app-muted-foreground uppercase block">New</span>
+                                            <span className="font-medium text-app-foreground text-xs">{impact.new_account}</span>
+                                        </div>
+                                    </div>
+                                    {impact.risk === 'HIGH' && (
+                                        <div className="mt-3 flex items-center gap-4 text-xs text-app-error font-bold">
+                                            <span>{impact.journal_entries} journal entries</span>
+                                            <span>Balance: {impact.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-
-                        {/* Actions */}
                         <div className="p-6 border-t border-app-border bg-app-background space-y-3">
-                            <button
-                                onClick={() => handleConfirmSave(true)}
-                                disabled={isPending}
-                                className="w-full bg-app-primary text-white py-3 rounded-2xl font-bold text-sm hover:bg-app-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                <Save size={16} />
-                                Save &amp; Reclassify Balances (Recommended)
+                            <button onClick={() => handleConfirmSave(true)} disabled={isPending}
+                                className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                                style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                <Save size={16} /> Save & Reclassify Balances (Recommended)
                             </button>
-                            <p className="text-[10px] text-app-muted-foreground text-center leading-relaxed">
-                                This will post reclassification journal entries to sweep existing balances from the old accounts to the new ones.
+                            <p className="text-[10px] text-app-muted-foreground text-center">
+                                Posts reclassification journal entries to sweep balances from old to new accounts.
                             </p>
                             <div className="flex gap-3">
-                                <button
-                                    onClick={() => handleConfirmSave(false)}
-                                    disabled={isPending}
-                                    className="flex-1 bg-app-surface border border-app-border text-app-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all disabled:opacity-50"
-                                >
+                                <button onClick={() => handleConfirmSave(false)} disabled={isPending}
+                                    className="flex-1 bg-app-surface border border-app-border text-app-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all disabled:opacity-50">
                                     Save Without Reclassify
                                 </button>
-                                <button
-                                    onClick={() => setImpactDialog(null)}
-                                    className="flex-1 bg-app-surface border border-app-border text-app-muted-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all"
-                                >
+                                <button onClick={() => setImpactDialog(null)}
+                                    className="flex-1 bg-app-surface border border-app-border text-app-muted-foreground py-2.5 rounded-xl text-xs font-bold hover:bg-app-surface-2 transition-all">
                                     Cancel
                                 </button>
                             </div>
@@ -528,4 +770,21 @@ export default function PostingRulesForm({
             )}
         </div>
     )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Utils
+// ═══════════════════════════════════════════════════════════════
+
+function getTimeAgo(date: Date): string {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 30) return `${days}d ago`
+    return date.toLocaleDateString()
 }

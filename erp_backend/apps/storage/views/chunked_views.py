@@ -63,7 +63,7 @@ def chunked_upload_init(request):
         linked_model=request.data.get('linked_model', ''),
         linked_id=request.data.get('linked_id'),
         package_type=request.data.get('package_type', ''),
-        tenant_id=org.id if org else None,
+        organization_id=org.id if org else None,
         uploaded_by=request.user,
     )
     session.save()

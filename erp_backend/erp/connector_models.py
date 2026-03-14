@@ -146,7 +146,7 @@ class ConnectorPolicy(models.Model):
         max_length=20,
         choices=READ_FALLBACK_CHOICES,
         default='empty',
-        help_text="Action when module is DISABLED for tenant"
+        help_text="Action when module is DISABLED for organization"
     )
     when_disabled_write = models.CharField(
         max_length=20,
@@ -160,7 +160,7 @@ class ConnectorPolicy(models.Model):
         max_length=20,
         choices=READ_FALLBACK_CHOICES,
         default='empty',
-        help_text="Action when tenant has NO PERMISSION"
+        help_text="Action when organization has NO PERMISSION"
     )
     when_unauthorized_write = models.CharField(
         max_length=20,

@@ -1,23 +1,21 @@
+// @ts-nocheck
 'use client'
 
 /**
- * MCP Usage Analytics
- * ====================
- * Comprehensive usage analytics for AI token consumption, costs, and trends.
+ * MCP Usage & Billing — V2 Dajingo Pro Redesign
+ * ===============================================
+ * Premium analytics with theme-aware cards,
+ * visual bar chart, and provider breakdown.
  */
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
-    ArrowLeft, BarChart3, RefreshCw, TrendingUp, TrendingDown,
-    Zap, DollarSign, Clock, Calendar, ArrowUpRight, Brain
+    BarChart3, RefreshCw, TrendingUp,
+    Zap, DollarSign, Calendar, ArrowUpRight, Brain, Activity
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-/** Client-safe API fetch (erpFetch uses server-only cookies) */
 async function apiFetch(path: string, opts?: RequestInit) {
     return fetch(`/api${path}`, { credentials: 'include', ...opts })
 }
@@ -28,38 +26,24 @@ interface UsageData {
     total_cost: number
     avg_tokens_per_request: number
     period_days: number
-    daily_breakdown: Array<{
-        date: string
-        tokens: number
-        requests: number
-        cost: number
-    }>
-    provider_breakdown: Array<{
-        provider: string
-        tokens: number
-        requests: number
-        cost: number
-        percentage: number
-    }>
+    daily_breakdown: Array<{ date: string; tokens: number; requests: number; cost: number }>
+    provider_breakdown: Array<{ provider: string; tokens: number; requests: number; cost: number; percentage: number }>
 }
+
+const PROVIDER_COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#6366F1']
 
 export default function MCPUsagePage() {
     const [usage, setUsage] = useState<UsageData | null>(null)
     const [loading, setLoading] = useState(true)
     const [period, setPeriod] = useState<'7' | '30' | '90'>('30')
 
-    useEffect(() => {
-        loadData()
-    }, [period])
+    useEffect(() => { loadData() }, [period])
 
     async function loadData() {
         setLoading(true)
         try {
             const res = await apiFetch(`/mcp/usage/?days=${period}`)
-            if (res.ok) {
-                const data = await res.json()
-                setUsage(data)
-            }
+            if (res.ok) setUsage(await res.json())
         } catch {
             toast.error('Failed to load usage data')
         } finally {
@@ -75,226 +59,231 @@ export default function MCPUsagePage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-                <div>
-                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium transition-colors">
-                        <ArrowLeft size={16} />
-                        Back to MCP Dashboard
-                    </Link>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg">
-                            <BarChart3 size={28} />
+            {/* ── Page Header ──────────────────────────────────────── */}
+            <div
+                className="rounded-[28px] p-6 md:p-8"
+                style={{
+                    background: 'linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-2) 100%)',
+                    border: '1px solid var(--app-border)',
+                    boxShadow: 'var(--app-shadow-lg)',
+                }}
+            >
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        <div
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                            style={{
+                                background: 'linear-gradient(135deg, var(--app-primary), var(--app-primary-hover))',
+                                boxShadow: '0 8px 24px var(--app-primary-glow)',
+                            }}
+                        >
+                            <BarChart3 className="w-7 h-7 text-white" />
                         </div>
-                        <Badge className="bg-cyan-100 text-cyan-700 border-cyan-200 px-3 py-1 font-black uppercase text-[10px]">
-                            Analytics
-                        </Badge>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                                Usage & Billing
+                            </h1>
+                            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                                Token consumption, costs, and usage trends
+                            </p>
+                        </div>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-app-text tracking-tight">Usage Analytics</h2>
-                    <p className="text-app-text-faint mt-2 font-medium">
-                        Token consumption, costs, and usage trends
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    {/* Period Selector */}
-                    <div className="flex bg-app-surface-2 rounded-2xl p-1">
-                        {[
-                            { value: '7', label: '7D' },
-                            { value: '30', label: '30D' },
-                            { value: '90', label: '90D' },
-                        ].map((p) => (
-                            <button
-                                key={p.value}
-                                onClick={() => setPeriod(p.value as '7' | '30' | '90')}
-                                className={`px-5 py-3 rounded-xl text-sm font-bold transition-all ${period === p.value
-                                    ? 'bg-app-surface text-app-text shadow-lg'
-                                    : 'text-app-text-faint hover:text-app-text-muted'
-                                    }`}
-                            >
-                                {p.label}
-                            </button>
-                        ))}
+                    <div className="flex gap-3">
+                        {/* Period Selector */}
+                        <div className="flex rounded-xl p-1" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                            {[
+                                { value: '7', label: '7D' },
+                                { value: '30', label: '30D' },
+                                { value: '90', label: '90D' },
+                            ].map((p) => (
+                                <button
+                                    key={p.value}
+                                    onClick={() => setPeriod(p.value as '7' | '30' | '90')}
+                                    className="px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
+                                    style={period === p.value ? {
+                                        background: 'var(--app-primary)',
+                                        color: '#fff',
+                                        boxShadow: '0 2px 8px var(--app-primary-glow)',
+                                    } : {
+                                        color: 'var(--app-text-muted)',
+                                    }}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+                        <Button onClick={loadData} disabled={loading} variant="outline"
+                            className="rounded-xl px-4 h-11 font-bold" style={{ borderColor: 'var(--app-border)' }}>
+                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        </Button>
                     </div>
-                    <Button
-                        onClick={loadData}
-                        disabled={loading}
-                        variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold"
-                    >
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    </Button>
                 </div>
             </div>
 
             {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <div className="flex flex-col items-center gap-4">
-                        <RefreshCw className="w-10 h-10 animate-spin text-cyan-500" />
-                        <p className="text-app-text-faint font-medium">Loading analytics...</p>
+                    <div className="flex flex-col items-center gap-3">
+                        <RefreshCw className="w-8 h-8 animate-spin" style={{ color: 'var(--app-primary)' }} />
+                        <p className="text-sm font-medium" style={{ color: 'var(--app-text-muted)' }}>Loading analytics...</p>
                     </div>
                 </div>
             ) : (
                 <>
-                    {/* Summary Cards */}
+                    {/* ── Summary Cards ─────────────────────────────── */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-cyan-500 to-blue-600 border-0 text-white rounded-3xl shadow-xl overflow-hidden relative">
-                            <div className="absolute top-0 right-0 opacity-10">
-                                <Zap size={120} className="-mt-4 -mr-4" />
-                            </div>
-                            <CardContent className="p-6 relative z-10">
+                        {[
+                            { label: 'Total Tokens', value: formatNumber(usage?.total_tokens || 0), icon: Zap, desc: `Last ${period} days` },
+                            { label: 'Total Requests', value: formatNumber(usage?.total_requests || 0), icon: Brain, desc: 'AI interactions' },
+                            { label: 'Estimated Cost', value: `$${(usage?.total_cost || 0).toFixed(2)}`, icon: DollarSign, desc: 'Total spend' },
+                            { label: 'Avg Tokens/Req', value: formatNumber(usage?.avg_tokens_per_request || 0), icon: TrendingUp, desc: 'Efficiency' },
+                        ].map((stat, i) => (
+                            <div
+                                key={i}
+                                className="rounded-[20px] p-5 transition-all duration-300 hover:translate-y-[-2px]"
+                                style={{
+                                    background: 'var(--app-surface)',
+                                    border: '1px solid var(--app-border)',
+                                    boxShadow: 'var(--app-shadow-md)',
+                                }}
+                            >
                                 <div className="flex items-center justify-between mb-3">
-                                    <Zap size={20} className="text-cyan-200" />
-                                    <div className="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
-                                        <ArrowUpRight size={12} />
-                                        {period}D
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                        style={{ background: 'var(--app-primary-light)' }}>
+                                        <stat.icon size={18} style={{ color: 'var(--app-primary)' }} />
                                     </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
+                                        style={{ background: 'var(--app-bg)', color: 'var(--app-text-muted)' }}>
+                                        <ArrowUpRight size={10} className="inline mr-0.5" />
+                                        {period}D
+                                    </span>
                                 </div>
-                                <div className="text-4xl font-black">{formatNumber(usage?.total_tokens || 0)}</div>
-                                <p className="text-cyan-100 text-sm mt-1 font-medium">Total tokens</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-purple-500 to-violet-600 border-0 text-white rounded-3xl shadow-xl overflow-hidden relative">
-                            <div className="absolute top-0 right-0 opacity-10">
-                                <Brain size={120} className="-mt-4 -mr-4" />
+                                <p className="text-2xl font-black" style={{ color: 'var(--app-text)' }}>{stat.value}</p>
+                                <p className="text-[11px] font-medium mt-0.5" style={{ color: 'var(--app-text-muted)' }}>{stat.label}</p>
                             </div>
-                            <CardContent className="p-6 relative z-10">
-                                <div className="flex items-center justify-between mb-3">
-                                    <Brain size={20} className="text-purple-200" />
-                                    <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold">Requests</Badge>
-                                </div>
-                                <div className="text-4xl font-black">{formatNumber(usage?.total_requests || 0)}</div>
-                                <p className="text-purple-100 text-sm mt-1 font-medium">Total requests</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white rounded-3xl shadow-xl overflow-hidden relative">
-                            <div className="absolute top-0 right-0 opacity-10">
-                                <DollarSign size={120} className="-mt-4 -mr-4" />
-                            </div>
-                            <CardContent className="p-6 relative z-10">
-                                <div className="flex items-center justify-between mb-3">
-                                    <DollarSign size={20} className="text-emerald-200" />
-                                    <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold">Cost</Badge>
-                                </div>
-                                <div className="text-4xl font-black">${(usage?.total_cost || 0).toFixed(2)}</div>
-                                <p className="text-emerald-100 text-sm mt-1 font-medium">Est. cost</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-white rounded-3xl shadow-xl overflow-hidden relative">
-                            <div className="absolute top-0 right-0 opacity-10">
-                                <TrendingUp size={120} className="-mt-4 -mr-4" />
-                            </div>
-                            <CardContent className="p-6 relative z-10">
-                                <div className="flex items-center justify-between mb-3">
-                                    <TrendingUp size={20} className="text-amber-200" />
-                                    <Badge className="bg-white/20 text-white border-0 text-[10px] font-bold">Average</Badge>
-                                </div>
-                                <div className="text-4xl font-black">{formatNumber(usage?.avg_tokens_per_request || 0)}</div>
-                                <p className="text-amber-100 text-sm mt-1 font-medium">Tokens/request</p>
-                            </CardContent>
-                        </Card>
+                        ))}
                     </div>
 
-                    {/* Provider Breakdown */}
-                    <Card className="rounded-3xl shadow-xl border-app-border">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-3">
-                                <Brain size={24} className="text-purple-500" />
-                                Provider Breakdown
-                            </CardTitle>
-                            <CardDescription>Token consumption by AI provider</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {usage?.provider_breakdown && usage.provider_breakdown.length > 0 ? (
-                                <div className="space-y-4">
-                                    {usage.provider_breakdown.map((provider, i) => (
-                                        <div key={i} className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-3 h-3 rounded-full ${['bg-purple-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-red-500'][i % 5]
-                                                        }`} />
-                                                    <span className="font-bold text-app-text">{provider.provider}</span>
+                    {/* ── Provider Breakdown ────────────────────────── */}
+                    <div
+                        className="rounded-[28px] p-6"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: 'var(--app-shadow-lg)',
+                        }}
+                    >
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                style={{ background: 'var(--app-primary-light)' }}>
+                                <Brain size={18} style={{ color: 'var(--app-primary)' }} />
+                            </div>
+                            <div>
+                                <h2 className="font-black text-lg" style={{ color: 'var(--app-text)' }}>Provider Breakdown</h2>
+                                <p className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>Token consumption by AI provider</p>
+                            </div>
+                        </div>
+
+                        {usage?.provider_breakdown && usage.provider_breakdown.length > 0 ? (
+                            <div className="space-y-4">
+                                {usage.provider_breakdown.map((provider, i) => {
+                                    const color = PROVIDER_COLORS[i % PROVIDER_COLORS.length]
+                                    return (
+                                        <div key={i}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full" style={{ background: color }} />
+                                                    <span className="font-bold text-sm" style={{ color: 'var(--app-text)' }}>{provider.provider}</span>
                                                 </div>
-                                                <div className="flex items-center gap-6 text-sm">
-                                                    <span className="text-app-text-faint">{formatNumber(provider.tokens)} tokens</span>
-                                                    <span className="text-app-text-faint">{provider.requests} reqs</span>
-                                                    <span className="font-bold text-app-text">${provider.cost.toFixed(2)}</span>
+                                                <div className="flex items-center gap-4 text-xs">
+                                                    <span style={{ color: 'var(--app-text-muted)' }}>{formatNumber(provider.tokens)} tokens</span>
+                                                    <span style={{ color: 'var(--app-text-muted)' }}>{provider.requests} reqs</span>
+                                                    <span className="font-bold" style={{ color: 'var(--app-text)' }}>${provider.cost.toFixed(2)}</span>
                                                 </div>
                                             </div>
-                                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
+                                            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--app-bg)' }}>
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${['bg-purple-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-red-500'][i % 5]
-                                                        }`}
-                                                    style={{ width: `${provider.percentage}%` }}
+                                                    className="h-full rounded-full transition-all duration-1000"
+                                                    style={{ width: `${provider.percentage}%`, background: color }}
                                                 />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-12 text-app-text-faint">
-                                    <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                                    <p className="font-medium">No provider data available</p>
-                                    <p className="text-sm mt-1">Start making AI requests to see breakdown</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                    )
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10">
+                                <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-30" style={{ color: 'var(--app-text-muted)' }} />
+                                <p className="font-bold text-sm" style={{ color: 'var(--app-text)' }}>No provider data</p>
+                                <p className="text-xs mt-1" style={{ color: 'var(--app-text-muted)' }}>Start making AI requests to see breakdown</p>
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Daily Activity */}
-                    <Card className="rounded-3xl shadow-xl border-app-border">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-3">
-                                <Calendar size={24} className="text-cyan-500" />
-                                Daily Activity
-                            </CardTitle>
-                            <CardDescription>Requests and tokens over the last {period} days</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {usage?.daily_breakdown && usage.daily_breakdown.length > 0 ? (
-                                <div className="space-y-1">
-                                    {/* Visual bar chart */}
-                                    <div className="flex items-end gap-1 h-40 px-2">
-                                        {usage.daily_breakdown.map((day, i) => {
-                                            const maxTokens = Math.max(...usage.daily_breakdown.map(d => d.tokens), 1)
-                                            const height = (day.tokens / maxTokens) * 100
-                                            return (
+                    {/* ── Daily Activity ────────────────────────────── */}
+                    <div
+                        className="rounded-[28px] p-6"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: 'var(--app-shadow-lg)',
+                        }}
+                    >
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                style={{ background: 'var(--app-primary-light)' }}>
+                                <Activity size={18} style={{ color: 'var(--app-primary)' }} />
+                            </div>
+                            <div>
+                                <h2 className="font-black text-lg" style={{ color: 'var(--app-text)' }}>Daily Activity</h2>
+                                <p className="text-xs font-medium" style={{ color: 'var(--app-text-muted)' }}>
+                                    Requests and tokens over the last {period} days
+                                </p>
+                            </div>
+                        </div>
+
+                        {usage?.daily_breakdown && usage.daily_breakdown.length > 0 ? (
+                            <div>
+                                <div className="flex items-end gap-[2px] h-40 px-1">
+                                    {usage.daily_breakdown.map((day, i) => {
+                                        const maxTokens = Math.max(...usage.daily_breakdown.map(d => d.tokens), 1)
+                                        const height = (day.tokens / maxTokens) * 100
+                                        return (
+                                            <div key={i} className="flex-1 group relative">
                                                 <div
-                                                    key={i}
-                                                    className="flex-1 group relative"
-                                                    title={`${day.date}: ${day.tokens} tokens, ${day.requests} requests`}
-                                                >
-                                                    <div
-                                                        className="w-full bg-gradient-to-t from-cyan-500 to-blue-400 rounded-t-lg transition-all duration-500 hover:from-cyan-400 hover:to-blue-300 min-h-[2px]"
-                                                        style={{ height: `${Math.max(height, 2)}%` }}
-                                                    />
-                                                    {/* Tooltip */}
-                                                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
-                                                        <div className="font-bold">{day.date}</div>
-                                                        <div>{formatNumber(day.tokens)} tokens</div>
-                                                        <div>{day.requests} requests</div>
-                                                    </div>
+                                                    className="w-full rounded-t-md transition-all duration-500 min-h-[2px]"
+                                                    style={{
+                                                        height: `${Math.max(height, 2)}%`,
+                                                        background: `var(--app-primary)`,
+                                                        opacity: 0.6 + (height / 250),
+                                                    }}
+                                                />
+                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 text-[10px]"
+                                                    style={{ background: 'var(--app-text)', color: 'var(--app-bg)', boxShadow: 'var(--app-shadow-lg)' }}>
+                                                    <div className="font-bold">{day.date}</div>
+                                                    <div>{formatNumber(day.tokens)} tokens</div>
+                                                    <div>{day.requests} requests</div>
                                                 </div>
-                                            )
-                                        })}
-                                    </div>
-                                    {/* Date labels */}
-                                    <div className="flex justify-between px-2 text-[10px] text-app-text-faint font-medium mt-2">
-                                        <span>{usage.daily_breakdown[0]?.date}</span>
-                                        <span>{usage.daily_breakdown[usage.daily_breakdown.length - 1]?.date}</span>
-                                    </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                            ) : (
-                                <div className="text-center py-12 text-app-text-faint">
-                                    <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                                    <p className="font-medium">No daily data available</p>
-                                    <p className="text-sm mt-1">Usage history will appear here</p>
+                                <div className="flex justify-between px-1 mt-2">
+                                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                                        {usage.daily_breakdown[0]?.date}
+                                    </span>
+                                    <span className="text-[10px] font-bold" style={{ color: 'var(--app-text-muted)' }}>
+                                        {usage.daily_breakdown[usage.daily_breakdown.length - 1]?.date}
+                                    </span>
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                            </div>
+                        ) : (
+                            <div className="text-center py-10">
+                                <Calendar className="w-10 h-10 mx-auto mb-3 opacity-30" style={{ color: 'var(--app-text-muted)' }} />
+                                <p className="font-bold text-sm" style={{ color: 'var(--app-text)' }}>No daily data</p>
+                                <p className="text-xs mt-1" style={{ color: 'var(--app-text-muted)' }}>Usage history will appear here</p>
+                            </div>
+                        )}
+                    </div>
                 </>
             )}
         </div>

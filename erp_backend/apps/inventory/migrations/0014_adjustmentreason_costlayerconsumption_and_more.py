@@ -302,7 +302,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='adjustmentreason',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -312,7 +312,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='costlayerconsumption',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -337,7 +337,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='inventorybalance',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -352,7 +352,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='inventorybalancehistory',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -367,7 +367,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='inventoryfreezeperiod',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -397,7 +397,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='packingorder',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -432,7 +432,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='picklist',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -462,7 +462,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='picklistline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -482,7 +482,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='purchasesuggestion',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -502,7 +502,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='replenishmentrule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -547,7 +547,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='shipment',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -562,7 +562,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='stockcostlayer',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -583,11 +583,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='unitconversion',
             name='product',
-            field=models.ForeignKey(blank=True, help_text='Product-specific conversion (null = universal for this tenant)', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='unit_conversions', to='inventory.product'),
+            field=models.ForeignKey(blank=True, help_text='Product-specific conversion (null = universal for this organization)', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='unit_conversions', to='inventory.product'),
         ),
         migrations.AddField(
             model_name='unitconversion',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -597,7 +597,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='adjustmentreason',
-            unique_together={('code', 'tenant')},
+            unique_together={('code', 'organization')},
         ),
         migrations.AddIndex(
             model_name='cyclecountpolicy',
@@ -605,47 +605,47 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='inventorybalance',
-            index=models.Index(fields=['tenant', 'warehouse'], name='inventory_b_tenant__0e72b4_idx'),
+            index=models.Index(fields=['organization', 'warehouse'], name='inventory_b_organization__0e72b4_idx'),
         ),
         migrations.AddIndex(
             model_name='inventorybalance',
-            index=models.Index(fields=['tenant', 'product'], name='inventory_b_tenant__fc159a_idx'),
+            index=models.Index(fields=['organization', 'product'], name='inventory_b_organization__fc159a_idx'),
         ),
         migrations.AddIndex(
             model_name='inventorybalance',
-            index=models.Index(fields=['tenant', 'available'], name='inventory_b_tenant__9a458f_idx'),
+            index=models.Index(fields=['organization', 'available'], name='inventory_b_organization__9a458f_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='inventorybalance',
-            unique_together={('product', 'warehouse', 'tenant')},
+            unique_together={('product', 'warehouse', 'organization')},
         ),
         migrations.AddIndex(
             model_name='inventorybalancehistory',
-            index=models.Index(fields=['tenant', 'snapshot_date'], name='inventory_b_tenant__cb554c_idx'),
+            index=models.Index(fields=['organization', 'snapshot_date'], name='inventory_b_organization__cb554c_idx'),
         ),
         migrations.AddIndex(
             model_name='inventorybalancehistory',
-            index=models.Index(fields=['tenant', 'product', 'snapshot_date'], name='inventory_b_tenant__5fb521_idx'),
+            index=models.Index(fields=['organization', 'product', 'snapshot_date'], name='inventory_b_organization__5fb521_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='inventorybalancehistory',
-            unique_together={('product', 'warehouse', 'snapshot_date', 'tenant')},
+            unique_together={('product', 'warehouse', 'snapshot_date', 'organization')},
         ),
         migrations.AddIndex(
             model_name='inventoryfreezeperiod',
-            index=models.Index(fields=['tenant', 'start_date', 'end_date'], name='inventory_f_tenant__7cd43f_idx'),
+            index=models.Index(fields=['organization', 'start_date', 'end_date'], name='inventory_f_organization__7cd43f_idx'),
         ),
         migrations.AddIndex(
             model_name='picklist',
-            index=models.Index(fields=['tenant', 'status'], name='pick_list_tenant__bfa097_idx'),
+            index=models.Index(fields=['organization', 'status'], name='pick_list_organization__bfa097_idx'),
         ),
         migrations.AddIndex(
             model_name='picklist',
-            index=models.Index(fields=['tenant', 'assigned_to', 'status'], name='pick_list_tenant__25cffa_idx'),
+            index=models.Index(fields=['organization', 'assigned_to', 'status'], name='pick_list_organization__25cffa_idx'),
         ),
         migrations.AddIndex(
             model_name='packingorder',
-            index=models.Index(fields=['tenant', 'status'], name='packing_ord_tenant__1cf36a_idx'),
+            index=models.Index(fields=['organization', 'status'], name='packing_ord_organization__1cf36a_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='picklistline',
@@ -653,23 +653,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='replenishmentrule',
-            index=models.Index(fields=['tenant', 'is_active'], name='replenishme_tenant__216cbb_idx'),
+            index=models.Index(fields=['organization', 'is_active'], name='replenishme_organization__216cbb_idx'),
         ),
         migrations.AlterUniqueTogether(
             name='replenishmentrule',
-            unique_together={('product', 'warehouse', 'tenant')},
+            unique_together={('product', 'warehouse', 'organization')},
         ),
         migrations.AddIndex(
             model_name='purchasesuggestion',
-            index=models.Index(fields=['tenant', 'status'], name='purchase_su_tenant__4718e7_idx'),
+            index=models.Index(fields=['organization', 'status'], name='purchase_su_organization__4718e7_idx'),
         ),
         migrations.AddIndex(
             model_name='purchasesuggestion',
-            index=models.Index(fields=['tenant', 'product', 'status'], name='purchase_su_tenant__4e31ba_idx'),
+            index=models.Index(fields=['organization', 'product', 'status'], name='purchase_su_organization__4e31ba_idx'),
         ),
         migrations.AddIndex(
             model_name='shipment',
-            index=models.Index(fields=['tenant', 'status'], name='shipment_tenant__904ae2_idx'),
+            index=models.Index(fields=['organization', 'status'], name='shipment_organization__904ae2_idx'),
         ),
         migrations.AddIndex(
             model_name='shipment',
@@ -677,11 +677,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='stockcostlayer',
-            index=models.Index(fields=['tenant', 'product', 'warehouse', 'is_exhausted'], name='stock_cost__tenant__eb8e7d_idx'),
+            index=models.Index(fields=['organization', 'product', 'warehouse', 'is_exhausted'], name='stock_cost__organization__eb8e7d_idx'),
         ),
         migrations.AddIndex(
             model_name='stockcostlayer',
-            index=models.Index(fields=['tenant', 'product', 'receipt_date'], name='stock_cost__tenant__1082d2_idx'),
+            index=models.Index(fields=['organization', 'product', 'receipt_date'], name='stock_cost__organization__1082d2_idx'),
         ),
         migrations.AddIndex(
             model_name='costlayerconsumption',
@@ -689,6 +689,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='unitconversion',
-            unique_together={('from_unit', 'to_unit', 'product', 'tenant')},
+            unique_together={('from_unit', 'to_unit', 'product', 'organization')},
         ),
     ]

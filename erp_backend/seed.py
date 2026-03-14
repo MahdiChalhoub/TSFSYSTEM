@@ -278,7 +278,7 @@ def run_seed():
             'version': '2.1.0',
             'manifest': {
                 'name': 'Core Platform',
-                'description': 'The Spine of the system. Handles platform integrity, security, and multi-tenant infrastructure.',
+                'description': 'The Spine of the system. Handles platform integrity, security, and multi-organization infrastructure.',
                 'is_core': True,
                 'required': True,
                 'dependencies': [],

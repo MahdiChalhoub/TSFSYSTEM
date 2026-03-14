@@ -6,7 +6,6 @@ validation invariants, and audit-aware sensitive field tracking.
 """
 from rest_framework import serializers
 from apps.crm.models import Contact, ContactTag, ContactPerson, ContactAuditLog, ContactComplianceDocument, ContactTask
-from apps.storage.serializers.storage_serializers import StoredFileSerializer
 
 
 # ── Sensitive fields that require audit logging on change ──
@@ -40,11 +39,21 @@ class ContactComplianceDocumentSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     review_status_display = serializers.CharField(source='get_review_status_display', read_only=True)
     is_expired = serializers.BooleanField(read_only=True)
-    attachment_data = StoredFileSerializer(source='attachment', read_only=True)
+    attachment_data = serializers.SerializerMethodField()
 
     class Meta:
         model = ContactComplianceDocument
         fields = '__all__'
+
+    def get_attachment_data(self, obj):
+        """Lazy-load StoredFileSerializer to avoid cross-module import."""
+        if not obj.attachment_id:
+            return None
+        try:
+            from apps.storage.serializers.storage_serializers import StoredFileSerializer
+            return StoredFileSerializer(obj.attachment).data
+        except Exception:
+            return None
 
 
 class ContactTaskSerializer(serializers.ModelSerializer):

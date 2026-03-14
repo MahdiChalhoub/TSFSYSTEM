@@ -2,93 +2,108 @@
  * Offline Indicator for POS
  * ==========================
  * Shows connectivity status and pending order count.
+ * Now supports a "forced online" mode from backend settings.
  * 
  * States:
  * 🟢 Online — connected, all synced
  * 🟡 Syncing — replaying queued orders
  * 🔴 Offline — no connectivity, orders queuing locally
  * 🔵 Reconnected — just came back, auto-syncing
+ * 🔒 Forced Online — POS offline mode is disabled in settings
  */
 
 'use client';
 
 import { useOnlineStatus, usePendingOrders } from '@/lib/offline/hooks';
-import { Wifi, WifiOff, RefreshCw, Check, AlertTriangle } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Check, AlertTriangle, Lock } from 'lucide-react';
 
-export default function OfflineIndicator() {
- const { isOnline, wasOffline, clearWasOffline } = useOnlineStatus();
- const { count: pendingCount, syncing, syncProgress, triggerSync } = usePendingOrders();
+interface OfflineIndicatorProps {
+    /** When false, POS is in forced-online mode — no offline queueing */
+    offlineEnabled?: boolean;
+}
 
- // Determine state
- const state = !isOnline
- ? 'offline'
- : syncing
- ? 'syncing'
- : wasOffline && pendingCount > 0
- ? 'reconnected'
- : pendingCount > 0
- ? 'pending'
- : 'online';
+export default function OfflineIndicator({ offlineEnabled = true }: OfflineIndicatorProps) {
+    const { isOnline, wasOffline, clearWasOffline } = useOnlineStatus();
+    const { count: pendingCount, syncing, syncProgress, triggerSync } = usePendingOrders();
 
- // Auto-clear "was offline" after a few seconds if nothing pending
- if (wasOffline && pendingCount === 0 && isOnline) {
- setTimeout(clearWasOffline, 3000);
- }
+    // Determine state
+    const state = !offlineEnabled
+        ? 'forced-online'
+        : !isOnline
+            ? 'offline'
+            : syncing
+                ? 'syncing'
+                : wasOffline && pendingCount > 0
+                    ? 'reconnected'
+                    : pendingCount > 0
+                        ? 'pending'
+                        : 'online';
 
- return (
- <div className="offline-indicator" data-state={state}>
- <div className="offline-indicator__dot" />
+    // Auto-clear "was offline" after a few seconds if nothing pending
+    if (wasOffline && pendingCount === 0 && isOnline) {
+        setTimeout(clearWasOffline, 3000);
+    }
 
- <span className="offline-indicator__label">
- {state === 'offline' && (
- <>
- <WifiOff size={14} />
- <span>Offline</span>
- </>
- )}
- {state === 'syncing' && (
- <>
- <RefreshCw size={14} className="spin" />
- <span>Syncing {syncProgress?.synced + syncProgress?.failed || 0}/{syncProgress?.total || pendingCount}...</span>
- </>
- )}
- {state === 'reconnected' && (
- <>
- <AlertTriangle size={14} />
- <span>{pendingCount} to sync</span>
- </>
- )}
- {state === 'pending' && (
- <>
- <AlertTriangle size={14} />
- <span>{pendingCount} queued</span>
- </>
- )}
- {state === 'online' && (
- <>
- <Wifi size={14} />
- <span>Online</span>
- </>
- )}
- </span>
+    return (
+        <div className="offline-indicator" data-state={state}>
+            <div className="offline-indicator__dot" />
 
- {/* Sync button when there are pending orders */}
- {pendingCount > 0 && isOnline && !syncing && (
- <button
- className="offline-indicator__sync-btn"
- onClick={triggerSync}
- title="Sync pending orders now"
- >
- <RefreshCw size={12} />
- </button>
- )}
+            <span className="offline-indicator__label">
+                {state === 'forced-online' && (
+                    <>
+                        <Lock size={14} />
+                        <span>Online Only</span>
+                    </>
+                )}
+                {state === 'offline' && (
+                    <>
+                        <WifiOff size={14} />
+                        <span>Offline</span>
+                    </>
+                )}
+                {state === 'syncing' && (
+                    <>
+                        <RefreshCw size={14} className="spin" />
+                        <span>Syncing {syncProgress?.synced + syncProgress?.failed || 0}/{syncProgress?.total || pendingCount}...</span>
+                    </>
+                )}
+                {state === 'reconnected' && (
+                    <>
+                        <AlertTriangle size={14} />
+                        <span>{pendingCount} to sync</span>
+                    </>
+                )}
+                {state === 'pending' && (
+                    <>
+                        <AlertTriangle size={14} />
+                        <span>{pendingCount} queued</span>
+                    </>
+                )}
+                {state === 'online' && (
+                    <>
+                        <Wifi size={14} />
+                        <span>Online</span>
+                    </>
+                )}
+            </span>
 
- {/* Pending badge */}
- {pendingCount > 0 && (
- <span className="offline-indicator__badge">{pendingCount}</span>
- )}
+            {/* Sync button when there are pending orders */}
+            {pendingCount > 0 && isOnline && !syncing && (
+                <button
+                    className="offline-indicator__sync-btn"
+                    onClick={triggerSync}
+                    title="Sync pending orders now"
+                >
+                    <RefreshCw size={12} />
+                </button>
+            )}
 
- <style jsx>{`
+            {/* Pending badge */}
+            {pendingCount > 0 && (
+                <span className="offline-indicator__badge">{pendingCount}</span>
+            )}
+
+            <style jsx>{`
  .offline-indicator {
  display: inline-flex;
  align-items: center;
@@ -105,6 +120,12 @@ export default function OfflineIndicator() {
  background: rgba(34, 197, 94, 0.1);
  color: #22c55e;
  border: 1px solid rgba(34, 197, 94, 0.2);
+ }
+
+ .offline-indicator[data-state="forced-online"] {
+ background: rgba(6, 182, 212, 0.1);
+ color: #06b6d4;
+ border: 1px solid rgba(6, 182, 212, 0.25);
  }
 
  .offline-indicator[data-state="offline"] {
@@ -182,6 +203,6 @@ export default function OfflineIndicator() {
  50% { opacity: 0.7; }
  }
  `}</style>
- </div>
- );
+        </div>
+    );
 }

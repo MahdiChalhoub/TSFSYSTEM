@@ -47,8 +47,8 @@ def process_outbox(batch_size: int = 100):
 
     for event in pending_events:
         try:
-            # Set tenant context
-            with tenant_context(event.tenant):
+            # Set organization context
+            with tenant_context(event.organization):
                 EventBus.process_event(event)
                 processed_count += 1
 
@@ -147,10 +147,10 @@ def replay_events(
 
     for event in events:
         try:
-            with tenant_context(event.tenant):
+            with tenant_context(event.organization):
                 # Create a copy to avoid modifying original event
                 event_copy = DomainEvent(
-                    tenant=event.tenant,
+                    organization=event.organization,
                     event_type=event.event_type,
                     event_version=event.event_version,
                     payload=event.payload,

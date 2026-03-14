@@ -20,7 +20,7 @@ class Product(AuditLogMixin, TenantOwnedModel):
     Product model with full Kernel OS v2.0 integration
 
     Features:
-    - Automatic tenant isolation via TenantOwnedModel
+    - Automatic organization isolation via TenantOwnedModel
     - Automatic audit logging via AuditLogMixin
     - Event emission on create/update
     - Contract-validated events
@@ -84,17 +84,17 @@ class Product(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'product'
         constraints = [
-            UniqueConstraint(fields=['sku', 'tenant'], name='unique_product_sku_per_tenant'),
+            UniqueConstraint(fields=['sku', 'organization'], name='unique_product_sku_per_tenant'),
             UniqueConstraint(
-                fields=['barcode', 'tenant'],
+                fields=['barcode', 'organization'],
                 name='unique_product_barcode_per_tenant',
                 condition=Q(barcode__isnull=False)
             ),
         ]
         indexes = [
-            models.Index(fields=['tenant', 'category', 'is_active'], name='product_tenant_cat_active_idx'),
-            models.Index(fields=['tenant', 'status'], name='product_tenant_status_idx'),
-            models.Index(fields=['tenant', 'min_stock_level'], name='product_tenant_minstk_idx'),
+            models.Index(fields=['organization', 'category', 'is_active'], name='product_tenant_cat_active_idx'),
+            models.Index(fields=['organization', 'status'], name='product_tenant_status_idx'),
+            models.Index(fields=['organization', 'min_stock_level'], name='product_tenant_minstk_idx'),
         ]
 
     def __str__(self):
@@ -120,5 +120,5 @@ class Product(AuditLogMixin, TenantOwnedModel):
                 'category_id': self.category_id if self.category else None,
                 'cost_price': float(self.cost_price),
                 'selling_price': float(self.selling_price_ttc),
-                'tenant_id': self.tenant_id
+                'organization_id': self.organization_id
             })

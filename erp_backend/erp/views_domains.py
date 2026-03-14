@@ -65,7 +65,7 @@ class CustomDomainSerializer(serializers.ModelSerializer):
 class CustomDomainViewSet(viewsets.ModelViewSet):
     """
     CRUD for custom domains.
-    Scoped to the user's organization (tenant isolation).
+    Scoped to the user's organization (organization isolation).
     Cache invalidated on create/update/delete.
     """
     serializer_class = CustomDomainSerializer
@@ -110,7 +110,7 @@ class CustomDomainViewSet(viewsets.ModelViewSet):
                 "Maximum of 5 custom domains per organization. Remove one to add another."
             )
 
-        instance = serializer.save(tenant_id=org_id)
+        instance = serializer.save(organization_id=org_id)
         logger.info(f"[DOMAIN] Added: {domain} → org={org_id} type={instance.domain_type}")
 
     def perform_destroy(self, instance):

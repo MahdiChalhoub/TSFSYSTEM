@@ -14,101 +14,101 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # 1. Add 'tenant' field to all models first
+        # 1. Add 'organization' field to all models first
         migrations.AddField(
             model_name='autotaskrule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='checklistinstance',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='checklistitemresponse',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='checklisttemplate',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='checklisttemplateitem',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='employeeperformance',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='employeerequest',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='questionnaire',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='questionnaireanswer',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='questionnairequestion',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='questionnaireresponse',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='task',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='taskattachment',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='taskcategory',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='taskcomment',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='tasktemplate',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='workspaceconfig',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
 
-        # 2. Now constraints can use 'tenant'
+        # 2. Now constraints can use 'organization'
         migrations.AlterUniqueTogether(
             name='employeeperformance',
-            unique_together={('tenant', 'employee', 'period_label')},
+            unique_together={('organization', 'employee', 'period_label')},
         ),
         migrations.AlterUniqueTogether(
             name='taskcategory',
-            unique_together={('tenant', 'name')},
+            unique_together={('organization', 'name')},
         ),
 
         # 3. Remove old fields

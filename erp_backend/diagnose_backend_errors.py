@@ -38,12 +38,12 @@ def test_brands():
         traceback.print_exc()
         return
 
-    # Test 2: Can we filter by tenant?
+    # Test 2: Can we filter by organization?
     try:
         org = Organization.objects.first()
         if org:
-            tenant_brands = Brand.objects.filter(tenant=org)
-            print(f"✓ Tenant filter works: {tenant_brands.count()} brands for tenant '{org.name}'")
+            tenant_brands = Brand.objects.filter(organization=org)
+            print(f"✓ Tenant filter works: {tenant_brands.count()} brands for organization '{org.name}'")
         else:
             print("⚠ No organizations found in database")
     except Exception as e:
@@ -52,26 +52,26 @@ def test_brands():
 
     # Test 3: Check for duplicate brand names (constraint violation)
     try:
-        duplicates = Brand.objects.values('name', 'tenant').annotate(count=Count('id')).filter(count__gt=1)
+        duplicates = Brand.objects.values('name', 'organization').annotate(count=Count('id')).filter(count__gt=1)
         if duplicates:
             print(f"⚠ CONSTRAINT VIOLATION: Found {len(duplicates)} duplicate brand names")
             for dup in list(duplicates)[:5]:
-                print(f"  - Brand '{dup['name']}' has {dup['count']} entries for same tenant")
+                print(f"  - Brand '{dup['name']}' has {dup['count']} entries for same organization")
         else:
             print("✓ No duplicate brands found (constraint is valid)")
     except Exception as e:
         print(f"✗ Duplicate check FAILED:")
         print(f"  Error: {type(e).__name__}: {e}")
 
-    # Test 4: Check for brands without tenant (NULL tenant)
+    # Test 4: Check for brands without organization (NULL organization)
     try:
         no_tenant = Brand.objects.filter(tenant__isnull=True)
         if no_tenant.exists():
-            print(f"⚠ TENANT ISSUE: Found {no_tenant.count()} brands with NULL tenant")
+            print(f"⚠ TENANT ISSUE: Found {no_tenant.count()} brands with NULL organization")
         else:
-            print("✓ All brands have valid tenant")
+            print("✓ All brands have valid organization")
     except Exception as e:
-        print(f"✗ NULL tenant check FAILED:")
+        print(f"✗ NULL organization check FAILED:")
         print(f"  Error: {type(e).__name__}: {e}")
 
     # Test 5: Try to access serializer
@@ -103,12 +103,12 @@ def test_categories():
         traceback.print_exc()
         return
 
-    # Test 2: Can we filter by tenant?
+    # Test 2: Can we filter by organization?
     try:
         org = Organization.objects.first()
         if org:
-            tenant_categories = Category.objects.filter(tenant=org)
-            print(f"✓ Tenant filter works: {tenant_categories.count()} categories for tenant '{org.name}'")
+            tenant_categories = Category.objects.filter(organization=org)
+            print(f"✓ Tenant filter works: {tenant_categories.count()} categories for organization '{org.name}'")
         else:
             print("⚠ No organizations found in database")
     except Exception as e:
@@ -117,26 +117,26 @@ def test_categories():
 
     # Test 3: Check for duplicate category names (constraint violation)
     try:
-        duplicates = Category.objects.values('name', 'tenant').annotate(count=Count('id')).filter(count__gt=1)
+        duplicates = Category.objects.values('name', 'organization').annotate(count=Count('id')).filter(count__gt=1)
         if duplicates:
             print(f"⚠ CONSTRAINT VIOLATION: Found {len(duplicates)} duplicate category names")
             for dup in list(duplicates)[:5]:
-                print(f"  - Category '{dup['name']}' has {dup['count']} entries for same tenant")
+                print(f"  - Category '{dup['name']}' has {dup['count']} entries for same organization")
         else:
             print("✓ No duplicate categories found (constraint is valid)")
     except Exception as e:
         print(f"✗ Duplicate check FAILED:")
         print(f"  Error: {type(e).__name__}: {e}")
 
-    # Test 4: Check for categories without tenant (NULL tenant)
+    # Test 4: Check for categories without organization (NULL organization)
     try:
         no_tenant = Category.objects.filter(tenant__isnull=True)
         if no_tenant.exists():
-            print(f"⚠ TENANT ISSUE: Found {no_tenant.count()} categories with NULL tenant")
+            print(f"⚠ TENANT ISSUE: Found {no_tenant.count()} categories with NULL organization")
         else:
-            print("✓ All categories have valid tenant")
+            print("✓ All categories have valid organization")
     except Exception as e:
-        print(f"✗ NULL tenant check FAILED:")
+        print(f"✗ NULL organization check FAILED:")
         print(f"  Error: {type(e).__name__}: {e}")
 
     # Test 5: Try to access serializer
@@ -211,7 +211,7 @@ def main():
     print("#"*60)
     print("\nNext Steps:")
     print("1. If constraint violations found → Fix duplicate data")
-    print("2. If tenant issues found → Run data migration")
+    print("2. If organization issues found → Run data migration")
     print("3. If ViewSet/URL issues → Check imports and registration")
     print("4. If serializer issues → Check field definitions")
 

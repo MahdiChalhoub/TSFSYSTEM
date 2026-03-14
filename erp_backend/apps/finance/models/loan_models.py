@@ -6,13 +6,21 @@ from apps.finance.models.ledger_models import JournalEntry
 from apps.finance.models.transaction_models import Transaction
 
 class Loan(TenantModel):
+    AMORTIZATION_METHODS = (
+        ('REDUCING_BALANCE', 'Reducing Balance'),
+        ('FLAT_RATE', 'Flat Rate'),
+        ('BALLOON', 'Balloon Payment'),
+        ('INTEREST_ONLY', 'Interest Only'),
+    )
     contract_number = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.PROTECT, related_name='loans')
     principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     interest_type = models.CharField(max_length=50, default='SIMPLE')
+    amortization_method = models.CharField(max_length=50, choices=AMORTIZATION_METHODS, default='REDUCING_BALANCE')
     term_months = models.IntegerField(default=12)
     start_date = models.DateField(null=True, blank=True)
+    disbursement_date = models.DateField(null=True, blank=True)
     payment_frequency = models.CharField(max_length=50, default='MONTHLY')
     status = models.CharField(max_length=20, default='DRAFT')
     scope = models.CharField(max_length=20, default='OFFICIAL')
@@ -24,11 +32,13 @@ class Loan(TenantModel):
 
 class LoanInstallment(TenantModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='installments')
+    installment_number = models.IntegerField(default=1)
     due_date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     principal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     interest_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     paid_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    balance_after = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     is_paid = models.BooleanField(default=False)
     status = models.CharField(max_length=20, default='PENDING')
     paid_at = models.DateTimeField(null=True, blank=True)

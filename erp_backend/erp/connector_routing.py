@@ -16,6 +16,18 @@ from .connector_engine import ModuleState, OperationType, ConnectorResponse
 logger = logging.getLogger(__name__)
 
 
+def _track_route(target_module, endpoint, operation, success, latency_ms, fallback=False):
+    """Track connector routing metrics via kernel observability (non-blocking)."""
+    try:
+        from kernel.observability.metrics import increment_counter, record_timing
+        tags = {'target': target_module, 'endpoint': endpoint, 'op': operation}
+        status = 'success' if success else 'fallback' if fallback else 'error'
+        increment_counter(f'connector.route.{status}', tags=tags)
+        record_timing('connector.route.latency', latency_ms, tags=tags)
+    except Exception:
+        pass  # Observability must never crash routing
+
+
 
 class ConnectorRoutingMixin:
     
@@ -58,11 +70,13 @@ class ConnectorRoutingMixin:
                     target_module, endpoint, organization_id, response
                 )
                 
+                _track_route(target_module, endpoint, 'read', True, (time.time() - start_time) * 1000)
                 return ConnectorResponse(data=response, state=state)
                 
             except Exception as e:
                 logger.error(f"Forward read failed for {target_module}/{endpoint}: {e}")
                 self._increment_failure(target_module, organization_id) # [HARDENING]
+                _track_route(target_module, endpoint, 'read', False, (time.time() - start_time) * 1000)
                 state = ModuleState.MISSING
         
         # Apply fallback policy
@@ -112,11 +126,13 @@ class ConnectorRoutingMixin:
                     target_module, endpoint, data, organization_id, method, version
                 )
                 
+                _track_route(target_module, endpoint, 'write', True, (time.time() - start_time) * 1000)
                 return ConnectorResponse(data=response, state=state)
                 
             except Exception as e:
                 logger.error(f"Forward write failed for {target_module}/{endpoint}: {e}")
                 self._increment_failure(target_module, organization_id) # [HARDENING]
+                _track_route(target_module, endpoint, 'write', False, (time.time() - start_time) * 1000)
                 state = ModuleState.MISSING
         
         # Apply fallback policy
@@ -150,17 +166,9 @@ class ConnectorRoutingMixin:
         In this architecture, it maps to the module's Service methods.
         """
         try:
-            # 1. Resolve service
-            # Convention: apps.<module>.services.<Module>Service
-            module_name = target_module.capitalize()
-            import_path = f"apps.{target_module}.services"
-            import importlib
-            service_module = importlib.import_module(import_path)
-            
-            service_class_name = f"{module_name}Service"
-            if hasattr(service_module, service_class_name):
-                service = getattr(service_module, service_class_name)
-                
+            service = self._resolve_service(target_module)
+
+            if service:
                 # 2. Map endpoint to method
                 # Simple mapping for now: "products/" -> "get_products"
                 method_name = endpoint.strip('/').replace('/', '_')
@@ -181,20 +189,46 @@ class ConnectorRoutingMixin:
             logger.error(f"Internal read forward error: {e}")
             raise e
 
+    def _resolve_service(self, target_module):
+        """
+        Resolve the service class for a module.
+        Tries {Module}ConnectorService first (dedicated connector handler),
+        then falls back to {Module}Service (general service).
+        """
+        import importlib
+        module_name = target_module.capitalize()
+        import_path = f"apps.{target_module}.services"
+        service_module = importlib.import_module(import_path)
+
+        # Priority 1: Dedicated ConnectorService (e.g. FinanceConnectorService)
+        connector_class_name = f"{module_name}ConnectorService"
+        # Try importing from connector_handlers sub-module
+        try:
+            handler_module = importlib.import_module(f"{import_path}.connector_handlers")
+            if hasattr(handler_module, connector_class_name):
+                return getattr(handler_module, connector_class_name)
+        except ImportError:
+            pass
+
+        # Also check if it's exported from __init__.py
+        if hasattr(service_module, connector_class_name):
+            return getattr(service_module, connector_class_name)
+
+        # Priority 2: General service (e.g. FinanceService)
+        service_class_name = f"{module_name}Service"
+        if hasattr(service_module, service_class_name):
+            return getattr(service_module, service_class_name)
+
+        return None
+
     def _forward_write_request(self, target_module, endpoint, data, organization_id, method, version):
         """
         Internal implementation of write forwarding.
         """
         try:
-            module_name = target_module.capitalize()
-            import_path = f"apps.{target_module}.services"
-            import importlib
-            service_module = importlib.import_module(import_path)
-            
-            service_class_name = f"{module_name}Service"
-            if hasattr(service_module, service_class_name):
-                service = getattr(service_module, service_class_name)
-                
+            service = self._resolve_service(target_module)
+
+            if service:
                 # Map endpoint to method: "products/create/" -> "create_product"
                 method_name = endpoint.strip('/').replace('/', '_')
                 if method_name.endswith('_create'): # Handle products/create/
@@ -231,11 +265,11 @@ class ConnectorRoutingMixin:
             
             if hasattr(models_module, model_name):
                 model = getattr(models_module, model_name)
-                qs = model.objects.filter(tenant_id=organization_id)
+                qs = model.objects.filter(organization_id=organization_id)
                 # handle detail
                 parts = endpoint.strip('/').split('/')
                 if len(parts) > 1 and parts[1].isdigit():
-                    return model.objects.filter(tenant_id=organization_id, id=parts[1]).values().first()
+                    return model.objects.filter(organization_id=organization_id, id=parts[1]).values().first()
                 return list(qs.values()[:100]) # Safety limit
             return None
         except Exception:
@@ -293,7 +327,7 @@ class ConnectorRoutingMixin:
                 module_state=state.value,
                 decision=decision,
                 policy_applied=policy,
-                tenant_id=org_id,
+                organization_id=org_id,
                 user_id=user_id,
                 success=success,
                 response_time_ms=latency

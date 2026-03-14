@@ -46,7 +46,10 @@ class CatalogView(APIView):
 
         # Get products from inventory
         try:
-            from apps.inventory.models import Product
+            from erp.connector_registry import connector
+            Product = connector.require('inventory.products.get_model', org_id=org.id, source='ecommerce.catalog')
+            if not Product:
+                return Response({'results': [], 'total': 0, 'page': 1, 'per_page': 24, 'total_pages': 0})
             products = Product.objects.filter(
                 organization=org,
                 is_active=True,
@@ -367,7 +370,13 @@ class OrderViewSet(TenantModelViewSet):
         if order.payment_status == 'PAID':
             return Response({'error': 'Order is already marked as paid.'}, status=400)
 
-        from apps.finance.payment_gateway import PaymentGatewayService
+        try:
+            from erp.connector_registry import connector
+            PaymentGatewayService = connector.require('finance.gateways.get_payment_service', org_id=order.organization_id, source='ecommerce.payment')
+            if not PaymentGatewayService:
+                return Response({'error': 'Payment gateway service not available.'}, status=503)
+        except Exception:
+            return Response({'error': 'Finance payment module not available.'}, status=503)
         success = PaymentGatewayService.confirm_manual_payment(order, confirmed_by_user=request.user)
 
         if success:

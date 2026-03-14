@@ -13,7 +13,7 @@ Usage:
     from apps.crm.services.duplicate_service import DuplicateDetectionService
 
     result = DuplicateDetectionService.check_for_duplicates(
-        tenant_id=org.id,
+        organization_id=org.id,
         name='Acme Corp',
         email='acme@example.com',
         phone='+2250700001122',
@@ -70,7 +70,7 @@ class DuplicateDetectionService:
         duplicates = []
         seen_ids = set()
 
-        base_qs = Contact.objects.filter(tenant_id=organization_id)
+        base_qs = Contact.objects.filter(organization_id=organization_id)
         if exclude_contact_id:
             base_qs = base_qs.exclude(id=exclude_contact_id)
 

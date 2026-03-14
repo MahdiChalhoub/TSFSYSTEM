@@ -5,9 +5,9 @@ import '../globals.css';
 import '@/styles/app-theme-engine.css';
 import '@/styles/app-animations.css';
 import '@/styles/theme-integration.css';
+import { UnifiedThemeWrapper } from '@/components/theme/UnifiedThemeWrapper';
 import { AppThemeProvider } from '@/components/app/AppThemeProvider';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { LayoutProvider } from '@/contexts/LayoutContext';
+import { DesignSystemProvider } from '@/contexts/DesignSystemContext';
 import { AdminProvider } from '@/context/AdminContext';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { TopHeader } from '@/components/admin/TopHeader';
@@ -97,14 +97,12 @@ export default async function AdminLayout({
     // 2. Fetch data in parallel ONLY if authenticated
     // ── All independent fetches run concurrently to minimize waterfall ──
     const setupReadinessPromise = !isSaas ? checkSetupReadiness().catch(() => ({ ready: true })) : Promise.resolve({ ready: true });
-    const themePromise = import('@/app/actions/settings/theme');
 
-    const [sites, organizations, financialSettings, setupReadiness, themeModule] = await Promise.all([
-        getSites(),
+    const [sites, organizations, financialSettings, setupReadiness] = await Promise.all([
+        getSites().catch(() => []),
         getOrganizations(),
-        getGlobalFinancialSettings(),
+        getGlobalFinancialSettings().catch(() => ({})),
         setupReadinessPromise,
-        themePromise,
     ]);
 
     // ── HARD GATE: Setup Wizard for TENANT subdomains only ──
@@ -116,24 +114,18 @@ export default async function AdminLayout({
             redirect('/setup-wizard');
         }
     }
-    // ── Phase 5: 3-tier theme fallback chain ────────────────────────────
+    // ── Phase 5: Scope Access ────────────────────────────
     const cookieStore = await cookies();
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
 
-    // Priority: user cookie → org default (DB) → system default (midnight-pro)
-    const userTheme = await themeModule.getPersistedTheme();
-    // Only hit the backend for org default if the user has no personal preference
-    const orgTheme = userTheme ? null : await themeModule.getOrgDefaultTheme();
-    const serverTheme = userTheme ?? orgTheme ?? undefined;
-
     return (
-        <AppThemeProvider serverTheme={serverTheme ?? undefined}>
-            <ThemeProvider defaultTheme="midnight-pro">
-                <LayoutProvider defaultLayout="card-heavy">
+        <DesignSystemProvider defaultSystem="tailwind">
+            <UnifiedThemeWrapper>
+                <AppThemeProvider>
                     <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
                         <DevProvider>
                             {process.env.DEV_MODULE && <DevModeBanner moduleName={process.env.DEV_MODULE} />}
-                            <div className="flex h-screen overflow-hidden" style={{ background: 'var(--app-background)', color: 'var(--app-foreground)' }}>
+                            <div className="flex h-screen overflow-hidden" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
                                 {/* Left Panel: Sidebar Tree */}
                                 <Sidebar
                                     isSaas={isSaas}
@@ -161,8 +153,8 @@ export default async function AdminLayout({
                             </div>
                         </DevProvider>
                     </AdminProvider>
-                </LayoutProvider>
-            </ThemeProvider>
-        </AppThemeProvider>
+                </AppThemeProvider>
+            </UnifiedThemeWrapper>
+        </DesignSystemProvider>
     );
 }

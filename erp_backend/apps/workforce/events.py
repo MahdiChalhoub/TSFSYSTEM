@@ -17,8 +17,9 @@ Event Coverage:
 
 import logging
 from kernel.events import subscribe_to_event
-from apps.hr.models import Employee
 from .services import WorkforceScoreEngine
+from erp.connector_registry import connector
+Employee = connector.require('hr.employees.get_model', org_id=0, source='workforce')
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +32,14 @@ def _get_employee_by_user(user_id, organization_id):
     """Resolve user_id → Employee."""
     if not user_id:
         return None
-    return Employee.objects.filter(user_id=user_id, tenant_id=organization_id).first()
+    return Employee.objects.filter(user_id=user_id, organization_id=organization_id).first()
 
 
 def _get_employee_by_id(employee_id, organization_id):
     """Resolve employee_id → Employee."""
     if not employee_id:
         return None
-    return Employee.objects.filter(id=employee_id, tenant_id=organization_id).first()
+    return Employee.objects.filter(id=employee_id, organization_id=organization_id).first()
 
 
 def _safe_record(employee, event_code, module, payload=None):
@@ -63,7 +64,7 @@ def on_crm_interaction_recorded(event):
     """CRM follow-up outcome → scoring."""
     payload  = event.payload
     outcome  = payload.get('outcome')
-    employee = _get_employee_by_user(payload.get('user_id'), event.tenant_id)
+    employee = _get_employee_by_user(payload.get('user_id'), event.organization_id)
     if not employee:
         return
 
@@ -77,7 +78,7 @@ def on_crm_interaction_recorded(event):
 def on_crm_contact_converted(event):
     """Lead conversion → bonus points."""
     payload  = event.payload
-    employee = _get_employee_by_user(payload.get('user_id'), event.tenant_id)
+    employee = _get_employee_by_user(payload.get('user_id'), event.organization_id)
     if not employee:
         return
 
@@ -94,7 +95,7 @@ def on_invoice_created(event):
     """Invoice posting → accuracy score."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'invoice_posted', 'finance', payload)
 
@@ -104,7 +105,7 @@ def on_invoice_paid(event):
     """Payment collection → productivity score."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'payment_collected', 'finance', payload)
 
@@ -117,7 +118,7 @@ def on_finance_expense_unauthorized(event):
     """
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('submitted_by_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'unauthorized_expense', 'finance', payload)
 
@@ -130,7 +131,7 @@ def on_finance_expense_unauthorized(event):
 def on_hr_attendance_late(event):
     """Late arrival → attendance penalty."""
     payload  = event.payload
-    employee = _get_employee_by_id(payload.get('employee_id'), event.tenant_id)
+    employee = _get_employee_by_id(payload.get('employee_id'), event.organization_id)
     if employee:
         _safe_record(employee, 'attendance_late', 'hr', payload)
 
@@ -139,7 +140,7 @@ def on_hr_attendance_late(event):
 def on_hr_attendance_on_time(event):
     """On-time arrival → attendance reward (daily capped by rule)."""
     payload  = event.payload
-    employee = _get_employee_by_id(payload.get('employee_id'), event.tenant_id)
+    employee = _get_employee_by_id(payload.get('employee_id'), event.organization_id)
     if employee:
         _safe_record(employee, 'attendance_on_time', 'hr', payload)
 
@@ -148,7 +149,7 @@ def on_hr_attendance_on_time(event):
 def on_hr_absence_unexcused(event):
     """Unexcused absence → critical attendance penalty."""
     payload  = event.payload
-    employee = _get_employee_by_id(payload.get('employee_id'), event.tenant_id)
+    employee = _get_employee_by_id(payload.get('employee_id'), event.organization_id)
     if employee:
         _safe_record(employee, 'absence_unexcused', 'hr', payload)
 
@@ -165,7 +166,7 @@ def on_order_completed(event):
     """
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('cashier_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'invoice_posted', 'sales', payload)
 
@@ -179,7 +180,7 @@ def on_pos_session_closed(event):
     payload     = event.payload
     user_id     = event.triggered_by_id or payload.get('cashier_user_id')
     discrepancy = abs(float(payload.get('discrepancy_amount', 0)))
-    employee    = _get_employee_by_user(user_id, event.tenant_id)
+    employee    = _get_employee_by_user(user_id, event.organization_id)
     if not employee:
         return
 
@@ -205,7 +206,7 @@ def on_inventory_insufficient_stock(event):
     """
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('responsible_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'stock_shortage', 'inventory', payload)
 
@@ -215,7 +216,7 @@ def on_inventory_expiry_waste(event):
     """Expired stock written off — Critical discipline penalty."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('responsible_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'expiry_waste', 'inventory', payload)
 
@@ -225,7 +226,7 @@ def on_stock_count_accurate(event):
     """Accurate stock count submitted — accuracy reward."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('counted_by_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'stock_count_accurate', 'inventory', payload)
 
@@ -239,10 +240,10 @@ def on_task_completed(event):
     """Task completed → timeliness / productivity score for assignee."""
     payload  = event.payload
     # Prefer employee_id direct resolution; fall back to user lookup
-    employee = _get_employee_by_id(payload.get('employee_id'), event.tenant_id)
+    employee = _get_employee_by_id(payload.get('employee_id'), event.organization_id)
     if not employee:
         user_id = event.triggered_by_id or payload.get('assignee_user_id')
-        employee = _get_employee_by_user(user_id, event.tenant_id)
+        employee = _get_employee_by_user(user_id, event.organization_id)
     if not employee:
         return
 
@@ -260,7 +261,7 @@ def on_task_overdue(event):
     """
     payload  = event.payload
     user_id  = payload.get('assignee_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'task_overdue', 'workspace', payload)
 
@@ -274,7 +275,7 @@ def on_procurement_po_on_time(event):
     """Purchase order received on or before expected date → reliability reward."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('buyer_user_id') or payload.get('receiver_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'po_received_on_time', 'procurement', payload)
 
@@ -284,7 +285,7 @@ def on_procurement_po_late(event):
     """Purchase order received significantly late → timeliness penalty."""
     payload  = event.payload
     user_id  = event.triggered_by_id or payload.get('buyer_user_id') or payload.get('receiver_user_id')
-    employee = _get_employee_by_user(user_id, event.tenant_id)
+    employee = _get_employee_by_user(user_id, event.organization_id)
     if employee:
         _safe_record(employee, 'po_received_late', 'procurement', payload)
 
@@ -304,27 +305,31 @@ def on_badges_awarded(event):
     payload = event.payload
     period_key    = payload.get('period_key', 'unknown')
     awarded_count = payload.get('awarded_count', 0)
-    tenant_id     = event.tenant_id
+    organization_id     = event.organization_id
 
     logger.info(f"[WISE] Badges awarded for period {period_key}: {awarded_count} employees.")
 
     try:
-        from apps.workspace.models import Task, TaskCategory
+        Task = connector.require('workspace.tasks.get_model', org_id=0, source='workforce')
+        TaskCategory = connector.require('workspace.tasks.get_category_model', org_id=0, source='workforce')
+        if not Task or not TaskCategory:
+            logger.warning("[WISE] Workspace module not available for badge notification task.")
+            return
         from erp.models import User
 
         category, _ = TaskCategory.objects.get_or_create(
-            tenant_id=tenant_id,
+            organization_id=organization_id,
             name='WISE / HR Analytics',
             defaults={'color': '#a78bfa', 'icon': 'BarChart3'}
         )
         manager = User.objects.filter(
-            tenant_id=tenant_id,
+            organization_id=organization_id,
             is_staff=True
         ).first()
 
         if manager:
             Task.objects.create(
-                tenant_id=tenant_id,
+                organization_id=organization_id,
                 title=f"📊 WISE Period Close: {period_key}",
                 description=(
                     f"Workforce Intelligence badges have been awarded for period {period_key}.\n\n"

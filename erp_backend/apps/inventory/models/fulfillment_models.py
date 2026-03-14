@@ -56,8 +56,8 @@ class PickList(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'pick_list'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'assigned_to', 'status']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'assigned_to', 'status']),
         ]
 
     def __str__(self):
@@ -126,7 +126,7 @@ class PackingOrder(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'packing_order'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['organization', 'status']),
         ]
 
     def __str__(self):
@@ -187,7 +187,7 @@ class Shipment(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'shipment'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['organization', 'status']),
             models.Index(fields=['tracking_number']),
         ]
 

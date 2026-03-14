@@ -13,7 +13,7 @@ Usage:
                 'customer_id': 456,
                 'total_amount': 99.99,
                 'currency': 'USD',
-                'tenant_id': 1
+                'organization_id': 1
             }
             self.assert_contract_valid('invoice.created', payload)
 """
@@ -46,7 +46,7 @@ def validate_event_payload(event_name: str, payload: Dict[str, Any],
             'invoice_id': 123,
             'total_amount': 99.99,
             'currency': 'USD',
-            'tenant_id': 1
+            'organization_id': 1
         })
     """
     contracts = get_all_contracts()

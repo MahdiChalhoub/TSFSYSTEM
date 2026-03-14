@@ -3,18 +3,19 @@ from .base import (
     TenantModelViewSet, get_current_tenant_id,
     Organization
 )
-from kernel.lifecycle.viewsets import LifecycleViewSetMixin
 from apps.finance.invoice_models import Invoice, InvoiceLine, PaymentAllocation
 from apps.finance.serializers import (
     InvoiceSerializer, InvoiceLineSerializer, PaymentAllocationSerializer
 )
+from kernel.performance import profile_view
 
-class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
+class InvoiceViewSet(TenantModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 
+    @profile_view
     def get_queryset(self):
-        qs = super().get_queryset().select_related('contact', 'created_by', 'site').prefetch_related('lines')
+        qs = super().get_queryset().select_related('contact', 'created_by', 'site', 'organization').prefetch_related('lines__product')
         # Filters
         inv_type = self.request.query_params.get('type')
         inv_status = self.request.query_params.get('status')
@@ -45,7 +46,8 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             data = request.data.copy()
 
             # Snapshot contact info
-            from apps.crm.models import Contact
+            from erp.connector_registry import connector
+            Contact = connector.require('crm.contacts.get_model', org_id=organization_id, source='finance.invoice')
             contact = Contact.objects.get(id=data.get('contact'), organization=organization)
             data.setdefault('contact_name', contact.name)
             data.setdefault('contact_email', contact.email)
@@ -89,6 +91,15 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    @action(detail=True, methods=['post'])
+    def send_invoice(self, request, pk=None):
+        """Mark invoice as SENT and auto-generate invoice number."""
+        invoice = self.get_object()
+        if invoice.status != 'DRAFT':
+            return Response({"error": "Only DRAFT invoices can be sent."}, status=400)
+        invoice.status = 'SENT'
+        invoice.save()  # Triggers auto-numbering in save()
+        return Response(InvoiceSerializer(invoice).data)
 
     @action(detail=True, methods=['post'])
     def record_payment(self, request, pk=None):
@@ -147,9 +158,13 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         
         product_id = request.data.get('product')
         if product_id:
-            from apps.inventory.models import Product
-            if not Product.objects.filter(id=product_id, organization=organization).exists():
-                return Response({"error": "Product not found or access denied."}, status=403)
+            try:
+                from erp.connector_registry import connector
+                Product = connector.require('inventory.products.get_model', org_id=organization_id, source='finance.invoice')
+                if Product and not Product.objects.filter(id=product_id, organization=organization).exists():
+                    return Response({"error": "Product not found or access denied."}, status=403)
+            except Exception:
+                pass  # Inventory module not available — skip product validation
                 
         try:
             line = InvoiceLine.objects.create(
@@ -163,6 +178,7 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             return Response({"error": str(e)}, status=400)
 
     @action(detail=False, methods=['get'])
+    @profile_view
     def dashboard(self, request):
         """Invoice dashboard stats."""
         organization_id = get_current_tenant_id()
@@ -172,7 +188,7 @@ class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         from django.db.models import Sum
         from django.utils import timezone
 
-        qs = Invoice.objects.filter(tenant_id=organization_id)
+        qs = Invoice.objects.filter(organization_id=organization_id).only('id', 'status', 'balance_due', 'paid_amount')
         
         return Response({
             'total_invoices': qs.count(),
@@ -208,14 +224,14 @@ class InvoiceLineViewSet(TenantModelViewSet):
         invoice = serializer.validated_data.get('invoice')
         if invoice and invoice.organization_id != org_id:
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
         invoice = serializer.validated_data.get('invoice')
         if invoice and invoice.organization_id != org_id:
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
 
 class PaymentAllocationViewSet(TenantModelViewSet):
@@ -230,7 +246,7 @@ class PaymentAllocationViewSet(TenantModelViewSet):
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
         if payment and payment.organization_id != org_id:
             raise ValidationError("Cross-tenant Payment assignment blocked.")
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)
 
     def perform_update(self, serializer):
         org_id = get_current_tenant_id()
@@ -240,4 +256,4 @@ class PaymentAllocationViewSet(TenantModelViewSet):
             raise ValidationError("Cross-tenant Invoice assignment blocked.")
         if payment and payment.organization_id != org_id:
             raise ValidationError("Cross-tenant Payment assignment blocked.")
-        serializer.save(tenant_id=org_id)
+        serializer.save(organization_id=org_id)

@@ -23,7 +23,7 @@ class DashboardAPITests(APITestCase):
         self.token = Token.objects.create(user=self.admin)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         
-        # Add tenant header (Middleware expects X-Tenant-Id as UUID)
+        # Add organization header (Middleware expects X-Tenant-Id as UUID)
         self.client.defaults['HTTP_X_TENANT_ID'] = str(self.org.id)
 
     def test_realtime_kpis_smoke(self):

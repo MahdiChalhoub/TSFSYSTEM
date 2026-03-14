@@ -184,7 +184,7 @@ class CycleCountPolicy(AuditLogMixin, TenantOwnedModel):
         db_table = 'cycle_count_policy'
         ordering = ['classification', 'name']
         indexes = [
-            models.Index(fields=['tenant', 'classification', 'is_active']),
+            models.Index(fields=['organization', 'classification', 'is_active']),
         ]
 
     def __str__(self):

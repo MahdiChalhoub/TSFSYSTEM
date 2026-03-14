@@ -119,7 +119,7 @@ class ProvisioningService:
                 source_module='kernel',
                 event_name='org:provisioned',
                 payload=event_payload,
-                tenant_id=str(org.id)
+                organization_id=str(org.id)
             )
             
             logger.info(
@@ -193,7 +193,7 @@ class ConfigurationService:
             response = connector.route_read(
                 target_module='finance',
                 endpoint='coa',
-                tenant_id=str(organization.id),
+                organization_id=str(organization.id),
                 source_module='kernel',
                 params={'is_active': True}
             )
@@ -227,65 +227,134 @@ class ConfigurationService:
             acc = qs.first()
             return acc.id if acc else None
 
+        def find_by_sub_type(sub_type):
+            """Fallback: find by sub_type field (CASH, BANK, RECEIVABLE, PAYABLE, etc.)."""
+            acc = accounts.filter(sub_type=sub_type).first()
+            return acc.id if acc else None
+
+        def find_first_of_type(acct_type):
+            """Ultimate fallback: first active account of any given type."""
+            acc = accounts.filter(type=acct_type).first()
+            return acc.id if acc else None
+
         # ═══════════════════════════════════════════════════════════════
         # Code search order for each field:
         #   1. IFRS codes (1110, 2101, 3001, 4100, 5100, 6303, 9001)
         #   2. USA GAAP codes (1100, 1200, 2100, 3100, 4100, 5000, 6100)
         #   3. SYSCOHADA/PCG codes (41, 40, 10, 70, 60, 44, 28, 16)
         #   4. Lebanese PCN codes  (similar to SYSCOHADA)
-        #   5. Fallback by type + name keyword
+        #   5. Fallback by sub_type / type + name keyword
+        #   6. Ultimate fallback: first account of matching type
         # ═══════════════════════════════════════════════════════════════
 
         # ── Sales ──
-        config['sales']['receivable'] = find('1110') or find('1200') or find('411') or find('41') or find_by_type('ASSET', 'receivable') or config['sales']['receivable']
-        config['sales']['revenue'] = find('4100') or find('4101') or find('701') or find('70') or find_by_type('INCOME', 'sales') or config['sales']['revenue']
-        config['sales']['cogs'] = find('5100') or find('5101') or find('5000') or find('601') or find('60') or find_by_type('EXPENSE', 'cost') or config['sales']['cogs']
-        config['sales']['inventory'] = find('1120') or find('1300') or find('31') or find('37') or find_by_type('ASSET', 'inventory') or config['sales']['inventory']
-        config['sales']['round_off'] = find('9002') or find('6589') or find('7589') or find('758') or config['sales']['round_off']
-        config['sales']['discount'] = find('6190') or find('709') or find_by_type('EXPENSE', 'discount') or config['sales']['discount']
-        config['sales']['vat_collected'] = find('2111') or find('4457') or find('443') or find('44') or find_by_type('LIABILITY', 'vat') or config['sales']['vat_collected']
+        config['sales']['receivable'] = find('1110') or find('1200') or find('411') or find('41') or find_by_sub_type('RECEIVABLE') or find_by_type('ASSET', 'receivable') or find_by_type('ASSET', 'client') or config['sales']['receivable']
+        config['sales']['revenue'] = find('4100') or find('4101') or find('4102') or find('701') or find('70') or find_by_type('INCOME', 'sales') or find_by_type('INCOME', 'vente') or find_by_type('INCOME', 'revenue') or find_first_of_type('INCOME') or config['sales']['revenue']
+        config['sales']['cogs'] = find('5100') or find('5101') or find('5000') or find('601') or find('60') or find_by_type('EXPENSE', 'cost of goods') or find_by_type('EXPENSE', 'cogs') or find_by_type('EXPENSE', 'achat') or config['sales']['cogs']
+        config['sales']['inventory'] = find('1120') or find('1300') or find('31') or find('37') or find_by_type('ASSET', 'inventory') or find_by_type('ASSET', 'stock') or find_by_type('ASSET', 'marchandise') or config['sales']['inventory']
+        config['sales']['round_off'] = find('9002') or find('6589') or find('7589') or find('758') or find_by_type('INCOME', 'rounding') or find_by_type('EXPENSE', 'rounding') or find_by_type('INCOME', 'arrondi') or config['sales']['round_off']
+        config['sales']['discount'] = find('6190') or find('709') or find('4201') or find_by_type('EXPENSE', 'discount') or find_by_type('INCOME', 'discount') or find_by_type('EXPENSE', 'remise') or config['sales']['discount']
+        config['sales']['vat_collected'] = find('2111') or find('4457') or find('443') or find('44') or find_by_type('LIABILITY', 'vat payable') or find_by_type('LIABILITY', 'vat collected') or find_by_type('LIABILITY', 'tva') or config['sales']['vat_collected']
 
         # ── Purchases ──
-        config['purchases']['payable'] = find('2101') or find('2100') or find('401') or find('40') or find_by_type('LIABILITY', 'payable') or config['purchases']['payable']
-        config['purchases']['inventory'] = find('1120') or find('1300') or find('31') or find('37') or find('607') or find_by_type('ASSET', 'inventory') or config['purchases']['inventory']
-        config['purchases']['expense'] = find('5101') or find('6011') or find('5000') or find('601') or find('60') or find_by_type('EXPENSE', 'purchase') or find_by_type('EXPENSE', 'achat') or config['purchases']['expense']
-        config['purchases']['vat_recoverable'] = find('2112') or find('4456') or find('445') or find('44') or find_by_type('ASSET', 'vat') or config['purchases']['vat_recoverable']
-        config['purchases']['vat_suspense'] = find('2116') or find('4458') or find('44586') or config['purchases']['vat_suspense']
-        config['purchases']['airsi_payable'] = find('2113') or find('4471') or config['purchases']['airsi_payable']
-        config['purchases']['reverse_charge_vat'] = find('2114') or find('4452') or find_by_type('LIABILITY', 'reverse') or config['purchases']['reverse_charge_vat']
-        config['purchases']['discount_earned'] = find('4201') or find('7190') or find('609') or find('77') or find_by_type('INCOME', 'discount') or config['purchases']['discount_earned']
-        config['purchases']['delivery_fees'] = find('5102') or find('6241') or find('624') or find('61') or find_by_type('EXPENSE', 'freight') or find_by_type('EXPENSE', 'transport') or config['purchases']['delivery_fees']
+        config['purchases']['payable'] = find('2101') or find('2100') or find('401') or find('40') or find_by_sub_type('PAYABLE') or find_by_type('LIABILITY', 'payable') or find_by_type('LIABILITY', 'fournisseur') or config['purchases']['payable']
+        config['purchases']['inventory'] = config['sales']['inventory'] or find('1120') or find('1300') or find('31') or find('37') or find('607') or find_by_type('ASSET', 'inventory') or config['purchases']['inventory']
+        config['purchases']['expense'] = find('5101') or find('6011') or find('5000') or find('601') or find('60') or find_by_type('EXPENSE', 'purchase') or find_by_type('EXPENSE', 'achat') or find_first_of_type('EXPENSE') or config['purchases']['expense']
+        config['purchases']['vat_recoverable'] = find('2115') or find('2112') or find('4456') or find('445') or find_by_type('ASSET', 'vat') or find_by_type('ASSET', 'tva') or config['purchases']['vat_recoverable']
+        config['purchases']['vat_suspense'] = find('2116') or find('4458') or find('44586') or find_by_type('LIABILITY', 'vat suspense') or find_by_type('LIABILITY', 'tva en attente') or config['purchases']['vat_suspense']
+        # AIRSI = non-refundable withholding tax payable to government
+        config['purchases']['airsi_payable'] = find('2113') or find('4471') or find('447') or find_by_type('LIABILITY', 'withholding') or find_by_type('LIABILITY', 'airsi') or find_by_type('LIABILITY', 'retenue') or find_by_type('LIABILITY', 'tax payable') or config['purchases']['airsi_payable']
+        config['purchases']['airsi'] = config['purchases']['airsi_payable']  # Same concept — keep in sync
+        config['purchases']['reverse_charge_vat'] = find('2114') or find('4452') or find_by_type('LIABILITY', 'reverse charge') or find_by_type('LIABILITY', 'autoliquidation') or config['purchases']['reverse_charge_vat']
+        config['purchases']['discount_earned'] = find('4201') or find('7190') or find('609') or find('77') or find_by_type('INCOME', 'discount') or find_by_type('INCOME', 'escompte') or find_by_type('INCOME', 'remise') or config['purchases']['discount_earned']
+        config['purchases']['delivery_fees'] = find('5102') or find('6241') or find('624') or find('61') or find_by_type('EXPENSE', 'freight') or find_by_type('EXPENSE', 'transport') or find_by_type('EXPENSE', 'livraison') or config['purchases']['delivery_fees']
 
         # ── Inventory ──
-        config['inventory']['adjustment'] = find('9001') or find('5104') or find('708') or find('709') or find_by_type('EXPENSE', 'adjustment') or config['inventory']['adjustment']
-        config['inventory']['transfer'] = find('9002') or find('1120') or find('31') or config['inventory']['transfer']
+        config['inventory']['adjustment'] = find('9001') or find('5104') or find('708') or find_by_type('EXPENSE', 'adjustment') or find_by_type('EXPENSE', 'variation') or find_by_type('EXPENSE', 'stock') or config['inventory']['adjustment']
+        config['inventory']['transfer'] = find('1120') or find('31') or find('37') or config['sales']['inventory'] or find_by_type('ASSET', 'inventory') or find_by_type('ASSET', 'stock') or config['inventory']['transfer']
 
         # ── Suspense ──
-        config['suspense']['reception'] = find('2102') or find('9004') or find('380') or find('471') or find_by_type('LIABILITY', 'reception') or find_by_type('LIABILITY', 'transit') or config['suspense']['reception']
+        config['suspense']['reception'] = find('2102') or find('9004') or find('380') or find('471') or find('408') or find_by_type('LIABILITY', 'reception') or find_by_type('LIABILITY', 'transit') or find_by_type('LIABILITY', 'goods received') or config['suspense']['reception']
 
         # ── Tax ──
-        config['tax']['vat_payable'] = find('2110') or find('2111') or find('4455') or find('443') or find('44') or find_by_type('LIABILITY', 'vat payable') or config['tax']['vat_payable']
-        config['tax']['vat_refund_receivable'] = find('2115') or find('4458') or find_by_type('ASSET', 'vat refund') or find_by_type('ASSET', 'vat credit') or config['tax']['vat_refund_receivable']
+        config['tax']['vat_payable'] = find('2110') or find('2111') or find('4455') or find('443') or find('44') or find_by_type('LIABILITY', 'vat payable') or find_by_type('LIABILITY', 'tva') or config['sales']['vat_collected'] or config['tax']['vat_payable']
+        config['tax']['vat_refund_receivable'] = find('2115') or find('4458') or find_by_type('ASSET', 'vat refund') or find_by_type('ASSET', 'vat credit') or find_by_type('ASSET', 'tva') or config['purchases']['vat_recoverable'] or config['tax']['vat_refund_receivable']
 
         # ── Automation ──
-        config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or find('41') or find_by_type('ASSET', 'receivable') or config['automation']['customerRoot']
-        config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or find('40') or find_by_type('LIABILITY', 'payable') or config['automation']['supplierRoot']
-        config['automation']['payrollRoot'] = find('2200') or find('2121') or find('421') or find('42') or find_by_type('LIABILITY', 'salary') or find_by_type('LIABILITY', 'personnel') or config['automation']['payrollRoot']
+        config['automation']['customerRoot'] = config['sales']['receivable'] or find('1111') or find('1110') or find('1200') or find('411') or find('41') or find_by_sub_type('RECEIVABLE') or config['automation']['customerRoot']
+        config['automation']['supplierRoot'] = config['purchases']['payable'] or find('2101') or find('2100') or find('401') or find('40') or find_by_sub_type('PAYABLE') or config['automation']['supplierRoot']
+        config['automation']['payrollRoot'] = find('2200') or find('2121') or find('421') or find('42') or find_by_type('LIABILITY', 'salary') or find_by_type('LIABILITY', 'salaire') or find_by_type('LIABILITY', 'personnel') or config['automation']['payrollRoot']
 
         # ── Fixed Assets ──
         config['fixedAssets']['depreciationExpense'] = find('6303') or find('681') or find('6109') or find('6302') or find('68') or find_by_type('EXPENSE', 'depreciation') or find_by_type('EXPENSE', 'amortis') or config['fixedAssets']['depreciationExpense']
         config['fixedAssets']['accumulatedDepreciation'] = find('1210') or find('1211') or find('281') or find('28') or find_by_type('ASSET', 'accumulated depreciation') or find_by_type('ASSET', 'amortis') or config['fixedAssets']['accumulatedDepreciation']
 
         # ── Partners ──
-        config['partners']['capital'] = find('3001') or find('3100') or find('101') or find('10') or find_by_type('EQUITY', 'capital') or config['partners']['capital']
-        config['partners']['loan'] = find('2201') or find('1680') or find('168') or find('16') or find_by_type('LIABILITY', 'loan') or find_by_type('LIABILITY', 'emprunt') or config['partners']['loan']
-        config['partners']['withdrawal'] = find('3005') or find('3200') or find('108') or find('12') or find_by_type('EQUITY', 'draw') or find_by_type('EQUITY', 'retrait') or config['partners']['withdrawal']
+        config['partners']['capital'] = find('3001') or find('3100') or find('101') or find('10') or find_by_type('EQUITY', 'capital') or find_first_of_type('EQUITY') or config['partners']['capital']
+        config['partners']['loan'] = find('2201') or find('2500') or find('1680') or find('168') or find('16') or find_by_type('LIABILITY', 'loan') or find_by_type('LIABILITY', 'emprunt') or find_by_type('LIABILITY', 'bank loan') or config['partners']['loan']
+        config['partners']['withdrawal'] = find('3005') or find('3200') or find('108') or find('12') or find_by_type('EQUITY', 'draw') or find_by_type('EQUITY', 'retrait') or find_by_type('EQUITY', 'withdrawal') or config['partners']['withdrawal']
 
         # ── Equity ──
-        config['equity']['capital'] = find('3001') or find('3100') or find('101') or find('10') or find_by_type('EQUITY', 'capital') or config['equity']['capital']
-        config['equity']['draws'] = find('3005') or find('3200') or find('108') or find('129') or find('12') or find_by_type('EQUITY', 'draw') or find_by_type('EQUITY', 'retrait') or config['equity']['draws']
+        config['equity']['capital'] = config['partners']['capital'] or find('3001') or find('3100') or find('101') or find('10') or find_by_type('EQUITY', 'capital') or find_first_of_type('EQUITY') or config['equity']['capital']
+        config['equity']['draws'] = config['partners']['withdrawal'] or find('3005') or find('3200') or find('108') or find('129') or find('12') or find_by_type('EQUITY', 'draw') or find_by_type('EQUITY', 'retrait') or config['equity']['draws']
 
         ConfigurationService.save_posting_rules(organization, config)
+
+        # ── Sync to PostingRule model (Phase 2: dual-write) ──
+        try:
+            from apps.finance.models import PostingRule
+            for section, mappings in config.items():
+                if not isinstance(mappings, dict):
+                    continue
+                for key, account_id in mappings.items():
+                    if not account_id:
+                        continue
+                    event_code = f"{section}.{key}"
+                    PostingRule.objects.update_or_create(
+                        organization=organization,
+                        event_code=event_code,
+                        defaults={
+                            'account_id': account_id,
+                            'source': 'AUTO',
+                            'is_active': True,
+                        }
+                    )
+            logger.info(f"✅ Posting rules synced to PostingRule model for '{organization}'")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not sync to PostingRule model: {e}")
+
+        # ── Clear PostingResolver cache so fresh data is used ──
+        try:
+            from apps.finance.services.posting_resolver import PostingResolver
+            PostingResolver.clear_cache(organization.id)
+        except Exception:
+            pass
+
+        # ── Sync tax accounts to OrgTaxPolicy (Tax Engine owns tax GL resolution) ──
+        try:
+            from apps.finance.models import OrgTaxPolicy
+            policy = OrgTaxPolicy.objects.filter(
+                organization=organization, is_default=True
+            ).first()
+            if not policy:
+                policy = OrgTaxPolicy.objects.filter(organization=organization).first()
+            if policy:
+                policy.vat_collected_account_id = config.get('sales', {}).get('vat_collected')
+                policy.vat_recoverable_account_id = config.get('purchases', {}).get('vat_recoverable')
+                policy.vat_payable_account_id = config.get('tax', {}).get('vat_payable')
+                policy.vat_refund_receivable_account_id = config.get('tax', {}).get('vat_refund_receivable')
+                policy.vat_suspense_account_id = config.get('purchases', {}).get('vat_suspense')
+                policy.airsi_account_id = config.get('purchases', {}).get('airsi_payable')
+                policy.reverse_charge_account_id = config.get('purchases', {}).get('reverse_charge_vat')
+                policy.save(update_fields=[
+                    'vat_collected_account_id', 'vat_recoverable_account_id',
+                    'vat_payable_account_id', 'vat_refund_receivable_account_id',
+                    'vat_suspense_account_id', 'airsi_account_id', 'reverse_charge_account_id',
+                ])
+                logger.info(f"✅ Tax accounts synced to OrgTaxPolicy for '{organization}'")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not sync tax accounts to OrgTaxPolicy: {e}")
+
         return config
 
     # ── Dual View Add-On Helper ───────────────────────────────────────────────

@@ -23,6 +23,15 @@ class CoreConfig(AppConfig):
             register_all_contracts()
             print("✅ Event Contracts Registered: 19 contracts loaded")
 
+            # Register business policies (PolicyEngine)
+            from .policies import register_all_policies
+            policy_count = register_all_policies()
+            print(f"✅ PolicyEngine: {policy_count} business policies loaded")
+
+            # Initialize observability stack (Sentry + Metrics)
+            from .observability import setup_observability
+            setup_observability()
+
         except Exception as e:
             # Log the error but do NOT sys.exit — that kills manage.py commands
             # (check, migrate, etc.) before they can even run.

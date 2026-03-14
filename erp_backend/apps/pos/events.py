@@ -282,7 +282,7 @@ def emit_order_completed(order):
         'payment_method': getattr(order, 'payment_method', 'CASH'),
         'items': items,
         'tenant_id': order.tenant_id
-    }, aggregate_type='order', aggregate_id=order.id, triggered_by=order.user)
+    })
 
     logger.info(f"[POS] Emitted order.completed for order {order.id}")
 

@@ -131,7 +131,7 @@ class CustomerBalance(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'customer_balance'
-        unique_together = ('contact', 'tenant')
+        unique_together = ('contact', 'organization')
 
     def __str__(self):
         return f"AR: {self.contact} = {self.current_balance}"
@@ -153,7 +153,7 @@ class SupplierBalance(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'supplier_balance'
-        unique_together = ('contact', 'tenant')
+        unique_together = ('contact', 'organization')
 
     def __str__(self):
         return f"AP: {self.contact} = {self.current_balance}"

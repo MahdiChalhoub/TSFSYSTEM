@@ -1,0 +1,119 @@
+name: Architecture Compliance
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  architecture-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: tsf_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        cd erp_backend
+        pip install -r requirements.txt
+
+    - name: Run Architecture Compliance Tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tsf_test
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        cd erp_backend
+        python manage.py test erp.tests.test_architecture --verbosity=2
+
+    - name: Run Connector Integration Tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tsf_test
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        cd erp_backend
+        python manage.py test erp.tests.test_connector_integration --verbosity=2
+
+    - name: Run Event Flow Tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tsf_test
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        cd erp_backend
+        python manage.py test kernel.events.tests.test_event_flow --verbosity=2
+
+    - name: Check Cross-Module Imports
+      run: |
+        cd erp_backend
+        echo "🔍 Checking for cross-module import violations..."
+        violations=$(grep -r "^from apps\." apps --include="*.py" | \
+          grep -v "connector_service.py" | \
+          grep -v "migrations/" | \
+          grep -v "tests/" | \
+          awk -F: '{
+            split($1, path, "/");
+            module = path[2];
+            if ($2 !~ "from apps\\." module "\\.") print;
+          }' || true)
+
+        if [ -n "$violations" ]; then
+          echo "❌ Cross-module import violations found:"
+          echo "$violations"
+          exit 1
+        else
+          echo "✅ No cross-module import violations"
+        fi
+
+    - name: Generate Architecture Metrics
+      run: |
+        cd erp_backend
+        echo "📊 Architecture Metrics:"
+        echo "Modules: $(ls -d apps/*/ | wc -l)"
+        echo "Connector services: $(find apps -name "connector_service.py" | wc -l)"
+        echo "Event handlers: $(find apps -name "events.py" | wc -l)"
+        echo "Python files: $(find apps -name "*.py" | wc -l)"
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: erp_backend/test-results/

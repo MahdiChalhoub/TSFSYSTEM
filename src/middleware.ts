@@ -43,6 +43,18 @@ async function resolveCustomDomainCached(hostname: string): Promise<{ slug: stri
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl;
 
+    // ─── STATIC ASSET BYPASS (safety net for standalone builds) ───────────
+    // The config.matcher regex should exclude these, but standalone builds
+    // sometimes ignore the matcher. This guard ensures static files are NEVER
+    // intercepted by the middleware.
+    if (
+        url.pathname.startsWith('/_next/') ||
+        url.pathname.startsWith('/_static/') ||
+        url.pathname.startsWith('/favicon.ico')
+    ) {
+        return NextResponse.next();
+    }
+
     // ─── PUBLIC BYPASS ──────────────────────────────────────────────────────
     if (url.pathname.startsWith('/design-demo')) {
         return NextResponse.next();

@@ -6,8 +6,6 @@ import { Bell, Search, User, Menu, ChevronDown, Settings, LogOut, HelpCircle } f
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
 import { NotificationBell } from './NotificationBell';
-import { ThemeSwitcher } from '@/components/shared/ThemeSwitcher';
-import { LayoutSwitcher } from '@/components/shared/LayoutSwitcher';
 import { logoutAction } from '@/app/actions/auth';
 
 export function TopHeader({ sites, organizations = [], currentSlug, user }: { sites: Record<string, any>[], organizations?: Record<string, any>[], currentSlug?: string, user?: Record<string, any> }) {
@@ -91,8 +89,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
 
                 {/* Theme & Layout Switchers */}
                 <div className="hidden md:flex items-center gap-2">
-                    <ThemeSwitcher showLabel={false} />
-                    <LayoutSwitcher showLabel={false} />
+                    {/* Theme switcher now in sidebar footer */}
                 </div>
 
                 <div className="h-6 w-px hidden sm:block" style={{ background: 'var(--app-border)' }}></div>

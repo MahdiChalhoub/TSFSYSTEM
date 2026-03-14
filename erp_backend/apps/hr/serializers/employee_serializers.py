@@ -12,10 +12,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def _resolve_account(self, account_id):
         if not account_id: return None
         try:
-            from apps.finance.models import ChartOfAccount
-            account = ChartOfAccount.objects.filter(id=account_id).first()
-            if account:
-                return {'id': account.id, 'code': account.code, 'name': account.name}
+            from erp.connector_registry import connector
+            ChartOfAccount = connector.require('finance.accounts.get_model', org_id=0, source='hr.serializer')
+            if ChartOfAccount:
+                account = ChartOfAccount.objects.filter(id=account_id).first()
+                if account:
+                    return {'id': account.id, 'code': account.code, 'name': account.name}
         except Exception:
             pass
         return {'id': account_id, 'code': '?', 'name': 'Unknown'}

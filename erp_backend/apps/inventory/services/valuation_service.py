@@ -10,12 +10,12 @@ class InventoryValuationService:
     @staticmethod
     def get_inventory_valuation(organization):
         from apps.inventory.models import Inventory
-        result = Inventory.objects.filter(tenant=organization).aggregate(
+        result = Inventory.objects.filter(organization=organization).aggregate(
             total_value=Sum(F('quantity') * F('product__cost_price'))
         )
         return {
             "total_value": Decimal(str(result['total_value'] or '0')),
-            "item_count": Inventory.objects.filter(tenant=organization).count(),
+            "item_count": Inventory.objects.filter(organization=organization).count(),
             "timestamp": timezone.now(),
         }
 
@@ -24,7 +24,7 @@ class InventoryValuationService:
         from apps.inventory.models import Inventory, InventoryMovement, Product
         from datetime import timedelta
 
-        inv_qs = Inventory.objects.filter(tenant=organization)
+        inv_qs = Inventory.objects.filter(organization=organization)
 
         agg = inv_qs.aggregate(
             total_cost_value=Sum(F('quantity') * F('product__cost_price')),
@@ -42,7 +42,7 @@ class InventoryValuationService:
 
         thirty_days_ago = timezone.now() - timedelta(days=30)
         movement_agg = InventoryMovement.objects.filter(
-            tenant=organization,
+            organization=organization,
             created_at__gte=thirty_days_ago,
         ).values('type').annotate(
             total_qty=Sum('quantity'),
@@ -62,7 +62,7 @@ class InventoryValuationService:
             "potential_margin": float(total_retail - total_cost),
             "total_items": float(total_items),
             "low_stock_count": low_stock_count,
-            "sku_count": Product.objects.filter(tenant=organization, status='ACTIVE').count(),
+            "sku_count": Product.objects.filter(organization=organization, status='ACTIVE').count(),
             "movements_30d": movements,
             "timestamp": timezone.now().isoformat(),
         }
@@ -71,12 +71,8 @@ class InventoryValuationService:
     def reconcile_with_finance(organization):
         from apps.inventory.models import Inventory
         from erp.services import ConfigurationService
-        try:
-            from apps.finance.models import ChartOfAccount
-        except ImportError:
-            return {"status": "ERROR", "message": "Finance module required for reconciliation."}
 
-        physical_valuation = Inventory.objects.filter(tenant=organization).aggregate(
+        physical_valuation = Inventory.objects.filter(organization=organization).aggregate(
             total=Sum(F('quantity') * F('product__cost_price'))
         )['total'] or Decimal('0.00')
 
@@ -87,8 +83,18 @@ class InventoryValuationService:
             return {"status": "CONFIG_MISSING", "message": "Inventory posting rule not configured."}
             
         try:
-            inv_acc = ChartOfAccount.objects.get(id=inv_acc_id)
-            gl_balance = inv_acc.balance
+            # Get account balance via ConnectorEngine — no direct ChartOfAccount import
+            from erp.connector_engine import connector_engine
+            result = connector_engine.route_read(
+                target_module='finance',
+                endpoint='get_account_balance',
+                organization_id=organization.id,
+                params={'account_id': inv_acc_id},
+            )
+            gl_balance = Decimal('0')
+            if result and result.data and isinstance(result.data, dict):
+                gl_balance = Decimal(str(result.data.get('balance', '0')))
+
             discrepancy = physical_valuation - gl_balance
             
             if abs(discrepancy) > Decimal('0.01'):
@@ -107,8 +113,8 @@ class InventoryValuationService:
                 "valuation": physical_valuation,
                 "timestamp": timezone.now()
             }
-        except ChartOfAccount.DoesNotExist:
-            return {"status": "ERROR", "message": f"Account {inv_acc_id} not found."}
+        except Exception as e:
+            return {"status": "ERROR", "message": str(e)}
 
     @staticmethod
     def sync_inventory_to_ledger(organization, user=None):
@@ -126,23 +132,19 @@ class InventoryValuationService:
             return {"status": "ERROR", "message": "Rules for inventory/adjustment missing."}
 
         try:
-            from apps.finance.services import LedgerService
-            desc = f"Inventory Valuation Sync: {'Gain' if discrepancy > 0 else 'Loss'}"
-            if discrepancy > 0:
-                lines = [
-                    {"account_id": inv_acc, "debit": discrepancy, "credit": Decimal('0')},
-                    {"account_id": adj_acc, "debit": Decimal('0'), "credit": discrepancy}
-                ]
-            else:
-                lines = [
-                    {"account_id": adj_acc, "debit": abs(discrepancy), "credit": Decimal('0')},
-                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": abs(discrepancy)}
-                ]
-
-            LedgerService.create_journal_entry(
-                tenant=organization, transaction_date=timezone.now(),
-                description=desc, reference="SYNC-AUTO", status='POSTED',
-                user=user, lines=lines
+            from erp.connector_engine import connector_engine
+            connector_engine.route_write(
+                target_module='finance',
+                endpoint='post_stock_adjustment',
+                data={
+                    'organization_id': organization.id,
+                    'adjustment_amount': str(discrepancy),
+                    'reference': 'SYNC-AUTO',
+                    'reason': f"Inventory Valuation Sync: {'Gain' if discrepancy > 0 else 'Loss'}",
+                    'user_id': user.id if user else None,
+                },
+                organization_id=organization.id,
+                source_module='inventory',
             )
             return {"status": "FIXED", "adjusted_by": discrepancy}
         except Exception as e:
@@ -159,7 +161,7 @@ class InventoryValuationService:
 
         with transaction.atomic():
             last_entry = StockValuationEntry.objects.filter(
-                tenant=organization, product=product, warehouse=warehouse
+                organization=organization, product=product, warehouse=warehouse
             ).order_by('-movement_date', '-created_at').first()
 
             prev_qty = last_entry.running_quantity if last_entry else Decimal('0')
@@ -170,7 +172,7 @@ class InventoryValuationService:
             new_avg = (new_val / new_qty).quantize(Decimal('0.01')) if new_qty > 0 else Decimal('0')
 
             return StockValuationEntry.objects.create(
-                tenant=organization, product=product, warehouse=warehouse,
+                organization=organization, product=product, warehouse=warehouse,
                 movement_type='IN', movement_date=timezone.now(),
                 quantity=quantity, unit_cost=unit_cost, total_value=total_value,
                 valuation_method=valuation_method, reference=reference, batch=batch,
@@ -185,7 +187,7 @@ class InventoryValuationService:
 
         with transaction.atomic():
             last_entry = StockValuationEntry.objects.filter(
-                tenant=organization, product=product, warehouse=warehouse
+                organization=organization, product=product, warehouse=warehouse
             ).order_by('-movement_date', '-created_at').first()
 
             if not allow_negative and (not last_entry or last_entry.running_quantity < quantity):
@@ -195,13 +197,13 @@ class InventoryValuationService:
                 unit_cost = last_entry.running_avg_cost if last_entry else Decimal('0')
             elif valuation_method == 'FIFO':
                 oldest = StockValuationEntry.objects.filter(
-                    tenant=organization, product=product, warehouse=warehouse,
+                    organization=organization, product=product, warehouse=warehouse,
                     movement_type='IN', running_quantity__gt=0
                 ).order_by('movement_date').first()
                 unit_cost = oldest.unit_cost if oldest else (last_entry.running_avg_cost if last_entry else Decimal('0'))
             elif valuation_method == 'LIFO':
                 newest = StockValuationEntry.objects.filter(
-                    tenant=organization, product=product, warehouse=warehouse,
+                    organization=organization, product=product, warehouse=warehouse,
                     movement_type='IN'
                 ).order_by('-movement_date').first()
                 unit_cost = newest.unit_cost if newest else (last_entry.running_avg_cost if last_entry else Decimal('0'))
@@ -214,7 +216,7 @@ class InventoryValuationService:
             new_avg = (new_val / new_qty).quantize(Decimal('0.01')) if new_qty > 0 else Decimal('0')
 
             return StockValuationEntry.objects.create(
-                tenant=organization, product=product, warehouse=warehouse,
+                organization=organization, product=product, warehouse=warehouse,
                 movement_type='OUT', movement_date=timezone.now(),
                 quantity=quantity, unit_cost=unit_cost, total_value=total_value,
                 valuation_method=valuation_method, reference=reference,
@@ -228,7 +230,7 @@ class InventoryValuationService:
         alerts_created = []
 
         batches = ProductBatch.objects.filter(
-            tenant=organization, status='ACTIVE',
+            organization=organization, status='ACTIVE',
             expiry_date__isnull=False, quantity__gt=0
         )
 
@@ -244,13 +246,13 @@ class InventoryValuationService:
             else: severity = 'WARNING'
 
             if ExpiryAlert.objects.filter(
-                tenant=organization, batch=batch,
+                organization=organization, batch=batch,
                 severity=severity, is_acknowledged=False
             ).exists(): continue
 
             value_at_risk = (batch.quantity * batch.cost_price).quantize(Decimal('0.01'))
             alert = ExpiryAlert.objects.create(
-                tenant=organization, batch=batch, product=batch.product,
+                organization=organization, batch=batch, product=batch.product,
                 severity=severity, days_until_expiry=days_until,
                 quantity_at_risk=batch.quantity, value_at_risk=value_at_risk
             )
@@ -258,23 +260,25 @@ class InventoryValuationService:
 
             # ── Auto-Task: EXPIRY_APPROACHING / PRODUCT_EXPIRED ──
             try:
-                from apps.workspace.signals import trigger_inventory_event
-                if severity == 'EXPIRED':
-                    trigger_inventory_event(
-                        organization, 'PRODUCT_EXPIRED',
-                        product_name=str(batch.product),
-                        product_id=batch.product_id,
-                        reference=f'Batch:{batch.batch_number}',
-                        extra={'days': days_until, 'qty': float(batch.quantity), 'value': float(value_at_risk)},
-                    )
-                else:
-                    trigger_inventory_event(
-                        organization, 'EXPIRY_APPROACHING',
-                        product_name=str(batch.product),
-                        product_id=batch.product_id,
-                        reference=f'Batch:{batch.batch_number}',
-                        extra={'days_until': days_until, 'qty': float(batch.quantity), 'severity': severity},
-                    )
+                from erp.connector_registry import connector
+                trigger_inv = connector.require('workspace.events.trigger_inventory', org_id=0, source='inventory')
+                if trigger_inv:
+                    if severity == 'EXPIRED':
+                        trigger_inv(
+                            org_id=organization.id, organization=organization, event='PRODUCT_EXPIRED',
+                            product_name=str(batch.product),
+                            product_id=batch.product_id,
+                            reference=f'Batch:{batch.batch_number}',
+                            extra={'days': days_until, 'qty': float(batch.quantity), 'value': float(value_at_risk)},
+                        )
+                    else:
+                        trigger_inv(
+                            org_id=organization.id, organization=organization, event='EXPIRY_APPROACHING',
+                            product_name=str(batch.product),
+                            product_id=batch.product_id,
+                            reference=f'Batch:{batch.batch_number}',
+                            extra={'days_until': days_until, 'qty': float(batch.quantity), 'severity': severity},
+                        )
             except Exception:
                 pass
 
@@ -286,7 +290,7 @@ class InventoryValuationService:
         filters = {'organization': organization}
         if warehouse_id: filters['warehouse_id'] = warehouse_id
 
-        products = Product.objects.filter(tenant=organization, is_active=True)
+        products = Product.objects.filter(organization=organization, is_active=True)
         summary = []
         for product in products:
             last_entry = StockValuationEntry.objects.filter(

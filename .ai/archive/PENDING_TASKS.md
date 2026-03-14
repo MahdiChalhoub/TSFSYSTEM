@@ -63,5 +63,45 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 
 ---
 
+## 📋 Upcoming — Feature Expansion Roadmap
+
+### 7. [x] PWA Mobile App ✅
+- **Status:** Fully implemented
+- `manifest.json` — Full enterprise app (name, icons, shortcuts, scope)
+- `sw.js` — Cache-first + network-first strategies, offline fallback page, background sync
+- Layout: manifest link, SW registration, Apple PWA meta tags
+- Installable on iOS (Add to Home Screen) and Android (Install App prompt)
+- **Design rule created:** `.agent/workflows/design-standards.md` — all features must be PWA-suitable, mobile-responsive, theme-compliant
+
+### 8. [x] Bank Reconciliation UI ✅
+- **Status:** Already built at `/finance/bank-reconciliation/page.tsx`
+- Account drill-in, auto-matching, manual match confirmation
+- Uses TypicalListView with proper columns
+- **Future enhancement:** Drag-and-drop UI, AI suggestions
+
+### 9. [ ] Tax Export Engine (FEC/CSV/XML)
+- **Effort:** 2 sessions | **Priority:** Medium
+- Export tax data in government-required formats (FEC for France, CSV for Lebanon, etc.)
+- Leverage existing Universal Tax Engine calculations
+- Per-country export format plugins
+- NOT direct API submission — file export for manual upload to government portals
+
+### 10. [ ] Payroll Engine
+- **Effort:** 5-7 sessions | **Priority:** Medium
+- Salary calculation engine with deductions/contributions rules
+- Payslip generation (PDF + on-screen)
+- Auto-post payroll journal entries via ConnectorEngine (HR → Finance)
+- **Prerequisites:** HR module with employees, departments, contracts already exists
+- **Country-specific:** Deduction rules, social security rates, tax brackets vary by country
+
+### 11. [ ] Country-Specific Tax & Payroll Rules
+- **Effort:** Ongoing | **Priority:** Future
+- Pluggable country packs: Lebanon, France, OHADA zone, UAE, etc.
+- Each pack defines: tax brackets, social contributions, filing formats, fiscal calendar
+- Direct government e-filing APIs (per-country, where available)
+- **Note:** This is the most complex item — each country is a separate project. Start with Lebanon + France.
+
+---
+
 > **Rule:** Always finish the current task before starting the next one.
 > **Rule:** Never add a new task mid-flight — finish first, then plan.

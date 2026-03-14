@@ -20,7 +20,7 @@ from .middleware import get_current_tenant_id
 
 
 # =============================================================================
-# GLOBAL PLATFORM MODELS (Not tenant-scoped)
+# GLOBAL PLATFORM MODELS (Not organization-scoped)
 # =============================================================================
 
 class BusinessType(models.Model):
@@ -43,9 +43,9 @@ class SystemModule(models.Model):
         ('DISABLED', 'Disabled'),
     )
     VISIBILITY_CHOICES = (
-        ('public', 'Public – shown on landing page'),
-        ('organization', 'Organization – only visible to assigned orgs'),
-        ('private', 'Private – hidden/internal only'),
+        ('public', 'Public - shown on landing page'),
+        ('organization', 'Organization - only visible to assigned orgs'),
+        ('private', 'Private - hidden/internal only'),
     )
     name = models.CharField(max_length=100, unique=True)
     version = models.CharField(max_length=50)
@@ -151,6 +151,11 @@ class Organization(models.Model):
     
     business_type = models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
     base_currency = models.ForeignKey(GlobalCurrency, on_delete=models.SET_NULL, null=True, blank=True)
+    base_country = models.ForeignKey(
+        'reference.Country', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='base_organizations',
+        help_text='Base country for this organization (from reference master data)'
+    )
 
     # Organization-level settings stored as JSON
     settings = models.JSONField(default=dict, blank=True)
@@ -180,14 +185,14 @@ class Organization(models.Model):
 
 class TenantManager(models.Manager):
     def get_queryset(self):
-        tenant_id = get_current_tenant_id()
-        if tenant_id:
-            return super().get_queryset().filter(tenant_id=tenant_id)
+        organization_id = get_current_tenant_id()
+        if organization_id:
+            return super().get_queryset().filter(organization_id=organization_id)
         return super().get_queryset()
 
 
 class TenantModel(models.Model):
-    """Base model for all tenant-scoped data. Provides automatic organization filtering."""
+    """Base model for all organization-scoped data. Provides automatic organization filtering."""
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     objects = TenantManager()
     original_objects = models.Manager()
@@ -806,7 +811,7 @@ from .list_preferences import OrgListDefault, UserListPreference  # noqa: E402, 
 
 class PaymentTerm(models.Model):
     """
-    Dynamic, tenant-scoped payment terms used across purchases, sales, and CRM.
+    Dynamic, organization-scoped payment terms used across purchases, sales, and CRM.
     Examples: Net 30, Due on Receipt, 2/10 Net 30, COD, etc.
     """
     organization = models.ForeignKey(

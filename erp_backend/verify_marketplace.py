@@ -8,7 +8,7 @@ PASS = "admin"
 TENANT_ID = "165c9434-85c3-4790-af4e-d0b1956c2f3c"
 
 def test_marketplace():
-    print(f"Logging in as {USER} for tenant {TENANT_ID}...")
+    print(f"Logging in as {USER} for organization {TENANT_ID}...")
     headers = {"X-Tenant-Id": TENANT_ID}
     resp = requests.post(f"{BASE_URL}/auth/login/", json={"username": USER, "password": PASS}, headers=headers)
     if resp.status_code != 200:

@@ -85,7 +85,7 @@ class WorkflowService:
         # Log the event
         org_id = organization.id if organization else None
         audit_entry = AuditLog.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             actor=actor if actor and actor.is_authenticated else None,
             action=f'WORKFLOW:{event_type}',
             table_name=target_table,
@@ -104,7 +104,7 @@ class WorkflowService:
                 payload=payload,
                 target_table=target_table,
                 target_id=target_id,
-                tenant_id=org_id,
+                organization_id=org_id,
             )
 
             logger.info(
@@ -162,7 +162,7 @@ class AuditService:
 
         try:
             return AuditLog.objects.create(
-                tenant_id=organization.id if organization else None,
+                organization_id=organization.id if organization else None,
                 actor=actor if actor and hasattr(actor, 'is_authenticated') and actor.is_authenticated else None,
                 action=action,
                 table_name=table_name,

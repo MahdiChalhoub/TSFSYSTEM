@@ -337,37 +337,35 @@ export default function ContactManager({
           })}
 
           {/* Add + Categories buttons */}
-          {can('crm.create_contact') && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', paddingLeft: '0.5rem', flexShrink: 0 }}>
-              <button
-                ref={addBtnRef}
-                onClick={openAddMenu}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.25rem',
-                  padding: '0.3125rem 0.625rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
-                  fontSize: '0.6875rem', fontWeight: 700,
-                  background: 'var(--app-primary)', color: '#fff',
-                  border: 'none', cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                }}
-              >
-                <Plus size={12} /> New Contact <ChevronDown size={10} />
-              </button>
-              <button
-                onClick={() => setShowTagManager(true)}
-                title="Manage Categories"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.25rem',
-                  padding: '0.3125rem 0.5rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
-                  fontSize: '0.625rem', fontWeight: 600,
-                  background: 'var(--app-surface-2)', color: 'var(--app-text-muted)',
-                  border: '1px solid var(--app-border)', cursor: 'pointer',
-                }}
-              >
-                <Tag size={11} /> Categories
-              </button>
-            </div>
-          )}
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', paddingLeft: '0.5rem', flexShrink: 0 }}>
+            <button
+              ref={addBtnRef}
+              onClick={openAddMenu}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.25rem',
+                padding: '0.3125rem 0.625rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
+                fontSize: '0.6875rem', fontWeight: 700,
+                background: 'var(--app-primary)', color: '#fff',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+              }}
+            >
+              <Plus size={12} /> New Contact <ChevronDown size={10} />
+            </button>
+            <button
+              onClick={() => setShowTagManager(true)}
+              title="Manage Categories"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.25rem',
+                padding: '0.3125rem 0.5rem', borderRadius: 'calc(var(--app-radius) - 0.25rem)',
+                fontSize: '0.625rem', fontWeight: 600,
+                background: 'var(--app-surface-2)', color: 'var(--app-text-muted)',
+                border: '1px solid var(--app-border)', cursor: 'pointer',
+              }}
+            >
+              <Tag size={11} /> Categories
+            </button>
+          </div>
         </div>
 
         {/* ── Row 2: Search + Smart Filters ── */}

@@ -36,7 +36,7 @@ class ActivitySchedulerService:
 
         # Create the task
         task = ScheduledActivity.objects.create(
-            tenant_id=policy.tenant_id,
+            organization_id=policy.organization_id,
             contact=policy.contact,
             followup_policy=policy,
             action_type=policy.action_type,
@@ -82,7 +82,7 @@ class ActivitySchedulerService:
             
             if remind_at > timezone.now():
                 ActivityReminder.objects.create(
-                    tenant_id=task.tenant_id,
+                    organization_id=task.organization_id,
                     scheduled_activity=task,
                     user=task.assigned_to,
                     channel='IN_APP',
@@ -118,7 +118,7 @@ class FollowUpService:
         """
         with transaction.atomic():
             log = InteractionLog.objects.create(
-                tenant_id=contact.tenant_id,
+                organization_id=contact.organization_id,
                 contact=contact,
                 user=user,
                 channel=channel,
@@ -152,7 +152,7 @@ class FollowUpService:
                         'channel': channel,
                         'contact_name': contact.name,
                         'outcome_label': outcome,
-                        'tenant_id': contact.tenant_id
+                        'organization_id': contact.organization_id
                     },
                     aggregate_type='crm.interaction',
                     aggregate_id=log.id,

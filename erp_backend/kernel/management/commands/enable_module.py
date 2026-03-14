@@ -1,10 +1,10 @@
 """
 Enable Module Management Command
 
-Enables a module for a tenant.
+Enables a module for a organization.
 
 Usage:
-    python manage.py enable_module inventory --tenant=acme
+    python manage.py enable_module inventory --organization=acme
     python manage.py enable_module inventory --all-tenants
 """
 
@@ -14,7 +14,7 @@ from erp.models import Organization as Tenant
 
 
 class Command(BaseCommand):
-    help = 'Enable module for tenant(s)'
+    help = 'Enable module for organization(s)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             help='Module name to enable'
         )
         parser.add_argument(
-            '--tenant',
+            '--organization',
             type=str,
             help='Tenant slug'
         )
@@ -35,12 +35,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         module_name = options['module_name']
-        tenant_slug = options.get('tenant')
+        tenant_slug = options.get('organization')
         all_tenants = options.get('all_tenants')
 
         if not tenant_slug and not all_tenants:
             self.stdout.write(self.style.ERROR(
-                'Please specify --tenant=SLUG or --all-tenants'
+                'Please specify --organization=SLUG or --all-tenants'
             ))
             return
 
@@ -54,24 +54,24 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"No tenants found"))
             return
 
-        self.stdout.write(f"🔄 Enabling module '{module_name}' for {tenants.count()} tenant(s)...\n")
+        self.stdout.write(f"🔄 Enabling module '{module_name}' for {tenants.count()} organization(s)...\n")
 
         enabled_count = 0
         failed_count = 0
 
-        for tenant in tenants:
+        for organization in tenants:
             try:
-                org_module = ModuleLoader.enable_for_tenant(tenant, module_name)
+                org_module = ModuleLoader.enable_for_tenant(organization, module_name)
                 self.stdout.write(self.style.SUCCESS(
-                    f"  ✅ {tenant.name}: {module_name} v{org_module.module.version}"
+                    f"  ✅ {organization.name}: {module_name} v{org_module.module.version}"
                 ))
                 enabled_count += 1
             except Exception as e:
                 self.stdout.write(self.style.ERROR(
-                    f"  ❌ {tenant.name}: {str(e)}"
+                    f"  ❌ {organization.name}: {str(e)}"
                 ))
                 failed_count += 1
 
         self.stdout.write(self.style.SUCCESS(
-            f"\n✅ Enabled for {enabled_count} tenant(s), {failed_count} failed"
+            f"\n✅ Enabled for {enabled_count} organization(s), {failed_count} failed"
         ))

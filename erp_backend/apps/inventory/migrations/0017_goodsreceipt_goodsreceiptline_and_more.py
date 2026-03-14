@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('purchase_order', models.ForeignKey(blank=True, help_text='Linked PO (Mode B only)', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='goods_receipts', to='pos.purchaseorder')),
                 ('received_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='goods_receipts_received', to=settings.AUTH_USER_MODEL)),
                 ('supplier', models.ForeignKey(blank=True, limit_choices_to={'type': 'SUPPLIER'}, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='goods_receipts', to='crm.contact')),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
                 ('warehouse', models.ForeignKey(help_text='Receiving location', on_delete=django.db.models.deletion.PROTECT, related_name='goods_receipts', to='inventory.warehouse')),
             ],
             options={
@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
                 ('processed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='processed_receipt_lines', to=settings.AUTH_USER_MODEL)),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='goods_receipt_lines', to='inventory.product')),
                 ('receipt', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lines', to='inventory.goodsreceipt')),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
             ],
             options={
                 'db_table': 'goods_receipt_line',
@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='goodsreceipt',
-            index=models.Index(fields=['tenant', 'status'], name='goods_recei_tenant__5001d4_idx'),
+            index=models.Index(fields=['organization', 'status'], name='goods_recei_organization__5001d4_idx'),
         ),
         migrations.AddIndex(
             model_name='goodsreceipt',

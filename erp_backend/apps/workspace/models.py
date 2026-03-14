@@ -122,7 +122,7 @@ class TaskCategory(TenantOwnedModel):
 
     class Meta:
         db_table = 'workspace_task_category'
-        unique_together = ('tenant', 'name')
+        unique_together = ('organization', 'name')
         verbose_name_plural = 'Task Categories'
 
     def __str__(self):
@@ -481,19 +481,21 @@ class Task(TenantOwnedModel):
                 'is_on_time':       is_on_time,
                 'due_date':         self.due_date.isoformat() if self.due_date else None,
                 'completed_at':     self.completed_at.isoformat() if self.completed_at else None,
-                'tenant_id':        self.tenant_id,
+                'organization_id':        self.organization_id,
             }, aggregate_type='task', aggregate_id=self.id)
 
             # 2. Direct WISE score (fast path — avoids event roundtrip for the user's own score)
             if employee:
-                from apps.workforce.services import WorkforceScoreEngine
-                WorkforceScoreEngine.record_event(
-                    employee=employee,
-                    event_code=event_code,
-                    module='workspace',
-                    reference_obj=self,
-                    metadata={'task_title': self.title, 'task_id': self.id}
-                )
+                from erp.connector_registry import connector
+                WorkforceScoreEngine = connector.require('workforce.services.get_score_engine', org_id=0, source='workspace')
+                if WorkforceScoreEngine:
+                    WorkforceScoreEngine.record_event(
+                        employee=employee,
+                        event_code=event_code,
+                        module='workspace',
+                        reference_obj=self,
+                        metadata={'task_title': self.title, 'task_id': self.id}
+                    )
         except Exception:
             pass  # WISE scoring must never crash the caller
 
@@ -818,7 +820,7 @@ class EmployeePerformance(TenantOwnedModel):
     
     class Meta:
         db_table = 'workspace_employee_performance'
-        unique_together = ('tenant', 'employee', 'period_label')
+        unique_together = ('organization', 'employee', 'period_label')
 
     def calculate_tier(self, config=None):
         """Determine performance tier from overall_score using WorkspaceConfig thresholds."""

@@ -48,7 +48,7 @@ class MigrationSetupMixin:
         uploaded_file = serializer.validated_data['file']
         name = serializer.validated_data.get('name', 'UltimatePOS Migration')
 
-        # Get tenant context from middleware
+        # Get organization context from middleware
         org = getattr(request, 'organization', None)
         if not org:
              return Response({'error': 'Organization context required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -74,7 +74,7 @@ class MigrationSetupMixin:
         from apps.storage.models import StoredFile
         # Create StoredFile record
         stored_file = StoredFile.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             original_filename=uploaded_file.name,
             storage_key=storage_key,
             bucket=bucket,
@@ -87,7 +87,7 @@ class MigrationSetupMixin:
 
         # Create migration job linked to stored_file
         job = MigrationJob.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             name=name,
             source_type='SQL_DUMP',
             stored_file=stored_file,
@@ -122,14 +122,14 @@ class MigrationSetupMixin:
         if not stored_file:
             return Response({'error': 'StoredFile not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get tenant context
+        # Get organization context
         org_id = getattr(request.user, 'organization_id', None)
         if request.user.is_superuser:
             org_id = request.headers.get('X-Tenant-Id') or org_id
 
         # Create migration job
         job = MigrationJob.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             name=name,
             source_type='SQL_DUMP',
             stored_file=stored_file,
@@ -153,7 +153,7 @@ class MigrationSetupMixin:
             org_id = request.headers.get('X-Tenant-Id') or org_id
 
         job = MigrationJob.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             name=serializer.validated_data.get('name', 'UltimatePOS Migration'),
             source_type='DIRECT_DB',
             db_host=serializer.validated_data['db_host'],

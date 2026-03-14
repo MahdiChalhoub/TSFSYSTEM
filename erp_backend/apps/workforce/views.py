@@ -158,7 +158,10 @@ class EmployeeScoreSummaryViewSet(viewsets.ModelViewSet):
         Manual score adjustment by a manager.
         Payload: { employee_id, points, dimension, score_family, reason, adjustment_type }
         """
-        from apps.hr.models import Employee
+        from erp.connector_registry import connector
+        Employee = connector.require('hr.employees.get_model', org_id=0, source='workforce')
+        if not Employee:
+            return Response({'error': 'HR module is required for this operation.'}, status=503)
         from .models import EmployeeScoreAdjustment, ScoreDimension, ScoreFamily
 
         data = request.data

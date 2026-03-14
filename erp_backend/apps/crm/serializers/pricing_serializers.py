@@ -3,6 +3,7 @@ CRM Pricing Serializers — Price Groups and Client Price Rules
 """
 from rest_framework import serializers
 from apps.crm.models import PriceGroup, PriceGroupMember, ClientPriceRule
+from erp.connector_registry import connector
 
 
 class PriceGroupSerializer(serializers.ModelSerializer):
@@ -60,7 +61,7 @@ class ClientPriceRuleSerializer(serializers.ModelSerializer):
         if not obj.product_id:
             return None
         try:
-            from apps.inventory.models import Product
+            Product = connector.require('inventory.products.get_model', org_id=0, source='crm')
             return Product.objects.get(id=obj.product_id).name
         except Exception:
             return f"Product #{obj.product_id}"
@@ -69,7 +70,7 @@ class ClientPriceRuleSerializer(serializers.ModelSerializer):
         if not obj.category_id:
             return None
         try:
-            from apps.inventory.models import Category
+            Category = connector.require('inventory.categories.get_model', org_id=0, source='crm')
             return Category.objects.get(id=obj.category_id).name
         except Exception:
             return f"Category #{obj.category_id}"

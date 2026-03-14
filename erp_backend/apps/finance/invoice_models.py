@@ -253,10 +253,10 @@ class Invoice(AuditLogMixin, TenantOwnedModel, PostableMixin):
         db_table = 'invoice'
         ordering = ['-issue_date', '-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'type']),
-            models.Index(fields=['tenant', 'contact']),
-            models.Index(fields=['tenant', 'due_date']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'type']),
+            models.Index(fields=['organization', 'contact']),
+            models.Index(fields=['organization', 'due_date']),
             models.Index(fields=['invoice_number']),
         ]
 
@@ -287,7 +287,7 @@ class Invoice(AuditLogMixin, TenantOwnedModel, PostableMixin):
         if not self.invoice_number and self.status != LifecycleStatus.DRAFT:
             from apps.finance.models import TransactionSequence
             self.invoice_number = TransactionSequence.next_value(
-                self.tenant, f'INVOICE_{self.type}'
+                self.organization, f'INVOICE_{self.type}'
             )
 
         # Recalculate balance
@@ -332,14 +332,22 @@ class Invoice(AuditLogMixin, TenantOwnedModel, PostableMixin):
         Record a payment against this invoice and update status.
         Called by PaymentService after creating a Payment record.
         """
-        self.paid_amount += Decimal(str(amount))
-        self.balance_due = self.total_amount - self.paid_amount
+        from decimal import ROUND_HALF_UP
 
-        if self.balance_due <= 0:
+        amount = Decimal(str(amount))
+        self.paid_amount += amount
+        self.balance_due = (self.total_amount - self.paid_amount).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP
+        )
+
+        # Fix: Update status based on balance_due, accounting for rounding
+        if self.balance_due <= Decimal('0.01'):  # Allow 1 cent tolerance
             self.status = 'PAID'
+            self.balance_due = Decimal('0.00')  # Normalize to zero
             from django.utils import timezone
             self.paid_at = timezone.now()
-        elif self.paid_amount > 0:
+        elif self.paid_amount > 0 and self.status == 'SENT':
+            # Only update to PARTIAL_PAID if currently SENT
             self.status = 'PARTIAL_PAID'
 
         self.save(update_fields=['paid_amount', 'balance_due', 'status', 'paid_at'])
@@ -443,18 +451,33 @@ class InvoiceLine(AuditLogMixin, TenantOwnedModel):
         rate = self.tax_rate / Decimal('100')
         discount_mult = (Decimal('100') - self.discount_percent) / Decimal('100')
 
+        # Use ROUND_HALF_UP for consistent rounding behavior
+        from decimal import ROUND_HALF_UP
+
         if display_mode == 'TTC':
             # unit_price is TTC → derive HT
-            ttc_after_discount = self.unit_price * self.quantity * discount_mult
+            ttc_after_discount = (self.unit_price * self.quantity * discount_mult).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
             self.line_total_ttc = ttc_after_discount
-            self.line_total_ht = ttc_after_discount / (Decimal('1') + rate) if rate else ttc_after_discount
-            self.tax_amount = self.line_total_ttc - self.line_total_ht
+            self.line_total_ht = (ttc_after_discount / (Decimal('1') + rate)).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            ) if rate else ttc_after_discount
+            self.tax_amount = (self.line_total_ttc - self.line_total_ht).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
         else:
             # unit_price is HT → derive TTC
-            ht_after_discount = self.unit_price * self.quantity * discount_mult
+            ht_after_discount = (self.unit_price * self.quantity * discount_mult).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
             self.line_total_ht = ht_after_discount
-            self.tax_amount = ht_after_discount * rate
-            self.line_total_ttc = ht_after_discount + self.tax_amount
+            self.tax_amount = (ht_after_discount * rate).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            self.line_total_ttc = (ht_after_discount + self.tax_amount).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
 
         super().save(*args, **kwargs)
 

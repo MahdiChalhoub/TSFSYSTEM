@@ -59,3 +59,32 @@ export async function disburseLoan(loanId: number, targetAccountId: number) {
  throw e
  }
 }
+
+// ─── Phase 2 Loan Enhancements ────────────────────────────────────
+
+export async function getAmortizationSchedule(loanId: number) {
+ return await erpFetch(`finance/loans/${loanId}/amortization-schedule/`)
+}
+
+export async function calculateEarlyPayoff(loanId: number, payoffDate: string) {
+ const params = new URLSearchParams({ payoff_date: payoffDate })
+ return await erpFetch(`finance/loans/${loanId}/early-payoff/?${params.toString()}`)
+}
+
+export async function makeLoanPayment(loanId: number, data: {
+ amount: string
+ payment_account_id: number
+ reference?: string
+}) {
+ try {
+ const result = await erpFetch(`finance/loans/${loanId}/payment/`, {
+ method: 'POST',
+ body: JSON.stringify(data)
+ })
+ revalidatePath(`/finance/loans/${loanId}`)
+ return { success: true, data: result }
+ } catch (e: unknown) {
+ console.error("Make Payment Failed", e)
+ throw e
+ }
+}

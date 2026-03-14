@@ -1,8 +1,8 @@
 """
 Tenancy Context
 
-Thread-local storage for current tenant.
-Allows automatic tenant scoping in QuerySets.
+Thread-local storage for current organization.
+Allows automatic organization scoping in QuerySets.
 """
 
 import threading
@@ -12,29 +12,29 @@ from contextlib import contextmanager
 _thread_locals = threading.local()
 
 
-def set_current_tenant(tenant):
+def set_current_tenant(organization):
     """
-    Set current tenant in thread-local context.
+    Set current organization in thread-local context.
 
     Args:
-        tenant: Tenant instance
+        organization: Tenant instance
     """
-    _thread_locals.tenant = tenant
+    _thread_locals.organization = organization
 
 
 def get_current_tenant():
     """
-    Get current tenant (Organization) from thread-local context.
+    Get current organization (Organization) from thread-local context.
     """
-    return getattr(_thread_locals, 'tenant', None)
+    return getattr(_thread_locals, 'organization', None)
 
 
 def clear_current_tenant():
     """
-    Clear current tenant from thread-local context.
+    Clear current organization from thread-local context.
     """
-    if hasattr(_thread_locals, 'tenant'):
-        delattr(_thread_locals, 'tenant')
+    if hasattr(_thread_locals, 'organization'):
+        delattr(_thread_locals, 'organization')
 
 
 # Alias for middleware
@@ -42,9 +42,9 @@ _get_current_tenant = get_current_tenant
 
 
 @contextmanager
-def tenant_context(tenant):
+def tenant_context(organization):
     """
-    Context manager for temporarily switching tenant.
+    Context manager for temporarily switching organization.
 
     Useful for:
     - Background jobs
@@ -52,14 +52,14 @@ def tenant_context(tenant):
     - Testing
 
     Usage:
-        with tenant_context(tenant):
-            Invoice.objects.all()  # Scoped to tenant
+        with tenant_context(organization):
+            Invoice.objects.all()  # Scoped to organization
     """
     previous_tenant = get_current_tenant()
 
     try:
-        set_current_tenant(tenant)
-        yield tenant
+        set_current_tenant(organization)
+        yield organization
     finally:
         if previous_tenant:
             set_current_tenant(previous_tenant)
@@ -68,7 +68,7 @@ def tenant_context(tenant):
 
 
 @contextmanager
-def switch_tenant(tenant):
+def switch_tenant(organization):
     """
     Alias for tenant_context (more intuitive name).
 
@@ -77,14 +77,14 @@ def switch_tenant(tenant):
             # All queries scoped to other_tenant
             invoices = Invoice.objects.all()
     """
-    with tenant_context(tenant):
-        yield tenant
+    with tenant_context(organization):
+        yield organization
 
 
 @contextmanager
 def no_tenant_context():
     """
-    Context manager for disabling tenant scoping.
+    Context manager for disabling organization scoping.
 
     Use with EXTREME CAUTION - only for system-level operations.
 

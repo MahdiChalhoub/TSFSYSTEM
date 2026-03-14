@@ -43,17 +43,22 @@ class RegisterSessionMixin:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # ── GUARD 1: Fiscal year must be open ──
-        from apps.finance.models import FiscalYear
-        has_open_fy = FiscalYear.objects.filter(
-            organization=organization,
-            is_closed=False
-        ).exists()
-        if not has_open_fy:
-            return Response({
-                "error": "No open fiscal year",
-                "error_code": "NO_FISCAL_YEAR",
-                "message": "You must open a financial year before using the POS register. Go to Finance → Fiscal Years to open one."
-            }, status=status.HTTP_403_FORBIDDEN)
+        try:
+            from erp.connector_registry import connector
+            FiscalYear = connector.require('finance.fiscal_year.get_model', org_id=org_id, source='pos.session')
+            if FiscalYear:
+                has_open_fy = FiscalYear.objects.filter(
+                    organization=organization,
+                    is_closed=False
+                ).exists()
+                if not has_open_fy:
+                    return Response({
+                        "error": "No open fiscal year",
+                        "error_code": "NO_FISCAL_YEAR",
+                        "message": "You must open a financial year before using the POS register. Go to Finance → Fiscal Years to open one."
+                    }, status=status.HTTP_403_FORBIDDEN)
+        except (ImportError, Exception):
+            pass  # Finance module unavailable — skip guard
 
         # ── GUARD 2: Register must have payment accounts configured ──
         # The JSON payment_methods list must have at least one entry with accountId
@@ -150,25 +155,31 @@ class RegisterSessionMixin:
             )
 
             # Create per-account reconciliation records
-            from apps.finance.models import FinancialAccount
-            for ar in account_recons:
-                try:
-                    account = FinancialAccount.objects.get(id=ar['account_id'], organization=organization)
-                    sw = Decimal(str(ar.get('software_amount', 0)))
-                    st = Decimal(str(ar.get('statement_amount', 0)))
-                    diff = sw - st
-                    SessionAccountReconciliation.objects.create(
-                        organization=organization,
-                        session=session,
-                        account=account,
-                        software_amount=sw,
-                        statement_amount=st,
-                        difference=diff,
-                        calibrated_to_cash=-diff,
-                        is_controlled=account.type != 'CASH',
-                    )
-                except FinancialAccount.DoesNotExist:
-                    pass
+            try:
+                from erp.connector_registry import connector as _conn
+                FinancialAccount = _conn.require('finance.accounts.get_financial_account_model', org_id=org_id, source='pos.session')
+            except (ImportError, Exception):
+                FinancialAccount = None
+
+            if FinancialAccount:
+                for ar in account_recons:
+                    try:
+                        account = FinancialAccount.objects.get(id=ar['account_id'], organization=organization)
+                        sw = Decimal(str(ar.get('software_amount', 0)))
+                        st = Decimal(str(ar.get('statement_amount', 0)))
+                        diff = sw - st
+                        SessionAccountReconciliation.objects.create(
+                            organization=organization,
+                            session=session,
+                            account=account,
+                            software_amount=sw,
+                            statement_amount=st,
+                            difference=diff,
+                            calibrated_to_cash=-diff,
+                            is_controlled=account.type != 'CASH',
+                        )
+                    except Exception:
+                        pass
 
         else:
             # ── Standard mode: simple opening balance ──
@@ -369,21 +380,6 @@ class RegisterSessionMixin:
         session.total_cash_in = total_cash_in
         session.save()
 
-        # ── WISE: Score cashier's financial discipline ──────────────────────
-        try:
-            from kernel.events import emit_event
-            emit_event('pos.session.closed', {
-                'cashier_user_id':    session.cashier_id,
-                'session_id':         session.id,
-                'discrepancy_amount': float(difference),
-                'total_sales':        float(total_sales),
-                'total_transactions': total_transactions,
-                'tenant_id':          org_id,
-            }, aggregate_type='register_session', aggregate_id=session.id,
-               triggered_by=request.user)
-        except Exception:
-            pass
-
         # Duration
         duration_secs = int((session.closed_at - session.opened_at).total_seconds())
         hours = duration_secs // 3600
@@ -422,14 +418,14 @@ class RegisterSessionMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         open_sessions = RegisterSession.objects.filter(
-            tenant_id=org_id, status='OPEN'
+            organization_id=org_id, status='OPEN'
         ).select_related('register', 'register__site', 'cashier')
 
         data = []
         for s in open_sessions:
             # Live sales count since session opened
             live_orders = Order.objects.filter(
-                tenant_id=org_id,
+                organization_id=org_id,
                 site=s.register.site,
                 user=s.cashier,
                 type='SALE',
@@ -465,7 +461,7 @@ class RegisterSessionMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         qs = RegisterSession.objects.filter(
-            tenant_id=org_id,
+            organization_id=org_id,
             status__in=['CLOSED', 'FORCE_CLOSED']
         ).select_related('register', 'register__site', 'cashier', 'closed_by').order_by('-opened_at')
 
@@ -486,7 +482,7 @@ class RegisterSessionMixin:
         for s in sessions:
             # Per-method breakdown from orders during that session
             session_orders = Order.objects.filter(
-                tenant_id=org_id,
+                organization_id=org_id,
                 site=s.register.site,
                 user=s.cashier,
                 type='SALE',

@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
         qs = EmployeeScoreSummary.objects.select_related('employee').all()
         if org_filter:
-            qs = qs.filter(tenant_id=org_filter)
+            qs = qs.filter(organization_id=org_filter)
 
         created_count  = 0
         updated_count  = 0
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 continue
 
             _, created = EmployeeScorePeriod.objects.update_or_create(
-                tenant_id=summary.organization_id,
+                organization_id=summary.organization_id,
                 employee=summary.employee,
                 period_type=period_type,
                 period_key=period_key,

@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
+ - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 
@@ -90,11 +90,11 @@ class DashboardViewSet(viewsets.ViewSet):
 
         # 1. Sales Velocity (Quantity in last 24h)
         today_qty = OrderLine.objects.filter(
-            order__organization=org, order__created_at__gte=today_start, order__status='COMPLETED'
+            order__tenant=org, order__created_at__gte=today_start, order__status='COMPLETED'
         ).aggregate(qty=Sum('quantity'))['qty'] or 0
         
         yesterday_qty = OrderLine.objects.filter(
-            order__organization=org, order__created_at__gte=yesterday_start, 
+            order__tenant=org, order__created_at__gte=yesterday_start, 
             order__created_at__lt=today_start, order__status='COMPLETED'
         ).aggregate(qty=Sum('quantity'))['qty'] or 0
         
@@ -249,7 +249,7 @@ class DashboardViewSet(viewsets.ViewSet):
         )
         
         if organization:
-            lines_qs = lines_qs.filter(journal_entry__organization=organization)
+            lines_qs = lines_qs.filter(journal_entry__tenant=organization)
         if scope == 'OFFICIAL':
             lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
 
@@ -273,7 +273,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 journal_entry__status='POSTED'
             )
             if organization:
-                month_lines = month_lines.filter(journal_entry__organization=organization)
+                month_lines = month_lines.filter(journal_entry__tenant=organization)
             if scope == 'OFFICIAL':
                 month_lines = month_lines.filter(journal_entry__scope='OFFICIAL')
                 
@@ -432,7 +432,7 @@ class DashboardViewSet(viewsets.ViewSet):
             
             # ── Sales ──
             sales_30d = OrderLine.objects.filter(
-                order__organization=organization,
+                order__tenant=organization,
                 product=p,
                 order__created_at__gte=thirty_days_ago,
                 order__status='COMPLETED',
@@ -446,7 +446,7 @@ class DashboardViewSet(viewsets.ViewSet):
             monthly_average = sales_qty_30d
             
             total_sales_all = OrderLine.objects.filter(
-                order__organization=organization,
+                order__tenant=organization,
                 product=p,
                 order__status='COMPLETED',
                 order__type='SALE'
@@ -455,7 +455,7 @@ class DashboardViewSet(viewsets.ViewSet):
             # ── Purchases ──
             from apps.pos.models import PurchaseOrderLine
             purchase_data = PurchaseOrderLine.objects.filter(
-                order__organization=organization,
+                order__tenant=organization,
                 product=p,
             ).aggregate(
                 count=models.Count('id'),
@@ -481,7 +481,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 pass
             
             purchased_qty_total = PurchaseOrderLine.objects.filter(
-                order__organization=organization, product=p
+                order__tenant=organization, product=p
             ).aggregate(total=Sum('quantity'))['total'] or 1
             adjustment_score = round((adjustment_qty / float(purchased_qty_total)) * 100)
             
@@ -649,7 +649,7 @@ class DashboardViewSet(viewsets.ViewSet):
         # Annotate sales (30 days) - REQUIRED for rotation filters
         thirty_days_ago = timezone.now() - timedelta(days=30)
         sales_subquery = OrderLine.objects.filter(
-            order__organization=organization, product=OuterRef('pk'),
+            order__tenant=organization, product=OuterRef('pk'),
             order__created_at__gte=thirty_days_ago,
             order__status='COMPLETED', order__type='SALE'
         ).values('product').annotate(total_qty=Sum('quantity')).values('total_qty')
@@ -787,16 +787,16 @@ class DashboardViewSet(viewsets.ViewSet):
         from apps.inventory.models import Category, Brand
         
         categories = list(Category.objects.filter(
-            tenant_id=organization_id
+            organization_id=organization_id
         ).values('id', 'name').order_by('name')[:100])
         
         brands = list(Brand.objects.filter(
-            tenant_id=organization_id
+            organization_id=organization_id
         ).values('id', 'name').order_by('name')[:100])
         
         # Product types
         types = list(Product.objects.filter(
-            tenant_id=organization_id, status='ACTIVE'
+            organization_id=organization_id, status='ACTIVE'
         ).values_list('product_type', flat=True).distinct()[:20]) if hasattr(Product, 'product_type') else []
         
         return Response({

@@ -72,7 +72,7 @@
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
   --app-sidebar-text: #CBD5E1;
   --app-sidebar-muted: #475569;
-  --app-sidebar-active: rgba(16, 185, 129, 0.15);
+  --app-sidebar-active: rgba(16, 185, 129, 0.06);
   --app-sidebar-border: rgba(255, 255, 255, 0.06);
 
   /* Status — semantic (consistent across all themes) */
@@ -87,10 +87,11 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   1. MIDNIGHT PRO — Dark luxury glassmorphism
+   1. FINANCE PRO (Midnight Pro) — Dark luxury glassmorphism
    Primary: Emerald #10B981 on Slate-950 | Font: Outfit
    NOTE: This is the :root default, so overrides only confirm it
 ══════════════════════════════════════════════════════════════ */
+.theme-finance-pro,
 .theme-midnight-pro {
   /* :root already defines this theme — only explicit to guarantee class precedence */
   --app-bg: #020617;
@@ -112,7 +113,7 @@
   --app-sidebar-surface: rgba(255, 255, 255, 0.05);
   --app-sidebar-text: #CBD5E1;
   --app-sidebar-muted: #475569;
-  --app-sidebar-active: rgba(16, 185, 129, 0.15);
+  --app-sidebar-active: rgba(16, 185, 129, 0.06);
   --app-sidebar-border: rgba(255, 255, 255, 0.06);
   --app-shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5);
   --app-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
@@ -154,7 +155,7 @@
   --app-sidebar-surface: #F8FAFC;
   --app-sidebar-text: #374151;
   --app-sidebar-muted: #9CA3AF;
-  --app-sidebar-active: rgba(99, 102, 241, 0.08);
+  --app-sidebar-active: rgba(99, 102, 241, 0.04);
   --app-sidebar-border: #E5E7EB;
   --app-success: #10B981;
   --app-success-bg: #ECFDF5;
@@ -167,10 +168,11 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   3. NEON RUSH — Cyberpunk, high-energy
+   3. PURPLE DREAM (Neon Rush) — Cyberpunk, high-energy
    Primary: Violet #8B5CF6 on near-black | Font: Rajdhani
    Overrides: colors + shadows (dark like default, different hue)
 ══════════════════════════════════════════════════════════════ */
+.theme-purple-dream,
 .theme-neon-rush {
   --app-bg: #09090B;
   --app-surface: #111113;
@@ -197,7 +199,7 @@
   --app-sidebar-surface: rgba(139, 92, 246, 0.08);
   --app-sidebar-text: #D4D4D8;
   --app-sidebar-muted: #52525B;
-  --app-sidebar-active: rgba(139, 92, 246, 0.2);
+  --app-sidebar-active: rgba(139, 92, 246, 0.06);
   --app-sidebar-border: rgba(139, 92, 246, 0.1);
   --app-success: #22D3EE;
   --app-success-bg: rgba(34, 211, 238, 0.1);
@@ -210,10 +212,11 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   4. SAVANE EARTH — Warm, West African market
+   4. SUNSET ORANGE (Savane Earth) — Warm, energetic
    Primary: Amber #D97706 on sand | Font: Playfair + DM Sans
    Overrides: all colors + serif display font
 ══════════════════════════════════════════════════════════════ */
+.theme-sunset-orange,
 .theme-savane-earth {
   --app-bg: #FEF3C7;
   --app-surface: #FFFBEB;
@@ -239,7 +242,7 @@
   --app-sidebar-surface: rgba(217, 119, 6, 0.06);
   --app-sidebar-text: #44403C;
   --app-sidebar-muted: #A8A29E;
-  --app-sidebar-active: rgba(217, 119, 6, 0.12);
+  --app-sidebar-active: rgba(217, 119, 6, 0.05);
   --app-sidebar-border: #FDE68A;
   --app-success: #16A34A;
   --app-success-bg: #F0FDF4;
@@ -252,10 +255,11 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   5. ARCTIC GLASS — Ultra-modern, cold blue glassmorphism
+   5. OCEAN BLUE (Arctic Glass) — Ultra-modern glassmorphism
    Primary: Sky #0EA5E9 on frosted white | Font: Sora
    Overrides: all colors + max blur glass
 ══════════════════════════════════════════════════════════════ */
+.theme-ocean-blue,
 .theme-arctic-glass {
   --app-bg: #EFF6FF;
   --app-surface: rgba(255, 255, 255, 0.75);
@@ -282,7 +286,7 @@
   --app-sidebar-surface: rgba(255, 255, 255, 0.5);
   --app-sidebar-text: #1E3A5F;
   --app-sidebar-muted: #7AAFCC;
-  --app-sidebar-active: rgba(14, 165, 233, 0.12);
+  --app-sidebar-active: rgba(14, 165, 233, 0.05);
   --app-sidebar-border: rgba(14, 165, 233, 0.12);
   --app-success: #10B981;
   --app-success-bg: rgba(16, 185, 129, 0.08);
@@ -295,11 +299,10 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   6. LUMINA SKY — Crisp professional SaaS dashboard
+   6. SKY BLUE (Lumina Sky) — Crisp professional SaaS dashboard
    Primary: Sky #0EA5E9 on pure White | Font: SF Pro / Inter
-   Inspired by: theme extraction guide with sky-blue instead of purple
-   Distinct from Arctic Glass: no frosted glass, clean flat surfaces
 ══════════════════════════════════════════════════════════════ */
+.theme-sky-blue,
 .theme-lumina-sky {
   --app-bg: #FFFFFF;
   --app-surface: #F8FAFC;
@@ -326,7 +329,7 @@
   --app-sidebar-surface: rgba(255, 255, 255, 0.06);
   --app-sidebar-text: #E2E8F0;
   --app-sidebar-muted: #64748B;
-  --app-sidebar-active: rgba(14, 165, 233, 0.15);
+  --app-sidebar-active: rgba(14, 165, 233, 0.05);
   --app-sidebar-border: rgba(255, 255, 255, 0.06);
   --app-success: #10B981;
   --app-success-bg: #F0FDF4;
@@ -339,11 +342,10 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   7. WARM ENTERPRISE — Clean corporate dashboard style
-   Primary: Orange #F97316 on pure White | Font: Inter / system-ui
-   Inspired by: POS/ERP reference screenshot — white cards, orange accent,
-   dark text, crisp borders, minimal shadows. No glassmorphism.
+   7. CORPORATE MINIMAL (Warm Enterprise)
+   Primary: Orange #F97316 on pure White | Font: Inter
 ══════════════════════════════════════════════════════════════ */
+.theme-corporate-minimal,
 .theme-warm-enterprise {
   --app-bg: #F9FAFB;
   --app-surface: #FFFFFF;
@@ -370,7 +372,7 @@
   --app-sidebar-surface: rgba(255, 255, 255, 0.06);
   --app-sidebar-text: #F9FAFB;
   --app-sidebar-muted: #9CA3AF;
-  --app-sidebar-active: rgba(249, 115, 22, 0.15);
+  --app-sidebar-active: rgba(249, 115, 22, 0.05);
   --app-sidebar-border: rgba(255, 255, 255, 0.06);
   --app-success: #10B981;
   --app-success-bg: #ECFDF5;

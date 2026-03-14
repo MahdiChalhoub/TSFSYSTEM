@@ -98,6 +98,7 @@ class ChartOfAccount(TenantModel):
 
     # ── Enterprise Metadata (v2.2 Architecture) ─────────────────────
     SYSTEM_ROLE_CHOICES = [
+        # ── Core Control Accounts ──
         ('AR_CONTROL', 'Accounts Receivable Control'),
         ('AP_CONTROL', 'Accounts Payable Control'),
         ('CASH_ACCOUNT', 'Cash Account'),
@@ -113,6 +114,29 @@ class ChartOfAccount(TenantModel):
         ('ROUNDING_DIFF', 'Rounding Difference'),
         ('EXCHANGE_DIFF', 'Exchange Difference'),
         ('SUSPENSE', 'Suspense/Clearing Account'),
+        # ── Posting-Specific Roles (Phase A) ──
+        ('RECEIVABLE', 'Accounts Receivable'),
+        ('PAYABLE', 'Accounts Payable'),
+        ('VAT_INPUT', 'VAT Deductible / Input'),
+        ('VAT_OUTPUT', 'VAT Collected / Output'),
+        ('REVENUE', 'Revenue / Sales Income'),
+        ('COGS', 'Cost of Goods Sold'),
+        ('INVENTORY', 'Inventory / Stock'),
+        ('EXPENSE', 'General Expense'),
+        ('DISCOUNT_GIVEN', 'Discount Given / Allowed'),
+        ('DISCOUNT_RECEIVED', 'Discount Received / Earned'),
+        ('FX_GAIN', 'Foreign Exchange Gain'),
+        ('FX_LOSS', 'Foreign Exchange Loss'),
+        ('WIP', 'Work In Progress'),
+        ('DELIVERY_FEES', 'Freight / Delivery Fees'),
+        ('CAPITAL', 'Owner Capital / Equity'),
+        ('WITHDRAWAL', 'Owner Withdrawals / Draws'),
+        ('DEPRECIATION_EXP', 'Depreciation Expense'),
+        ('ACCUM_DEPRECIATION', 'Accumulated Depreciation'),
+        ('LOAN', 'Loans / Borrowings'),
+        ('WITHHOLDING', 'Withholding Tax / AIRSI'),
+        ('BAD_DEBT', 'Bad Debt Expense'),
+        ('GRNI', 'Goods Received Not Invoiced'),
     ]
     system_role = models.CharField(
         max_length=30, choices=SYSTEM_ROLE_CHOICES, null=True, blank=True,

@@ -49,12 +49,23 @@ class TaxEngineContext:
         internal_sales_vat_mode: str = 'NONE',
         is_export: bool = False,
         custom_rules: list = None,
+        # ── Destination-based jurisdiction ──────────────────────────
+        origin_country: str = '',
+        destination_country: str = '',
+        destination_region: str = '',
+        tax_jurisdiction_code: str = '',
     ):
         self.scope = scope
         self.is_export = is_export
         self.internal_cost_mode = internal_cost_mode
         self.internal_sales_vat_mode = internal_sales_vat_mode
         self.custom_rules = custom_rules or []
+
+        # ── Jurisdiction context ──────────────────────────────────────
+        self.origin_country = origin_country
+        self.destination_country = destination_country
+        self.destination_region = destination_region
+        self.tax_jurisdiction_code = tax_jurisdiction_code
 
         # ── SCOPE GUARD (evaluated once at construction) ──────────────
         # VAT is only active when: scope is OFFICIAL AND org charges VAT on official sales
@@ -208,6 +219,21 @@ class _ClientProfile:
         # Legacy fallback: client_type B2B = vat_registered
         client_type = getattr(contact, 'client_type', 'UNKNOWN') or 'UNKNOWN'
         return cls(vat_registered=(client_type == 'B2B'))
+
+# ── Compound Tax Helpers ──────────────────────────────────────────────────────
+
+def _sum_prior_tax_amount(tax_lines: list, tax_type: str = None) -> Decimal:
+    """
+    Sum amounts of all prior tax_lines matching the given type.
+    Used for PREVIOUS_TAX base mode in compound tax calculations.
+    If tax_type is None or empty, sums ALL prior tax line amounts.
+    """
+    total = Decimal('0')
+    for t in tax_lines:
+        if tax_type and t.get('type') != tax_type:
+            continue
+        total += Decimal(str(t.get('amount', 0)))
+    return total
 
 
 # ── Core Tax Math ─────────────────────────────────────────────────────────────
@@ -390,7 +416,27 @@ class TaxCalculator:
 
         vat_amount    = (base_ht * vat_rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         ttc           = base_ht + vat_amount
-        airsi_amount  = (base_ht * airsi_rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+        # ── Legacy AIRSI backward compat ──────────────────────────────
+        # If caller passes airsi_rate + supplier_airsi_subject (deprecated),
+        # auto-inject a synthetic withholding rule into custom_rules so
+        # the unified compound engine handles it. No separate AIRSI block.
+        airsi_rate = Decimal(str(airsi_rate))
+        if supplier_airsi_subject and airsi_rate > 0:
+            _SyntheticAIRSI = type('_SyntheticAIRSI', (), {
+                'id': None,
+                'name': 'AIRSI (legacy)',
+                'rate': airsi_rate,
+                'transaction_type': 'PURCHASE',
+                'math_behavior': 'WITHHELD_FROM_AP',
+                'purchase_cost_treatment': ctx.airsi_treatment if ctx.airsi_treatment == 'CAPITALIZE' else 'EXPENSE',
+                'tax_base_mode': 'HT',
+                'base_tax_type': None,
+                'calculation_order': 20,  # After VAT(10), before PURCHASE_TAX(30)
+                'compound_group': None,
+                'is_active': True,
+            })
+            ctx.custom_rules = list(ctx.custom_rules) + [_SyntheticAIRSI()]
 
         tax_lines       = []
         vat_cost_impact = Decimal('0')
@@ -406,6 +452,7 @@ class TaxCalculator:
                 vat_recoverable = vat_amount
                 tax_lines.append({
                     'type': 'VAT_REVERSE_CHARGE',
+                    'base_amount': float(base_ht),
                     'rate': float(vat_rate),
                     'amount': float(vat_amount),
                     'cost_impact_ratio': 0.0,
@@ -416,6 +463,7 @@ class TaxCalculator:
                 vat_recoverable = (vat_amount * ratio).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
                 tax_lines.append({
                     'type': 'VAT',
+                    'base_amount': float(base_ht),
                     'rate': float(vat_rate),
                     'amount': float(vat_amount),
                     'cost_impact_ratio': float(Decimal('1') - ratio),
@@ -428,21 +476,7 @@ class TaxCalculator:
             vat_recoverable = Decimal('0')
             # No tax_lines added because we don't track statutory VAT here
 
-        # ── AIRSI ─────────────────────────────────────────────────────
-        airsi_cost_impact = Decimal('0')
-        if supplier_airsi_subject and airsi_amount > 0:
-            treatment = ctx.airsi_treatment
-            if treatment == 'CAPITALIZE':
-                airsi_cost_impact = airsi_amount
-            # RECOVER: goes to AIRSI Récupérable asset — not in cost
-            # EXPENSE: goes to P&L — not in cost
-            tax_lines.append({
-                'type': 'AIRSI',
-                'rate': float(airsi_rate),
-                'amount': float(airsi_amount),
-                'cost_impact_ratio': 1.0 if treatment == 'CAPITALIZE' else 0.0,
-                'treatment': treatment,
-            })
+        # ── (AIRSI block removed — now handled by custom_rules engine) ──
 
         # ── Purchase Tax ──────────────────────────────────────────────
         pt_cost_impact = Decimal('0')
@@ -452,6 +486,7 @@ class TaxCalculator:
                 pt_cost_impact = pt_amount
             tax_lines.append({
                 'type': 'PURCHASE_TAX',
+                'base_amount': float(base_ht),
                 'rate': float(ctx.purchase_tax_rate),
                 'amount': float(pt_amount),
                 'cost_impact_ratio': 1.0 if ctx.purchase_tax_mode == 'CAPITALIZE' else 0.0,
@@ -459,14 +494,36 @@ class TaxCalculator:
         else:
             pt_amount = Decimal('0')
 
-        # ── Custom Dynamic Taxes ──────────────────────────────────────
+        # ── Custom Dynamic Taxes (compound-aware) ─────────────────────────
         custom_cost_impact = Decimal('0')
         custom_withheld = Decimal('0')
         custom_added_ttc = Decimal('0')
 
-        for rule in ctx.custom_rules:
+        # Sort custom rules by calculation_order for deterministic compound execution
+        sorted_rules = sorted(ctx.custom_rules, key=lambda r: getattr(r, 'calculation_order', 100))
+
+        for rule in sorted_rules:
             if rule.transaction_type in ('PURCHASE', 'BOTH'):
-                c_amount = (base_ht * rule.rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+                # ── Resolve tax base depending on tax_base_mode ──
+                # Semantics:
+                #   HT            = pre-tax amount (base_ht), always the original invoice HT
+                #   TTC           = running gross: HT + sum of all tax amounts computed
+                #                   BEFORE this rule (i.e. core taxes + earlier custom taxes)
+                #   PREVIOUS_TAX  = sum of amounts from a specific prior tax type only
+                rule_base_mode = getattr(rule, 'tax_base_mode', 'HT')
+                if rule_base_mode == 'TTC':
+                    # Running gross = base_ht + sum of ALL prior tax amounts
+                    # (tax_lines already contains core taxes + earlier custom taxes)
+                    all_prior_tax = sum(Decimal(str(t['amount'])) for t in tax_lines)
+                    c_base = base_ht + all_prior_tax
+                elif rule_base_mode == 'PREVIOUS_TAX':
+                    ref_type = getattr(rule, 'base_tax_type', None)
+                    c_base = _sum_prior_tax_amount(tax_lines, ref_type)
+                else:
+                    # HT (default)
+                    c_base = base_ht
+
+                c_amount = (c_base * rule.rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
                 if c_amount <= 0:
                     continue
 
@@ -481,16 +538,19 @@ class TaxCalculator:
 
                 tax_lines.append({
                     'type': 'CUSTOM',
+                    'base_amount': float(c_base),
                     'rate': float(rule.rate),
                     'amount': float(c_amount),
                     'cost_impact_ratio': c_impact_ratio,
                     'custom_tax_rule_id': rule.id,
+                    'tax_base_mode': rule_base_mode,
+                    'compound_group': getattr(rule, 'compound_group', None),
                 })
 
         ttc += custom_added_ttc
 
         # ── Cost Views ────────────────────────────────────────────────
-        cost_official = base_ht + vat_cost_impact + airsi_cost_impact + pt_cost_impact + custom_cost_impact
+        cost_official = base_ht + vat_cost_impact + pt_cost_impact + custom_cost_impact
 
         # Internal scope: TTC_ALWAYS means we always use TTC as cost
         if not ctx.vat_active and ctx.internal_cost_mode == 'TTC_ALWAYS':
@@ -500,8 +560,8 @@ class TaxCalculator:
         else:
             cost_internal = ttc
 
-        # AP = TTC owed to supplier (net of AIRSI if withheld)
-        ap_amount   = ttc - airsi_amount if supplier_airsi_subject else ttc
+        # AP = TTC owed to supplier (net of any WITHHELD_FROM_AP custom rules)
+        ap_amount   = ttc
         ap_amount  -= custom_withheld
         # cost_cash = actual cash at invoice time = ap_amount (may be 0 if fully on credit)
         cost_cash   = ap_amount
@@ -510,7 +570,7 @@ class TaxCalculator:
             'base_ht':           base_ht,
             'vat_amount':        vat_amount,
             'ttc':               ttc,
-            'airsi_amount':      airsi_amount,
+            'airsi_amount':      custom_withheld,  # backward compat: total withheld amount
             'ap_amount':         ap_amount,        # owed to supplier
             'cost_official':     cost_official.quantize(TWOPLACES, rounding=ROUND_HALF_UP),
             'cost_internal':     cost_internal.quantize(TWOPLACES, rounding=ROUND_HALF_UP),

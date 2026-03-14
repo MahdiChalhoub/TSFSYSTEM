@@ -1,4 +1,8 @@
 import logging
+
+# Connector Governance Layer — all cross-module access goes through here
+from erp.connector_registry import connector
+
 from decimal import Decimal
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
@@ -194,7 +198,7 @@ class ClientOrderAdminViewSet(TenantModelViewSet):
         # On CANCELLED: release stock reservations (non-blocking)
         if new_status == 'CANCELLED':
             try:
-                from apps.inventory.services.reservation_service import StockReservationService
+                StockReservationService = connector.require('inventory.services.get_reservation_service', org_id=0, source='client_portal')
                 from apps.client_portal.warehouse_router import WarehouseRouter
                 for line in order.lines.select_related('product').all():
                     if not line.product:
@@ -218,8 +222,9 @@ class ClientOrderAdminViewSet(TenantModelViewSet):
 
         # Emit domain event (non-blocking)
         try:
-            from apps.integrations.event_service import DomainEventService
-            DomainEventService.emit_for_status_change(order, new_status)
+            DomainEventService = connector.require('integrations.events.get_service', org_id=0, source='client_portal')
+            if DomainEventService:
+                DomainEventService.emit_for_status_change(order, new_status)
         except Exception as evt_err:
             logger.warning(f"[AdminOrders] Domain event failed: {evt_err}")
 
@@ -240,15 +245,18 @@ class ClientOrderAdminViewSet(TenantModelViewSet):
         if order.payment_status == 'PAID':
             return Response({'error': 'Order is already marked as paid.'}, status=400)
 
-        from apps.finance.payment_gateway import PaymentGatewayService
+        PaymentGatewayService = connector.require('finance.gateways.get_payment_service', org_id=0, source='client_portal')
+        if not PaymentGatewayService:
+            return Response({'error': 'FINANCE module is required for this operation.'}, status=503)
         success = PaymentGatewayService.confirm_manual_payment(order, confirmed_by_user=request.user)
         if not success:
             return Response({'error': 'Failed to confirm payment.'}, status=500)
 
         # Domain event
         try:
-            from apps.integrations.event_service import DomainEventService
-            DomainEventService.emit_payment_confirmed(order)
+            DomainEventService = connector.require('integrations.events.get_service', org_id=0, source='client_portal')
+            if DomainEventService:
+                DomainEventService.emit_payment_confirmed(order)
         except Exception as evt_err:
             logger.warning(f"[AdminOrders] payment.confirmed event failed: {evt_err}")
 

@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('erp', '0011_remove_tenant_core_tenant_slug_bb8545_idx_and_more'),
+        ('erp', '0011_remove_organization_core_organization_slug_bb8545_idx_and_more'),
     ]
 
     operations = [

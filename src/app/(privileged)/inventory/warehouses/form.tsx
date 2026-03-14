@@ -3,13 +3,7 @@
 import { useActionState, useState } from 'react';
 import { createWarehouse, updateWarehouse } from '@/app/actions/inventory/warehouses';
 import { Warehouse, X, Building2, Store, Cloud, MapPin, Phone, FileText } from 'lucide-react';
-
-const LOCATION_TYPES = [
-    { value: 'BRANCH', label: 'Branch / Site', icon: Building2, desc: 'Top-level location (HQ, branch, office)', color: 'indigo' },
-    { value: 'STORE', label: 'Store', icon: Store, desc: 'Retail point-of-sale location', color: 'emerald' },
-    { value: 'WAREHOUSE', label: 'Warehouse', icon: Warehouse, desc: 'Pure storage / inventory hub', color: 'slate' },
-    { value: 'VIRTUAL', label: 'Virtual', icon: Cloud, desc: 'Transit, consignment, or virtual stock', color: 'violet' },
-];
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function WarehouseModal({
     warehouse,
@@ -22,6 +16,14 @@ export default function WarehouseModal({
     parentOptions?: { id: number; name: string }[],
     defaultParent?: number | null,
 }) {
+    const { t } = useTranslation();
+    const LOCATION_TYPES = [
+        { value: 'BRANCH', label: t('inventory.branch'), icon: Building2, desc: 'Top-level location (HQ, branch, office)', color: 'indigo' },
+        { value: 'STORE', label: t('inventory.store'), icon: Store, desc: 'Retail point-of-sale location', color: 'emerald' },
+        { value: 'WAREHOUSE', label: t('inventory.warehouses'), icon: Warehouse, desc: 'Pure storage / inventory hub', color: 'slate' },
+        { value: 'VIRTUAL', label: t('inventory.virtual'), icon: Cloud, desc: 'Transit, consignment, or virtual stock', color: 'violet' },
+    ];
+
     const [state, action, isPending] = useActionState(
         warehouse ? updateWarehouse.bind(null, warehouse.id) : createWarehouse,
         { message: '' }
@@ -29,7 +31,7 @@ export default function WarehouseModal({
 
     const [locationType, setLocationType] = useState(warehouse?.location_type || (defaultParent ? 'STORE' : 'BRANCH'));
 
-    const selectedType = LOCATION_TYPES.find(t => t.value === locationType) || LOCATION_TYPES[2];
+    const selectedType = LOCATION_TYPES.find(v => v.value === locationType) || LOCATION_TYPES[2];
     const TypeIcon = selectedType.icon;
 
     return (
@@ -42,7 +44,7 @@ export default function WarehouseModal({
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-app-foreground">
-                                {warehouse ? 'Edit Location' : 'New Location'}
+                                {warehouse ? t('inventory.edit_location') : t('inventory.new_location')}
                             </h2>
                             <p className="text-[10px] text-app-muted-foreground font-medium uppercase tracking-wider">{selectedType.label}</p>
                         </div>
@@ -59,7 +61,7 @@ export default function WarehouseModal({
 
                     {/* Location Type Picker */}
                     <div>
-                        <label className="block text-sm font-bold text-app-muted-foreground mb-2">Location Type</label>
+                        <label className="block text-sm font-bold text-app-muted-foreground mb-2">{t('inventory.location_type')}</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {LOCATION_TYPES.map(lt => {
                                 const Icon = lt.icon;
@@ -91,31 +93,31 @@ export default function WarehouseModal({
                     {/* Core Fields */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <label className="block text-sm font-bold text-app-muted-foreground mb-1">Location Name</label>
+                            <label className="block text-sm font-bold text-app-muted-foreground mb-1">{t('inventory.location_name')}</label>
                             <input
                                 name="name"
                                 defaultValue={warehouse?.name}
                                 className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all"
-                                placeholder="e.g., Central Warehouse, Downtown Store…"
+                                placeholder={t('inventory.location_name_placeholder')}
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-app-muted-foreground mb-1">Code</label>
+                            <label className="block text-sm font-bold text-app-muted-foreground mb-1">{t('inventory.location_code')}</label>
                             <input
                                 name="code"
                                 defaultValue={warehouse?.code}
                                 className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all font-mono"
-                                placeholder="Auto-generated"
+                                placeholder={t('inventory.auto_generated')}
                             />
-                            <p className="mt-1 text-[10px] text-app-muted-foreground">Leave blank for auto-increment</p>
+                            <p className="mt-1 text-[10px] text-app-muted-foreground">{t('inventory.auto_increment_hint')}</p>
                         </div>
 
                         {parentOptions.length > 0 && locationType !== 'BRANCH' && (
                             <div>
                                 <label className="block text-sm font-bold text-app-muted-foreground mb-1">
-                                    Assign to Branch <span className="text-rose-500">*</span>
+                                    {t('inventory.assign_to_branch')} <span className="text-rose-500">*</span>
                                 </label>
                                 <select
                                     name="parent"
@@ -123,13 +125,13 @@ export default function WarehouseModal({
                                     required
                                     className="w-full px-4 py-2.5 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all"
                                 >
-                                    <option value="" disabled>— Select a Branch —</option>
-                                    {parentOptions.map(p => (
+                                    <option value="" disabled>— {t('inventory.select_branch')} —</option>
+                                    {parentOptions.map((p: any) => (
                                         <option key={p.id} value={p.id}>{p.name}</option>
                                     ))}
                                 </select>
                                 <p className="mt-1 text-[10px] text-app-muted-foreground">
-                                    Every Store, Warehouse and Virtual location must belong to a branch
+                                    {t('inventory.branch_requirement_hint')}
                                 </p>
                             </div>
                         )}
@@ -139,7 +141,7 @@ export default function WarehouseModal({
                     <div className="p-4 bg-app-background rounded-2xl space-y-3">
                         <div className="flex items-center gap-2 text-sm font-bold text-app-muted-foreground mb-2">
                             <MapPin size={16} />
-                            Physical Address
+                            {t('inventory.physical_address')}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div className="col-span-2">
@@ -147,14 +149,14 @@ export default function WarehouseModal({
                                     name="address"
                                     defaultValue={warehouse?.address}
                                     className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
-                                    placeholder="Street address…"
+                                    placeholder={t('inventory.street_address_placeholder')}
                                 />
                             </div>
                             <input
                                 name="city"
                                 defaultValue={warehouse?.city}
                                 className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
-                                placeholder="City"
+                                placeholder={t('inventory.city')}
                             />
                             <div className="flex items-center gap-2">
                                 <Phone size={14} className="text-app-muted-foreground shrink-0" />
@@ -162,7 +164,7 @@ export default function WarehouseModal({
                                     name="phone"
                                     defaultValue={warehouse?.phone}
                                     className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
-                                    placeholder="Phone"
+                                    placeholder={t('inventory.phone')}
                                 />
                             </div>
                         </div>
@@ -172,7 +174,7 @@ export default function WarehouseModal({
                                 name="vat_number"
                                 defaultValue={warehouse?.vat_number}
                                 className="w-full px-4 py-2 rounded-xl border border-app-border focus:ring-2 focus:ring-app-primary outline-none transition-all text-sm"
-                                placeholder="VAT / Tax ID"
+                                placeholder={t('inventory.vat_tax_id')}
                             />
                         </div>
                     </div>
@@ -182,8 +184,8 @@ export default function WarehouseModal({
                         <div className="p-4 bg-app-primary-light rounded-2xl space-y-3">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="text-sm font-bold text-app-success">Commercial Point of Sale</h4>
-                                    <p className="text-[10px] text-app-success">Can items be sold directly from this location?</p>
+                                    <h4 className="text-sm font-bold text-app-success">{t('inventory.commercial_pos')}</h4>
+                                    <p className="text-[10px] text-app-success">{t('inventory.can_sell_hint')}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="canSell" defaultChecked={warehouse?.can_sell !== false} className="sr-only peer" />
@@ -197,8 +199,8 @@ export default function WarehouseModal({
                         <input type="checkbox" name="isActive" defaultChecked={warehouse?.is_active !== false} id="isActive" className="rounded-md border-app-border text-app-primary focus:ring-app-primary" />
                         <label htmlFor="isActive" className="text-sm font-medium text-app-muted-foreground">
                             {locationType === 'BRANCH'
-                                ? 'Branch is visible and active'
-                                : 'Active and available for operations'}
+                                ? t('inventory.branch_active_hint')
+                                : t('inventory.location_active_hint')}
                         </label>
                     </div>
 
@@ -208,14 +210,14 @@ export default function WarehouseModal({
                             onClick={onClose}
                             className="flex-1 px-6 py-3 rounded-xl font-bold text-app-muted-foreground hover:bg-app-background transition-all text-sm"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={isPending}
                             className="flex-1 bg-app-primary text-app-foreground px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-900/20 hover:bg-app-primary transition-all text-sm disabled:opacity-50"
                         >
-                            {isPending ? 'Saving...' : (warehouse ? 'Update Location' : 'Create Location')}
+                            {isPending ? t('inventory.saving') : (warehouse ? t('inventory.update_location') : t('inventory.create_location'))}
                         </button>
                     </div>
 

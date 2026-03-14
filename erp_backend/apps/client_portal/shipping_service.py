@@ -27,6 +27,7 @@ Usage:
 """
 import logging
 from decimal import Decimal
+from erp.connector_registry import connector
 
 logger = logging.getLogger('client_portal.shipping')
 
@@ -62,7 +63,9 @@ class ShippingService:
               ...
             ]
         """
-        from apps.pos.models import DeliveryZone
+        DeliveryZone = connector.require('pos.delivery_zones.get_model', org_id=0, source='client_portal')
+        if not DeliveryZone:
+            raise ValueError('POS module is required.')
 
         zones = DeliveryZone.objects.filter(
             organization=organization,
@@ -94,7 +97,9 @@ class ShippingService:
 
         Raises ValueError if the zone does not belong to this organization.
         """
-        from apps.pos.models import DeliveryZone
+        DeliveryZone = connector.require('pos.delivery_zones.get_model', org_id=0, source='client_portal')
+        if not DeliveryZone:
+            raise ValueError('POS module is required.')
 
         try:
             zone = DeliveryZone.objects.prefetch_related('shipping_rates').get(

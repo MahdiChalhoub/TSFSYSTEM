@@ -8,9 +8,14 @@ from .models import (
     EmployeeScoreAdjustment, ScoreDirection, PriorityLevel, 
     SeverityLevel, ConfidenceLevel, BadgeLevel, RiskLevel
 )
-from apps.hr.models import Employee
 
 logger = logging.getLogger(__name__)
+
+# Connector Governance Layer — all cross-module access goes through here
+from erp.connector_registry import connector
+
+# Module-level Employee resolution (used by events.py, admin.py, views.py)
+Employee = connector.require('hr.employees.get_model', org_id=0, source='workforce')
 
 class WorkforceScoreEngine:
     """
@@ -25,7 +30,7 @@ class WorkforceScoreEngine:
         """
         try:
             rule = ScoreRule.objects.filter(
-                tenant_id=employee.organization_id,
+                organization_id=employee.organization_id,
                 event_code=event_code,
                 module=module,
                 is_active=True
@@ -75,7 +80,7 @@ class WorkforceScoreEngine:
             with transaction.atomic():
                 # 5. Create Event
                 event = EmployeeScoreEvent.objects.create(
-                    tenant_id=employee.organization_id,
+                    organization_id=employee.organization_id,
                     employee=employee,
                     branch=employee.site,
                     department=employee.department,
@@ -234,7 +239,7 @@ class WorkforceScoreEngine:
                     'new_risk':      summary.risk_level,
                     'global_score':  float(summary.global_score),
                     'critical_count':summary.critical_negative_count,
-                    'tenant_id':     employee.organization_id
+                    'organization_id':     employee.organization_id
                 })
 
         summary.last_event_at = timezone.now()
@@ -323,7 +328,7 @@ class WorkforceScoreEngine:
             # ── Company-wide rankings ─────────────────────────────────────
             summaries = list(
                 EmployeeScoreSummary.objects.filter(
-                    tenant_id=organization_id
+                    organization_id=organization_id
                 ).order_by('-global_score').only(
                     'id', 'global_score', 'branch_id', 'current_rank_company', 'current_rank_branch'
                 )

@@ -25,7 +25,7 @@ from .registry import ContractRegistry
 # =============================================================================
 
 def register_provisioning_contracts():
-    """Register contracts for tenant provisioning events"""
+    """Register contracts for organization provisioning events"""
 
     ContractRegistry.register(
         name='org:provisioned',
@@ -35,7 +35,7 @@ def register_provisioning_contracts():
             'properties': {
                 'org_id': {
                     'type': 'integer',
-                    'description': 'Organization (tenant) ID'
+                    'description': 'Organization (organization) ID'
                 },
                 'org_name': {
                     'type': 'string',
@@ -54,7 +54,7 @@ def register_provisioning_contracts():
         category='EVENT',
         owner_module='core',
         version='1.0.0',
-        description='Emitted when a new organization (tenant) is provisioned',
+        description='Emitted when a new organization (organization) is provisioned',
         producer='core',
         consumers=['finance', 'inventory', 'crm', 'hr']
     )
@@ -71,7 +71,7 @@ def register_finance_contracts():
         name='invoice.created',
         schema={
             'type': 'object',
-            'required': ['invoice_id', 'customer_id', 'total_amount', 'currency', 'tenant_id'],
+            'required': ['invoice_id', 'customer_id', 'total_amount', 'currency', 'organization_id'],
             'properties': {
                 'invoice_id': {
                     'type': 'integer',
@@ -112,7 +112,7 @@ def register_finance_contracts():
                     'type': 'string',
                     'description': 'Invoice reference number'
                 },
-                'tenant_id': {
+                'organization_id': {
                     'type': 'integer',
                     'description': 'Tenant organization ID'
                 }
@@ -130,7 +130,7 @@ def register_finance_contracts():
         name='invoice.paid',
         schema={
             'type': 'object',
-            'required': ['invoice_id', 'amount_paid', 'payment_date', 'tenant_id'],
+            'required': ['invoice_id', 'amount_paid', 'payment_date', 'organization_id'],
             'properties': {
                 'invoice_id': {'type': 'integer'},
                 'amount_paid': {'type': 'number'},
@@ -140,7 +140,7 @@ def register_finance_contracts():
                 },
                 'payment_date': {'type': 'string', 'format': 'date-time'},
                 'reference': {'type': 'string'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -155,13 +155,13 @@ def register_finance_contracts():
         name='invoice.voided',
         schema={
             'type': 'object',
-            'required': ['invoice_id', 'void_reason', 'tenant_id'],
+            'required': ['invoice_id', 'void_reason', 'organization_id'],
             'properties': {
                 'invoice_id': {'type': 'integer'},
                 'void_reason': {'type': 'string'},
                 'voided_by': {'type': 'integer', 'description': 'User ID'},
                 'voided_at': {'type': 'string', 'format': 'date-time'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -176,7 +176,7 @@ def register_finance_contracts():
         name='payment.received',
         schema={
             'type': 'object',
-            'required': ['payment_id', 'amount', 'customer_id', 'tenant_id'],
+            'required': ['payment_id', 'amount', 'customer_id', 'organization_id'],
             'properties': {
                 'payment_id': {'type': 'integer'},
                 'amount': {'type': 'number'},
@@ -188,7 +188,7 @@ def register_finance_contracts():
                 },
                 'reference': {'type': 'string'},
                 'received_at': {'type': 'string', 'format': 'date-time'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -211,7 +211,7 @@ def register_inventory_contracts():
         name='inventory.stock_changed',
         schema={
             'type': 'object',
-            'required': ['product_id', 'warehouse_id', 'old_quantity', 'new_quantity', 'tenant_id'],
+            'required': ['product_id', 'warehouse_id', 'old_quantity', 'new_quantity', 'organization_id'],
             'properties': {
                 'product_id': {'type': 'integer'},
                 'warehouse_id': {'type': 'integer'},
@@ -223,7 +223,7 @@ def register_inventory_contracts():
                     'enum': ['SALE', 'PURCHASE', 'ADJUSTMENT', 'TRANSFER', 'RETURN']
                 },
                 'reference': {'type': 'string'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -238,14 +238,14 @@ def register_inventory_contracts():
         name='inventory.low_stock',
         schema={
             'type': 'object',
-            'required': ['product_id', 'current_quantity', 'threshold', 'tenant_id'],
+            'required': ['product_id', 'current_quantity', 'threshold', 'organization_id'],
             'properties': {
                 'product_id': {'type': 'integer'},
                 'product_name': {'type': 'string'},
                 'current_quantity': {'type': 'number'},
                 'threshold': {'type': 'number', 'description': 'Minimum stock level'},
                 'warehouse_id': {'type': 'integer'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -260,7 +260,7 @@ def register_inventory_contracts():
         name='inventory.adjusted',
         schema={
             'type': 'object',
-            'required': ['order_id', 'total_amount', 'tenant_id'],
+            'required': ['order_id', 'total_amount', 'organization_id'],
             'properties': {
                 'order_id': {'type': 'integer'},
                 'total_amount': {'type': 'number'},
@@ -271,7 +271,7 @@ def register_inventory_contracts():
                     'enum': ['OFFICIAL', 'INTERNAL'],
                     'default': 'OFFICIAL'
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -294,7 +294,7 @@ def register_sales_contracts():
         name='order.completed',
         schema={
             'type': 'object',
-            'required': ['order_id', 'type', 'total_amount', 'lines', 'tenant_id'],
+            'required': ['order_id', 'type', 'total_amount', 'lines', 'organization_id'],
             'properties': {
                 'order_id': {'type': 'integer'},
                 'type': {
@@ -331,7 +331,7 @@ def register_sales_contracts():
                         }
                     }
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -346,7 +346,7 @@ def register_sales_contracts():
         name='order.voided',
         schema={
             'type': 'object',
-            'required': ['order_id', 'type', 'lines', 'tenant_id'],
+            'required': ['order_id', 'type', 'lines', 'organization_id'],
             'properties': {
                 'order_id': {'type': 'integer'},
                 'type': {'type': 'string', 'enum': ['SALE', 'PURCHASE']},
@@ -363,7 +363,7 @@ def register_sales_contracts():
                         }
                     }
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -386,14 +386,14 @@ def register_purchasing_contracts():
         name='purchase_order.created',
         schema={
             'type': 'object',
-            'required': ['po_id', 'supplier_id', 'total_amount', 'tenant_id'],
+            'required': ['po_id', 'supplier_id', 'total_amount', 'organization_id'],
             'properties': {
                 'po_id': {'type': 'integer'},
                 'po_number': {'type': 'string'},
                 'supplier_id': {'type': 'integer'},
                 'total_amount': {'type': 'number'},
                 'expected_delivery_date': {'type': 'string', 'format': 'date'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -408,7 +408,7 @@ def register_purchasing_contracts():
         name='purchase_order.received',
         schema={
             'type': 'object',
-            'required': ['po_id', 'po_number', 'lines', 'tenant_id'],
+            'required': ['po_id', 'po_number', 'lines', 'organization_id'],
             'properties': {
                 'po_id': {'type': 'integer'},
                 'po_number': {'type': 'string'},
@@ -430,7 +430,7 @@ def register_purchasing_contracts():
                         }
                     }
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -453,7 +453,7 @@ def register_crm_contracts():
         name='contact.created',
         schema={
             'type': 'object',
-            'required': ['contact_id', 'contact_name', 'tenant_id'],
+            'required': ['contact_id', 'contact_name', 'organization_id'],
             'properties': {
                 'contact_id': {'type': 'integer'},
                 'contact_name': {'type': 'string'},
@@ -467,7 +467,7 @@ def register_crm_contracts():
                     'type': 'integer',
                     'description': 'For SaaS billing contacts'
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -482,14 +482,14 @@ def register_crm_contracts():
         name='contact.updated',
         schema={
             'type': 'object',
-            'required': ['contact_id', 'tenant_id'],
+            'required': ['contact_id', 'organization_id'],
             'properties': {
                 'contact_id': {'type': 'integer'},
                 'updated_fields': {
                     'type': 'array',
                     'items': {'type': 'string'}
                 },
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -504,7 +504,7 @@ def register_crm_contracts():
         name='contact.interaction_recorded',
         schema={
             'type': 'object',
-            'required': ['contact_id', 'user_id', 'outcome', 'channel', 'tenant_id'],
+            'required': ['contact_id', 'user_id', 'outcome', 'channel', 'organization_id'],
             'properties': {
                 'contact_id': {'type': 'integer'},
                 'user_id': {'type': 'integer'},
@@ -512,7 +512,7 @@ def register_crm_contracts():
                 'channel': {'type': 'string'},
                 'contact_name': {'type': 'string'},
                 'outcome_label': {'type': 'string'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -527,14 +527,14 @@ def register_crm_contracts():
         name='contact.type_converted',
         schema={
             'type': 'object',
-            'required': ['contact_id', 'old_type', 'new_type', 'tenant_id'],
+            'required': ['contact_id', 'old_type', 'new_type', 'organization_id'],
             'properties': {
                 'contact_id': {'type': 'integer'},
                 'old_type': {'type': 'string'},
                 'new_type': {'type': 'string'},
                 'user_id': {'type': 'integer'},
                 'contact_name': {'type': 'string'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -557,10 +557,10 @@ def register_subscription_contracts():
         name='subscription.renewed',
         schema={
             'type': 'object',
-            'required': ['subscription_id', 'tenant_id', 'renewal_date'],
+            'required': ['subscription_id', 'organization_id', 'renewal_date'],
             'properties': {
                 'subscription_id': {'type': 'integer'},
-                'tenant_id': {'type': 'integer'},
+                'organization_id': {'type': 'integer'},
                 'plan_name': {'type': 'string'},
                 'amount': {'type': 'number'},
                 'renewal_date': {'type': 'string', 'format': 'date'},
@@ -579,7 +579,7 @@ def register_subscription_contracts():
         name='subscription.updated',
         schema={
             'type': 'object',
-            'required': ['type', 'amount', 'description', 'target_org_id', 'tenant_id'],
+            'required': ['type', 'amount', 'description', 'target_org_id', 'organization_id'],
             'properties': {
                 'type': {
                     'type': 'string',
@@ -592,7 +592,7 @@ def register_subscription_contracts():
                     'type': 'integer',
                     'description': 'Tenant that purchased/credited'
                 },
-                'tenant_id': {
+                'organization_id': {
                     'type': 'integer',
                     'description': 'SaaS provider org ID'
                 }
@@ -621,14 +621,14 @@ def register_all_contracts():
         name='inventory.low_stock',
         schema={
             'type': 'object',
-            'required': ['product_id', 'tenant_id'],
+            'required': ['product_id', 'organization_id'],
             'properties': {
                 'product_id': {'type': 'integer'},
                 'product_name': {'type': 'string'},
                 'amount': {'type': 'number'},
                 'threshold': {'type': 'number'},
                 'reorder_qty': {'type': 'number'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',
@@ -643,12 +643,12 @@ def register_all_contracts():
         name='inventory.negative_stock',
         schema={
             'type': 'object',
-            'required': ['product_id', 'tenant_id'],
+            'required': ['product_id', 'organization_id'],
             'properties': {
                 'product_id': {'type': 'integer'},
                 'product_name': {'type': 'string'},
                 'amount': {'type': 'number'},
-                'tenant_id': {'type': 'integer'}
+                'organization_id': {'type': 'integer'}
             }
         },
         category='EVENT',

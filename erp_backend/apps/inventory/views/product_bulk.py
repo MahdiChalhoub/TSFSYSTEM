@@ -67,13 +67,13 @@ class ProductBulkMixin:
             if not Country.objects.filter(id=target_id).exists():
                 return Response({"error": f"Country with id {target_id} not found"}, status=404)
         elif target_model:
-            if not target_model.objects.filter(id=target_id, tenant=organization).exists():
+            if not target_model.objects.filter(id=target_id, organization=organization).exists():
                 return Response({"error": f"{move_type.title()} with id {target_id} not found"}, status=404)
         else:
             return Response({"error": f"Unknown move type: {move_type}"}, status=400)
 
         with transaction.atomic():
-            products = Product.objects.filter(id__in=product_ids, tenant=organization)
+            products = Product.objects.filter(id__in=product_ids, organization=organization)
 
             updates = {}
             if move_type == 'category':
@@ -131,7 +131,7 @@ class ProductBulkMixin:
                 if not product_id:
                     continue
                 try:
-                    product = Product.objects.get(id=product_id, tenant=organization)
+                    product = Product.objects.get(id=product_id, organization=organization)
                 except Product.DoesNotExist:
                     errors.append(f"Product {product_id} not found")
                     continue
@@ -168,14 +168,14 @@ class ProductBulkMixin:
 
         if all_missing:
             products = Product.objects.filter(
-                tenant=organization,
+                organization=organization,
                 is_active=True,
             ).filter(
                 Q(barcode__isnull=True) | Q(barcode='')
             )
         elif product_ids:
             products = Product.objects.filter(
-                id__in=product_ids, tenant=organization
+                id__in=product_ids, organization=organization
             ).filter(
                 Q(barcode__isnull=True) | Q(barcode='')
             )
@@ -183,17 +183,27 @@ class ProductBulkMixin:
             return Response({"error": "Provide product_ids or set all_missing=true"}, status=400)
 
         try:
-            from apps.finance.services import BarcodeService
+            from erp.connector_engine import connector_engine
         except ImportError:
-            return Response({"error": "Barcode service not available"}, status=500)
+            return Response({"error": "Connector engine not available"}, status=500)
 
         generated = 0
         with transaction.atomic():
             for product in products:
-                barcode = BarcodeService.generate_barcode(organization)
-                product.barcode = barcode
-                product.save(update_fields=['barcode'])
-                generated += 1
+                result = connector_engine.route_write(
+                    target_module='finance',
+                    endpoint='generate_barcode',
+                    data={'organization_id': organization.id},
+                    organization_id=organization.id,
+                    source_module='inventory',
+                )
+                barcode = None
+                if result and result.data and isinstance(result.data, dict):
+                    barcode = result.data.get('barcode')
+                if barcode:
+                    product.barcode = barcode
+                    product.save(update_fields=['barcode'])
+                    generated += 1
 
         return Response({"success": True, "generated": generated})
 

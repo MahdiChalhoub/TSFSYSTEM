@@ -2,7 +2,7 @@
 AES-256-GCM Field-Level Encryption Utility
 ============================================
 Provides authenticated encryption for sensitive data fields.
-Each organization gets its own 256-bit key for tenant isolation.
+Each organization gets its own 256-bit key for organization isolation.
 
 Usage:
     from erp.encryption import generate_org_key, encrypt_value, decrypt_value

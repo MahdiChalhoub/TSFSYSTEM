@@ -97,7 +97,7 @@ class StockLedger(AuditLogMixin, TenantOwnedModel):
         db_table = 'stock_ledger'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'product', 'warehouse', 'created_at']),
+            models.Index(fields=['organization', 'product', 'warehouse', 'created_at']),
             models.Index(fields=['order', 'movement_type']),
         ]
 

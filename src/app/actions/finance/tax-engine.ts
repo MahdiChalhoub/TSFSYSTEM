@@ -102,3 +102,59 @@ export async function deleteCustomTaxRule(id: number) {
         method: 'DELETE',
     })
 }
+
+// ── TaxJurisdictionRule ───────────────────────────────────────
+export async function getTaxJurisdictionRules() {
+    return await erpFetch('finance/tax-jurisdiction-rules/')
+}
+
+export async function saveTaxJurisdictionRule(id: number | null, data: Record<string, unknown>) {
+    if (id) {
+        return await erpFetch(`finance/tax-jurisdiction-rules/${id}/`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        })
+    }
+    return await erpFetch('finance/tax-jurisdiction-rules/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+}
+
+export async function deleteTaxJurisdictionRule(id: number) {
+    return await erpFetch(`finance/tax-jurisdiction-rules/${id}/`, {
+        method: 'DELETE',
+    })
+}
+
+export async function resolveJurisdiction(payload: {
+    origin_country: string
+    destination_country: string
+    destination_region?: string
+    counterparty_country?: string
+    is_export?: boolean
+    is_b2b?: boolean
+    tax_type?: string
+}) {
+    return await erpFetch('finance/tax-jurisdiction-rules/resolve/', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    })
+}
+
+// ── Delete helpers ────────────────────────────────────────────
+export async function deleteOrgTaxPolicy(id: number) {
+    return await erpFetch(`finance/org-tax-policies/${id}/`, { method: 'DELETE' })
+}
+
+export async function deleteCounterpartyTaxProfile(id: number) {
+    return await erpFetch(`finance/counterparty-tax-profiles/${id}/`, { method: 'DELETE' })
+}
+
+export async function seedCounterpartyPresets() {
+    return await erpFetch('finance/counterparty-tax-profiles/seed-presets/', { method: 'POST' })
+}
+
+export async function setDefaultOrgTaxPolicy(id: number) {
+    return await erpFetch(`finance/org-tax-policies/${id}/set-default/`, { method: 'POST' })
+}

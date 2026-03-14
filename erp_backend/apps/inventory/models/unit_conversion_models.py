@@ -42,7 +42,7 @@ class UnitConversion(AuditLogMixin, TenantOwnedModel):
         'inventory.Product', on_delete=models.CASCADE,
         null=True, blank=True,
         related_name='unit_conversions',
-        help_text='Product-specific conversion (null = universal for this tenant)'
+        help_text='Product-specific conversion (null = universal for this organization)'
     )
 
     is_active = models.BooleanField(default=True)
@@ -50,7 +50,7 @@ class UnitConversion(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'unit_conversion'
-        unique_together = ('from_unit', 'to_unit', 'product', 'tenant')
+        unique_together = ('from_unit', 'to_unit', 'product', 'organization')
         ordering = ['from_unit__name', 'to_unit__name']
 
     def __str__(self):

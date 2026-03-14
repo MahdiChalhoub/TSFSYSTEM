@@ -8,11 +8,16 @@ from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalanc
 from apps.finance.invoice_models import Invoice
 from apps.finance.serializers import PaymentSerializer, CustomerBalanceSerializer, SupplierBalanceSerializer
 from apps.finance.payment_service import PaymentService
+from kernel.performance import profile_view
 
 class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
     lifecycle_transaction_type = 'PAYMENT'
+
+    @profile_view
+    def get_queryset(self):
+        return super().get_queryset().select_related('contact', 'payment_account', 'organization').prefetch_related('allocations__invoice')
 
     @action(detail=False, methods=['post'])
     def supplier_payment(self, request):
@@ -63,6 +68,7 @@ class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             return Response({"error": str(e)}, status=400)
 
     @action(detail=False, methods=['get'])
+    @profile_view
     def aged_receivables(self, request):
         """Get aged receivables report."""
         organization_id = get_current_tenant_id()
@@ -71,6 +77,7 @@ class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         return Response(PaymentService.get_aged_receivables(organization))
 
     @action(detail=False, methods=['get'])
+    @profile_view
     def aged_payables(self, request):
         """Get aged payables report."""
         organization_id = get_current_tenant_id()
@@ -87,7 +94,7 @@ class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
         if not invoice_id or not amount:
             return Response({'error': 'invoice_id and amount are required'}, status=400)
         try:
-            invoice = Invoice.objects.get(id=invoice_id, tenant_id=payment.organization_id)
+            invoice = Invoice.objects.get(id=invoice_id, organization_id=payment.organization_id)
             from apps.finance.invoice_service import InvoiceService
             allocation = InvoiceService.allocate_payment(payment, invoice, amount)
             return Response({
@@ -141,7 +148,7 @@ class CustomerBalanceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(tenant_id=org_id)
+        return super().get_queryset().filter(organization_id=org_id)
 
 class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SupplierBalance.objects.all()
@@ -149,7 +156,7 @@ class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(tenant_id=org_id)
+        return super().get_queryset().filter(organization_id=org_id)
 
 
 # =============================================================================
@@ -211,7 +218,8 @@ class FlutterwaveWebhookView(APIView):
             return Response({'error': 'Missing tx_ref'}, status=400)
 
         # ── 3. Find the matching order ────────────────────────────────────
-        from apps.client_portal.models import ClientOrder
+        from erp.connector_registry import connector
+        ClientOrder = connector.require('client_portal.orders.get_model', org_id=0, source='finance')
         order = ClientOrder.objects.filter(order_number=tx_ref).first()
         if not order:
             webhook_logger.error(f"[Flutterwave Webhook] Order not found for tx_ref: {tx_ref}")
@@ -222,7 +230,7 @@ class FlutterwaveWebhookView(APIView):
         try:
             from apps.finance.gateway_models import GatewayConfig
             cfg = GatewayConfig.objects.filter(
-                tenant_id=order.organization_id,
+                organization_id=order.organization_id,
                 gateway_type='FLUTTERWAVE',
                 is_active=True,
             ).first()

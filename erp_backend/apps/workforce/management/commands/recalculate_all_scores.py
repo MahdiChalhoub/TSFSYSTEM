@@ -16,7 +16,7 @@ Usage:
 import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from apps.hr.models import Employee
+from erp.connector_registry import connector
 from apps.workforce.services import WorkforceScoreEngine
 
 logger = logging.getLogger(__name__)
@@ -33,9 +33,13 @@ class Command(BaseCommand):
         org_id   = options.get('org')
         dry_run  = options.get('dry_run')
         
+        Employee = connector.require('hr.employees.get_model', org_id=0, source='workforce')
+        if not Employee:
+            self.stderr.write(self.style.ERROR('HR module is required for this command.'))
+            return
         qs = Employee.objects.select_related('user', 'organization')
         if org_id:
-            qs = qs.filter(tenant_id=org_id)
+            qs = qs.filter(organization_id=org_id)
 
         total = qs.count()
         self.stdout.write(f"WISE: {'[DRY-RUN] ' if dry_run else ''}Found {total} employees to process.")

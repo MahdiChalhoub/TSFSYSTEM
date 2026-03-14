@@ -36,11 +36,12 @@ from .views_lifecycle import (
     lock_transaction, unlock_transaction, verify_transaction,
     verify_and_complete, unverify_transaction, get_transaction_history
 )
+from apps.core import views_themes
 
 # ── Kernel Router (infrastructure only) ──────────────────────────────────────
 router = DefaultRouter()
-router.register(r'tenant', TenantResolutionView, basename='tenant')
-router.register(r'organizations', OrganizationViewSet)
+router.register(r'organization', TenantResolutionView, basename='organization')
+router.register(r'organizations', OrganizationViewSet, basename='organizations')
 router.register(r'sites', SiteViewSet, basename='sites')
 router.register(r'settings', SettingsViewSet, basename='settings')
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
@@ -108,6 +109,18 @@ urlpatterns = [
     path('lifecycle/verify-complete/', verify_and_complete, name='lifecycle_verify_complete'),
     path('lifecycle/unverify/', unverify_transaction, name='lifecycle_unverify'),
     path('lifecycle/history/<str:model_name>/<int:instance_id>/', get_transaction_history, name='lifecycle_history'),
+
+    # Theme Engine API
+    path('themes/', views_themes.list_themes, name='list_themes'),
+    path('themes/current/', views_themes.get_current_theme, name='get_current_theme'),
+    path('themes/toggle-mode/', views_themes.toggle_color_mode, name='toggle_color_mode'),
+    path('themes/create/', views_themes.create_theme, name='create_theme'),
+    path('themes/import/', views_themes.import_theme, name='import_theme'),
+    path('themes/<int:theme_id>/', views_themes.get_theme, name='get_theme'),
+    path('themes/<int:theme_id>/update/', views_themes.update_theme, name='update_theme'),
+    path('themes/<int:theme_id>/delete/', views_themes.delete_theme, name='delete_theme'),
+    path('themes/<int:theme_id>/activate/', views_themes.activate_theme, name='activate_theme'),
+    path('themes/<int:theme_id>/export/', views_themes.export_theme, name='export_theme'),
 
     # Kernel Router
     path('', include(router.urls)),

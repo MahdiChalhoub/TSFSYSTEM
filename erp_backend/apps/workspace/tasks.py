@@ -163,7 +163,8 @@ def check_stale_orders():
     Fires ORDER_STALE and APPROVAL_PENDING triggers as appropriate.
     """
     from apps.workspace.auto_task_service import fire_auto_tasks
-    from apps.pos.models.purchase_order_models import PurchaseOrder
+    from erp.connector_registry import connector
+    PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=0, source='workspace.tasks')
     from erp.models import Organization
 
     now = timezone.now()
@@ -245,34 +246,40 @@ def send_task_notification_async(task_id: int):
     if task.related_object_type and task.related_object_id:
         try:
             if task.related_object_type in ('PurchaseOrder', 'PO'):
-                from apps.pos.models.purchase_order_models import PurchaseOrder
-                po = PurchaseOrder.objects.filter(id=task.related_object_id).first()
-                if po and po.supplier:
-                    target_whatsapp_group = getattr(po.supplier, 'whatsapp_group_id', None)
-                    if po.supplier.phone:
-                        target_phone = po.supplier.phone
-                        target_name = po.supplier.name
-                    if getattr(po.supplier, 'email', None): target_email = po.supplier.email
+                from erp.connector_registry import connector
+                PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=task.organization_id, source='workspace.tasks')
+                if PurchaseOrder:
+                    po = PurchaseOrder.objects.filter(id=task.related_object_id).first()
+                    if po and po.supplier:
+                        target_whatsapp_group = getattr(po.supplier, 'whatsapp_group_id', None)
+                        if po.supplier.phone:
+                            target_phone = po.supplier.phone
+                            target_name = po.supplier.name
+                        if getattr(po.supplier, 'email', None): target_email = po.supplier.email
 
             elif task.related_object_type in ('Order', 'Invoice'):
-                from apps.pos.models import Order
-                order = Order.objects.filter(id=task.related_object_id).first()
-                if order and order.customer:
-                    target_whatsapp_group = getattr(order.customer, 'whatsapp_group_id', None)
-                    if getattr(order.customer, 'phone', None):
-                        target_phone = order.customer.phone
-                        target_name = order.customer.name
-                    if getattr(order.customer, 'email', None): target_email = order.customer.email
+                from erp.connector_registry import connector
+                Order = connector.require('pos.orders.get_model', org_id=task.organization_id, source='workspace.tasks')
+                if Order:
+                    order = Order.objects.filter(id=task.related_object_id).first()
+                    if order and order.customer:
+                        target_whatsapp_group = getattr(order.customer, 'whatsapp_group_id', None)
+                        if getattr(order.customer, 'phone', None):
+                            target_phone = order.customer.phone
+                            target_name = order.customer.name
+                        if getattr(order.customer, 'email', None): target_email = order.customer.email
 
             elif task.related_object_type == 'Contact':
-                from apps.crm.models import Contact
-                contact = Contact.objects.filter(id=task.related_object_id).first()
-                if contact:
-                    target_whatsapp_group = getattr(contact, 'whatsapp_group_id', None)
-                    if getattr(contact, 'phone', None):
-                        target_phone = contact.phone
-                        target_name = contact.name
-                    if getattr(contact, 'email', None): target_email = contact.email
+                from erp.connector_registry import connector
+                Contact = connector.require('crm.contacts.get_model', org_id=task.organization_id, source='workspace.tasks')
+                if Contact:
+                    contact = Contact.objects.filter(id=task.related_object_id).first()
+                    if contact:
+                        target_whatsapp_group = getattr(contact, 'whatsapp_group_id', None)
+                        if getattr(contact, 'phone', None):
+                            target_phone = contact.phone
+                            target_name = contact.name
+                        if getattr(contact, 'email', None): target_email = contact.email
         except ImportError:
             pass
 

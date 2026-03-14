@@ -64,10 +64,11 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
 
         # 1. Purchase Orders
         try:
-            from apps.pos.models import PurchaseOrderLine
+            from erp.connector_registry import connector
+            PurchaseOrderLine = connector.require('pos.purchase_order_lines.get_model', org_id=0, source='inventory')
             po_lines = PurchaseOrderLine.objects.filter(
                 product=product,
-                tenant=product.tenant,
+                organization=product.organization,
                 order__status__in=['SUBMITTED', 'APPROVED', 'ORDERED', 'CONFIRMED', 'IN_TRANSIT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'REJECTED', 'CANCELLED']
             ).select_related('order', 'order__supplier', 'order__warehouse', 'order__site', 'warehouse', 'order__rejected_by', 'order__cancelled_by')
 
@@ -126,7 +127,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             from apps.inventory.models import StockTransferLine
             manifest_lines = StockTransferLine.objects.filter(
                 product=product,
-                tenant=product.tenant,
+                organization=product.organization,
                 order__lifecycle_status__in=['OPEN', 'APPROVED', 'CANCELLED']
             ).select_related('order', 'from_warehouse', 'to_warehouse')
 
@@ -150,7 +151,7 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
             from apps.inventory.models import StockMoveLine
             move_lines = StockMoveLine.objects.filter(
                 product=product,
-                tenant=product.tenant,
+                organization=product.organization,
                 move__status__in=['DRAFT', 'PENDING', 'IN_TRANSIT', 'CANCELLED']
             ).select_related('move', 'move__from_warehouse', 'move__to_warehouse')
 

@@ -32,6 +32,12 @@ export type GoodsReceiptLine = {
     adjustment_risk_score: number
     recommended_action: string | null
     decision_warnings: string[]
+    // Elite metrics
+    shelf_pressure: number | null
+    coverage_days: number | null
+    predicted_expiry_loss: number | null
+    batch_priority_index: number | null
+    supplier_reliability_score: number | null
     evidence_attachment: string | null
     processed_by: number | null
     processed_at: string | null

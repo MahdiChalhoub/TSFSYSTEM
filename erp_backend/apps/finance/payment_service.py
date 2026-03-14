@@ -14,13 +14,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _safe_import(module_path, names):
-    try:
-        mod = __import__(module_path, fromlist=names)
-        return tuple(getattr(mod, n) for n in names)
-    except ImportError:
-        logger.warning(f"Module '{module_path}' not installed — import skipped")
-        return tuple(None for _ in names)
+# Connector Governance Layer
+from erp.connector_registry import connector
 
 
 class PaymentService:
@@ -41,9 +36,9 @@ class PaymentService:
         from apps.finance.payment_models import Payment, SupplierBalance
         from erp.services import ConfigurationService
 
-        (LedgerService, SequenceService) = _safe_import(
-            'apps.finance.services', ['LedgerService', 'SequenceService']
-        )
+        from apps.finance.services import LedgerService, SequenceService
+        if not LedgerService or not SequenceService:
+            raise ValidationError('Finance services unavailable.')
 
         with transaction.atomic():
             amount = Decimal(str(amount))
@@ -101,9 +96,9 @@ class PaymentService:
         from apps.finance.payment_models import Payment, CustomerBalance
         from erp.services import ConfigurationService
 
-        (LedgerService, SequenceService) = _safe_import(
-            'apps.finance.services', ['LedgerService', 'SequenceService']
-        )
+        from apps.finance.services import LedgerService, SequenceService
+        if not LedgerService or not SequenceService:
+            raise ValidationError('Finance services unavailable.')
 
         with transaction.atomic():
             amount = Decimal(str(amount))
@@ -165,7 +160,7 @@ class PaymentService:
         if company_type != 'REAL' or not declare_tva:
             return None  # No cash-basis VAT for this company type
 
-        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        from apps.finance.services import LedgerService
         if not LedgerService:
             return None
 
@@ -219,7 +214,9 @@ class PaymentService:
         Customer aging report: 0-30, 31-60, 61-90, 90+ days.
         Based on posted SALE orders that are not fully paid.
         """
-        from apps.pos.models import Order
+        Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+        if not Order:
+            raise ValueError('POS module is required.')
         from django.db.models import Sum, Q, F
 
         today = timezone.now().date()
@@ -267,7 +264,9 @@ class PaymentService:
         Supplier aging report: 0-30, 31-60, 61-90, 90+ days.
         Based on posted PURCHASE orders that are not fully paid.
         """
-        from apps.pos.models import Order
+        Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+        if not Order:
+            raise ValueError('POS module is required.')
         from django.db.models import Sum
 
         today = timezone.now().date()

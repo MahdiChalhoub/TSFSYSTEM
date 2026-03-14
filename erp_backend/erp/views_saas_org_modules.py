@@ -71,7 +71,7 @@ class OrgSaasModulesMixin:
                 ModuleManager.grant_access(module_code, org_id)
             else:
                 OrganizationModule.objects.filter(
-                    tenant_id=org_id,
+                    organization_id=org_id,
                     module_name=module_code
                 ).update(is_enabled=False)
             return Response({'message': 'Success'})
@@ -87,7 +87,7 @@ class OrgSaasModulesMixin:
 
         try:
             OrganizationModule.objects.filter(
-                tenant_id=org_id,
+                organization_id=org_id,
                 module_name=module_code
             ).update(active_features=features)
             return Response({'message': 'Features updated successfully', 'features': features})

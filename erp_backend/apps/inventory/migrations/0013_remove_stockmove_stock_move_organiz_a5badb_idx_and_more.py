@@ -80,17 +80,17 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='operationalrequest',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='operationalrequestline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stockadjustmentline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -125,7 +125,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='stockadjustmentorder',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -170,17 +170,17 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='stockmove',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stockmoveline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stocktransferline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -215,7 +215,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='stocktransferorder',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AlterField(
@@ -235,23 +235,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='stockadjustmentorder',
-            index=models.Index(fields=['tenant', 'status'], name='stock_adjus_tenant__32c7e3_idx'),
+            index=models.Index(fields=['organization', 'status'], name='stock_adjus_organization__32c7e3_idx'),
         ),
         migrations.AddIndex(
             model_name='stockadjustmentorder',
-            index=models.Index(fields=['tenant', 'date'], name='stock_adjus_tenant__6379d2_idx'),
+            index=models.Index(fields=['organization', 'date'], name='stock_adjus_organization__6379d2_idx'),
         ),
         migrations.AddIndex(
             model_name='stockmove',
-            index=models.Index(fields=['tenant', 'status'], name='stock_move_tenant__d85b58_idx'),
+            index=models.Index(fields=['organization', 'status'], name='stock_move_organization__d85b58_idx'),
         ),
         migrations.AddIndex(
             model_name='stocktransferorder',
-            index=models.Index(fields=['tenant', 'status'], name='stock_trans_tenant__abd0bb_idx'),
+            index=models.Index(fields=['organization', 'status'], name='stock_trans_organization__abd0bb_idx'),
         ),
         migrations.AddIndex(
             model_name='stocktransferorder',
-            index=models.Index(fields=['tenant', 'date'], name='stock_trans_tenant__4e3b8c_idx'),
+            index=models.Index(fields=['organization', 'date'], name='stock_trans_organization__4e3b8c_idx'),
         ),
         migrations.RemoveField(
             model_name='stockmove',

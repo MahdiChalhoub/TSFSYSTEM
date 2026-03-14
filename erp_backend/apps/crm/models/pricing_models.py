@@ -47,7 +47,7 @@ class PriceGroupMember(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'price_group_member'
-        unique_together = ('price_group', 'contact_id', 'tenant')
+        unique_together = ('price_group', 'contact_id', 'organization')
 
     def __str__(self):
         return f"Contact #{self.contact_id} → {self.price_group.name}"

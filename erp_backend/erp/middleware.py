@@ -12,8 +12,8 @@ logger = logging.getLogger('erp.security')
 _tenant_id: ContextVar[str | None] = ContextVar('_tenant_id', default=None)
 _authorized_scope: ContextVar[str | None] = ContextVar('_authorized_scope', default=None)
 
-def set_current_tenant_id(tenant_id):
-    _tenant_id.set(tenant_id)
+def set_current_tenant_id(organization_id):
+    _tenant_id.set(organization_id)
 
 def get_current_tenant_id():
     return _tenant_id.get(None)
@@ -25,7 +25,7 @@ def get_authorized_scope():
     return _authorized_scope.get(None)
 
 
-# ─── Paths that bypass tenant isolation (public endpoints) ───
+# ─── Paths that bypass organization isolation (public endpoints) ───
 _PUBLIC_PATHS = frozenset([
     '/api/auth/login/',
     '/api/auth/logout/',
@@ -35,13 +35,13 @@ _PUBLIC_PATHS = frozenset([
     '/api/auth/password-reset/confirm/',
     '/api/health/',
     '/api/saas/pricing/',
-    '/api/tenant/resolve/',
+    '/api/organization/resolve/',
     '/api/domains/resolve/',
 ])
 
 
 def _is_public_path(path: str) -> bool:
-    """Check if the request path is a public endpoint that doesn't require tenant context."""
+    """Check if the request path is a public endpoint that doesn't require organization context."""
     # Normalize paths: remove optional '/erp' prefix if present from /api/erp/...
     normalized_path = path
     if path.startswith('/api/erp/'):
@@ -70,7 +70,7 @@ class TenantMiddleware:
             from .tenant_utils import resolve_tenant_header
             header_tenant_id = resolve_tenant_header(header_tenant_id)
 
-        tenant_id = None
+        organization_id = None
 
         # ─── 3. PUBLIC PATHS HANDLING ───
         if _is_public_path(path):
@@ -78,41 +78,41 @@ class TenantMiddleware:
             # if the header is provided (important for login/register).
             if header_tenant_id:
                 # establish context if header is provided
-                tenant_id = header_tenant_id
+                organization_id = header_tenant_id
             
-            set_current_tenant_id(tenant_id)
-            request.organization_id = tenant_id
+            set_current_tenant_id(organization_id)
+            request.organization_id = organization_id
             response = self.get_response(request)
             set_current_tenant_id(None) # Cleanup
             return response
 
         if header_tenant_id:
             # ─── STRICT ISOLATION CHECK ───
-            # Header claims a specific tenant. Verify the user is authorized.
+            # Header claims a specific organization. Verify the user is authorized.
             if not user:
-                # Anonymous access with a tenant header = suspicious.
+                # Anonymous access with a organization header = suspicious.
                 logger.warning(
                     f"[ISOLATION] Unauthenticated request with X-Tenant-Id={header_tenant_id} "
                     f"from {request.META.get('REMOTE_ADDR')} — BLOCKED"
                 )
                 from django.http import JsonResponse
                 return JsonResponse(
-                    {"error": "Authentication required to access tenant resources."},
+                    {"error": "Authentication required to access organization resources."},
                     status=401
                 )
 
             if user.is_superuser and user.organization and user.organization.slug == 'saas':
-                # Superusers can access any tenant for management ONLY if they come from the 'saas' org.
-                tenant_id = header_tenant_id
-                logger.info(f"[ISOLATION] SaaS Superuser {user.username} accessing tenant {tenant_id}")
+                # Superusers can access any organization for management ONLY if they come from the 'saas' org.
+                organization_id = header_tenant_id
+                logger.info(f"[ISOLATION] SaaS Superuser {user.username} accessing organization {organization_id}")
             elif str(user.organization_id) == str(header_tenant_id):
-                # User matches the requested tenant — allowed
-                tenant_id = header_tenant_id
+                # User matches the requested organization — allowed
+                organization_id = header_tenant_id
             else:
                 # ─── CROSS-TENANT VIOLATION ───
                 logger.error(
                     f"[ISOLATION VIOLATION] User {user.id} ({user.username}) "
-                    f"org={user.organization_id} attempted access to tenant={header_tenant_id} "
+                    f"org={user.organization_id} attempted access to organization={header_tenant_id} "
                     f"from IP={request.META.get('REMOTE_ADDR')} path={path}"
                 )
                 from django.http import JsonResponse
@@ -125,20 +125,20 @@ class TenantMiddleware:
                 )
         elif user and user.organization_id:
             # No header — fallback to user's own organization
-            tenant_id = str(user.organization_id)
+            organization_id = str(user.organization_id)
         
         request.organization = None
-        if tenant_id:
+        if organization_id:
             from erp.models import Organization
-            request.organization = Organization.objects.filter(id=tenant_id, is_active=True).first()
+            request.organization = Organization.objects.filter(id=organization_id, is_active=True).first()
             if not request.organization:
                 # Fail if context was requested but not found
                 from django.http import JsonResponse
                 return JsonResponse({"error": "Organization not found or inactive."}, status=404)
 
-        set_current_tenant_id(tenant_id)
+        set_current_tenant_id(organization_id)
         set_current_tenant(request.organization)
-        request.organization_id = tenant_id
+        request.organization_id = organization_id
 
         # ─── 4. RESOLVE AUTHORIZED SCOPE ───
         authorized_scope = 'official' # Default to strict
@@ -205,8 +205,8 @@ class TenantMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """Enforce Read-Only Mode for Expired Subscriptions."""
-        tenant_id = get_current_tenant_id()
-        if tenant_id and request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+        organization_id = get_current_tenant_id()
+        if organization_id and request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
             # Whitelist auth endpoints — users must be able to login/logout even on expired tenants
             auth_safe_paths = ['/api/auth/login/', '/api/auth/logout/', '/api/auth/password-reset/']
             if any(request.path.startswith(p) for p in auth_safe_paths):
@@ -214,7 +214,7 @@ class TenantMiddleware:
 
             from .models import Organization
             try:
-                org = Organization.objects.get(id=tenant_id)
+                org = Organization.objects.get(id=organization_id)
                 if org.is_read_only:
                     from django.http import JsonResponse
                     return JsonResponse(

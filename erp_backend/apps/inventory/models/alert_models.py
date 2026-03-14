@@ -85,9 +85,9 @@ class StockAlert(AuditLogMixin, TenantOwnedModel):
         db_table = 'stock_alert'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'alert_type']),
-            models.Index(fields=['tenant', 'product']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'alert_type']),
+            models.Index(fields=['organization', 'product']),
         ]
 
     def __str__(self):
@@ -128,15 +128,15 @@ class StockAlertService:
         alerts = service.scan_all()
     """
     
-    def __init__(self, tenant):
-        self.tenant = tenant
+    def __init__(self, organization):
+        self.organization = organization
 
     def scan_all(self):
         """Scan all products and create alerts for threshold breaches."""
         from apps.inventory.models import Product, Inventory
         
         products = Product.objects.filter(
-            tenant=self.tenant,
+            organization=self.organization,
             is_active=True
         ).select_related('category', 'unit')
 
@@ -156,7 +156,7 @@ class StockAlertService:
         
         # Get total stock across all warehouses
         total_stock = Inventory.objects.filter(
-            tenant=self.tenant,
+            organization=self.organization,
             product=product
         ).aggregate(total=Sum('quantity'))['total'] or Decimal('0.00')
 
@@ -223,7 +223,7 @@ class StockAlertService:
                                      threshold, message, reorder_qty=Decimal('0')):
         """Create alert only if no active alert of same type exists for this product."""
         existing = StockAlert.objects.filter(
-            tenant=self.tenant,
+            organization=self.organization,
             product=product,
             alert_type=alert_type,
             status__in=['ACTIVE', 'ACKNOWLEDGED']
@@ -233,7 +233,7 @@ class StockAlertService:
             return None
 
         alert = StockAlert.objects.create(
-            tenant=self.tenant,
+            organization=self.organization,
             product=product,
             alert_type=alert_type,
             severity=severity,
@@ -254,7 +254,7 @@ class StockAlertService:
                         'amount': float(current_stock),
                         'threshold': float(threshold),
                         'reorder_qty': float(reorder_qty),
-                        'tenant_id': self.tenant.id if hasattr(self.tenant, 'id') else self.tenant
+                        'organization_id': self.organization.id if hasattr(self.organization, 'id') else self.organization
                     },
                     aggregate_type='inventory.product',
                     aggregate_id=product.id
@@ -266,7 +266,7 @@ class StockAlertService:
                         'product_id': product.id,
                         'product_name': str(product),
                         'amount': float(current_stock),
-                        'tenant_id': self.tenant.id if hasattr(self.tenant, 'id') else self.tenant
+                        'organization_id': self.organization.id if hasattr(self.organization, 'id') else self.organization
                     },
                     aggregate_type='inventory.product',
                     aggregate_id=product.id

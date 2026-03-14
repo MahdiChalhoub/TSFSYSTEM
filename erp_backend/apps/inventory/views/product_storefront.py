@@ -46,7 +46,7 @@ class ProductStorefrontMixin:
             throttle_classes=[StorefrontThrottle])
     def storefront(self, request):
         """
-        Public endpoint for tenant storefronts.
+        Public endpoint for organization storefronts.
         Throttled, paginated, and returns limited fields.
         """
         slug = request.query_params.get('organization_slug') or request.query_params.get('organizationSlug')
@@ -56,7 +56,7 @@ class ProductStorefrontMixin:
         try:
             org = Organization.objects.get(slug=slug)
             products = Product.objects.filter(
-                tenant=org, status='ACTIVE'
+                organization=org, status='ACTIVE'
             ).select_related('brand', 'category', 'unit').prefetch_related(
                 'variants__attribute_values__attribute'
             )[:100]

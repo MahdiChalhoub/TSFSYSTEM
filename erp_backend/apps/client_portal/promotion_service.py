@@ -25,6 +25,7 @@ Usage:
 import logging
 from decimal import Decimal
 from django.utils import timezone
+from erp.connector_registry import connector
 
 logger = logging.getLogger('client_portal.promotions')
 
@@ -278,7 +279,9 @@ class PromotionService:
     @staticmethod
     def _add_free_line(order, product_id: int, quantity: Decimal) -> None:
         """Inserts a zero-price line item into the order for BOGO rewards."""
-        from apps.inventory.models import Product
+        Product = connector.require('inventory.products.get_model', org_id=0, source='client_portal')
+        if not Product:
+            raise ValueError('INVENTORY module is required.')
         from apps.client_portal.models import ClientOrderLine
         try:
             product = Product.objects.get(id=product_id)

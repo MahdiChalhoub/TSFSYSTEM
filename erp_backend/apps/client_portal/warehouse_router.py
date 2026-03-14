@@ -22,6 +22,7 @@ Usage:
 """
 import logging
 from decimal import Decimal
+from erp.connector_registry import connector
 
 logger = logging.getLogger('client_portal.warehouse_router')
 
@@ -49,7 +50,9 @@ class WarehouseRouter:
         Returns:
             inventory.Warehouse instance, or raises ValueError if none available.
         """
-        from apps.inventory.models import Warehouse
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='client_portal')
+        if not Warehouse:
+            return None
 
         all_warehouses = Warehouse.objects.filter(
             organization=organization,
@@ -114,7 +117,7 @@ class WarehouseRouter:
         if not contact:
             return None
         try:
-            from apps.inventory.models import DeliveryZone
+            DeliveryZone = connector.require('inventory.delivery_zones.get_model', org_id=0, source='client_portal')
             # DeliveryZone may have a `warehouse` FK (check if field exists)
             zone = DeliveryZone.objects.filter(
                 organization=organization,
@@ -135,7 +138,7 @@ class WarehouseRouter:
         Uses StockLedger if available, falls back to ProductStock.
         """
         try:
-            from apps.inventory.models import ProductStock
+            ProductStock = connector.require('inventory.product_stock.get_model', org_id=0, source='client_portal')
             stock_record = ProductStock.objects.filter(
                 product=product,
                 warehouse=warehouse,
@@ -147,7 +150,7 @@ class WarehouseRouter:
 
         try:
             # Fallback: use StockLedger net balance
-            from apps.inventory.models import StockLedger
+            StockLedger = connector.require('inventory.stock_ledger.get_model', org_id=0, source='client_portal')
             from django.db.models import Sum
             net = StockLedger.objects.filter(
                 product=product,

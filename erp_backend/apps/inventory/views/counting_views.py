@@ -38,7 +38,7 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
         org = getattr(self.request, 'organization', None)
         qs = InventorySession.objects.select_related('warehouse', 'created_by', 'adjustment_order')
         if org:
-            qs = qs.filter(tenant=org)
+            qs = qs.filter(organization=org)
         return qs
 
     def get_serializer_class(self):
@@ -50,7 +50,7 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
         """Create session without auto-populating lines (now handled by Populator/Sync panel)."""
         org = getattr(self.request, 'organization', None)
         serializer.save(
-            tenant=org,
+            organization=org,
             created_by=self.request.user,
         )
 
@@ -116,9 +116,9 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
             )
 
         # Create a stock adjustment order
-        warehouse = session.warehouse or Warehouse.objects.filter(tenant=org).first()
+        warehouse = session.warehouse or Warehouse.objects.filter(organization=org).first()
         adj_order = StockAdjustmentOrder.objects.create(
-            tenant=org,
+            organization=org,
             reference=f"COUNT-{session.pk}",
             date=timezone.now().date(),
             warehouse=warehouse,
@@ -167,19 +167,20 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
         org = getattr(request, 'organization', None)
 
         categories = list(
-            Category.objects.filter(tenant=org)
+            Category.objects.filter(organization=org)
             .values_list('name', flat=True)
             .distinct()
         )
 
-        from apps.crm.models import Contact
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=org.id if org else 0, source='inventory.counting')
         suppliers = list(
-            Contact.objects.filter(tenant=org, type='SUPPLIER')
+            Contact.objects.filter(organization=org, type='SUPPLIER')
             .values('id', 'company_name')
-        )
+        ) if Contact else []
 
         warehouses = list(
-            Warehouse.objects.filter(tenant=org, is_active=True)
+            Warehouse.objects.filter(organization=org, is_active=True)
             .values('id', 'name', 'code')
         )
 
@@ -193,7 +194,7 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
     def product_count(self, request):
         """Preview how many products match the given filters."""
         org = getattr(request, 'organization', None)
-        products = Product.objects.filter(tenant=org, is_active=True)
+        products = Product.objects.filter(organization=org, is_active=True)
 
         category = request.query_params.get('category')
         supplier_id = request.query_params.get('supplier_id')
@@ -209,16 +210,16 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
 
         if qty_filter == 'zero':
             zero_ids = Inventory.objects.filter(
-                tenant=org, quantity=0
+                organization=org, quantity=0
             ).values_list('product_id', flat=True)
             products = products.filter(id__in=zero_ids)
         elif qty_filter == 'non_zero':
             nonzero_ids = Inventory.objects.filter(
-                tenant=org, quantity__gt=0
+                organization=org, quantity__gt=0
             ).values_list('product_id', flat=True)
             products = products.filter(id__in=nonzero_ids)
         elif qty_filter == 'custom':
-            inv_qs = Inventory.objects.filter(tenant=org)
+            inv_qs = Inventory.objects.filter(organization=org)
             if qty_min:
                 inv_qs = inv_qs.filter(quantity__gte=qty_min)
             if qty_max:
@@ -246,7 +247,7 @@ class InventorySessionLineViewSet(viewsets.ModelViewSet):
             'product', 'product__category', 'product__brand', 'session'
         )
         if org:
-            qs = qs.filter(session__tenant=org)
+            qs = qs.filter(session__organization=org)
 
         # Filter by session if provided
         session_id = self.request.query_params.get('session_id')
@@ -313,12 +314,12 @@ class SyncViewSet(viewsets.ViewSet):
         batch_limit = 500
 
         try:
-            session = InventorySession.objects.get(id=session_id, tenant=org)
+            session = InventorySession.objects.get(id=session_id, organization=org)
         except InventorySession.DoesNotExist:
             return Response({"error": "Session not found"}, status=404)
 
         # Build product queryset based on session filters
-        products = Product.objects.filter(tenant=org, is_active=True, id__gt=last_id).order_by('id')
+        products = Product.objects.filter(organization=org, is_active=True, id__gt=last_id).order_by('id')
 
         if session.category_filter:
             products = products.filter(category__name=session.category_filter)
@@ -327,11 +328,11 @@ class SyncViewSet(viewsets.ViewSet):
 
         # Apply Qty filters from session
         if session.qty_filter == 'zero':
-            products = products.filter(id__in=Inventory.objects.filter(tenant=org, quantity=0).values_list('product_id', flat=True))
+            products = products.filter(id__in=Inventory.objects.filter(organization=org, quantity=0).values_list('product_id', flat=True))
         elif session.qty_filter == 'non_zero':
-            products = products.filter(id__in=Inventory.objects.filter(tenant=org, quantity__gt=0).values_list('product_id', flat=True))
+            products = products.filter(id__in=Inventory.objects.filter(organization=org, quantity__gt=0).values_list('product_id', flat=True))
         elif session.qty_filter == 'custom':
-            inv_qs = Inventory.objects.filter(tenant=org)
+            inv_qs = Inventory.objects.filter(organization=org)
             if session.qty_min is not None: inv_qs = inv_qs.filter(quantity__gte=session.qty_min)
             if session.qty_max is not None: inv_qs = inv_qs.filter(quantity__lte=session.qty_max)
             products = products.filter(id__in=inv_qs.values_list('product_id', flat=True))
@@ -341,7 +342,7 @@ class SyncViewSet(viewsets.ViewSet):
         new_last_id = last_id
 
         for product in batch:
-            inv_qs = Inventory.objects.filter(product=product, tenant=org)
+            inv_qs = Inventory.objects.filter(product=product, organization=org)
             if session.warehouse:
                 inv_qs = inv_qs.filter(warehouse=session.warehouse)
             system_qty = inv_qs.aggregate(total=Sum('quantity'))['total'] or Decimal('0')
@@ -374,8 +375,8 @@ class SyncViewSet(viewsets.ViewSet):
             return Response({"error": "Barcode required"}, status=400)
             
         try:
-            product = Product.objects.get(Q(barcode=barcode) | Q(sku=barcode), tenant=org)
-            inv_qs = Inventory.objects.filter(product=product, tenant=org)
+            product = Product.objects.get(Q(barcode=barcode) | Q(sku=barcode), organization=org)
+            inv_qs = Inventory.objects.filter(product=product, organization=org)
             if warehouse_id:
                 inv_qs = inv_qs.filter(warehouse_id=warehouse_id)
             

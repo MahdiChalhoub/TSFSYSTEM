@@ -85,7 +85,7 @@ def lock_transaction(request):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         if not organization:
             return Response(
                 {"error": "No organization context"},
@@ -156,7 +156,7 @@ def unlock_transaction(request):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         model_name = request.data.get('model')
         instance_id = request.data.get('instance_id')
         transaction_type = request.data.get('transaction_type')
@@ -205,7 +205,7 @@ def verify_transaction(request):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         model_name = request.data.get('model')
         instance_id = request.data.get('instance_id')
         transaction_type = request.data.get('transaction_type')
@@ -254,7 +254,7 @@ def verify_and_complete(request):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         model_name = request.data.get('model')
         instance_id = request.data.get('instance_id')
         transaction_type = request.data.get('transaction_type')
@@ -308,7 +308,7 @@ def unverify_transaction(request):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         model_name = request.data.get('model')
         instance_id = request.data.get('instance_id')
         transaction_type = request.data.get('transaction_type')
@@ -369,7 +369,7 @@ def get_transaction_history(request, model_name, instance_id):
     }
     """
     try:
-        organization = request.tenant
+        organization = request.organization
         instance = get_model_instance(model_name, instance_id, organization)
 
         # Get transaction type from instance

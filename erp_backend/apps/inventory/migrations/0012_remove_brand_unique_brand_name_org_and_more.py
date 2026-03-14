@@ -34,22 +34,22 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='brand',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='category',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='parfum',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productgroup',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
@@ -74,24 +74,24 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='unit',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddConstraint(
             model_name='brand',
-            constraint=models.UniqueConstraint(fields=('name', 'tenant'), name='unique_brand_name_tenant'),
+            constraint=models.UniqueConstraint(fields=('name', 'organization'), name='unique_brand_name_tenant'),
         ),
         migrations.AddConstraint(
             model_name='category',
-            constraint=models.UniqueConstraint(fields=('name', 'tenant'), name='unique_category_name_tenant'),
+            constraint=models.UniqueConstraint(fields=('name', 'organization'), name='unique_category_name_tenant'),
         ),
         migrations.AddConstraint(
             model_name='parfum',
-            constraint=models.UniqueConstraint(fields=('name', 'tenant'), name='unique_parfum_name_tenant'),
+            constraint=models.UniqueConstraint(fields=('name', 'organization'), name='unique_parfum_name_tenant'),
         ),
         migrations.AddConstraint(
             model_name='unit',
-            constraint=models.UniqueConstraint(fields=('code', 'tenant'), name='unique_unit_code_tenant'),
+            constraint=models.UniqueConstraint(fields=('code', 'organization'), name='unique_unit_code_tenant'),
         ),
         migrations.RemoveField(
             model_name='brand',

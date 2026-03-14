@@ -16,13 +16,17 @@ from apps.finance.services import (
     LedgerService, BarcodeService, LoanService,
     FinancialEventService, AuditVerificationService
 )
+from kernel.performance import profile_view
 
 class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 
+    @profile_view
     def get_queryset(self):
-        qs = super().get_queryset().order_by('-transaction_date', '-id')
+        qs = super().get_queryset().select_related(
+            'fiscal_year', 'fiscal_period', 'created_by', 'organization'
+        ).prefetch_related('lines__account').order_by('-transaction_date', '-id')
         params = self.request.query_params
 
         # Filter by fiscal year
@@ -141,7 +145,7 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
         
         entries = JournalEntry.objects.filter(
-            tenant_id=organization_id,
+            organization_id=organization_id,
             reference__startswith='OPEN-'
         )
         serializer = self.get_serializer(entries, many=True)
@@ -500,7 +504,7 @@ class TransactionSequenceViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return super().get_queryset().filter(tenant_id=org_id)
+        return super().get_queryset().filter(organization_id=org_id)
 
 
 class ForensicAuditLogViewSet(TenantModelViewSet):

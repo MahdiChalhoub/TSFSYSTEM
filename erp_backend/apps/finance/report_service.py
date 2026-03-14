@@ -24,68 +24,54 @@ def _build_registry():
     if MODEL_REGISTRY:
         return
 
-    # POS
-    try:
-        from apps.pos.models import Order as POSOrder, OrderLine as POSOrderLine
-        MODEL_REGISTRY['POSOrder'] = POSOrder
-        MODEL_REGISTRY['Order'] = POSOrder  # Alias
-        MODEL_REGISTRY['OrderLine'] = POSOrderLine
-    except ImportError: pass
+    from erp.connector_registry import connector
 
-    # Finance - Invoices
-    try:
-        from apps.finance.invoice_models import Invoice, InvoiceLine
-        MODEL_REGISTRY['Invoice'] = Invoice
-        MODEL_REGISTRY['InvoiceLine'] = InvoiceLine
-    except ImportError: pass
+    def _safe_reg(module_path, names):
+        try:
+            mod = __import__(module_path, fromlist=names)
+            return {n: getattr(mod, n) for n in names}
+        except ImportError:
+            return {}
 
-    # Finance - Models
-    try:
-        from apps.finance.models import Voucher, Asset, DeferredExpense, FinancialAccount, ChartOfAccount
-        MODEL_REGISTRY['Voucher'] = Voucher
-        MODEL_REGISTRY['Asset'] = Asset
-        MODEL_REGISTRY['DeferredExpense'] = DeferredExpense
-        MODEL_REGISTRY['FinancialAccount'] = FinancialAccount
-        MODEL_REGISTRY['ChartOfAccount'] = ChartOfAccount
-    except ImportError: pass
+    # POS — via connector
+    Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+    if Order:
+        MODEL_REGISTRY['POSOrder'] = Order
+        MODEL_REGISTRY['Order'] = Order
+    OrderLine = connector.require('pos.order_lines.get_model', org_id=0, source='finance')
+    if OrderLine:
+        MODEL_REGISTRY['OrderLine'] = OrderLine
 
-    # Finance - Payments
-    try:
-        from apps.finance.payment_models import Payment
-        MODEL_REGISTRY['Payment'] = Payment
-    except ImportError: pass
+    # Finance - self-imports (OK)
+    reg = _safe_reg('apps.finance.invoice_models', ['Invoice', 'InvoiceLine'])
+    MODEL_REGISTRY.update(reg)
 
-    # Inventory
-    try:
-        from apps.inventory.models import Product, Category, Warehouse, Unit
+    reg = _safe_reg('apps.finance.models', ['Voucher', 'Asset', 'DeferredExpense', 'FinancialAccount', 'ChartOfAccount'])
+    MODEL_REGISTRY.update(reg)
+
+    reg = _safe_reg('apps.finance.payment_models', ['Payment'])
+    MODEL_REGISTRY.update(reg)
+
+    # Inventory — via connector
+    Product = connector.require('inventory.products.get_model', org_id=0, source='finance')
+    if Product:
         MODEL_REGISTRY['Product'] = Product
+    Category = connector.require('inventory.categories.get_model', org_id=0, source='finance')
+    if Category:
         MODEL_REGISTRY['Category'] = Category
+    Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='finance')
+    if Warehouse:
         MODEL_REGISTRY['Warehouse'] = Warehouse
-        MODEL_REGISTRY['Unit'] = Unit
-        from apps.inventory.alert_models import StockAlert
-        MODEL_REGISTRY['StockAlert'] = StockAlert
-    except ImportError: pass
 
-    # CRM
-    try:
-        from apps.crm.models import Contact
+    # CRM — via connector
+    Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+    if Contact:
         MODEL_REGISTRY['Contact'] = Contact
-    except ImportError: pass
 
-    # HR
-    try:
-        from apps.hr.models import Employee, Attendance, Leave
+    # HR — via connector
+    Employee = connector.require('hr.employees.get_model', org_id=0, source='finance')
+    if Employee:
         MODEL_REGISTRY['Employee'] = Employee
-        MODEL_REGISTRY['Attendance'] = Attendance
-        MODEL_REGISTRY['Leave'] = Leave
-    except ImportError: pass
-
-    # Integrations
-    try:
-        from apps.integrations.models import ExternalOrderMapping, ExternalProductMapping
-        MODEL_REGISTRY['ExternalOrderMapping'] = ExternalOrderMapping
-        MODEL_REGISTRY['ExternalProductMapping'] = ExternalProductMapping
-    except ImportError: pass
 
 
 def _resolve_field(obj, field_path):
@@ -161,7 +147,7 @@ class ReportService:
         if not model_class:
             return {'error': f"Unknown data source: {report_def.data_source}"}
 
-        # Build base queryset (tenant-filtered)
+        # Build base queryset (organization-filtered)
         qs = model_class.objects.filter(organization_id=self.organization_id)
         
         # --- STRICT ISOLATION ---

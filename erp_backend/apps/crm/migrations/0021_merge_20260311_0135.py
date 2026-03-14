@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('crm', '0020_contact_assigned_owner_and_more'),
         ('crm', '0020_contact_compliance_last_checked_and_more'),
+        ('crm', '0021_fix_interaction_models_choices'),
         ('erp', '0020_organization_finance_hard_locked_at_and_more'),
         ('inventory', '0021_goodsreceipt_approved_by_goodsreceipt_assigned_to_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine, SupplierCreditNote
+from apps.pos.models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 
 class SalesReturnLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
@@ -33,7 +33,6 @@ class CreditNoteSerializer(serializers.ModelSerializer):
 class PurchaseReturnLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
-    po_line_number = serializers.ReadOnlyField(source='po_line.line_number')
 
     class Meta:
         model = PurchaseReturnLine
@@ -44,25 +43,7 @@ class PurchaseReturnSerializer(serializers.ModelSerializer):
     lines = PurchaseReturnLineSerializer(many=True, read_only=True)
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
     supplier_name = serializers.ReadOnlyField(source='supplier.name')
-    po_number = serializers.ReadOnlyField(source='purchase_order.po_number')
-    total_return_amount = serializers.ReadOnlyField()
-    credit_gap = serializers.ReadOnlyField()
-    credit_notes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = PurchaseReturn
         fields = '__all__'
-
-    def get_credit_notes_count(self, obj):
-        return obj.credit_notes.count() if hasattr(obj, 'credit_notes') else 0
-
-
-class SupplierCreditNoteSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
-    supplier_name = serializers.ReadOnlyField(source='supplier.name')
-    return_number = serializers.ReadOnlyField(source='purchase_return.return_number')
-
-    class Meta:
-        model = SupplierCreditNote
-        fields = '__all__'
-

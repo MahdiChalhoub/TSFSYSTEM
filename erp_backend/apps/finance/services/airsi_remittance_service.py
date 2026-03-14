@@ -39,10 +39,11 @@ class AIRSIRemittanceService:
           }
         """
         from apps.finance.models import JournalEntryLine
-        from erp.services import ConfigurationService
+        from apps.finance.services.posting_resolver import PostingResolver
 
-        rules = ConfigurationService.get_posting_rules(organization)
-        airsi_payable_acc = rules.get('purchases', {}).get('airsi_payable')
+        airsi_payable_acc = PostingResolver.resolve(
+            organization, 'purchases.airsi_payable', required=False
+        )
 
         if not airsi_payable_acc:
             raise ValidationError(

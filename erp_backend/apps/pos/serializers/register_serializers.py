@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from apps.pos.models import POSRegister, RegisterSession
-from apps.finance.serializers import FinancialAccountSerializer
 
 class POSRegisterSerializer(serializers.ModelSerializer):
     site_name = serializers.ReadOnlyField(source='branch.name')

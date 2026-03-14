@@ -24,6 +24,7 @@ from .location_views import (
 )
 from .stock_move_views import StockMoveViewSet, WarehouseStockView
 from .goods_receipt_views import GoodsReceiptViewSet
+from .intelligence_views import IntelligenceViewSet
 
 __all__ = [
     'BrandViewSet',
@@ -46,4 +47,5 @@ __all__ = [
     'WarehouseShelfViewSet', 'WarehouseBinViewSet', 'ProductLocationViewSet',
     'StockMoveViewSet', 'WarehouseStockView',
     'GoodsReceiptViewSet',
+    'IntelligenceViewSet',
 ]

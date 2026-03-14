@@ -73,10 +73,10 @@ class ReplenishmentRule(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'replenishment_rule'
-        unique_together = ('product', 'warehouse', 'tenant')
+        unique_together = ('product', 'warehouse', 'organization')
         ordering = ['product__name']
         indexes = [
-            models.Index(fields=['tenant', 'is_active']),
+            models.Index(fields=['organization', 'is_active']),
         ]
 
     def __str__(self):
@@ -150,8 +150,8 @@ class PurchaseSuggestion(AuditLogMixin, TenantOwnedModel):
         db_table = 'purchase_suggestion'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
-            models.Index(fields=['tenant', 'product', 'status']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['organization', 'product', 'status']),
         ]
 
     def __str__(self):

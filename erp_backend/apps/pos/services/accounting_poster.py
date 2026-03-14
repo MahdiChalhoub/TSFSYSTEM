@@ -9,81 +9,43 @@ Transitions handled:
   post_payment()       → On PAID (CREDIT):   Dr Cash/Bank, Cr A/R
   post_return()        → On RETURN:          Full reversal of confirmation + re-stock COGS
 
-All COA accounts are resolved dynamically from posting rules.
+All postings are wrapped in try/except so they NEVER block workflow transitions.
+Call them from SalesWorkflowService._log() or action methods.
+
+═══════════════════════════════════════════════════════════════════════════════
+  ARCHITECTURE NOTE (Phase 3A — Module Decoupling)
+  ─────────────────────────────────────────────────
+  This file NO LONGER imports from apps.finance directly.
+  All finance operations go through ConnectorEngine:
+    - COA code resolution      → finance owns the code maps
+    - Journal entry creation   → finance owns ledger logic
+    - Journal entry reversal   → finance owns reversal logic
+
+  POS sends BUSINESS INTENT (e.g., "post a sale"), not low-level journal data.
+  Finance decides which accounts to use internally.
+
+  Ref: .ai/plans/module-decoupling-blueprint.md (Phase 3A)
+═══════════════════════════════════════════════════════════════════════════════
 """
 from decimal import Decimal
 import logging
-from django.core.exceptions import ValidationError
 
 logger = logging.getLogger('erp.sales_accounting')
 
 
-def _resolve_accounts(organization):
-    """
-    Resolve all required COA account IDs from posting rules.
-    Returns a dict with resolved IDs. Raises ValidationError for missing critical rules.
-    """
-    from erp.services import ConfigurationService
-    rules = ConfigurationService.get_posting_rules(organization)
-
-    sales = rules.get('sales', {})
-    purchases = rules.get('purchases', {})
-    tax = rules.get('tax', {})
-
-    resolved = {
-        'AR':            sales.get('receivable'),
-        'REVENUE':       sales.get('revenue'),
-        'VAT_PAYABLE':   sales.get('vat_collected') or tax.get('vat_payable'),
-        'COGS':          sales.get('cogs'),
-        'INVENTORY':     sales.get('inventory'),
-        'AIRSI_PAYABLE': purchases.get('airsi_payable'),
-    }
-    return resolved
-
-
-def _resolve_payment_account(organization, payment_method):
-    """
-    Resolve the cash/bank ledger account for a given payment method.
-    Uses the organization's financial accounts and posting rules.
-    """
-    from erp.services import ConfigurationService
-    from apps.finance.models import FinancialAccount
-
-    method_upper = (payment_method or 'CASH').upper()
-
-    # CREDIT method → use A/R (receivable)
-    if method_upper == 'CREDIT':
-        rules = ConfigurationService.get_posting_rules(organization)
-        return rules.get('sales', {}).get('receivable')
-
-    # Try to match a financial account by name/type
-    type_map = {
-        'CASH': 'CASH',
-        'BANK': 'BANK',
-        'WAVE': 'MOBILE',
-        'ORANGE_MONEY': 'MOBILE',
-        'MTN_MOBILE': 'MOBILE',
-        'MOBILE': 'MOBILE',
-    }
-    account_type = type_map.get(method_upper, 'CASH')
-
-    fa = FinancialAccount.objects.filter(
-        organization=organization, type=account_type
-    ).first()
-    if fa and fa.ledger_account_id:
-        return fa.ledger_account_id
-
-    # Ultimate fallback: use first available financial account
-    fa = FinancialAccount.objects.filter(
-        organization=organization, ledger_account_id__isnull=False
-    ).first()
-    return fa.ledger_account_id if fa else None
+def _get_connector():
+    """Get the ConnectorEngine singleton. Lazy import to avoid circular refs."""
+    from erp.connector_engine import connector_engine
+    return connector_engine
 
 
 class SalesAccountingPoster:
     """
     Stateless service. All methods are class methods.
-    All COA accounts are resolved dynamically from posting rules.
+    Each method is independently safe — exceptions are logged, never re-raised.
+
+    All finance operations are routed through ConnectorEngine.
+    POS never directly imports finance models or services.
     """
 
     @classmethod
@@ -92,22 +54,18 @@ class SalesAccountingPoster:
         On ORDER_CONFIRMED / checkout:
 
         Official scope only (INTERNAL orders use TTC cost — no customer AR posting):
-          Dr  A/R (Receivable)        ← total_amount (TTC)
-            Cr  Revenue (HT)            ← subtotal_ht
-            Cr  VAT Payable             ← tax_amount
-            Cr  AIRSI Payable           ← sum of airsi_withheld per line (if any)
+          Dr  411 Clients (A/R)       ← total_amount (TTC)
+            Cr  701 Ventes HT           ← subtotal_ht
+            Cr  443 TVA facturée         ← tax_amount
+            Cr  447 AIRSI collecté       ← sum of airsi_withheld per line (if any)
 
         If INTERNAL scope: skip (cost handled via inventory deduction at checkout).
         """
         if not order or order.scope != 'OFFICIAL':
             return False
 
-        organization = order.organization
         try:
-            from apps.finance.services.ledger_service import LedgerService
             from django.utils import timezone
-
-            accounts = _resolve_accounts(organization)
 
             total_ttc  = Decimal(str(order.total_amount  or '0'))
             tax_amt    = Decimal(str(order.tax_amount   or '0'))
@@ -124,72 +82,41 @@ class SalesAccountingPoster:
             if total_ttc <= Decimal('0'):
                 return False
 
-            ar_id       = accounts['AR']
-            revenue_id  = accounts['REVENUE']
-            vat_id      = accounts['VAT_PAYABLE']
-            airsi_id    = accounts['AIRSI_PAYABLE'] if airsi_total else None
-
-            if not ar_id:
-                raise ValidationError(
-                    "Cannot post order confirmation: 'Accounts Receivable' not configured in posting rules. "
-                    "Go to Finance → Settings → Posting Rules."
-                )
-            if not revenue_id:
-                raise ValidationError(
-                    "Cannot post order confirmation: 'Revenue' account not configured in posting rules. "
-                    "Go to Finance → Settings → Posting Rules."
-                )
-
-            lines = [
-                # Dr A/R for full TTC
-                {'account_id': ar_id,
-                 'debit': total_ttc, 'credit': Decimal('0'),
-                 'description': f"A/R — {order.invoice_number or order.ref_code}",
-                 'contact_id': order.contact_id},
-                # Cr Revenue (HT)
-                {'account_id': revenue_id,
-                 'debit': Decimal('0'), 'credit': subtotal_ht,
-                 'description': f"Revenue HT — {order.invoice_number or order.ref_code}"},
-            ]
-
-            # Cr VAT Payable
-            if vat_id and tax_amt > Decimal('0'):
-                lines.append({'account_id': vat_id,
-                               'debit': Decimal('0'), 'credit': tax_amt,
-                               'description': f"VAT collected — {order.invoice_number or order.ref_code}"})
-            elif tax_amt > Decimal('0'):
-                # No VAT account — fold into revenue to balance
-                lines[1]['credit'] += tax_amt
-                logger.warning(f"[SalesAccountingPoster] VAT account missing — VAT folded into revenue for order {order.id}")
-
-            # Cr AIRSI Payable
-            if airsi_id and airsi_total > Decimal('0'):
-                lines.append({'account_id': airsi_id,
-                               'debit': Decimal('0'), 'credit': airsi_total,
-                               'description': f"AIRSI collected — {order.invoice_number or order.ref_code}"})
-
-            # Balance check
-            cls._ensure_balance(lines)
-
-            ref = f"CONF-{order.invoice_number or order.id}-{order.scope}"
-            LedgerService.create_journal_entry(
-                organization=organization,
-                transaction_date=order.confirmed_at or timezone.now(),
-                description=f"Sale confirmed — {order.invoice_number or order.ref_code}",
-                lines=lines,
-                reference=ref,
-                status='POSTED',
-                scope=order.scope,
-                site_id=order.site_id,
-                user=user,
-                internal_bypass=True,
+            # ── Route to Finance via ConnectorEngine ──
+            connector = _get_connector()
+            result = connector.route_write(
+                target_module='finance',
+                endpoint='post_sale_transaction',
+                data={
+                    'organization_id': order.organization_id,
+                    'order_id': order.id,
+                    'total_ttc': str(total_ttc),
+                    'subtotal_ht': str(subtotal_ht),
+                    'tax_amount': str(tax_amt),
+                    'airsi_amount': str(airsi_total),
+                    'invoice_number': order.invoice_number or '',
+                    'ref_code': order.ref_code or '',
+                    'contact_id': order.contact_id,
+                    'scope': order.scope,
+                    'site_id': order.site_id,
+                    'confirmed_at': str(order.confirmed_at or timezone.now()),
+                    'user_id': user.id if user else None,
+                },
+                organization_id=order.organization_id,
+                source_module='pos',
             )
-            cls._store_je_ref(order, 'confirmation_ref', ref)
-            logger.info(f"[SalesAccountingPoster] Confirmation JE posted for order {order.id}: {ref}")
-            return True
 
-        except ValidationError:
-            raise  # Let validation errors propagate — these are configuration issues
+            journal_ref = None
+            if result and result.data:
+                journal_ref = result.data.get('journal_ref') if isinstance(result.data, dict) else None
+
+            if journal_ref:
+                cls._store_je_ref(order, 'confirmation_ref', journal_ref)
+                logger.info(f"[SalesAccountingPoster] Confirmation JE posted for order {order.id}: {journal_ref}")
+                return True
+
+            return False
+
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_confirmation failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -198,17 +125,12 @@ class SalesAccountingPoster:
     def post_delivery_cogs(cls, order, user=None) -> bool:
         """
         On DELIVERED:
-          Dr  COGS             ← sum of effective_cost × qty per line
-            Cr  Inventory        ← same amount
+          Dr  601 COGS           ← sum of effective_cost × qty per line
+            Cr  311 Inventory      ← same amount
         """
-        organization = order.organization
         try:
-            from apps.finance.services.ledger_service import LedgerService
-            from django.utils import timezone
             from django.db.models import F, Sum as _Sum, ExpressionWrapper
             from django.db.models import DecimalField as _DjDecF
-
-            accounts = _resolve_accounts(organization)
 
             cost_expr = ExpressionWrapper(F('effective_cost') * F('quantity'), output_field=_DjDecF(max_digits=18, decimal_places=4))
             cogs_total = (
@@ -220,44 +142,37 @@ class SalesAccountingPoster:
             if cogs_total <= Decimal('0'):
                 return False
 
-            cogs_id  = accounts['COGS']
-            inv_id   = accounts['INVENTORY']
-
-            if not cogs_id:
-                raise ValidationError(
-                    "Cannot post delivery COGS: 'COGS' account not configured in posting rules. "
-                    "Go to Finance → Settings → Posting Rules."
-                )
-            if not inv_id:
-                raise ValidationError(
-                    "Cannot post delivery COGS: 'Inventory Assets' account not configured in posting rules. "
-                    "Go to Finance → Settings → Posting Rules."
-                )
-
-            ref = f"COGS-{order.invoice_number or order.id}"
-            LedgerService.create_journal_entry(
-                organization=organization,
-                transaction_date=order.delivered_at or timezone.now(),
-                description=f"COGS delivery — {order.invoice_number or order.ref_code}",
-                lines=[
-                    {'account_id': cogs_id,  'debit': cogs_total, 'credit': Decimal('0'),
-                     'description': f"COGS — {order.invoice_number or order.ref_code}"},
-                    {'account_id': inv_id,   'debit': Decimal('0'), 'credit': cogs_total,
-                     'description': f"Inventory relief — {order.invoice_number or order.ref_code}"},
-                ],
-                reference=ref,
-                status='POSTED',
-                scope=order.scope,
-                site_id=order.site_id,
-                user=user,
-                internal_bypass=True,
+            # ── Route to Finance via ConnectorEngine ──
+            connector = _get_connector()
+            result = connector.route_write(
+                target_module='finance',
+                endpoint='post_cogs_entry',
+                data={
+                    'organization_id': order.organization_id,
+                    'order_id': order.id,
+                    'cogs_total': str(cogs_total),
+                    'invoice_number': order.invoice_number or '',
+                    'ref_code': order.ref_code or '',
+                    'scope': order.scope or 'OFFICIAL',
+                    'site_id': order.site_id,
+                    'delivered_at': str(order.delivered_at) if order.delivered_at else None,
+                    'user_id': user.id if user else None,
+                },
+                organization_id=order.organization_id,
+                source_module='pos',
             )
-            cls._store_je_ref(order, 'cogs_ref', ref)
-            logger.info(f"[SalesAccountingPoster] COGS JE posted for order {order.id}: {ref}")
-            return True
 
-        except ValidationError:
-            raise
+            journal_ref = None
+            if result and result.data:
+                journal_ref = result.data.get('journal_ref') if isinstance(result.data, dict) else None
+
+            if journal_ref:
+                cls._store_je_ref(order, 'cogs_ref', journal_ref)
+                logger.info(f"[SalesAccountingPoster] COGS JE posted for order {order.id}: {journal_ref}")
+                return True
+
+            return False
+
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_delivery_cogs failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -266,58 +181,38 @@ class SalesAccountingPoster:
     def post_payment(cls, order, user=None) -> bool:
         """
         On PAID (cash/mobile reconciliation):
-          Dr  Cash/Mobile/Bank   ← amount paid
-            Cr  A/R                ← clears receivable
+          Dr  571/562/521 Cash/Mobile/Bank   ← amount paid
+            Cr  411 A/R                        ← clears receivable
 
-        Skipped for non-CREDIT orders (cash was already received at checkout).
+        Skipped for non-CREDIT orders (cash was already received at checkout
+        — the A/R entry clears immediately via confirmation line swap).
         """
-        organization = order.organization
         try:
             if order.payment_method == 'CREDIT' and order.scope == 'OFFICIAL':
-                from apps.finance.services.ledger_service import LedgerService
-                from django.utils import timezone
-
-                accounts = _resolve_accounts(organization)
-
-                amount = Decimal(str(order.total_amount or '0'))
-                ar_id = accounts['AR']
-
-                if not ar_id:
-                    raise ValidationError(
-                        "Cannot post payment: 'Accounts Receivable' not configured in posting rules. "
-                        "Go to Finance → Settings → Posting Rules."
-                    )
-
-                cash_id = _resolve_payment_account(organization, order.payment_method)
-                if not cash_id:
-                    raise ValidationError(
-                        "Cannot post payment: No cash/bank financial account found. "
-                        "Create a Cash or Bank financial account first."
-                    )
-
-                ref = f"PAY-{order.invoice_number or order.id}"
-                LedgerService.create_journal_entry(
-                    organization=organization,
-                    transaction_date=timezone.now(),
-                    description=f"Payment received — {order.invoice_number or order.ref_code}",
-                    lines=[
-                        {'account_id': cash_id, 'debit': amount, 'credit': Decimal('0'),
-                         'description': f"Payment {order.payment_method}"},
-                        {'account_id': ar_id,   'debit': Decimal('0'), 'credit': amount,
-                         'description': f"A/R cleared — {order.invoice_number or order.ref_code}"},
-                    ],
-                    reference=ref,
-                    status='POSTED',
-                    scope=order.scope,
-                    site_id=order.site_id,
-                    user=user,
-                    internal_bypass=True,
+                connector = _get_connector()
+                result = connector.route_write(
+                    target_module='finance',
+                    endpoint='post_payment_receipt',
+                    data={
+                        'organization_id': order.organization_id,
+                        'order_id': order.id,
+                        'amount': str(order.total_amount or '0'),
+                        'payment_method': order.payment_method or 'CASH',
+                        'invoice_number': order.invoice_number or '',
+                        'ref_code': order.ref_code or '',
+                        'scope': order.scope,
+                        'site_id': order.site_id,
+                        'user_id': user.id if user else None,
+                    },
+                    organization_id=order.organization_id,
+                    source_module='pos',
                 )
-                logger.info(f"[SalesAccountingPoster] Payment JE posted for order {order.id}: {ref}")
+                if result and result.data:
+                    journal_ref = result.data.get('journal_ref') if isinstance(result.data, dict) else None
+                    if journal_ref:
+                        logger.info(f"[SalesAccountingPoster] Payment JE posted for order {order.id}: {journal_ref}")
             return True
 
-        except ValidationError:
-            raise
         except Exception as exc:
             logger.error(f"[SalesAccountingPoster] post_payment failed for order {order.id}: {exc}", exc_info=True)
             return False
@@ -326,14 +221,11 @@ class SalesAccountingPoster:
     def post_return(cls, order, user=None) -> bool:
         """
         On RETURN / CANCELLED (after confirmation):
-        Reverse the confirmation journal entry using LedgerService.reverse_journal_entry().
+        Reverse the confirmation journal entry using finance connector.
         If the COGS journal was posted, reverse that too (re-stocks inventory).
         """
-        organization = order.organization
         try:
-            from apps.finance.services.ledger_service import LedgerService
-            from apps.finance.models import JournalEntry
-
+            connector = _get_connector()
             conf_ref  = cls._load_je_ref(order, 'confirmation_ref')
             cogs_ref  = cls._load_je_ref(order, 'cogs_ref')
 
@@ -342,15 +234,22 @@ class SalesAccountingPoster:
                 if not ref:
                     continue
                 try:
-                    je = JournalEntry.objects.filter(
-                        organization=organization,
-                        reference=ref,
-                        status='POSTED'
-                    ).first()
-                    if je:
-                        LedgerService.reverse_journal_entry(organization, je.id, user=user)
-                        reversed_any = True
-                        logger.info(f"[SalesAccountingPoster] Reversed JE {ref} for order {order.id}")
+                    result = connector.route_write(
+                        target_module='finance',
+                        endpoint='post_refund',
+                        data={
+                            'organization_id': order.organization_id,
+                            'journal_ref': ref,
+                            'user_id': user.id if user else None,
+                        },
+                        organization_id=order.organization_id,
+                        source_module='pos',
+                    )
+                    if result and result.data:
+                        success = result.data.get('success') if isinstance(result.data, dict) else False
+                        if success:
+                            reversed_any = True
+                            logger.info(f"[SalesAccountingPoster] Reversed JE {ref} for order {order.id}")
                 except Exception as rev_exc:
                     logger.error(f"[SalesAccountingPoster] Reversal of {ref} failed: {rev_exc}")
 
@@ -361,21 +260,6 @@ class SalesAccountingPoster:
             return False
 
     # ── Internal helpers ───────────────────────────────────────────────────────
-
-    @staticmethod
-    def _ensure_balance(lines: list) -> None:
-        """
-        Adjusts the last credit line by the debit/credit imbalance to guarantee
-        the entry is balanced. Accepts rounding differences up to 1 unit.
-        """
-        total_dr = sum(Decimal(str(l['debit']))  for l in lines)
-        total_cr = sum(Decimal(str(l['credit'])) for l in lines)
-        diff = total_dr - total_cr
-        if abs(diff) > Decimal('0') and abs(diff) <= Decimal('1'):
-            for l in reversed(lines):
-                if l['credit'] > Decimal('0'):
-                    l['credit'] = Decimal(str(l['credit'])) + diff
-                    break
 
     @staticmethod
     def _store_je_ref(order, key: str, ref: str) -> None:

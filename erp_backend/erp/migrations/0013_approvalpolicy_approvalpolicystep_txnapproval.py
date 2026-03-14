@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
                 ('txn_type', models.CharField(db_index=True, max_length=100)),
                 ('min_level_required', models.PositiveIntegerField(default=1)),
                 ('allow_bypass', models.BooleanField(default=False)),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
             ],
             options={
                 'db_table': 'kernel_approval_policies',
-                'unique_together': {('tenant', 'txn_type')},
+                'unique_together': {('organization', 'txn_type')},
             },
         ),
         migrations.CreateModel(
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('role_id', models.CharField(max_length=100)),
                 ('required', models.BooleanField(default=True)),
                 ('policy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='steps', to='erp.approvalpolicy')),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
             ],
             options={
                 'db_table': 'kernel_approval_policy_steps',
@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 ('note', models.TextField(blank=True, null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('actor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization')),
             ],
             options={
                 'db_table': 'kernel_txn_approvals',

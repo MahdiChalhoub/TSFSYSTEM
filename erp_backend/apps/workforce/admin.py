@@ -67,7 +67,10 @@ class EmployeeScoreEventAdmin(admin.ModelAdmin):
         # Recalculate summaries for affected employees
         from .services import WorkforceScoreEngine
         employee_ids = queryset.values_list('employee_id', flat=True).distinct()
-        from apps.hr.models import Employee
+        from erp.connector_registry import connector
+        Employee = connector.require('hr.employees.get_model', org_id=0, source='workforce')
+        if not Employee:
+            return
         for emp in Employee.objects.filter(id__in=employee_ids):
             WorkforceScoreEngine.update_employee_summary(emp)
             WorkforceScoreEngine.rank_employees(emp.organization_id)

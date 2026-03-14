@@ -60,7 +60,7 @@ class Permission(models.Model):
 
 class Role(TenantOwnedModel):
     """
-    Roles within a tenant.
+    Roles within a organization.
 
     Examples:
     - Admin
@@ -96,13 +96,13 @@ class Role(TenantOwnedModel):
     class Meta:
         app_label = 'erp'
         db_table = 'kernel_role'
-        unique_together = [['tenant', 'name']]
+        unique_together = [['organization', 'name']]
         indexes = [
-            models.Index(fields=['tenant', 'name']),
+            models.Index(fields=['organization', 'name']),
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.tenant.name})"
+        return f"{self.name} ({self.organization.name})"
 
     def get_all_permissions(self):
         """
@@ -135,9 +135,9 @@ class Role(TenantOwnedModel):
 
 class UserRole(TenantOwnedModel):
     """
-    User-to-Role assignment within a tenant.
+    User-to-Role assignment within a organization.
 
-    A user can have multiple roles in a tenant.
+    A user can have multiple roles in a organization.
     A user can belong to multiple tenants with different roles.
     """
 
@@ -157,14 +157,14 @@ class UserRole(TenantOwnedModel):
     class Meta:
         app_label = 'erp'
         db_table = 'kernel_user_role'
-        unique_together = [['tenant', 'user', 'role', 'resource_type', 'resource_id']]
+        unique_together = [['organization', 'user', 'role', 'resource_type', 'resource_id']]
         indexes = [
-            models.Index(fields=['tenant', 'user']),
+            models.Index(fields=['organization', 'user']),
             models.Index(fields=['role']),
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.role.name} ({self.tenant.name})"
+        return f"{self.user} - {self.role.name} ({self.organization.name})"
 
     def is_valid(self):
         """
@@ -218,9 +218,9 @@ class ResourcePermission(TenantOwnedModel):
     class Meta:
         app_label = 'erp'
         db_table = 'kernel_resource_permission'
-        unique_together = [['tenant', 'user', 'permission', 'resource_type', 'resource_id']]
+        unique_together = [['organization', 'user', 'permission', 'resource_type', 'resource_id']]
         indexes = [
-            models.Index(fields=['tenant', 'user', 'resource_type', 'resource_id']),
+            models.Index(fields=['organization', 'user', 'resource_type', 'resource_id']),
         ]
 
     def __str__(self):

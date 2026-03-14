@@ -34,7 +34,7 @@ class PeriodicTaxViewSet(TenantModelViewSet):
         if not org_id:
             return Response({'error': 'Tenant missing'}, status=400)
         qs = PeriodicTaxAccrual.objects.filter(
-            tenant_id=org_id
+            organization_id=org_id
         ).order_by('-period_end')[:50]
         data = [
             {

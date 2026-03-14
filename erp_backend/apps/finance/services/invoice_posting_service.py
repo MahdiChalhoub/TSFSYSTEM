@@ -21,15 +21,18 @@ class InvoicePostingService:
         from apps.finance.services import LedgerService
         from erp.services import ConfigurationService
 
-        organization = invoice.tenant
+        organization = invoice.organization
         rules = ConfigurationService.get_posting_rules(organization)
+
+        # Resolve VAT accounts via PostingResolver (Tax Engine first, rules fallback)
+        from apps.finance.services.posting_resolver import PostingResolver
         
         # Determine accounts from rules
         lines = []
         if invoice.type == 'SALES':
             ar_acc = rules.get('sales', {}).get('receivable')
             income_acc = rules.get('sales', {}).get('revenue') or rules.get('sales', {}).get('income')
-            tax_acc = rules.get('sales', {}).get('vat_collected') or rules.get('sales', {}).get('tax') # VAT Output
+            tax_acc = PostingResolver.resolve(organization, 'sales.vat_collected', required=False) or rules.get('sales', {}).get('tax')
             
             if not all([ar_acc, income_acc]):
                 raise ValidationError("Invoice GL mapping missing: Sales accounts not configured")
@@ -66,7 +69,7 @@ class InvoicePostingService:
         elif invoice.type == 'PURCHASE':
             ap_acc = rules.get('purchases', {}).get('payable')
             expense_acc = rules.get('purchases', {}).get('expense')
-            tax_acc = rules.get('purchases', {}).get('vat_recoverable') or rules.get('purchases', {}).get('tax') # VAT Input
+            tax_acc = PostingResolver.resolve(organization, 'purchases.vat_recoverable', required=False) or rules.get('purchases', {}).get('tax') # VAT Input
             
             if not all([ap_acc, expense_acc]):
                 raise ValidationError("Invoice GL mapping missing: Purchase accounts not configured")

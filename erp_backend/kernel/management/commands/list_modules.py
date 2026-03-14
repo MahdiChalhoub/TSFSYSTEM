@@ -1,11 +1,11 @@
 """
 List Modules Management Command
 
-Lists registered modules and their status per tenant.
+Lists registered modules and their status per organization.
 
 Usage:
     python manage.py list_modules
-    python manage.py list_modules --tenant=acme
+    python manage.py list_modules --organization=acme
 """
 
 from django.core.management.base import BaseCommand
@@ -18,13 +18,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--tenant',
+            '--organization',
             type=str,
-            help='Filter by tenant slug'
+            help='Filter by organization slug'
         )
 
     def handle(self, *args, **options):
-        tenant_slug = options.get('tenant')
+        tenant_slug = options.get('organization')
 
         if tenant_slug:
             self.list_for_tenant(tenant_slug)
@@ -62,14 +62,14 @@ class Command(BaseCommand):
                 self.stdout.write(f"    Depends: {', '.join(module.depends_on)}")
 
     def list_for_tenant(self, tenant_slug: str):
-        """List modules for specific tenant."""
+        """List modules for specific organization."""
         try:
-            tenant = Tenant.objects.get(slug=tenant_slug, is_active=True)
+            organization = Tenant.objects.get(slug=tenant_slug, is_active=True)
         except Tenant.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Tenant not found: {tenant_slug}"))
             return
 
-        self.stdout.write(f"📦 Modules for {tenant.name}\n")
+        self.stdout.write(f"📦 Modules for {organization.name}\n")
 
         # Get all modules with their org status
         modules = KernelModule.objects.all().order_by('name')
@@ -81,7 +81,7 @@ class Command(BaseCommand):
         for module in modules:
             # Get org module status
             org_module = OrgModule.objects.filter(
-                tenant=tenant,
+                organization=organization,
                 module=module
             ).first()
 

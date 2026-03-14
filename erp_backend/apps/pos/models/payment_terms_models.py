@@ -1,4 +1,4 @@
-"""Payment Terms — dynamic, tenant-scoped payment conditions."""
+"""Payment Terms — dynamic, organization-scoped payment conditions."""
 from django.db import models
 from erp.models import TenantModel
 

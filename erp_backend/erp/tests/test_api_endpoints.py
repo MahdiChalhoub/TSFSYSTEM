@@ -277,7 +277,7 @@ class TestSchemaEndpoints(APITestBase):
 
 
 class TestTenantIsolationAPI(APITestBase):
-    """Tests that API endpoints respect tenant isolation."""
+    """Tests that API endpoints respect organization isolation."""
 
     @classmethod
     def setUpTestData(cls):

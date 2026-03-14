@@ -16,10 +16,10 @@ class POSAuditRuleViewSet(viewsets.ModelViewSet):
         org_id = get_current_tenant_id()
         if not org_id:
             return POSAuditRule.objects.none()
-        return POSAuditRule.objects.filter(tenant_id=org_id)
+        return POSAuditRule.objects.filter(organization_id=org_id)
 
     def perform_create(self, serializer):
-        serializer.save(tenant_id=get_current_tenant_id())
+        serializer.save(organization_id=get_current_tenant_id())
 
 class POSAuditEventViewSet(viewsets.ModelViewSet):
     serializer_class = POSAuditEventSerializer
@@ -33,11 +33,11 @@ class POSAuditEventViewSet(viewsets.ModelViewSet):
         org_id = get_current_tenant_id()
         if not org_id:
             return POSAuditEvent.objects.none()
-        return POSAuditEvent.objects.filter(tenant_id=org_id)
+        return POSAuditEvent.objects.filter(organization_id=org_id)
 
     def perform_create(self, serializer):
         # Usually created programmatically, but allow manual creation for testing if needed
-        serializer.save(tenant_id=get_current_tenant_id())
+        serializer.save(organization_id=get_current_tenant_id())
 
     @action(detail=True, methods=['post'])
     def mark_reviewed(self, request, pk=None):

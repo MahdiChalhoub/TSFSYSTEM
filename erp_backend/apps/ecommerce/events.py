@@ -12,7 +12,7 @@ from kernel.contracts.decorators import enforce_contract
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """Main event handler for eCommerce module"""
     logger.info(f"[eCommerce] Received event: {event_name}")
 
@@ -25,7 +25,7 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
     handler = handlers.get(event_name)
     if handler:
         try:
-            return handler(payload, tenant_id)
+            return handler(payload, organization_id)
         except Exception as e:
             logger.error(f"[eCommerce] Error: {e}")
             raise
@@ -36,10 +36,10 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 @enforce_contract('order.completed')
 def on_order_completed(event):
     """EventBus handler wrapper for order.completed"""
-    handle_order_completed(event.payload, event.tenant_id)
+    handle_order_completed(event.payload, event.organization_id)
 
 
-def handle_order_completed(payload: dict, tenant_id: int):
+def handle_order_completed(payload: dict, organization_id: int):
     """Handle order completion - update cart/quote status"""
     logger.info(f"[eCommerce] Order completed")
     # TODO: Mark quote as converted, clear cart, send confirmation
@@ -50,10 +50,10 @@ def handle_order_completed(payload: dict, tenant_id: int):
 @enforce_contract('payment.received')
 def on_payment_received(event):
     """EventBus handler wrapper for payment.received"""
-    handle_payment_received(event.payload, event.tenant_id)
+    handle_payment_received(event.payload, event.organization_id)
 
 
-def handle_payment_received(payload: dict, tenant_id: int):
+def handle_payment_received(payload: dict, organization_id: int):
     """Handle payment received - process online order"""
     logger.info(f"[eCommerce] Payment received")
     # TODO: Update order status, trigger fulfillment
@@ -63,10 +63,10 @@ def handle_payment_received(payload: dict, tenant_id: int):
 @subscribe_to_event('shipment.dispatched')
 def on_shipment_dispatched(event):
     """EventBus handler wrapper for shipment.dispatched"""
-    handle_shipment_dispatched(event.payload, event.tenant_id)
+    handle_shipment_dispatched(event.payload, event.organization_id)
 
 
-def handle_shipment_dispatched(payload: dict, tenant_id: int):
+def handle_shipment_dispatched(payload: dict, organization_id: int):
     """Handle shipment dispatch - notify customer"""
     logger.info(f"[eCommerce] Shipment dispatched")
     # TODO: Send tracking email to customer

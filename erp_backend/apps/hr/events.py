@@ -19,12 +19,12 @@ from kernel.contracts.decorators import enforce_contract
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """
     Main event handler for HR module (Kernel OS v2.0)
 
     Routes events to appropriate handlers based on event name.
-    Compatible with both old (organization_id) and new (tenant_id) signatures.
+    Compatible with both old (organization_id) and new (organization_id) signatures.
     """
     logger.info(f"[HR] Received event: {event_name}")
 
@@ -42,7 +42,7 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 
     if handler:
         try:
-            result = handler(payload, tenant_id)
+            result = handler(payload, organization_id)
             logger.info(f"[HR] Successfully handled {event_name}")
             return result
         except Exception as e:
@@ -86,7 +86,7 @@ def _on_payroll_processed(payload: dict, organization_id: int) -> dict:
                 'total_amount': str(total_amount),
                 'organization_id': str(organization_id),
             },
-            tenant_id=str(organization_id)
+            organization_id=str(organization_id)
         )
     except Exception as e:
         logger.warning(f"HR: Failed to dispatch payroll event: {e}")
@@ -101,11 +101,11 @@ def _on_payroll_processed(payload: dict, organization_id: int) -> dict:
 @subscribe_to_event('user.created')
 def on_user_created(event):
     """EventBus handler wrapper for user.created"""
-    handle_user_created(event.payload, event.tenant_id)
+    handle_user_created(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_user_created(payload: dict, tenant_id: int):
+def handle_user_created(payload: dict, organization_id: int):
     """Handle user.created event - Create employee record"""
     from apps.hr.models import Employee
 
@@ -117,7 +117,7 @@ def handle_user_created(payload: dict, tenant_id: int):
     logger.info(f"[HR] Creating employee for user: {user_id}")
 
     try:
-        existing = Employee.objects.filter(user_id=user_id, tenant_id=tenant_id).first()
+        existing = Employee.objects.filter(user_id=user_id, organization_id=organization_id).first()
         if existing:
             return {'success': True, 'employee_id': existing.id, 'existed': True}
 
@@ -127,13 +127,13 @@ def handle_user_created(payload: dict, tenant_id: int):
             last_name=last_name,
             email=email,
             hire_date=timezone.now().date(),
-            tenant_id=tenant_id
+            organization_id=organization_id
         )
 
         emit_event('employee.created', {
             'employee_id': employee.id,
             'user_id': user_id,
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         })
 
         return {'success': True, 'employee_id': employee.id}
@@ -145,10 +145,10 @@ def handle_user_created(payload: dict, tenant_id: int):
 @subscribe_to_event('role.assigned')
 def on_role_assigned(event):
     """EventBus handler wrapper for role.assigned"""
-    handle_role_assigned(event.payload, event.tenant_id)
+    handle_role_assigned(event.payload, event.organization_id)
 
 
-def handle_role_assigned(payload: dict, tenant_id: int):
+def handle_role_assigned(payload: dict, organization_id: int):
     """Handle role.assigned event - Update employee permissions"""
     logger.info(f"[HR] Role assigned event received")
     # Update employee role/position if needed

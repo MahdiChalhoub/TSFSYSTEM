@@ -9,10 +9,10 @@ from django.apps import apps
 Organization = apps.get_model('erp', 'Organization')
 
 def seed_invoice_policy():
-    for tenant in Organization.objects.all():
-        print(f"Seeding policy for tenant: {tenant.name}")
+    for organization in Organization.objects.all():
+        print(f"Seeding policy for organization: {organization.name}")
         policy, created = ApprovalPolicy.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             txn_type='finance.invoice',
             defaults={
                 'min_level_required': 2,

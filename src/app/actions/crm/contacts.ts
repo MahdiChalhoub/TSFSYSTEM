@@ -88,3 +88,135 @@ export async function searchContacts(query: string = '', limit: number = 20) {
         return [];
     }
 }
+
+// ── CONTACT TAGS ──────────────────────────────────────────────────────────
+
+export async function getContactTags() {
+    try {
+        const data = await erpFetch('crm/contact-tags/')
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch {
+        return []
+    }
+}
+
+export async function createContactTag(data: unknown) {
+    try {
+        return await erpFetch('crm/contact-tags/', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to create tag' }
+    }
+}
+
+export async function updateContactTag(id: number, data: unknown) {
+    try {
+        return await erpFetch(`crm/contact-tags/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to update tag' }
+    }
+}
+
+export async function deleteContactTag(id: number) {
+    try {
+        return await erpFetch(`crm/contact-tags/${id}/`, {
+            method: 'DELETE'
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to delete tag' }
+    }
+}
+
+// ── FOLLOW-UP CONTACTS ──────────────────────────────────────────────────
+
+export async function getFollowUpContacts(status?: string) {
+    try {
+        const query = status ? `?followup_status=${status}` : ''
+        const data = await erpFetch(`contacts/${query}`)
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch {
+        return []
+    }
+}
+
+// ── CONTACT PERSONS (Contact Book) ──────────────────────────────────────
+
+export async function getContactPersons(contactId: number) {
+    try {
+        const data = await erpFetch(`crm/contact-persons/?contact=${contactId}`)
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch {
+        return []
+    }
+}
+
+export async function createContactPerson(data: Record<string, any>) {
+    try {
+        return await erpFetch('crm/contact-persons/', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to create contact person' }
+    }
+}
+
+// ── INTERACTIONS (Timeline) ──────────────────────────────────────────────
+
+export async function getInteractions(contactId: number) {
+    try {
+        const data = await erpFetch(`crm/interactions/?contact=${contactId}&ordering=-interaction_at`)
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch {
+        return []
+    }
+}
+
+export async function createInteraction(data: Record<string, any>) {
+    try {
+        return await erpFetch('crm/interactions/', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to log interaction' }
+    }
+}
+
+// ── ACTIVITIES (Scheduled Tasks) ─────────────────────────────────────────
+
+export async function getActivitiesForContact(contactId: number) {
+    try {
+        const data = await erpFetch(`crm/activities/?contact=${contactId}&ordering=due_date`)
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch {
+        return []
+    }
+}
+
+export async function createActivity(data: Record<string, any>) {
+    try {
+        return await erpFetch('crm/activities/', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to create activity' }
+    }
+}
+
+export async function completeActivityById(id: number) {
+    try {
+        return await erpFetch(`crm/activities/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'DONE', completed_at: new Date().toISOString() }),
+        })
+    } catch (e: any) {
+        return { error: e?.message || 'Failed to complete activity' }
+    }
+}

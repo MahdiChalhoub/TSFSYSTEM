@@ -6,7 +6,9 @@ import { erpFetch } from '@/lib/erp-api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Eye } from 'lucide-react'
+import { TaxLinePreviewTable } from '@/components/finance/TaxLinePreviewTable'
+import { TaxExplanationDrawer } from '@/components/finance/TaxExplanationDrawer'
 
 export default function PurchaseOrdersDetailPage() {
   const router = useRouter()
@@ -15,6 +17,7 @@ export default function PurchaseOrdersDetailPage() {
 
   const [item, setItem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showTaxDrawer, setShowTaxDrawer] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -114,6 +117,7 @@ export default function PurchaseOrdersDetailPage() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="tax">Tax Analysis</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -139,6 +143,33 @@ export default function PurchaseOrdersDetailPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="tax">
+          <Card className="layout-card-radius theme-surface">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Tax Breakdown</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setShowTaxDrawer(true)}>
+                <Eye className="h-4 w-4 mr-2" /> Explain Taxes
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {item?.tax_lines && item.tax_lines.length > 0 ? (
+                <TaxLinePreviewTable
+                  taxLines={item.tax_lines}
+                  baseHT={item.base_ht || item.subtotal}
+                  totalTTC={item.total_ttc || item.total}
+                  apAmount={item.ap_amount}
+                  costOfficial={item.cost_official}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-app-muted-foreground text-sm">No tax lines on this order.</p>
+                  <p className="text-app-muted-foreground text-xs mt-1">Tax computation occurs when the order is finalized.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="activity">
           <Card className="layout-card-radius theme-surface">
             <CardHeader>
@@ -150,6 +181,30 @@ export default function PurchaseOrdersDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <TaxExplanationDrawer
+        open={showTaxDrawer}
+        onClose={() => setShowTaxDrawer(false)}
+        taxResult={item?.tax_lines ? {
+          base_ht: item.base_ht || item.subtotal || 0,
+          vat_amount: item.vat_amount || 0,
+          total_ttc: item.total_ttc || item.total || 0,
+          cost_official: item.cost_official || 0,
+          ap_amount: item.ap_amount,
+          airsi_amount: item.airsi_amount,
+          tax_lines: item.tax_lines,
+        } : undefined}
+        context={{
+          scope: item?.scope || 'OFFICIAL',
+          policyName: item?.tax_policy_name,
+          profileName: item?.counterparty_profile_name,
+          jurisdictionCode: item?.tax_jurisdiction_code,
+          originCountry: item?.origin_country,
+          destinationCountry: item?.destination_country,
+          isExport: item?.is_export,
+        }}
+      />
     </div>
   )
 }
+

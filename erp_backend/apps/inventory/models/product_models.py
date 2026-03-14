@@ -21,7 +21,7 @@ class Unit(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'unit'
         constraints = [
-            models.UniqueConstraint(fields=['code', 'tenant'], name='unique_unit_code_tenant')
+            models.UniqueConstraint(fields=['code', 'organization'], name='unique_unit_code_tenant')
         ]
 
     def __str__(self):
@@ -43,7 +43,7 @@ class Category(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'category'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_category_name_tenant')
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_category_name_tenant')
         ]
 
     def __str__(self):
@@ -81,7 +81,7 @@ class Brand(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'brand'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_brand_name_tenant')
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_brand_name_tenant')
         ]
 
     def __str__(self):
@@ -97,7 +97,7 @@ class Parfum(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'parfum'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_parfum_name_tenant')
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_parfum_name_tenant')
         ]
 
     def __str__(self):
@@ -193,11 +193,11 @@ class Product(AuditLogMixin, TenantOwnedModel):
         from erp.services import TaxService
 
         if not settings:
-            settings = ConfigurationService.get_global_settings(self.tenant)
+            settings = ConfigurationService.get_global_settings(self.organization)
         
         if not tax_ctx:
             # Refactored: Use universal TaxService instead of direct finance imports
-            tax_ctx = TaxService.get_engine_context(self.tenant, scope=scope)
+            tax_ctx = TaxService.get_engine_context(self.organization, scope=scope)
 
         # ── 0. Scope-Based Early Exit ──
         # If INTERNAL scope + TTC_ALWAYS mode, we forcedly return TTC if possible
@@ -224,7 +224,7 @@ class Product(AuditLogMixin, TenantOwnedModel):
             try:
                 from .advanced_models import StockValuationEntry
                 entry_qs = StockValuationEntry.objects.filter(
-                    tenant=self.tenant, 
+                    organization=self.organization, 
                     product=self,
                     movement_type='IN',
                     running_quantity__gt=0
@@ -291,7 +291,7 @@ class Product(AuditLogMixin, TenantOwnedModel):
 
         try:
             from erp.services import PurchaseService
-            last_pp = PurchaseService.get_last_purchase_price(self.tenant, self)
+            last_pp = PurchaseService.get_last_purchase_price(self.organization, self)
             if last_pp:
                 return last_pp
         except Exception:
@@ -308,7 +308,7 @@ class Product(AuditLogMixin, TenantOwnedModel):
         - MARKUP: (Revenue HT - Cost) / Cost                --> "Profit as % of Investment"
         """
         from erp.services import ConfigurationService
-        settings = ConfigurationService.get_global_settings(self.tenant)
+        settings = ConfigurationService.get_global_settings(self.organization)
         mode = settings.get('marginCalculationMode', 'MARGIN') # Default to Gross Margin
 
         cost = self.effective_cost
@@ -373,14 +373,14 @@ class Product(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'product'
         constraints = [
-            UniqueConstraint(fields=['sku', 'tenant'], name='unique_product_sku_per_tenant'),
-            UniqueConstraint(fields=['barcode', 'tenant'], name='unique_product_barcode_per_tenant', condition=Q(barcode__isnull=False)),
+            UniqueConstraint(fields=['sku', 'organization'], name='unique_product_sku_per_tenant'),
+            UniqueConstraint(fields=['barcode', 'organization'], name='unique_product_barcode_per_tenant', condition=Q(barcode__isnull=False)),
         ]
         indexes = [
             # Gap 10 — Performance Architecture: compound indexes for POS catalog patterns
-            models.Index(fields=['tenant', 'category', 'is_active'], name='product_tenant_cat_active_idx'),
-            models.Index(fields=['tenant', 'status'],                name='product_tenant_status_idx'),
-            models.Index(fields=['tenant', 'min_stock_level'],       name='product_tenant_minstk_idx'),
+            models.Index(fields=['organization', 'category', 'is_active'], name='product_tenant_cat_active_idx'),
+            models.Index(fields=['organization', 'status'],                name='product_tenant_status_idx'),
+            models.Index(fields=['organization', 'min_stock_level'],       name='product_tenant_minstk_idx'),
         ]
 
     def __str__(self):
@@ -394,7 +394,7 @@ class ProductAttribute(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'product_attribute'
         constraints = [
-            models.UniqueConstraint(fields=['name', 'tenant'], name='unique_attribute_name_tenant')
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_attribute_name_tenant')
         ]
 
     def __str__(self):
@@ -408,7 +408,7 @@ class ProductAttributeValue(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'product_attribute_value'
-        unique_together = ('attribute', 'value', 'tenant')
+        unique_together = ('attribute', 'value', 'organization')
 
     def __str__(self):
         return f"{self.attribute.name}: {self.value}"
@@ -428,7 +428,7 @@ class ProductVariant(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'product_variant'
         constraints = [
-            models.UniqueConstraint(fields=['sku', 'tenant'], name='unique_variant_sku_tenant')
+            models.UniqueConstraint(fields=['sku', 'organization'], name='unique_variant_sku_tenant')
         ]
 
 
@@ -441,7 +441,7 @@ class ComboComponent(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'combo_component'
-        unique_together = ('combo_product', 'component_product', 'tenant')
+        unique_together = ('combo_product', 'component_product', 'organization')
         ordering = ['sort_order']
 
 
@@ -484,8 +484,8 @@ class ProductPackaging(AuditLogMixin, TenantOwnedModel):
         db_table = 'product_packaging'
         ordering = ['level']
         constraints = [
-            models.UniqueConstraint(fields=['product', 'unit', 'tenant'], name='unique_packaging_per_unit'),
-            models.UniqueConstraint(fields=['barcode', 'tenant'], name='unique_packaging_barcode', condition=Q(barcode__isnull=False)),
+            models.UniqueConstraint(fields=['product', 'unit', 'organization'], name='unique_packaging_per_unit'),
+            models.UniqueConstraint(fields=['barcode', 'organization'], name='unique_packaging_barcode', condition=Q(barcode__isnull=False)),
         ]
 
     @property

@@ -60,9 +60,6 @@ class Order(TenantModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='orders', help_text='Branch/location where this order was made')
-    branch = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='branch_orders', limit_choices_to={'location_type': 'BRANCH'},
-        help_text='Auto-derived from site — do not set manually')
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -92,6 +89,25 @@ class Order(TenantModel):
     is_export = models.BooleanField(
         default=False,
         help_text='True = export sale → VAT rate overridden to 0'
+    )
+
+    # ── Destination-Based Tax Fields ──────────────────────────────────
+    destination_country = models.CharField(
+        max_length=3, null=True, blank=True,
+        help_text='ISO country code of delivery destination (null = same as org origin)'
+    )
+    destination_region = models.CharField(
+        max_length=50, null=True, blank=True,
+        help_text='State/province/region for sub-national taxes (e.g. CA, ON)'
+    )
+    tax_jurisdiction_code = models.CharField(
+        max_length=20, null=True, blank=True,
+        help_text='Resolved jurisdiction code (e.g. CI, US-CA, EU-DE) — read-only after calculation'
+    )
+    place_of_supply_mode = models.CharField(
+        max_length=20, default='ORIGIN',
+        choices=[('ORIGIN', 'Origin'), ('DESTINATION', 'Destination'), ('REVERSE_CHARGE', 'Reverse Charge')],
+        help_text='How tax jurisdiction was determined'
     )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
@@ -195,17 +211,3 @@ class PosTicket(TenantModel):
         unique_together = ('user', 'ticket_id')
     def __str__(self):
         return f"Ticket {self.name} ({self.user.username})"
-
-
-# ─── Auto-derive branch on Order ─────────────────────────────────────────────
-
-from django.db.models.signals import pre_save  # noqa: E402
-from django.dispatch import receiver  # noqa: E402
-
-
-@receiver(pre_save, sender=Order)
-def derive_order_branch(sender, instance, **kwargs):
-    """Stamp branch FK from the order's site (warehouse) parent chain."""
-    if instance.site:
-        site = instance.site
-        instance.branch = site.get_branch() if site.location_type != 'BRANCH' else site

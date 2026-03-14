@@ -9,6 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from erp.connector_registry import connector
+
 
 class ContactTypeConversionService:
     """
@@ -99,7 +101,7 @@ class ContactTypeConversionService:
                     'new_type': new_type,
                     'user_id': actor_user_id,
                     'contact_name': contact.name,
-                    'tenant_id': contact.tenant_id
+                    'organization_id': contact.organization_id
                 },
                 aggregate_type='crm.contact',
                 aggregate_id=contact.id
@@ -120,10 +122,15 @@ class ContactTypeConversionService:
         try:
             from erp.models import Organization
             from erp.services import ConfigurationService
-            from apps.finance.models import ChartOfAccount
-            from apps.finance.services import LedgerService
+            ChartOfAccount = connector.require('finance.accounts.get_model', org_id=0, source='crm')
+            LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='crm')
+            if not LedgerService:
+                raise ValueError('FINANCE module is required.')
+            if not ChartOfAccount or not LedgerService:
+                contact.finance_link_status = 'PENDING'
+                return {'status': 'PENDING', 'message': 'Finance module not available'}
 
-            org = Organization.objects.get(pk=contact.tenant_id)
+            org = Organization.objects.get(pk=contact.organization_id)
             mapping = contact.COA_MAPPING.get(contact.type)
             if not mapping:
                 return {'status': 'N_A', 'message': 'No COA mapping for this type'}
@@ -140,13 +147,13 @@ class ContactTypeConversionService:
                 return {'status': 'FAILED', 'message': 'No posting rule configured'}
 
             try:
-                parent = ChartOfAccount.objects.get(pk=parent_id, tenant=org)
+                parent = ChartOfAccount.objects.get(pk=parent_id, organization=org)
             except ChartOfAccount.DoesNotExist:
                 contact.finance_link_status = 'FAILED'
                 return {'status': 'FAILED', 'message': 'Parent account not found'}
 
             sub = LedgerService.get_or_create_sub_account(
-                tenant=org, parent=parent,
+                organization=org, parent=parent,
                 sub_name=contact.name, sub_type=sub_type,
             )
             contact.linked_account_id = sub.id
@@ -163,10 +170,14 @@ class ContactTypeConversionService:
         try:
             from erp.models import Organization
             from erp.services import ConfigurationService
-            from apps.finance.models import ChartOfAccount
-            from apps.finance.services import LedgerService
+            ChartOfAccount = connector.require('finance.accounts.get_model', org_id=0, source='crm')
+            LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='crm')
+            if not LedgerService:
+                raise ValueError('FINANCE module is required.')
+            if not ChartOfAccount or not LedgerService:
+                return {'status': 'PENDING', 'message': 'Finance module not available'}
 
-            org = Organization.objects.get(pk=contact.tenant_id)
+            org = Organization.objects.get(pk=contact.organization_id)
             posting_rules = ConfigurationService.get_posting_rules(org)
 
             # If was CUSTOMER, already has AR → create AP
@@ -176,9 +187,9 @@ class ContactTypeConversionService:
                     posting_rules.get('purchases', {}).get('payable')
                 )
                 if ap_parent_id:
-                    parent = ChartOfAccount.objects.get(pk=ap_parent_id, tenant=org)
+                    parent = ChartOfAccount.objects.get(pk=ap_parent_id, organization=org)
                     sub = LedgerService.get_or_create_sub_account(
-                        tenant=org, parent=parent,
+                        organization=org, parent=parent,
                         sub_name=contact.name, sub_type='PAYABLE',
                     )
                     contact.linked_payable_account_id = sub.id
@@ -191,9 +202,9 @@ class ContactTypeConversionService:
                     posting_rules.get('sales', {}).get('receivable')
                 )
                 if ar_parent_id:
-                    parent = ChartOfAccount.objects.get(pk=ar_parent_id, tenant=org)
+                    parent = ChartOfAccount.objects.get(pk=ar_parent_id, organization=org)
                     sub = LedgerService.get_or_create_sub_account(
-                        tenant=org, parent=parent,
+                        organization=org, parent=parent,
                         sub_name=contact.name, sub_type='RECEIVABLE',
                     )
                     # Swap: current linked_account_id is AP, new one is AR

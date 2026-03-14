@@ -16,10 +16,9 @@ class FinancialEventService:
     def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None, user=None, scope='OFFICIAL'):
         from apps.finance.models import FinancialEvent, FiscalPeriod
         from apps.finance.services.base_services import SequenceService
-        # Gated cross-module import
-        try:
-            from apps.crm.models import Contact
-        except ImportError:
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+        if not Contact:
             raise ValidationError("CRM module is required for financial events.")
         
         amount = Decimal(str(amount))

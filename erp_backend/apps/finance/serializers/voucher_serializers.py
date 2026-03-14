@@ -15,7 +15,7 @@ class VoucherSerializer(serializers.ModelSerializer):
             'financial_event', 'contact', 'journal_entry',
             'scope', 'status', 'is_locked', 
             'locked_by', 'locked_by_name', 'locked_at',
-            'created_at', 'updated_at', 'tenant',
+            'created_at', 'updated_at', 'organization',
         ]
-        read_only_fields = ['tenant', 'reference', 'status', 'is_locked', 
+        read_only_fields = ['organization', 'reference', 'status', 'is_locked', 
                             'locked_by', 'locked_at']

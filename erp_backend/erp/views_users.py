@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
+ - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 

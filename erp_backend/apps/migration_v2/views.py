@@ -66,7 +66,7 @@ class MigrationJobViewSet(viewsets.ModelViewSet):
         # Create job
         job = MigrationJob.objects.create(
             name=name,
-            target_organization=organization,
+            target_tenant=organization,
             coa_template_used=coa_template,
             status='DRAFT',
             created_by=request.user

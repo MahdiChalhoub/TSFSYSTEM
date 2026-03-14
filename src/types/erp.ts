@@ -967,6 +967,9 @@ export interface SaasOrganization {
     client_name?: string
     business_type_name?: string
     country?: string
+    base_country?: number | null        // FK to reference.Country
+    country_name?: string | null        // derived from base_country
+    country_iso2?: string | null        // derived from base_country
     modules?: Array<Record<string, unknown>>
     sites?: Array<Record<string, unknown>>
     subscription?: Record<string, unknown>
@@ -1288,6 +1291,85 @@ export interface Currency {
     code: string
     name: string
     symbol?: string
+    [key: string]: unknown
+}
+
+// ─── Reference Master Data (apps/reference) ────────────────────
+
+/** Global SaaS-level country from ref_countries */
+export interface RefCountry {
+    id: number
+    iso2: string
+    iso3: string
+    numeric_code?: string
+    name: string
+    official_name?: string
+    phone_code?: string
+    region?: string
+    subregion?: string
+    default_currency?: number | null
+    default_currency_code?: string | null
+    default_currency_symbol?: string | null
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+/** Global SaaS-level currency from ref_currencies */
+export interface RefCurrency {
+    id: number
+    code: string
+    numeric_code?: string
+    name: string
+    symbol?: string
+    minor_unit?: number
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+/** Country-currency mapping from ref_country_currency_map */
+export interface CountryCurrencyMap {
+    id: number
+    country: number
+    currency: number
+    country_iso2?: string
+    country_name?: string
+    currency_code?: string
+    currency_name?: string
+    is_primary?: boolean
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+/** Org-scoped country activation from ref_org_countries */
+export interface OrgCountry {
+    id: number
+    country: number
+    is_enabled: boolean
+    is_default: boolean
+    display_order?: number
+    country_iso2?: string
+    country_iso3?: string
+    country_name?: string
+    country_phone_code?: string
+    country_region?: string
+    default_currency_code?: string | null
+    [key: string]: unknown
+}
+
+/** Org-scoped currency activation from ref_org_currencies */
+export interface OrgCurrency {
+    id: number
+    currency: number
+    is_enabled: boolean
+    is_default: boolean
+    display_order?: number
+    exchange_rate_source?: string
+    is_reporting_currency?: boolean
+    is_transaction_currency?: boolean
+    currency_code?: string
+    currency_name?: string
+    currency_symbol?: string
+    currency_minor_unit?: number
     [key: string]: unknown
 }
 

@@ -16,6 +16,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Connector Governance Layer
+from erp.connector_registry import connector
+
 
 class ProcurementAnalyticsService:
     """Stateless analytics — all methods are class/staticmethods."""
@@ -512,7 +515,9 @@ class ProcurementAnalyticsService:
         """
         Predictive analysis of stock-at-risk due to expiration.
         """
-        from apps.inventory.models import Inventory
+        Inventory = connector.require('inventory.inventory.get_model', org_id=0, source='pos')
+        if not Inventory:
+            return {'risk_7d': {'items': 0, 'quantity': 0, 'value': 0}, 'risk_30d': {'items': 0, 'quantity': 0, 'value': 0}, 'total_stock_at_risk_value': 0}
         today = timezone.now().date()
         
         # 7-day risk
@@ -558,7 +563,12 @@ class ProcurementAnalyticsService:
         """
         Consolidated Inventory Health & Quality Overview.
         """
-        from apps.inventory.models import Inventory, Warehouse
+        Inventory = connector.require('inventory.inventory.get_model', org_id=0, source='pos')
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='pos')
+        if not Warehouse:
+            raise ValueError('INVENTORY module is required.')
+        if not Inventory or not Warehouse:
+            return {'overstock_value': 0, 'understock_risk_value': 0, 'health_index': 0}
         
         # 1. Overstock & Understock (Value)
         # Overstock: qty > max_stock

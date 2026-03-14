@@ -2,14 +2,13 @@
 'use client'
 
 /**
- * MCP Tools - Configuration Page
- * ===============================
- * Define and manage tools that AI can use.
+ * MCP Tools — V2 Dajingo Pro Redesign
+ * ====================================
+ * Premium tool registry with grouped categories,
+ * HTTP method badges, and professional management.
  */
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -17,23 +16,16 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+    Dialog, DialogContent, DialogDescription, DialogHeader,
+    DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-    ArrowLeft, Plus, Trash2, Edit2, RefreshCw, Save, Wand2,
-    Wrench, Database, ShoppingCart, DollarSign, Users, Box
+    Plus, Trash2, Edit2, RefreshCw, Save, Wand2,
+    Wrench, Database, ShoppingCart, DollarSign, Users, Box,
+    Code, Terminal, Shield, Search
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -56,27 +48,24 @@ interface Tool {
 }
 
 const CATEGORIES = [
-    { value: 'inventory', label: 'Inventory', icon: Box },
-    { value: 'finance', label: 'Finance', icon: DollarSign },
-    { value: 'pos', label: 'Point of Sale', icon: ShoppingCart },
-    { value: 'crm', label: 'CRM', icon: Users },
-    { value: 'hr', label: 'Human Resources', icon: Users },
-    { value: 'system', label: 'System', icon: Database },
-    { value: 'custom', label: 'Custom', icon: Wrench },
+    { value: 'inventory', label: 'Inventory', icon: Box, color: '#6366F1' },
+    { value: 'finance', label: 'Finance', icon: DollarSign, color: '#10B981' },
+    { value: 'pos', label: 'Point of Sale', icon: ShoppingCart, color: '#F59E0B' },
+    { value: 'crm', label: 'CRM', icon: Users, color: '#3B82F6' },
+    { value: 'hr', label: 'Human Resources', icon: Users, color: '#EC4899' },
+    { value: 'system', label: 'System', icon: Database, color: '#8B5CF6' },
+    { value: 'custom', label: 'Custom', icon: Wrench, color: '#6B7280' },
 ]
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+const METHOD_COLORS: Record<string, string> = {
+    GET: '#10B981', POST: '#3B82F6', PUT: '#F59E0B', PATCH: '#8B5CF6', DELETE: '#EF4444',
+}
 
 const emptyTool = {
-    name: '',
-    description: '',
-    category: 'custom',
-    internal_endpoint: '',
-    http_method: 'GET',
-    parameters_schema: {},
-    required_permissions: [],
-    is_active: true,
-    requires_confirmation: false
+    name: '', description: '', category: 'custom', internal_endpoint: '',
+    http_method: 'GET', parameters_schema: {}, required_permissions: [],
+    is_active: true, requires_confirmation: false
 }
 
 export default function MCPToolsPage() {
@@ -90,10 +79,9 @@ export default function MCPToolsPage() {
     const [generating, setGenerating] = useState(false)
     const [deleteToolId, setDeleteToolId] = useState<number | null>(null)
     const [showRegisterDefaults, setShowRegisterDefaults] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
-    useEffect(() => {
-        loadData()
-    }, [])
+    useEffect(() => { loadData() }, [])
 
     async function loadData() {
         setLoading(true)
@@ -110,15 +98,10 @@ export default function MCPToolsPage() {
     function handleEdit(tool: Tool) {
         setEditingTool(tool)
         setFormData({
-            name: tool.name,
-            description: tool.description,
-            category: tool.category,
-            internal_endpoint: tool.internal_endpoint,
-            http_method: tool.http_method,
-            parameters_schema: tool.parameters_schema,
-            required_permissions: tool.required_permissions,
-            is_active: tool.is_active,
-            requires_confirmation: tool.requires_confirmation
+            name: tool.name, description: tool.description, category: tool.category,
+            internal_endpoint: tool.internal_endpoint, http_method: tool.http_method,
+            parameters_schema: tool.parameters_schema, required_permissions: tool.required_permissions,
+            is_active: tool.is_active, requires_confirmation: tool.requires_confirmation
         })
         setSchemaText(JSON.stringify(tool.parameters_schema, null, 2))
         setIsDialogOpen(true)
@@ -136,20 +119,11 @@ export default function MCPToolsPage() {
             toast.error('Name and endpoint are required')
             return
         }
-
-        // Parse schema
         let schema = {}
-        try {
-            schema = JSON.parse(schemaText)
-        } catch {
-            toast.error('Invalid JSON schema')
-            return
-        }
-
+        try { schema = JSON.parse(schemaText) } catch { toast.error('Invalid JSON schema'); return }
         setSaving(true)
         try {
             const data = { ...formData, parameters_schema: schema }
-
             if (editingTool) {
                 const res = await updateMCPTool(editingTool.id, data)
                 if (!res.success) throw new Error(res.error)
@@ -168,10 +142,6 @@ export default function MCPToolsPage() {
         }
     }
 
-    async function handleDelete(id: number) {
-        setDeleteToolId(id)
-    }
-
     async function confirmDelete() {
         if (deleteToolId === null) return
         try {
@@ -183,10 +153,6 @@ export default function MCPToolsPage() {
             toast.error((e instanceof Error ? e.message : String(e)))
         }
         setDeleteToolId(null)
-    }
-
-    async function handleRegisterDefaults() {
-        setShowRegisterDefaults(true)
     }
 
     async function confirmRegisterDefaults() {
@@ -204,279 +170,317 @@ export default function MCPToolsPage() {
         }
     }
 
-    const getCategoryIcon = (category: string) => {
-        const cat = CATEGORIES.find(c => c.value === category)
-        const Icon = cat?.icon || Wrench
-        return <Icon size={16} />
-    }
-
-    const getCategoryLabel = (category: string) => {
-        return CATEGORIES.find(c => c.value === category)?.label || category
-    }
+    const getCategoryMeta = (category: string) => CATEGORIES.find(c => c.value === category) || CATEGORIES[6]
+    const activeCount = tools.filter(t => t.is_active).length
+    const filteredTools = tools.filter(t =>
+        !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-                <div>
-                    <Link href="/mcp" className="text-app-text-faint hover:text-app-text-muted flex items-center gap-2 mb-4 text-sm font-medium">
-                        <ArrowLeft size={16} />
-                        Back to MCP Dashboard
-                    </Link>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 rounded-2xl bg-blue-100 text-blue-600">
-                            <Wrench size={28} />
+            {/* ── Page Header ──────────────────────────────────────── */}
+            <div
+                className="rounded-[28px] p-6 md:p-8"
+                style={{
+                    background: 'linear-gradient(135deg, var(--app-surface) 0%, var(--app-surface-2) 100%)',
+                    border: '1px solid var(--app-border)',
+                    boxShadow: 'var(--app-shadow-lg)',
+                }}
+            >
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div className="flex items-center gap-4">
+                        <div
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                            style={{
+                                background: 'linear-gradient(135deg, var(--app-primary), var(--app-primary-hover))',
+                                boxShadow: '0 8px 24px var(--app-primary-glow)',
+                            }}
+                        >
+                            <Terminal className="w-7 h-7 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                                Tool Registry
+                            </h1>
+                            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                                {tools.length} tool{tools.length !== 1 ? 's' : ''} registered
+                                {activeCount > 0 && <> · <span style={{ color: 'var(--app-success)' }}>{activeCount} active</span></>}
+                            </p>
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-app-text tracking-tight">MCP Tools</h2>
-                    <p className="text-app-text-faint mt-2 font-medium">
-                        {tools.length} tool{tools.length !== 1 ? 's' : ''} available to AI
-                    </p>
+                    <div className="flex gap-3 flex-wrap">
+                        <Button
+                            onClick={() => setShowRegisterDefaults(true)}
+                            disabled={generating || loading}
+                            variant="outline"
+                            className="rounded-xl px-4 h-11 font-bold"
+                            style={{ borderColor: 'var(--app-warning)', color: 'var(--app-warning)' }}
+                        >
+                            <Wand2 size={16} className={`mr-2 ${generating ? 'animate-spin' : ''}`} />
+                            {generating ? 'Registering...' : 'Register Defaults'}
+                        </Button>
+                        <Button
+                            onClick={loadData} disabled={loading} variant="outline"
+                            className="rounded-xl px-4 h-11 font-bold"
+                            style={{ borderColor: 'var(--app-border)' }}
+                        >
+                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        </Button>
+                        <Button
+                            onClick={handleNew}
+                            className="rounded-xl px-5 h-11 font-bold text-white"
+                            style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px var(--app-primary-glow)' }}
+                        >
+                            <Plus size={16} className="mr-2" />
+                            Add Tool
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex gap-3 flex-wrap">
-                    <Button
-                        onClick={handleRegisterDefaults}
-                        disabled={generating || loading}
-                        variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
-                    >
-                        <Wand2 size={18} className={generating ? 'animate-spin' : ''} />
-                        {generating ? 'Registering...' : 'Register Defaults'}
-                    </Button>
-                    <Button
-                        onClick={loadData}
-                        disabled={loading}
-                        variant="outline"
-                        className="rounded-2xl px-6 py-5 font-bold"
-                    >
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    </Button>
-                    <Button
-                        onClick={handleNew}
-                        className="rounded-2xl px-6 py-5 font-bold bg-blue-600 hover:bg-blue-500"
-                    >
-                        <Plus size={18} />
-                        Add Tool
-                    </Button>
+
+                {/* Quick Stats + Search */}
+                <div className="mt-6 flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-text-muted)' }} />
+                        <Input
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search tools..."
+                            className="pl-10 rounded-xl h-10"
+                            style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text)' }}
+                        />
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                        {CATEGORIES.filter(c => tools.some(t => t.category === c.value)).map(cat => {
+                            const count = tools.filter(t => t.category === cat.value).length
+                            return (
+                                <div
+                                    key={cat.value}
+                                    className="rounded-lg px-3 py-1.5 flex items-center gap-1.5"
+                                    style={{ background: `${cat.color}12`, border: `1px solid ${cat.color}30` }}
+                                >
+                                    <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+                                    <span className="text-[11px] font-bold" style={{ color: cat.color }}>{cat.label}</span>
+                                    <span className="text-[10px] font-black ml-0.5" style={{ color: cat.color }}>{count}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Tool Dialog */}
+            {/* ── Tool Dialog ──────────────────────────────────────── */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"
+                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
                     <DialogHeader>
-                        <DialogTitle>{editingTool ? 'Edit Tool' : 'Add MCP Tool'}</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle style={{ color: 'var(--app-text)' }}>
+                            {editingTool ? 'Edit Tool' : 'Add MCP Tool'}
+                        </DialogTitle>
+                        <DialogDescription style={{ color: 'var(--app-text-muted)' }}>
                             Define a tool that AI can use to interact with your system.
                         </DialogDescription>
                     </DialogHeader>
-
                     <div className="space-y-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Tool Name</Label>
-                                <Input
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="get_products"
-                                />
+                                <Label style={{ color: 'var(--app-text)' }}>Tool Name</Label>
+                                <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="get_products" className="rounded-xl"
+                                    style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text)' }} />
                             </div>
                             <div className="space-y-2">
-                                <Label>Category</Label>
-                                <Select
-                                    value={formData.category}
-                                    onValueChange={(v) => setFormData({ ...formData, category: v })}
-                                >
-                                    <SelectTrigger>
+                                <Label style={{ color: 'var(--app-text)' }}>Category</Label>
+                                <Select value={formData.category} onValueChange={v => setFormData({ ...formData, category: v })}>
+                                    <SelectTrigger className="rounded-xl" style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)' }}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {CATEGORIES.map((c) => (
-                                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                                        {CATEGORIES.map(c => (
+                                            <SelectItem key={c.value} value={c.value}>
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full" style={{ background: c.color }} />
+                                                    {c.label}
+                                                </span>
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
-
                         <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Textarea
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Get list of products from inventory"
-                                rows={2}
-                            />
+                            <Label style={{ color: 'var(--app-text)' }}>Description</Label>
+                            <Textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                placeholder="Get list of products from inventory" rows={2} className="rounded-xl"
+                                style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text)' }} />
                         </div>
-
                         <div className="grid grid-cols-3 gap-4">
                             <div className="col-span-2 space-y-2">
-                                <Label>Internal Endpoint</Label>
-                                <Input
-                                    value={formData.internal_endpoint}
-                                    onChange={(e) => setFormData({ ...formData, internal_endpoint: e.target.value })}
-                                    placeholder="inventory/products/"
-                                />
+                                <Label style={{ color: 'var(--app-text)' }}>Internal Endpoint</Label>
+                                <Input value={formData.internal_endpoint}
+                                    onChange={e => setFormData({ ...formData, internal_endpoint: e.target.value })}
+                                    placeholder="inventory/products/" className="rounded-xl font-mono text-sm"
+                                    style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text)' }} />
                             </div>
                             <div className="space-y-2">
-                                <Label>HTTP Method</Label>
-                                <Select
-                                    value={formData.http_method}
-                                    onValueChange={(v) => setFormData({ ...formData, http_method: v })}
-                                >
-                                    <SelectTrigger>
+                                <Label style={{ color: 'var(--app-text)' }}>Method</Label>
+                                <Select value={formData.http_method} onValueChange={v => setFormData({ ...formData, http_method: v })}>
+                                    <SelectTrigger className="rounded-xl" style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)' }}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {HTTP_METHODS.map((m) => (
-                                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                                        {HTTP_METHODS.map(m => (
+                                            <SelectItem key={m} value={m}>
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full" style={{ background: METHOD_COLORS[m] }} />
+                                                    {m}
+                                                </span>
+                                            </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
-
                         <div className="space-y-2">
-                            <Label>Parameters Schema (JSON)</Label>
-                            <Textarea
-                                value={schemaText}
-                                onChange={(e) => setSchemaText(e.target.value)}
-                                placeholder='{"type": "object", "properties": {...}}'
-                                rows={6}
-                                className="font-mono text-sm"
-                            />
+                            <Label style={{ color: 'var(--app-text)' }}>Parameters Schema (JSON)</Label>
+                            <Textarea value={schemaText} onChange={e => setSchemaText(e.target.value)}
+                                placeholder='{"type": "object", "properties": {...}}' rows={6}
+                                className="rounded-xl font-mono text-sm"
+                                style={{ background: 'var(--app-bg)', borderColor: 'var(--app-border)', color: 'var(--app-text)' }} />
                         </div>
-
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-app-bg">
+                        <div className="flex items-center justify-between p-4 rounded-xl"
+                            style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
                             <div>
-                                <p className="font-medium text-app-text">Requires Confirmation</p>
-                                <p className="text-sm text-app-text-faint">Ask user before executing</p>
+                                <p className="font-bold text-sm" style={{ color: 'var(--app-text)' }}>Requires Confirmation</p>
+                                <p className="text-xs" style={{ color: 'var(--app-text-muted)' }}>Ask user before executing</p>
                             </div>
-                            <Switch
-                                checked={formData.requires_confirmation}
-                                onCheckedChange={(v) => setFormData({ ...formData, requires_confirmation: v })}
-                            />
+                            <Switch checked={formData.requires_confirmation}
+                                onCheckedChange={v => setFormData({ ...formData, requires_confirmation: v })} />
                         </div>
                     </div>
-
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={saving} className="bg-blue-600 hover:bg-blue-500">
-                            <Save size={16} />
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                        <Button onClick={handleSave} disabled={saving} className="rounded-xl text-white"
+                            style={{ background: 'var(--app-primary)' }}>
+                            <Save size={16} className="mr-2" />
                             {saving ? 'Saving...' : 'Save Tool'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Tools Grid */}
+            {/* ── Tools Grid ───────────────────────────────────────── */}
             {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <RefreshCw className="w-8 h-8 animate-spin text-app-text-faint" />
+                    <div className="flex flex-col items-center gap-3">
+                        <RefreshCw className="w-8 h-8 animate-spin" style={{ color: 'var(--app-primary)' }} />
+                        <p className="text-sm font-medium" style={{ color: 'var(--app-text-muted)' }}>Loading tools...</p>
+                    </div>
                 </div>
-            ) : tools.length === 0 ? (
-                <Card className="rounded-3xl shadow-xl border-app-border">
-                    <CardContent className="p-0">
-                        <div className="text-center py-20 text-app-text-faint">
-                            <Wrench className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p className="font-medium">No tools configured</p>
-                            <p className="text-sm mt-1">Register default tools or create custom ones</p>
-                            <div className="flex gap-3 justify-center mt-4">
-                                <Button onClick={handleRegisterDefaults} className="bg-amber-500 hover:bg-amber-400">
-                                    <Wand2 size={16} />
-                                    Register Defaults
-                                </Button>
-                                <Button onClick={handleNew} variant="outline">
-                                    <Plus size={16} />
-                                    Add Custom Tool
-                                </Button>
-                            </div>
+            ) : filteredTools.length === 0 ? (
+                <div className="rounded-[28px] p-12 text-center"
+                    style={{ background: 'var(--app-surface)', border: '2px dashed var(--app-border)' }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                        style={{ background: 'var(--app-primary-light)' }}>
+                        <Terminal className="w-8 h-8" style={{ color: 'var(--app-primary)' }} />
+                    </div>
+                    <h3 className="text-xl font-black mb-2" style={{ color: 'var(--app-text)' }}>
+                        {searchQuery ? 'No Matching Tools' : 'No Tools Registered'}
+                    </h3>
+                    <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'var(--app-text-muted)' }}>
+                        {searchQuery ? 'Try a different search query.' : 'Register default tools or create custom ones to enable AI automation.'}
+                    </p>
+                    {!searchQuery && (
+                        <div className="flex gap-3 justify-center">
+                            <Button onClick={() => setShowRegisterDefaults(true)} className="rounded-xl px-6 h-11 font-bold text-white"
+                                style={{ background: 'var(--app-warning)' }}>
+                                <Wand2 size={16} className="mr-2" /> Register Defaults
+                            </Button>
+                            <Button onClick={handleNew} variant="outline" className="rounded-xl px-6 h-11 font-bold"
+                                style={{ borderColor: 'var(--app-border)' }}>
+                                <Plus size={16} className="mr-2" /> Add Custom
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    )}
+                </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {tools.map((tool) => (
-                        <Card key={tool.id} className="rounded-2xl shadow-lg border-app-border hover:shadow-xl transition-shadow">
-                            <CardContent className="p-5">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 rounded-lg bg-app-surface-2 text-app-text-muted">
-                                            {getCategoryIcon(tool.category)}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredTools.map(tool => {
+                        const meta = getCategoryMeta(tool.category)
+                        const methodColor = METHOD_COLORS[tool.http_method] || '#6B7280'
+                        return (
+                            <div
+                                key={tool.id}
+                                className="rounded-[20px] overflow-hidden transition-all duration-300 hover:translate-y-[-2px]"
+                                style={{
+                                    background: 'var(--app-surface)',
+                                    border: '1px solid var(--app-border)',
+                                    boxShadow: 'var(--app-shadow-md)',
+                                    opacity: tool.is_active ? 1 : 0.6,
+                                }}
+                            >
+                                <div className="h-1" style={{ background: meta.color }} />
+                                <div className="p-5">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                                                style={{ background: `${meta.color}15` }}>
+                                                <Code size={18} style={{ color: meta.color }} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-[14px] font-mono" style={{ color: 'var(--app-text)' }}>{tool.name}</h3>
+                                                <p className="text-[11px] font-medium" style={{ color: 'var(--app-text-muted)' }}>{meta.label}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-app-text">{tool.name}</h3>
-                                            <p className="text-xs text-app-text-faint">{getCategoryLabel(tool.category)}</p>
+                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md"
+                                            style={{ background: `${methodColor}15`, color: methodColor, border: `1px solid ${methodColor}30` }}>
+                                            {tool.http_method}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs line-clamp-2 mb-3" style={{ color: 'var(--app-text-muted)' }}>
+                                        {tool.description || 'No description'}
+                                    </p>
+                                    <div className="rounded-lg p-2 mb-3 font-mono text-[11px] truncate"
+                                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)', color: 'var(--app-text-muted)' }}>
+                                        {tool.internal_endpoint}
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex gap-1.5">
+                                            {!tool.is_active && (
+                                                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md"
+                                                    style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-muted)' }}>
+                                                    Inactive
+                                                </span>
+                                            )}
+                                            {tool.requires_confirmation && (
+                                                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-md"
+                                                    style={{ background: 'var(--app-warning-light)', color: 'var(--app-warning)' }}>
+                                                    <Shield size={9} className="inline mr-0.5" /> Confirm
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <Button size="sm" variant="ghost" onClick={() => handleEdit(tool)} className="rounded-lg h-8 px-2">
+                                                <Edit2 size={13} />
+                                            </Button>
+                                            <Button size="sm" variant="ghost" onClick={() => setDeleteToolId(tool.id)}
+                                                className="rounded-lg h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-500/10">
+                                                <Trash2 size={13} />
+                                            </Button>
                                         </div>
                                     </div>
-                                    <Badge variant="outline" className={`text-xs ${tool.http_method === 'GET' ? 'text-green-600 border-green-200' :
-                                        tool.http_method === 'POST' ? 'text-blue-600 border-blue-200' :
-                                            tool.http_method === 'DELETE' ? 'text-red-600 border-red-200' :
-                                                'text-amber-600 border-amber-200'
-                                        }`}>
-                                        {tool.http_method}
-                                    </Badge>
                                 </div>
-
-                                <p className="text-sm text-app-text-muted mb-3 line-clamp-2">
-                                    {tool.description}
-                                </p>
-
-                                <div className="p-2 rounded-lg bg-app-bg mb-3">
-                                    <code className="text-xs text-app-text-muted">{tool.internal_endpoint}</code>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="flex gap-1">
-                                        {!tool.is_active && (
-                                            <Badge variant="outline" className="text-xs text-app-text-faint">Inactive</Badge>
-                                        )}
-                                        {tool.requires_confirmation && (
-                                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-200">Confirm</Badge>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => handleEdit(tool)}
-                                        >
-                                            <Edit2 size={14} />
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => handleDelete(tool.id)}
-                                            className="text-red-500 hover:text-red-600"
-                                        >
-                                            <Trash2 size={14} />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                            </div>
+                        )
+                    })}
                 </div>
             )}
 
-            <ConfirmDialog
-                open={deleteToolId !== null}
-                onOpenChange={(open) => { if (!open) setDeleteToolId(null) }}
-                onConfirm={confirmDelete}
-                title="Delete Tool?"
-                description="This MCP tool will be permanently removed."
-                variant="danger"
-            />
-
-            <ConfirmDialog
-                open={showRegisterDefaults}
-                onOpenChange={setShowRegisterDefaults}
-                onConfirm={confirmRegisterDefaults}
-                title="Register Default Tools?"
-                description="This will register default tools for your organization."
-                confirmText="Register"
-                variant="warning"
-            />
+            <ConfirmDialog open={deleteToolId !== null} onOpenChange={open => { if (!open) setDeleteToolId(null) }}
+                onConfirm={confirmDelete} title="Delete Tool?" description="This MCP tool will be permanently removed." variant="danger" />
+            <ConfirmDialog open={showRegisterDefaults} onOpenChange={setShowRegisterDefaults}
+                onConfirm={confirmRegisterDefaults} title="Register Default Tools?"
+                description="This will register default tools for your organization." confirmText="Register" variant="warning" />
         </div>
     )
 }

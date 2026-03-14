@@ -21,7 +21,6 @@ import logging
 from datetime import date
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from apps.hr.models import Employee
 from apps.workforce.models import (
     EmployeeScoreSummary, EmployeeScorePeriod,
     EmployeeBadge, BadgeLevel
@@ -91,7 +90,7 @@ class Command(BaseCommand):
         # ── Resolve employees ─────────────────────────────────────────
         summary_qs = EmployeeScoreSummary.objects.select_related('employee', 'employee__user')
         if org_id:
-            summary_qs = summary_qs.filter(tenant_id=org_id)
+            summary_qs = summary_qs.filter(organization_id=org_id)
 
         created = skipped = errors = 0
 

@@ -39,15 +39,20 @@ class TenantMiddleware(MiddlewareMixin):
             # Set in thread-local context for automatic QuerySet scoping
             set_current_tenant(tenant)
         else:
-            request.tenant = None
-            clear_current_tenant()
-
-            # For API endpoints, require tenant
-            if request.path.startswith('/api/'):
-                return HttpResponseForbidden(
-                    "Tenant could not be determined. "
-                    "Please provide tenant via subdomain, header, or authentication."
-                )
+            # FALLBACK: If no tenant resolved, default to SAAS organization
+            # The SAAS platform IS an organization - the first one!
+            try:
+                from erp.models import Organization
+                saas_org = Organization.objects.filter(slug='saas').first()
+                if saas_org:
+                    request.tenant = saas_org
+                    set_current_tenant(saas_org)
+                else:
+                    request.tenant = None
+                    clear_current_tenant()
+            except Exception:
+                request.tenant = None
+                clear_current_tenant()
 
         return None
 

@@ -1,15 +1,17 @@
 """
 Tax Policy Views
 ================
-ViewSets for OrgTaxPolicy and CounterpartyTaxProfile.
+ViewSets for OrgTaxPolicy, CounterpartyTaxProfile, CustomTaxRule,
+and TaxJurisdictionRule.
 """
 from .base import (
     status, Response, action,
     TenantModelViewSet, get_current_tenant_id
 )
-from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile, CustomTaxRule
+from apps.finance.models import OrgTaxPolicy, CounterpartyTaxProfile, CustomTaxRule, TaxJurisdictionRule
 from apps.finance.serializers.tax_policy_serializers import (
-    OrgTaxPolicySerializer, CounterpartyTaxProfileSerializer, CustomTaxRuleSerializer
+    OrgTaxPolicySerializer, CounterpartyTaxProfileSerializer,
+    CustomTaxRuleSerializer, TaxJurisdictionRuleSerializer
 )
 from apps.finance.models.counterparty_tax_profile import (
     PRESET_ASSUJETTI, PRESET_NON_ASSUJETTI, PRESET_FOREIGN_B2B,
@@ -37,7 +39,7 @@ class OrgTaxPolicyViewSet(TenantModelViewSet):
         """Return the default tax policy for current org."""
         org_id = get_current_tenant_id()
         policy = OrgTaxPolicy.objects.filter(
-            tenant_id=org_id, is_default=True
+            organization_id=org_id, is_default=True
         ).first()
         if not policy:
             return Response({'detail': 'No default tax policy configured.'}, status=404)
@@ -53,7 +55,7 @@ class CounterpartyTaxProfileViewSet(TenantModelViewSet):
         org_id = get_current_tenant_id()
         from django.db.models import Q
         return CounterpartyTaxProfile.objects.filter(
-            Q(tenant_id=org_id) | Q(organization_id__isnull=True)
+            Q(organization_id=org_id) | Q(organization_id__isnull=True)
         )
 
     @action(detail=False, methods=['post'], url_path='seed-presets')
@@ -96,3 +98,48 @@ class CounterpartyTaxProfileViewSet(TenantModelViewSet):
 class CustomTaxRuleViewSet(TenantModelViewSet):
     queryset = CustomTaxRule.objects.all()
     serializer_class = CustomTaxRuleSerializer
+
+
+class TaxJurisdictionRuleViewSet(TenantModelViewSet):
+    queryset = TaxJurisdictionRule.objects.all()
+    serializer_class = TaxJurisdictionRuleSerializer
+
+    def get_queryset(self):
+        """Return org-specific rules + system presets."""
+        org_id = get_current_tenant_id()
+        from django.db.models import Q
+        return TaxJurisdictionRule.objects.filter(
+            Q(organization_id=org_id) | Q(is_system_preset=True)
+        )
+
+    @action(detail=False, methods=['post'], url_path='resolve')
+    def resolve_jurisdiction(self, request):
+        """
+        Preview jurisdiction resolution for given parameters.
+        POST body: {origin_country, destination_country, destination_region,
+                    counterparty_country, is_export, is_b2b, tax_type}
+        """
+        from apps.finance.services.jurisdiction_resolver_service import JurisdictionResolverService
+        from erp.models import Organization
+
+        org_id = get_current_tenant_id()
+        org = Organization.objects.get(id=org_id)
+
+        result = JurisdictionResolverService.resolve(
+            organization=org,
+            origin_country=request.data.get('origin_country', ''),
+            destination_country=request.data.get('destination_country', ''),
+            destination_region=request.data.get('destination_region', ''),
+            counterparty_country=request.data.get('counterparty_country', ''),
+            is_export=request.data.get('is_export', False),
+            is_b2b=request.data.get('is_b2b', False),
+            tax_type=request.data.get('tax_type', 'VAT'),
+        )
+
+        # Serialize Decimals
+        for k, v in result.items():
+            if hasattr(v, 'quantize'):
+                result[k] = str(v)
+
+        return Response(result)
+

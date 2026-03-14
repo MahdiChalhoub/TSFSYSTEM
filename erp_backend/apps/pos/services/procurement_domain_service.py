@@ -30,13 +30,7 @@ from django.core.exceptions import ValidationError
 logger = logging.getLogger(__name__)
 
 
-def _safe_import(path, name):
-    """Gated import to avoid hard cross-module dependency."""
-    try:
-        module = __import__(path, fromlist=[name])
-        return getattr(module, name)
-    except (ImportError, AttributeError):
-        return None
+from erp.connector_registry import connector
 
 
 class ProcurementDomainService:
@@ -233,7 +227,7 @@ class ProcurementDomainService:
                     'received_date':  now.date().isoformat(),
                     'is_on_time':     is_on_time,
                     'supplier':       str(po.supplier_name),
-                    'tenant_id':      po.organization_id,
+                    'organization_id':      po.organization_id,
                 }, aggregate_type='purchase_order', aggregate_id=po.id)
             except Exception:
                 pass  # WISE scoring must never block the transition
@@ -269,8 +263,8 @@ class ProcurementDomainService:
         """
         from apps.pos.models import PurchaseOrder, PurchaseOrderLine
 
-        GoodsReceipt = _safe_import('apps.inventory.models.goods_receipt_models', 'GoodsReceipt')
-        GoodsReceiptLine = _safe_import('apps.inventory.models.goods_receipt_models', 'GoodsReceiptLine')
+        GoodsReceipt = connector.require('inventory.goods_receipt.get_model', org_id=0, source='pos')
+        GoodsReceiptLine = connector.require('inventory.goods_receipt.get_line_model', org_id=0, source='pos')
 
         if not GoodsReceipt or not GoodsReceiptLine:
             raise ValidationError("GoodsReceipt models not available. Check inventory module.")
@@ -286,12 +280,14 @@ class ProcurementDomainService:
                     f"Expected: SENT, CONFIRMED, IN_TRANSIT, or PARTIALLY_RECEIVED."
                 )
 
-            Warehouse = _safe_import('apps.inventory.models', 'Warehouse')
+            Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='pos')
+            if not Warehouse:
+                raise ValidationError("Inventory module is required for receiving.")
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
 
             # Create GoodsReceipt header
             grn = GoodsReceipt(
-                tenant=organization,
+                organization=organization,
                 mode='PO_BASED',
                 status='IN_PROGRESS',
                 purchase_order=po,
@@ -320,9 +316,7 @@ class ProcurementDomainService:
                     continue
 
                 # Tolerance check
-                settings_service = _safe_import(
-                    'apps.finance.services.configuration_service', 'ConfigurationService'
-                )
+                from erp.services import ConfigurationService as settings_service
                 tolerance = Decimal('0.05')  # default 5%
                 if settings_service:
                     try:
@@ -344,7 +338,7 @@ class ProcurementDomainService:
 
                 # Create GRN line
                 grn_line = GoodsReceiptLine(
-                    tenant=organization,
+                    organization=organization,
                     receipt=grn,
                     product=po_line.product,
                     po_line=po_line,
@@ -372,8 +366,8 @@ class ProcurementDomainService:
 
                 # Update inventory (accepted qty only)
                 if qty_received > 0:
-                    StockService = _safe_import(
-                        'apps.inventory.services.stock_service', 'StockService'
+                    StockService = connector.require(
+                        'inventory.services.get_stock_service', org_id=0, source='pos'
                     )
                     if StockService:
                         StockService.receive_stock(
@@ -502,10 +496,8 @@ class ProcurementDomainService:
         Unified posting rules resolution.
         All procurement posting flows through this method.
         """
-        LedgerService = _safe_import('apps.finance.services.ledger_service', 'LedgerService')
-        ConfigurationService = _safe_import(
-            'apps.finance.services.configuration_service', 'ConfigurationService'
-        )
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
+        from erp.services import ConfigurationService
 
         if not LedgerService or not ConfigurationService:
             raise ValidationError("Finance module not available for ledger posting.")
@@ -516,10 +508,8 @@ class ProcurementDomainService:
     @staticmethod
     def _post_receipt_accrual(po, warehouse, total_value, grn_ref, scope, user):
         """Post receipt accrual entry: DR Inventory, CR GRNI (Reception Suspense)."""
-        LedgerService = _safe_import('apps.finance.services.ledger_service', 'LedgerService')
-        ConfigurationService = _safe_import(
-            'apps.finance.services.configuration_service', 'ConfigurationService'
-        )
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
+        from erp.services import ConfigurationService
 
         if not LedgerService or not ConfigurationService:
             logger.warning(f"Cannot post receipt accrual: Finance module unavailable")
@@ -668,7 +658,7 @@ class ProcurementDomainService:
             from kernel.lifecycle.models import ApprovalPolicy, ApprovalPolicyStep
 
             policy = ApprovalPolicy.objects.filter(
-                tenant=organization,
+                organization=organization,
                 txn_type='PURCHASE_ORDER',
             ).first()
 
@@ -733,12 +723,11 @@ class ProcurementDomainService:
         Fire-and-forget: never blocks the procurement operation.
         """
         try:
-            trigger = _safe_import('apps.workspace.signals', 'trigger_purchasing_event')
+            trigger = connector.require('workspace.events.trigger_purchasing', org_id=0, source='pos')
             if trigger:
                 trigger(
-                    organization=organization,
-                    event_type=event_type,
-                    context=context,
+                    org_id=organization.id, organization=organization, event=event_type,
+                    **context,
                 )
         except Exception as e:
             logger.warning(f"Event emission failed (non-blocking): {event_type} — {e}")

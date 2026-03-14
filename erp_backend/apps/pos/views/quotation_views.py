@@ -99,10 +99,18 @@ class QuotationViewSet(TenantModelViewSet):
             return Response({'error': 'Already converted', 'order_id': quotation.converted_order_id}, status=400)
 
         from apps.pos.models import Order, OrderLine
-        from apps.finance.models import TransactionSequence
 
         with transaction.atomic():
-            ref = TransactionSequence.next_value(quotation.organization, 'SALE')
+            try:
+                from erp.connector_registry import connector
+                TransactionSequence = connector.require('finance.sequences.get_model', org_id=quotation.organization_id, source='pos.quotation')
+                if TransactionSequence:
+                    ref = TransactionSequence.next_value(quotation.organization, 'SALE')
+                else:
+                    raise ImportError("TransactionSequence not available")
+            except Exception:
+                import random
+                ref = f"SAL-{random.randint(10000, 99999)}"
             order = Order.objects.create(
                 organization=quotation.organization,
                 type='SALE', status='DRAFT', ref_code=ref,

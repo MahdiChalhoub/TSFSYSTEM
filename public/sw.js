@@ -1,23 +1,25 @@
 /**
- * Service Worker for POS Offline Mode
- * ====================================
+ * Service Worker — TSFSYSTEM Enterprise PWA
+ * ==========================================
  * Strategies:
- *   - Static assets: Cache-first (JS, CSS, images, fonts)
- *   - API calls:     Network-first, fallback to IndexedDB cache
- *   - Navigation:    Network-first with offline fallback page
+ *   - Static assets (images, fonts):  Cache-first
+ *   - Next.js chunks:                 Network-first (content-hashed)
+ *   - API calls:                      Network-first, fallback to cache
+ *   - Navigation pages:               Network-first with offline fallback
+ *   - Background Sync:                Replay queued POS orders
  */
 
-const CACHE_NAME = 'pos-cache-v2';
+const CACHE_VERSION = 'tsf-v3';
 const STATIC_ASSETS = [
-    '/sales',
     '/manifest.json',
+    '/dashboard',
 ];
 
 // ── Install: Pre-cache critical assets ──────────────────────────
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Pre-caching static assets');
+        caches.open(CACHE_VERSION).then((cache) => {
+            console.log('[SW] Pre-caching critical assets');
             return cache.addAll(STATIC_ASSETS);
         })
     );
@@ -30,7 +32,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((keys) =>
             Promise.all(
                 keys
-                    .filter((key) => key !== CACHE_NAME)
+                    .filter((key) => key !== CACHE_VERSION)
                     .map((key) => caches.delete(key))
             )
         )
@@ -45,10 +47,10 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
-    // Skip cross-origin requests to prevent connect-src CSP blocking on images/CDN imports
+    // Skip cross-origin requests
     if (url.origin !== self.location.origin) return;
 
-    // Skip non-GET requests (POST orders etc. handled by sync queue)
+    // Skip non-GET requests (POST/PUT handled by sync queue)
     if (event.request.method !== 'GET') return;
 
     // API calls: network-first
@@ -57,9 +59,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Next.js static chunks: network-first (content-hashed, never stale)
+    // Next.js static chunks: cache-first (content-hashed filenames)
     if (url.pathname.startsWith('/_next/static/')) {
-        event.respondWith(networkFirst(event.request));
+        event.respondWith(cacheFirst(event.request));
         return;
     }
 
@@ -90,13 +92,17 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SYNC_NOW') {
         syncPendingOrders().then((result) => {
-            // Notify all clients of sync result
             self.clients.matchAll().then((clients) => {
                 clients.forEach((client) => {
                     client.postMessage({ type: 'SYNC_COMPLETE', ...result });
                 });
             });
         });
+    }
+
+    // Force update when requested
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
     }
 });
 
@@ -109,7 +115,7 @@ async function cacheFirst(request) {
     try {
         const response = await fetch(request);
         if (response.ok) {
-            const cache = await caches.open(CACHE_NAME);
+            const cache = await caches.open(CACHE_VERSION);
             cache.put(request, response.clone());
         }
         return response;
@@ -122,13 +128,20 @@ async function networkFirst(request) {
     try {
         const response = await fetch(request);
         if (response.ok) {
-            const cache = await caches.open(CACHE_NAME);
+            const cache = await caches.open(CACHE_VERSION);
             cache.put(request, response.clone());
         }
         return response;
     } catch {
         const cached = await caches.match(request);
         if (cached) return cached;
+        // For navigation, return a basic offline page
+        if (request.mode === 'navigate') {
+            return new Response(
+                `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline — TSFSYSTEM</title><style>body{font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#09090B;color:#F1F5F9;text-align:center}h1{font-size:1.5rem;margin-bottom:0.5rem}p{color:#94A3B8}button{margin-top:1rem;padding:0.75rem 1.5rem;background:#10B981;color:white;border:none;border-radius:0.75rem;font-weight:700;cursor:pointer}</style></head><body><div><h1>You're Offline</h1><p>Check your connection and try again.</p><button onclick="location.reload()">Retry</button></div></body></html>`,
+                { status: 503, headers: { 'Content-Type': 'text/html' } }
+            );
+        }
         return new Response(JSON.stringify({ offline: true, error: 'No network' }), {
             status: 503,
             headers: { 'Content-Type': 'application/json' },
@@ -137,14 +150,12 @@ async function networkFirst(request) {
 }
 
 function isStaticAsset(pathname) {
-    // Exclude /_next/static/ — handled separately with network-first above
-    return /\.(css|png|jpg|jpeg|webp|svg|woff2?|ttf|ico)$/.test(pathname);
+    return /\.(css|png|jpg|jpeg|webp|svg|woff2?|ttf|ico|mp3|wav)$/.test(pathname);
 }
 
 // ── Sync Logic ──────────────────────────────────────────────────
 
 async function syncPendingOrders() {
-    // Open IndexedDB to get pending orders
     const dbRequest = indexedDB.open('pos-offline-db', 1);
 
     return new Promise((resolve) => {
@@ -177,7 +188,6 @@ async function syncPendingOrders() {
                         });
 
                         if (response.ok) {
-                            // Delete from pending queue
                             const delTx = db.transaction('pendingOrders', 'readwrite');
                             delTx.objectStore('pendingOrders').delete(order.id);
                             synced++;

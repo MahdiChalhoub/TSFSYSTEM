@@ -145,6 +145,38 @@ class OrgTaxPolicy(TenantModel):
         )
     )
 
+    # ── Tax Account Links (centralized GL resolution) ─────────────────
+    # These FK fields make the Tax Engine the single source of truth
+    # for tax-related GL accounts, replacing standalone posting rules.
+    vat_collected_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_vat_collected',
+        help_text='Output VAT liability on sales invoices (TVA Collectée)')
+    vat_recoverable_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_vat_recoverable',
+        help_text='Input VAT asset on purchases (TVA Récupérable)')
+    vat_payable_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_vat_payable',
+        help_text='Net VAT due clearing account for settlement')
+    vat_refund_receivable_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_vat_refund',
+        help_text='VAT credit receivable when input > output')
+    vat_suspense_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_vat_suspense',
+        help_text='VAT suspense for cash-basis accounting')
+    airsi_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_airsi',
+        help_text='AIRSI withholding: LIABILITY if non-refundable, ASSET if RECOVER')
+    reverse_charge_account = models.ForeignKey(
+        'ChartOfAccount', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='tax_policy_reverse_charge',
+        help_text='Reverse charge / autoliquidation VAT account')
+
     # ── Audit ─────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)

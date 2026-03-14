@@ -10,12 +10,10 @@ from erp.middleware import get_current_tenant_id
 from erp.models import Organization, User
 from erp.views import TenantModelViewSet, UDLEViewSetMixin
 
-# Gated cross-module imports
-try:
-    from apps.inventory.models import Warehouse, Product
-except ImportError:
-    Warehouse = None
-    Product = None
+# Connector Governance Layer
+from erp.connector_registry import connector
+Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='pos')
+Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
 
 try:
     from apps.pos.services import PDFService

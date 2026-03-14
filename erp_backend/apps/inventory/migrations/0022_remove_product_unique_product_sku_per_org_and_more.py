@@ -98,7 +98,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='combocomponent',
-            unique_together={('combo_product', 'component_product', 'tenant')},
+            unique_together={('combo_product', 'component_product', 'organization')},
         ),
         migrations.RemoveField(
             model_name='cyclecountpolicy',
@@ -110,7 +110,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='inventory',
-            unique_together={('warehouse', 'product', 'variant', 'tenant')},
+            unique_together={('warehouse', 'product', 'variant', 'organization')},
         ),
         migrations.RemoveField(
             model_name='inventorymovement',
@@ -130,11 +130,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='productattributevalue',
-            unique_together={('attribute', 'value', 'tenant')},
+            unique_together={('attribute', 'value', 'organization')},
         ),
         migrations.AlterUniqueTogether(
             name='productbatch',
-            unique_together={('batch_number', 'product', 'tenant')},
+            unique_together={('batch_number', 'product', 'organization')},
         ),
         migrations.RemoveField(
             model_name='productlocation',
@@ -146,7 +146,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='productserial',
-            unique_together={('serial_number', 'product', 'tenant')},
+            unique_together={('serial_number', 'product', 'organization')},
         ),
         migrations.RemoveField(
             model_name='productvariant',
@@ -170,7 +170,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='warehouse',
-            unique_together={('code', 'tenant')},
+            unique_together={('code', 'organization')},
         ),
         migrations.RemoveField(
             model_name='warehouseaisle',
@@ -190,212 +190,212 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='warehousezone',
-            unique_together={('warehouse', 'code', 'tenant')},
+            unique_together={('warehouse', 'code', 'organization')},
         ),
         migrations.AddField(
             model_name='combocomponent',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='cyclecountpolicy',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='expiryalert',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='inventory',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='inventorymovement',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='inventorysession',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='inventorysessionline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='product',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productattribute',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productattributevalue',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productbatch',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productlocation',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productpackaging',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productserial',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='productvariant',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='seriallog',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stockalert',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stockledger',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='stockvaluationentry',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehouse',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehouseaisle',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehousebin',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehouserack',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehouseshelf',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='warehousezone',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddIndex(
             model_name='cyclecountpolicy',
-            index=models.Index(fields=['tenant', 'classification', 'is_active'], name='cycle_count_tenant__9d8842_idx'),
+            index=models.Index(fields=['organization', 'classification', 'is_active'], name='cycle_count_organization__9d8842_idx'),
         ),
         migrations.AddIndex(
             model_name='inventory',
-            index=models.Index(fields=['tenant', 'branch'], name='inv_tenant_branch_idx'),
+            index=models.Index(fields=['organization', 'branch'], name='inv_organization_branch_idx'),
         ),
         migrations.AddIndex(
             model_name='inventorymovement',
-            index=models.Index(fields=['tenant', 'branch'], name='invmov_tenant_branch_idx'),
+            index=models.Index(fields=['organization', 'branch'], name='invmov_organization_branch_idx'),
         ),
         migrations.AddIndex(
             model_name='product',
-            index=models.Index(fields=['tenant', 'category', 'is_active'], name='product_tenant_cat_active_idx'),
+            index=models.Index(fields=['organization', 'category', 'is_active'], name='product_organization_cat_active_idx'),
         ),
         migrations.AddIndex(
             model_name='product',
-            index=models.Index(fields=['tenant', 'status'], name='product_tenant_status_idx'),
+            index=models.Index(fields=['organization', 'status'], name='product_organization_status_idx'),
         ),
         migrations.AddIndex(
             model_name='product',
-            index=models.Index(fields=['tenant', 'min_stock_level'], name='product_tenant_minstk_idx'),
+            index=models.Index(fields=['organization', 'min_stock_level'], name='product_organization_minstk_idx'),
         ),
         migrations.AddIndex(
             model_name='productserial',
-            index=models.Index(fields=['tenant', 'serial_number'], name='product_ser_tenant__94fbb8_idx'),
+            index=models.Index(fields=['organization', 'serial_number'], name='product_ser_organization__94fbb8_idx'),
         ),
         migrations.AddIndex(
             model_name='productserial',
-            index=models.Index(fields=['tenant', 'product', 'status'], name='product_ser_tenant__af6f16_idx'),
+            index=models.Index(fields=['organization', 'product', 'status'], name='product_ser_organization__af6f16_idx'),
         ),
         migrations.AddIndex(
             model_name='productserial',
-            index=models.Index(fields=['tenant', 'warehouse', 'status'], name='product_ser_tenant__e199ef_idx'),
+            index=models.Index(fields=['organization', 'warehouse', 'status'], name='product_ser_organization__e199ef_idx'),
         ),
         migrations.AddIndex(
             model_name='stockalert',
-            index=models.Index(fields=['tenant', 'status'], name='stock_alert_tenant__0e1ee9_idx'),
+            index=models.Index(fields=['organization', 'status'], name='stock_alert_organization__0e1ee9_idx'),
         ),
         migrations.AddIndex(
             model_name='stockalert',
-            index=models.Index(fields=['tenant', 'alert_type'], name='stock_alert_tenant__d0b067_idx'),
+            index=models.Index(fields=['organization', 'alert_type'], name='stock_alert_organization__d0b067_idx'),
         ),
         migrations.AddIndex(
             model_name='stockalert',
-            index=models.Index(fields=['tenant', 'product'], name='stock_alert_tenant__6e5562_idx'),
+            index=models.Index(fields=['organization', 'product'], name='stock_alert_organization__6e5562_idx'),
         ),
         migrations.AddIndex(
             model_name='stockledger',
-            index=models.Index(fields=['tenant', 'product', 'warehouse', 'created_at'], name='stock_ledge_tenant__a4d0a5_idx'),
+            index=models.Index(fields=['organization', 'product', 'warehouse', 'created_at'], name='stock_ledge_organization__a4d0a5_idx'),
         ),
         migrations.AddIndex(
             model_name='stockvaluationentry',
-            index=models.Index(fields=['tenant', 'product', 'warehouse', 'movement_date'], name='stock_valua_tenant__9b19ac_idx'),
+            index=models.Index(fields=['organization', 'product', 'warehouse', 'movement_date'], name='stock_valua_organization__9b19ac_idx'),
         ),
         migrations.AddConstraint(
             model_name='product',
-            constraint=models.UniqueConstraint(fields=('sku', 'tenant'), name='unique_product_sku_per_tenant'),
+            constraint=models.UniqueConstraint(fields=('sku', 'organization'), name='unique_product_sku_per_tenant'),
         ),
         migrations.AddConstraint(
             model_name='product',
-            constraint=models.UniqueConstraint(condition=models.Q(('barcode__isnull', False)), fields=('barcode', 'tenant'), name='unique_product_barcode_per_tenant'),
+            constraint=models.UniqueConstraint(condition=models.Q(('barcode__isnull', False)), fields=('barcode', 'organization'), name='unique_product_barcode_per_tenant'),
         ),
         migrations.AddConstraint(
             model_name='productattribute',
-            constraint=models.UniqueConstraint(fields=('name', 'tenant'), name='unique_attribute_name_tenant'),
+            constraint=models.UniqueConstraint(fields=('name', 'organization'), name='unique_attribute_name_tenant'),
         ),
         migrations.AddConstraint(
             model_name='productpackaging',
-            constraint=models.UniqueConstraint(fields=('product', 'unit', 'tenant'), name='unique_packaging_per_unit'),
+            constraint=models.UniqueConstraint(fields=('product', 'unit', 'organization'), name='unique_packaging_per_unit'),
         ),
         migrations.AddConstraint(
             model_name='productpackaging',
-            constraint=models.UniqueConstraint(condition=models.Q(('barcode__isnull', False)), fields=('barcode', 'tenant'), name='unique_packaging_barcode'),
+            constraint=models.UniqueConstraint(condition=models.Q(('barcode__isnull', False)), fields=('barcode', 'organization'), name='unique_packaging_barcode'),
         ),
         migrations.AddConstraint(
             model_name='productvariant',
-            constraint=models.UniqueConstraint(fields=('sku', 'tenant'), name='unique_variant_sku_tenant'),
+            constraint=models.UniqueConstraint(fields=('sku', 'organization'), name='unique_variant_sku_tenant'),
         ),
         migrations.RemoveField(
             model_name='combocomponent',

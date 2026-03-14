@@ -67,7 +67,10 @@ class VoucherService:
                 debit_acc = dst.ledger_account_id
                 # Credit the contact's/event's source
                 if voucher.contact_id:
-                    from apps.crm.models import Contact
+                    from erp.connector_registry import connector
+                    Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+                    if not Contact:
+                        raise ValueError('CRM module is required.')
                     contact = Contact.objects.get(id=voucher.contact_id, organization=organization)
                     credit_acc = getattr(contact, 'linked_account_id', None)
                 desc = f"Receipt: {desc}"
@@ -76,7 +79,10 @@ class VoucherService:
                 src = FinancialAccount.objects.get(id=voucher.source_account_id, organization=organization)
                 credit_acc = src.ledger_account_id
                 if voucher.contact_id:
-                    from apps.crm.models import Contact
+                    from erp.connector_registry import connector
+                    Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+                    if not Contact:
+                        raise ValueError('CRM module is required.')
                     contact = Contact.objects.get(id=voucher.contact_id, organization=organization)
                     debit_acc = getattr(contact, 'linked_account_id', None)
                 desc = f"Payment: {desc}"

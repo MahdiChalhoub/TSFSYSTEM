@@ -57,14 +57,19 @@ class RegisterOrderMixin:
         ).aggregate(ret_count=Count('id'))
         # (Allow partial returns — no blocking here, just info)
 
-        from apps.inventory.models import Product, Inventory
+        from erp.connector_registry import connector
+        Product = connector.require('inventory.products.get_model', org_id=org_id, source='pos.register_order')
+        Inventory = connector.require('inventory.inventory.get_model', org_id=org_id, source='pos.register_order')
         from decimal import Decimal as D
 
         with transaction.atomic():
             # Gapless return sequence
             try:
-                from apps.finance.services import SequenceService, LedgerService
-                ret_num = SequenceService.get_next_number(organization, 'RETURN_OFFICIAL')
+                SequenceService = connector.require('finance.services.get_sequence_service', org_id=org_id, source='pos.register_order')
+                if SequenceService:
+                    ret_num = SequenceService.get_next_number(organization, 'RETURN_OFFICIAL')
+                else:
+                    raise ImportError("SequenceService not available")
             except Exception:
                 import random
                 ret_num = f"RET-{random.randint(10000, 99999)}"
@@ -143,7 +148,7 @@ class RegisterOrderMixin:
 
         try:
             order = Order.objects.select_related('user', 'site').prefetch_related('lines__product').get(
-                tenant_id=org_id,
+                organization_id=org_id,
                 invoice_number__iexact=ref,
                 type='SALE',
                 status='COMPLETED',
@@ -188,7 +193,7 @@ class RegisterOrderMixin:
             return Response({'error': 'No org context'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            order = Order.objects.get(id=pk, tenant_id=org_id)
+            order = Order.objects.get(id=pk, organization_id=org_id)
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -198,7 +203,7 @@ class RegisterOrderMixin:
 
         # Create a PENDING record first so the caller gets an ID immediately
         doc = GeneratedDocument.objects.create(
-            tenant_id=org_id,
+            organization_id=org_id,
             order_id=order.id,
             doc_type=doc_type,
             status='PENDING',
@@ -229,7 +234,7 @@ class RegisterOrderMixin:
 
         try:
             doc = GeneratedDocument.objects.filter(
-                tenant_id=org_id,
+                organization_id=org_id,
                 order_id=pk,
                 doc_type=doc_type,
             ).latest('generated_at')

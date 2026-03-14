@@ -8,7 +8,7 @@ from erp.middleware import get_current_tenant_id
 
 
 class PaymentTermViewSet(viewsets.ModelViewSet):
-    """CRUD for payment terms (tenant-scoped)."""
+    """CRUD for payment terms (organization-scoped)."""
     serializer_class = PaymentTermSerializer
     queryset = PaymentTerm.objects.all()
 

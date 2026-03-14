@@ -13,6 +13,10 @@ from .org_tax_policy import OrgTaxPolicy
 from .counterparty_tax_profile import CounterpartyTaxProfile
 from .periodic_tax_models import PeriodicTaxAccrual
 from .custom_tax_rule import CustomTaxRule
+from .tax_jurisdiction_rule import TaxJurisdictionRule
+from .posting_rule import PostingRule
+from .posting_event import PostingEvent, PostingRuleHistory
+from .contextual_posting_rule import ContextualPostingRule
 from .analytics import FinanceDailySummary
 from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance
 from apps.finance.invoice_models import Invoice, InvoiceLine
@@ -23,6 +27,7 @@ from apps.finance.gateway_models import GatewayConfig
 from .opening_balance import OpeningBalance
 from .balance_snapshot import AccountBalanceSnapshot
 from .reconciliation_models import ReconciliationMatch, ReconciliationLine
+from .bank_reconciliation_models import BankStatement, BankStatementLine, ReconciliationSession
 # ── Phase 3: Enterprise Models ─────────────────────────────────
 from .currency_models import Currency, ExchangeRate, CurrencyRevaluation, CurrencyRevaluationLine
 from .recurring_journal_models import RecurringJournalTemplate, RecurringJournalLine, RecurringJournalExecution
@@ -39,13 +44,15 @@ __all__ = [
     'Loan', 'LoanInstallment', 'FinancialEvent', 'DeferredExpense', 'DirectExpense',
     'Asset', 'AmortizationSchedule', 'Voucher', 'ProfitDistribution', 'ForensicAuditLog',
     'TaxGroup', 'BarcodeSettings', 'OrgTaxPolicy', 'CounterpartyTaxProfile', 'PeriodicTaxAccrual',
-    'CustomTaxRule',
+    'CustomTaxRule', 'TaxJurisdictionRule', 'PostingRule', 'PostingEvent', 'PostingRuleHistory',
+    'ContextualPostingRule',
     'Payment', 'CustomerBalance', 'SupplierBalance',
     'Invoice', 'InvoiceLine', 'ZATCAConfig', 'ReportDefinition', 'ReportExecution',
     'GatewayConfig',
     # v2.0 Engine Models
     'OpeningBalance', 'AccountBalanceSnapshot',
     'ReconciliationMatch', 'ReconciliationLine',
+    'BankStatement', 'BankStatementLine', 'ReconciliationSession',
     'NORMAL_BALANCE_MAP', 'ACCOUNT_CLASS_MAP', 'ACCOUNT_CLASS_NAMES',
     'FinanceDailySummary',
     # Phase 3: Enterprise

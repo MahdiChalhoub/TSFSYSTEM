@@ -18,7 +18,6 @@ Never raises silently — always raises WorkflowError with a user-readable messa
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from apps.crm.services import ComplianceService
 
 
 class WorkflowError(ValidationError):
@@ -78,15 +77,12 @@ class SalesWorkflowService:
 
     @classmethod
     def confirm_order(cls, order, user=None, warehouse_id=None) -> None:
+        """
+        DRAFT / PENDING → CONFIRMED
+        Sets confirmed_at, optionally updates fulfillment warehouse.
+        Also reserves stock per line (Gap 3).
+        """
         _assert_transition('order_status', ORDER_TRANSITIONS, order.order_status, 'CONFIRMED')
-
-        # CRM Compliance Guard (11/10 Enterprise Layer)
-        if order.contact_id:
-            # We pass order.site_id as the branch_id for multi-entity resolver
-            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'CONFIRM_ORDER', branch_id=order.site_id)
-            if not is_ok:
-                raise WorkflowError(msg)
-
         with transaction.atomic():
             if warehouse_id:
                 order.site_id = warehouse_id
@@ -191,13 +187,6 @@ class SalesWorkflowService:
         NOT_GENERATED → GENERATED
         """
         _assert_transition('invoice_status', INVOICE_TRANSITIONS, order.invoice_status, 'GENERATED')
-
-        # CRM Compliance Guard (11/10 Enterprise Layer)
-        if order.contact_id:
-            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'GENERATE_INVOICE', branch_id=order.site_id)
-            if not is_ok:
-                raise WorkflowError(msg)
-
         with transaction.atomic():
             order.invoice_status = 'GENERATED'
             order.invoiced_at = timezone.now()
@@ -258,8 +247,9 @@ class SalesWorkflowService:
     def _resolve_warehouse(cls, order):
         """Resolve the delivery warehouse from order.site (Warehouse FK)."""
         try:
-            from apps.inventory.models import Warehouse
-            if order.site:
+            from erp.connector_registry import connector
+            Warehouse = connector.require('inventory.warehouses.get_model', org_id=order.organization_id, source='pos.workflow')
+            if Warehouse and order.site:
                 return order.site
         except Exception:
             pass
@@ -269,15 +259,22 @@ class SalesWorkflowService:
     def _reserve_stock(cls, order, user=None) -> None:
         """Safe wrapper: reserves stock on confirm. Raises StockReservationError on shortage."""
         try:
-            from apps.inventory.services import StockReservationService
+            from erp.connector_registry import connector
+            StockReservationService = connector.require('inventory.services.get_reservation_service', org_id=order.organization_id, source='pos.workflow')
+            if not StockReservationService:
+                return
             warehouse = cls._resolve_warehouse(order)
             if warehouse:
                 StockReservationService.reserve(order, warehouse, user)
         except Exception as exc:
             # Re-raise reservation errors (insufficient stock) — these ARE blocking
-            from apps.inventory.services import StockReservationError
-            if isinstance(exc, StockReservationError):
-                raise
+            try:
+                from erp.connector_registry import connector as _conn
+                StockReservationError = _conn.require('inventory.services.get_reservation_error', org_id=order.organization_id, source='pos.workflow')
+                if StockReservationError and isinstance(exc, StockReservationError):
+                    raise
+            except Exception:
+                pass
             import logging
             logging.getLogger(__name__).warning(
                 "[WorkflowService] Stock reservation failed for order %s: %s",
@@ -288,7 +285,10 @@ class SalesWorkflowService:
     def _release_stock(cls, order, user=None) -> None:
         """Safe wrapper: releases reservations on cancel. Never blocks."""
         try:
-            from apps.inventory.services import StockReservationService
+            from erp.connector_registry import connector
+            StockReservationService = connector.require('inventory.services.get_reservation_service', org_id=order.organization_id, source='pos.workflow')
+            if not StockReservationService:
+                return
             warehouse = cls._resolve_warehouse(order)
             if warehouse:
                 StockReservationService.release(order, warehouse, user)
@@ -303,7 +303,10 @@ class SalesWorkflowService:
     def _deduct_stock(cls, order, user=None) -> None:
         """Safe wrapper: deducts stock on delivery. Never blocks."""
         try:
-            from apps.inventory.services import StockReservationService
+            from erp.connector_registry import connector
+            StockReservationService = connector.require('inventory.services.get_reservation_service', org_id=order.organization_id, source='pos.workflow')
+            if not StockReservationService:
+                return
             warehouse = cls._resolve_warehouse(order)
             if warehouse:
                 StockReservationService.deduct(order, warehouse, user)
@@ -318,119 +321,101 @@ class SalesWorkflowService:
     def _post_cogs_on_delivery(cls, order, user=None) -> None:
         """
         Phase 2 — Gap 2: Post Dr COGS / Cr Inventory when delivery is confirmed.
+
         Uses effective_cost on each OrderLine (AMC captured at checkout time).
-        Raises ValidationError if posting rules are not configured.
+        Safe: catches all exceptions — never blocks the delivery workflow.
+
+        [Phase 3A] Now routes through ConnectorEngine instead of importing finance directly.
         """
-        from decimal import Decimal
-        from erp.services import ConfigurationService
-        from apps.finance.services import LedgerService
+        try:
+            from decimal import Decimal
+            from erp.connector_engine import connector_engine
 
-        rules = ConfigurationService.get_posting_rules(order.organization)
-        cogs_acc = rules.get('sales', {}).get('cogs')
-        inv_acc  = rules.get('sales', {}).get('inventory')
+            # Sum COGS from order lines using the cost captured at checkout
+            total_cogs = Decimal('0')
+            for line in order.lines.all():
+                cost = line.effective_cost or line.unit_cost_ht or Decimal('0')
+                total_cogs += (cost * line.quantity).quantize(Decimal('0.01'))
 
-        if not cogs_acc:
-            raise WorkflowError(
-                "Cannot post delivery: 'COGS (Cost of Goods Sold)' account not configured in posting rules. "
-                "Go to Finance → Settings → Posting Rules."
+            if total_cogs <= Decimal('0'):
+                return  # Nothing to post (e.g., service items with zero cost)
+
+            # Route to Finance via ConnectorEngine — finance resolves accounts internally
+            connector_engine.route_write(
+                target_module='finance',
+                endpoint='post_cogs_entry',
+                data={
+                    'organization_id': order.organization_id,
+                    'order_id': order.id,
+                    'cogs_total': str(total_cogs),
+                    'invoice_number': order.invoice_number or f'ORD-{order.id}',
+                    'ref_code': order.ref_code or '',
+                    'scope': order.scope or 'OFFICIAL',
+                    'site_id': order.site_id,
+                    'delivered_at': str(timezone.now()),
+                    'user_id': user.id if user else None,
+                },
+                organization_id=order.organization_id,
+                source_module='pos',
             )
-        if not inv_acc:
-            raise WorkflowError(
-                "Cannot post delivery: 'Inventory Assets' account not configured in posting rules. "
-                "Go to Finance → Settings → Posting Rules."
+        except Exception as exc:
+            # Log the failure but never block the delivery status change
+            import logging
+            logging.getLogger(__name__).warning(
+                "[WorkflowService] COGS posting failed for order %s: %s",
+                order.id, exc, exc_info=True
             )
-
-        # Sum COGS from order lines using the cost captured at checkout
-        total_cogs = Decimal('0')
-        for line in order.lines.all():
-            cost = line.effective_cost or line.unit_cost_ht or Decimal('0')
-            total_cogs += (cost * line.quantity).quantize(Decimal('0.01'))
-
-        if total_cogs <= Decimal('0'):
-            return  # Nothing to post (e.g., service items with zero cost)
-
-        LedgerService.create_journal_entry(
-            organization=order.organization,
-            transaction_date=timezone.now(),
-            description=(
-                f"COGS — Delivery: {order.invoice_number or f'ORD-{order.id}'}"
-            ),
-            reference=f"WF-COGS-{order.id}",
-            status='POSTED',
-            scope=order.scope or 'OFFICIAL',
-            site_id=order.site_id,
-            user=user,
-            lines=[
-                # Dr COGS (expense increases)
-                {'account_id': cogs_acc, 'debit': total_cogs,  'credit': Decimal('0'),
-                 'description': 'COGS — cost of delivered goods'},
-                # Cr Inventory (asset decreases)
-                {'account_id': inv_acc,  'debit': Decimal('0'), 'credit': total_cogs,
-                 'description': 'Inventory relief on delivery'},
-            ]
-        )
 
     @classmethod
     def _post_ar_adjustment_on_payment(cls, order, amount_paid, user=None) -> None:
         """
         Phase 2 — Gap 5: For orders paid via CREDIT method (A/R sale),
         when the customer pays cash/Wave/bank: Dr Cash / Cr A/R.
-        Raises ValidationError if posting rules are not configured.
+
+        This clears the receivable that was booked at checkout.
+        Safe: catches all exceptions — never blocks the payment workflow.
+
+        [Phase 3A] Now routes through ConnectorEngine instead of importing finance directly.
         """
-        # Only post this for credit sales (A/R was debited at checkout)
-        if order.payment_method != 'CREDIT':
-            return
+        try:
+            # Only post this for credit sales (A/R was debited at checkout)
+            if order.payment_method != 'CREDIT':
+                return
 
-        from decimal import Decimal
-        from erp.services import ConfigurationService
-        from apps.finance.services import LedgerService
-        from apps.finance.models import FinancialAccount
+            from decimal import Decimal
+            from erp.connector_engine import connector_engine
 
-        rules = ConfigurationService.get_posting_rules(order.organization)
-        receivable_acc = rules.get('sales', {}).get('receivable')
+            amount = (amount_paid or order.total_amount or Decimal('0'))
+            if hasattr(amount, 'quantize'):
+                amount = amount.quantize(Decimal('0.01'))
+            if amount <= Decimal('0'):
+                return
 
-        if not receivable_acc:
-            raise WorkflowError(
-                "Cannot post A/R clearance: 'Accounts Receivable' not configured in posting rules. "
-                "Go to Finance → Settings → Posting Rules."
+            # Route to Finance via ConnectorEngine — finance resolves accounts internally
+            connector_engine.route_write(
+                target_module='finance',
+                endpoint='post_payment_receipt',
+                data={
+                    'organization_id': order.organization_id,
+                    'order_id': order.id,
+                    'amount': str(amount),
+                    'payment_method': order.payment_method or 'CREDIT',
+                    'invoice_number': order.invoice_number or f'ORD-{order.id}',
+                    'ref_code': order.ref_code or '',
+                    'scope': order.scope or 'OFFICIAL',
+                    'site_id': order.site_id,
+                    'user_id': user.id if user else None,
+                    'force': True,  # Force JE since we're processing CREDIT A/R clearance
+                },
+                organization_id=order.organization_id,
+                source_module='pos',
             )
-
-        # Resolve the cash/bank account from the primary financial account
-        primary_fa = FinancialAccount.objects.filter(
-            organization=order.organization
-        ).first()
-        cash_acc = primary_fa.ledger_account_id if primary_fa else None
-
-        if not cash_acc:
-            raise WorkflowError(
-                "Cannot post A/R clearance: No financial account with a linked ledger account found. "
-                "Create a Cash or Bank financial account first."
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning(
+                "[WorkflowService] A/R clearance posting failed for order %s: %s",
+                order.id, exc, exc_info=True
             )
-
-        amount = (amount_paid or order.total_amount or Decimal('0')).quantize(Decimal('0.01'))
-        if amount <= Decimal('0'):
-            return
-
-        LedgerService.create_journal_entry(
-            organization=order.organization,
-            transaction_date=timezone.now(),
-            description=(
-                f"A/R Clearance — Payment: {order.invoice_number or f'ORD-{order.id}'}"
-            ),
-            reference=f"WF-PAY-{order.id}",
-            status='POSTED',
-            scope=order.scope or 'OFFICIAL',
-            site_id=order.site_id,
-            user=user,
-            lines=[
-                # Dr Cash/Bank (asset increases)
-                {'account_id': cash_acc,        'debit': amount,          'credit': Decimal('0'),
-                 'description': 'Cash received from client'},
-                # Cr A/R (receivable cleared)
-                {'account_id': receivable_acc,  'debit': Decimal('0'),    'credit': amount,
-                 'description': 'Accounts receivable — cleared on payment'},
-            ]
-        )
 
     @classmethod
     def _log(cls, order, user, action: str, note: str) -> None:

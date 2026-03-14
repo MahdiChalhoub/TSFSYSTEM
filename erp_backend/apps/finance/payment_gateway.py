@@ -195,7 +195,7 @@ class PaymentGatewayService:
             try:
                 from apps.finance.gateway_models import GatewayConfig
                 config = GatewayConfig.objects.filter(
-                    tenant_id=order.organization_id,
+                    organization_id=order.organization_id,
                     gateway_type='BANK_TRANSFER',
                     is_active=True,
                 ).first()
@@ -228,7 +228,8 @@ class PaymentGatewayService:
 
         Returns: True on success
         """
-        from apps.client_portal.models import ClientPortalConfig
+        from erp.connector_registry import connector
+        ClientPortalConfig = connector.require('client_portal.config.get_model', org_id=0, source='finance')
         order.payment_status = "PAID"
         order.save(update_fields=["payment_status", "updated_at"])
 

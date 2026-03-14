@@ -11,6 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from erp.connector_registry import connector
+
 
 class ContactMergeService:
     """
@@ -120,9 +122,9 @@ class ContactMergeService:
         # ── 2. Reassign Orders ──
         if reassign_orders:
             try:
-                from apps.pos.models import Order
+                Order = connector.require('pos.orders.get_model', org_id=0, source='crm')
                 count = Order.objects.filter(
-                    tenant_id=org_id, contact=source
+                    organization_id=org_id, contact=source
                 ).update(contact=target)
                 result['reassigned']['orders'] = count
             except Exception as e:
@@ -132,11 +134,14 @@ class ContactMergeService:
         # ── 3. Reassign Payments ──
         if reassign_payments:
             try:
-                from apps.finance.payment_models import Payment
-                count = Payment.objects.filter(
-                    tenant_id=org_id, contact=source
-                ).update(contact=target)
-                result['reassigned']['payments'] = count
+                Payment = connector.require('finance.payments.get_model', org_id=0, source='crm')
+                if not Payment:
+                    result['reassigned']['payments'] = 'SKIPPED: module unavailable'
+                else:
+                    count = Payment.objects.filter(
+                        organization_id=org_id, contact=source
+                    ).update(contact=target)
+                    result['reassigned']['payments'] = count
             except Exception as e:
                 logger.warning(f"[Merge] Payment reassignment failed: {e}")
                 result['reassigned']['payments'] = f'FAILED: {str(e)[:100]}'
@@ -145,7 +150,7 @@ class ContactMergeService:
             for BalanceModel in cls._get_balance_models():
                 try:
                     count = BalanceModel.objects.filter(
-                        tenant_id=org_id, contact=source
+                        organization_id=org_id, contact=source
                     ).update(contact=target)
                     result['reassigned'][f'balance.{BalanceModel.__name__}'] = count
                 except Exception:
@@ -156,12 +161,12 @@ class ContactMergeService:
             try:
                 from apps.crm.models import ClientPriceRule, PriceGroupMember
                 rule_count = ClientPriceRule.objects.filter(
-                    tenant_id=org_id, contact=source
+                    organization_id=org_id, contact=source
                 ).update(contact=target)
                 result['reassigned']['pricing_rules'] = rule_count
 
                 member_count = PriceGroupMember.objects.filter(
-                    tenant_id=org_id, contact=source
+                    organization_id=org_id, contact=source
                 ).update(contact=target)
                 result['reassigned']['price_group_memberships'] = member_count
             except Exception as e:
@@ -261,13 +266,15 @@ class ContactMergeService:
         """Safely get balance models if they exist."""
         models = []
         try:
-            from apps.finance.payment_models import CustomerBalance
-            models.append(CustomerBalance)
+            CustomerBalance = connector.require('finance.payments.get_customer_balance_model', org_id=0, source='crm')
+            if CustomerBalance:
+                models.append(CustomerBalance)
         except Exception:
             pass
         try:
-            from apps.finance.payment_models import SupplierBalance
-            models.append(SupplierBalance)
+            SupplierBalance = connector.require('finance.payments.get_supplier_balance_model', org_id=0, source='crm')
+            if SupplierBalance:
+                models.append(SupplierBalance)
         except Exception:
             pass
         return models

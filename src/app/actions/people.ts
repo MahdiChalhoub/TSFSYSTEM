@@ -32,6 +32,12 @@ export async function createContact(prevState: Record<string, any>, formData: Fo
         // Tax profile assignment
         const taxProfileId = formData.get('taxProfileId');
         if (taxProfileId) data.tax_profile_id = parseInt(taxProfileId as string);
+        // Credit limit
+        const creditLimit = formData.get('creditLimit');
+        if (creditLimit) data.credit_limit = parseFloat(creditLimit as string);
+        // Address
+        const address = formData.get('address');
+        if (address) data.address = address;
         // Supplier-specific
         if (['SUPPLIER', 'BOTH', 'SERVICE', 'CREDITOR'].includes(type)) {
             data.supplier_category = formData.get('supplierCategory') || 'REGULAR';
@@ -46,6 +52,44 @@ export async function createContact(prevState: Record<string, any>, formData: Fo
         return { success: true, message: 'Contact created successfully' };
     } catch (e: unknown) {
         return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create contact' };
+    }
+}
+
+export async function updateContact(prevState: Record<string, any>, formData: FormData) {
+    try {
+        const id = formData.get('id') as string;
+        if (!id) return { success: false, message: 'Missing contact ID' };
+        const type = formData.get('type') as string || 'CUSTOMER';
+        const data: Record<string, any> = {
+            name: formData.get('name'),
+            type,
+            entity_type: formData.get('entity_type') || 'INDIVIDUAL',
+            email: formData.get('email') || '',
+            phone: formData.get('phone') || '',
+            whatsapp_group_id: formData.get('whatsappGroupId') || '',
+            company_name: formData.get('companyName') || '',
+            home_site_id: formData.get('homeSiteId') || null,
+            payment_terms_days: parseInt(formData.get('paymentTermsDays') as string) || 0,
+            notes: formData.get('notes') || '',
+        };
+        const taxProfileId = formData.get('taxProfileId');
+        if (taxProfileId) data.tax_profile_id = parseInt(taxProfileId as string);
+        const creditLimit = formData.get('creditLimit');
+        if (creditLimit) data.credit_limit = parseFloat(creditLimit as string);
+        const address = formData.get('address');
+        if (address) data.address = address;
+        if (['SUPPLIER', 'BOTH', 'SERVICE', 'CREDITOR'].includes(type)) {
+            data.supplier_category = formData.get('supplierCategory') || 'REGULAR';
+        }
+        if (['CUSTOMER', 'BOTH', 'DEBTOR'].includes(type)) {
+            data.customer_tier = formData.get('customerTier') || 'STANDARD';
+            const homeZoneId = formData.get('homeZoneId');
+            if (homeZoneId) data.home_zone = parseInt(homeZoneId as string);
+        }
+        await erpFetch(`contacts/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+        return { success: true, message: 'Contact updated successfully' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update contact' };
     }
 }
 

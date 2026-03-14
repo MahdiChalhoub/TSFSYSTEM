@@ -113,7 +113,7 @@ class GoodsReceipt(AuditLogMixin, TenantOwnedModel):
         db_table = 'goods_receipt'
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['organization', 'status']),
             models.Index(fields=['receipt_number']),
         ]
 
@@ -126,7 +126,7 @@ class GoodsReceipt(AuditLogMixin, TenantOwnedModel):
             # Refactored: Avoid direct cross-module import from apps.finance
             from erp.services import SequenceService
             self.receipt_number = SequenceService.generate_next_value(
-                self.tenant, 'GOODS_RECEIPT'
+                self.organization, 'GOODS_RECEIPT'
             )
         # Auto-set started_at when moving to IN_PROGRESS
         if self.status == 'IN_PROGRESS' and not self.started_at:

@@ -5,7 +5,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.utils.translation import gettext_lazy as _
 from erp.models import TenantModel, User
-from apps.hr.models import Employee, Department
+# Note: Employee and Department are referenced via string-based FKs ('hr.Employee', 'hr.Department')
+# to avoid direct cross-module imports — Connector Governance Layer compliance.
 # Note: Branch usually comes from erp.models.Organization (as sites) or a dedicated Branch model.
 # In TSFSYSTEM, "Site" is often used for Branch.
 from erp.models import Site
@@ -132,9 +133,9 @@ class EmployeeScoreEvent(TenantModel):
     """
     Detailed ledger of every scoring event for an employee.
     """
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='score_events')
+    employee = models.ForeignKey('hr.Employee', on_delete=models.CASCADE, related_name='score_events')
     branch = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey('hr.Department', on_delete=models.SET_NULL, null=True, blank=True)
     # user_role is usually on the User or Employee object. 
     # For snapshot purposes, we might want to store the role ID here.
     role_id = models.IntegerField(null=True, blank=True)
@@ -200,9 +201,9 @@ class EmployeeScoreSummary(TenantModel):
     Denormalized totals for fast dashboarding. 
     Updated by the PerformanceScoreEngine on every event.
     """
-    employee = models.OneToOneField(Employee, on_delete=models.CASCADE, related_name='score_summary')
+    employee = models.OneToOneField('hr.Employee', on_delete=models.CASCADE, related_name='score_summary')
     branch = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey('hr.Department', on_delete=models.SET_NULL, null=True, blank=True)
     role_id = models.IntegerField(null=True, blank=True)
 
     # Core scores (0-100 normalized usually)
@@ -250,7 +251,7 @@ class EmployeeScorePeriod(TenantModel):
     """
     Historical snapshots (Weekly/Monthly) for trending.
     """
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey('hr.Employee', on_delete=models.CASCADE)
     period_type = models.CharField(max_length=20, default='MONTHLY') # DAILY, WEEKLY, MONTHLY
     period_key = models.CharField(max_length=20, help_text="e.g. 2026-03")
 
@@ -285,7 +286,7 @@ class EmployeeScoreAdjustment(TenantModel):
     """
     Manual adjustments by managers.
     """
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey('hr.Employee', on_delete=models.CASCADE)
     adjustment_type = models.CharField(max_length=20, default='BONUS') # BONUS, PENALTY, CORRECTION
     points = models.DecimalField(max_digits=10, decimal_places=2)
     reason = models.TextField()
@@ -311,7 +312,7 @@ class EmployeeBadge(TenantModel):
     Historical record of badges earned.
     One badge per employee per period (unique on org + employee + period_key).
     """
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='badges')
+    employee = models.ForeignKey('hr.Employee', on_delete=models.CASCADE, related_name='badges')
     badge_code = models.CharField(max_length=50, choices=BadgeLevel.choices)
     badge_name = models.CharField(max_length=100)
     period_key = models.CharField(max_length=20, null=True, blank=True)

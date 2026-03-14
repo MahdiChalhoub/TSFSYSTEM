@@ -1,8 +1,8 @@
 """
 Kernel — Tenant Isolation Security Tests
 ==========================================
-Tests for the TenantMiddleware to ensure strict multi-tenant isolation.
-Covers: anonymous access, cross-tenant attacks, superuser access,
+Tests for the TenantMiddleware to ensure strict multi-organization isolation.
+Covers: anonymous access, cross-organization attacks, superuser access,
         expired org read-only mode, and cleanup after requests.
 
 These tests are critical for data security and compliance.
@@ -16,7 +16,7 @@ from erp.middleware import TenantMiddleware, get_current_tenant_id, set_current_
 
 
 class TenantIsolationTestBase(TestCase):
-    """Shared fixtures for tenant isolation tests."""
+    """Shared fixtures for organization isolation tests."""
 
     @classmethod
     def setUpTestData(cls):
@@ -50,24 +50,24 @@ class TenantIsolationTestBase(TestCase):
 
 
 class TestPublicPathBypass(TenantIsolationTestBase):
-    """Paths like /api/health/ should bypass tenant isolation."""
+    """Paths like /api/health/ should bypass organization isolation."""
 
     def test_health_endpoint_is_public(self):
-        """Health check should be accessible without tenant context."""
+        """Health check should be accessible without organization context."""
         request = self.factory.get('/api/health/')
         response = self.middleware(request)
         # Should delegate to get_response (not blocked)
         self.get_response.assert_called_once()
 
     def test_auth_login_is_public(self):
-        """Login endpoint should be accessible without tenant context."""
+        """Login endpoint should be accessible without organization context."""
         request = self.factory.get('/api/auth/login/')
         response = self.middleware(request)
         self.get_response.assert_called_once()
 
 
 class TestAnonymousAccess(TenantIsolationTestBase):
-    """Unauthenticated users with tenant headers should be blocked."""
+    """Unauthenticated users with organization headers should be blocked."""
 
     def test_anonymous_with_tenant_header_returns_401(self):
         """Anonymous request with X-Tenant-Id should be blocked."""
@@ -93,7 +93,7 @@ class TestAnonymousAccess(TenantIsolationTestBase):
         with patch.object(self.middleware, '_resolve_user_from_token', return_value=None):
             response = self.middleware(request)
         
-        # Should pass through (tenant_id will be None)
+        # Should pass through (organization_id will be None)
         self.get_response.assert_called_once()
 
 
@@ -142,7 +142,7 @@ class TestCrossTenantIsolation(TenantIsolationTestBase):
         self.assertEqual(request.organization_id, str(self.org_a.id))
 
     def test_superuser_can_switch_between_orgs(self):
-        """Superuser should be able to switch tenant context across requests."""
+        """Superuser should be able to switch organization context across requests."""
         # Access Org A
         request_a = self.factory.get(
             '/api/products/',
@@ -204,7 +204,7 @@ class TestTenantContextCleanup(TenantIsolationTestBase):
     """Tenant context should be cleaned up after each request."""
 
     def test_tenant_context_cleared_after_request(self):
-        """The thread-local tenant_id should be None after request completes."""
+        """The thread-local organization_id should be None after request completes."""
         request = self.factory.get(
             '/api/products/',
             HTTP_X_TENANT_ID=str(self.org_a.id),
@@ -214,11 +214,11 @@ class TestTenantContextCleanup(TenantIsolationTestBase):
         with patch.object(self.middleware, '_resolve_user_from_token', return_value=self.user_a):
             self.middleware(request)
 
-        # After the middleware completes, the tenant context should be cleared
+        # After the middleware completes, the organization context should be cleared
         self.assertIsNone(get_current_tenant_id())
 
     def test_tenant_context_cleared_on_error(self):
-        """Even if the view raises an error, tenant context should be cleaned."""
+        """Even if the view raises an error, organization context should be cleaned."""
         self.get_response.side_effect = Exception('View crashed')
         request = self.factory.get(
             '/api/products/',
@@ -245,7 +245,7 @@ class TestStrictLoginIsolation(TenantIsolationTestBase):
     from rest_framework.exceptions import ValidationError
 
     def test_public_path_establishes_context(self):
-        """Verify public paths establish tenant context if X-Tenant-Id is present."""
+        """Verify public paths establish organization context if X-Tenant-Id is present."""
         request = self.factory.get(
             '/api/auth/login/',
             HTTP_X_TENANT_ID=str(self.org_a.id)
@@ -277,7 +277,7 @@ class TestStrictLoginIsolation(TenantIsolationTestBase):
             set_current_tenant_id(None)
 
     def test_saas_admin_backdoor_prevention(self):
-        """Verify SaaS Superusers cannot login via tenant-scoped login pages."""
+        """Verify SaaS Superusers cannot login via organization-scoped login pages."""
         from erp.serializers.auth import LoginSerializer
         from rest_framework.exceptions import ValidationError
 
@@ -294,7 +294,7 @@ class TestStrictLoginIsolation(TenantIsolationTestBase):
             set_current_tenant_id(None)
 
     def test_root_login_restriction(self):
-        """Verify normal tenant users cannot login to the SaaS Root Panel."""
+        """Verify normal organization users cannot login to the SaaS Root Panel."""
         from erp.serializers.auth import LoginSerializer
         from rest_framework.exceptions import ValidationError
 

@@ -107,9 +107,9 @@ class EventBus:
                 aggregate_id='123'
             )
         """
-        tenant = get_current_tenant()
-        if not tenant:
-            raise ValueError("Cannot emit event without tenant context")
+        organization = get_current_tenant()
+        if not organization:
+            raise ValueError("Cannot emit event without organization context")
 
         # Sanitize payload for JSON (UUIDs are not serializable by default in some contexts)
         import uuid
@@ -124,7 +124,7 @@ class EventBus:
 
         # Create event in outbox (transactional)
         event = DomainEvent.objects.create(
-            tenant=tenant,
+            organization=organization,
             event_type=event_type,
             event_version=event_version,
             payload=_sanitize(payload),

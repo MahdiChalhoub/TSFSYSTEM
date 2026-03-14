@@ -1,6 +1,6 @@
 # 📍 PROJECT CONTEXT (Source of Truth)
 
-**Last Updated**: 2026-03-04
+**Last Updated**: 2026-03-12
 **Read by**: Both Antigravity and Claude Code
 
 ---
@@ -43,6 +43,12 @@
   - 19 contracts registered at startup via `apps/core/apps.py`
   - 20 `@subscribe_to_event` handlers across 6 modules
   - All 6 module `apps.py` import `events.py` in `ready()` to activate handlers
+- ✅ **Connector Governance Layer — FULLY MIGRATED** (completed 2026-03-12)
+  - 82 registered capabilities across 5 connector services (CRM, Finance, Inventory, POS, HR)
+  - Zero `_safe_import` calls remaining (100% migrated to `connector.require()`)
+  - Zero direct cross-module imports in production code
+  - Architecture compliance test updated (`test_architecture.py`)
+  - Workforce models use Django string-based FKs for HR dependency
 
 
 ---
@@ -69,7 +75,9 @@
 ### **Module Isolation**
 - ✅ Each module has `module.json` manifest
 - ✅ Module loader enables/disables per tenant
-- ✅ Boundaries to be enforced (next phase)
+- ✅ **Connector Governance Layer**: 82 capabilities, 5 connector services
+- ✅ **Zero direct cross-module imports** — fully enforced
+- ✅ Architecture compliance test (`test_architecture.py`) guards regressions
 
 ### **Kernel-First**
 - ✅ All modules inherit from TenantOwnedModel

@@ -184,7 +184,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         # 2. Add items from ACTIVE modules
         # If no organization context, we treat as MASTER PANEL (is_saas)
         # BUGFIX: Also treat 'saas' slug organization as SaaS context for panel visibility
-        is_saas = not hasattr(request, 'tenant') or request.tenant is None or getattr(request.tenant, 'slug', '') == 'saas'
+        is_saas = not hasattr(request, 'organization') or request.organization is None or getattr(request.organization, 'slug', '') == 'saas'
         
         active_modules = SystemModule.objects.all()
         for m in active_modules:
@@ -206,7 +206,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
                 # Visibility check: Some items only show in SaaS, some only in Tenant
                 if item.get('visibility') == 'saas' and not is_saas:
                     continue
-                if item.get('visibility') == 'tenant' and is_saas:
+                if item.get('visibility') == 'organization' and is_saas:
                     continue
                     
                 items.append(item)
@@ -219,7 +219,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     def encryption_status(self, request):
         """Get encryption status for the current organization."""
         from erp.encryption_service import EncryptionService
-        org = getattr(request, 'tenant', None)
+        org = getattr(request, 'organization', None)
         if not org:
             return Response({'error': 'No organization context'}, status=400)
         return Response(EncryptionService.get_status(org))
@@ -228,7 +228,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     def encryption_activate(self, request):
         """Activate AES-256 encryption for an organization."""
         from erp.encryption_service import EncryptionService
-        org = getattr(request, 'tenant', None)
+        org = getattr(request, 'organization', None)
         if not org:
             # Allow superadmin to specify org_id
             org_id = request.data.get('organization_id')
@@ -249,7 +249,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     def encryption_deactivate(self, request):
         """Deactivate encryption for an organization."""
         from erp.encryption_service import EncryptionService
-        org = getattr(request, 'tenant', None)
+        org = getattr(request, 'organization', None)
         if not org:
             org_id = request.data.get('organization_id')
             if org_id and request.user.is_superuser:
@@ -271,7 +271,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
             return Response({'error': 'Superadmin access required'}, status=403)
         
         from erp.encryption_service import EncryptionService
-        org = getattr(request, 'tenant', None)
+        org = getattr(request, 'organization', None)
         if not org:
             org_id = request.data.get('organization_id')
             if org_id:

@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='contacttag',
-            unique_together={('tenant', 'name')},
+            unique_together={('organization', 'name')},
         ),
         migrations.RemoveField(
             model_name='contacttask',
@@ -102,7 +102,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='pricegroupmember',
-            unique_together={('price_group', 'contact_id', 'tenant')},
+            unique_together={('price_group', 'contact_id', 'organization')},
         ),
         migrations.RemoveField(
             model_name='relationshipassignment',
@@ -114,96 +114,96 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='supplierproductpolicy',
-            unique_together={('tenant', 'supplier', 'product', 'branch')},
+            unique_together={('organization', 'supplier', 'product', 'branch')},
         ),
         migrations.AddField(
             model_name='activityreminder',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='clientpricerule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='complianceevent',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='complianceoverride',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='compliancerule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contact',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contactauditlog',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contactcompliancedocument',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contactperson',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contacttag',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='contacttask',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='followuppolicy',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='interactionlog',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='pricegroup',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='pricegroupmember',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='relationshipassignment',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='scheduledactivity',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='supplierproductpolicy',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AlterField(
@@ -213,31 +213,31 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'type'], name='idx_contact_tenant_type'),
+            index=models.Index(fields=['organization', 'type'], name='idx_contact_organization_type'),
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'status'], name='idx_contact_tenant_status'),
+            index=models.Index(fields=['organization', 'status'], name='idx_contact_organization_status'),
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'email'], name='idx_contact_tenant_email'),
+            index=models.Index(fields=['organization', 'email'], name='idx_contact_organization_email'),
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'phone'], name='idx_contact_tenant_phone'),
+            index=models.Index(fields=['organization', 'phone'], name='idx_contact_organization_phone'),
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'vat_id'], name='idx_contact_tenant_vat'),
+            index=models.Index(fields=['organization', 'vat_id'], name='idx_contact_organization_vat'),
         ),
         migrations.AddIndex(
             model_name='contact',
-            index=models.Index(fields=['tenant', 'entity_type'], name='idx_contact_tenant_entity'),
+            index=models.Index(fields=['organization', 'entity_type'], name='idx_contact_organization_entity'),
         ),
         migrations.AddIndex(
             model_name='contactauditlog',
-            index=models.Index(fields=['tenant', 'action'], name='idx_audit_tenant_action'),
+            index=models.Index(fields=['organization', 'action'], name='idx_audit_organization_action'),
         ),
         migrations.RemoveField(
             model_name='contacttag',

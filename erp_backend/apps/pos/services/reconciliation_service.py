@@ -19,49 +19,45 @@ logger = logging.getLogger('erp.payment_reconciliation')
 
 class PaymentReconciliationService:
 
+    # ── Map from payment method key to SYSCOHADA COA code ─────────────────────
+    _PM_TO_COA = {
+        'CASH':         '571',
+        'WAVE':         '562',
+        'ORANGE_MONEY': '562',
+        'MTN_MOBILE':   '562',
+        'MOBILE':       '562',
+        'BANK':         '521',
+        'CREDIT':       '411',
+        'REWARD_POINTS': '411',
+        'WALLET_DEBIT':  '411',
+        'ROUND_OFF':     '673',
+        'OTHER':         '4718',
+    }
+
     @classmethod
     def persist_legs(cls, order, parsed_legs: list, journal_entry=None, user=None) -> list:
         """
         Persist a list of (method, amount) tuples as SalesPaymentLeg records.
         Called immediately after the JE is posted at checkout.
 
-        Args:
-            order:        The Order instance.
-            parsed_legs:  List of (payment_method, Decimal) tuples.
-            journal_entry: The JournalEntry that was just created (optional).
-            user:         The acting user.
-
-        Returns:
-            List of created SalesPaymentLeg instances.
+        [Phase 3A] Account resolution now routes through ConnectorEngine.
         """
         from apps.pos.models.payment_models import SalesPaymentLeg
+        from erp.connector_engine import connector_engine
 
         created = []
         for method, amount in parsed_legs:
             try:
-                # Resolve ledger account dynamically from register's payment method config
-                ledger_acc = None
-
-                # Try to find account from register's payment_methods config
-                if hasattr(order, 'register') and order.register and order.register.payment_methods:
-                    for pm in order.register.payment_methods:
-                        if pm.get('key', '').upper() == method.upper() and pm.get('accountId'):
-                            from apps.finance.models import ChartOfAccount
-                            ledger_acc = ChartOfAccount.objects.filter(
-                                id=pm['accountId'], organization=order.organization
-                            ).first()
-                            break
-
-                # Fallback to sales.receivable from posting rules
-                if not ledger_acc:
-                    from erp.services import ConfigurationService
-                    from apps.finance.models import ChartOfAccount
-                    rules = ConfigurationService.get_posting_rules(order.organization)
-                    ar_id = rules.get('sales', {}).get('receivable')
-                    if ar_id:
-                        ledger_acc = ChartOfAccount.objects.filter(
-                            id=ar_id, organization=order.organization
-                        ).first()
+                # Resolve COA account via finance connector — POS no longer knows COA codes
+                result = connector_engine.route_read(
+                    target_module='finance',
+                    endpoint='get_payment_method_account',
+                    organization_id=order.organization_id,
+                    params={'payment_method': method.upper()},
+                )
+                ledger_acc_id = None
+                if result and result.data and isinstance(result.data, dict):
+                    ledger_acc_id = result.data.get('account_id')
 
                 leg = SalesPaymentLeg.objects.create(
                     organization=order.organization,
@@ -70,7 +66,7 @@ class PaymentReconciliationService:
                     amount=Decimal(str(amount)).quantize(Decimal('0.01')),
                     status='POSTED',
                     journal_entry=journal_entry,
-                    ledger_account=ledger_acc,
+                    ledger_account_id=ledger_acc_id,
                     posted_by=user,
                 )
                 created.append(leg)
@@ -218,63 +214,54 @@ class PaymentReconciliationService:
 
     @classmethod
     def _post_write_off_je(cls, leg, amount: Decimal, reason: str, user=None):
-        """Dr Write-Off Expense / Cr leg's receivable account — resolved from posting rules."""
-        from apps.finance.services.ledger_service import LedgerService
-        from apps.finance.models import ChartOfAccount
-        from erp.services import ConfigurationService
-        from django.core.exceptions import ValidationError
+        """Post write-off JE via ConnectorEngine — finance resolves accounts."""
+        try:
+            from erp.connector_engine import connector_engine
 
-        rules = ConfigurationService.get_posting_rules(leg.organization)
-
-        # Write-off expense account from posting rules (round_off or discount)
-        wo_id = rules.get('sales', {}).get('round_off') or rules.get('sales', {}).get('discount')
-        wo_acc = ChartOfAccount.objects.filter(id=wo_id, organization=leg.organization).first() if wo_id else None
-
-        # Receivable account: use the leg's own ledger_account, or sales.receivable from rules
-        ar_acc = leg.ledger_account
-        if not ar_acc:
-            ar_id = rules.get('sales', {}).get('receivable')
-            ar_acc = ChartOfAccount.objects.filter(id=ar_id, organization=leg.organization).first() if ar_id else None
-
-        if not wo_acc:
-            raise ValidationError(
-                "Cannot post write-off: No write-off/round-off account configured in posting rules. "
-                "Go to Finance → Settings → Posting Rules and set 'Round-Off Account' or 'Sales Discount'."
+            connector_engine.route_write(
+                target_module='finance',
+                endpoint='post_write_off_entry',
+                data={
+                    'organization_id': leg.organization_id,
+                    'amount': str(amount),
+                    'reason': reason or 'approved shortfall',
+                    'reference': f"WO-{leg.id}-{leg.order_id}",
+                    'credit_account_id': leg.ledger_account_id,
+                    'scope': leg.order.scope or 'OFFICIAL',
+                    'site_id': leg.order.site_id,
+                    'user_id': user.id if user else None,
+                },
+                organization_id=leg.organization_id,
+                source_module='pos',
             )
-        if not ar_acc:
-            raise ValidationError(
-                "Cannot post write-off: No receivable account found for this payment leg. "
-                "Configure 'Accounts Receivable' in posting rules."
-            )
-
-        LedgerService.create_journal_entry(
-            organization=leg.organization,
-            transaction_date=timezone.now(),
-            description=f"Write-Off — Order #{leg.order.invoice_number or leg.order_id}: {reason or 'approved shortfall'}",
-            reference=f"WO-{leg.id}-{leg.order_id}",
-            status='POSTED',
-            scope=leg.order.scope or 'OFFICIAL',
-            site_id=leg.order.site_id,
-            user=user,
-            lines=[
-                {'account_id': wo_acc.id, 'debit': amount, 'credit': Decimal('0'),
-                 'description': f"Write-off approved: {reason}"},
-                {'account_id': ar_acc.id, 'debit': Decimal('0'), 'credit': amount,
-                 'description': f"Clear receivable — leg #{leg.id}"},
-            ],
-            internal_bypass=True,
-        )
+        except Exception as exc:
+            logger.error(f"[PaymentReconciliation] Write-off JE failed for leg {leg.id}: {exc}")
 
     @classmethod
     def _post_refund_je(cls, leg, reason: str, user=None):
-        """Swap Dr/Cr of the original leg's account entry."""
+        """Reverse the original leg's journal entry via ConnectorEngine."""
         try:
             if not leg.journal_entry_id:
                 return
-            from apps.finance.services.ledger_service import LedgerService
-            LedgerService.reverse_journal_entry(
-                leg.organization, leg.journal_entry_id, user=user
-            )
+            from erp.connector_engine import connector_engine
+
+            # Find the JE reference for reversal
+            je_ref = None
+            if leg.journal_entry:
+                je_ref = getattr(leg.journal_entry, 'reference', None)
+
+            if je_ref:
+                connector_engine.route_write(
+                    target_module='finance',
+                    endpoint='post_refund',
+                    data={
+                        'organization_id': leg.organization_id,
+                        'journal_ref': je_ref,
+                        'user_id': user.id if user else None,
+                    },
+                    organization_id=leg.organization_id,
+                    source_module='pos',
+                )
         except Exception as exc:
             logger.error(f"[PaymentReconciliation] Refund JE failed for leg {leg.id}: {exc}")
 

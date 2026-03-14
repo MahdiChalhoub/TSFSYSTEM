@@ -66,10 +66,10 @@ class TenantConfig(TenantOwnedModel):
 
     class Meta:
         app_label = 'erp'
-        unique_together = [['tenant', 'key']]
+        unique_together = [['organization', 'key']]
         ordering = ['key']
         indexes = [
-            models.Index(fields=['tenant', 'key']),
+            models.Index(fields=['organization', 'key']),
         ]
         verbose_name = 'Tenant Config'
         verbose_name_plural = 'Tenant Configs'
@@ -99,7 +99,7 @@ class FeatureFlag(TenantOwnedModel):
     Feature flag for gradual rollout and A/B testing.
 
     Supports:
-    - Enable/disable features per tenant
+    - Enable/disable features per organization
     - Percentage-based rollout
     - User segment targeting
     - Schedule-based activation
@@ -148,10 +148,10 @@ class FeatureFlag(TenantOwnedModel):
 
     class Meta:
         app_label = 'erp'
-        unique_together = [['tenant', 'key']]
+        unique_together = [['organization', 'key']]
         ordering = ['key']
         indexes = [
-            models.Index(fields=['tenant', 'key']),
+            models.Index(fields=['organization', 'key']),
             models.Index(fields=['is_enabled']),
         ]
         verbose_name = 'Feature Flag'
@@ -205,7 +205,7 @@ class FeatureFlag(TenantOwnedModel):
             from kernel.rbac.models import UserRole
             user_roles = UserRole.objects.filter(
                 user=user,
-                tenant=self.tenant
+                organization=self.organization
             ).values_list('role__name', flat=True)
 
             if any(role in self.target_user_roles for role in user_roles):

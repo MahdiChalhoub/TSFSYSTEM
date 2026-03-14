@@ -17,26 +17,26 @@ class ConfigManager:
     """
     Configuration Manager
 
-    Provides caching and type-safe access to tenant configs.
+    Provides caching and type-safe access to organization configs.
     """
 
     CACHE_PREFIX = 'tenant_config'
     CACHE_TTL = 300  # 5 minutes
 
     @classmethod
-    def _get_cache_key(cls, tenant_id: int, key: str) -> str:
+    def _get_cache_key(cls, organization_id: int, key: str) -> str:
         """Generate cache key."""
-        return f"{cls.CACHE_PREFIX}:{tenant_id}:{key}"
+        return f"{cls.CACHE_PREFIX}:{organization_id}:{key}"
 
     @classmethod
-    def get(cls, key: str, default: Any = None, tenant=None) -> Any:
+    def get(cls, key: str, default: Any = None, organization=None) -> Any:
         """
         Get configuration value.
 
         Args:
             key: Config key
             default: Default value if not found
-            tenant: Tenant (defaults to current tenant)
+            organization: Tenant (defaults to current organization)
 
         Returns:
             Config value or default
@@ -44,22 +44,22 @@ class ConfigManager:
         Example:
             tax_rate = ConfigManager.get('default_tax_rate', default=0.15)
         """
-        if tenant is None:
-            tenant = get_current_tenant()
+        if organization is None:
+            organization = get_current_tenant()
 
-        if not tenant:
-            logger.warning("No tenant context, returning default value")
+        if not organization:
+            logger.warning("No organization context, returning default value")
             return default
 
         # Try cache first
-        cache_key = cls._get_cache_key(tenant.id, key)
+        cache_key = cls._get_cache_key(organization.id, key)
         cached_value = cache.get(cache_key)
         if cached_value is not None:
             return cached_value
 
         # Query database
         try:
-            config = TenantConfig.objects.get(tenant=tenant, key=key)
+            config = TenantConfig.objects.get(organization=organization, key=key)
             value = config.value
 
             # Cache the value
@@ -80,7 +80,7 @@ class ConfigManager:
         is_system: bool = False,
         is_sensitive: bool = False,
         user=None,
-        tenant=None
+        organization=None
     ) -> TenantConfig:
         """
         Set configuration value.
@@ -93,7 +93,7 @@ class ConfigManager:
             is_system: Is system config (cannot be deleted)
             is_sensitive: Is sensitive value
             user: User making the change
-            tenant: Tenant (defaults to current tenant)
+            organization: Tenant (defaults to current organization)
 
         Returns:
             TenantConfig instance
@@ -101,15 +101,15 @@ class ConfigManager:
         Example:
             ConfigManager.set('invoice_prefix', 'INV-', value_type='string')
         """
-        if tenant is None:
-            tenant = get_current_tenant()
+        if organization is None:
+            organization = get_current_tenant()
 
-        if not tenant:
-            raise ValueError("Cannot set config without tenant context")
+        if not organization:
+            raise ValueError("Cannot set config without organization context")
 
         # Get existing config or create new
         config, created = TenantConfig.objects.get_or_create(
-            tenant=tenant,
+            organization=organization,
             key=key,
             defaults={
                 'value': value,
@@ -133,7 +133,7 @@ class ConfigManager:
 
             # Record history
             ConfigHistory.objects.create(
-                tenant=tenant,
+                organization=organization,
                 config=config,
                 old_value=old_value,
                 new_value=value,
@@ -141,30 +141,30 @@ class ConfigManager:
             )
 
         # Invalidate cache
-        cache_key = cls._get_cache_key(tenant.id, key)
+        cache_key = cls._get_cache_key(organization.id, key)
         cache.delete(cache_key)
 
-        logger.info(f"Config set: {key} = {value} (tenant: {tenant.slug})")
+        logger.info(f"Config set: {key} = {value} (organization: {organization.slug})")
 
         return config
 
     @classmethod
-    def delete(cls, key: str, tenant=None):
+    def delete(cls, key: str, organization=None):
         """
         Delete configuration value.
 
         Args:
             key: Config key
-            tenant: Tenant (defaults to current tenant)
+            organization: Tenant (defaults to current organization)
         """
-        if tenant is None:
-            tenant = get_current_tenant()
+        if organization is None:
+            organization = get_current_tenant()
 
-        if not tenant:
-            raise ValueError("Cannot delete config without tenant context")
+        if not organization:
+            raise ValueError("Cannot delete config without organization context")
 
         try:
-            config = TenantConfig.objects.get(tenant=tenant, key=key)
+            config = TenantConfig.objects.get(organization=organization, key=key)
 
             if config.is_system:
                 raise ValueError(f"Cannot delete system config: {key}")
@@ -172,10 +172,10 @@ class ConfigManager:
             config.delete()
 
             # Invalidate cache
-            cache_key = cls._get_cache_key(tenant.id, key)
+            cache_key = cls._get_cache_key(organization.id, key)
             cache.delete(cache_key)
 
-            logger.info(f"Config deleted: {key} (tenant: {tenant.slug})")
+            logger.info(f"Config deleted: {key} (organization: {organization.slug})")
 
         except TenantConfig.DoesNotExist:
             logger.warning(f"Config not found: {key}")
@@ -183,7 +183,7 @@ class ConfigManager:
 
 # Module-level convenience functions
 
-def get_config(key: str, default: Any = None, tenant=None) -> Any:
+def get_config(key: str, default: Any = None, organization=None) -> Any:
     """
     Get configuration value.
 
@@ -194,7 +194,7 @@ def get_config(key: str, default: Any = None, tenant=None) -> Any:
 
         tax_rate = get_config('default_tax_rate', default=0.15)
     """
-    return ConfigManager.get(key, default, tenant)
+    return ConfigManager.get(key, default, organization)
 
 
 def set_config(
@@ -203,7 +203,7 @@ def set_config(
     value_type: str = 'string',
     description: str = '',
     user=None,
-    tenant=None
+    organization=None
 ) -> TenantConfig:
     """
     Set configuration value.
@@ -215,17 +215,17 @@ def set_config(
 
         set_config('invoice_prefix', 'INV-', value_type='string')
     """
-    return ConfigManager.set(key, value, value_type, description, user=user, tenant=tenant)
+    return ConfigManager.set(key, value, value_type, description, user=user, organization=organization)
 
 
-def is_feature_enabled(feature_key: str, user=None, tenant=None) -> bool:
+def is_feature_enabled(feature_key: str, user=None, organization=None) -> bool:
     """
     Check if feature flag is enabled.
 
     Args:
         feature_key: Feature flag key
         user: User (for user-specific targeting)
-        tenant: Tenant (defaults to current tenant)
+        organization: Tenant (defaults to current organization)
 
     Returns:
         bool
@@ -237,15 +237,15 @@ def is_feature_enabled(feature_key: str, user=None, tenant=None) -> bool:
             # Use new UI
             pass
     """
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
-        logger.warning("No tenant context, feature disabled by default")
+    if not organization:
+        logger.warning("No organization context, feature disabled by default")
         return False
 
     try:
-        flag = FeatureFlag.objects.get(tenant=tenant, key=feature_key)
+        flag = FeatureFlag.objects.get(organization=organization, key=feature_key)
 
         if user:
             return flag.is_enabled_for_user(user)
@@ -260,7 +260,7 @@ def is_feature_enabled(feature_key: str, user=None, tenant=None) -> bool:
 def enable_feature(
     feature_key: str,
     rollout_percentage: int = 100,
-    tenant=None
+    organization=None
 ) -> FeatureFlag:
     """
     Enable a feature flag.
@@ -268,7 +268,7 @@ def enable_feature(
     Args:
         feature_key: Feature flag key
         rollout_percentage: Rollout percentage (0-100)
-        tenant: Tenant (defaults to current tenant)
+        organization: Tenant (defaults to current organization)
 
     Returns:
         FeatureFlag instance
@@ -279,14 +279,14 @@ def enable_feature(
         # Enable for 50% of users
         enable_feature('new_invoice_ui', rollout_percentage=50)
     """
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
-        raise ValueError("Cannot enable feature without tenant context")
+    if not organization:
+        raise ValueError("Cannot enable feature without organization context")
 
     flag, _ = FeatureFlag.objects.update_or_create(
-        tenant=tenant,
+        organization=organization,
         key=feature_key,
         defaults={
             'is_enabled': True,
@@ -294,18 +294,18 @@ def enable_feature(
         }
     )
 
-    logger.info(f"Feature enabled: {feature_key} ({rollout_percentage}%) (tenant: {tenant.slug})")
+    logger.info(f"Feature enabled: {feature_key} ({rollout_percentage}%) (organization: {organization.slug})")
 
     return flag
 
 
-def disable_feature(feature_key: str, tenant=None) -> FeatureFlag:
+def disable_feature(feature_key: str, organization=None) -> FeatureFlag:
     """
     Disable a feature flag.
 
     Args:
         feature_key: Feature flag key
-        tenant: Tenant (defaults to current tenant)
+        organization: Tenant (defaults to current organization)
 
     Returns:
         FeatureFlag instance
@@ -315,18 +315,18 @@ def disable_feature(feature_key: str, tenant=None) -> FeatureFlag:
 
         disable_feature('new_invoice_ui')
     """
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
-        raise ValueError("Cannot disable feature without tenant context")
+    if not organization:
+        raise ValueError("Cannot disable feature without organization context")
 
     flag, _ = FeatureFlag.objects.update_or_create(
-        tenant=tenant,
+        organization=organization,
         key=feature_key,
         defaults={'is_enabled': False}
     )
 
-    logger.info(f"Feature disabled: {feature_key} (tenant: {tenant.slug})")
+    logger.info(f"Feature disabled: {feature_key} (organization: {organization.slug})")
 
     return flag

@@ -32,7 +32,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from kernel.events import emit_event
-        from apps.workspace.models import Task
+        from erp.connector_registry import connector
+        Task = connector.require('workspace.tasks.get_model', org_id=0, source='workforce')
+        if not Task:
+            self.stderr.write(self.style.ERROR("Workspace module not available — cannot scan tasks."))
+            return
 
         org_filter   = options.get('org')
         dry_run      = options['dry_run']
@@ -48,10 +52,10 @@ class Command(BaseCommand):
             status__in=['PENDING', 'IN_PROGRESS'],
         ).exclude(
             assigned_to__isnull=True
-        ).select_related('assigned_to', 'tenant')
+        ).select_related('assigned_to', 'organization')
 
         if org_filter:
-            qs = qs.filter(tenant_id=org_filter)
+            qs = qs.filter(organization_id=org_filter)
 
         emitted     = 0
         no_employee = 0
@@ -82,7 +86,7 @@ class Command(BaseCommand):
                         'assignee_user_id': user.id,
                         'days_overdue': days_late,
                         'due_date': task.due_date.isoformat() if task.due_date else None,
-                        'tenant_id': task.tenant_id,
+                        'organization_id': task.organization_id,
                     },
                     aggregate_type='task',
                     aggregate_id=task.id,

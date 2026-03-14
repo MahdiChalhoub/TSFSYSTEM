@@ -100,7 +100,7 @@ class StockMove(AuditLogMixin, TenantOwnedModel, PostableMixin):
     class Meta:
         db_table = 'stock_move'
         indexes  = [
-            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['organization', 'status']),
             models.Index(fields=['from_warehouse', 'to_warehouse']),
             models.Index(fields=['ref_code']),
         ]

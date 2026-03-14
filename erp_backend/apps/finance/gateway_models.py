@@ -1,7 +1,7 @@
 """
 Payment Gateway Configuration Model
 =====================================
-Stores encrypted API keys per tenant for payment gateways (Stripe, etc.)
+Stores encrypted API keys per organization for payment gateways (Stripe, etc.)
 """
 from django.db import models
 from erp.models import TenantModel

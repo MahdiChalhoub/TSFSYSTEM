@@ -5,10 +5,12 @@ import { buildTree } from '@/lib/utils/tree'
 import { UnitTree } from '@/components/admin/UnitTree'
 import { UnitCalculator } from '@/components/admin/UnitCalculator'
 import { CreateUnitButton } from '@/components/admin/CreateUnitButton'
-import { Ruler, Scale, Box, Calculator, Wrench, Layers } from 'lucide-react'
+import { Calculator, Wrench, Layers } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/use-translation'
 
 export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
+    const { t } = useTranslation()
     const [data] = useState(initialUnits)
 
     // Build tree structure
@@ -21,19 +23,19 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 <div className="space-y-1">
                     <h1 className="text-4xl font-extrabold text-app-foreground tracking-tight flex items-center gap-3">
                         <Layers className="text-app-primary" size={32} />
-                        Units & Packaging
+                        {t('inventory.units_and_packaging')}
                     </h1>
-                    <p className="text-app-muted-foreground font-medium tracking-tight">Define scaling multipliers and base unit relationships.</p>
+                    <p className="text-app-muted-foreground font-medium tracking-tight">{t('inventory.units_info_subtitle')}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <Link
                         href="/inventory/maintenance?tab=unit"
                         className="p-3 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-app-primary hover:border-app-success transition-all shadow-sm flex items-center gap-2"
-                        title="Reorganize Hierarchy"
+                        title={t('inventory.reorganize_hierarchy')}
                     >
                         <Wrench size={18} />
-                        <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Bulk Align</span>
+                        <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">{t('inventory.bulk_align')}</span>
                     </Link>
 
                     <CreateUnitButton potentialParents={data} />
@@ -62,15 +64,15 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                         <div className="relative z-10">
                             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                 <Calculator className="text-app-primary" size={20} />
-                                Conversion Logic
+                                {t('inventory.conversion_logic')}
                             </h3>
                             <p className="text-app-primary text-sm mb-6 leading-relaxed">
-                                Ensure every product is linked to a "Base Unit" for financial transparency and stock valuation accuracy.
+                                {t('inventory.unit_registry_info')}
                             </p>
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-app-primary">
-                                    <span>Primary Registry</span>
-                                    <span>{data.filter(u => !u.base_unit).length} Base Units</span>
+                                    <span>{t('inventory.primary_registry')}</span>
+                                    <span>{data.filter(u => !u.base_unit).length} {t('inventory.base_units')}</span>
                                 </div>
                                 <div className="w-full bg-app-foreground/10 h-1.5 rounded-full overflow-hidden">
                                     <div
@@ -79,8 +81,8 @@ export default function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                                     />
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] text-app-primary font-medium">
-                                    <span>Derived Packaging</span>
-                                    <span>{data.filter(u => u.base_unit).length} Units</span>
+                                    <span>{t('inventory.derived_packaging')}</span>
+                                    <span>{data.filter(u => u.base_unit).length} {t('inventory.derived_units')}</span>
                                 </div>
                             </div>
                         </div>

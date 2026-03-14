@@ -11,9 +11,9 @@ class UnitSerializer(serializers.ModelSerializer):
             'id', 'code', 'name', 'short_name', 'type', 
             'conversion_factor', 'base_unit', 'allow_fraction', 
             'needs_balance', 'balance_code_structure', 'product_count',
-            'tenant'
+            'organization'
         ]
-        read_only_fields = ['tenant']
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -35,9 +35,9 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'code', 'short_name', 'parent', 
             'level', 'full_path', 'product_count',
-            'brand_count', 'parfum_count', 'tenant'
+            'brand_count', 'parfum_count', 'organization'
         ]
-        read_only_fields = ['tenant', 'level', 'full_path']
+        read_only_fields = ['organization', 'level', 'full_path']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -79,9 +79,9 @@ class BrandSerializer(serializers.ModelSerializer):
             'countries', 'categories',
             'category_ids', 'country_ids',
             'product_count',
-            'created_at', 'tenant',
+            'created_at', 'organization',
         ]
-        read_only_fields = ['tenant']
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -96,9 +96,9 @@ class BrandDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'short_name', 'logo',
             'countries', 'categories',
-            'product_count', 'created_at', 'tenant',
+            'product_count', 'created_at', 'organization',
         ]
-        read_only_fields = ['tenant']
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -123,9 +123,9 @@ class ParfumSerializer(serializers.ModelSerializer):
             'id', 'name', 'short_name',
             'categories', 'category_ids',
             'product_count',
-            'tenant',
+            'organization',
         ]
-        read_only_fields = ['tenant']
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -143,9 +143,9 @@ class ProductGroupSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'image',
             'brand', 'parfum', 'category',
             'brand_name', 'parfum_name', 'category_name',
-            'product_count', 'tenant',
+            'product_count', 'organization',
         ]
-        read_only_fields = ['tenant']
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()

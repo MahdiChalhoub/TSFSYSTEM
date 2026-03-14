@@ -365,13 +365,10 @@ export async function importChartOfAccountsTemplate(templateKey: keyof typeof TE
             })
         })
 
-        // Auto-apply smart posting rules after template import
-        // so the posting rules page is pre-populated when the user arrives
-        try {
-            await applySmartPostingRules()
-        } catch {
-            // Non-critical — user can still manually map on the posting rules page
-        }
+        // NOTE: Do NOT call applySmartPostingRules() here.
+        // At this point both old and new accounts coexist, so smart_apply
+        // would pick wrong/old accounts. The correct call happens in
+        // migrateBalances() AFTER old accounts are deactivated.
 
         try {
             revalidatePath('/finance/chart-of-accounts')

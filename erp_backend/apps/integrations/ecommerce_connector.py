@@ -16,7 +16,7 @@ class EcommerceSyncConfig:
 
     PLATFORMS = ('SHOPIFY', 'WOOCOMMERCE')
 
-    def __init__(self, platform, api_url, api_key, api_secret=None, tenant_id=None):
+    def __init__(self, platform, api_url, api_key, api_secret=None, organization_id=None):
         self.platform = platform.upper()
         self.api_url = api_url.rstrip('/')
         self.api_key = api_key

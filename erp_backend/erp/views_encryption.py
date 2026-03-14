@@ -26,12 +26,12 @@ class EncryptionViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     def _get_org(self, request):
-        """Get the current org from tenant context."""
-        tenant_id = get_current_tenant_id()
-        if not tenant_id:
+        """Get the current org from organization context."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
             return None
         try:
-            return Organization.objects.get(id=tenant_id)
+            return Organization.objects.get(id=organization_id)
         except Organization.DoesNotExist:
             return None
 

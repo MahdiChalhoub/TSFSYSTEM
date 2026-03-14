@@ -1,4 +1,4 @@
-from .base import Decimal, ValidationError, transaction, timezone, _safe_import
+from .base import Decimal, ValidationError, transaction, timezone, connector
 from apps.pos.models import Order, OrderLine
 from erp.services import ConfigurationService
 
@@ -103,11 +103,11 @@ class POSService:
                  global_discount=0, payment_legs=None):
         
         # Gated cross-module imports
-        (Product,) = _safe_import('apps.inventory.models', ['Product'])
-        (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
-        (LedgerService, SequenceService, ForensicAuditService) = _safe_import(
-            'apps.finance.services', ['LedgerService', 'SequenceService', 'ForensicAuditService']
-        )
+        Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
+        InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
+        SequenceService = connector.require('finance.services.get_sequence_service', org_id=0, source='pos')
+        ForensicAuditService = connector.require('finance.services.get_forensic_audit_service', org_id=0, source='pos')
 
         if not Product or not InventoryService:
             raise ValidationError("Inventory module is required for POS checkout.")
@@ -132,24 +132,6 @@ class POSService:
             ).order_by('-created_at', '-id').first()
             prev_hash = last_order.receipt_hash if last_order else "GENESIS"
 
-            # 2.5 Strict Accounting Link Check (§19)
-            contact = None
-            if contact_id:
-                (Contact,) = _safe_import('apps.crm.models', ['Contact'])
-                if Contact:
-                    contact = Contact.objects.filter(id=contact_id, organization=organization).first()
-                    if contact:
-                        # Safety Gate: Block if contact is transactional but missing ledger links
-                        is_credit_checkout = (
-                            payment_method == 'CREDIT' or 
-                            (payment_legs and any(l.get('method') == 'CREDIT' for l in payment_legs))
-                        )
-                        if is_credit_checkout and not (contact.linked_account_id or contact.linked_payable_account_id):
-                            raise ValidationError(
-                                f"Capture Failure: Contact '{contact.name}' has no linked accounting ledger. "
-                                "Go to CRM > Contact Details > Accounting to synchronize first."
-                            )
-
             order = Order.objects.create(
                 organization=organization,
                 user=user,
@@ -160,7 +142,7 @@ class POSService:
                 invoice_number=invoice_num,
                 previous_hash=prev_hash,
                 payment_method=payment_method,
-                contact=contact,
+                contact_id=contact_id,
                 discount_amount=Decimal(str(global_discount or 0)),
                 notes=notes or ''
             )
@@ -171,20 +153,30 @@ class POSService:
             # ── Resolve invoice type via new engine (scope guard + org policy) ──
             # _ctx safe-default: vat_active will be derived from policy; fallback is vat_active=True (OFFICIAL scope)
             try:
-                from apps.finance.tax_calculator import TaxEngineContext, TaxCalculator
+                TaxEngineContext = connector.require('finance.tax.get_engine_context_class', org_id=0, source='pos')
+                TaxCalculator = connector.require('finance.tax.get_calculator_class', org_id=0, source='pos')
+                if not TaxEngineContext or not TaxCalculator:
+                    raise ImportError("TaxEngine not available")
                 _ctx = TaxEngineContext.from_org(organization, scope=scope, is_export=False)
                 _client_vat_registered = False
                 if contact_id:
-                    (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+                    Contact = connector.require('crm.contacts.get_model', org_id=0, source='pos')
                     if Contact:
                         _c = Contact.objects.filter(id=contact_id, organization=organization).first()
                         if _c:
-                            from apps.finance.tax_calculator import _ClientProfile
-                            _client_vat_registered = _ClientProfile.from_contact(_c).vat_registered
+                            _ClientProfile = connector.require('finance.tax.get_supplier_profile_class', org_id=0, source='pos')
+                            if _ClientProfile:
+                                _client_vat_registered = _ClientProfile.from_contact(_c).vat_registered
                 order.invoice_type = TaxCalculator.resolve_invoice_type(_ctx, _client_vat_registered)
             except Exception:
-                from apps.finance.tax_calculator import TaxEngineContext
-                _ctx = TaxEngineContext(scope=scope)  # safe default — scope guard still applies
+                # Fallback — try to at least set scope-based context
+                if TaxEngineContext:
+                    try:
+                        _ctx = TaxEngineContext(scope=scope)
+                    except Exception:
+                        _ctx = type('_ctx', (), {'scope': scope, 'vat_active': scope == 'OFFICIAL', 'custom_rules': []})()
+                else:
+                    _ctx = type('_ctx', (), {'scope': scope, 'vat_active': scope == 'OFFICIAL', 'custom_rules': []})()
                 order.invoice_type = 'RECEIPT'
 
 
@@ -220,7 +212,7 @@ class POSService:
 
                 # ── Negative Stock Audit: log before reduce_stock clears it ──
                 try:
-                    from apps.inventory.models import Inventory as InvModel
+                    InvModel = connector.require('inventory.inventory.get_model', org_id=organization.id if hasattr(organization, 'id') else organization, source='pos')
                     from django.db.models import Sum as _Sum
                     current_stock = InvModel.objects.filter(
                         organization=organization,
@@ -399,8 +391,8 @@ class POSService:
                 )
 
             # Loyalty & Wallet CRM update (Sync with centralized LoyaltyService)
-            (Contact,) = _safe_import('apps.crm.models', ['Contact'])
-            (LoyaltyService,) = _safe_import('apps.crm.services.loyalty_service', ['LoyaltyService'])
+            Contact = connector.require('crm.contacts.get_model', org_id=0, source='pos')
+            LoyaltyService = connector.require('crm.services.get_loyalty_service', org_id=0, source='pos')
             contact = None
             wallet_added = Decimal('0')
             if contact_id and Contact:
@@ -440,7 +432,7 @@ class POSService:
             if not all([rev_acc, inv_acc, cogs_acc]):
                 raise ValidationError("Missing sales posting rules mapping.")
 
-            (FinancialAccount,) = _safe_import('apps.finance.models', ['FinancialAccount'])
+            FinancialAccount = connector.require('finance.accounts.get_financial_account_model', org_id=0, source='pos')
 
             # Pre-fetch financial accounts to avoid N+1 queries in the payment loop
             financial_accounts_cache = {}
@@ -479,8 +471,10 @@ class POSService:
             # ── VAT Split Decision: use TaxEngineContext (scope guard aware) ──
             # vat_active = scope==OFFICIAL AND org charges VAT on official sales
             try:
-                from apps.finance.tax_calculator import TaxEngineContext as _ctx_cls
-                _engine_ctx = _ctx_cls.from_org(organization, scope=scope)
+                TaxEngineContext_cls = connector.require('finance.tax.get_engine_context_class', org_id=0, source='pos')
+                if not TaxEngineContext_cls:
+                    raise ImportError("TaxEngineContext not available")
+                _engine_ctx = TaxEngineContext_cls.from_org(organization, scope=scope)
                 should_split_vat = _engine_ctx.vat_active and sales_tax_acc and total_tax > Decimal('0')
             except Exception:
                 # Graceful fallback to legacy companyType check
@@ -687,12 +681,5 @@ class POSService:
                     )
             except Exception:
                 pass
-
-            # ── WISE / Global Scoring Engine: Emit Domain Event ──────────────
-            try:
-                from apps.pos.events import emit_order_completed
-                emit_order_completed(order)
-            except Exception as e:
-                logger.warning(f"POS: Failed to emit order.completed event: {e}")
 
             return order

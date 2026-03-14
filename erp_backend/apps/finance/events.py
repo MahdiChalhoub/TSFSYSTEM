@@ -22,7 +22,7 @@ from kernel.contracts.decorators import enforce_contract
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """
     Main event handler for Finance module
 
@@ -41,7 +41,7 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 
     if handler:
         try:
-            handler(payload, tenant_id)
+            handler(payload, organization_id)
             logger.info(f"[Finance] Successfully handled {event_name}")
         except Exception as e:
             logger.error(f"[Finance] Error handling {event_name}: {e}")
@@ -54,11 +54,11 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 @enforce_contract('order.completed')
 def on_order_completed(event):
     """EventBus handler wrapper for order.completed"""
-    handle_order_completed(event.payload, event.tenant_id, triggered_by=event.triggered_by)
+    handle_order_completed(event.payload, event.organization_id, triggered_by=event.triggered_by)
 
 
 @transaction.atomic
-def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
+def handle_order_completed(payload: dict, organization_id: int, triggered_by=None):
     """
     Handle order.completed event from POS module
 
@@ -85,7 +85,7 @@ def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
             status='PAID',  # POS orders are paid immediately
             reference_type='ORDER',
             reference_id=order_id,
-            tenant_id=tenant_id
+            organization_id=organization_id
         )
 
         # Create invoice lines
@@ -97,7 +97,7 @@ def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
                 quantity=Decimal(str(item.get('quantity', 0))),
                 unit_price=Decimal(str(item.get('unit_price', 0))),
                 total=Decimal(str(item.get('total', 0))),
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
         # Emit invoice.created event
@@ -106,7 +106,7 @@ def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
             'customer_id': customer_id,
             'total_amount': float(total_amount),
             'currency': currency,
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         }, aggregate_type='invoice', aggregate_id=invoice.id, triggered_by=triggered_by)
 
         # Emit invoice.paid event (since POS orders are paid immediately)
@@ -115,7 +115,7 @@ def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
             'customer_id': customer_id,
             'amount_paid': float(total_amount),
             'payment_date': timezone.now().isoformat(),
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         }, aggregate_type='invoice', aggregate_id=invoice.id, triggered_by=triggered_by)
 
         logger.info(f"[Finance] Created invoice {invoice.id} for order {order_id}")
@@ -128,11 +128,11 @@ def handle_order_completed(payload: dict, tenant_id: int, triggered_by=None):
 @subscribe_to_event('subscription.created')
 def on_subscription_created(event):
     """EventBus handler wrapper for subscription.created"""
-    handle_subscription_created(event.payload, event.tenant_id)
+    handle_subscription_created(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_subscription_created(payload: dict, tenant_id: int):
+def handle_subscription_created(payload: dict, organization_id: int):
     """
     Handle subscription.created event
 
@@ -149,11 +149,11 @@ def handle_subscription_created(payload: dict, tenant_id: int):
 @enforce_contract('subscription.renewed')
 def on_subscription_renewed(event):
     """EventBus handler wrapper for subscription.renewed"""
-    handle_subscription_renewed(event.payload, event.tenant_id)
+    handle_subscription_renewed(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_subscription_renewed(payload: dict, tenant_id: int):
+def handle_subscription_renewed(payload: dict, organization_id: int):
     """
     Handle subscription.renewed event
 
@@ -180,7 +180,7 @@ def handle_subscription_renewed(payload: dict, tenant_id: int):
             status='PENDING',
             reference_type='SUBSCRIPTION',
             reference_id=subscription_id,
-            tenant_id=tenant_id
+            organization_id=organization_id
         )
 
         # Emit invoice.created event
@@ -189,7 +189,7 @@ def handle_subscription_renewed(payload: dict, tenant_id: int):
             'customer_id': customer_id,
             'total_amount': float(amount),
             'currency': currency,
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         })
 
         logger.info(f"[Finance] Created renewal invoice {invoice.id}")
@@ -202,10 +202,10 @@ def handle_subscription_renewed(payload: dict, tenant_id: int):
 @subscribe_to_event('subscription.cancelled')
 def on_subscription_cancelled(event):
     """EventBus handler wrapper for subscription.cancelled"""
-    handle_subscription_cancelled(event.payload, event.tenant_id)
+    handle_subscription_cancelled(event.payload, event.organization_id)
 
 
-def handle_subscription_cancelled(payload: dict, tenant_id: int):
+def handle_subscription_cancelled(payload: dict, organization_id: int):
     """
     Handle subscription.cancelled event
 
@@ -218,14 +218,14 @@ def handle_subscription_cancelled(payload: dict, tenant_id: int):
 
 # Utility functions
 
-def record_payment(invoice_id: int, amount: Decimal, payment_method: str, tenant_id: int):
+def record_payment(invoice_id: int, amount: Decimal, payment_method: str, organization_id: int):
     """
     Record a payment against an invoice and emit payment.received event.
     """
     from apps.finance.models import Invoice, Payment
 
     try:
-        invoice = Invoice.objects.get(id=invoice_id, tenant_id=tenant_id)
+        invoice = Invoice.objects.get(id=invoice_id, organization_id=organization_id)
 
         # Create payment record
         payment = Payment.objects.create(
@@ -233,7 +233,7 @@ def record_payment(invoice_id: int, amount: Decimal, payment_method: str, tenant
             amount=amount,
             payment_method=payment_method,
             payment_date=timezone.now(),
-            tenant_id=tenant_id
+            organization_id=organization_id
         )
 
         # Update invoice status
@@ -251,7 +251,7 @@ def record_payment(invoice_id: int, amount: Decimal, payment_method: str, tenant
             'customer_id': invoice.customer_id,
             'amount': float(amount),
             'payment_method': payment_method,
-            'tenant_id': tenant_id
+            'organization_id': organization_id
         })
 
         # If fully paid, emit invoice.paid event
@@ -261,7 +261,7 @@ def record_payment(invoice_id: int, amount: Decimal, payment_method: str, tenant
                 'customer_id': invoice.customer_id,
                 'amount_paid': float(invoice.total_amount),
                 'payment_date': timezone.now().isoformat(),
-                'tenant_id': tenant_id
+                'organization_id': organization_id
             })
 
         logger.info(f"[Finance] Recorded payment of {amount} for invoice {invoice_id}")

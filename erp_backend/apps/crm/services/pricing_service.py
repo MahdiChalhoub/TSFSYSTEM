@@ -45,7 +45,7 @@ class PricingService:
             product:      inventory.Product instance
             contact:      crm.Contact instance (may be None for guest B2C)
             quantity:     order line quantity (for min_quantity checks)
-            organization: erp.Organization instance (for tenant isolation)
+            organization: erp.Organization instance (for organization isolation)
 
         Returns:
             Decimal — effective unit price (TTC, matching product.selling_price_ttc scale)

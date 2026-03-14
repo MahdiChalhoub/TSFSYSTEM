@@ -16,6 +16,7 @@ from apps.inventory.views import (
     WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
     StockMoveViewSet, WarehouseStockView,
     GoodsReceiptViewSet,
+    IntelligenceViewSet,
 )
 
 router = DefaultRouter()
@@ -48,6 +49,8 @@ router.register(r'bins', WarehouseBinViewSet, basename='warehouse-bins')
 router.register(r'product-locations', ProductLocationViewSet, basename='product-locations')
 router.register(r'goods-receipts', GoodsReceiptViewSet, basename='goods-receipts')
 
+# AI Intelligence Endpoints
+router.register(r'intelligence', IntelligenceViewSet, basename='intelligence')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -26,10 +26,14 @@ import POSLobby from '@/components/pos/lobby/POSLobby';
 import CloseRegisterModal from '@/components/pos/CloseRegisterModal';
 import ReturnOrderModal from '@/components/pos/ReturnOrderModal';
 import POSKeyboardShortcuts from '@/components/pos/POSKeyboardShortcuts';
+import OfflineIndicator from '@/components/pos/OfflineIndicator';
+import OnlineOnlyOverlay from '@/components/pos/OnlineOnlyOverlay';
 import { saveHold } from '@/components/pos/POSQuickHold';
 import { useTerminal } from '@/hooks/pos/useTerminal';
 import { useBarcodeScanner } from '@/hooks/pos/useBarcodeScanner';
+import { useOnlineStatus } from '@/lib/offline/hooks';
 import { POSLayoutVariant } from '@/types/pos-layout';
+import { erpFetch } from '@/lib/erp-api';
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { AlertCircle, RefreshCw } from 'lucide-react';
@@ -73,6 +77,17 @@ const LAYOUT_STORAGE_KEY = 'pos-layout-preference';
 // ─── Inner component (uses terminal hook directly) ──────────────
 function POSTerminalInner() {
     const terminal = useTerminal();
+    const { isOnline } = useOnlineStatus();
+
+    // Fetch POS connectivity setting from backend
+    const [posOfflineEnabled, setPosOfflineEnabled] = useState(true);
+    useEffect(() => {
+        erpFetch('pos/pos-settings/').then((d: any) => {
+            if (d && typeof d.pos_offline_enabled === 'boolean') {
+                setPosOfflineEnabled(d.pos_offline_enabled);
+            }
+        }).catch(() => { });
+    }, []);
 
     // Barcode scanner integration
     useBarcodeScanner(terminal);
@@ -99,10 +114,20 @@ function POSTerminalInner() {
     // ─── Lobby Gate ──────────────────────────────────────────────
     if (!terminal.registerConfig) {
         return (
-            <POSLobby
-                currency={terminal.currency}
-                onEnterPOS={terminal.enterRegister}
-            />
+            <>
+                <POSLobby
+                    currency={terminal.currency}
+                    onEnterPOS={terminal.enterRegister}
+                />
+                {/* Connectivity indicator in lobby */}
+                <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 100 }}>
+                    <OfflineIndicator offlineEnabled={posOfflineEnabled} />
+                </div>
+                {/* Block POS if forced-online and offline */}
+                {!posOfflineEnabled && !isOnline && (
+                    <OnlineOnlyOverlay reason="POS is configured for online-only mode. Please connect to the internet to continue." />
+                )}
+            </>
         );
     }
 
@@ -312,6 +337,16 @@ function POSTerminalInner() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Connectivity indicator */}
+            <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 100 }}>
+                <OfflineIndicator offlineEnabled={posOfflineEnabled} />
+            </div>
+
+            {/* Block POS terminal if forced-online and offline */}
+            {!posOfflineEnabled && !isOnline && (
+                <OnlineOnlyOverlay reason="POS is configured for online-only mode. Please connect to the internet to continue." />
             )}
         </>
     );

@@ -23,6 +23,7 @@ from django.core.exceptions import ValidationError
 from erp.views_base import TenantModelViewSet
 from apps.inventory.models import GoodsReceipt, GoodsReceiptLine, Product
 from apps.inventory.services.goods_receipt_service import GoodsReceiptService
+from erp.connector_registry import connector
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -201,13 +202,13 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             warehouse = Warehouse.objects.get(
                 id=data['warehouse_id'],
-                tenant=request.user.organization
+                organization=request.user.organization
             )
         except Warehouse.DoesNotExist:
             return Response({'error': 'Warehouse not found'}, status=status.HTTP_400_BAD_REQUEST)
 
         receipt = GoodsReceipt(
-            tenant=request.user.organization,
+            organization=request.user.organization,
             mode=data['mode'],
             status='IN_PROGRESS',
             warehouse=warehouse,
@@ -218,22 +219,26 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
 
         # Mode B — link PO
         if data['mode'] == 'PO_BASED' and data.get('purchase_order_id'):
-            from apps.pos.models import PurchaseOrder
+            PurchaseOrder = connector.require('pos.purchase_orders.get_model', org_id=0, source='inventory')
+            if not PurchaseOrder:
+                return Response({'error': 'POS module is required for this operation.'}, status=503)
             try:
                 po = PurchaseOrder.objects.get(
                     id=data['purchase_order_id'],
-                    tenant=request.user.organization,
+                    organization=request.user.organization,
                 )
                 receipt.purchase_order = po
                 receipt.supplier = po.supplier
             except PurchaseOrder.DoesNotExist:
                 return Response({'error': 'Purchase Order not found'}, status=status.HTTP_400_BAD_REQUEST)
         elif data.get('supplier_id'):
-            from apps.crm.models import Contact
+            Contact = connector.require('crm.contacts.get_model', org_id=0, source='inventory')
+            if not Contact:
+                return Response({'error': 'CRM module is required for this operation.'}, status=503)
             try:
                 receipt.supplier = Contact.objects.get(
                     id=data['supplier_id'],
-                    tenant=request.user.organization,
+                    organization=request.user.organization,
                 )
             except Contact.DoesNotExist:
                 pass
@@ -246,7 +251,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
                 remaining = po_line.quantity - po_line.qty_received
                 if remaining > 0:
                     GoodsReceiptLine.objects.create(
-                        tenant=request.user.organization,
+                        organization=request.user.organization,
                         receipt=receipt,
                         product=po_line.product,
                         po_line=po_line,
@@ -277,7 +282,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             product = Product.objects.get(
                 id=data['product_id'],
-                tenant=request.user.organization,
+                organization=request.user.organization,
             )
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -287,7 +292,9 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         po_line = None
         if receipt.mode == 'PO_BASED' and receipt.purchase_order:
             if data.get('po_line_id'):
-                from apps.pos.models import PurchaseOrderLine
+                PurchaseOrderLine = connector.require('pos.purchase_order_lines.get_model', org_id=0, source='inventory')
+                if not PurchaseOrderLine:
+                    return Response({'error': 'POS module is required for this operation.'}, status=503)
                 try:
                     po_line = PurchaseOrderLine.objects.get(id=data['po_line_id'])
                 except PurchaseOrderLine.DoesNotExist:
@@ -295,7 +302,9 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
 
             if not po_line:
                 # Check if product is on PO at all
-                from apps.pos.models import PurchaseOrderLine
+                PurchaseOrderLine = connector.require('pos.purchase_order_lines.get_model', org_id=0, source='inventory')
+                if not PurchaseOrderLine:
+                    return Response({'error': 'POS module is required for this operation.'}, status=503)
                 po_line = PurchaseOrderLine.objects.filter(
                     order=receipt.purchase_order,
                     product=product,
@@ -305,7 +314,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
                 is_unexpected = True
 
         line = GoodsReceiptLine.objects.create(
-            tenant=request.user.organization,
+            organization=request.user.organization,
             receipt=receipt,
             product=product,
             po_line=po_line,
@@ -454,7 +463,7 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         try:
             product = Product.objects.get(
                 id=data['product_id'],
-                tenant=request.user.organization,
+                organization=request.user.organization,
             )
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -469,7 +478,9 @@ class GoodsReceiptViewSet(BranchScopedMixin, TenantModelViewSet):
         # Evaluate rules with a lightweight dict
         is_unexpected = False
         if receipt.mode == 'PO_BASED' and receipt.purchase_order:
-            from apps.pos.models import PurchaseOrderLine
+            PurchaseOrderLine = connector.require('pos.purchase_order_lines.get_model', org_id=0, source='inventory')
+            if not PurchaseOrderLine:
+                return Response({'error': 'POS module is required for this operation.'}, status=503)
             is_unexpected = not PurchaseOrderLine.objects.filter(
                 order=receipt.purchase_order, product=product
             ).exists()

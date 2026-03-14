@@ -47,7 +47,7 @@ def _generate_sku(organization, category_code, brand_code, index):
     prefix = f"{(category_code or 'GEN')[:3].upper()}-{(brand_code or 'XX')[:3].upper()}"
     # Find the next available sequence
     existing = Product.objects.filter(
-        tenant=organization,
+        organization=organization,
         sku__startswith=prefix
     ).count()
     seq = existing + index + 1
@@ -65,7 +65,7 @@ def _generate_barcode(organization, category, brand, index):
         category.save(update_fields=['barcode_sequence'])
         seq = category.barcode_sequence
     else:
-        seq = Product.objects.filter(tenant=organization).count() + index + 1
+        seq = Product.objects.filter(organization=organization).count() + index + 1
 
     return f"INT{brand_code}{cat_code}{seq:06d}"
 
@@ -97,8 +97,8 @@ class ProductComboMixin:
                 unit_id = data.get('unitId')
                 product_type = data.get('productType', 'STANDARD')
 
-                category = Category.objects.filter(id=category_id, tenant=organization).first() if category_id else None
-                brand = Brand.objects.filter(id=brand_id, tenant=organization).first() if brand_id else None
+                category = Category.objects.filter(id=category_id, organization=organization).first() if category_id else None
+                brand = Brand.objects.filter(id=brand_id, organization=organization).first() if brand_id else None
 
                 # --- 2. Resolve Parfum/Flavor & ProductGroup ---
                 parfum_id = None
@@ -119,14 +119,14 @@ class ProductComboMixin:
 
                 if parfum_name and brand_id:
                     parfum, _ = Parfum.objects.update_or_create(
-                        tenant=organization,
+                        organization=organization,
                         name=parfum_name,
                         defaults={}
                     )
                     parfum_id = parfum.id
 
                     group = ProductGroup.objects.filter(
-                        tenant=organization,
+                        organization=organization,
                         brand_id=brand_id,
                         parfum_id=parfum_id
                     ).first()
@@ -134,7 +134,7 @@ class ProductComboMixin:
                     if not group:
                         group_name = f"{brand.name} {parfum_name}".strip() if brand else parfum_name
                         group = ProductGroup.objects.create(
-                            tenant=organization,
+                            organization=organization,
                             name=group_name,
                             brand_id=brand_id,
                             parfum_id=parfum_id,
@@ -191,11 +191,11 @@ class ProductComboMixin:
                     barcode = data.get('barcode') or _generate_barcode(organization, category, brand, 0)
 
                     # Check uniqueness
-                    if Product.objects.filter(tenant=organization, sku=sku).exists():
+                    if Product.objects.filter(organization=organization, sku=sku).exists():
                         return Response({"error": f"SKU '{sku}' already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
                     product = Product.objects.create(
-                        tenant=organization,
+                        organization=organization,
                         name=base_product_name,
                         description=base_description,
                         sku=sku,
@@ -243,7 +243,7 @@ class ProductComboMixin:
                         var_parfum_id = parfum_id
                         if v_name and brand_id:
                             var_parfum, _ = Parfum.objects.update_or_create(
-                                tenant=organization,
+                                organization=organization,
                                 name=v_name,
                                 defaults={}
                             )
@@ -258,14 +258,14 @@ class ProductComboMixin:
                             full_name = f"{base_product_name} {v_name}".strip()
 
                         # Check SKU uniqueness
-                        if Product.objects.filter(tenant=organization, sku=v_sku).exists():
+                        if Product.objects.filter(organization=organization, sku=v_sku).exists():
                             return Response(
                                 {"error": f"SKU '{v_sku}' already exists (for variation '{v_name}')"},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
 
                         product = Product.objects.create(
-                            tenant=organization,
+                            organization=organization,
                             name=full_name,
                             description=base_description,
                             sku=v_sku,
@@ -311,7 +311,7 @@ class ProductComboMixin:
 
                             if pkg_unit_id:  # Only create if a unit was selected
                                 ProductPackaging.objects.create(
-                                    tenant=organization,
+                                    organization=organization,
                                     product=product,
                                     unit_id=pkg_unit_id,
                                     level=level_idx + 1,
@@ -323,36 +323,38 @@ class ProductComboMixin:
                 # --- 7. Link Supplier ---
                 supplier_id = data.get('supplierId')
                 if supplier_id:
-                    from apps.crm.models import Contact
-                    try:
-                        supplier = Contact.objects.get(id=supplier_id, tenant=organization)
-                        supplier_sku = data.get('supplierSku', '')
-                        supplier_price = data.get('supplierPrice')
-                        supplier_lt = data.get('supplierLeadTime')
-
-                        # Import the ProductSupplier model
-                        from django.apps import apps
+                    from erp.connector_registry import connector as _conn
+                    Contact = _conn.require('crm.contacts.get_model', org_id=organization.id, source='inventory.product_combo')
+                    if Contact:
                         try:
-                            ProductSupplier = apps.get_model('pos', 'ProductSupplier')
-                        except LookupError:
-                            ProductSupplier = None
+                            supplier = Contact.objects.get(id=supplier_id, organization=organization)
+                            supplier_sku = data.get('supplierSku', '')
+                            supplier_price = data.get('supplierPrice')
+                            supplier_lt = data.get('supplierLeadTime')
+
+                            # Import the ProductSupplier model
+                            from django.apps import apps
+                            try:
+                                ProductSupplier = apps.get_model('pos', 'ProductSupplier')
+                            except LookupError:
+                                ProductSupplier = None
                             
-                        if ProductSupplier:
-                            for product in created_products:
-                                ProductSupplier.objects.update_or_create(
-                                    tenant=organization,
-                                    product=product,
-                                    supplier=supplier,
-                                    defaults={
-                                        'supplier_sku': supplier_sku or '',
-                                        'last_purchased_price': Decimal(str(supplier_price)) if supplier_price else None,
-                                        'lead_time_days': int(supplier_lt) if supplier_lt else None,
-                                        'is_preferred': True,
-                                        'is_active': True,
-                                    }
-                                )
-                    except Exception:
-                        pass  # Supplier linking is non-critical, don't fail the whole creation
+                            if ProductSupplier:
+                                for product in created_products:
+                                    ProductSupplier.objects.update_or_create(
+                                        organization=organization,
+                                        product=product,
+                                        supplier=supplier,
+                                        defaults={
+                                            'supplier_sku': supplier_sku or '',
+                                            'last_purchased_price': Decimal(str(supplier_price)) if supplier_price else None,
+                                            'lead_time_days': int(supplier_lt) if supplier_lt else None,
+                                            'is_preferred': True,
+                                            'is_active': True,
+                                        }
+                                    )
+                        except Exception:
+                            pass  # Supplier linking is non-critical, don't fail the whole creation
 
                 # --- 8. Respond ---
                 if len(created_products) == 1:
@@ -403,7 +405,7 @@ class ProductComboMixin:
 
         try:
             component_product = Product.objects.get(
-                id=component_id, tenant=product.tenant
+                id=component_id, organization=product.organization
             )
         except Product.DoesNotExist:
             return Response({'error': 'Component product not found'}, status=404)
@@ -411,7 +413,7 @@ class ProductComboMixin:
         comp, created = ComboComponent.objects.update_or_create(
             combo_product=product,
             component_product=component_product,
-            tenant=product.tenant,
+            organization=product.organization,
             defaults={
                 'quantity': quantity,
                 'price_override': price_override,

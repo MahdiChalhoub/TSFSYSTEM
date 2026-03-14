@@ -25,7 +25,7 @@ def user_list_preference(request, list_key):
         # Try user preference first
         try:
             pref = UserListPreference.objects.get(
-                user=request.user, tenant_id=org_id, list_key=list_key
+                user=request.user, organization_id=org_id, list_key=list_key
             )
             return Response({
                 'source': 'user',
@@ -42,7 +42,7 @@ def user_list_preference(request, list_key):
         # Fall back to org default
         try:
             org_default = OrgListDefault.objects.get(
-                tenant_id=org_id, list_key=list_key
+                organization_id=org_id, list_key=list_key
             )
             return Response({
                 'source': 'organization',
@@ -71,7 +71,7 @@ def user_list_preference(request, list_key):
         data = request.data
         pref, created = UserListPreference.objects.update_or_create(
             user=request.user,
-            tenant_id=org_id,
+            organization_id=org_id,
             list_key=list_key,
             defaults={
                 'visible_columns': data.get('visible_columns', []),
@@ -102,7 +102,7 @@ def org_list_default(request, list_key):
     if request.method == 'GET':
         try:
             org_default = OrgListDefault.objects.get(
-                tenant_id=org_id, list_key=list_key
+                organization_id=org_id, list_key=list_key
             )
             return Response({
                 'list_key': list_key,
@@ -132,7 +132,7 @@ def org_list_default(request, list_key):
 
         data = request.data
         default, created = OrgListDefault.objects.update_or_create(
-            tenant_id=org_id,
+            organization_id=org_id,
             list_key=list_key,
             defaults={
                 'visible_columns': data.get('visible_columns', []),

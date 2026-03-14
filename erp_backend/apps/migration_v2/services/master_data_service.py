@@ -24,7 +24,7 @@ class MasterDataMigrationService:
 
     Rules:
     - All operations use transaction.atomic
-    - Uses organization from job (tenant isolation)
+    - Uses organization from job (organization isolation)
     - Stores mappings for all entities
     - Logs errors but doesn't stop the process
     """

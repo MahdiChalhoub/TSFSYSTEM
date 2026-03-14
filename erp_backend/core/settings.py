@@ -115,7 +115,7 @@ if not DEBUG:
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'erp.auth_token.ExpiringTokenAuthentication',
+        'erp.auth_token.CookieTokenAuthentication',  # Reads from cookie OR Authorization header
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -136,11 +136,11 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/minute',       # Public endpoints
-        'user': '200/minute',      # Authenticated users
-        'login': '5/minute',       # Login attempts (custom)
+        'anon': '300/minute',       # Public endpoints
+        'user': '1000/minute',      # Authenticated users
+        'login': '20/minute',       # Login attempts (custom)
         'register': '3/minute',    # Registration attempts
-        'tenant_resolve': '30/minute',  # Tenant resolution
+        'tenant_resolve': '120/minute',  # Tenant resolution
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'EXCEPTION_HANDLER': 'erp.exception_handler.tsf_exception_handler',
@@ -148,7 +148,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'TSF Enterprise Suite API',
-    'DESCRIPTION': 'Multi-tenant SaaS ERP Platform — Finance, Inventory, POS, CRM, HR',
+    'DESCRIPTION': 'Multi-organization SaaS ERP Platform — Finance, Inventory, POS, CRM, HR',
     'VERSION': '2.9.2',
     'SERVE_INCLUDE_SCHEMA': False,
     'CONTACT': {'name': 'TSF Engineering', 'url': 'https://tsf.ci'},
@@ -249,8 +249,8 @@ class _JSONFormatter(_logging.Formatter):
             'func': record.funcName,
             'line': record.lineno,
         }
-        if hasattr(record, 'tenant_id'):
-            log_data['tenant_id'] = record.tenant_id
+        if hasattr(record, 'organization_id'):
+            log_data['organization_id'] = record.organization_id
         if record.exc_info:
             log_data['exception'] = self.formatException(record.exc_info)
         return _json.dumps(log_data)
@@ -434,8 +434,8 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP System <noreply@tsf.ci
 AUTHENTICATION_BACKENDS = [
     'erp.backends.TenantAuthBackend',
     # NOTE: Do NOT add ModelBackend here — it calls get_by_natural_key(username)
-    # without tenant scoping, which crashes with MultipleObjectsReturned when
-    # the same username exists in multiple organizations (valid multi-tenant data).
+    # without organization scoping, which crashes with MultipleObjectsReturned when
+    # the same username exists in multiple organizations (valid multi-organization data).
     # TenantAuthBackend already handles admin panel logins.
 ]
 

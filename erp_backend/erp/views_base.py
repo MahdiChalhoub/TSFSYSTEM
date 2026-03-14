@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
+ - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 
@@ -95,7 +95,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
     
     DAJINGO RULES ENFORCED:
     - Rule 3: All queries MUST be scoped by organization_id.
-    - Rule 5: organization_id derived from auth user context or secure tenant header.
+    - Rule 5: organization_id derived from auth user context or secure organization header.
     - Rule 6: APIs automatically inject organization_id; manual override forbidden.
     """
     permission_classes = [permissions.IsAuthenticated]
@@ -103,12 +103,12 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        tenant_id = get_current_tenant_id()
+        organization_id = get_current_tenant_id()
         model = self.queryset.model
 
         # 1. Resolve Organization ID
         if user.is_staff or user.is_superuser:
-            org_id = tenant_id or user.organization_id
+            org_id = organization_id or user.organization_id
         else:
             org_id = user.organization_id
 
@@ -143,7 +143,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
             # But they are still caged within their Organization (Step 1 above).
             is_detail = self.detail or 'pk' in self.kwargs
             if is_detail:
-                # Still respect tenant, but ignore scope for specific record lookup
+                # Still respect organization, but ignore scope for specific record lookup
                 pass 
             else:
                 filters['scope'] = target_scope
@@ -177,7 +177,7 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
         if not organization_id:
              from rest_framework import serializers
              raise serializers.ValidationError({
-                 "error": "Organization context missing. Please ensure you are within a valid tenant environment."
+                 "error": "Organization context missing. Please ensure you are within a valid organization environment."
              })
 
         # --- GLOBAL SCOPE ENFORCEMENT ---
@@ -185,11 +185,11 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
         if hasattr(model, 'scope'):
             self.check_scope_permission(self.request.data.get('scope'))
 
-        # Detect whether model uses 'tenant' (TenantOwnedModel) or 'organization' (TenantModel)
-        if hasattr(model, 'tenant'):
-            serializer.save(tenant_id=organization_id)
+        # Detect whether model uses 'organization' (TenantOwnedModel) or 'organization' (TenantModel)
+        if hasattr(model, 'organization'):
+            serializer.save(organization_id=organization_id)
         else:
-            serializer.save(tenant_id=organization_id)
+            serializer.save(organization_id=organization_id)
 
     def perform_update(self, serializer):
         if 'organization' in self.request.data or 'organization_id' in self.request.data:
@@ -204,6 +204,19 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         super().perform_destroy(instance)  # Triggers AuditLogMixin
+
+
+class TenantViewMixin:
+    """
+    Mixin for plain DRF APIView classes that need tenant context.
+    TenantModelViewSet handles ViewSets automatically, but plain APIViews
+    (e.g., financial reports) need this mixin for tenant resolution via middleware.
+    """
+
+    def get_organization_id(self):
+        """Resolve the current tenant from middleware."""
+        return get_current_tenant_id()
+
 
 # ============================================================================
 #  KERNEL VIEWSETS

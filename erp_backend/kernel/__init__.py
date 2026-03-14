@@ -2,7 +2,7 @@
 TSFSYSTEM Kernel OS
 
 The kernel provides core cross-cutting concerns:
-- Tenancy: Automatic tenant isolation
+- Tenancy: Automatic organization isolation
 - RBAC: Centralized permission system
 - Audit: 4-layer audit engine
 - Events: Event bus with outbox pattern

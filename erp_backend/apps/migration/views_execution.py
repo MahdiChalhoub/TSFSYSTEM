@@ -54,7 +54,7 @@ class MigrationExecutionMixin:
         org_id = request.headers.get('X-Tenant-Id') or \
                  getattr(request.user, 'organization_id', None)
         active_job = MigrationJob.objects.filter(
-            tenant_id=org_id,
+            organization_id=org_id,
             status__in=['RUNNING', 'PARSING']
         ).exclude(id=job.id).first()
         if active_job:

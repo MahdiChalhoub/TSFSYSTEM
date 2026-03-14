@@ -47,7 +47,7 @@ class ProductAnalyticsMixin:
         organization, err = _get_org_or_400()
         if err: return err
 
-        total = Product.objects.filter(tenant=organization, is_active=True)
+        total = Product.objects.filter(organization=organization, is_active=True)
         missing_barcode = total.filter(Q(barcode__isnull=True) | Q(barcode='')).count()
         missing_category = total.filter(category__isnull=True).count()
         missing_brand = total.filter(brand__isnull=True).count()
@@ -82,7 +82,7 @@ class ProductAnalyticsMixin:
         offset = int(request.query_params.get('offset', 0))
 
         products_qs = Product.objects.filter(
-            tenant=organization, status='ACTIVE'
+            organization=organization, status='ACTIVE'
         ).select_related('brand', 'category', 'unit')
         if query:
             products_qs = products_qs.filter(
@@ -91,14 +91,14 @@ class ProductAnalyticsMixin:
         if category_id:
             # Include products from the category and all its descendants
             try:
-                cat = Category.objects.get(id=category_id, tenant=organization)
+                cat = Category.objects.get(id=category_id, organization=organization)
                 descendant_ids = list(Category.objects.filter(
-                    tenant=organization, parent=cat
+                    organization=organization, parent=cat
                 ).values_list('id', flat=True))
                 all_cat_ids = [cat.id] + descendant_ids
                 # Also grab grandchildren
                 grandchild_ids = list(Category.objects.filter(
-                    tenant=organization, parent_id__in=descendant_ids
+                    organization=organization, parent_id__in=descendant_ids
                 ).values_list('id', flat=True))
                 all_cat_ids += grandchild_ids
                 products_qs = products_qs.filter(category_id__in=all_cat_ids)
@@ -127,7 +127,7 @@ class ProductAnalyticsMixin:
 
         # Batch: Sales velocity (1 query instead of N)
         sales_rows = InventoryMovement.objects.filter(
-            tenant=organization, product_id__in=product_ids,
+            organization=organization, product_id__in=product_ids,
             type='OUT', created_at__gte=thirty_days_ago
         ).values('product_id').annotate(
             total_out=Coalesce(Sum('quantity'), 0, output_field=DecimalField())
@@ -185,7 +185,7 @@ class ProductAnalyticsMixin:
         offset = int(request.query_params.get('offset', 0))
 
         products_qs = Product.objects.filter(
-            tenant=organization, status='ACTIVE'
+            organization=organization, status='ACTIVE'
         ).select_related('brand', 'category', 'unit')
 
         if search:
@@ -218,14 +218,14 @@ class ProductAnalyticsMixin:
 
         # Batch: Sales
         sales_rows = InventoryMovement.objects.filter(
-            tenant=organization, product_id__in=product_ids,
+            organization=organization, product_id__in=product_ids,
             type='OUT', created_at__gte=thirty_days_ago
         ).values('product_id').annotate(total_out=Coalesce(Sum('quantity'), 0, output_field=DecimalField()))
         sales_map = {r['product_id']: float(r['total_out']) for r in sales_rows}
 
         # Batch: Purchases
         purchase_rows = InventoryMovement.objects.filter(
-            tenant=organization, product_id__in=product_ids,
+            organization=organization, product_id__in=product_ids,
             type='IN', created_at__gte=thirty_days_ago
         ).values('product_id').annotate(
             total_in=Coalesce(Sum('quantity'), 0, output_field=DecimalField()),

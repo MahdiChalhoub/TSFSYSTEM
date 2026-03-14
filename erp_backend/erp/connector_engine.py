@@ -32,7 +32,7 @@ class ModuleState(Enum):
     """
     AVAILABLE = "available"       # 🟢 Module installed and enabled
     MISSING = "missing"           # 🟡 Module not installed on system
-    DISABLED = "disabled"         # 🔵 Module installed but disabled for tenant
+    DISABLED = "disabled"         # 🔵 Module installed but disabled for organization
     UNAUTHORIZED = "unauthorized"  # 🔴 Module exists but no permission
 
 
@@ -130,7 +130,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
                 source_module='finance',
                 target_module='inventory',
                 endpoint='products/cost/',
-                tenant_id=org.id,
+                organization_id=org.id,
                 user=request.user
             )
             
@@ -140,7 +140,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
                 target_module='inventory',
                 endpoint='stock/update/',
                 data={'product_id': 123, 'quantity': -1},
-                tenant_id=org.id,
+                organization_id=org.id,
                 user=request.user
             )
         """
@@ -162,7 +162,7 @@ class ConnectorEngine(ConnectorStateMixin, ConnectorRoutingMixin, ConnectorEvent
             buffered = self._BufferedRequest.objects.create(
                 target_module=target_module,
                 target_endpoint=endpoint,
-                tenant_id=organization_id,
+                organization_id=organization_id,
                 source_module=source_module or '',
                 method=method,
                 payload=data,

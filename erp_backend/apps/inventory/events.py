@@ -22,7 +22,7 @@ from kernel.tenancy.context import get_current_tenant
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """
     Main event handler for Inventory module
 
@@ -42,7 +42,7 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
 
     if handler:
         try:
-            handler(payload, tenant_id)
+            handler(payload, organization_id)
             logger.info(f"[Inventory] Successfully handled {event_name}")
         except Exception as e:
             logger.error(f"[Inventory] Error handling {event_name}: {e}")
@@ -58,11 +58,11 @@ def on_order_completed(event):
     EventBus handler wrapper for order.completed
     Automatically registered and validated against contract.
     """
-    handle_order_completed(event.payload, event.tenant_id)
+    handle_order_completed(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_order_completed(payload: dict, tenant_id: int):
+def handle_order_completed(payload: dict, organization_id: int):
     """
     Handle order.completed event from POS module
 
@@ -88,7 +88,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
             inventory = Inventory.objects.get(
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
             # Check if sufficient stock
@@ -103,7 +103,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
                     'warehouse_id': warehouse_id,
                     'available_quantity': float(inventory.quantity),
                     'requested_quantity': float(quantity),
-                    'tenant_id': tenant_id
+                    'organization_id': organization_id
                 })
 
             # Decrement inventory
@@ -119,7 +119,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
                 reference_type='ORDER',
                 reference_id=order_id,
                 notes=f'Sale from Order #{order_id}',
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
             # Check if stock is now low
@@ -129,7 +129,7 @@ def handle_order_completed(payload: dict, tenant_id: int):
                     'warehouse_id': warehouse_id,
                     'current_quantity': float(inventory.quantity),
                     'min_level': inventory.product.min_stock_level,
-                    'tenant_id': tenant_id
+                    'organization_id': organization_id
                 })
 
             logger.info(
@@ -148,11 +148,11 @@ def handle_order_completed(payload: dict, tenant_id: int):
 @enforce_contract('order.voided')
 def on_order_voided(event):
     """EventBus handler wrapper for order.voided"""
-    handle_order_voided(event.payload, event.tenant_id)
+    handle_order_voided(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_order_voided(payload: dict, tenant_id: int):
+def handle_order_voided(payload: dict, organization_id: int):
     """
     Handle order.voided event
 
@@ -177,7 +177,7 @@ def handle_order_voided(payload: dict, tenant_id: int):
             inventory = Inventory.objects.get(
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
             # Restore inventory
@@ -192,7 +192,7 @@ def handle_order_voided(payload: dict, tenant_id: int):
                 reference_type='ORDER_VOID',
                 reference_id=order_id,
                 notes=f'Void of Order #{order_id}',
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
             logger.info(f"[Inventory] Restored stock for product {product_id}: +{quantity}")
@@ -208,11 +208,11 @@ def handle_order_voided(payload: dict, tenant_id: int):
 @enforce_contract('purchase_order.received')
 def on_purchase_order_received(event):
     """EventBus handler wrapper for purchase_order.received"""
-    handle_purchase_order_received(event.payload, event.tenant_id)
+    handle_purchase_order_received(event.payload, event.organization_id)
 
 
 @transaction.atomic
-def handle_purchase_order_received(payload: dict, tenant_id: int):
+def handle_purchase_order_received(payload: dict, organization_id: int):
     """
     Handle purchase_order.received event
 
@@ -238,7 +238,7 @@ def handle_purchase_order_received(payload: dict, tenant_id: int):
             inventory, created = Inventory.objects.get_or_create(
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-                tenant_id=tenant_id,
+                organization_id=organization_id,
                 defaults={'quantity': Decimal('0')}
             )
 
@@ -254,7 +254,7 @@ def handle_purchase_order_received(payload: dict, tenant_id: int):
                 reference_type='PURCHASE_ORDER',
                 reference_id=po_id,
                 notes=f'Receipt from PO #{po_id}',
-                tenant_id=tenant_id
+                organization_id=organization_id
             )
 
             logger.info(
@@ -270,10 +270,10 @@ def handle_purchase_order_received(payload: dict, tenant_id: int):
 @enforce_contract('invoice.created')
 def on_invoice_created(event):
     """EventBus handler wrapper for invoice.created"""
-    handle_invoice_created(event.payload, event.tenant_id)
+    handle_invoice_created(event.payload, event.organization_id)
 
 
-def handle_invoice_created(payload: dict, tenant_id: int):
+def handle_invoice_created(payload: dict, organization_id: int):
     """
     Handle invoice.created event
 
@@ -287,17 +287,28 @@ def handle_invoice_created(payload: dict, tenant_id: int):
 
 # Utility functions for inventory operations
 
-def check_low_stock_and_emit(product_id: int, tenant_id: int):
+def check_low_stock_and_emit(product_id: int, organization_id: int):
     """
     Check if a product is low on stock and emit event if needed.
 
     Can be called from anywhere to check stock levels.
+    Gated by feature flag: inventory.auto_reorder
     """
+    # Feature flag gate
+    try:
+        from kernel.config import is_feature_enabled
+        from kernel.tenancy.middleware import get_current_tenant
+        org = get_current_tenant()
+        if org and not is_feature_enabled('inventory.auto_reorder', organization=org):
+            return
+    except Exception:
+        pass  # Fail-open: emit alerts if flag check fails
+
     from apps.inventory.models import Inventory
 
     inventories = Inventory.objects.filter(
         product_id=product_id,
-        tenant_id=tenant_id
+        organization_id=organization_id
     )
 
     for inventory in inventories:
@@ -307,5 +318,5 @@ def check_low_stock_and_emit(product_id: int, tenant_id: int):
                 'warehouse_id': inventory.warehouse_id,
                 'current_quantity': float(inventory.quantity),
                 'min_level': inventory.product.min_stock_level,
-                'tenant_id': tenant_id
+                'organization_id': organization_id
             })

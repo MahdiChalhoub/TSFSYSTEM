@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
+ - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 
@@ -76,7 +76,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     """
     Endpoints for current user notifications.
     [RESILIENCE] Wrapped with try/except to prevent 500 HTML errors on SaaS pages
-    where tenant context may not be fully resolved.
+    where organization context may not be fully resolved.
     """
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -153,7 +153,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 class TenantResolutionView(viewsets.ViewSet):
     """
-    Public endpoint to resolve tenant slug to ID.
+    Public endpoint to resolve organization slug to ID.
     Used by Next.js middleware/context to avoid direct DB access.
     """
     permission_classes = [] 
@@ -245,7 +245,7 @@ class SettingsViewSet(viewsets.ViewSet):
                         # Count JE lines on old account
                         je_count = JournalEntryLine.objects.filter(
                             account_id=old_id,
-                            journal_entry__organization=organization
+                            journal_entry__tenant=organization
                         ).count()
 
                         # Get balance
@@ -253,7 +253,7 @@ class SettingsViewSet(viewsets.ViewSet):
                         from decimal import Decimal
                         agg = JournalEntryLine.objects.filter(
                             account_id=old_id,
-                            journal_entry__organization=organization
+                            journal_entry__tenant=organization
                         ).aggregate(
                             total_debit=_Sum('debit'),
                             total_credit=_Sum('credit')
@@ -324,7 +324,7 @@ class SettingsViewSet(viewsets.ViewSet):
 
                         agg = JournalEntryLine.objects.filter(
                             account_id=old_id,
-                            journal_entry__organization=organization
+                            journal_entry__tenant=organization
                         ).aggregate(
                             total_debit=_Sum('debit'),
                             total_credit=_Sum('credit')
@@ -516,10 +516,10 @@ class RecordHistoryViewSet(viewsets.ViewSet):
         if not table or not record_id:
             return Response({"error": "Both 'table' and 'id' params required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        tenant_id = get_current_tenant_id()
+        organization_id = get_current_tenant_id()
         qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
-        if tenant_id:
-            qs = qs.filter(tenant_id=tenant_id)
+        if organization_id:
+            qs = qs.filter(organization_id=organization_id)
         
         # --- STRICT SCOPE ISOLATION ---
         from .middleware import get_authorized_scope
@@ -560,18 +560,18 @@ class EntityGraphViewSet(viewsets.ViewSet):
         if not table or not record_id:
             return Response({"error": "Both 'table' and 'id' params required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        tenant_id = get_current_tenant_id()
+        organization_id = get_current_tenant_id()
 
         # Audit entries for this entity
         audit_qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
-        if tenant_id:
-            audit_qs = audit_qs.filter(tenant_id=tenant_id)
+        if organization_id:
+            audit_qs = audit_qs.filter(organization_id=organization_id)
         audit_ids = list(audit_qs.values_list('id', flat=True)[:50])
 
         # Approval requests linked to this entity
         approval_qs = ApprovalRequest.objects.filter(target_table=table, target_id=record_id)
-        if tenant_id:
-            approval_qs = approval_qs.filter(tenant_id=tenant_id)
+        if organization_id:
+            approval_qs = approval_qs.filter(organization_id=organization_id)
         approvals = [{
             "id": str(a.id),
             "status": a.status,

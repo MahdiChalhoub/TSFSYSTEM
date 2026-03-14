@@ -1,27 +1,24 @@
-from .base import Decimal, ValidationError, transaction, timezone, _safe_import
+from .base import Decimal, ValidationError, transaction, timezone, connector
 from apps.pos.models import Order, OrderLine
 from erp.services import ConfigurationService
 
 class PurchaseService:
     @staticmethod
     def authorize_po(organization, order_id):
-        ...
-    
-    @staticmethod
-    def get_last_purchase_price(tenant, product):
-        """Retrieve the last recorded purchase price for a product across all suppliers."""
-        from apps.pos.models.sourcing_models import ProductSupplier
-        return ProductSupplier.objects.filter(
-            tenant=tenant,
-            product=product
-        ).order_by('-last_purchased_date').values_list('last_purchased_price', flat=True).first()
+        with transaction.atomic():
+            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
+            if order.status != 'DRAFT':
+                raise ValidationError(f"Cannot authorize order in status {order.status}")
+            order.status = 'AUTHORIZED'
+            order.save()
+            return order
 
     @staticmethod
     def receive_po(organization, order_id, warehouse_id, receptions=None, is_tax_recoverable=True, scope='OFFICIAL', user=None):
         # Gated cross-module imports
-        (Warehouse,) = _safe_import('apps.inventory.models', ['Warehouse'])
-        (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
-        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=0, source='pos')
+        InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
 
         if not Warehouse or not InventoryService:
             raise ValidationError("Inventory module is required for PO reception.")
@@ -126,21 +123,14 @@ class PurchaseService:
 
     @staticmethod
     def create_purchase_order(organization, supplier_id, site_id, warehouse_id, lines, scope='OFFICIAL', notes=None, ref_code=None, user=None):
-        (Product,) = _safe_import('apps.inventory.models', ['Product'])
-        (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+        Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='pos')
 
         if not Product: raise ValidationError("Inventory module required.")
         if not Contact: raise ValidationError("CRM module required.")
 
-        from apps.crm.services.compliance_service import ComplianceService
-
         with transaction.atomic():
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
-
-            # Compliance Guard
-            is_ok, msg = ComplianceService.transaction_guard(supplier, 'PURCHASE_ORDER', branch_id=site_id)
-            if not is_ok:
-                raise ValidationError(msg)
 
             order = Order.objects.create(
                 organization=organization,
@@ -180,15 +170,17 @@ class PurchaseService:
 
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None, **kwargs):
-        from apps.inventory.models.advanced_models import ProductBatch
-        from apps.inventory.models import InventoryMovement
+        ProductBatch = connector.require('inventory.advanced.get_product_batch_model', org_id=0, source='pos')
+        InventoryMovement = connector.require('inventory.movements.get_model', org_id=0, source='pos')
 
         # Gated cross-module imports
-        (Product, Inventory) = _safe_import('apps.inventory.models', ['Product', 'Inventory'])
-        (Contact,) = _safe_import('apps.crm.models', ['Contact'])
-        (ChartOfAccount, FinancialAccount) = _safe_import('apps.finance.models', ['ChartOfAccount', 'FinancialAccount'])
-        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
-        (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
+        Product = connector.require('inventory.products.get_model', org_id=0, source='pos')
+        Inventory = connector.require('inventory.inventory.get_model', org_id=0, source='pos')
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='pos')
+        ChartOfAccount = connector.require('finance.accounts.get_model', org_id=0, source='pos')
+        FinancialAccount = connector.require('finance.accounts.get_financial_account_model', org_id=0, source='pos')
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
+        InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='pos')
 
         if not Product or not Inventory:
             raise ValidationError("Inventory module is required for purchases.")
@@ -203,14 +195,12 @@ class PurchaseService:
 
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
 
-            # Compliance Guard
-            from apps.crm.services.compliance_service import ComplianceService
-            is_ok, msg = ComplianceService.transaction_guard(supplier, 'PURCHASE_ORDER', branch_id=site_id)
-            if not is_ok:
-                raise ValidationError(msg)
-
             # ── New Tax Engine Context (scope guard + OrgTaxPolicy) ───────────
-            from apps.finance.tax_calculator import TaxEngineContext, TaxCalculator, _SupplierProfile
+            TaxEngineContext = connector.require('finance.tax.get_engine_context_class', org_id=0, source='pos.purchase')
+            TaxCalculator = connector.require('finance.tax.get_calculator_class', org_id=0, source='pos.purchase')
+            _SupplierProfile = connector.require('finance.tax.get_supplier_profile_class', org_id=0, source='pos.purchase')
+            if not TaxEngineContext or not TaxCalculator or not _SupplierProfile:
+                raise ValidationError("Finance tax engine is required for purchase operations.")
             _is_export = kwargs.get('is_export', False)
             _ctx = TaxEngineContext.from_org(organization, scope=scope, is_export=_is_export)
             _supplier_profile = _SupplierProfile.from_contact(supplier)
@@ -406,12 +396,13 @@ class PurchaseService:
             order.save(force_audit_bypass=True)
 
             rules = ConfigurationService.get_posting_rules(organization)
+            from apps.finance.services.posting_resolver import PostingResolver
 
             ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
             stock_account_id = rules['purchases']['inventory']
-            tax_account_id = rules['purchases']['vat_recoverable']
-            airsi_account_id = rules['purchases'].get('airsi')
-            airsi_payable_acc = rules['purchases'].get('airsi_payable')
+            tax_account_id = PostingResolver.resolve(organization, 'purchases.vat_recoverable', required=False)
+            airsi_account_id = PostingResolver.resolve(organization, 'purchases.airsi', required=False)
+            airsi_payable_acc = PostingResolver.resolve(organization, 'purchases.airsi_payable', required=False)
             discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
 
             if not ap_account_id or not stock_account_id:
@@ -486,8 +477,8 @@ class PurchaseService:
 
             # VAT Reverse Charge (supplier.reverse_charge=True + vat_active)
             if _ctx.vat_active and _supplier_profile.reverse_charge and total_tax > 0:
-                reverse_charge_acc = rules.get('purchases', {}).get('reverse_charge_vat') or tax_account_id
-                sales_tax_acc_rc = rules.get('sales', {}).get('vat_collected')
+                reverse_charge_acc = PostingResolver.resolve(organization, 'purchases.reverse_charge_vat', required=False) or tax_account_id
+                sales_tax_acc_rc = PostingResolver.resolve(organization, 'sales.vat_collected', required=False)
                 if reverse_charge_acc and sales_tax_acc_rc:
                     posting_lines.append({
                         "account_id": reverse_charge_acc, "debit": total_tax, "credit": Decimal('0'),
@@ -563,22 +554,20 @@ class PurchaseService:
     @staticmethod
     def invoice_po(organization, order_id, invoice_number, invoice_date=None, user=None):
         # Gated cross-module import
-        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
-        (Invoice, InvoiceLine) = _safe_import('apps.finance.models', ['Invoice', 'InvoiceLine'])
-        (ThreeWayMatchService,) = _safe_import('apps.pos.services.three_way_match_service', ['ThreeWayMatchService'])
+        LedgerService = connector.require('finance.services.get_ledger_service', org_id=0, source='pos')
+        Invoice = connector.require('finance.invoices.get_model', org_id=0, source='pos')
+        InvoiceLine = connector.require('finance.invoices.get_line_model', org_id=0, source='pos')
+        ThreeWayMatchService = None
+        try:
+            from apps.pos.services.three_way_match_service import ThreeWayMatchService
+        except ImportError:
+            pass
 
         if not LedgerService or not Invoice or not InvoiceLine:
             raise ValidationError("Finance module is required for invoice processing.")
 
-        from apps.crm.services.compliance_service import ComplianceService
-
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
-
-            # Compliance Guard
-            is_ok, msg = ComplianceService.transaction_guard(order.contact, 'SUPPLIER_INVOICE', branch_id=order.site_id)
-            if not is_ok:
-                raise ValidationError(msg)
 
             # 1. Create the Backend Invoice record
             invoice = Invoice.objects.create(

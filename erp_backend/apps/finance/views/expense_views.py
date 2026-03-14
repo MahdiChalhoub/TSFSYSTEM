@@ -76,7 +76,7 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             # Auto-generate reference
             ref = TransactionSequence.next_value(organization, 'EXPENSE')
             expense = DirectExpense.objects.create(
-                tenant=organization,
+                organization=organization,
                 name=data.get('name'),
                 description=data.get('description', ''),
                 category=data.get('category', 'OTHER'),
@@ -129,7 +129,7 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
                 # (Existing posting logic - I'll keep it for now as I don't want to break the module)
                 # 1. Create financial event
                 event = FinancialEvent.objects.create(
-                    tenant=expense.tenant,
+                    organization=expense.organization,
                     event_type='EXPENSE',
                     amount=expense.amount,
                     date=expense.date,
@@ -142,7 +142,7 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
 
                 # 2. Create journal entry
                 je = JournalEntry.objects.create(
-                    tenant=expense.tenant,
+                    organization=expense.organization,
                     transaction_date=expense.date,
                     description=f"Direct Expense: {expense.name}",
                     reference=expense.reference,
@@ -154,7 +154,7 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
                 
                 if expense.expense_coa:
                     JournalEntryLine.objects.create(
-                        tenant=expense.tenant,
+                        organization=expense.organization,
                         journal_entry=je,
                         account=expense.expense_coa,
                         debit=expense.amount,
@@ -163,7 +163,7 @@ class DirectExpenseViewSet(LifecycleViewSetMixin, TenantModelViewSet):
                     )
                 if expense.source_account and expense.source_account.ledger_account:
                     JournalEntryLine.objects.create(
-                        tenant=expense.tenant,
+                        organization=expense.organization,
                         journal_entry=je,
                         account=expense.source_account.ledger_account,
                         debit=0,

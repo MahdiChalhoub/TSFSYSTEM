@@ -62,7 +62,7 @@ class MCPChatView(APIView):
             try:
                 conversation = MCPConversation.objects.get(
                     id=conversation_id,
-                    tenant_id=org_id,
+                    organization_id=org_id,
                     user=user
                 )
             except MCPConversation.DoesNotExist:
@@ -76,7 +76,7 @@ class MCPChatView(APIView):
             provider = service.get_provider(provider_id)
             
             conversation = MCPConversation.objects.create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 user=user,
                 provider=provider,
                 title=message[:50]

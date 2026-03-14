@@ -2,6 +2,8 @@ from decimal import Decimal
 from rest_framework import serializers
 from apps.client_portal.models import ClientOrder, ClientOrderLine
 
+from erp.connector_registry import connector
+
 class ClientOrderLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClientOrderLine
@@ -45,7 +47,9 @@ class ClientOrderSerializer(serializers.ModelSerializer):
             tax_rate = Decimal('0.00')
 
             if product_id:
-                from apps.inventory.models import Product
+                Product = connector.require('inventory.products.get_model', org_id=0, source='client_portal')
+                if not Product:
+                    return
                 try:
                     product = Product.objects.get(id=product_id)
                     if not line_data.get('product_name'):

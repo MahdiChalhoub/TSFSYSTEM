@@ -6,31 +6,80 @@ import { TypicalListView, type ColumnDef } from '@/components/common/TypicalList
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { erpFetch } from '@/lib/erp-api'
-import { Plus } from 'lucide-react'
+import { Plus, Shield, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-type OrgTaxPolicies = Record<string, any>
+type OrgTaxPolicy = Record<string, any>
 
-const ALL_COLUMNS: ColumnDef<OrgTaxPolicies>[] = [
-  { key: 'id', label: 'ID', sortable: true }
+const BoolBadge = ({ value }: { value: boolean }) => (
+  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
+    ${value ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
+    {value ? <Check size={10} /> : <X size={10} />}
+    {value ? 'Yes' : 'No'}
+  </span>
+)
+
+const ALL_COLUMNS: ColumnDef<OrgTaxPolicy>[] = [
+  { key: 'name', label: 'Policy Name', sortable: true },
+  {
+    key: 'is_default', label: 'Default', sortable: true,
+    render: (r) => <BoolBadge value={r.is_default} />
+  },
+  {
+    key: 'country_code', label: 'Country', sortable: true,
+    render: (r) => <span className="font-mono text-xs">{r.country_code}</span>
+  },
+  {
+    key: 'currency_code', label: 'Currency', sortable: true,
+    render: (r) => <span className="font-mono text-xs">{r.currency_code}</span>
+  },
+  {
+    key: 'vat_output_enabled', label: 'VAT Output', sortable: true,
+    render: (r) => <BoolBadge value={r.vat_output_enabled} />
+  },
+  {
+    key: 'vat_input_recoverability', label: 'VAT Recovery', sortable: true,
+    render: (r) => <span className="font-mono text-xs">{(parseFloat(r.vat_input_recoverability || 0) * 100).toFixed(1)}%</span>
+  },
+  {
+    key: 'airsi_treatment', label: 'Withholding Treatment', sortable: true,
+    render: (r) => (
+      <span className="px-2 py-0.5 rounded-full bg-app-surface text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--app-muted)' }}>
+        {r.airsi_treatment || '—'}
+      </span>
+    )
+  },
+  {
+    key: 'purchase_tax_rate', label: 'Purchase Tax', sortable: true,
+    render: (r) => <span className="font-mono text-xs">{(parseFloat(r.purchase_tax_rate || 0) * 100).toFixed(2)}%</span>
+  },
+  { key: 'internal_cost_mode', label: 'Cost Mode', sortable: true },
+  {
+    key: 'allowed_scopes', label: 'Scopes', sortable: false,
+    render: (r) => (
+      <div className="flex gap-1">
+        {(r.allowed_scopes || []).map((s: string) => (
+          <span key={s} className="px-1.5 py-0.5 rounded bg-app-accent/20 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-accent)' }}>{s}</span>
+        ))}
+      </div>
+    )
+  },
 ]
 
 export default function OrgTaxPoliciesListPage() {
   const router = useRouter()
-  const [items, setItems] = useState<OrgTaxPolicies[]>([])
+  const [items, setItems] = useState<OrgTaxPolicy[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   const settings = useListViewSettings('finance_org-tax-policies', {
-    columns: ALL_COLUMNS.map(c => c.key),
+    columns: ['name', 'is_default', 'country_code', 'vat_output_enabled', 'vat_input_recoverability', 'airsi_treatment', 'internal_cost_mode'],
     pageSize: 20,
-    sortKey: 'id',
+    sortKey: 'name',
     sortDir: 'asc',
   })
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     try {
@@ -50,8 +99,8 @@ export default function OrgTaxPoliciesListPage() {
 
   return (
     <div className="space-y-4">
-      <TypicalListView<OrgTaxPolicies>
-        title="Org Tax Policies"
+      <TypicalListView<OrgTaxPolicy>
+        title="Organization Tax Policies"
         data={filtered}
         loading={loading}
         getRowId={r => r.id}
@@ -69,16 +118,16 @@ export default function OrgTaxPoliciesListPage() {
             onClick={() => router.push('/finance/org-tax-policies/new')}
             className="h-9 px-4 bg-app-primary text-app-foreground hover:bg-app-primary rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
           >
-            <Plus size={14} className="mr-2" /> Create New
+            <Plus size={14} className="mr-2" /> New Policy
           </Button>
         }
         actions={{
           onView: (r) => router.push(`/finance/org-tax-policies/${r.id}`),
-          onEdit: (r) => router.push(`/finance/org-tax-policies/${r.id}/edit`),
+          onEdit: (r) => router.push(`/finance/org-tax-policies/${r.id}`),
         }}
       >
         <TypicalFilter
-          search={{ placeholder: 'Search...', value: search, onChange: setSearch }}
+          search={{ placeholder: 'Search policies by name, country, treatment...', value: search, onChange: setSearch }}
         />
       </TypicalListView>
     </div>

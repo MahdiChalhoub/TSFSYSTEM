@@ -4,7 +4,7 @@ Custom Domain Module
 Allows organizations to link their own domains to the platform.
 
 Domain Types:
-  - SHOP:     whatever.com       → Maps to storefront (/tenant/[slug]/...)
+  - SHOP:     whatever.com       → Maps to storefront (/organization/[slug]/...)
   - PLATFORM: platform.whatever.com → Maps to admin panel (/dashboard, /finance, etc.)
 
 Flow:

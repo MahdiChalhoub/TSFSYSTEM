@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { ChevronRight, ChevronDown, CheckCircle2, LayoutGrid, Columns, Undo2, Library, Zap, FileText, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
+import { applySmartPostingRules } from '@/app/actions/finance/posting-rules'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-export default function CoaTemplatesLibrary({ templates }: { templates: Record<string, any> }) {
+export default function CoaTemplatesLibrary({ templates, currentAccounts = [] }: { templates: Record<string, any>, currentAccounts?: any[] }) {
     const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
     const [isPending, setIsPending] = useState(false)
     const router = useRouter()
@@ -13,13 +14,25 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
         if (selectedTemplates.includes(key)) {
             setSelectedTemplates(selectedTemplates.filter(k => k !== key))
         } else {
-            // Max 2 or 3 for comparison? Let's allow any but visually it works best with 2-3
             setSelectedTemplates([...selectedTemplates, key])
         }
     }
-    const [importTarget, setImportTarget] = useState<{ key: string; step: 'confirm' | 'reset' } | null>(null)
+
+    // Determine if the current COA has data (balances or sub-accounts)
+    const hasBalances = currentAccounts.some(a => Math.abs(a.balance ?? 0) > 0.0001)
+    const hasSubAccounts = currentAccounts.some(a => a.parentId || a.parent_id || a.parent)
+    const hasData = hasBalances || hasSubAccounts
+    const coaIsEmpty = currentAccounts.length === 0
+
+    const [importTarget, setImportTarget] = useState<{ key: string; step: 'confirm' | 'reset' | 'has-data' } | null>(null)
     const handleImport = async (key: string) => {
-        setImportTarget({ key, step: 'confirm' })
+        if (hasData) {
+            // COA has data — show warning and redirect to migration tool
+            setImportTarget({ key, step: 'has-data' })
+        } else {
+            // COA is empty or has no data — clean import directly
+            setImportTarget({ key, step: 'confirm' })
+        }
     }
     const handleConfirmImport = async (reset: boolean) => {
         if (!importTarget) return
@@ -28,7 +41,10 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
         setIsPending(true)
         try {
             await importChartOfAccountsTemplate(key as any, { reset })
-            toast.success(`Successfully imported ${key} — Verify your posting rules now.`)
+            // Auto-apply smart posting rules after clean import
+            // (safe because old accounts are gone after reset)
+            try { await applySmartPostingRules() } catch { /* non-critical */ }
+            toast.success(`Successfully imported ${key.replace('_', ' ')} — Posting rules auto-configured.`)
             router.push('/finance/settings/posting-rules')
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
@@ -158,26 +174,32 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     </div>
                 )}
             </div>
+            {/* Dialog 1: COA has data — redirect to migration */}
+            <ConfirmDialog
+                open={importTarget?.step === 'has-data'}
+                onOpenChange={(open) => { if (!open) setImportTarget(null) }}
+                onConfirm={() => {
+                    setImportTarget(null)
+                    router.push('/finance/chart-of-accounts/migrate')
+                }}
+                title="Your COA has existing data"
+                description="Your chart of accounts has balances or sub-accounts. You must use the Migration Tool to safely transfer your data to the new standard. Importing directly would risk losing your financial history."
+                confirmText="Open Migration Tool"
+                cancelText="Cancel"
+                variant="warning"
+            />
+            {/* Dialog 2: COA is empty — confirm import */}
             <ConfirmDialog
                 open={importTarget?.step === 'confirm'}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
-                onConfirm={() => {
-                    if (importTarget) setImportTarget({ ...importTarget, step: 'reset' })
-                }}
-                title={`Import ${importTarget?.key ?? ''}?`}
-                description="Existing accounts will be kept. You'll be asked about a clean reset next."
-                confirmText="Import"
-                variant="warning"
-            />
-            <ConfirmDialog
-                open={importTarget?.step === 'reset'}
-                onOpenChange={(open) => { if (!open) { handleConfirmImport(false) } }}
                 onConfirm={() => handleConfirmImport(true)}
-                title="Clean Reset?"
-                description="Perform a Clean Reset? This deletes ALL existing accounts first — only works if zero transactions exist. Press Cancel to keep existing accounts."
-                confirmText="Clean Reset"
-                cancelText="Keep Existing"
-                variant="danger"
+                title={`Import ${importTarget?.key?.replace('_', ' ') ?? ''}?`}
+                description={coaIsEmpty
+                    ? "This will create your chart of accounts from the selected template. No existing data will be affected."
+                    : "This will replace your current (empty) accounts with the selected template and configure posting rules automatically."
+                }
+                confirmText="Import Template"
+                variant="info"
             />
         </div>
     )

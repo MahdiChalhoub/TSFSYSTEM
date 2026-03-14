@@ -1,0 +1,166 @@
+{
+  "dashboard": {
+    "title": "TSFSYSTEM Architecture Health",
+    "tags": ["architecture", "tsfsystem", "connector"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Capability Call Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(tsf_connector_capability_calls_total[5m])",
+            "legendFormat": "{{capability}} ({{status}})"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Capability Latency (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(tsf_connector_capability_latency_seconds_bucket[5m]))",
+            "legendFormat": "{{capability}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Circuit Breaker States",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(tsf_connector_circuit_breaker_state) by (module)",
+            "legendFormat": "{{module}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "Available"},
+              {"value": 1, "text": "Degraded"},
+              {"value": 2, "text": "Disabled"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(tsf_connector_cache_hits_total[5m]) / (rate(tsf_connector_cache_hits_total[5m]) + rate(tsf_connector_cache_misses_total[5m]))",
+            "legendFormat": "Hit Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 0.7, "color": "yellow"},
+                {"value": 0.9, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Buffered Requests",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(tsf_connector_buffered_requests) by (module)",
+            "legendFormat": "{{module}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Module Health",
+        "type": "table",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "tsf_connector_module_state",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Event Emission Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(tsf_events_emitted_total[5m])",
+            "legendFormat": "{{event_name}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Event Dispatch Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(tsf_events_dispatch_latency_seconds_bucket[5m]))",
+            "legendFormat": "{{handler}}"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Active Tenants",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "tsf_tenancy_active_tenants"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Permission Denials",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(tsf_rbac_permission_denials_total[5m])",
+            "legendFormat": "{{permission}}"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Error Rate by Module",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(tsf_connector_capability_errors_total[5m])",
+            "legendFormat": "{{module}} - {{error_type}}"
+          }
+        ]
+      }
+    ]
+  }
+}

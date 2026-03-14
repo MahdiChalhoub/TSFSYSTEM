@@ -5,7 +5,7 @@
     "description": "AI-powered business intelligence: predictive analytics, natural language queries, automated insights, demand forecasting, and smart recommendations.",
     "category": "intelligence",
     "plan_required": "enterprise",
-    "is_core": false,
+    "is_core": true,
     "required": false,
     "icon": "Sparkles",
     "dependencies": [

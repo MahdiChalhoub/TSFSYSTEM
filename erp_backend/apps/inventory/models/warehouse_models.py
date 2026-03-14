@@ -47,7 +47,7 @@ class Warehouse(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'warehouse'
-        unique_together = ('code', 'tenant')
+        unique_together = ('code', 'organization')
 
     def __str__(self):
         prefix = dict(self.LOCATION_TYPES).get(self.location_type, '')
@@ -131,13 +131,13 @@ def auto_create_branch_children(sender, instance, created, **kwargs):
         return
 
     # Avoid recursion — children are not BRANCH type
-    tenant = instance.tenant
+    organization = instance.organization
 
     # Generate codes based on branch code
     branch_code = instance.code or f'BR{instance.id}'
 
     Warehouse.objects.create(
-        tenant=tenant,
+        organization=organization,
         parent=instance,
         name=f'{instance.name} — Main Store',
         code=f'{branch_code}-STORE',
@@ -149,7 +149,7 @@ def auto_create_branch_children(sender, instance, created, **kwargs):
     )
 
     Warehouse.objects.create(
-        tenant=tenant,
+        organization=organization,
         parent=instance,
         name=f'{instance.name} — Main Warehouse',
         code=f'{branch_code}-WH',
@@ -185,9 +185,9 @@ class Inventory(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'inventory'
-        unique_together = ('warehouse', 'product', 'variant', 'tenant')
+        unique_together = ('warehouse', 'product', 'variant', 'organization')
         indexes = [
-            models.Index(fields=['tenant', 'branch'], name='inv_tenant_branch_idx'),
+            models.Index(fields=['organization', 'branch'], name='inv_tenant_branch_idx'),
         ]
 
 
@@ -217,7 +217,7 @@ class InventoryMovement(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'inventorymovement'
         indexes = [
-            models.Index(fields=['tenant', 'branch'], name='invmov_tenant_branch_idx'),
+            models.Index(fields=['organization', 'branch'], name='invmov_tenant_branch_idx'),
         ]
 
 

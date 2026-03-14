@@ -17,87 +17,87 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # 1. Add 'tenant' field to all models first
+        # 1. Add 'organization' field to all models first
         migrations.AddField(
             model_name='amortizationschedule',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='asset',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='customerbalance',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='deferredexpense',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='directexpense',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='invoice',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='invoiceline',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='payment',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='paymentallocation',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='supplierbalance',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
         migrations.AddField(
             model_name='voucher',
-            name='tenant',
+            name='organization',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_set', to='erp.organization'),
         ),
 
-        # 2. Now constraints and indexes can use 'tenant'
+        # 2. Now constraints and indexes can use 'organization'
         migrations.AlterUniqueTogether(
             name='customerbalance',
-            unique_together={('contact', 'tenant')},
+            unique_together={('contact', 'organization')},
         ),
         migrations.AlterUniqueTogether(
             name='supplierbalance',
-            unique_together={('contact', 'tenant')},
+            unique_together={('contact', 'organization')},
         ),
         migrations.AddIndex(
             model_name='invoice',
-            index=models.Index(fields=['tenant', 'status'], name='invoice_tenant__622a8f_idx'),
+            index=models.Index(fields=['organization', 'status'], name='invoice_organization__622a8f_idx'),
         ),
         migrations.AddIndex(
             model_name='invoice',
-            index=models.Index(fields=['tenant', 'type'], name='invoice_tenant__5ad5ff_idx'),
+            index=models.Index(fields=['organization', 'type'], name='invoice_organization__5ad5ff_idx'),
         ),
         migrations.AddIndex(
             model_name='invoice',
-            index=models.Index(fields=['tenant', 'contact'], name='invoice_tenant__54699b_idx'),
+            index=models.Index(fields=['organization', 'contact'], name='invoice_organization__54699b_idx'),
         ),
         migrations.AddIndex(
             model_name='invoice',
-            index=models.Index(fields=['tenant', 'due_date'], name='invoice_tenant__e6fe4b_idx'),
+            index=models.Index(fields=['organization', 'due_date'], name='invoice_organization__e6fe4b_idx'),
         ),
 
         # 3. Cleanup old indexes and fields

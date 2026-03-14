@@ -40,6 +40,10 @@ class CounterpartyTaxProfile(TenantModel):
         max_length=3, default='CI',
         help_text='ISO country code of the counterparty'
     )
+    state_code = models.CharField(
+        max_length=50, null=True, blank=True,
+        help_text='State/province/region code for sub-national taxes (e.g. CA, ON, BW)'
+    )
 
     # ── VAT ───────────────────────────────────────────────────────────
     vat_registered = models.BooleanField(

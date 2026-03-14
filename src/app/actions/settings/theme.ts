@@ -81,7 +81,7 @@ export async function getPersistedTheme(): Promise<AppThemeName | null> {
  *
  * Priority chain: user cookie → org default (this) → system default (midnight-pro)
  */
-export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
+export async function getOrgDefaultTheme(): Promise<string | null> {
     try {
         const { getTenantContext } = await import('@/lib/erp-api');
         const context = await getTenantContext();
@@ -113,8 +113,8 @@ export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
         if (!res.ok) return null;
 
         const data = await res.json();
-        const theme = data?.default_theme as AppThemeName | null;
-        return theme && VALID_THEMES.includes(theme) ? theme : null;
+        const theme = data?.default_theme as string | null;
+        return theme || null;
     } catch {
         return null;
     }
@@ -123,14 +123,13 @@ export async function getOrgDefaultTheme(): Promise<AppThemeName | null> {
 /**
  * Set (or clear) the org-level default theme.
  * Called from /settings/appearance by org admins.
- * Pass null to remove the org default (falls back to system default midnight-pro).
+ * Pass null to remove the org default (falls back to system default finance-pro).
+ * Now accepts any string (theme slug) instead of hardcoded AppThemeName enum.
  */
 export async function setOrgDefaultTheme(
-    theme: AppThemeName | null
+    theme: string | null
 ): Promise<{ ok: boolean; error?: string }> {
-    if (theme !== null && !VALID_THEMES.includes(theme)) {
-        return { ok: false, error: 'Invalid theme name' };
-    }
+    // No validation - accept any theme slug from the unified theme engine
     try {
         const { getTenantContext } = await import('@/lib/erp-api');
         const context = await getTenantContext();

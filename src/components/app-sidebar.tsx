@@ -32,6 +32,8 @@ import {
     Wrench,
 } from "lucide-react"
 import { PLATFORM_CONFIG } from "@/lib/saas_config"
+import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher"
+import { DesignSystemSwitcher } from "@/components/design-systems/DesignSystemSwitcher"
 
 import {
     Sidebar,
@@ -199,7 +201,8 @@ const defaultNav = [
             { title: "Bank Accounts", url: "/finance/gateway" },
             { title: "Fixed Assets", url: "/finance/balances" },
             { title: "Loans", url: "/finance/loans" },
-            { title: "Budget", url: "/finance/budget" },
+            { title: "💰 Budget Management", url: "/finance/budgets" },
+            { title: "📊 Budget Alerts", url: "/finance/budgets/alerts" },
             { title: "Revenue", url: "/finance/revenue" },
             { title: "Profit Centers", url: "/finance/profit-centers" },
             { title: "Profit Distribution", url: "/finance/profit-distribution" },
@@ -219,9 +222,11 @@ const defaultNav = [
             { title: "Statements", url: "/finance/statements" },
             { title: "Posting Rules", url: "/finance/settings/posting-rules" },
             { title: "Audit Trail", url: "/finance/audit-trail" },
+            { title: "📈 Reports Dashboard", url: "/finance/reports/dashboard" },
             { title: "Reports", url: "/finance/reports" },
             { title: "P&L", url: "/finance/reports/pnl" },
             { title: "Balance Sheet", url: "/finance/reports/balance-sheet" },
+            { title: "💵 Cash Flow Statement", url: "/finance/reports/cash-flow" },
             { title: "Trial Balance", url: "/finance/reports/trial-balance" },
             { title: "Aging Report", url: "/finance/reports/aging" },
         ]
@@ -262,12 +267,12 @@ const defaultNav = [
         url: "#",
         icon: Bot,
         items: [
-            { title: "AI Chat", url: "/mcp/chat" },
+            { title: "AI Assistant", url: "/mcp/chat" },
             { title: "Virtual Employees", url: "/mcp/agents" },
-            { title: "Knowledge Base", url: "/mcp/conversations" },
             { title: "AI Providers", url: "/mcp/providers" },
-            { title: "AI Tools", url: "/mcp/tools" },
-            { title: "Usage & Billing", url: "/mcp/usage" },
+            { title: "Tool Registry", url: "/mcp/tools" },
+            { title: "Conversations", url: "/mcp/conversations" },
+            { title: "Usage \u0026 Billing", url: "/mcp/usage" },
         ]
     },
     {
@@ -282,6 +287,7 @@ const defaultNav = [
             { title: "WhatsApp", url: "/settings/whatsapp" },
             { title: "Webhooks", url: "/integrations/webhooks" },
             { title: "Barcode Settings", url: "/finance/settings/barcode" },
+            { title: "Subscription", url: "/subscription" },
             { title: "Theme Demo", url: "/theme-demo" },
             { title: "UI Kit", url: "/ui-kit" },
         ]
@@ -296,7 +302,6 @@ const defaultNav = [
             { title: "Security & Roles", url: "/settings/roles" },
             { title: "Custom Domains", url: "/settings/domains" },
             { title: "Audit Events", url: "/finance/events" },
-            { title: "Subscription", url: "/subscription" },
         ]
     }
 ]
@@ -394,7 +399,18 @@ export function AppSidebar({ user, tenant, ...props }: AppSidebarProps) {
                 </SidebarMenu>
             </SidebarContent>
             <SidebarFooter>
-                <div className="p-4">
+                {/* Design System Switcher (Multi-Design-System Framework) */}
+                <div className="p-4 border-t border-[var(--color-border)]">
+                    <DesignSystemSwitcher compact showLabel={false} />
+                </div>
+
+                {/* Theme Switcher (Unified Theme Engine - Color Themes) */}
+                <div className="px-4 pb-4">
+                    <ThemeSwitcher compact />
+                </div>
+
+                {/* User Profile */}
+                <div className="p-4 border-t border-[var(--color-border)]">
                     <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-app-border flex items-center justify-center text-xs font-bold text-app-text-muted">
                             {userName.charAt(0).toUpperCase()}

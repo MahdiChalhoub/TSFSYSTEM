@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def handle_event(event_name: str, payload: dict, tenant_id: int):
+def handle_event(event_name: str, payload: dict, organization_id: int):
     """Main event handler for Storage module"""
     logger.info(f"[Storage] Received event: {event_name}")
 
@@ -22,21 +22,21 @@ def handle_event(event_name: str, payload: dict, tenant_id: int):
     handler = handlers.get(event_name)
     if handler:
         try:
-            return handler(payload, tenant_id)
+            return handler(payload, organization_id)
         except Exception as e:
             logger.error(f"[Storage] Error: {e}")
             raise
     return {'success': True, 'skipped': True}
 
 
-def handle_file_uploaded(payload: dict, tenant_id: int):
+def handle_file_uploaded(payload: dict, organization_id: int):
     """Handle file upload - process/scan file"""
     logger.info(f"[Storage] File uploaded")
     # TODO: Virus scan, generate thumbnails, extract metadata
     return {'success': True}
 
 
-def handle_file_deleted(payload: dict, tenant_id: int):
+def handle_file_deleted(payload: dict, organization_id: int):
     """Handle file deletion - cleanup storage"""
     logger.info(f"[Storage] File deleted")
     # TODO: Remove from S3/storage, cleanup thumbnails

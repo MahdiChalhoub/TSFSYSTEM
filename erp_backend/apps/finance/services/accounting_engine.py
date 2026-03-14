@@ -32,6 +32,9 @@ class AccountingEngine:
         org = invoice.organization
         rules = ConfigurationService.get_posting_rules(org)
         
+        # Resolve via PostingResolver (Tax Engine first, rules fallback)
+        from apps.finance.services.posting_resolver import PostingResolver
+
         # Enforce scope and context
         ctx = TaxEngineContext.from_org(org, scope=invoice.scope)
         supplier_profile = _SupplierProfile.from_contact(invoice.contact)
@@ -40,7 +43,7 @@ class AccountingEngine:
         purch_rules = rules.get('purchases', {})
         payable_acc = purch_rules.get('payable')
         inventory_acc = purch_rules.get('inventory')
-        vat_rec_acc = purch_rules.get('vat_recoverable')
+        vat_rec_acc = PostingResolver.resolve(org, 'purchases.vat_recoverable', required=False)
 
         if not payable_acc:
             raise ValidationError("Posting Rule Missing: 'purchases.payable' account not configured.")
@@ -135,7 +138,7 @@ class AccountingEngine:
         sales_rules = rules.get('sales', {})
         receivable_acc = sales_rules.get('receivable')
         revenue_acc = sales_rules.get('revenue')
-        vat_coll_acc = sales_rules.get('vat_collected')
+        vat_coll_acc = PostingResolver.resolve(org, 'sales.vat_collected', required=False)
 
         if not receivable_acc:
             raise ValidationError("Posting Rule Missing: 'sales.receivable' account not configured.")

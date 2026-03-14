@@ -25,7 +25,10 @@ def rebuild_finance_daily_summary(org_id: int = None, date_str: str = None):
     from datetime import date, timedelta
     from django.db.models import Sum, Count, Q
 
-    from apps.pos.models import OrderLineTaxEntry
+    from erp.connector_registry import connector
+    OrderLineTaxEntry = connector.require('pos.order_lines.get_tax_entry_model', org_id=0, source='finance')
+    if not OrderLineTaxEntry:
+        return None
     from erp.models import Organization
     from apps.finance.models import FinanceDailySummary
 
@@ -50,7 +53,7 @@ def rebuild_finance_daily_summary(org_id: int = None, date_str: str = None):
     for org in orgs:
         for scope in ('OFFICIAL', 'INTERNAL'):
             entries = OrderLineTaxEntry.objects.filter(
-                order_line__order__organization=org,
+                order_line__order__tenant=org,
                 order_line__order__scope=scope,
                 order_line__order__created_at__date=target_date,
             )

@@ -32,7 +32,12 @@ class VATReturnReportService:
         Build the full VAT return report for the period.
         Returns a dict serializable to JSON.
         """
-        from apps.pos.models import Order, OrderLine, OrderLineTaxEntry
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=0, source='finance')
+        OrderLineTaxEntry = connector.require('pos.order_lines.get_tax_entry_model', org_id=0, source='finance')
+        if not Order:
+            raise ValueError('POS module is required.')
         from apps.finance.models import PeriodicTaxAccrual
 
         # ── Resolve completed order IDs in the period ──────────────────

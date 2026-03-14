@@ -4,7 +4,7 @@ Custom Throttle Classes for DRF
 Provides rate-limited access to sensitive endpoints:
   - LoginRateThrottle: 5/minute per IP for login attempts
   - RegisterRateThrottle: 3/minute per IP for registration
-  - TenantResolveRateThrottle: 30/minute per IP for tenant resolution
+  - TenantResolveRateThrottle: 30/minute per IP for organization resolution
 """
 
 from rest_framework.throttling import SimpleRateThrottle
@@ -34,7 +34,7 @@ class RegisterRateThrottle(SimpleRateThrottle):
 
 
 class TenantResolveRateThrottle(SimpleRateThrottle):
-    """Limit tenant resolution to prevent enumeration attacks."""
+    """Limit organization resolution to prevent enumeration attacks."""
     scope = 'tenant_resolve'
 
     def get_cache_key(self, request, view):

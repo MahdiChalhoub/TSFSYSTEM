@@ -1,4 +1,5 @@
 import logging
+from erp.connector_registry import connector
 from decimal import Decimal
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
@@ -153,7 +154,9 @@ class StorefrontPublicConfigView(APIView):
         })
 
     def _get_stripe_key(self, org):
-        from apps.finance.gateway_models import GatewayConfig
+        GatewayConfig = connector.require('finance.gateways.get_config_model', org_id=0, source='client_portal')
+        if not GatewayConfig:
+            return None
         stripe_cfg = GatewayConfig.objects.filter(
             organization=org, gateway_type='STRIPE', is_active=True
         ).first()
@@ -165,6 +168,9 @@ class StorefrontPublicConfigView(APIView):
 # =============================================================================
 
 logger = logging.getLogger(__name__)
+
+
+
 
 
 class ClientPortalRegisterView(APIView):
@@ -187,7 +193,9 @@ class ClientPortalRegisterView(APIView):
 
     def post(self, request):
         from erp.models import Organization, User
-        from apps.crm.models import Contact
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='client_portal')
+        if not Contact:
+            return Response({'error': 'CRM module is required for this operation.'}, status=503)
 
         name     = request.data.get('name', '').strip()
         email    = request.data.get('email', '').strip().lower()

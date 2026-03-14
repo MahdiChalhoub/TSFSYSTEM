@@ -453,6 +453,15 @@ class POSSettings(TenantModel):
         )
     )
 
+    # ── POS Connectivity Mode ──
+    pos_offline_enabled = models.BooleanField(
+        default=True,
+        help_text=(
+            'When enabled: POS can queue orders offline and sync when connection returns. '
+            'When disabled: POS requires active internet — all operations blocked if offline.'
+        )
+    )
+
     class Meta:
         db_table = 'pos_settings'
 

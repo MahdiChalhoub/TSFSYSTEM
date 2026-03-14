@@ -1,7 +1,7 @@
 """
 Marketplace Views — erp/views_modules.py
 
-Provides the tenant-facing Module Marketplace API:
+Provides the organization-facing Module Marketplace API:
   GET  /api/erp/marketplace/              — annotated list of all system modules
   POST /api/erp/marketplace/<code>/enable/  — enable a module for the current org
   POST /api/erp/marketplace/<code>/disable/ — disable a module for the current org
@@ -77,7 +77,7 @@ def _org_can_access(org_plan_slug, required_plan_slug):
 
 class MarketplaceView(APIView):
     """
-    Full Module Marketplace endpoint for tenant admins.
+    Full Module Marketplace endpoint for organization admins.
     Returns all SystemModules annotated with this org's enable state,
     plan access gate, and manifest-driven metadata.
     """
@@ -170,7 +170,7 @@ class MarketplaceModuleActionView(APIView):
             emit_event('marketplace.module_enabled', {
                 'module_code': code,
                 'organization_id': str(org.id),
-                'tenant_id': str(org.id),
+                'organization_id': str(org.id),
             })
 
             return Response({
@@ -191,7 +191,7 @@ class MarketplaceModuleActionView(APIView):
             emit_event('marketplace.module_disabled', {
                 'module_code': code,
                 'organization_id': str(org.id),
-                'tenant_id': str(org.id),
+                'organization_id': str(org.id),
             })
 
             return Response({
@@ -225,14 +225,20 @@ class ActiveSidebarView(APIView):
 
         sidebar_items = []
 
-        # Always include core sidebar items (required modules)
+        # Include only NON-core enabled modules.
+        # Core modules (is_core=true) have their sidebar items hardcoded
+        # in the frontend Sidebar.tsx — including them here would cause duplicates.
         all_modules = SystemModule.objects.filter(status='INSTALLED')
         for m in all_modules:
             mf = m.manifest
             code = mf.get('code', m.name)
             is_core = mf.get('is_core', mf.get('required', False))
 
-            if is_core or code in enabled_module_names or m.name in enabled_module_names:
+            # Skip core modules — their sidebar is managed by the frontend
+            if is_core:
+                continue
+
+            if code in enabled_module_names or m.name in enabled_module_names:
                 items = mf.get('sidebar_items', [])
                 for item in items:
                     item['module_code'] = code
@@ -250,7 +256,7 @@ class ModuleListView(APIView):
     def get(self, request):
         org = request.user.organization
         if not org:
-            return Response({'error': 'No tenant context'}, status=400)
+            return Response({'error': 'No organization context'}, status=400)
 
         all_modules = SystemModule.objects.all()
         org_modules = OrganizationModule.objects.filter(organization=org)

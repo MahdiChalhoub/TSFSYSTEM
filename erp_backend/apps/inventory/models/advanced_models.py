@@ -43,7 +43,7 @@ class ProductBatch(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'product_batch'
-        unique_together = ('batch_number', 'product', 'tenant')
+        unique_together = ('batch_number', 'product', 'organization')
         ordering = ['expiry_date', 'received_date']
 
     def __str__(self):
@@ -80,12 +80,12 @@ class ProductSerial(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'product_serial'
-        unique_together = ('serial_number', 'product', 'tenant')
+        unique_together = ('serial_number', 'product', 'organization')
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'serial_number']),
-            models.Index(fields=['tenant', 'product', 'status']),
-            models.Index(fields=['tenant', 'warehouse', 'status']),
+            models.Index(fields=['organization', 'serial_number']),
+            models.Index(fields=['organization', 'product', 'status']),
+            models.Index(fields=['organization', 'warehouse', 'status']),
         ]
 
     def __str__(self):
@@ -194,7 +194,7 @@ class StockValuationEntry(AuditLogMixin, TenantOwnedModel):
         db_table = 'stock_valuation_entry'
         ordering = ['-movement_date', '-created_at']
         indexes = [
-            models.Index(fields=['tenant', 'product', 'warehouse', 'movement_date']),
+            models.Index(fields=['organization', 'product', 'warehouse', 'movement_date']),
         ]
 
     def __str__(self):

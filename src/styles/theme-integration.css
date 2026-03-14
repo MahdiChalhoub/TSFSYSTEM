@@ -218,6 +218,7 @@ body,
    ======================================== */
 
 @media print {
+
   /* Force light theme for printing */
   :root {
     --theme-bg: #ffffff;
@@ -251,6 +252,7 @@ body,
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   body,
   .card,
   .btn,

@@ -193,7 +193,7 @@ class POSViewSet(viewsets.ViewSet):
             
         try:
             order = Order.objects.select_related('organization', 'contact').get(
-                id=pk, tenant_id=organization_id
+                id=pk, organization_id=organization_id
             )
             
             if PDFService is None:
@@ -345,7 +345,7 @@ class PosTicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         org_id = get_current_tenant_id()
-        return self.queryset.filter(tenant_id=org_id)
+        return self.queryset.filter(organization_id=org_id)
 
     def perform_create(self, serializer):
         org_id = get_current_tenant_id()

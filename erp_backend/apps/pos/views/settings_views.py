@@ -52,7 +52,8 @@ class POSSettingsViewSet(viewsets.ViewSet):
             'sms_delivery_code_enabled', 'sms_provider',
             'sms_account_sid', 'sms_api_key', 'sms_sender_id', 'sms_webhook_url',
             'loyalty_point_value', 'loyalty_earn_rate',
-            'allow_negative_stock',
+            'allow_negative_stock', 'restrict_unique_cash_account',
+            'pos_offline_enabled',
         ]
         updated = []
         for f in fields:
@@ -104,4 +105,6 @@ class POSSettingsViewSet(viewsets.ViewSet):
             'loyalty_point_value': float(ps.loyalty_point_value),
             'loyalty_earn_rate': float(ps.loyalty_earn_rate),
             'allow_negative_stock': ps.allow_negative_stock,
+            'restrict_unique_cash_account': ps.restrict_unique_cash_account,
+            'pos_offline_enabled': ps.pos_offline_enabled,
         }

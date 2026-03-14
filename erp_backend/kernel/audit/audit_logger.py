@@ -5,12 +5,14 @@ Core logging functions and context management.
 """
 
 import threading
+import logging
 from typing import Optional, Dict, Any
 from django.contrib.auth import get_user_model
 from .models import AuditLog, AuditTrail
 from kernel.tenancy.middleware import get_current_tenant
 
 User = get_user_model()
+logger = logging.getLogger('erp.audit')
 
 # Thread-local storage for audit context
 _thread_locals = threading.local()
@@ -100,9 +102,9 @@ def audit_log(
             severity='WARNING'
         )
     """
-    tenant = get_current_tenant()
-    if not tenant:
-        raise ValueError("Cannot create audit log without tenant context")
+    organization = get_current_tenant()
+    if not organization:
+        raise ValueError("Cannot create audit log without organization context")
 
     # Get context from thread-local if not provided
     context = get_audit_context()
@@ -118,25 +120,28 @@ def audit_log(
         request_path = context.get('request_path', '')
 
     # Create audit log
-    log = AuditLog.objects.create(
-        tenant=tenant,
-        user=user,
-        username=user.username if user else '',
-        ip_address=ip_address,
-        user_agent=user_agent[:500] if user_agent else '',
-        action=action,
-        resource_type=resource_type,
-        resource_id=resource_id,
-        resource_repr=resource_repr[:255] if resource_repr else '',
-        http_method=http_method,
-        request_path=request_path[:500] if request_path else '',
-        details=details or {},
-        success=success,
-        error_message=error_message,
-        severity=severity
-    )
-
-    return log
+    try:
+        log = AuditLog.objects.create(
+            organization=organization,
+            user=user,
+            username=user.username if user else '',
+            ip_address=ip_address,
+            user_agent=user_agent[:500] if user_agent else '',
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            resource_repr=resource_repr[:255] if resource_repr else '',
+            http_method=http_method,
+            request_path=request_path[:500] if request_path else '',
+            details=details or {},
+            success=success,
+            error_message=error_message,
+            severity=severity
+        )
+        return log
+    except Exception as e:
+        logger.warning(f"Audit tracking failed (likely missing table): {e}")
+        return None
 
 
 def audit_field_change(
@@ -163,26 +168,29 @@ def audit_field_change(
     Returns:
         AuditTrail instance
     """
-    tenant = get_current_tenant()
-    if not tenant:
-        raise ValueError("Cannot create audit trail without tenant context")
+    organization = get_current_tenant()
+    if not organization:
+        raise ValueError("Cannot create audit trail without organization context")
 
     # Convert values to strings for storage
     old_str = str(old_value) if old_value is not None else None
     new_str = str(new_value) if new_value is not None else None
 
-    trail = AuditTrail.objects.create(
-        tenant=tenant,
-        audit_log=audit_log,
-        model_name=model_name,
-        object_id=object_id,
-        field_name=field_name,
-        old_value=old_str,
-        new_value=new_str,
-        field_type=field_type
-    )
-
-    return trail
+    try:
+        trail = AuditTrail.objects.create(
+            organization=organization,
+            audit_log=audit_log,
+            model_name=model_name,
+            object_id=object_id,
+            field_name=field_name,
+            old_value=old_str,
+            new_value=new_str,
+            field_type=field_type
+        )
+        return trail
+    except Exception as e:
+        logger.warning(f"Audit field tracking failed: {e}")
+        return None
 
 
 def audit_model_change(
@@ -223,7 +231,7 @@ def audit_model_change(
     )
 
     # Record field changes
-    if changed_fields:
+    if changed_fields and log:
         for field_name, (old_value, new_value) in changed_fields.items():
             # Get field type
             field = instance._meta.get_field(field_name)

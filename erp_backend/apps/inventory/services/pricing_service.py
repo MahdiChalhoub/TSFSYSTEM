@@ -26,6 +26,8 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
+from erp.connector_registry import connector
+
 TWO_PLACES = Decimal('0.01')
 
 
@@ -57,7 +59,7 @@ class ProductGroupPricingService:
         # Update all member products
         members = Product.objects.filter(
             product_group=group,
-            tenant=group.tenant
+            organization=group.organization
         )
         count = members.update(
             selling_price_ttc=new_base_price_ttc,
@@ -178,7 +180,10 @@ class ProductGroupPricingService:
           2. PriceGroup rules (by priority)
           3. Tier-level rules
         """
-        from apps.crm.models.pricing_models import ClientPriceRule, PriceGroupMember
+        ClientPriceRule = connector.require('crm.pricing.get_client_price_rule_model', org_id=0, source='inventory')
+        PriceGroupMember = connector.require('crm.pricing.get_price_group_member_model', org_id=0, source='inventory')
+        if not ClientPriceRule:
+            return None
         from django.utils import timezone as tz
 
         today = tz.now().date()
@@ -205,7 +210,7 @@ class ProductGroupPricingService:
 
         # 2. PriceGroup rules
         member_group_ids = PriceGroupMember.objects.filter(
-            tenant=product.tenant,
+            organization=product.organization,
             contact_id=contact.id
         ).values_list('price_group_id', flat=True)
 
@@ -226,9 +231,11 @@ class ProductGroupPricingService:
         # 3. Tier-level rules — match via customer_tier
         # (Tier rules use price_group with matching name)
         if hasattr(contact, 'customer_tier') and contact.customer_tier:
-            from apps.crm.models.pricing_models import PriceGroup
+            PriceGroup = connector.require('crm.pricing.get_price_group_model', org_id=0, source='inventory')
+            if not PriceGroup:
+                raise ValueError('CRM module is required.')
             tier_groups = PriceGroup.objects.filter(
-                tenant=product.tenant,
+                organization=product.organization,
                 name__iexact=contact.customer_tier,
                 is_active=True
             ).values_list('id', flat=True)

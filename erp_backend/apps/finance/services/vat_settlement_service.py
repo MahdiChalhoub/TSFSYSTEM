@@ -58,17 +58,20 @@ class VATSettlementService:
           }
         """
         from apps.finance.models import JournalEntryLine
-        from erp.services import ConfigurationService
+        from apps.finance.services.posting_resolver import PostingResolver
 
-        rules = ConfigurationService.get_posting_rules(organization)
-        sales_tax_coa_id = rules.get('sales', {}).get('vat_collected')
-        purchases_tax_coa_id = rules.get('purchases', {}).get('vat_recoverable')
+        sales_tax_coa_id = PostingResolver.resolve(
+            organization, 'sales.vat_collected', required=False
+        )
+        purchases_tax_coa_id = PostingResolver.resolve(
+            organization, 'purchases.vat_recoverable', required=False
+        )
 
         if not sales_tax_coa_id or not purchases_tax_coa_id:
             raise ValidationError(
-                "Cannot calculate VAT settlement: 'sales.vat_collected' (TVA Collectée) and/or "
-                "'purchases.vat_recoverable' (TVA Récupérable) accounts not configured in "
-                "Finance → Posting Rules."
+                "Cannot calculate VAT settlement: 'vat_collected' (TVA Collectée) and/or "
+                "'vat_recoverable' (TVA Récupérable) accounts not configured in "
+                "Tax Policy or Posting Rules."
             )
 
         # TVA Collectée: credits on the sales VAT account in the period
@@ -131,9 +134,15 @@ class VATSettlementService:
             net_due = report['net_due']
 
             from erp.services import ConfigurationService
-            posting_rules = ConfigurationService.get_posting_rules(organization)
-            vat_payable_acc = posting_rules.get('tax', {}).get('vat_payable')
-            vat_refund_receivable_acc = posting_rules.get('tax', {}).get('vat_refund_receivable')
+
+            # Resolve VAT control accounts via PostingResolver
+            from apps.finance.services.posting_resolver import PostingResolver
+            vat_payable_acc = PostingResolver.resolve(
+                organization, 'tax.vat_payable', required=False
+            )
+            vat_refund_receivable_acc = PostingResolver.resolve(
+                organization, 'tax.vat_refund_receivable', required=False
+            )
 
             if vat_collected == Decimal('0') and vat_recoverable == Decimal('0'):
                 raise ValidationError(

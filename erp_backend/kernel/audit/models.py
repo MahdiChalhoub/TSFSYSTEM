@@ -68,10 +68,10 @@ class AuditLog(TenantOwnedModel):
         app_label = 'erp'
         ordering = ['-timestamp']
         indexes = [
-            models.Index(fields=['tenant', 'timestamp']),
-            models.Index(fields=['tenant', 'user', 'timestamp']),
-            models.Index(fields=['tenant', 'action', 'timestamp']),
-            models.Index(fields=['tenant', 'resource_type', 'resource_id']),
+            models.Index(fields=['organization', 'timestamp']),
+            models.Index(fields=['organization', 'user', 'timestamp']),
+            models.Index(fields=['organization', 'action', 'timestamp']),
+            models.Index(fields=['organization', 'resource_type', 'resource_id']),
         ]
         verbose_name = 'Audit Log'
         verbose_name_plural = 'Audit Logs'
@@ -113,7 +113,7 @@ class AuditTrail(TenantOwnedModel):
         app_label = 'erp'
         ordering = ['field_name']
         indexes = [
-            models.Index(fields=['tenant', 'model_name', 'object_id']),
+            models.Index(fields=['organization', 'model_name', 'object_id']),
             models.Index(fields=['audit_log']),
         ]
         verbose_name = 'Audit Trail'

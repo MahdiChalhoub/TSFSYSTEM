@@ -1,5 +1,5 @@
 """
-Module Loader — per-tenant module registration and enabling/disabling.
+Module Loader — per-organization module registration and enabling/disabling.
 
 Import guide:
     from kernel.modules import ModuleLoader, is_module_enabled

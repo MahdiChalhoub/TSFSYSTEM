@@ -65,7 +65,7 @@ export async function getTenantContext() {
 
     try {
         // Resolve via Django API to avoid direct DB access
-        const res = await fetch(`${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`, {
+        const res = await fetch(`${DJANGO_URL}/api/organization/resolve/?slug=${subdomain}`, {
             cache: 'force-cache',
             next: { revalidate: 60 } // Cache resolution for 60s
         });
@@ -197,12 +197,19 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
             // Only log errors for non-auth issues to prevent noise during redirects
             // [SAAS RESILIENCE] Suppress "No organization context" errors in the logs if we are at SaaS root
-            const isContextError = errorText.includes("No organization context");
+            const isContextError = errorText.includes("No organization context") || errorText.includes("Tenant could not be determined");
             const isSaaS = !context;
 
+            // [GRACEFUL DEGRADATION] If no tenant context and the error is about missing org,
+            // return null silently instead of throwing — callers already handle null gracefully.
+            if (isContextError && isSaaS) {
+                debug(`[ERP_API] Root/SaaS context - Returning null for ${path} (no tenant)`);
+                return null;
+            }
+
             if (response.status !== 401 && response.status !== 403) {
-                if (isContextError && isSaaS) {
-                    debug(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
+                if (isContextError) {
+                    debug(`[ERP_API] Missing org context for ${path} — check auth token`);
                 } else {
                     console.error(`[ERP_API] Error response from ${path}:`, errorText.substring(0, 500));
                 }
@@ -227,13 +234,23 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
                 if (typeof errorData === 'string') {
                     message = errorData;
+                } else if (errorData.message && errorData.message !== 'Validation failed.') {
+                    // Direct message field (highest priority if not generic)
+                    message = errorData.message;
+                } else if (errorData.errors && typeof errorData.errors === 'object') {
+                    // Standardized validation errors: { errors: { non_field_errors: [...], field: [...] } }
+                    const firstKey = Object.keys(errorData.errors)[0];
+                    if (firstKey) {
+                        const val = errorData.errors[firstKey];
+                        message = Array.isArray(val) ? val[0] : String(val);
+                    }
                 } else if (errorData.error) {
                     message = Array.isArray(errorData.error) ? errorData.error[0] : errorData.error;
                 } else if (errorData.detail) {
                     message = errorData.detail;
                 } else if (typeof errorData === 'object') {
-                    // Handle field-specific errors or simple lists
-                    const firstKey = Object.keys(errorData)[0];
+                    // Fallback: pick first field value
+                    const firstKey = Object.keys(errorData).filter(k => k !== 'status' && k !== 'code' && k !== 'request_id')[0];
                     if (firstKey) {
                         const val = errorData[firstKey];
                         message = Array.isArray(val) ? val[0] : val.toString();

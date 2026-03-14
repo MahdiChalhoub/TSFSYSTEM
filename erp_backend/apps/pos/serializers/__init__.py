@@ -12,14 +12,6 @@ from .consignment_serializers import ConsignmentSettlementSerializer, Consignmen
 from .sourcing_serializers import ProductSupplierSerializer, SupplierPriceHistorySerializer
 from .register_serializers import POSRegisterSerializer, RegisterSessionSerializer
 from .audit_serializers import POSAuditEventSerializer, POSAuditRuleSerializer
-from .procurement_governance_serializers import (
-    ThreeWayMatchResultSerializer, ThreeWayMatchLineSerializer,
-    DisputeCaseSerializer,
-    PurchaseRequisitionSerializer, PurchaseRequisitionLineSerializer,
-    SupplierQuotationSerializer, SupplierQuotationLineSerializer,
-    ProcurementBudgetSerializer, BudgetCommitmentSerializer,
-    SupplierPerformanceSnapshotSerializer,
-)
 
 __all__ = [
     'OrderSerializer', 'OrderLineSerializer', 'PosTicketSerializer',
@@ -34,10 +26,4 @@ __all__ = [
     'ProductSupplierSerializer', 'SupplierPriceHistorySerializer',
     'POSAuditEventSerializer', 'POSAuditRuleSerializer',
     'POSRegisterSerializer', 'RegisterSessionSerializer',
-    'ThreeWayMatchResultSerializer', 'ThreeWayMatchLineSerializer',
-    'DisputeCaseSerializer',
-    'PurchaseRequisitionSerializer', 'PurchaseRequisitionLineSerializer',
-    'SupplierQuotationSerializer', 'SupplierQuotationLineSerializer',
-    'ProcurementBudgetSerializer', 'BudgetCommitmentSerializer',
-    'SupplierPerformanceSnapshotSerializer',
 ]

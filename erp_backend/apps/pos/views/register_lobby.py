@@ -27,8 +27,9 @@ class RegisterLobbyMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
         organization = Organization.objects.get(id=org_id)
 
-        from apps.inventory.models import Warehouse
-        sites = Warehouse.objects.filter(organization=organization, location_type='BRANCH', is_active=True)
+        from erp.connector_registry import connector
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=org_id, source='pos.lobby')
+        sites = Warehouse.objects.filter(organization=organization, location_type='BRANCH', is_active=True) if Warehouse else []
 
         data = []
         for site in sites:
@@ -102,7 +103,7 @@ class RegisterLobbyMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
 
         site_id = request.query_params.get('site_id')
-        qs = POSRegister.objects.filter(tenant_id=org_id)
+        qs = POSRegister.objects.filter(organization_id=org_id)
         if site_id:
             qs = qs.filter(branch_id=site_id)
 
@@ -130,7 +131,8 @@ class RegisterLobbyMixin:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)
         organization = Organization.objects.get(id=org_id)
 
-        from apps.inventory.models import Warehouse
+        from erp.connector_registry import connector
+        Warehouse = connector.require('inventory.warehouses.get_model', org_id=org_id, source='pos.lobby')
         from apps.pos.models.register_models import POSSettings
         name = request.data.get('name')
         site_id = request.data.get('site_id')
@@ -165,29 +167,28 @@ class RegisterLobbyMixin:
             else:
                 # Auto-create a dedicated cash account under RegisterCash parent
                 try:
-                    from apps.finance.services import FinancialAccountService
-                    from apps.finance.models import ChartOfAccount
-                    from erp.services import ConfigurationService
-
+                    from erp.connector_registry import connector as _conn
+                    FinancialAccount = _conn.require('finance.accounts.get_financial_account_model', org_id=org_id, source='pos.lobby')
+                    if not FinancialAccount:
+                        raise ImportError("FinancialAccount not available")
+                    # Find or create the RegisterCash parent account
+                    parent = FinancialAccount.objects.filter(
+                        organization=organization, name__iexact='RegisterCash'
+                    ).first()
+                    if not parent:
+                        parent = FinancialAccount.objects.filter(
+                            organization=organization, name__icontains='Register Cash'
+                        ).first()
+                    # Build the new account
                     acct_name = f'{name} Cash'
-
-                    # Resolve parent COA from posting rules (NO hardcoded codes)
-                    rules = ConfigurationService.get_posting_rules(organization)
-                    parent_coa_id = (
-                        rules.get('automation', {}).get('customerRoot') or
-                        rules.get('sales', {}).get('receivable')
-                    )
-
-                    new_account = FinancialAccountService.create_account(
+                    new_account = FinancialAccount.objects.create(
                         organization=organization,
                         name=acct_name,
                         type='CASH',
-                        currency=organization.base_currency.code if organization.base_currency_id else 'USD',
-                        site_id=None,
-                        parent_coa_id=parent_coa_id,
+                        parent=parent,
+                        currency=organization.currency or 'USD',
+                        is_active=True,
                     )
-                    new_account.is_pos_enabled = True
-                    new_account.save(update_fields=['is_pos_enabled'])
                     cash_account_id = new_account.id
                 except Exception as e:
                     import logging
@@ -236,7 +237,7 @@ class RegisterLobbyMixin:
 
         register_id = request.data.get('id')
         try:
-            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
+            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -271,10 +272,10 @@ class RegisterLobbyMixin:
         if 'cash_account_id' in request.data and request.data['cash_account_id']:
             # Validate uniqueness on update too
             from apps.pos.models.register_models import POSSettings
-            settings_obj, _ = POSSettings.objects.get_or_create(tenant_id=org_id)
+            settings_obj, _ = POSSettings.objects.get_or_create(organization_id=org_id)
             if settings_obj.restrict_unique_cash_account:
                 conflict = POSRegister.objects.filter(
-                    tenant_id=org_id, cash_account_id=register.cash_account_id
+                    organization_id=org_id, cash_account_id=register.cash_account_id
                 ).exclude(id=register_id).first()
                 if conflict:
                     return Response({
@@ -301,7 +302,7 @@ class RegisterLobbyMixin:
             return Response({"error": "register_id required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
+            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -322,7 +323,7 @@ class RegisterLobbyMixin:
             })
 
         entries = CashierAddressBook.objects.filter(
-            tenant_id=org_id, session=session, is_deleted=False
+            organization_id=org_id, session=session, is_deleted=False
         )
 
         from decimal import Decimal
@@ -358,7 +359,7 @@ class RegisterLobbyMixin:
 
         try:
             register = POSRegister.objects.select_related('cash_account').prefetch_related('allowed_accounts').get(
-                id=register_id, tenant_id=org_id
+                id=register_id, organization_id=org_id
             )
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -373,10 +374,13 @@ class RegisterLobbyMixin:
             accounts_seen.add(acc.id)
             # Try to get current balance from the financial ledger
             try:
-                from apps.finance.models import JournalLine
+                from erp.connector_registry import connector as _conn
+                JournalLine = _conn.require('finance.journal.get_line_model', org_id=org_id, source='pos.lobby')
+                if not JournalLine:
+                    raise ImportError("JournalLine not available")
                 from django.db.models import Sum
                 agg = JournalLine.objects.filter(
-                    tenant_id=org_id, account=acc
+                    organization_id=org_id, account=acc
                 ).aggregate(
                     total_debit=Sum('debit_amount'),
                     total_credit=Sum('credit_amount'),
@@ -424,7 +428,7 @@ class RegisterLobbyMixin:
             return Response({"error": "register_id and pin are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            register = POSRegister.objects.get(id=register_id, tenant_id=org_id)
+            register = POSRegister.objects.get(id=register_id, organization_id=org_id)
         except POSRegister.DoesNotExist:
             return Response({"error": "Register not found"}, status=status.HTTP_404_NOT_FOUND)
 

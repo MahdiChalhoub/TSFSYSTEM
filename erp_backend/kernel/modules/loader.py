@@ -110,13 +110,13 @@ class ModuleLoader:
     @transaction.atomic
     def install_for_tenant(
         cls,
-        tenant,
+        organization,
         module_name: str,
         user=None,
         auto_enable: bool = True
     ) -> OrgModule:
         """
-        Install module for a tenant.
+        Install module for a organization.
 
         Steps:
         1. Check if module exists
@@ -127,7 +127,7 @@ class ModuleLoader:
         6. Enable if auto_enable=True
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
             user: User performing installation
             auto_enable: Auto-enable after installation
@@ -137,7 +137,7 @@ class ModuleLoader:
 
         Example:
             org_module = ModuleLoader.install_for_tenant(
-                tenant=tenant,
+                organization=organization,
                 module_name='inventory',
                 user=request.user
             )
@@ -150,22 +150,22 @@ class ModuleLoader:
 
         # Check if already installed
         org_module = OrgModule.objects.filter(
-            tenant=tenant,
+            organization=organization,
             module=module
         ).first()
 
         if org_module:
             if org_module.status == ModuleState.ENABLED:
-                logger.info(f"Module already enabled: {module_name} for {tenant.name}")
+                logger.info(f"Module already enabled: {module_name} for {organization.name}")
                 return org_module
             elif org_module.status == ModuleState.DISABLED:
                 # Re-enable
                 org_module.enable(user=user)
-                logger.info(f"Module re-enabled: {module_name} for {tenant.name}")
+                logger.info(f"Module re-enabled: {module_name} for {organization.name}")
                 return org_module
 
         # Check dependencies
-        missing_deps = cls._check_dependencies(tenant, module)
+        missing_deps = cls._check_dependencies(organization, module)
         if missing_deps:
             raise ValueError(
                 f"Missing dependencies for {module_name}: {', '.join(missing_deps)}"
@@ -173,7 +173,7 @@ class ModuleLoader:
 
         # Create OrgModule
         org_module = OrgModule.objects.create(
-            tenant=tenant,
+            organization=organization,
             module=module,
             status=ModuleState.INSTALLED,
             installed_version=module.version,
@@ -181,17 +181,17 @@ class ModuleLoader:
             installed_by=user
         )
 
-        logger.info(f"Module installed: {module_name} v{module.version} for {tenant.name}")
+        logger.info(f"Module installed: {module_name} v{module.version} for {organization.name}")
 
         # Auto-enable
         if auto_enable:
             org_module.enable(user=user)
-            logger.info(f"Module auto-enabled: {module_name} for {tenant.name}")
+            logger.info(f"Module auto-enabled: {module_name} for {organization.name}")
 
         return org_module
 
     @classmethod
-    def _check_dependencies(cls, tenant, module: KernelModule) -> List[str]:
+    def _check_dependencies(cls, organization, module: KernelModule) -> List[str]:
         """
         Check if all dependencies are met.
 
@@ -205,9 +205,9 @@ class ModuleLoader:
             try:
                 dep_module = KernelModule.objects.get(name=dep_name)
 
-                # Check if dependency is enabled for this tenant
+                # Check if dependency is enabled for this organization
                 dep_org_module = OrgModule.objects.filter(
-                    tenant=tenant,
+                    organization=organization,
                     module=dep_module,
                     status=ModuleState.ENABLED
                 ).first()
@@ -221,12 +221,12 @@ class ModuleLoader:
         return missing
 
     @classmethod
-    def enable_for_tenant(cls, tenant, module_name: str, user=None) -> OrgModule:
+    def enable_for_tenant(cls, organization, module_name: str, user=None) -> OrgModule:
         """
-        Enable module for tenant.
+        Enable module for organization.
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
             user: User performing action
 
@@ -234,7 +234,7 @@ class ModuleLoader:
             OrgModule instance
 
         Example:
-            ModuleLoader.enable_for_tenant(tenant, 'inventory')
+            ModuleLoader.enable_for_tenant(organization, 'inventory')
         """
         try:
             module = KernelModule.objects.get(name=module_name)
@@ -243,32 +243,32 @@ class ModuleLoader:
 
         # Get or install module
         org_module = OrgModule.objects.filter(
-            tenant=tenant,
+            organization=organization,
             module=module
         ).first()
 
         if not org_module:
             # Install first
-            return cls.install_for_tenant(tenant, module_name, user, auto_enable=True)
+            return cls.install_for_tenant(organization, module_name, user, auto_enable=True)
 
         # Enable
         org_module.enable(user=user)
-        logger.info(f"Module enabled: {module_name} for {tenant.name}")
+        logger.info(f"Module enabled: {module_name} for {organization.name}")
 
         return org_module
 
     @classmethod
-    def disable_for_tenant(cls, tenant, module_name: str, user=None):
+    def disable_for_tenant(cls, organization, module_name: str, user=None):
         """
-        Disable module for tenant (soft delete).
+        Disable module for organization (soft delete).
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
             user: User performing action
 
         Example:
-            ModuleLoader.disable_for_tenant(tenant, 'inventory')
+            ModuleLoader.disable_for_tenant(organization, 'inventory')
         """
         try:
             module = KernelModule.objects.get(name=module_name)
@@ -280,61 +280,61 @@ class ModuleLoader:
             raise ValueError(f"Cannot disable system module: {module_name}")
 
         org_module = OrgModule.objects.filter(
-            tenant=tenant,
+            organization=organization,
             module=module
         ).first()
 
         if not org_module:
-            logger.warning(f"Module not installed: {module_name} for {tenant.name}")
+            logger.warning(f"Module not installed: {module_name} for {organization.name}")
             return
 
         org_module.disable(user=user)
-        logger.info(f"Module disabled: {module_name} for {tenant.name}")
+        logger.info(f"Module disabled: {module_name} for {organization.name}")
 
     @classmethod
-    def get_enabled_modules(cls, tenant) -> List[KernelModule]:
+    def get_enabled_modules(cls, organization) -> List[KernelModule]:
         """
-        Get all enabled modules for tenant.
+        Get all enabled modules for organization.
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
 
         Returns:
             List of KernelModule instances
 
         Example:
-            modules = ModuleLoader.get_enabled_modules(tenant)
+            modules = ModuleLoader.get_enabled_modules(organization)
             for module in modules:
                 print(module.name, module.version)
         """
         org_modules = OrgModule.objects.filter(
-            tenant=tenant,
+            organization=organization,
             status=ModuleState.ENABLED
         ).select_related('module')
 
         return [org_module.module for org_module in org_modules]
 
     @classmethod
-    def is_module_enabled(cls, tenant, module_name: str) -> bool:
+    def is_module_enabled(cls, organization, module_name: str) -> bool:
         """
-        Check if module is enabled for tenant.
+        Check if module is enabled for organization.
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
 
         Returns:
             bool
 
         Example:
-            if ModuleLoader.is_module_enabled(tenant, 'inventory'):
+            if ModuleLoader.is_module_enabled(organization, 'inventory'):
                 # Module is enabled
                 pass
         """
         try:
             module = KernelModule.objects.get(name=module_name)
             org_module = OrgModule.objects.filter(
-                tenant=tenant,
+                organization=organization,
                 module=module,
                 status=ModuleState.ENABLED
             ).exists()
@@ -345,25 +345,25 @@ class ModuleLoader:
             return False
 
     @classmethod
-    def get_module_config(cls, tenant, module_name: str) -> Dict[str, Any]:
+    def get_module_config(cls, organization, module_name: str) -> Dict[str, Any]:
         """
-        Get module configuration for tenant.
+        Get module configuration for organization.
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
 
         Returns:
             Configuration dict
 
         Example:
-            config = ModuleLoader.get_module_config(tenant, 'inventory')
+            config = ModuleLoader.get_module_config(organization, 'inventory')
             allow_negative = config.get('allow_negative_stock', False)
         """
         try:
             module = KernelModule.objects.get(name=module_name)
             org_module = OrgModule.objects.get(
-                tenant=tenant,
+                organization=organization,
                 module=module
             )
             return org_module.config
@@ -374,21 +374,21 @@ class ModuleLoader:
     @classmethod
     def set_module_config(
         cls,
-        tenant,
+        organization,
         module_name: str,
         config: Dict[str, Any]
     ):
         """
-        Set module configuration for tenant.
+        Set module configuration for organization.
 
         Args:
-            tenant: Tenant instance
+            organization: Tenant instance
             module_name: Module name
             config: Configuration dict
 
         Example:
             ModuleLoader.set_module_config(
-                tenant,
+                organization,
                 'inventory',
                 {'allow_negative_stock': True}
             )
@@ -396,7 +396,7 @@ class ModuleLoader:
         try:
             module = KernelModule.objects.get(name=module_name)
             org_module = OrgModule.objects.get(
-                tenant=tenant,
+                organization=organization,
                 module=module
             )
 
@@ -405,7 +405,7 @@ class ModuleLoader:
             org_module.config = config
             org_module.save()
 
-            logger.info(f"Module config updated: {module_name} for {tenant.name}")
+            logger.info(f"Module config updated: {module_name} for {organization.name}")
 
         except (KernelModule.DoesNotExist, OrgModule.DoesNotExist):
             raise ValueError(f"Module not found or not installed: {module_name}")
@@ -413,40 +413,40 @@ class ModuleLoader:
 
 # Module-level convenience functions
 
-def is_module_enabled(tenant, module_name: str) -> bool:
+def is_module_enabled(organization, module_name: str) -> bool:
     """
     Check if module is enabled (convenience wrapper).
 
     Example:
         from kernel.modules import is_module_enabled
 
-        if is_module_enabled(request.tenant, 'inventory'):
+        if is_module_enabled(request.organization, 'inventory'):
             # Show inventory features
             pass
     """
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
+    if not organization:
         return False
 
-    return ModuleLoader.is_module_enabled(tenant, module_name)
+    return ModuleLoader.is_module_enabled(organization, module_name)
 
 
-def get_enabled_modules(tenant=None) -> List[KernelModule]:
+def get_enabled_modules(organization=None) -> List[KernelModule]:
     """
     Get enabled modules (convenience wrapper).
 
     Example:
         from kernel.modules import get_enabled_modules
 
-        modules = get_enabled_modules(request.tenant)
+        modules = get_enabled_modules(request.organization)
         module_names = [m.name for m in modules]
     """
-    if tenant is None:
-        tenant = get_current_tenant()
+    if organization is None:
+        organization = get_current_tenant()
 
-    if not tenant:
+    if not organization:
         return []
 
-    return ModuleLoader.get_enabled_modules(tenant)
+    return ModuleLoader.get_enabled_modules(organization)

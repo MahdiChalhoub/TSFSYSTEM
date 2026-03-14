@@ -21,7 +21,7 @@ class InvoiceService:
 
     @staticmethod
     @transaction.atomic
-    def record_payment(invoice_id, amount, method, reference=None, tenant_id=None, user=None):
+    def record_payment(invoice_id, amount, method, reference=None, organization_id=None, user=None):
         """
         Public API to record a payment for an invoice by ID.
         Used by external gateways (Stripe, etc.)
@@ -31,7 +31,7 @@ class InvoiceService:
 
         qs = Invoice.objects.filter(id=invoice_id)
         if organization_id:
-            qs = qs.filter(tenant_id=organization_id)
+            qs = qs.filter(organization_id=organization_id)
         
         invoice = qs.first()
         if not invoice:
@@ -39,7 +39,7 @@ class InvoiceService:
 
         # Find a default payment account if not provided (e.g. 'Stripe Clearing')
         payment_account = FinancialAccount.objects.filter(
-            tenant_id=invoice.organization_id,
+            organization_id=invoice.organization_id,
             type='BANK'
         ).first()
 

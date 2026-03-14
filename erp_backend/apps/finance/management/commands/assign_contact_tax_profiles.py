@@ -41,7 +41,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from erp.models import Organization
-        from apps.crm.models import Contact
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+        if not Contact:
+            self.stderr.write(self.style.ERROR('CRM module is required for this command.'))
+            return
         from apps.finance.models import CounterpartyTaxProfile
 
         org_id  = options.get('org_id')

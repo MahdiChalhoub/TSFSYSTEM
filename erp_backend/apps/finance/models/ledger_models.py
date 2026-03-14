@@ -81,6 +81,13 @@ class JournalEntry(VerifiableModel):
     entry_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
     previous_hash = models.CharField(max_length=64, null=True, blank=True)
 
+    # ── Posting Snapshot (Phase A: immutable audit trail) ──────────
+    posting_snapshot = models.JSONField(
+        null=True, blank=True,
+        help_text='Frozen snapshot of resolved posting rules at posting time. '
+                  'Records: event_code, account_id, account_code, account_name, rule_source.'
+    )
+
     def calculate_hash(self):
         from apps.finance.cryptography import LedgerCryptography
         lines_data = []

@@ -6,7 +6,7 @@ class SerialService:
     def register_serial_exit(organization, product, warehouse, serial_number, reference, user_name=None):
         from apps.inventory.models import ProductSerial, SerialLog
         serial = ProductSerial.objects.filter(
-            tenant=organization,
+            organization=organization,
             product=product,
             serial_number=serial_number,
             status='AVAILABLE'
@@ -20,7 +20,7 @@ class SerialService:
         serial.save()
         
         SerialLog.objects.create(
-            tenant=organization,
+            organization=organization,
             serial=serial,
             action='SALE',
             reference=reference,
@@ -31,7 +31,7 @@ class SerialService:
     def register_serial_entry(organization, product, warehouse, serial_number, reference, cost_price=Decimal('0'), user_name=None):
         from apps.inventory.models import ProductSerial, SerialLog
         serial, created = ProductSerial.objects.get_or_create(
-            tenant=organization,
+            organization=organization,
             product=product,
             serial_number=serial_number,
             defaults={
@@ -50,7 +50,7 @@ class SerialService:
             serial.save()
             
         SerialLog.objects.create(
-            tenant=organization,
+            organization=organization,
             serial=serial,
             action='PURCHASE',
             reference=reference,

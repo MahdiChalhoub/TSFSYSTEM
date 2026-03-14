@@ -1,5 +1,5 @@
 """
-Config Engine — tenant-specific configuration and feature flags.
+Config Engine — organization-specific configuration and feature flags.
 
 Import guide:
     from kernel.config import get_config, is_feature_enabled, set_config

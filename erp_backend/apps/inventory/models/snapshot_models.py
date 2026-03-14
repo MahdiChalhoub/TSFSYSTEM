@@ -48,11 +48,11 @@ class InventoryBalance(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'inventory_balance'
-        unique_together = ('product', 'warehouse', 'tenant')
+        unique_together = ('product', 'warehouse', 'organization')
         indexes = [
-            models.Index(fields=['tenant', 'warehouse']),
-            models.Index(fields=['tenant', 'product']),
-            models.Index(fields=['tenant', 'available']),
+            models.Index(fields=['organization', 'warehouse']),
+            models.Index(fields=['organization', 'product']),
+            models.Index(fields=['organization', 'available']),
         ]
 
     def __str__(self):
@@ -87,11 +87,11 @@ class InventoryBalanceHistory(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'inventory_balance_history'
-        unique_together = ('product', 'warehouse', 'snapshot_date', 'tenant')
+        unique_together = ('product', 'warehouse', 'snapshot_date', 'organization')
         ordering = ['-snapshot_date']
         indexes = [
-            models.Index(fields=['tenant', 'snapshot_date']),
-            models.Index(fields=['tenant', 'product', 'snapshot_date']),
+            models.Index(fields=['organization', 'snapshot_date']),
+            models.Index(fields=['organization', 'product', 'snapshot_date']),
         ]
 
     def __str__(self):
@@ -122,7 +122,7 @@ class InventoryFreezePeriod(AuditLogMixin, TenantOwnedModel):
         db_table = 'inventory_freeze_period'
         ordering = ['-start_date']
         indexes = [
-            models.Index(fields=['tenant', 'start_date', 'end_date']),
+            models.Index(fields=['organization', 'start_date', 'end_date']),
         ]
 
     def __str__(self):
@@ -144,10 +144,10 @@ class InventoryFreezePeriod(AuditLogMixin, TenantOwnedModel):
         self.save()
 
     @classmethod
-    def is_date_frozen(cls, tenant, date):
+    def is_date_frozen(cls, organization, date):
         """Check if a given date falls within a locked freeze period."""
         return cls.objects.filter(
-            tenant=tenant,
+            organization=organization,
             is_locked=True,
             start_date__lte=date,
             end_date__gte=date

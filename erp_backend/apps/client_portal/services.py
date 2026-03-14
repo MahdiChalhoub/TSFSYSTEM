@@ -13,12 +13,24 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 from apps.client_portal.models import ClientOrder
-from apps.inventory.services import InventoryService
-from apps.finance.invoice_models import Invoice, InvoiceLine
-from apps.finance.invoice_service import InvoiceService
-from apps.crm.models import Contact
 
-logger = logging.getLogger(__name__)
+# Connector Governance Layer — all cross-module access goes through here
+from erp.connector_registry import connector
+
+InventoryService = connector.require('inventory.services.get_inventory_service', org_id=0, source='client_portal')
+if not InventoryService:
+    raise ValueError('INVENTORY module is required.')
+Invoice = connector.require('finance.invoices.get_model', org_id=0, source='client_portal')
+if not Invoice:
+    raise ValueError('FINANCE module is required.')
+InvoiceLine = connector.require('finance.invoices.get_line_model', org_id=0, source='client_portal')
+InvoiceService = connector.require('finance.invoices.get_service', org_id=0, source='client_portal')
+if not InvoiceService:
+    raise ValueError('FINANCE module is required.')
+Contact = connector.require('crm.contacts.get_model', org_id=0, source='client_portal')
+if not Contact:
+    raise ValueError('CRM module is required.')
+
 
 class IntegratedCheckoutService:
     @staticmethod
@@ -152,10 +164,11 @@ class IntegratedCheckoutService:
 
             # ── 5. Domain Events ──────────────────────────────────────────────
             try:
-                from apps.integrations.event_service import DomainEventService
-                DomainEventService.emit_for_status_change(order, 'CONFIRMED')
-                if order.payment_status == 'PAID':
-                    DomainEventService.emit_payment_confirmed(order)
+                DomainEventService = connector.require('integrations.events.get_service', org_id=0, source='client_portal')
+                if DomainEventService:
+                    DomainEventService.emit_for_status_change(order, 'CONFIRMED')
+                    if order.payment_status == 'PAID':
+                        DomainEventService.emit_payment_confirmed(order)
             except Exception as evt_err:
                 logger.warning(f"[Checkout] Domain event emission failed: {evt_err}")
 

@@ -309,7 +309,7 @@ class ModuleManager:
             
         # 2. Org-specific check
         return OrganizationModule.objects.filter(
-            tenant_id=organization_id,
+            organization_id=organization_id,
             module_name=module_name,
             is_enabled=True
         ).exists()
@@ -317,7 +317,7 @@ class ModuleManager:
     @staticmethod
     def grant_access(module_name, organization_id):
         """
-        Enables a module for a tenant.
+        Enables a module for a organization.
         Also triggers replay of any buffered requests for this module.
         """
         # Ensure it exists system-wide first
@@ -330,7 +330,7 @@ class ModuleManager:
         default_features = [f['code'] for f in features if f.get('default', False)]
 
         OrganizationModule.objects.update_or_create(
-            tenant_id=organization_id,
+            organization_id=organization_id,
             module_name=module_name,
             defaults={
                 'is_enabled': True,

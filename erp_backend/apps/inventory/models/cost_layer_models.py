@@ -81,8 +81,8 @@ class StockCostLayer(AuditLogMixin, TenantOwnedModel):
         db_table = 'stock_cost_layer'
         ordering = ['receipt_date', 'created_at']
         indexes = [
-            models.Index(fields=['tenant', 'product', 'warehouse', 'is_exhausted']),
-            models.Index(fields=['tenant', 'product', 'receipt_date']),
+            models.Index(fields=['organization', 'product', 'warehouse', 'is_exhausted']),
+            models.Index(fields=['organization', 'product', 'receipt_date']),
         ]
 
     def __str__(self):

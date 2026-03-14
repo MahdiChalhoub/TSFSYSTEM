@@ -36,7 +36,7 @@ class WarehouseZone(AuditLogMixin, TenantOwnedModel):
 
     class Meta:
         db_table = 'warehouse_zone'
-        unique_together = ['warehouse', 'code', 'tenant']
+        unique_together = ['warehouse', 'code', 'organization']
         ordering = ['code']
 
     def __str__(self):

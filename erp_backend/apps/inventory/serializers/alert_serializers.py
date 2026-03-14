@@ -11,7 +11,7 @@ class StockAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockAlert
         fields = '__all__'
-        read_only_fields = ['tenant', 'acknowledged_by', 'acknowledged_at',
+        read_only_fields = ['organization', 'acknowledged_by', 'acknowledged_at',
                             'resolved_at']
 
     def get_acknowledged_by_name(self, obj):

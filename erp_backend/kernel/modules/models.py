@@ -2,7 +2,7 @@ from django.conf import settings
 """
 Module Models
 
-Stores module registry and per-tenant module state.
+Stores module registry and per-organization module state.
 """
 
 from django.db import models
@@ -13,7 +13,7 @@ from kernel.tenancy.models import TenantOwnedModel
 class ModuleState:
     """Module state constants."""
     REGISTERED = 'REGISTERED'  # Registered in global catalog
-    INSTALLED = 'INSTALLED'     # Installed for tenant (migrations run)
+    INSTALLED = 'INSTALLED'     # Installed for organization (migrations run)
     ENABLED = 'ENABLED'         # Enabled and active
     DISABLED = 'DISABLED'       # Disabled (soft delete)
     UPGRADING = 'UPGRADING'     # Currently upgrading
@@ -101,9 +101,9 @@ class KernelModule(models.Model):
 
 class OrgModule(TenantOwnedModel):
     """
-    Module state per tenant.
+    Module state per organization.
 
-    Tracks which modules are enabled/disabled for each tenant.
+    Tracks which modules are enabled/disabled for each organization.
     """
 
     module = models.ForeignKey(
@@ -154,17 +154,17 @@ class OrgModule(TenantOwnedModel):
 
     class Meta:
         app_label = 'erp'
-        unique_together = [['tenant', 'module']]
+        unique_together = [['organization', 'module']]
         ordering = ['module__name']
         indexes = [
-            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['organization', 'status']),
             models.Index(fields=['module', 'status']),
         ]
         verbose_name = 'Organization Module'
         verbose_name_plural = 'Organization Modules'
 
     def __str__(self):
-        return f"{self.tenant.name}: {self.module.name} ({self.status})"
+        return f"{self.organization.name}: {self.module.name} ({self.status})"
 
     def is_enabled(self) -> bool:
         """Check if module is enabled."""
@@ -195,10 +195,10 @@ class OrgModule(TenantOwnedModel):
 
 class ModuleMigration(TenantOwnedModel):
     """
-    Track which migrations have been applied per tenant.
+    Track which migrations have been applied per organization.
 
     Each module has its own migrations, and we track which ones
-    have run for each tenant.
+    have run for each organization.
     """
 
     org_module = models.ForeignKey(

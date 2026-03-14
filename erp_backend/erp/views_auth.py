@@ -23,6 +23,35 @@ from django.core.mail import send_mail
 
 logger = logging.getLogger('erp')
 
+
+def _get_root_domain(request):
+    """
+    Dynamically extract the root domain from the request Host header.
+    Examples:
+      'saas.developos.shop'  → 'developos.shop'
+      'demo.tsf.ci'          → 'tsf.ci'
+      'localhost:3000'        → 'localhost'
+      '91.99.11.249'         → '91.99.11.249'
+    Falls back to settings.ROOT_DOMAIN if Host is unavailable.
+    """
+    host = request.headers.get('X-Forwarded-Host') or request.headers.get('Host', '')
+    host = host.split(':')[0]  # Strip port
+    
+    # IP addresses: return as-is
+    import re
+    if re.match(r'^\d{1,3}(\.\d{1,3}){3}$', host):
+        return host
+    
+    parts = host.split('.')
+    # localhost, single-word hosts
+    if len(parts) <= 1:
+        return host or getattr(settings, 'ROOT_DOMAIN', 'localhost')
+    # Two parts (e.g., tsf.ci, developos.shop with no subdomain): return as-is
+    if len(parts) == 2:
+        return host
+    # Three+ parts (e.g., saas.developos.shop, demo.app.tsf.ci): strip first segment
+    return '.'.join(parts[1:])
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @authentication_classes([])  # No CSRF for public login endpoint
@@ -173,9 +202,9 @@ class PublicConfigView(APIView):
         business_types = BusinessType.objects.all()
         currencies = GlobalCurrency.objects.all()
         
-        # Optionally get tenant config if slug provided
+        # Optionally get organization config if slug provided
         tenant_data = {}
-        slug = request.query_params.get('tenant')
+        slug = request.query_params.get('organization')
         if slug:
             try:
                 org = Organization.objects.get(slug=slug)
@@ -186,7 +215,7 @@ class PublicConfigView(APIView):
         return Response({
             "business_types": BusinessTypeSerializer(business_types, many=True).data,
             "currencies": GlobalCurrencySerializer(currencies, many=True).data,
-            "tenant": tenant_data
+            "organization": tenant_data
         })
 
 # ── Business Registration (Public) ──────────────────────────────────────────
@@ -290,7 +319,7 @@ def register_business_view(request):
         logger.info(f"✅ Business registered: '{data['business_name']}' [{slug}] by {data['admin_username']}")
 
         token, _ = Token.objects.get_or_create(user=admin_user)
-        root_domain = getattr(settings, 'ROOT_DOMAIN', 'localhost')
+        root_domain = _get_root_domain(request)
         # Use absolute URL to ensure correct subdomain redirect from root domain
         login_url = f"https://{slug}.{root_domain}/login"
         
@@ -332,8 +361,8 @@ def password_reset_request_view(request):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             
-            # Construct tenant-aware link
-            root_domain = getattr(settings, 'ROOT_DOMAIN', 'localhost')
+            # Construct organization-aware link
+            root_domain = _get_root_domain(request)
             if user.organization and user.organization.slug != 'saas':
                 reset_link = f"https://{user.organization.slug}.{root_domain}/reset-password?uid={uid}&token={token}"
             else:

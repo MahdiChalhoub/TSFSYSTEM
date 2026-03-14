@@ -16,10 +16,20 @@ from apps.finance.views import (
     InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
     GatewayConfigViewSet, ReportViewSet,
     EInvoiceViewSet,
-    OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet, CustomTaxRuleViewSet,
+    OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet,
+    CustomTaxRuleViewSet, TaxJurisdictionRuleViewSet,
+    PostingRuleViewSet,
     VATSettlementViewSet,
     PeriodicTaxViewSet,
     VATReturnReportViewSet,
+)
+from apps.finance.views.bank_reconciliation_views import (
+    BankStatementViewSet, ReconciliationSessionViewSet,
+)
+from apps.finance.views.budget_views import BudgetViewSet, BudgetLineViewSet
+from apps.finance.views.financial_report_views import (
+    TrialBalanceView, ProfitLossView, BalanceSheetView, CashFlowView,
+    FinancialReportsDashboardView, AccountDrillDownView
 )
 
 router = SimpleRouter()
@@ -52,13 +62,26 @@ router.register(r'einvoice', EInvoiceViewSet, basename='einvoice')
 router.register(r'org-tax-policies', OrgTaxPolicyViewSet, basename='org-tax-policy')
 router.register(r'counterparty-tax-profiles', CounterpartyTaxProfileViewSet, basename='counterparty-tax-profile')
 router.register(r'custom-tax-rules', CustomTaxRuleViewSet, basename='custom-tax-rule')
+router.register(r'tax-jurisdiction-rules', TaxJurisdictionRuleViewSet, basename='tax-jurisdiction-rule')
 router.register(r'vat-settlement', VATSettlementViewSet, basename='vat-settlement')
+router.register(r'posting-rules', PostingRuleViewSet, basename='posting-rule')
 router.register(r'periodic-tax', PeriodicTaxViewSet, basename='periodic-tax')
 router.register(r'vat-return', VATReturnReportViewSet, basename='vat-return')
+router.register(r'bank-statements', BankStatementViewSet, basename='bank-statement')
+router.register(r'reconciliation-sessions', ReconciliationSessionViewSet, basename='reconciliation-session')
+router.register(r'budgets', BudgetViewSet, basename='budget')
+router.register(r'budget-lines', BudgetLineViewSet, basename='budget-line')
 
 from apps.finance.views.payment_views import FlutterwaveWebhookView
 
 urlpatterns = [
     path('', include(router.urls)),
     path('webhooks/flutterwave/', FlutterwaveWebhookView.as_view(), name='flutterwave-webhook'),
+    # Financial Reports (APIView endpoints)
+    path('reports/trial-balance/', TrialBalanceView.as_view(), name='trial-balance'),
+    path('reports/profit-loss/', ProfitLossView.as_view(), name='profit-loss'),
+    path('reports/balance-sheet/', BalanceSheetView.as_view(), name='balance-sheet'),
+    path('reports/cash-flow/', CashFlowView.as_view(), name='cash-flow'),
+    path('reports/dashboard/', FinancialReportsDashboardView.as_view(), name='reports-dashboard'),
+    path('reports/account-drilldown/<int:account_id>/', AccountDrillDownView.as_view(), name='account-drilldown'),
 ]

@@ -36,6 +36,51 @@ export async function getSupplierBalances() {
  return await erpFetch('finance/supplier-balances/')
 }
 
+// ─── Phase 2 Financial Reports ────────────────────────────────────
+
+export async function getProfitLoss(startDate: string, endDate: string, comparative?: boolean, previousStart?: string, previousEnd?: string) {
+ const params = new URLSearchParams({
+   start_date: startDate,
+   end_date: endDate
+ })
+ if (comparative) params.set('comparative', 'true')
+ if (previousStart) params.set('previous_start', previousStart)
+ if (previousEnd) params.set('previous_end', previousEnd)
+
+ return await erpFetch(`finance/reports/profit-loss/?${params.toString()}`)
+}
+
+export async function getBalanceSheet(asOfDate: string, comparative?: boolean, previousDate?: string) {
+ const params = new URLSearchParams({ as_of_date: asOfDate })
+ if (comparative) params.set('comparative', 'true')
+ if (previousDate) params.set('previous_date', previousDate)
+
+ return await erpFetch(`finance/reports/balance-sheet/?${params.toString()}`)
+}
+
+export async function getCashFlowStatement(startDate: string, endDate: string, method: 'INDIRECT' | 'DIRECT' = 'INDIRECT') {
+ const params = new URLSearchParams({
+   start_date: startDate,
+   end_date: endDate,
+   method
+ })
+
+ return await erpFetch(`finance/reports/cash-flow/?${params.toString()}`)
+}
+
+export async function getFinancialReportsDashboard(period: 'CURRENT_MONTH' | 'CURRENT_QUARTER' | 'CURRENT_YEAR' | 'YTD' = 'CURRENT_MONTH') {
+ return await erpFetch(`finance/reports/dashboard/?period=${period}`)
+}
+
+export async function getAccountDrilldown(accountId: number, startDate: string, endDate: string) {
+ const params = new URLSearchParams({
+   start_date: startDate,
+   end_date: endDate
+ })
+
+ return await erpFetch(`finance/reports/account-drilldown/${accountId}/?${params.toString()}`)
+}
+
 // ─── Report Builder ───────────────────────────────────────────────
 
 export async function getReportDefinitions() {

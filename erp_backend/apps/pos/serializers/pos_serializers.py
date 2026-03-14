@@ -17,7 +17,6 @@ class OrderSerializer(serializers.ModelSerializer):
     total_items   = serializers.SerializerMethodField()
     shipping_status = serializers.SerializerMethodField()
     return_due    = serializers.SerializerMethodField()
-    contact_compliance = serializers.SerializerMethodField()
 
     def get_total_paid(self, obj):
         if obj.type == 'SALE':
@@ -33,20 +32,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_return_due(self, obj):
         return 0
-
-    def get_contact_compliance(self, obj):
-        if obj.contact:
-            is_compliant, missing, expired, msg = obj.contact.check_compliance()
-            return {
-                'is_compliant': is_compliant,
-                'status': obj.contact.compliance_status,
-                'risk_level': obj.contact.compliance_risk_level,
-                'score': float(obj.contact.compliance_score or 100),
-                'missing_docs': missing,
-                'expired_docs': expired,
-                'error_message': msg
-            }
-        return None
 
     class Meta:
         model = Order
@@ -71,7 +56,6 @@ class OrderSerializer(serializers.ModelSerializer):
             'notes',
             # Computed
             'total_paid', 'total_items', 'shipping_status', 'return_due',
-            'contact_compliance',
             # Timestamps
             'created_at', 'updated_at',
             # Lines

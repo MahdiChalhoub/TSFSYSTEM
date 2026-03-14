@@ -74,7 +74,10 @@ class LoanService:
     @staticmethod
     def create_contract(organization, data, scope='OFFICIAL'):
         from apps.finance.models import Loan, LoanInstallment
-        from apps.crm.models import Contact
+        from erp.connector_registry import connector
+        Contact = connector.require('crm.contacts.get_model', org_id=0, source='finance')
+        if not Contact:
+            raise ValueError('CRM module is required.')
         """
         Creates a Loan and its Installments in DRAFT status.
         """
@@ -214,3 +217,183 @@ class LoanService:
             )
             
             return event
+
+    @staticmethod
+    def generate_enhanced_schedule(loan):
+        """
+        Generate enhanced amortization schedule with reducing balance support.
+
+        Args:
+            loan: Loan instance
+
+        Returns:
+            List of installment dictionaries with balance_after field
+        """
+        from decimal import ROUND_HALF_UP
+
+        principal = loan.principal_amount
+        rate = loan.interest_rate / Decimal('100')
+        term_months = loan.term_months
+        start_date = loan.start_date
+        frequency = loan.payment_frequency
+        method = getattr(loan, 'amortization_method', 'REDUCING_BALANCE')
+
+        # Calculate number of installments and period rate
+        if frequency == 'MONTHLY':
+            num_installments = term_months
+            periods_per_year = Decimal('12')
+        elif frequency == 'QUARTERLY':
+            num_installments = math.ceil(term_months / 3)
+            periods_per_year = Decimal('4')
+        elif frequency == 'YEARLY':
+            num_installments = math.ceil(term_months / 12)
+            periods_per_year = Decimal('1')
+        else:
+            num_installments = term_months
+            periods_per_year = Decimal('12')
+
+        if num_installments <= 0:
+            return []
+
+        period_rate = rate / periods_per_year
+
+        # Generate based on method
+        if method == 'REDUCING_BALANCE':
+            # PMT formula
+            if period_rate > 0:
+                payment = principal * (
+                    period_rate * (1 + period_rate) ** num_installments
+                ) / ((1 + period_rate) ** num_installments - 1)
+            else:
+                payment = principal / num_installments
+
+            payment = payment.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+            installments = []
+            remaining_principal = principal
+
+            for i in range(1, num_installments + 1):
+                interest = (remaining_principal * period_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                principal_payment = payment - interest
+
+                if i == num_installments:
+                    principal_payment = remaining_principal
+                    payment = principal_payment + interest
+
+                if frequency == 'MONTHLY':
+                    due_date = start_date + relativedelta(months=i)
+                elif frequency == 'QUARTERLY':
+                    due_date = start_date + relativedelta(months=i*3)
+                else:
+                    due_date = start_date + relativedelta(years=i)
+
+                installments.append({
+                    "installment_number": i,
+                    "due_date": due_date,
+                    "principal": principal_payment,
+                    "interest": interest,
+                    "total": payment,
+                    "balance_after": remaining_principal - principal_payment
+                })
+
+                remaining_principal -= principal_payment
+
+            return installments
+        else:
+            # Fallback to existing simple method and add balance_after
+            schedule = LoanService.calculate_schedule(
+                principal, loan.interest_rate, loan.interest_type,
+                term_months, start_date, frequency
+            )
+            # Add balance_after and installment_number
+            remaining = principal
+            for i, item in enumerate(schedule, 1):
+                remaining -= item['principal']
+                item['balance_after'] = remaining
+                item['installment_number'] = i
+            return schedule
+
+    @staticmethod
+    def calculate_early_payoff(loan, payoff_date=None):
+        """
+        Calculate early payoff amount for a loan.
+
+        Args:
+            loan: Loan instance
+            payoff_date: Date for payoff calculation (default: today)
+
+        Returns:
+            Dict with payoff details
+        """
+        from apps.finance.models import LoanInstallment
+
+        if payoff_date is None:
+            payoff_date = datetime.date.today()
+
+        unpaid_installments = LoanInstallment.objects.filter(
+            loan=loan,
+            organization=loan.organization,
+            is_paid=False
+        )
+
+        total_outstanding = sum(
+            inst.total_amount - inst.paid_amount
+            for inst in unpaid_installments
+        )
+
+        principal_outstanding = sum(
+            inst.principal_amount - (inst.principal_amount * inst.paid_amount / inst.total_amount if inst.total_amount > 0 else Decimal('0'))
+            for inst in unpaid_installments
+        )
+
+        interest_outstanding = total_outstanding - principal_outstanding
+
+        return {
+            'payoff_date': payoff_date,
+            'total_payoff_amount': total_outstanding,
+            'principal_outstanding': principal_outstanding,
+            'interest_outstanding': interest_outstanding,
+            'unpaid_installments_count': unpaid_installments.count(),
+        }
+
+    @staticmethod
+    def get_loan_summary(loan):
+        """
+        Get comprehensive loan summary.
+
+        Args:
+            loan: Loan instance
+
+        Returns:
+            Dict with loan summary
+        """
+        from apps.finance.models import LoanInstallment
+
+        installments = LoanInstallment.objects.filter(
+            loan=loan,
+            organization=loan.organization
+        )
+
+        total_installments = installments.count()
+        paid_installments = installments.filter(is_paid=True).count()
+        total_paid = sum(inst.paid_amount for inst in installments)
+
+        unpaid = installments.filter(is_paid=False).order_by('due_date')
+        next_due = unpaid.first()
+
+        return {
+            'loan_id': loan.id,
+            'contract_number': loan.contract_number,
+            'contact_name': loan.contact.display_name,
+            'principal_amount': loan.principal_amount,
+            'interest_rate': loan.interest_rate,
+            'status': loan.status,
+            'total_installments': total_installments,
+            'paid_installments': paid_installments,
+            'total_paid': total_paid,
+            'next_payment_due': next_due.due_date if next_due else None,
+            'next_payment_amount': next_due.total_amount - next_due.paid_amount if next_due else Decimal('0'),
+            'outstanding_balance': sum(
+                inst.total_amount - inst.paid_amount for inst in unpaid
+            ),
+        }

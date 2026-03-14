@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('inventory', '0013_fix_null_tenant_data'),
+        ('inventory', '0013_fix_null_organization_data'),
         ('inventory', '0017_goodsreceipt_goodsreceiptline_and_more'),
     ]
 

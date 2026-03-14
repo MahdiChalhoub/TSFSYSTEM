@@ -27,7 +27,7 @@ class OrderService:
             
             for line in lines:
                 StockService.adjust_stock(
-                    tenant=organization,
+                    organization=organization,
                     product=line.product,
                     warehouse=line.warehouse,
                     quantity=line.qty_adjustment,
@@ -49,29 +49,45 @@ class OrderService:
 
             if finance_lines:
                 try:
-                    from apps.finance.services import LedgerService
-                    LedgerService.create_journal_entry(
-                        tenant=organization, transaction_date=timezone.now(),
-                        description=f"Bulk Stock Adjustment: {order.reference}",
-                        reference=order.reference, status='POSTED',
-                        user=user, lines=finance_lines
+                    from erp.connector_engine import connector_engine
+                    connector_engine.route_write(
+                        target_module='finance',
+                        endpoint='post_stock_adjustment',
+                        data={
+                            'organization_id': organization.id,
+                            'adjustment_amount': str(sum(l['debit'] for l in finance_lines if l['debit'] > 0)),
+                            'reference': order.reference,
+                            'reason': f"Bulk Stock Adjustment: {order.reference}",
+                            'user_id': user.id if user else None,
+                        },
+                        organization_id=organization.id,
+                        source_module='inventory',
                     )
-                except (ImportError, Exception):
+                except Exception:
                     logger.warning("Finance module unavailable for bulk adjustment posting.")
 
             order.is_posted = True
             order.lifecycle_status = 'CONFIRMED'
             order.save(update_fields=['is_posted', 'lifecycle_status'])
             
-            from apps.finance.services import ForensicAuditService
-            ForensicAuditService.log_mutation(
-                tenant=organization,
-                user=user,
-                model_name="StockAdjustmentOrder",
-                object_id=order.id,
-                change_type="UPDATE",
-                payload={"ref": order.reference, "status": "CONFIRMED"}
-            )
+            try:
+                from erp.connector_engine import connector_engine
+                connector_engine.route_write(
+                    target_module='finance',
+                    endpoint='log_audit_mutation',
+                    data={
+                        'organization_id': organization.id,
+                        'user_id': user.id if user else None,
+                        'model_name': 'StockAdjustmentOrder',
+                        'object_id': order.id,
+                        'change_type': 'UPDATE',
+                        'payload': {'ref': order.reference, 'status': 'CONFIRMED'},
+                    },
+                    organization_id=organization.id,
+                    source_module='inventory',
+                )
+            except Exception:
+                pass
             
         return True
 
@@ -91,7 +107,7 @@ class OrderService:
             
             for line in lines:
                 StockService.transfer_stock(
-                    tenant=organization,
+                    organization=organization,
                     product=line.product,
                     source_warehouse=line.from_warehouse,
                     destination_warehouse=line.to_warehouse,
@@ -104,14 +120,23 @@ class OrderService:
             order.lifecycle_status = 'CONFIRMED'
             order.save(update_fields=['is_posted', 'lifecycle_status'])
 
-            from apps.finance.services import ForensicAuditService
-            ForensicAuditService.log_mutation(
-                tenant=organization,
-                user=user,
-                model_name="StockTransferOrder",
-                object_id=order.id,
-                change_type="UPDATE",
-                payload={"ref": order.reference, "status": "CONFIRMED"}
-            )
+            try:
+                from erp.connector_engine import connector_engine
+                connector_engine.route_write(
+                    target_module='finance',
+                    endpoint='log_audit_mutation',
+                    data={
+                        'organization_id': organization.id,
+                        'user_id': user.id if user else None,
+                        'model_name': 'StockTransferOrder',
+                        'object_id': order.id,
+                        'change_type': 'UPDATE',
+                        'payload': {'ref': order.reference, 'status': 'CONFIRMED'},
+                    },
+                    organization_id=organization.id,
+                    source_module='inventory',
+                )
+            except Exception:
+                pass
             
         return True

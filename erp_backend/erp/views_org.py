@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
+ - TenantModelViewSet (base class for all organization-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 
@@ -16,7 +16,7 @@ All business-domain ViewSets live in their canonical module locations:
 Backward-compatible re-exports are provided at the bottom of this file.
 """
 from django.db import transaction
-from django.db.models import Q, Sum, F, Avg
+from django.db.models import Q, Sum, F, Avg, Case, When, Value, IntegerField
 from rest_framework import viewsets, status, serializers, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action, permission_classes
@@ -92,17 +92,28 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
+    # SaaS master org always sorts first in listings
+    SAAS_FIRST = Case(
+        When(name='SAAS', then=Value(0)),
+        default=Value(1),
+        output_field=IntegerField(),
+    )
+
     def get_queryset(self):
         user = self.request.user
         
         # 1. PLATFORM ADMIN (Global SaaS View)
         if user.is_superuser or user.is_staff:
-            return Organization.objects.all().order_by('-created_at')
+            return Organization.objects.all().annotate(
+                _saas_order=self.SAAS_FIRST
+            ).order_by('_saas_order', '-created_at')
 
         # 2. CROSS-TENANT IDENTITY (Federated View)
         if user.email:
             org_ids = User.objects.filter(email=user.email).values_list('organization_id', flat=True)
-            return Organization.objects.filter(id__in=org_ids)
+            return Organization.objects.filter(id__in=org_ids).annotate(
+                _saas_order=self.SAAS_FIRST
+            ).order_by('_saas_order', 'name')
             
         # 3. JAILED VIEW (regular user sees only their org)
         return Organization.objects.filter(id=user.organization_id)
@@ -144,7 +155,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             
             # ── Auto-create SaaSClient (account owner) ──
             from erp.models import SaaSClient
-            client_email = extra_fields.get('business_email', f'{slug}@tenant.local')
+            client_email = extra_fields.get('business_email', f'{slug}@organization.local')
             client_phone = extra_fields.get('phone', '')
             client_country = extra_fields.get('country', '')
             client_city = extra_fields.get('city', '')
@@ -262,7 +273,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            org = Organization.objects.select_related('business_type', 'base_currency').get(id=org_id)
+            org = Organization.objects.select_related('business_type', 'base_currency', 'base_country').get(id=org_id)
         except Organization.DoesNotExist:
             return Response({"error": "Organization not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -293,6 +304,10 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                 org.base_currency_id = request.data['base_currency_id']
                 update_fields.append('base_currency_id')
 
+            if 'base_country_id' in request.data and request.data['base_country_id']:
+                org.base_country_id = request.data['base_country_id']
+                update_fields.append('base_country_id')
+
             # Handle org-level settings (JSONField — merge, not replace)
             if 'settings' in request.data and isinstance(request.data['settings'], dict):
                 current_settings = org.settings or {}
@@ -316,6 +331,14 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                 'code': org.base_currency.code,
                 'symbol': org.base_currency.symbol,
                 'name': org.base_currency.name,
+            }
+        if org.base_country:
+            data['base_country'] = {
+                'id': org.base_country.id,
+                'iso2': org.base_country.iso2,
+                'iso3': org.base_country.iso3,
+                'name': org.base_country.name,
+                'phone_code': org.base_country.phone_code,
             }
         return Response(data)
 
@@ -395,11 +418,11 @@ class SiteViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         from apps.inventory.models import Warehouse
-        tenant_id = get_current_tenant_id()
-        if not tenant_id:
+        organization_id = get_current_tenant_id()
+        if not organization_id:
             return Warehouse.objects.none()
         return Warehouse.objects.filter(
-            tenant_id=tenant_id,
+            organization_id=organization_id,
             location_type='BRANCH'
         )
 
@@ -415,7 +438,7 @@ class CountryViewSet(viewsets.ModelViewSet):
         
         brands = Brand.objects.filter(
             products__country_id=pk,
-            tenant_id=organization_id
+            organization_id=organization_id
         ).distinct().prefetch_related(
             'products', 'products__inventory', 'products__unit'
         )
@@ -514,23 +537,23 @@ class PaymentTermViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        tenant_id = get_current_tenant_id()
-        org_id = tenant_id or getattr(user, 'organization_id', None)
+        organization_id = get_current_tenant_id()
+        org_id = organization_id or getattr(user, 'organization_id', None)
         if not org_id:
             return PaymentTerm.objects.none()
-        return PaymentTerm.objects.filter(tenant_id=org_id).order_by('sort_order', 'name')
+        return PaymentTerm.objects.filter(organization_id=org_id).order_by('sort_order', 'name')
 
     def perform_create(self, serializer):
         user = self.request.user
-        tenant_id = get_current_tenant_id()
-        org_id = tenant_id or user.organization_id
-        serializer.save(tenant_id=org_id)
+        organization_id = get_current_tenant_id()
+        org_id = organization_id or user.organization_id
+        serializer.save(organization_id=org_id)
 
     @action(detail=False, methods=['post'], url_path='seed-defaults')
     def seed_defaults(self, request):
         user = request.user
-        tenant_id = get_current_tenant_id()
-        org_id = tenant_id or user.organization_id
+        organization_id = get_current_tenant_id()
+        org_id = organization_id or user.organization_id
 
         if not org_id:
             return Response({'error': 'No organization context'}, status=400)
@@ -551,7 +574,7 @@ class PaymentTermViewSet(TenantModelViewSet):
         created = []
         for d in defaults:
             term, was_created = PaymentTerm.objects.get_or_create(
-                tenant_id=org_id,
+                organization_id=org_id,
                 code=d['code'],
                 defaults={k: v for k, v in d.items() if k != 'code'}
             )

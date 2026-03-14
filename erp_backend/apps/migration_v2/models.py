@@ -12,7 +12,7 @@ class MigrationJob(TenantOwnedModel):
     Tracks a complete migration job from UltimatePOS to TSFSYSTEM.
 
     Architecture:
-    - Uses TenantOwnedModel for multi-tenant isolation
+    - Uses TenantOwnedModel for multi-organization isolation
     - Uses AuditLogMixin for full audit trail
     - Stores posting rules snapshot to preserve migration context
     """

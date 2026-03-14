@@ -66,6 +66,10 @@ import {
     Truck,
     Webhook,
     MailQuestion,
+    Languages,
+    Cpu,
+    Network,
+    Database,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -74,8 +78,6 @@ import { logoutAction } from "@/app/actions/auth";
 import { toast } from "sonner";
 import { PLATFORM_CONFIG } from '@/lib/saas_config';
 import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
-import { useAppTheme } from '@/components/app/AppThemeProvider';
-import { AppThemeSelector } from '@/components/app/AppThemeSelector';
 
 const ICON_MAP: Record<string, any> = {
     LayoutDashboard, ShoppingBag, Box, Users, Briefcase, FileText,
@@ -84,7 +86,7 @@ const ICON_MAP: Record<string, any> = {
     TrendingUp, Calendar, DollarSign, Bell, Tag, Warehouse, FolderTree,
     ServerCog, Building2, Shield, ClipboardList, ScrollText, Wallet,
     Globe, ListChecks, Trophy, Star, History, Landmark, UserCheck, Store,
-    Truck, Webhook, MailQuestion, Percent,
+    Truck, Webhook, MailQuestion, Percent, Languages, Cpu, Network, Database,
 };
 
 function getIcon(name: string) { return ICON_MAP[name] || Box; }
@@ -100,7 +102,7 @@ export const MENU_ITEMS = [
             { title: 'Dashboard (Legacy)', path: '/dashboard/legacy', icon: LayoutDashboard, badge: 'LOCKED' },
             { title: 'Setup Wizard', path: '/setup-wizard', icon: Sparkles },
             { title: 'TaskBoard & Performance', path: '/workspace/tasks', icon: ClipboardList },
-            { title: 'Import (Migration)', path: '/migration', icon: Globe },
+            { title: 'Migration Hub (V2)', path: '/migration_v2', icon: Database },
         ]
     },
     {
@@ -273,8 +275,7 @@ export const MENU_ITEMS = [
         icon: Users,
         module: 'crm',
         children: [
-            { title: 'Contacts & Leads', path: '/crm/contacts', icon: UserCheck, badge: 'REVIEW' },
-            { title: 'Contacts (Legacy)', path: '/crm/contacts/legacy', icon: UserCheck, badge: 'LOCKED' },
+            { title: 'Contacts & Leads', path: '/crm/contacts', icon: UserCheck },
             { title: 'Price Groups', path: '/crm/pricing', icon: Tag },
             { title: 'Customer Insights', path: '/crm/insights', icon: BarChart3 },
         ]
@@ -337,10 +338,13 @@ export const MENU_ITEMS = [
         icon: Bot,
         module: 'mcp',
         children: [
+            { title: 'Intelligence Hub', path: '/mcp', icon: LayoutDashboard },
             { title: 'AI Assistant', path: '/mcp/chat', icon: Bot },
             { title: 'Virtual Employees', path: '/mcp/agents', icon: Sparkles },
-            { title: 'Knowledge Base', path: '/mcp/conversations', icon: BookOpen },
+            { title: 'AI Providers', path: '/mcp/providers', icon: Cloud },
             { title: 'Tool Registry', path: '/mcp/tools', icon: Wrench },
+            { title: 'Conversations', path: '/mcp/conversations', icon: BookOpen },
+            { title: 'Usage & Billing', path: '/mcp/usage', icon: TrendingUp },
         ]
     },
     {
@@ -364,7 +368,9 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Platform Health', path: '/health' },
                     { title: 'Kernel Console', path: '/updates' },
+                    { title: 'Connector Control', path: '/connector', icon: Zap },
                     { title: 'Module Registry', path: '/modules' },
+                    { title: 'Kernel Management', path: '/kernel', icon: Cpu },
                     { title: 'Currency Matrix', path: '/currencies' },
                     { title: 'Encryption Keyroom', path: '/encryption' },
                 ]
@@ -390,6 +396,7 @@ export const MENU_ITEMS = [
             { title: 'App Marketplace', path: '/marketplace', icon: Store },
             { title: 'Security & Roles', path: '/settings/roles', icon: Shield },
             { title: 'Appearance & Theme', path: '/settings/appearance', icon: Paintbrush },
+            { title: 'Regional Settings', path: '/settings/regional', icon: Languages },
             { title: 'Custom Domains', path: '/settings/domains', icon: Globe },
             { title: 'Payment Terms', path: '/settings/payment-terms', icon: ScrollText },
             { title: 'Document Numbering', path: '/settings/sequences', icon: ListChecks },
@@ -426,7 +433,6 @@ export function Sidebar({
     dualViewEnabled?: boolean;
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope } = useAdmin();
-    const { isDark } = useAppTheme();
     const [showThemeSelector, setShowThemeSelector] = useState(false);
 
     const ALL_KNOWN_MODULES = ['core', 'pos', 'finance', 'inventory', 'crm', 'hr', 'purchases', 'ecommerce', 'mcp'];
@@ -635,15 +641,7 @@ export function Sidebar({
                         </button>
                     )}
 
-                    {/* Inline theme selector panel */}
-                    {showThemeSelector && sidebarOpen && (
-                        <div
-                            className="rounded-2xl overflow-hidden"
-                            style={{ border: '1px solid var(--app-border)' }}
-                        >
-                            <AppThemeSelector onClose={() => setShowThemeSelector(false)} />
-                        </div>
-                    )}
+                    {/* Theme selector removed - using ThemeSwitcher in footer instead */}
 
                     {/* Version badge */}
                     {sidebarOpen ? (
@@ -735,8 +733,8 @@ function MenuItem({
                 )}
                 style={isActive || isChildActive ? {
                     background: 'var(--app-sidebar-active)',
-                    color: 'var(--app-primary)',
-                    boxShadow: isActive ? 'inset 0 0 0 1px var(--app-primary-glow), 0 2px 12px var(--app-primary-glow)' : 'none',
+                    color: 'var(--app-text)',
+                    boxShadow: isActive ? 'inset 3px 0 0 0 var(--app-primary)' : 'none',
                 } : {
                     color: 'var(--app-sidebar-text)',
                 }}

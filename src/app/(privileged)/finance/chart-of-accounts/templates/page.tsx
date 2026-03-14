@@ -1,10 +1,13 @@
 import { getAllTemplates } from '@/app/actions/finance/coa-templates'
+import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import CoaTemplatesLibrary from './viewer'
 import { LayoutTemplate } from 'lucide-react'
 
 export default async function TemplatesLibraryPage() {
     let templates: any = []
+    let accounts: any[] = []
     try { templates = await getAllTemplates() } catch { /* empty fallback */ }
+    try { accounts = await getChartOfAccounts(true, 'INTERNAL') } catch { /* empty fallback */ }
 
     return (
         <div className="app-page space-y-6 p-6">
@@ -18,7 +21,7 @@ export default async function TemplatesLibraryPage() {
                     <p className="text-sm text-app-muted-foreground mt-0.5">Chart of accounts template library</p>
                 </div>
             </header>
-            <CoaTemplatesLibrary templates={templates} />
+            <CoaTemplatesLibrary templates={templates} currentAccounts={accounts} />
         </div>
     )
 }

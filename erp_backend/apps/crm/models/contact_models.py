@@ -51,7 +51,7 @@ class ContactTag(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'contact_tag'
         ordering = ['sort_order', 'name']
-        unique_together = ['tenant', 'name']
+        unique_together = ['organization', 'name']
 
     def __str__(self):
         return self.name
@@ -65,7 +65,7 @@ def contact_photo_path(instance, filename):
     import os
     ext = os.path.splitext(filename)[1]
     # We use a clean name to maintain isolation and predictability
-    return f"org_{instance.tenant_id}/crm/contacts/p_{instance.id}{ext}"
+    return f"org_{instance.organization_id}/crm/contacts/p_{instance.id}{ext}"
 
 
 class Contact(AuditLogMixin, TenantOwnedModel):
@@ -511,12 +511,12 @@ class Contact(AuditLogMixin, TenantOwnedModel):
     class Meta:
         db_table = 'contact'
         indexes = [
-            models.Index(fields=['tenant', 'type'], name='idx_contact_tenant_type'),
-            models.Index(fields=['tenant', 'status'], name='idx_contact_tenant_status'),
-            models.Index(fields=['tenant', 'email'], name='idx_contact_tenant_email'),
-            models.Index(fields=['tenant', 'phone'], name='idx_contact_tenant_phone'),
-            models.Index(fields=['tenant', 'vat_id'], name='idx_contact_tenant_vat'),
-            models.Index(fields=['tenant', 'entity_type'], name='idx_contact_tenant_entity'),
+            models.Index(fields=['organization', 'type'], name='idx_contact_tenant_type'),
+            models.Index(fields=['organization', 'status'], name='idx_contact_tenant_status'),
+            models.Index(fields=['organization', 'email'], name='idx_contact_tenant_email'),
+            models.Index(fields=['organization', 'phone'], name='idx_contact_tenant_phone'),
+            models.Index(fields=['organization', 'vat_id'], name='idx_contact_tenant_vat'),
+            models.Index(fields=['organization', 'entity_type'], name='idx_contact_tenant_entity'),
         ]
 
     def __str__(self):
@@ -800,7 +800,7 @@ class ContactAuditLog(AuditLogMixin, TenantOwnedModel):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['contact', '-created_at'], name='idx_audit_contact_time'),
-            models.Index(fields=['tenant', 'action'], name='idx_audit_tenant_action'),
+            models.Index(fields=['organization', 'action'], name='idx_audit_tenant_action'),
         ]
 
     def __str__(self):
@@ -811,7 +811,7 @@ class ContactAuditLog(AuditLogMixin, TenantOwnedModel):
                    reason=None, source='UI', actor_user_id=None, actor_name=None, correlation_id=None):
         """Standardized change logging."""
         return cls.objects.create(
-            tenant_id=contact.tenant_id,
+            organization_id=contact.organization_id,
             contact=contact,
             action=action,
             field_name=field_name,
@@ -1009,7 +1009,7 @@ class ContactComplianceDocument(AuditLogMixin, TenantOwnedModel):
             reminder_date = self.expiry_date - timedelta(days=self.reminder_days)
             if timezone.now().date() >= reminder_date:
                 ContactTask.objects.get_or_create(
-                    tenant_id=self.tenant_id,
+                    organization_id=self.organization_id,
                     contact=self.contact,
                     type='COMPLIANCE_RENEWAL',
                     related_doc_id=self.id,

@@ -26,13 +26,13 @@ def on_workforce_risk_increased(event):
     new_risk = payload.get('new_risk')
     global_score = payload.get('global_score')
     critical_count = payload.get('critical_count')
-    organization_id = event.tenant_id
+    organization_id = event.organization_id
 
     logger.info(f"[Workspace] Risk escalated for {employee_name} to {new_risk}")
 
     # 1. Resolve Category
     category, _ = TaskCategory.objects.get_or_create(
-        tenant_id=organization_id,
+        organization_id=organization_id,
         name='Managerial / HR',
         defaults={'color': '#ef4444', 'icon': 'ShieldAlert'}
     )
@@ -43,7 +43,7 @@ def on_workforce_risk_increased(event):
 
     # 3. Create Task
     Task.objects.create(
-        tenant_id=organization_id,
+        organization_id=organization_id,
         title=f"⚠️ ACE Escalation: Review {employee_name} ({new_risk})",
         description=(
             f"The Workforce Intelligence Engine (WISE) has detected a critical risk increase for {employee_name}.\n\n"

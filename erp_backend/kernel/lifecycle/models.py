@@ -68,7 +68,7 @@ class ApprovalPolicy(AuditLogMixin, TenantOwnedModel):
     class Meta:
         app_label = 'erp'
         db_table = 'kernel_approval_policies'
-        unique_together = ('tenant', 'txn_type')
+        unique_together = ('organization', 'txn_type')
 
 
 class ApprovalPolicyStep(AuditLogMixin, TenantOwnedModel):

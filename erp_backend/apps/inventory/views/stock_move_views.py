@@ -83,7 +83,7 @@ class StockMoveViewSet(StockMoveBranchScopedMixin, LifecycleViewSetMixin, Tenant
     def perform_create(self, serializer):
         """Extract lines from request.data and call WarehouseTransferService.create_transfer."""
         lines_data  = self.request.data.get('lines', [])
-        org         = self.request.tenant
+        org         = self.request.organization
         from_wh     = serializer.validated_data.get('from_warehouse')
         to_wh       = serializer.validated_data.get('to_warehouse')
         move_type   = serializer.validated_data.get('move_type', 'TRANSFER')
