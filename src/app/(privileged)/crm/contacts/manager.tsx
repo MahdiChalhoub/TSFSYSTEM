@@ -1,6 +1,7 @@
 // @ts-nocheck
 'use client';
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { erpFetch } from '@/lib/erp-api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/lib/utils/currency';
@@ -230,16 +231,11 @@ export default function ContactManager({
     try {
       const body: any = { name: newTagName.trim(), color: newTagColor };
       if (newTagType) body.contact_type = newTagType;
-      const res = await fetch('/api/erp/crm/contact-tags/', {
+      const data = await erpFetch('/crm/contact-tags/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err);
-      }
-      const data = await res.json();
       setManagedTags(prev => [...prev, data]);
       setNewTagName('');
       setNewTagColor('#6366F1');
@@ -255,7 +251,7 @@ export default function ContactManager({
   async function handleDeleteTag(tag: any) {
     if (!confirm(`Delete category "${tag.name}"?`)) return;
     try {
-      await fetch(`/api/erp/crm/contact-tags/${tag.id}/`, { method: 'DELETE' });
+      await erpFetch(`/crm/contact-tags/${tag.id}/`, { method: 'DELETE' });
       setManagedTags(prev => prev.filter((t: any) => t.id !== tag.id));
       toast.success(`Deleted "${tag.name}"`);
     } catch {

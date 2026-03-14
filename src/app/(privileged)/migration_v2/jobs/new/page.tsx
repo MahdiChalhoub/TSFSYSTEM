@@ -16,6 +16,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { erpFetch } from '@/lib/erp-api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppCard } from '@/components/app/ui/AppCard';
 import { Button } from '@/components/ui/button';
@@ -153,11 +154,8 @@ export default function MigrationWizardPage() {
         try {
             setLoading(true);
             // Call your storage API to list .sql files
-            const response = await fetch('/api/proxy/storage/files/?category=MIGRATION', {
-                credentials: 'include',
-            });
-            const data = await response.json();
-            const sqlFiles = (data.results || []).filter((f: any) =>
+            const data = await erpFetch('/storage/files/?category=MIGRATION');
+            const sqlFiles = (data?.results || []).filter((f: any) =>
                 (f.original_filename || f.filename || '').toLowerCase().endsWith('.sql')
             );
             setCloudFiles(sqlFiles);

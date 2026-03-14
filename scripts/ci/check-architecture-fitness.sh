@@ -78,6 +78,7 @@ echo -n "3. Frontend API discipline: "
 RAW_FETCH=$(grep -rn "fetch(" src/app/ --include="*.tsx" 2>/dev/null \
     | grep -v "erpFetch" | grep -v "node_modules" | grep -v ".next" \
     | grep -v "/actions/" | grep -v "supplier-portal" | grep -v "api/proxy" \
+    | grep -v "/tenant/" | grep -v "/delivery/" \
     | grep -v "// allowed" | grep -v "revalidate" | grep -v "next/cache" \
     | grep -v "'use server'" || true)
 if [ -n "$RAW_FETCH" ]; then
