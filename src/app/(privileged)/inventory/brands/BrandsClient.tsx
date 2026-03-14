@@ -32,7 +32,7 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
  render: (row: any) => (
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-lg bg-app-background flex items-center justify-center text-sm font-bold text-app-muted-foreground uppercase border border-app-border overflow-hidden">
- {row.logo ? <img src={row.logo} className="w-full h-full object-cover" /> : row.name.substring(0, 2)}
+ {row.logo ? <img src={row.logo} alt="" className="w-full h-full object-cover" /> : row.name.substring(0, 2)}
  </div>
  <div>
  <p className="font-bold text-app-foreground">{row.name}</p>
@@ -79,7 +79,7 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
 
  <div className="flex justify-between items-start mb-6">
  <div className="w-16 h-16 rounded-[1.5rem] bg-app-background flex items-center justify-center text-2xl font-bold text-app-muted-foreground border border-app-border overflow-hidden shadow-inner">
- {row.logo ? <img src={row.logo} className="w-full h-full object-cover" /> : row.name.substring(0, 2)}
+ {row.logo ? <img src={row.logo} alt="" className="w-full h-full object-cover" /> : row.name.substring(0, 2)}
  </div>
  <div className="flex flex-col items-end gap-2">
  <Badge className="bg-app-primary-light text-app-success border-app-success/30 text-[10px] font-black uppercase tracking-widest">

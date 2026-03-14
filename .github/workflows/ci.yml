@@ -25,8 +25,14 @@ jobs:
       - name: Type Check
         run: npx tsc --noEmit
 
+      - name: Prettier Format Check
+        run: npm run format:check
+
       - name: ESLint
         run: npm run lint
+
+      - name: Architecture Fitness
+        run: bash scripts/ci/check-architecture-fitness.sh
 
   backend-ci:
     name: Backend Tests & Lint

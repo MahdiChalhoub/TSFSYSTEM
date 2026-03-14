@@ -12,6 +12,9 @@
     "build": "node scripts/check-kernel-integrity.js && next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "kernel-check": "node scripts/check-kernel-integrity.js",
     "typecheck": "npx tsc --noEmit 2>&1 | grep '^src/' || echo '✅ No TypeScript errors in src/'",
     "typecheck:pos": "npx tsc --noEmit 2>&1 | grep -E '(POSLayout|usePOSTerminal|TerminalContext|POSToolbar)' || echo '✅ POS clean'",
@@ -27,7 +30,11 @@
     "security:scan": "node scripts/security-scan.js",
     "health": "bash scripts/health-monitor.sh",
     "health:watch": "bash scripts/health-monitor.sh --watch",
-    "agent:verify": "bash scripts/agent-verify.sh"
+    "agent:verify": "bash scripts/agent-verify.sh",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -67,7 +74,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
@@ -79,7 +88,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "happy-dom": "^20.8.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.1.18",
     "typescript": "5.9.3",
     "vitest": "^4.1.0"

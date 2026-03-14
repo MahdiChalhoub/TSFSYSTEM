@@ -103,6 +103,49 @@ export function UnifiedThemeEngineProvider({
 
   const initialState = getInitialState()
 
+  // ⚡ FOUC Prevention: Apply cached theme CSS vars IMMEDIATELY (before any useEffect)
+  // This ensures the DOM has correct colors even before React effects fire.
+  if (initialState.theme && typeof window !== 'undefined') {
+    const effectiveMode = initialState.colorMode === 'auto' ? getSystemColorMode() : initialState.colorMode
+    const colors = initialState.theme.presetData?.colors?.[effectiveMode]
+      || initialState.theme.presetData?.colors?.dark
+    if (colors) {
+      const r = document.documentElement.style
+      // Core colors
+      r.setProperty('--app-primary', colors.primary || '#10B981')
+      r.setProperty('--app-primary-dark', colors.primaryDark || '#059669')
+      r.setProperty('--app-primary-light', colors.primary ? colors.primary + '1f' : 'rgba(16,185,129,0.12)')
+      r.setProperty('--app-primary-glow', colors.primary ? colors.primary + '59' : 'rgba(16,185,129,0.35)')
+      r.setProperty('--app-bg', colors.bg || '#020617')
+      r.setProperty('--app-surface', colors.surface || '#0F172A')
+      r.setProperty('--app-surface-2', colors.surface || '#0F172A')
+      r.setProperty('--app-surface-hover', colors.surfaceHover || 'rgba(255,255,255,0.07)')
+      r.setProperty('--app-text', colors.text || '#F1F5F9')
+      r.setProperty('--app-text-muted', colors.textMuted || '#94A3B8')
+      r.setProperty('--app-text-faint', colors.textMuted || '#94A3B8')
+      r.setProperty('--app-border', colors.border || 'rgba(255,255,255,0.08)')
+      r.setProperty('--app-border-strong', colors.border || 'rgba(255,255,255,0.08)')
+      // Sidebar
+      r.setProperty('--app-sidebar-bg', colors.bg || colors.surface || '#0F172A')
+      r.setProperty('--app-sidebar-text', colors.text || '#F1F5F9')
+      r.setProperty('--app-sidebar-muted', colors.textMuted || '#94A3B8')
+      r.setProperty('--app-sidebar-border', colors.border || 'rgba(255,255,255,0.08)')
+      // Status
+      r.setProperty('--app-success', colors.success || '#10B981')
+      r.setProperty('--app-warning', colors.warning || '#F59E0B')
+      r.setProperty('--app-error', colors.error || '#EF4444')
+      r.setProperty('--app-info', '#3B82F6')
+      // Data attributes
+      const root = document.documentElement
+      if (initialState.theme.slug) root.setAttribute('data-theme', initialState.theme.slug)
+      root.setAttribute('data-color-mode', initialState.colorMode)
+      // Theme class
+      const classes = Array.from(root.classList).filter(c => c.startsWith('theme-'))
+      classes.forEach(c => root.classList.remove(c))
+      if (initialState.theme.slug) root.classList.add(`theme-${initialState.theme.slug}`)
+    }
+  }
+
   // State
   const [currentTheme, setCurrentTheme] = useState<ThemePreset | null>(initialState.theme)
   const [colorMode, setColorModeState] = useState<ColorMode>(initialState.colorMode)

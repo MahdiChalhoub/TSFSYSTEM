@@ -71,7 +71,7 @@ function LoginContent() {
                 </div>
                 <div className="relative z-10 space-y-6">
                     {tenantLogo ? (
-                        <img src={tenantLogo} className="w-24 h-24 object-contain rounded-xl bg-app-surface/50 backdrop-blur-sm p-2 border border-app-border" alt={displayTitle} />
+                        <img src={tenantLogo} alt={displayTitle} className="w-24 h-24 object-contain rounded-xl bg-app-surface/50 backdrop-blur-sm p-2 border border-app-border" />
                     ) : (
                         <div className="w-20 h-20 bg-app-primary text-primary-foreground flex items-center justify-center text-4xl font-bold rounded-2xl shadow-xl shadow-app-primary/20">
                             {displayTitle.charAt(0)}

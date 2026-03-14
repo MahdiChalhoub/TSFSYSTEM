@@ -352,7 +352,7 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'Platform Dashboard', externalHref: '__saas_dashboard__', path: '/dashboard', icon: Globe },
+            { title: 'Platform Dashboard', path: '/platform-dashboard', icon: Globe },
             {
                 title: 'Organization Mgmt',
                 icon: Building2,

@@ -271,7 +271,7 @@ function BrandRow({ brand, onEdit }: Record<string, any>) {
  </button>
 
  <div className="w-10 h-10 rounded-lg bg-app-bg flex items-center justify-center text-sm font-bold text-app-text-muted uppercase border border-app-border">
- {brand.logo ? <img src={brand.logo} className="w-full h-full object-cover rounded-lg" /> : brand.name.substring(0, 2)}
+ {brand.logo ? <img src={brand.logo} alt={`${brand.name} logo`} className="w-full h-full object-cover rounded-lg" /> : brand.name.substring(0, 2)}
  </div>
 
  <div>

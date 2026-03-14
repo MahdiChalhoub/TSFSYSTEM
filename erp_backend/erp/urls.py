@@ -69,8 +69,12 @@ router.register(r'packages', PackageViewSet, basename='packages')
 router.register(r'domains', CustomDomainViewSet, basename='domains')
 
 from core.health import health_check as health_basic, health_db, health_full, error_report
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('health/', health_basic),
     path('health/db/', health_db),
     path('health/full/', health_full),

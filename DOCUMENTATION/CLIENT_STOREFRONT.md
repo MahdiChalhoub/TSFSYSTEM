@@ -1,0 +1,144 @@
+# Client Storefront Documentation
+
+## Goal
+Provide a configurable, multi-mode eCommerce storefront for clients (B2C, B2B, Catalog+Quote, Hybrid), with full shopping cart, checkout, account management, and portal authentication.
+
+## Architecture
+
+### Store Modes (per-organization)
+| Mode | Pricing | Checkout | Description |
+|------|---------|----------|-------------|
+| `B2C` | Retail prices for all | Standard eCommerce | Standard online store |
+| `B2B` | Tier/negotiated prices | Approval-gated | Wholesale portal |
+| `CATALOG_QUOTE` | Prices hidden | Quote request | Browse-only catalog |
+| `HYBRID` | B2C default, B2B for tier clients | Standard + approval | Default mode |
+
+### Configuration
+The `ClientPortalConfig` model stores per-org settings:
+- `store_mode` — Controls pricing logic and checkout behavior
+- `show_stock_levels` — Show exact quantities vs In Stock/Out of Stock
+- `allow_guest_browsing` — Allow unauthenticated catalog browsing
+- `require_approval_for_orders` — Orders need admin approval (B2B)
+- `storefront_title` / `storefront_tagline` — Custom branding
+
+## Data Flow
+
+### READ from
+| Page | Endpoint | Description |
+|------|----------|-------------|
+| Storefront config | `GET /api/client-portal/storefront/config/?slug=` | Public, no auth |
+| Dashboard | `GET /api/client-portal/dashboard/` | Auth required |
+| Orders | `GET /api/client-portal/my-orders/` | Auth required |
+| Wallet | `GET /api/client-portal/my-wallet/` | Auth required |
+| Tickets | `GET /api/client-portal/my-tickets/` | Auth required |
+| Quote Request | `POST /api/client-portal/quote-request/` | Optional auth |
+
+### SAVE to
+| Action | Endpoint | Method |
+|--------|----------|--------|
+| Login | `POST /api/client-portal/auth/login/` | POST |
+| Register | `POST /api/client-portal/register/` | POST |
+| Create order | `POST /api/client-portal/my-orders/` | POST |
+| Add to cart | `POST /api/client-portal/my-orders/{id}/add_to_cart/` | POST |
+| Place order | `POST /api/client-portal/my-orders/{id}/place_order/` | POST |
+| Create ticket | `POST /api/client-portal/my-tickets/` | POST |
+| Submit quote | `POST /api/client-portal/quote-request/` | POST |
+| Update profile | `POST /api/client-portal/profile/update/` | POST |
+| Change password | `POST /api/client-portal/profile/change-password/` | POST |
+| Mark notification read | `POST /api/client-portal/notifications/{id}/read/` | POST |
+
+## User Variables
+- **Email** — Client login credential
+- **Password** — Client login credential
+- **Delivery address** — Checkout delivery form
+- **Phone number** — Checkout delivery form
+- **Delivery notes** — Optional checkout notes
+- **Payment method** — WALLET / CASH / CARD
+- **Cart items** — Products added to cart (localStorage)
+- **Wishlist items** — Saved products (localStorage via PortalContext)
+- **Ticket type** — GENERAL / ORDER_ISSUE / DELIVERY_PROBLEM / etc.
+- **Ticket subject** — Support ticket subject
+- **Ticket description** — Support ticket description
+- **Registration name** — New account full name
+- **Registration email** — New account email
+- **Registration company** — Optional company name
+- **Registration password** — Min 8 characters + confirmation
+
+## Workflow
+
+### Shopping Flow
+1. Client visits `/tenant/[slug]`
+2. Browses catalog (StorefrontCatalog component)
+3. Clicks "Client Portal Login" → enters email/password
+4. System validates via `ClientPortalLoginView` (checks `ClientPortalAccess.status == ACTIVE`)
+5. Token + session stored in localStorage, user card appears
+6. Client adds products to cart → cart persisted in localStorage
+7. Navigates to `/tenant/[slug]/cart` → reviews items, adjusts quantities
+8. Proceeds to `/tenant/[slug]/checkout`:
+   - Step 1: Enter delivery details
+   - Step 2: Choose payment method
+   - Step 3: Review order summary
+   - Step 4: Place order → success confirmation
+9. Order created via backend API, cart cleared
+
+### Quote Request (CATALOG_QUOTE mode)
+1. Client navigates to `/tenant/[slug]/quote`
+2. Enters contact info (name, email, phone, company)
+3. Adds line items manually or imports from cart
+4. Submits message with additional requirements
+5. System sends quote request to organization
+
+### Product Detail
+1. Client clicks product card → `/tenant/[slug]/product/[id]`
+2. Full product view: image, name, SKU, description, stock
+3. Store-mode pricing: B2C/B2B shows price, CATALOG_QUOTE hides price
+4. Add to Cart (w/ quantity selector) or Request Quote button
+
+### Catalog Search & Filter
+- Text search bar filters by name or SKU
+- Category filter pills
+- Quick Add to Cart or Get Quote per card
+- Store-mode determines button behavior
+
+### Account Management
+- `/tenant/[slug]/account` — Dashboard with stats, POS barcode, 6-card nav grid
+- `/tenant/[slug]/account/orders` — Order history with status tracking
+- `/tenant/[slug]/account/orders/[id]` — Order detail with 5-step tracking timeline
+- `/tenant/[slug]/account/wallet` — Balance, loyalty tier progress (Bronze→Diamond), top-up request
+- `/tenant/[slug]/account/wishlist` — Saved products with Add to Cart and Remove
+- `/tenant/[slug]/account/notifications` — Notification inbox (All/Unread filter, mark-read)
+- `/tenant/[slug]/account/profile` — Profile settings, password change
+- `/tenant/[slug]/account/tickets` — Support tickets, create new tickets
+
+### Registration
+- `/tenant/[slug]/register` — Self-service client registration with name, email, company, password
+
+## Frontend Files
+- `src/app/tenant/[slug]/product/[id]/page.tsx` — Product detail w/ store-mode pricing
+- `src/app/tenant/[slug]/quote/page.tsx` — Quote request form
+- `src/components/tenant/StorefrontHeader.tsx` — Persistent header with org logo, cart badge, account link
+- `src/components/tenant/StorefrontFooter.tsx` — Footer with org branding, nav links, legal
+- `src/components/tenant/StorefrontCatalog.tsx` — Enhanced catalog with search, filter, quick-add
+- `src/components/tenant/ClientPortalLogin.tsx` — Login CTA / form / user card
+- `src/app/tenant/[slug]/layout.tsx` — PortalProvider + StorefrontHeader wrapper
+- `src/app/tenant/[slug]/account/layout.tsx` — Account sidebar (Dashboard, Orders, Wallet, Support)
+- `src/app/tenant/[slug]/cart/page.tsx` — Shopping cart
+- `src/app/tenant/[slug]/checkout/page.tsx` — Multi-step checkout
+- `src/app/tenant/[slug]/account/page.tsx` — Account dashboard
+- `src/app/tenant/[slug]/account/orders/page.tsx` — Order history (clickable rows)
+- `src/app/tenant/[slug]/account/orders/[id]/page.tsx` — Order detail (lines, totals, status)
+- `src/app/tenant/[slug]/account/wallet/page.tsx` — Wallet with loyalty tier progress (Bronze→Diamond), top-up request
+- `src/app/tenant/[slug]/categories/page.tsx` — Category browse grid with search and product counts
+- `src/app/tenant/[slug]/account/tickets/page.tsx` — Support tickets
+- `src/app/tenant/[slug]/account/wishlist/page.tsx` — Wishlist with Add to Cart and Remove
+- `src/app/tenant/[slug]/account/notifications/page.tsx` — Notifications inbox with read/unread filter
+- `src/app/tenant/[slug]/search/page.tsx` — Search results page with real-time filtering
+- `src/app/tenant/[slug]/register/page.tsx` — Client self-registration page
+- `src/app/tenant/[slug]/account/profile/page.tsx` — Profile settings, password change
+- `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
+- `src/context/PortalContext.tsx` — Client state management (cart, wishlist, auth, config)
+
+## Backend Files
+- `erp_backend/apps/client_portal/models.py` — ClientPortalConfig with store_mode
+- `erp_backend/apps/client_portal/views.py` — ClientPortalLoginView, StorefrontPublicConfigView
+- `erp_backend/apps/client_portal/urls.py` — Auth + router URLs

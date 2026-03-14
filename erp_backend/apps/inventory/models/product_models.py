@@ -6,7 +6,28 @@ from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
 from kernel.events import emit_event
 
-class Unit(AuditLogMixin, TenantOwnedModel):
+
+class _InventoryTenantModel(TenantOwnedModel):
+    """
+    Inventory-specific tenant base — overrides the `organization` FK's
+    `db_column` from the kernel default 'tenant_id' to 'organization_id',
+    which is what the existing inventory tables use.
+    """
+    organization = models.ForeignKey(
+        'erp.Organization',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_v2_set',
+        db_index=True,
+        null=True,
+        blank=True,
+        db_column='organization_id',
+    )
+
+    class Meta:
+        abstract = True
+
+
+class Unit(AuditLogMixin, _InventoryTenantModel):
     """Unit of measurement with Kernel OS v2.0 integration"""
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
@@ -28,7 +49,7 @@ class Unit(AuditLogMixin, TenantOwnedModel):
         return self.code
 
 
-class Category(AuditLogMixin, TenantOwnedModel):
+class Category(AuditLogMixin, _InventoryTenantModel):
     """Product category with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
@@ -69,7 +90,7 @@ class Category(AuditLogMixin, TenantOwnedModel):
         self.full_path = ' > '.join(parts)
 
 
-class Brand(AuditLogMixin, TenantOwnedModel):
+class Brand(AuditLogMixin, _InventoryTenantModel):
     """Brand with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
@@ -88,7 +109,7 @@ class Brand(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class Parfum(AuditLogMixin, TenantOwnedModel):
+class Parfum(AuditLogMixin, _InventoryTenantModel):
     """Parfum/Fragrance with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
@@ -104,7 +125,7 @@ class Parfum(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class ProductGroup(AuditLogMixin, TenantOwnedModel):
+class ProductGroup(AuditLogMixin, _InventoryTenantModel):
     """Product group with Kernel OS v2.0 integration"""
     name = models.CharField(max_length=255)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='product_groups')
@@ -138,7 +159,7 @@ class ProductGroup(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class Product(AuditLogMixin, TenantOwnedModel):
+class Product(AuditLogMixin, _InventoryTenantModel):
     PRODUCT_TYPES = (
         ('STANDARD', 'Standard'),
         ('COMBO', 'Combo / Bundle'),
@@ -387,7 +408,7 @@ class Product(AuditLogMixin, TenantOwnedModel):
         return f"{self.sku} - {self.name}"
 
 
-class ProductAttribute(AuditLogMixin, TenantOwnedModel):
+class ProductAttribute(AuditLogMixin, _InventoryTenantModel):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=50, null=True, blank=True)
 
@@ -401,7 +422,7 @@ class ProductAttribute(AuditLogMixin, TenantOwnedModel):
         return self.name
 
 
-class ProductAttributeValue(AuditLogMixin, TenantOwnedModel):
+class ProductAttributeValue(AuditLogMixin, _InventoryTenantModel):
     attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE, related_name='values')
     value = models.CharField(max_length=100)
     code = models.CharField(max_length=50, null=True, blank=True)
@@ -414,7 +435,7 @@ class ProductAttributeValue(AuditLogMixin, TenantOwnedModel):
         return f"{self.attribute.name}: {self.value}"
 
 
-class ProductVariant(AuditLogMixin, TenantOwnedModel):
+class ProductVariant(AuditLogMixin, _InventoryTenantModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     sku = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100, null=True, blank=True)
@@ -432,7 +453,7 @@ class ProductVariant(AuditLogMixin, TenantOwnedModel):
         ]
 
 
-class ComboComponent(AuditLogMixin, TenantOwnedModel):
+class ComboComponent(AuditLogMixin, _InventoryTenantModel):
     combo_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='combo_components')
     component_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='part_of_combos')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
@@ -445,7 +466,7 @@ class ComboComponent(AuditLogMixin, TenantOwnedModel):
         ordering = ['sort_order']
 
 
-class ProductPackaging(AuditLogMixin, TenantOwnedModel):
+class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
     """
     Multi-level packaging hierarchy for a product.
     Each level maps a higher-level unit (e.g., Carton) to the base product,

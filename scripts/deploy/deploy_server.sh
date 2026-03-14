@@ -85,6 +85,12 @@ fi
 # MAKE_EXIT=$?
 # set -e
 
+# ── Migration Pre-Flight Check ──
+if [ -f "$PROJECT_DIR/scripts/deploy/check_migrations.sh" ]; then
+    chmod +x "$PROJECT_DIR/scripts/deploy/check_migrations.sh"
+    bash "$PROJECT_DIR/scripts/deploy/check_migrations.sh" "$PROJECT_DIR" || true
+fi
+
 # Apply migrations
 log_info "Applying migrations..."
 set +e
