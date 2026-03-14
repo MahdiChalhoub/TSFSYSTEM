@@ -10,7 +10,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('finance', '0029_phase_a_enterprise_posting'),
+        ('finance', '0031_merge_compound_tax_and_enterprise_posting'),
         ('erp', '0001_initial'),
     ]
 

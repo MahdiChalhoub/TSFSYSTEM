@@ -63,7 +63,7 @@ def reverse_migration(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('finance', '0030_contextual_posting_rule'),
+        ('finance', '0032_contextual_posting_rule'),
         ('erp', '0001_initial'),
     ]
 
