@@ -6,7 +6,7 @@ Logs: method, path, status, duration_ms, user, tenant, IP.
 Skips: health checks, static files, media files.
 
 Enable in settings.py:
-    MIDDLEWARE = [..., 'erp.middleware.request_logger.RequestLoggingMiddleware']
+    MIDDLEWARE = [..., 'erp.middleware_request_logger.RequestLoggingMiddleware']
 
 Configure:
     REQUEST_LOGGING_ENABLED = True  # default: True in production, False in DEBUG

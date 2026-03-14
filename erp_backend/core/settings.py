@@ -94,7 +94,7 @@ MIDDLEWARE = [
     # Observability — request tracing with correlation IDs
     'core.middleware_tracing.RequestTracingMiddleware',
     # Observability — structured request/response logging
-    'erp.middleware.request_logger.RequestLoggingMiddleware',
+    'erp.middleware_request_logger.RequestLoggingMiddleware',
 ]
 
 # CORS — HARD FALSE, never allow all origins regardless of env
