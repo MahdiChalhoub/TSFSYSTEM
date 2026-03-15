@@ -224,35 +224,6 @@ export function UnitFormModal({ isOpen, onClose, onSuccess, unit, baseUnitId, ba
                             </div>
                         </div>
 
-                        {/* Balance Config */}
-                        {needsBalance && (
-                            <div className="p-3 rounded-xl space-y-2 animate-in fade-in slide-in-from-top-2"
-                                style={{ background: 'color-mix(in srgb, var(--app-warning) 6%, var(--app-surface))', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
-                                <div className="flex items-center gap-1.5">
-                                    <Scale size={11} style={{ color: 'var(--app-warning)' }} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>Balance Barcode Config</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { name: 'balanceItemDigits', label: 'Item Digits', idx: 0, def: 6 },
-                                        { name: 'balanceIntDigits', label: 'Weight Int', idx: 1, def: 3 },
-                                        { name: 'balanceDecDigits', label: 'Weight Dec', idx: 2, def: 3 },
-                                    ].map(f => (
-                                        <div key={f.name}>
-                                            <label className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-warning)' }}>{f.label}</label>
-                                            <input
-                                                name={f.name}
-                                                type="number"
-                                                defaultValue={unit?.balance_code_structure?.split(',')[f.idx] || f.def}
-                                                className="w-full px-2 py-1.5 rounded-lg text-[12px] font-mono outline-none"
-                                                style={{ background: 'var(--app-background)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)', color: 'var(--app-foreground)' }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         {/* Conversion Factor */}
                         {unitType === 'derived' && (
                             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">

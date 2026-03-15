@@ -527,6 +527,16 @@ class POSSettings(TenantModel):
     sms_on_delivery_complete = models.BooleanField(
         default=False, help_text='Send SMS to client when delivery is completed.')
 
+    # ── Balance Barcode Configuration (Global) ──
+    # Units with needs_balance=True reference these settings to parse weight barcodes.
+    # Structure: [prefix][item_digits][weight_int_digits][weight_dec_digits][check]
+    balance_item_digits = models.IntegerField(
+        default=6, help_text='Number of digits for item/PLU code in balance barcode')
+    balance_weight_int_digits = models.IntegerField(
+        default=3, help_text='Number of digits for integer part of weight')
+    balance_weight_dec_digits = models.IntegerField(
+        default=3, help_text='Number of digits for decimal part of weight')
+
     class Meta:
         db_table = 'pos_settings'
 
