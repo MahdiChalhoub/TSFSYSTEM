@@ -24,12 +24,25 @@ rsync -avz --update -e "ssh -i ~/.ssh/id_deploy" \
     root@91.99.11.249:/root/current/erp_backend/ 2>&1 | tail -3
 ```
 
-### Step 2: Rebuild frontend and restart services
+### Step 2: Build locally (safe — zero server CPU)
 ```bash
-ssh -i ~/.ssh/id_deploy -o ServerAliveInterval=30 root@91.99.11.249 "pm2 stop tsf-frontend 2>/dev/null; cd /root/current && rm -rf .next && npm run build 2>&1 | tail -5 && ln -sfn /root/current/.next/static /root/current/.next/standalone/.next/static && ln -sfn /root/current/public /root/current/.next/standalone/public && pm2 delete tsf-frontend 2>/dev/null; pm2 start /root/current/.next/standalone/server.js --name tsf-frontend --cwd /root/current && pm2 save && ps aux | grep 'gunicorn.*core.wsgi' | grep -v grep | head -1 | awk '{print \$2}' | xargs kill -HUP && echo '=== DEPLOYED ON .249 ==='"
+cd /root/.gemini/antigravity/scratch/TSFSYSTEM && npm run build 2>&1 | tail -5
 ```
 
-### Step 3: Post-deploy health checks
+### Step 3: Deploy pre-built bundle to server
+```bash
+ssh -i ~/.ssh/id_deploy root@91.99.11.249 "pm2 delete tsf-frontend 2>/dev/null; echo stopped" && \
+rsync -avz --delete -e "ssh -i ~/.ssh/id_deploy" \
+    /root/.gemini/antigravity/scratch/TSFSYSTEM/.next/standalone/ \
+    root@91.99.11.249:/root/current/.next/standalone/ 2>&1 | tail -3 && \
+rsync -avz --delete -e "ssh -i ~/.ssh/id_deploy" \
+    /root/.gemini/antigravity/scratch/TSFSYSTEM/.next/static/ \
+    root@91.99.11.249:/root/current/.next/standalone/.next/static/ 2>&1 | tail -3 && \
+ssh -i ~/.ssh/id_deploy root@91.99.11.249 "ln -sfn /root/current/public /root/current/.next/standalone/public && pm2 start /root/current/.next/standalone/server.js --name tsf-frontend --cwd /root/current && pm2 save && echo '=== FRONTEND DEPLOYED ==='" && \
+ssh -i ~/.ssh/id_deploy root@91.99.11.249 'kill -HUP \$(pgrep -f "gunicorn.*core.wsgi" | head -1) && echo Gunicorn_reloaded || echo No_gunicorn_found'
+```
+
+### Step 4: Post-deploy health checks
 ```bash
 echo "🔍 Running post-deploy health checks..." && \
 echo "" && \
