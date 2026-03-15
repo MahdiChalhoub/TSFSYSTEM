@@ -165,34 +165,61 @@ class RegisterLobbyMixin:
                         "conflicting_register": conflict.name,
                     }, status=status.HTTP_409_CONFLICT)
             else:
-                # Auto-create a dedicated cash account under RegisterCash parent
+                # Auto-create a dedicated cash account (FinancialAccount + ChartOfAccount ledger)
                 try:
                     from erp.connector_registry import connector as _conn
                     FinancialAccount = _conn.require('finance.accounts.get_financial_account_model', org_id=org_id, source='pos.lobby')
                     if not FinancialAccount:
                         raise ImportError("FinancialAccount not available")
-                    # Find or create the RegisterCash parent account
-                    parent = FinancialAccount.objects.filter(
-                        organization=organization, name__iexact='RegisterCash'
-                    ).first()
-                    if not parent:
-                        parent = FinancialAccount.objects.filter(
-                            organization=organization, name__icontains='Register Cash'
-                        ).first()
-                    # Build the new account
+
+                    from apps.finance.models.coa_models import ChartOfAccount
+
                     acct_name = f'{name} Cash'
+
+                    # ── 1. Find or create a parent COA for POS cash accounts ──
+                    parent_coa = ChartOfAccount.objects.filter(
+                        organization=organization, system_role='CASH_ACCOUNT'
+                    ).first()
+                    if not parent_coa:
+                        parent_coa = ChartOfAccount.objects.filter(
+                            organization=organization, type='ASSET', sub_type__icontains='cash'
+                        ).first()
+
+                    # Generate a unique code for the new ledger account
+                    base_code = parent_coa.code if parent_coa else '1100'
+                    existing_count = ChartOfAccount.objects.filter(
+                        organization=organization, code__startswith=base_code
+                    ).count()
+                    new_code = f'{base_code}.{existing_count + 1:02d}'
+
+                    # ── 2. Create the ChartOfAccount (ledger) ──
+                    ledger = ChartOfAccount.objects.create(
+                        organization=organization,
+                        code=new_code,
+                        name=acct_name,
+                        type='ASSET',
+                        sub_type='POS Cash',
+                        system_role='CASH_ACCOUNT',
+                        normal_balance='DEBIT',
+                        allow_posting=True,
+                        allow_reconciliation=True,
+                        parent=parent_coa,
+                    )
+
+                    # ── 3. Create the FinancialAccount linked to the ledger ──
                     new_account = FinancialAccount.objects.create(
                         organization=organization,
                         name=acct_name,
                         type='CASH',
-                        parent=parent,
                         currency=organization.currency or 'USD',
-                        is_active=True,
+                        is_pos_enabled=True,
+                        site=branch,
+                        ledger_account=ledger,
                     )
                     cash_account_id = new_account.id
                 except Exception as e:
                     import logging
-                    logging.getLogger(__name__).warning(f'Auto-create cash account failed: {e}')
+                    logging.getLogger(__name__).warning(f'Auto-create cash account failed: {e}', exc_info=True)
                     # Non-fatal — register is still created without auto-account
 
         payment_methods = request.data.get('payment_methods', [])
