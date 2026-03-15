@@ -3,196 +3,217 @@
 
 import { useActionState } from 'react';
 import { createBrand, updateBrand, BrandState } from '@/app/actions/inventory/brands';
-import { X, Save, Loader2, Globe } from 'lucide-react';
+import { X, Save, Loader2, Globe, Paintbrush, Tag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 
 type BrandFormModalProps = {
- isOpen: boolean;
- onClose: () => void;
- brand?: Record<string, any>; // If provided, edit mode
- countries: Record<string, any>[];
- categories: Record<string, any>[]; // NEW: Categories for linking
+    isOpen: boolean;
+    onClose: () => void;
+    brand?: Record<string, any>;
+    countries: Record<string, any>[];
+    categories: Record<string, any>[];
 };
 
 type CategoryNode = {
- id: number;
- name: string;
- parentId: number | null;
- children?: CategoryNode[];
- code?: string;
+    id: number;
+    name: string;
+    parentId: number | null;
+    children?: CategoryNode[];
+    code?: string;
 };
 
-// Helper to build tree from flat list
 function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[] {
- const categoryMap = new Map<number, CategoryNode>();
- const roots: CategoryNode[] = [];
+    const categoryMap = new Map<number, CategoryNode>();
+    const roots: CategoryNode[] = [];
 
- // First pass: Create all nodes
- flatCategories.forEach(cat => {
- categoryMap.set(cat.id, {
- id: cat.id,
- name: cat.name,
- parentId: cat.parent,
- code: cat.code,
- children: []
- });
- });
+    flatCategories.forEach(cat => {
+        categoryMap.set(cat.id, {
+            id: cat.id,
+            name: cat.name,
+            parentId: cat.parent,
+            code: cat.code,
+            children: []
+        });
+    });
 
- // Second pass: Build tree structure
- flatCategories.forEach(cat => {
- const node = categoryMap.get(cat.id)!;
- if (cat.parent === null || cat.parent === undefined) {
- roots.push(node);
- } else {
- const parent = categoryMap.get(cat.parent);
- if (parent) {
- parent.children!.push(node);
- }
- }
- });
+    flatCategories.forEach(cat => {
+        const node = categoryMap.get(cat.id)!;
+        if (cat.parent === null || cat.parent === undefined) {
+            roots.push(node);
+        } else {
+            const parent = categoryMap.get(cat.parent);
+            if (parent) parent.children!.push(node);
+        }
+    });
 
- return roots;
+    return roots;
 }
 
 const initialState: BrandState = { message: '', errors: {} };
 
 export function BrandFormModal({ isOpen, onClose, brand, countries, categories }: BrandFormModalProps) {
- const [state, formAction] = useActionState(brand ? updateBrand.bind(null, brand.id) : createBrand, initialState);
- const [pending, setPending] = useState(false);
- const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
- brand?.categories?.map((c: Record<string, any>) => c.id) || []
- );
+    const [state, formAction] = useActionState(brand ? updateBrand.bind(null, brand.id) : createBrand, initialState);
+    const [pending, setPending] = useState(false);
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
+        brand?.categories?.map((c: Record<string, any>) => c.id) || []
+    );
 
- // Reset selected categories when brand changes (for edit mode)
- useEffect(() => {
- if (isOpen) {
- setSelectedCategoryIds(brand?.categories?.map((c: Record<string, any>) => c.id) || []);
- setPending(false); // Reset pending state when opening
- }
- }, [isOpen, brand]);
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedCategoryIds(brand?.categories?.map((c: Record<string, any>) => c.id) || []);
+            setPending(false);
+        }
+    }, [isOpen, brand]);
 
- // Close modal on successful save
- useEffect(() => {
- if (state.message === 'success') {
- onClose();
- setPending(false); // Reset pending state after success
- }
- }, [state.message, onClose]); // Only track state.message, not entire state
+    useEffect(() => {
+        if (state.message === 'success') {
+            onClose();
+            setPending(false);
+        }
+    }, [state.message, onClose]);
 
- if (!isOpen) return null;
+    if (!isOpen) return null;
 
- return (
- <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
- <div className="bg-app-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
- <div className="px-6 py-4 border-b border-app-border flex justify-between items-center bg-app-surface-2">
- <h3 className="font-bold text-lg text-app-text">
- {brand ? 'Edit Brand' : 'Add New Brand'}
- </h3>
- <button onClick={onClose} className="p-1 rounded-full hover:bg-app-border text-app-text-faint hover:text-app-text-muted transition-colors">
- <X size={18} />
- </button>
- </div>
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+            onClick={e => { if (e.target === e.currentTarget) onClose() }}
+        >
+            <div
+                className="w-full max-w-md mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+            >
+                {/* Header */}
+                <div className="px-5 py-3 flex items-center justify-between flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                            <Paintbrush size={15} className="text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-app-foreground">{brand ? 'Edit Brand' : 'New Brand'}</h3>
+                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                                {brand ? `Editing "${brand.name}"` : 'Create a new product brand'}
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all">
+                        <X size={16} />
+                    </button>
+                </div>
 
- <form
- action={formAction}
- className="p-6 space-y-4"
- onSubmit={() => setPending(true)}
- >
+                {/* Body */}
+                <form
+                    action={formAction}
+                    className="flex-1 overflow-y-auto custom-scrollbar"
+                    onSubmit={() => setPending(true)}
+                >
+                    <div className="p-5 space-y-4">
 
- {state.message && state.message !== 'success' && (
- <div className="p-3 bg-app-error-bg text-app-error text-sm rounded-lg border border-red-100">
- {state.message}
- </div>
- )}
+                        {state.message && state.message !== 'success' && (
+                            <div className="p-3 rounded-xl text-[12px] font-bold"
+                                style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)', border: '1px solid color-mix(in srgb, var(--app-error) 20%, transparent)' }}>
+                                {state.message}
+                            </div>
+                        )}
 
- <div className="grid grid-cols-2 gap-4">
- <div className="space-y-1">
- <label className="text-xs font-bold text-app-text-muted uppercase tracking-wide">Brand Name</label>
- <input
- name="name"
- defaultValue={brand?.name || ''}
- placeholder="e.g. Nestle"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
- required
- />
- </div>
- <div className="space-y-1">
- <label className="text-xs font-bold text-app-text-muted uppercase tracking-wide">Short Name</label>
- <input
- name="shortName"
- defaultValue={brand?.short_name || ''}
- placeholder="e.g. NES"
- className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-app-primary outline-none transition-all"
- />
- </div>
- </div>
+                        {/* Name + Short Name */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                                    <Paintbrush size={10} /> Brand Name
+                                </label>
+                                <input
+                                    name="name"
+                                    defaultValue={brand?.name || ''}
+                                    placeholder="e.g. Nestle"
+                                    className="w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
+                                    Short Name
+                                </label>
+                                <input
+                                    name="shortName"
+                                    defaultValue={brand?.short_name || ''}
+                                    placeholder="e.g. NES"
+                                    className="w-full px-3 py-2.5 rounded-xl text-[13px] font-mono font-medium text-app-foreground placeholder:text-app-muted-foreground outline-none transition-all"
+                                    style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}
+                                />
+                            </div>
+                        </div>
 
- <div className="space-y-2">
- <label className="text-xs font-bold text-app-text-muted uppercase tracking-wide flex items-center gap-1">
- <Globe size={12} /> Operating Countries
- </label>
- <div className="grid grid-cols-2 gap-2 p-3 bg-app-bg rounded-xl border border-app-border max-h-40 overflow-y-auto">
- {countries.map(c => {
- const isChecked = brand?.countries?.some((bc: Record<string, any>) => bc.id === c.id);
- return (
- <label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-app-surface p-1 rounded transition-colors">
- <input
- type="checkbox"
- name="countryIds"
- value={c.id}
- defaultChecked={isChecked}
- className="w-4 h-4 text-app-primary rounded focus:ring-app-primary"
- />
- <span className="text-sm text-app-text-muted">{c.name} ({c.code})</span>
- </label>
- );
- })}
- </div>
- <p className="text-[10px] text-app-text-faint">Select all countries where this brand is available.</p>
- </div>
+                        {/* Countries */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                                <Globe size={10} /> Operating Countries
+                            </label>
+                            <div className="grid grid-cols-2 gap-1.5 p-3 rounded-xl max-h-32 overflow-y-auto custom-scrollbar"
+                                style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                                {countries.map(c => {
+                                    const isChecked = brand?.countries?.some((bc: Record<string, any>) => bc.id === c.id);
+                                    return (
+                                        <label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-app-surface p-1 rounded-lg transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                name="countryIds"
+                                                value={c.id}
+                                                defaultChecked={isChecked}
+                                                className="w-3.5 h-3.5 rounded focus:ring-app-primary accent-[var(--app-primary)]"
+                                            />
+                                            <span className="text-[11px] font-medium text-app-foreground">{c.name} ({c.code})</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
- {/* NEW: Category Selection Tree */}
- <div className="space-y-2">
- <label className="text-xs font-bold text-app-text-muted uppercase tracking-wide flex items-center gap-1">
- <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
- </svg>
- Linked Categories
- </label>
+                        {/* Categories */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                                <Tag size={10} /> Linked Categories
+                            </label>
 
- <CategoryTreeSelector
- categories={buildCategoryTree(categories)}
- selectedIds={selectedCategoryIds}
- onChange={setSelectedCategoryIds}
- maxHeight="max-h-56"
- />
+                            <CategoryTreeSelector
+                                categories={buildCategoryTree(categories)}
+                                selectedIds={selectedCategoryIds}
+                                onChange={setSelectedCategoryIds}
+                                maxHeight="max-h-44"
+                            />
 
- {/* Hidden inputs for form submission */}
- {selectedCategoryIds.map(id => (
- <input key={id} type="hidden" name="categoryIds" value={id} />
- ))}
+                            {selectedCategoryIds.map(id => (
+                                <input key={id} type="hidden" name="categoryIds" value={id} />
+                            ))}
 
- <p className="text-[10px] text-app-text-faint">
- ≡ƒÆí Leave empty to make this brand <strong>universal</strong> (available for ALL categories).
- <br />
- Select parent category to include all sub-categories automatically.
- </p>
- </div>
+                            <p className="text-[10px] text-app-muted-foreground">
+                                Leave empty for a <strong>universal</strong> brand across all categories.
+                            </p>
+                        </div>
+                    </div>
 
- {/* Logo URL (Optional) - Could be file upload later */}
-
- <div className="pt-2 flex gap-3">
- <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl font-semibold border border-app-border text-app-text-muted hover:bg-app-bg transition-colors">
- Cancel
- </button>
- <button type="submit" disabled={pending} className="flex-1 py-3 rounded-xl font-semibold bg-app-primary text-app-text hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-app-primary/20 flex items-center justify-center gap-2">
- {pending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
- <span>Save Brand</span>
- </button>
- </div>
- </form>
- </div>
- </div>
- );
+                    {/* Footer */}
+                    <div className="p-5 pt-0 flex gap-2">
+                        <button type="button" onClick={onClose}
+                            className="flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all"
+                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)', color: 'var(--app-muted-foreground)' }}>
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={pending}
+                            className="flex-1 py-2.5 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                            style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            {pending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                            <span>Save Brand</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 }

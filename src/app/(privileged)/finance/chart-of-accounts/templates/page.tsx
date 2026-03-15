@@ -12,7 +12,7 @@ export default async function TemplatesLibraryPage() {
     return (
         <div className="app-page space-y-6 p-6">
             <header className="flex items-center gap-4 fade-in-up">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'var(--app-info)20', border: '1px solid var(--app-info)40' }}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 25%, transparent)' }}>
                     <LayoutTemplate size={26} style={{ color: 'var(--app-info)' }} />
                 </div>
                 <div>

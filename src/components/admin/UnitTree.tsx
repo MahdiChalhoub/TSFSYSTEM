@@ -1,213 +1,230 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Package, Layers } from 'lucide-react';
+import {
+    ChevronRight, ChevronDown, Pencil, Trash2, Plus,
+    Package, Layers, Scale, AlertCircle, Ruler
+} from 'lucide-react';
 import { UnitFormModal } from './UnitFormModal';
 import { deleteUnit } from '@/app/actions/inventory';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import clsx from 'clsx';
 
 type UnitNode = {
- id: number;
- name: string;
- code: string;
- conversion_factor: number;
- base_unit: number | null;
- children?: UnitNode[];
- product_count?: number;
- type?: string;
- needs_balance?: boolean;
+    id: number;
+    name: string;
+    code: string;
+    conversion_factor: number;
+    base_unit: number | null;
+    children?: UnitNode[];
+    product_count?: number;
+    type?: string;
+    short_name?: string;
+    needs_balance?: boolean;
 };
 
-export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], potentialParents?: Record<string, any>[] }) {
- if (units.length === 0) {
- return (
- <div className="py-20 text-center animate-in fade-in zoom-in duration-500">
- <div className="w-20 h-20 bg-app-bg rounded-full flex items-center justify-center mx-auto mb-4 border border-app-border shadow-inner">
- <Package size={32} className="text-gray-300" />
- </div>
- <h3 className="text-xl font-bold text-app-text-faint">No units defined yet</h3>
- <p className="text-app-text-faint mt-1 max-w-xs mx-auto">Create a base unit like 'Piece' or 'KG' to get started.</p>
- </div>
- );
- }
+export function UnitTree({ units, potentialParents = [], forceExpanded, expandKey = 0 }: { units: UnitNode[], potentialParents?: Record<string, any>[], forceExpanded?: boolean, expandKey?: number }) {
+    if (units.length === 0) return null;
 
- return (
- <div className="space-y-4">
- {units.map((unit, idx) => (
- <div key={unit.id} className="animate-in slide-in-from-bottom-4 fade-in duration-500" style={{ animationDelay: `${idx * 50}ms` }}>
- <UnitTreeNode unit={unit} level={0} potentialParents={potentialParents} />
- </div>
- ))}
- </div>
- );
+    return (
+        <div>
+            {units.map((unit) => (
+                <UnitTreeNode key={`${unit.id}-${expandKey}`} unit={unit} level={0} potentialParents={potentialParents} forceExpanded={forceExpanded} expandKey={expandKey} />
+            ))}
+        </div>
+    );
 }
 
-function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level: number; potentialParents: Record<string, any>[] }) {
- const [isExpanded, setIsExpanded] = useState(true);
- const [isEditOpen, setIsEditOpen] = useState(false);
- const [isAddChildOpen, setIsAddChildOpen] = useState(false);
- const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null);
+function UnitTreeNode({ unit, level, potentialParents, forceExpanded, expandKey = 0 }: { unit: UnitNode; level: number; potentialParents: Record<string, any>[]; forceExpanded?: boolean; expandKey?: number }) {
+    const [isExpanded, setIsExpanded] = useState(forceExpanded !== undefined ? forceExpanded : level < 2);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isAddChildOpen, setIsAddChildOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null);
 
- const hasChildren = unit.children && unit.children.length > 0;
+    const hasChildren = unit.children && unit.children.length > 0;
+    const isRoot = level === 0;
+    const productCount = unit.product_count || 0;
 
- const handleDelete = () => {
- if (hasChildren) {
- toast.error("Delete sub-units first.");
- return;
- }
- setDeleteTarget(unit);
- };
+    const handleDelete = () => {
+        if (hasChildren) {
+            toast.error("Delete sub-units first.");
+            return;
+        }
+        setDeleteTarget(unit);
+    };
 
- const confirmDelete = async () => {
- if (!deleteTarget) return;
- await deleteUnit(deleteTarget.id);
- toast.success(`"${deleteTarget.name}" deleted`);
- setDeleteTarget(null);
- };
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        await deleteUnit(deleteTarget.id);
+        toast.success(`"${deleteTarget.name}" deleted`);
+        setDeleteTarget(null);
+    };
 
- return (
- <div className="select-none mb-1">
- <div
- className={clsx(
- "group flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden",
- level === 0
- ? "bg-app-text/80 backdrop-blur-md border-app-border shadow-sm hover:shadow-xl hover:border-app-success"
- : "bg-app-surface-2/40 border-app-border ml-10 mt-2 hover:bg-app-surface hover:border-app-info hover:shadow-lg hover:shadow-blue-500/5",
- "hover:-translate-y-0.5"
- )}
- >
- {/* Visual Connector lines for nested items */}
- {level > 0 && (
- <div className="absolute left-[-2.5rem] top-1/2 w-10 h-px bg-gradient-to-r from-gray-200 to-transparent pointer-events-none" />
- )}
+    return (
+        <div>
+            {/* ── ROW ── */}
+            <div
+                className={`
+                    group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-default
+                    border-b border-app-border/30
+                    ${isRoot
+                        ? 'hover:bg-app-surface py-2.5 md:py-3'
+                        : 'hover:bg-app-surface/40 py-1.5 md:py-2'
+                    }
+                `}
+                style={{
+                    paddingLeft: `${12 + level * 20}px`,
+                    paddingRight: '12px',
+                    background: isRoot
+                        ? 'color-mix(in srgb, var(--app-info) 4%, var(--app-surface))'
+                        : undefined,
+                    borderLeft: isRoot
+                        ? '3px solid var(--app-info)'
+                        : level > 0
+                            ? '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)'
+                            : undefined,
+                    marginLeft: level > 0 ? `${12 + (level - 1) * 20 + 10}px` : undefined,
+                }}
+            >
+                {/* Toggle */}
+                <button
+                    onClick={() => hasChildren && setIsExpanded(!isExpanded)}
+                    className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${hasChildren ? 'hover:bg-app-border/50 text-app-muted-foreground' : 'text-app-border'}`}
+                >
+                    {hasChildren ? (
+                        isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />
+                    ) : (
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-info)' }} />
+                    )}
+                </button>
 
- <div className="flex items-center gap-4 relative z-10">
- {/* Expand Toggle */}
- <button
- onClick={() => setIsExpanded(!isExpanded)}
- className={clsx(
- "p-1.5 rounded-xl transition-all duration-300",
- isExpanded ? "bg-app-primary-light text-app-primary rotate-0" : "bg-app-bg text-app-text-faint -rotate-90",
- !hasChildren && 'invisible opacity-0'
- )}
- >
- <ChevronDown size={18} />
- </button>
+                {/* Icon */}
+                <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: isRoot
+                            ? 'color-mix(in srgb, var(--app-info) 12%, transparent)'
+                            : 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                        color: isRoot ? 'var(--app-info)' : 'var(--app-muted-foreground)',
+                    }}
+                >
+                    {isRoot
+                        ? <Ruler size={14} strokeWidth={2.5} />
+                        : <Package size={13} />}
+                </div>
 
- {/* Icon with Gradient Glow */}
- <div className={clsx(
- "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-300",
- level === 0
- ? "bg-app-primary-light text-app-primary ring-4 ring-emerald-50/50"
- : "bg-app-info-bg text-app-info ring-4 ring-blue-50/50"
- )}>
- {level === 0 ? <Layers size={22} strokeWidth={2.5} /> : <Package size={20} strokeWidth={2} />}
- </div>
+                {/* Name */}
+                <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
+                    <span className={`truncate text-[13px] ${isRoot ? 'font-bold text-app-foreground' : 'font-medium text-app-foreground'}`}>
+                        {unit.name}
+                    </span>
+                    {unit.short_name && (
+                        <span className="hidden md:inline text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider bg-app-border/30 px-1.5 py-0.5 rounded flex-shrink-0">
+                            {unit.short_name}
+                        </span>
+                    )}
+                    {isRoot && (
+                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                            Base
+                        </span>
+                    )}
+                    {unit.needs_balance && (
+                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-0.5"
+                            style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
+                            <Scale size={8} /> Scale
+                        </span>
+                    )}
+                </div>
 
- {/* Info */}
- <div>
- <div className="flex items-center gap-2">
- <h4 className="font-extrabold text-app-text text-lg tracking-tight">{unit.name}</h4>
- <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-app-surface-2 text-app-text-muted border border-app-border shadow-sm">
- {unit.code}
- </span>
- {level === 0 && (
- <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-app-primary-light text-app-primary border border-emerald-100 animate-pulse">
- Base
- </span>
- )}
- {unit.needs_balance && (
- <span className="text-[10px] bg-app-warning-bg text-app-warning px-2 py-0.5 rounded-lg border border-amber-100 font-bold flex items-center gap-1 shadow-sm">
- <div className="w-1.5 h-1.5 bg-app-warning rounded-full animate-ping" />
- Scale
- </span>
- )}
- </div>
- <div className="text-sm text-app-text-muted mt-1 flex items-center gap-3">
- <span className="font-medium">
- {level === 0
- ? `Registry: ${unit.type || 'Standard'}`
- : `Ratio: 1:${unit.conversion_factor}`
- }
- </span>
- {unit.product_count != null && unit.product_count > 0 && (
- <div className="h-1 w-1 bg-gray-300 rounded-full" />
- )}
- {unit.product_count != null && unit.product_count > 0 && (
- <span className="flex items-center gap-1.5 text-app-primary font-bold bg-app-primary-light/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
- {unit.product_count} Products
- </span>
- )}
- </div>
- </div>
- </div>
+                {/* Code */}
+                <div className="hidden sm:flex w-16 flex-shrink-0">
+                    <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded"
+                        style={{
+                            background: isRoot
+                                ? 'color-mix(in srgb, var(--app-info) 10%, transparent)'
+                                : 'color-mix(in srgb, var(--app-background) 60%, transparent)',
+                            color: isRoot ? 'var(--app-info)' : 'var(--app-foreground)',
+                        }}>
+                        {unit.code}
+                    </span>
+                </div>
 
- {/* Actions - Modern Styled */}
- <div className="flex items-center gap-1 relative z-10">
- <button
- onClick={() => setIsEditOpen(true)}
- className="p-2.5 text-app-text-faint hover:text-app-primary hover:bg-app-primary-light rounded-xl transition-all hover:shadow-lg active:scale-90"
- title="Edit"
- >
- <Edit2 size={18} />
- </button>
- <button
- onClick={() => setIsAddChildOpen(true)}
- className="p-2.5 text-app-text-faint hover:text-app-info hover:bg-app-info-bg rounded-xl transition-all hover:shadow-lg active:scale-90"
- title="Add Multiplier"
- >
- <Plus size={18} />
- </button>
- {!hasChildren && (
- <button
- onClick={handleDelete}
- className="p-2.5 text-app-text-faint hover:text-app-error hover:bg-app-error-bg rounded-xl transition-all hover:shadow-lg active:scale-90"
- title="Delete"
- >
- <Trash2 size={18} />
- </button>
- )}
- </div>
+                {/* Type */}
+                <div className="hidden sm:flex w-20 flex-shrink-0">
+                    <span className="text-[10px] font-bold text-app-muted-foreground">
+                        {unit.type || 'COUNT'}
+                    </span>
+                </div>
 
- {/* Glassmorphism gradient overlay on hover */}
- <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform pointer-events-none" />
- </div>
+                {/* Ratio */}
+                <div className="hidden sm:flex w-20 flex-shrink-0">
+                    <span className="text-[10px] font-bold text-app-muted-foreground tabular-nums">
+                        {isRoot ? '1:1 (Base)' : `1:${unit.conversion_factor}`}
+                    </span>
+                </div>
 
- {/* Children Recursive Render with Animation */}
- {isExpanded && hasChildren && (
- <div className="border-l-2 border-app-border/80 ml-6 pl-1 animate-in slide-in-from-top-2 duration-300">
- {unit.children!.map((child, cidx) => (
- <UnitTreeNode key={child.id} unit={child} level={level + 1} potentialParents={potentialParents} />
- ))}
- </div>
- )}
+                {/* Products */}
+                <div className="hidden sm:flex w-20 flex-shrink-0">
+                    <span className="text-[10px] font-bold flex items-center gap-1"
+                        style={{ color: productCount > 0 ? 'var(--app-success)' : 'var(--app-muted-foreground)', opacity: productCount > 0 ? 1 : 0.5 }}>
+                        <Package size={10} />
+                        {productCount}
+                    </span>
+                </div>
 
- {/* Modals */}
- <UnitFormModal
- isOpen={isEditOpen}
- onClose={() => setIsEditOpen(false)}
- unit={unit}
- potentialParents={potentialParents}
- />
- <UnitFormModal
- isOpen={isAddChildOpen}
- onClose={() => setIsAddChildOpen(false)}
- baseUnitId={unit.id}
- baseUnitName={unit.name}
- potentialParents={potentialParents}
- />
+                {/* Actions */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setIsEditOpen(true)} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors" title="Edit">
+                        <Pencil size={12} />
+                    </button>
+                    <button onClick={() => setIsAddChildOpen(true)} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors" title="Add derived unit">
+                        <Plus size={13} />
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="p-1.5 hover:bg-app-border/50 rounded-lg transition-colors"
+                        style={{ color: hasChildren ? 'var(--app-border)' : 'var(--app-muted-foreground)', cursor: hasChildren ? 'not-allowed' : 'pointer' }}
+                        title={hasChildren ? 'Delete sub-units first' : 'Delete'}
+                    >
+                        {hasChildren ? <AlertCircle size={12} /> : <Trash2 size={12} />}
+                    </button>
+                </div>
+            </div>
 
- <ConfirmDialog
- open={deleteTarget !== null}
- onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
- onConfirm={confirmDelete}
- title={`Delete "${deleteTarget?.name}"?`}
- description="This will permanently remove this unit. Products using it may be affected."
- confirmText="Delete"
- variant="danger"
- />
- </div>
- );
+            {/* ── CHILDREN ── */}
+            {isExpanded && hasChildren && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    {unit.children!.map((child) => (
+                        <UnitTreeNode key={`${child.id}-${expandKey}`} unit={child} level={level + 1} potentialParents={potentialParents} forceExpanded={forceExpanded} expandKey={expandKey} />
+                    ))}
+                </div>
+            )}
+
+            {/* Modals */}
+            <UnitFormModal
+                isOpen={isEditOpen}
+                onClose={() => setIsEditOpen(false)}
+                unit={unit}
+                potentialParents={potentialParents}
+            />
+            <UnitFormModal
+                isOpen={isAddChildOpen}
+                onClose={() => setIsAddChildOpen(false)}
+                baseUnitId={unit.id}
+                baseUnitName={unit.name}
+                potentialParents={potentialParents}
+            />
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={confirmDelete}
+                title={`Delete "${deleteTarget?.name}"?`}
+                description="This will permanently remove this unit. Products using it may be affected."
+                confirmText="Delete"
+                variant="danger"
+            />
+        </div>
+    );
 }

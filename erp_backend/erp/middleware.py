@@ -224,3 +224,67 @@ class TenantMiddleware:
             except Organization.DoesNotExist:
                 pass
         return None
+
+
+# ═══════════════════════════════════════════════════════════════
+# Request Logging Middleware
+# Structured JSON request/response logging for observability.
+# Logs: method, path, status, duration_ms, user, tenant, IP.
+# ═══════════════════════════════════════════════════════════════
+import time
+
+_request_logger = logging.getLogger('tsfsystem.request')
+
+_SKIP_PATHS = ['/health/', '/static/', '/media/', '/favicon.ico']
+
+
+class RequestLoggingMiddleware:
+    """Log every API request with structured JSON metadata."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        from django.conf import settings as _s
+        self.enabled = getattr(_s, 'REQUEST_LOGGING_ENABLED', not _s.DEBUG)
+
+    def __call__(self, request):
+        if not self.enabled:
+            return self.get_response(request)
+
+        path = request.path
+        if any(path.startswith(skip) for skip in _SKIP_PATHS):
+            return self.get_response(request)
+
+        start = time.monotonic()
+        response = self.get_response(request)
+        duration_ms = round((time.monotonic() - start) * 1000, 2)
+
+        user = getattr(request, 'user', None)
+        user_str = str(user) if user and user.is_authenticated else 'anonymous'
+        tenant = getattr(request, 'tenant', None)
+        tenant_str = str(tenant) if tenant else '-'
+
+        log_data = {
+            'method': request.method,
+            'path': path,
+            'status': response.status_code,
+            'duration_ms': duration_ms,
+            'user': user_str,
+            'tenant': tenant_str,
+            'ip': self._get_client_ip(request),
+        }
+
+        if response.status_code >= 500:
+            _request_logger.error("%(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+        elif response.status_code >= 400:
+            _request_logger.warning("%(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+        else:
+            _request_logger.info("%(method)s %(path)s → %(status)s (%(duration_ms)sms)", log_data, extra=log_data)
+
+        return response
+
+    @staticmethod
+    def _get_client_ip(request):
+        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        if xff:
+            return xff.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR', '-')

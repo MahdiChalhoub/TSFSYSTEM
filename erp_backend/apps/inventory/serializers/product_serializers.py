@@ -1,7 +1,34 @@
 from rest_framework import serializers
-from apps.inventory.models import Product, ProductVariant, ProductAttributeValue, ComboComponent, Inventory
+from apps.inventory.models import Product, ProductVariant, ProductAttributeValue, ComboComponent, Inventory, ProductPackaging
 from django.db.models import Sum
 from decimal import Decimal
+
+
+class ProductPackagingSerializer(serializers.ModelSerializer):
+    """Full serializer for ProductPackaging as a first-class object."""
+    display_name = serializers.CharField(read_only=True)
+    effective_selling_price = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    effective_selling_price_ht = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    effective_purchase_price = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    unit_selling_price = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    unit_name = serializers.CharField(source='unit.name', read_only=True, default=None)
+    volume_cm3 = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True, allow_null=True)
+
+    class Meta:
+        model = ProductPackaging
+        fields = [
+            'id', 'product', 'name', 'display_name', 'sku', 'barcode', 'image_url',
+            'unit', 'unit_name', 'level', 'ratio',
+            'custom_selling_price', 'custom_selling_price_ht',
+            'price_mode', 'discount_pct',
+            'purchase_price_ht', 'purchase_price_ttc',
+            'weight_kg', 'length_cm', 'width_cm', 'height_cm', 'volume_cm3',
+            'is_default_purchase', 'is_default_sale', 'is_active',
+            'effective_selling_price', 'effective_selling_price_ht',
+            'effective_purchase_price', 'unit_selling_price',
+            'created_at',
+        ]
+        read_only_fields = ['organization']
 
 class ProductAttributeValueSerializer(serializers.ModelSerializer):
     attribute_name = serializers.CharField(source='attribute.name', read_only=True)
@@ -52,6 +79,7 @@ class ProductSerializer(serializers.ModelSerializer):
     parfum_name = serializers.CharField(source='parfum.name', read_only=True, default=None)
     size_unit_name = serializers.CharField(source='size_unit.short_name', read_only=True, default=None)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    packaging_levels = ProductPackagingSerializer(many=True, read_only=True)
     # ── Gap 3: Reservation-aware stock quantities ──
     on_hand_qty   = serializers.SerializerMethodField()
     reserved_qty  = serializers.SerializerMethodField()
@@ -64,7 +92,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'barcode', 'name', 'description',
-            'product_type', 'variants',
+            'product_type', 'variants', 'packaging_levels',
             'category', 'brand', 'unit', 'country', 'parfum',
             'product_group', 'size', 'size_unit',
             'brand_name', 'country_name', 'country_code',

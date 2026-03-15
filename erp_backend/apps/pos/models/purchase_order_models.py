@@ -316,6 +316,19 @@ class PurchaseOrderLine(TenantModel):
     """Individual line item on a purchase order."""
     order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='lines')
     product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
+    packaging = models.ForeignKey(
+        'inventory.ProductPackaging', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='purchase_lines',
+        help_text='If set, this line was ordered in a specific packaging level (e.g. Carton of 24)'
+    )
+    packaging_qty = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Quantity in packaging units (e.g. 10 cartons)'
+    )
+    base_qty = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Auto-calculated: packaging_qty × ratio (e.g. 10 × 24 = 240 pieces for stock)'
+    )
     description = models.TextField(null=True, blank=True, help_text='Override product description')
 
     # Quantities

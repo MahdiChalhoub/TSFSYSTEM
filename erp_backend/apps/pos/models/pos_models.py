@@ -150,6 +150,19 @@ class Order(TenantModel):
 class OrderLine(TenantModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='lines')
     product = models.ForeignKey('inventory.Product', on_delete=models.PROTECT, related_name='order_lines')
+    packaging = models.ForeignKey(
+        'inventory.ProductPackaging', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='order_lines',
+        help_text='If set, this line was sold in a specific packaging level (e.g. Carton)'
+    )
+    packaging_qty = models.DecimalField(
+        max_digits=12, decimal_places=3, null=True, blank=True,
+        help_text='Quantity in packaging units (e.g. 2 cartons)'
+    )
+    base_qty = models.DecimalField(
+        max_digits=12, decimal_places=3, null=True, blank=True,
+        help_text='Auto-calculated: packaging_qty × ratio (actual stock units deducted)'
+    )
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))

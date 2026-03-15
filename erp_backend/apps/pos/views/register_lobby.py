@@ -126,6 +126,16 @@ class RegisterLobbyMixin:
           - Validates no other register uses the same cash_account_id
           - Auto-creates a child cash account under 'RegisterCash' if no account is provided
         """
+        try:
+            return self._create_register_impl(request)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            import logging
+            logging.getLogger(__name__).error(f'create_register failed: {tb}')
+            return Response({"error": str(e), "traceback": tb}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _create_register_impl(self, request):
         org_id = get_current_tenant_id()
         if not org_id:
             return Response({"error": "No org context"}, status=status.HTTP_400_BAD_REQUEST)

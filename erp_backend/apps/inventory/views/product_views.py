@@ -8,6 +8,7 @@ from apps.inventory.models import (
     Parfum,
     Product,
     ProductGroup,
+    ProductPackaging,
     Unit,
 )
 from apps.inventory.serializers import (
@@ -56,6 +57,84 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
     search_fields = ['name', 'sku', 'barcode', 'description']
 
     ordering_fields = ['name', 'sku', 'selling_price_ttc', 'cost_price', 'stock_level', 'created_at']
+
+    # ── Universal Barcode Resolution ────────────────────────────────
+    @action(detail=False, methods=['get'], url_path='barcode-lookup')
+    def barcode_lookup(self, request):
+        """
+        Scan-optimized lookup: checks Product.barcode first,
+        then ProductPackaging.barcode. Returns product + packaging context.
+        Used by POS terminal, purchase receiving, and inventory scanning.
+        """
+        code = request.query_params.get('code', '').strip()
+        if not code:
+            return Response({"error": "code parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        org = _get_org_or_400(request)
+        if isinstance(org, Response):
+            return org
+
+        # 1. Try Product.barcode (base unit)
+        product = Product.objects.filter(organization=org, barcode=code, is_active=True).first()
+        if product:
+            serializer = self.get_serializer(product)
+            return Response({
+                "source": "product",
+                "product": serializer.data,
+                "packaging": None,
+            })
+
+        # 2. Try ProductPackaging.barcode (package scan)
+        pkg = ProductPackaging.objects.filter(
+            organization=org, barcode=code, is_active=True
+        ).select_related('product', 'unit').first()
+        if pkg:
+            product_serializer = self.get_serializer(pkg.product)
+            return Response({
+                "source": "packaging",
+                "product": product_serializer.data,
+                "packaging": {
+                    "id": pkg.id,
+                    "name": pkg.display_name,
+                    "sku": pkg.sku,
+                    "barcode": pkg.barcode,
+                    "ratio": float(pkg.ratio),
+                    "unit": pkg.unit.name if pkg.unit else None,
+                    "unit_id": pkg.unit_id,
+                    "level": pkg.level,
+                    "selling_price_ttc": float(pkg.effective_selling_price),
+                    "selling_price_ht": float(pkg.effective_selling_price_ht),
+                    "purchase_price_ht": float(pkg.purchase_price_ht) if pkg.purchase_price_ht else None,
+                    "weight_kg": float(pkg.weight_kg) if pkg.weight_kg else None,
+                    "is_default_sale": pkg.is_default_sale,
+                    "is_default_purchase": pkg.is_default_purchase,
+                },
+            })
+
+        # 3. Try ProductVariant.barcode (variant scan)
+        from apps.inventory.models.product_models import ProductVariant
+        variant = ProductVariant.objects.filter(
+            organization=org, barcode=code, is_active=True
+        ).select_related('product').first()
+        if variant:
+            product_serializer = self.get_serializer(variant.product)
+            return Response({
+                "source": "variant",
+                "product": product_serializer.data,
+                "packaging": None,
+                "variant": {
+                    "id": variant.id,
+                    "sku": variant.sku,
+                    "barcode": variant.barcode,
+                    "selling_price_ht": float(variant.selling_price_ht) if variant.selling_price_ht else None,
+                    "selling_price_ttc": float(variant.selling_price_ttc) if variant.selling_price_ttc else None,
+                },
+            })
+
+        return Response(
+            {"error": f"No product, packaging, or variant found for barcode '{code}'"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
     @action(detail=True, methods=['get'])
     def active_operations(self, request, pk=None):

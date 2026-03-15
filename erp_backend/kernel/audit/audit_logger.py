@@ -104,7 +104,8 @@ def audit_log(
     """
     organization = get_current_tenant()
     if not organization:
-        raise ValueError("Cannot create audit log without organization context")
+        logger.warning("audit_log skipped — no organization context (table may not exist yet)")
+        return None
 
     # Get context from thread-local if not provided
     context = get_audit_context()
@@ -170,7 +171,8 @@ def audit_field_change(
     """
     organization = get_current_tenant()
     if not organization:
-        raise ValueError("Cannot create audit trail without organization context")
+        logger.warning("audit_field_change skipped — no organization context")
+        return None
 
     # Convert values to strings for storage
     old_str = str(old_value) if old_value is not None else None

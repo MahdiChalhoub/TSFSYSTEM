@@ -468,30 +468,44 @@ class ComboComponent(AuditLogMixin, _InventoryTenantModel):
 
 class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
     """
-    Multi-level packaging hierarchy for a product.
-    Each level maps a higher-level unit (e.g., Carton) to the base product,
-    with its own barcode and optional custom selling price.
+    First-class packaging object for a product.
+    Each packaging level is an independently identifiable, priceable, and
+    scannable representation of a product.
 
-    Example:
-      Level 1: Pack   = 6 pieces,  barcode=6001234000001, price=5500
-      Level 2: Carton = 24 pieces, barcode=6001234000002, price=20000
-      Level 3: Pallet = 480 pieces, barcode=6001234000003, price=380000
+    Product = the sellable / stock item itself (always tracked in base units)
+    Package = one way that product is packed, identified, priced, and scanned
+
+    Example — Product: Coca Cola
+      Level 1: Can 330ml     = 1 piece,   barcode=6001234000000, sell=500, buy=350
+      Level 2: Pack of 6     = 6 pieces,  barcode=6001234000001, sell=2800, buy=1900
+      Level 3: Carton of 24  = 24 pieces, barcode=6001234000002, sell=10500, buy=7500
     """
     PRICE_MODE_CHOICES = (
         ('FORMULA', 'Formula — auto-calculated from base price × ratio × discount'),
         ('FIXED',   'Fixed — manually set custom_selling_price'),
     )
 
+    # ── Identity ────────────────────────────────────────────────────
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='packaging_levels')
+    name = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Display name for this package, e.g. "Pack of 6", "Carton 24"'
+    )
+    sku = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Package-level SKU/reference (independent of product SKU)'
+    )
+    barcode = models.CharField(max_length=100, null=True, blank=True, help_text="Unique barcode for this packaging level")
+    image_url = models.CharField(max_length=500, null=True, blank=True, help_text='Package-specific image')
+
+    # ── Unit & Conversion ───────────────────────────────────────────
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='packaging_levels')
     level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=first above base, 2=second, etc.)")
     ratio = models.DecimalField(max_digits=15, decimal_places=4, default=1, help_text="How many BASE units this level contains")
-    barcode = models.CharField(max_length=100, null=True, blank=True, help_text="Unique barcode for this packaging level")
-    custom_selling_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Override selling price for this level")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
-    # ── Level 2: Formula Pricing ────────────────────────────────────
+    # ── Selling Price ───────────────────────────────────────────────
+    custom_selling_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Override selling price (TTC) for this level")
+    custom_selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Override selling price (HT) for this level")
     price_mode = models.CharField(
         max_length=10, choices=PRICE_MODE_CHOICES, default='FORMULA',
         help_text='FORMULA: auto = base × ratio × (1 - discount%). FIXED: use custom_selling_price.'
@@ -501,13 +515,44 @@ class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
         help_text='Discount percentage vs unit price (e.g. 2.00 = 2% cheaper per unit in this packaging)'
     )
 
+    # ── Purchase Price ──────────────────────────────────────────────
+    purchase_price_ht = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Default purchase cost excl. tax for this packaging level'
+    )
+    purchase_price_ttc = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Default purchase cost incl. tax for this packaging level'
+    )
+
+    # ── Dimensions & Weight ─────────────────────────────────────────
+    weight_kg = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True, help_text='Gross weight in kg')
+    length_cm = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    width_cm = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    height_cm = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # ── Defaults & Flags ────────────────────────────────────────────
+    is_default_purchase = models.BooleanField(
+        default=False,
+        help_text='Preferred packaging when creating purchase orders'
+    )
+    is_default_sale = models.BooleanField(
+        default=False,
+        help_text='Preferred packaging when adding to POS / sales orders'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
     class Meta:
         db_table = 'product_packaging'
         ordering = ['level']
         constraints = [
             models.UniqueConstraint(fields=['product', 'unit', 'organization'], name='unique_packaging_per_unit'),
             models.UniqueConstraint(fields=['barcode', 'organization'], name='unique_packaging_barcode', condition=Q(barcode__isnull=False)),
+            models.UniqueConstraint(fields=['sku', 'organization'], name='unique_packaging_sku', condition=Q(sku__isnull=False)),
         ]
+
+    # ── Computed Properties ─────────────────────────────────────────
 
     @property
     def effective_selling_price(self):
@@ -521,6 +566,48 @@ class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
         discount_factor = Decimal('1') - (self.discount_pct / Decimal('100'))
         return (base_price * self.ratio * discount_factor).quantize(Decimal('0.01'))
 
+    @property
+    def effective_selling_price_ht(self):
+        """HT selling price — fixed override or derived from TTC via product tax rate."""
+        if self.price_mode == 'FIXED' and self.custom_selling_price_ht is not None:
+            return self.custom_selling_price_ht
+        base_ht = self.product.selling_price_ht
+        if not base_ht:
+            return Decimal('0.00')
+        discount_factor = Decimal('1') - (self.discount_pct / Decimal('100'))
+        return (base_ht * self.ratio * discount_factor).quantize(Decimal('0.01'))
+
+    @property
+    def effective_purchase_price(self):
+        """Purchase price for this package. Falls back to product cost × ratio."""
+        if self.purchase_price_ht and self.purchase_price_ht > 0:
+            return self.purchase_price_ht
+        base_cost = self.product.cost_price_ht or self.product.cost_price or Decimal('0.00')
+        return (base_cost * self.ratio).quantize(Decimal('0.01'))
+
+    @property
+    def unit_selling_price(self):
+        """Per-base-unit selling price at this packaging level."""
+        if self.ratio and self.ratio > 0:
+            return (self.effective_selling_price / self.ratio).quantize(Decimal('0.01'))
+        return self.effective_selling_price
+
+    @property
+    def display_name(self):
+        """Human-readable name: custom name or unit name with ratio."""
+        if self.name:
+            return self.name
+        unit_name = self.unit.name if self.unit else 'Unit'
+        return f"{unit_name} (×{self.ratio})"
+
+    @property
+    def volume_cm3(self):
+        """Volume in cubic centimetres, if dimensions are set."""
+        if self.length_cm and self.width_cm and self.height_cm:
+            return (self.length_cm * self.width_cm * self.height_cm).quantize(Decimal('0.01'))
+        return None
+
     def __str__(self):
-        unit_name = self.unit.name if self.unit else 'Unknown'
-        return f"{self.product.name} - {unit_name} (x{self.ratio})"
+        name = self.name or (self.unit.name if self.unit else 'Unknown')
+        return f"{self.product.name} — {name} (×{self.ratio})"
+
