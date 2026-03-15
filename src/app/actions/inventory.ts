@@ -94,7 +94,7 @@ export async function updateUnit(id: number, prevState: UnitState, formData: For
         revalidatePath('/inventory/units');
         return { message: 'success' };
     } catch (e) {
-        return { message: 'Failed to update unit' };
+        return { message: 'Failed to update unit: ' + (e instanceof Error ? e.message : String(e)) };
     }
 }
 

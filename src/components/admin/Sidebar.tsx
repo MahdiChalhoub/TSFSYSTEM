@@ -168,7 +168,7 @@ export const MENU_ITEMS = [
                 icon: Tag,
                 children: [
                     { title: 'Product Master', path: '/products', badge: 'REVIEW' },
-                    { title: 'Product (Legacy)', path: '/products/legacy', badge: 'LOCKED' },
+                    { title: 'Packaging', path: '/inventory/packaging', icon: Package },
                     { title: 'Categories', path: '/inventory/categories' },
                     { title: 'Brands', path: '/inventory/brands' },
                     { title: 'Units', path: '/inventory/units' },
