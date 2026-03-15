@@ -219,6 +219,7 @@ export default function ProductsDetailPage() {
                 productName={item.name}
                 basePriceTTC={item.selling_price_ttc}
                 basePriceHT={item.selling_price_ht}
+                productUnitId={item.unit}
               />
             </CardContent>
           </Card>

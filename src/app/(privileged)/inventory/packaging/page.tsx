@@ -1,15 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { erpFetch } from '@/lib/erp-api'
-import { Package, Search, ArrowRight, Box, Barcode, Scale } from 'lucide-react'
+import { Package, Search, ArrowRight, Box, Barcode, Plus, X } from 'lucide-react'
 
 export default function PackagingPage() {
     const router = useRouter()
     const [products, setProducts] = useState<any[]>([])
+    const [allProducts, setAllProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [showProductPicker, setShowProductPicker] = useState(false)
+    const [pickerSearch, setPickerSearch] = useState('')
 
     useEffect(() => { loadData() }, [])
 
@@ -18,7 +21,7 @@ export default function PackagingPage() {
             setLoading(true)
             const data = await erpFetch('inventory/products/?page_size=200')
             const productList = Array.isArray(data) ? data : data?.results || []
-            // Filter to only products that have packaging_levels
+            setAllProducts(productList)
             const withPackaging = productList.filter((p: any) =>
                 p.packaging_levels && p.packaging_levels.length > 0
             )
@@ -40,19 +43,36 @@ export default function PackagingPage() {
 
     const totalPackages = filtered.reduce((sum, p) => sum + (p.packaging_levels?.length || 0), 0)
 
+    const pickerProducts = allProducts.filter(p =>
+        !pickerSearch || p.name?.toLowerCase().includes(pickerSearch.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(pickerSearch.toLowerCase())
+    ).slice(0, 20)
+
     return (
         <div className="min-h-screen layout-container-padding theme-bg">
             {/* Header */}
             <div className="mb-6 md:mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, var(--app-primary), var(--app-info))', boxShadow: '0 4px 15px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
-                        <Package className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, var(--app-primary), var(--app-info))', boxShadow: '0 4px 15px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                            <Package className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-black theme-text">Product Packaging</h1>
+                            <p className="text-xs font-medium theme-text-muted">Manage packaging levels across all products</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-black theme-text">Product Packaging</h1>
-                        <p className="text-xs font-medium theme-text-muted">Manage packaging levels across all products</p>
-                    </div>
+                    <button
+                        onClick={() => setShowProductPicker(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all shadow-lg"
+                        style={{
+                            background: 'linear-gradient(135deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 80%, #000))',
+                            boxShadow: '0 4px 15px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                        }}
+                    >
+                        <Plus className="h-4 w-4" /> New Package
+                    </button>
                 </div>
 
                 {/* KPI Strip */}
@@ -85,6 +105,72 @@ export default function PackagingPage() {
                 </div>
             </div>
 
+            {/* Product Picker Modal */}
+            {showProductPicker && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowProductPicker(false)}>
+                    <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+                    <div
+                        className="relative w-full max-w-lg mx-4 rounded-2xl shadow-2xl overflow-hidden"
+                        style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                            <h3 className="font-bold theme-text">Select Product</h3>
+                            <button onClick={() => setShowProductPicker(false)} className="p-1.5 rounded-lg hover:bg-app-surface-hover">
+                                <X size={16} className="text-app-muted-foreground" />
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <div className="relative mb-3">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input
+                                    value={pickerSearch}
+                                    onChange={e => setPickerSearch(e.target.value)}
+                                    placeholder="Search by name or SKU..."
+                                    autoFocus
+                                    className="w-full pl-9 pr-4 py-2.5 rounded-xl text-[13px] font-medium outline-none"
+                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                />
+                            </div>
+                            <div className="max-h-72 overflow-y-auto space-y-1">
+                                {pickerProducts.map(p => (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => {
+                                            setShowProductPicker(false)
+                                            router.push(`/inventory/products/${p.id}?tab=packaging`)
+                                        }}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left group transition-all"
+                                        style={{ border: '1px solid transparent' }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-surface)'; e.currentTarget.style.borderColor = 'var(--app-border)' }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent' }}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
+                                            <Box size={14} style={{ color: 'var(--app-primary)' }} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold theme-text truncate">{p.name}</p>
+                                            <p className="text-[10px] font-mono theme-text-muted">
+                                                {p.sku || `ID: ${p.id}`}
+                                                {p.unit_name && <span className="ml-2">· {p.unit_name}</span>}
+                                                {p.packaging_levels?.length > 0 && (
+                                                    <span className="ml-2 text-violet-400">· {p.packaging_levels.length} pkg</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <ArrowRight size={14} className="text-app-muted-foreground shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                    </button>
+                                ))}
+                                {pickerProducts.length === 0 && (
+                                    <p className="text-center py-6 text-sm theme-text-muted">No products found</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-20">
@@ -96,9 +182,16 @@ export default function PackagingPage() {
                     <p className="text-sm font-bold theme-text-muted mb-1">
                         {search ? 'No matching packages' : 'No products have packaging yet'}
                     </p>
-                    <p className="text-xs theme-text-muted">
-                        Go to a product detail page → Packaging tab to add packaging levels
+                    <p className="text-xs theme-text-muted mb-4">
+                        Click &ldquo;New Package&rdquo; to add packaging levels to a product
                     </p>
+                    <button
+                        onClick={() => setShowProductPicker(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                    >
+                        <Plus size={14} /> Add Packaging to a Product
+                    </button>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -145,10 +238,16 @@ export default function PackagingPage() {
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[13px] font-bold theme-text">{pkg.name}</span>
+                                                <span className="text-[13px] font-bold theme-text">{pkg.name || pkg.display_name}</span>
                                                 <span className="text-[10px] font-mono theme-text-muted">
                                                     L{pkg.level} · {pkg.ratio}× base
                                                 </span>
+                                                {pkg.unit_name && (
+                                                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                                                        {pkg.unit_name}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-3 mt-0.5">
                                                 {pkg.barcode && (
@@ -170,9 +269,9 @@ export default function PackagingPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        {pkg.sell_price_ttc && (
+                                        {pkg.effective_selling_price != null && (
                                             <span className="text-[12px] font-bold" style={{ color: 'var(--app-success, #10b981)' }}>
-                                                {Number(pkg.sell_price_ttc).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                                                {Number(pkg.effective_selling_price).toLocaleString(undefined, { minimumFractionDigits: 0 })}
                                             </span>
                                         )}
                                     </div>

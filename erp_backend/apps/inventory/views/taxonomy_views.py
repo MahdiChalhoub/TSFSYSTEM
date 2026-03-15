@@ -42,6 +42,50 @@ class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     filterset_fields = ['name']
     search_fields = ['name']
 
+    @action(detail=False, methods=['get'])
+    def family_tree(self, request):
+        """
+        Return all units in the same family tree as the given unit.
+        ?unit_id=<id> — walks up to root, then returns root + all descendants.
+        Each unit includes `depth` (0 = root, 1 = first child, etc.).
+        """
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+
+        unit_id = request.query_params.get('unit_id')
+        if not unit_id:
+            return Response(
+                {"error": "unit_id query param required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            start_unit = Unit.objects.get(id=unit_id, organization=organization)
+        except Unit.DoesNotExist:
+            return Response({"error": "Unit not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Walk up to root
+        root = start_unit
+        while root.base_unit_id:
+            try:
+                root = Unit.objects.get(id=root.base_unit_id, organization=organization)
+            except Unit.DoesNotExist:
+                break
+
+        # Collect entire tree via BFS
+        tree = []
+        queue = [(root, 0)]  # (unit, depth)
+        while queue:
+            node, depth = queue.pop(0)
+            data = UnitSerializer(node).data
+            data['depth'] = depth
+            tree.append(data)
+            children = Unit.objects.filter(base_unit=node, organization=organization)
+            for child in children:
+                queue.append((child, depth + 1))
+
+        return Response(tree)
+
 
 # =============================================================================
 # BRAND

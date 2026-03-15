@@ -37,17 +37,28 @@ interface PackagingLevel {
     unit_selling_price: number;
 }
 
+interface UnitTreeItem {
+    id: number;
+    name: string;
+    code: string;
+    depth: number;
+    base_unit: number | null;
+    conversion_factor: number;
+}
+
 interface Props {
     productId: string | number;
     productName?: string;
     basePriceTTC?: number;
     basePriceHT?: number;
+    productUnitId?: number | null;
 }
 
 const EMPTY_FORM: Partial<PackagingLevel> = {
     name: '',
     sku: '',
     barcode: '',
+    unit: null,
     ratio: 1,
     level: 1,
     price_mode: 'FORMULA',
@@ -66,7 +77,7 @@ const EMPTY_FORM: Partial<PackagingLevel> = {
 };
 
 // ─── Main Component ─────────────────────────────────────────────
-export default function ProductPackagingTab({ productId, productName, basePriceTTC, basePriceHT }: Props) {
+export default function ProductPackagingTab({ productId, productName, basePriceTTC, basePriceHT, productUnitId }: Props) {
     const [packages, setPackages] = useState<PackagingLevel[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -75,6 +86,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
     const [form, setForm] = useState<Partial<PackagingLevel>>(EMPTY_FORM);
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [unitTree, setUnitTree] = useState<UnitTreeItem[]>([]);
 
     // ── Load packaging levels ──
     const loadPackages = useCallback(async () => {
@@ -92,6 +104,19 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
 
     useEffect(() => { loadPackages(); }, [loadPackages]);
 
+    // ── Load unit family tree ──
+    useEffect(() => {
+        if (!productUnitId) return;
+        (async () => {
+            try {
+                const tree = await erpFetch(`inventory/units/family_tree/?unit_id=${productUnitId}`);
+                setUnitTree(Array.isArray(tree) ? tree : []);
+            } catch (e) {
+                console.error('Failed to load unit tree:', e);
+            }
+        })();
+    }, [productUnitId]);
+
     // ── Toast helper ──
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });
@@ -100,7 +125,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
 
     // ── Create ──
     const handleCreate = async () => {
-        if (!form.name?.trim()) { setError('Package name is required'); return; }
+        if (!form.unit && unitTree.length > 0) { setError('Please select a unit type'); return; }
         if (!form.ratio || form.ratio <= 0) { setError('Qty in base unit must be positive'); return; }
         setError(null);
         setSaving(true);
@@ -108,9 +133,10 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             await erpFetch(`inventory/products/${productId}/packaging/create/`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    name: form.name,
+                    name: form.name || null,
                     sku: form.sku || null,
                     barcode: form.barcode || null,
+                    unit: form.unit || null,
                     ratio: form.ratio,
                     level: form.level || 1,
                     price_mode: form.price_mode,
@@ -142,7 +168,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
     // ── Update ──
     const handleUpdate = async () => {
         if (!editingId) return;
-        if (!form.name?.trim()) { setError('Package name is required'); return; }
+        if (!form.unit && unitTree.length > 0) { setError('Please select a unit type'); return; }
         if (!form.ratio || form.ratio <= 0) { setError('Qty in base unit must be positive'); return; }
         setError(null);
         setSaving(true);
@@ -150,9 +176,10 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             await erpFetch(`inventory/products/${productId}/packaging/${editingId}/`, {
                 method: 'PATCH',
                 body: JSON.stringify({
-                    name: form.name,
+                    name: form.name || null,
                     sku: form.sku || null,
                     barcode: form.barcode || null,
+                    unit: form.unit || null,
                     ratio: form.ratio,
                     level: form.level,
                     price_mode: form.price_mode,
@@ -203,6 +230,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             name: pkg.name || '',
             sku: pkg.sku || '',
             barcode: pkg.barcode || '',
+            unit: pkg.unit,
             ratio: pkg.ratio,
             level: pkg.level,
             price_mode: pkg.price_mode,
@@ -238,8 +266,8 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2 animate-in slide-in-from-right-5 ${toast.type === 'success'
-                        ? 'bg-emerald-500/90 text-white backdrop-blur'
-                        : 'bg-red-500/90 text-white backdrop-blur'
+                    ? 'bg-emerald-500/90 text-white backdrop-blur'
+                    : 'bg-red-500/90 text-white backdrop-blur'
                     }`}>
                     {toast.type === 'success' ? <Check className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                     {toast.message}
@@ -282,14 +310,51 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                         </div>
                     )}
 
-                    {/* Row 1: Name, SKU, Barcode */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Row 1: Unit Type, Name, SKU, Barcode */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Package Name *</label>
+                            <label className="text-xs font-medium theme-text-muted block mb-1">
+                                <Package className="inline h-3 w-3 mr-1" />Unit Type *
+                            </label>
+                            <select
+                                value={form.unit ?? ''}
+                                onChange={e => {
+                                    const unitId = e.target.value ? parseInt(e.target.value) : null;
+                                    const selected = unitTree.find(u => u.id === unitId);
+                                    setForm(f => ({
+                                        ...f,
+                                        unit: unitId,
+                                        level: selected?.depth ?? f.level,
+                                        // Auto-suggest ratio from unit conversion factor
+                                        ratio: selected?.conversion_factor && selected.conversion_factor > 1
+                                            ? selected.conversion_factor
+                                            : f.ratio,
+                                    }));
+                                }}
+                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
+                            >
+                                <option value="">Select unit...</option>
+                                {unitTree
+                                    .filter(u => u.depth > 0) // Exclude base unit (depth 0)
+                                    .map(u => (
+                                        <option key={u.id} value={u.id}>
+                                            {'—'.repeat(u.depth - 1)} {u.name} ({u.code}) · L{u.depth}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                            {form.unit && (
+                                <p className="text-[10px] mt-0.5 font-medium" style={{ color: 'var(--app-info)' }}>
+                                    Level {unitTree.find(u => u.id === form.unit)?.depth ?? '?'} in unit tree
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <label className="text-xs font-medium theme-text-muted block mb-1">Package Name</label>
                             <input
                                 value={form.name || ''}
                                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                placeholder="e.g. Carton of 24"
+                                placeholder="Auto from unit if empty"
                                 className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
@@ -315,7 +380,7 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                         </div>
                     </div>
 
-                    {/* Row 2: Ratio, Level, Price Mode */}
+                    {/* Row 2: Ratio, Price Mode */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                             <label className="text-xs font-medium theme-text-muted block mb-1">Qty in Base Unit *</label>
@@ -328,15 +393,10 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                                 className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
                             />
                         </div>
-                        <div>
-                            <label className="text-xs font-medium theme-text-muted block mb-1">Level</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={form.level ?? 1}
-                                onChange={e => setForm(f => ({ ...f, level: parseInt(e.target.value) || 1 }))}
-                                className="w-full px-3 py-2 rounded-lg border border-app-border bg-app-surface theme-text text-sm focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 outline-none"
-                            />
+                        <div className="flex items-end pb-0.5">
+                            <p className="text-xs theme-text-muted">
+                                {form.ratio && form.ratio > 0 ? `This package contains ${form.ratio}× of the base unit` : ''}
+                            </p>
                         </div>
                         <div>
                             <label className="text-xs font-medium theme-text-muted block mb-1">Selling Price Mode</label>
@@ -513,10 +573,10 @@ export default function ProductPackagingTab({ productId, productName, basePriceT
                         <div
                             key={pkg.id}
                             className={`group rounded-xl border p-4 transition-all ${!pkg.is_active
-                                    ? 'border-app-border/50 opacity-60'
-                                    : editingId === pkg.id
-                                        ? 'border-violet-500/50 bg-violet-500/5'
-                                        : 'border-app-border hover:border-violet-500/30 theme-surface'
+                                ? 'border-app-border/50 opacity-60'
+                                : editingId === pkg.id
+                                    ? 'border-violet-500/50 bg-violet-500/5'
+                                    : 'border-app-border hover:border-violet-500/30 theme-surface'
                                 }`}
                         >
                             <div className="flex items-center justify-between">

@@ -560,6 +560,22 @@ class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
         if self.ratio is not None and self.ratio <= 0:
             raise ValidationError("Quantity in base units (ratio) must be positive.")
 
+        # ── Auto-compute level from unit depth in tree ──
+        if self.unit_id:
+            depth = 0
+            walker = self.unit
+            while walker.base_unit_id:
+                depth += 1
+                try:
+                    walker = Unit.objects.get(id=walker.base_unit_id)
+                except Unit.DoesNotExist:
+                    break
+            self.level = depth
+
+            # Auto-set name from unit if not provided
+            if not self.name and self.unit:
+                self.name = f"{self.unit.name} (×{self.ratio})"
+
         # ── Enforce max one default_sale per product ──
         if self.is_default_sale:
             ProductPackaging.objects.filter(
