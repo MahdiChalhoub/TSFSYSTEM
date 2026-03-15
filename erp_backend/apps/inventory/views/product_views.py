@@ -252,4 +252,67 @@ class ProductViewSet(ProductBulkMixin, ProductAnalyticsMixin, ProductComboMixin,
         operations.sort(key=lambda x: x['date'] or '', reverse=True)
         return Response(operations)
 
+    # ── Package Management (CRUD for packaging levels) ──────────────
+    @action(detail=True, methods=['get'], url_path='packaging')
+    def list_packaging(self, request, pk=None):
+        """List all packaging levels for a product."""
+        product = self.get_object()
+        packages = ProductPackaging.objects.filter(
+            product=product, organization=product.organization
+        ).select_related('unit').order_by('level')
+        from apps.inventory.serializers import ProductPackagingSerializer
+        serializer = ProductPackagingSerializer(packages, many=True)
+        return Response(serializer.data)
 
+    @action(detail=True, methods=['post'], url_path='packaging/create')
+    def create_packaging(self, request, pk=None):
+        """Create a new packaging level for a product."""
+        product = self.get_object()
+        from apps.inventory.serializers import ProductPackagingSerializer
+        serializer = ProductPackagingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(product=product, organization=product.organization)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch'], url_path=r'packaging/(?P<pkg_id>\d+)')
+    def update_packaging(self, request, pk=None, pkg_id=None):
+        """Update a specific packaging level."""
+        product = self.get_object()
+        try:
+            pkg = ProductPackaging.objects.get(
+                id=pkg_id, product=product, organization=product.organization
+            )
+        except ProductPackaging.DoesNotExist:
+            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        from apps.inventory.serializers import ProductPackagingSerializer
+        serializer = ProductPackagingSerializer(pkg, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], url_path=r'packaging/(?P<pkg_id>\d+)/delete')
+    def delete_packaging(self, request, pk=None, pkg_id=None):
+        """Delete a packaging level (only if unused in transactions)."""
+        product = self.get_object()
+        try:
+            pkg = ProductPackaging.objects.get(
+                id=pkg_id, product=product, organization=product.organization
+            )
+        except ProductPackaging.DoesNotExist:
+            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Safety: don't delete if used in transactions
+        if hasattr(pkg, 'order_lines') and pkg.order_lines.exists():
+            return Response(
+                {"error": "Cannot delete: used in POS sales. Deactivate it instead."},
+                status=status.HTTP_409_CONFLICT
+            )
+        if hasattr(pkg, 'purchase_lines') and pkg.purchase_lines.exists():
+            return Response(
+                {"error": "Cannot delete: used in purchase orders. Deactivate it instead."},
+                status=status.HTTP_409_CONFLICT
+            )
+
+        pkg.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

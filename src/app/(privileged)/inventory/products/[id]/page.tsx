@@ -6,7 +6,8 @@ import { erpFetch } from '@/lib/erp-api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Package, Barcode, TrendingUp, Activity } from 'lucide-react'
+import ProductPackagingTab from '@/components/inventory/ProductPackagingTab'
 
 export default function ProductsDetailPage() {
   const router = useRouter()
@@ -65,6 +66,30 @@ export default function ProductsDetailPage() {
     )
   }
 
+  // Key product info for display
+  const infoFields = [
+    { label: 'SKU', value: item.sku },
+    { label: 'Barcode', value: item.barcode },
+    { label: 'Category', value: item.category_name },
+    { label: 'Brand', value: item.brand_name },
+    { label: 'Unit', value: item.unit_name },
+    { label: 'Status', value: item.is_active ? 'Active' : 'Inactive' },
+  ]
+
+  const priceFields = [
+    { label: 'Selling Price TTC', value: item.selling_price_ttc, color: 'text-emerald-400' },
+    { label: 'Selling Price HT', value: item.selling_price_ht },
+    { label: 'Cost Price', value: item.cost_price, color: 'text-blue-400' },
+    { label: 'TVA Rate', value: item.tva_rate ? `${item.tva_rate}%` : '—' },
+  ]
+
+  const stockFields = [
+    { label: 'On Hand', value: item.on_hand_qty },
+    { label: 'Reserved', value: item.reserved_qty },
+    { label: 'Available', value: item.available_qty },
+    { label: 'Min Stock', value: item.min_stock_level },
+  ]
+
   return (
     <div className="min-h-screen layout-container-padding theme-bg">
       {/* Header */}
@@ -84,10 +109,11 @@ export default function ProductsDetailPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl md:text-4xl font-black theme-text">
-              {item.name || item.title || `Products #${item.id}`}
+              {item.name || `Product #${item.id}`}
             </h1>
             <p className="theme-text-muted mt-1">
-              View and manage products details
+              {item.sku && <span className="font-mono text-sm">{item.sku}</span>}
+              {item.barcode && <span className="ml-3 text-xs"><Barcode className="inline h-3 w-3 mr-1" />{item.barcode}</span>}
             </p>
           </div>
 
@@ -113,32 +139,92 @@ export default function ProductsDetailPage() {
       {/* Content */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="overview">
+            <TrendingUp className="h-4 w-4 mr-1.5" />Overview
+          </TabsTrigger>
+          <TabsTrigger value="packaging">
+            <Package className="h-4 w-4 mr-1.5" />Packaging
+          </TabsTrigger>
+          <TabsTrigger value="activity">
+            <Activity className="h-4 w-4 mr-1.5" />Activity
+          </TabsTrigger>
         </TabsList>
 
+        {/* ── Overview Tab ── */}
         <TabsContent value="overview">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Product Info */}
+            <Card className="layout-card-radius theme-surface">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold">Product Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-3">
+                  {infoFields.map(f => (
+                    <div key={f.label} className="flex justify-between items-center border-b border-app-border/50 pb-2">
+                      <dt className="text-xs font-medium theme-text-muted">{f.label}</dt>
+                      <dd className="text-sm font-semibold theme-text">{f.value || '—'}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </CardContent>
+            </Card>
+
+            {/* Pricing */}
+            <Card className="layout-card-radius theme-surface">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold">Pricing</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-3">
+                  {priceFields.map(f => (
+                    <div key={f.label} className="flex justify-between items-center border-b border-app-border/50 pb-2">
+                      <dt className="text-xs font-medium theme-text-muted">{f.label}</dt>
+                      <dd className={`text-sm font-bold ${f.color || 'theme-text'}`}>
+                        {typeof f.value === 'number' ? Number(f.value).toLocaleString(undefined, { minimumFractionDigits: 2 }) : f.value || '—'}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </CardContent>
+            </Card>
+
+            {/* Stock */}
+            <Card className="layout-card-radius theme-surface">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold">Stock Levels</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-3">
+                  {stockFields.map(f => (
+                    <div key={f.label} className="flex justify-between items-center border-b border-app-border/50 pb-2">
+                      <dt className="text-xs font-medium theme-text-muted">{f.label}</dt>
+                      <dd className="text-sm font-bold theme-text">
+                        {f.value != null ? Number(f.value).toLocaleString() : '—'}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ── Packaging Tab ── */}
+        <TabsContent value="packaging">
           <Card className="layout-card-radius theme-surface">
-            <CardHeader>
-              <CardTitle>Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(item).map(([key, value]) => (
-                  <div key={key} className="border-b border-app-border pb-3">
-                    <dt className="text-sm font-bold text-app-muted-foreground uppercase">
-                      {key.replace('_', ' ')}
-                    </dt>
-                    <dd className="mt-1 text-app-foreground">
-                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+            <CardContent className="pt-6">
+              <ProductPackagingTab
+                productId={id}
+                productName={item.name}
+                basePriceTTC={item.selling_price_ttc}
+                basePriceHT={item.selling_price_ht}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* ── Activity Tab ── */}
         <TabsContent value="activity">
           <Card className="layout-card-radius theme-surface">
             <CardHeader>
