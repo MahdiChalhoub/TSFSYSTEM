@@ -163,6 +163,19 @@ class OrderLine(TenantModel):
         max_digits=12, decimal_places=3, null=True, blank=True,
         help_text='Auto-calculated: packaging_qty × ratio (actual stock units deducted)'
     )
+    # ── Package Snapshot (frozen at transaction time) ──────────────────
+    packaging_name_snapshot = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Package display name at time of sale (immutable after creation)'
+    )
+    packaging_barcode_snapshot = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Package barcode at time of sale (immutable after creation)'
+    )
+    packaging_ratio_snapshot = models.DecimalField(
+        max_digits=15, decimal_places=4, null=True, blank=True,
+        help_text='Qty in base units at time of sale (immutable after creation)'
+    )
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
@@ -201,6 +214,17 @@ class OrderLine(TenantModel):
         bypass = kwargs.pop('force_audit_bypass', False)
         if self.order and self.order.status in ['COMPLETED', 'INVOICED', 'RECEIVED'] and not bypass:
             raise ValidationError(f"Immutable POS: Lines belonging to order {self.order.id} ({self.order.status}) cannot be modified.")
+
+        # ── Auto-populate package snapshot & base_qty on first save ──
+        if self.packaging_id and not self.packaging_name_snapshot:
+            pkg = self.packaging
+            self.packaging_name_snapshot = pkg.display_name
+            self.packaging_barcode_snapshot = pkg.barcode
+            self.packaging_ratio_snapshot = pkg.ratio
+            if self.packaging_qty and not self.base_qty:
+                self.base_qty = self.packaging_qty * pkg.ratio
+                self.quantity = self.base_qty  # stock always in base units
+
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

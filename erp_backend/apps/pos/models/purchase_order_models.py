@@ -329,6 +329,19 @@ class PurchaseOrderLine(TenantModel):
         max_digits=15, decimal_places=2, null=True, blank=True,
         help_text='Auto-calculated: packaging_qty × ratio (e.g. 10 × 24 = 240 pieces for stock)'
     )
+    # ── Package Snapshot (frozen at PO creation time) ─────────────────
+    packaging_name_snapshot = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Package display name at time of order (immutable after creation)'
+    )
+    packaging_barcode_snapshot = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Package barcode at time of order (immutable after creation)'
+    )
+    packaging_ratio_snapshot = models.DecimalField(
+        max_digits=15, decimal_places=4, null=True, blank=True,
+        help_text='Qty in base units at time of order (immutable after creation)'
+    )
     description = models.TextField(null=True, blank=True, help_text='Override product description')
 
     # Quantities
@@ -412,12 +425,22 @@ class PurchaseOrderLine(TenantModel):
         return self.missing_vs_po * self.unit_price
 
     def save(self, *args, **kwargs):
-        """Auto-calculate line totals and validate mutability."""
+        """Auto-calculate line totals, snapshot packaging, and validate mutability."""
         bypass = kwargs.pop('force_audit_bypass', False)
         
         if self.order_id and not bypass:
             if self.order.status in ['RECEIVED', 'INVOICED', 'COMPLETED', 'CANCELLED']:
                 raise ValidationError(f"Immutable PO: Cannot modify lines for PurchaseOrder {self.order.po_number or self.order.id} ({self.order.status}).")
+
+        # ── Auto-populate package snapshot & base_qty on first save ──
+        if self.packaging_id and not self.packaging_name_snapshot:
+            pkg = self.packaging
+            self.packaging_name_snapshot = pkg.display_name
+            self.packaging_barcode_snapshot = pkg.barcode
+            self.packaging_ratio_snapshot = pkg.ratio
+            if self.packaging_qty and not self.base_qty:
+                self.base_qty = self.packaging_qty * pkg.ratio
+                self.quantity = self.base_qty  # stock always in base units
 
         base = self.quantity * self.unit_price
         discount = base * (self.discount_percent / Decimal('100'))

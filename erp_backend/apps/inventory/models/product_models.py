@@ -552,6 +552,30 @@ class ProductPackaging(AuditLogMixin, _InventoryTenantModel):
             models.UniqueConstraint(fields=['sku', 'organization'], name='unique_packaging_sku', condition=Q(sku__isnull=False)),
         ]
 
+    def save(self, *args, **kwargs):
+        """Governance validation before saving."""
+        from django.core.exceptions import ValidationError
+
+        # ── Validate ratio (qty in base unit) is positive ──
+        if self.ratio is not None and self.ratio <= 0:
+            raise ValidationError("Quantity in base units (ratio) must be positive.")
+
+        # ── Enforce max one default_sale per product ──
+        if self.is_default_sale:
+            ProductPackaging.objects.filter(
+                product=self.product, organization=self.organization,
+                is_default_sale=True
+            ).exclude(pk=self.pk).update(is_default_sale=False)
+
+        # ── Enforce max one default_purchase per product ──
+        if self.is_default_purchase:
+            ProductPackaging.objects.filter(
+                product=self.product, organization=self.organization,
+                is_default_purchase=True
+            ).exclude(pk=self.pk).update(is_default_purchase=False)
+
+        super().save(*args, **kwargs)
+
     # ── Computed Properties ─────────────────────────────────────────
 
     @property
