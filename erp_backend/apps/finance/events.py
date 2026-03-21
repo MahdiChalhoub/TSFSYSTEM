@@ -14,7 +14,6 @@ To subscribe to events, register them in your ModuleContract's
 
 import logging
 import calendar
-from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
@@ -59,7 +58,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
     
     Creates the FULL financial infrastructure for the new tenant:
     1. Fiscal Year + 12 monthly periods
-    2. Full standardized Chart of Accounts (16 accounts)
+    2. Full IFRS Chart of Accounts via centralized template system
     3. Cash Drawer financial account
     4. Auto-mapped posting rules
     5. Global financial settings
@@ -67,7 +66,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
     This handler replaces the direct model imports that were previously
     in ProvisioningService, achieving full module isolation.
     """
-    from .models import ChartOfAccount, FiscalYear, FiscalPeriod, FinancialAccount
+    from .models import ChartOfAccount, FiscalYear, FiscalPeriod
     from erp.models import Organization, Site
     
     org_id = payload.get('org_id')
@@ -104,69 +103,26 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
                     end_date=f"{now.year}-{str(month).zfill(2)}-{last_day}"
                 )
             
-            # ── Step 2: Chart of Accounts ─────────────────────────
-            coa_template = [
-                # Assets
-                ('1000', 'ASSETS', 'ASSET', None, None),
-                ('1110', 'Accounts Receivable', 'ASSET', 'RECEIVABLE', '1000'),
-                ('1120', 'Inventory', 'ASSET', 'INVENTORY', '1000'),
-                ('1300', 'Cash & Equivalents', 'ASSET', 'CASH', '1000'),
-                ('1310', 'Petty Cash', 'ASSET', 'CASH', '1300'),
-                ('1320', 'Main Bank Account', 'ASSET', 'BANK', '1300'),
-                # Liabilities
-                ('2000', 'LIABILITIES', 'LIABILITY', None, None),
-                ('2101', 'Accounts Payable', 'LIABILITY', 'PAYABLE', '2000'),
-                ('2102', 'Accrued Reception', 'LIABILITY', 'SUSPENSE', '2000'),
-                ('2111', 'VAT Payable', 'LIABILITY', 'TAX', '2000'),
-                # Equity
-                ('3000', 'EQUITY', 'EQUITY', None, None),
-                # Revenue
-                ('4000', 'REVENUE', 'INCOME', None, None),
-                ('4100', 'Sales Revenue', 'INCOME', 'REVENUE', '4000'),
-                # Expenses
-                ('5000', 'EXPENSES', 'EXPENSE', None, None),
-                ('5100', 'Cost of Goods Sold (COGS)', 'EXPENSE', 'COGS', '5000'),
-                ('5104', 'Inventory Adjustments', 'EXPENSE', 'ADJUSTMENT', '5000'),
-                ('5200', 'Operating Expenses', 'EXPENSE', None, '5000'),
-            ]
-            
-            account_map = {}
-            for code, acc_name, acc_type, sub_type, parent_code in coa_template:
-                parent = account_map.get(parent_code)
-                acc = ChartOfAccount.objects.create(
-                    organization=org,
-                    code=code,
-                    name=acc_name,
-                    type=acc_type,
-                    sub_type=sub_type,
-                    parent=parent,
-                    is_active=True
-                )
-                account_map[code] = acc
+            # ── Step 2: Chart of Accounts (via centralized template system) ──
+            # Uses LedgerService.apply_coa_template to prevent dual-standard
+            # pollution. The hardcoded mini-COA was causing conflicts when users
+            # later applied a different template from the UI.
+            from .services import LedgerService
+            LedgerService.apply_coa_template(org, 'IFRS_COA', reset=False)
             
             # ── Step 3: Default Financial Account (Cash Drawer) ───
             if site_id:
-                cash_parent = account_map.get('1300')
-                if cash_parent:
-                    code = f"{cash_parent.code}.001"
-                    cash_ledger = ChartOfAccount.objects.create(
-                        organization=org,
-                        code=code,
-                        name="Cash Drawer",
-                        type='ASSET',
-                        parent=cash_parent,
-                        is_system_only=True,
-                        is_active=True,
-                        balance=Decimal('0.00')
-                    )
-                    FinancialAccount.objects.create(
+                from .services import FinancialAccountService
+                try:
+                    FinancialAccountService.create_account(
                         organization=org,
                         name="Cash Drawer",
                         type="CASH",
                         currency="USD",
-                        site_id=site_id,
-                        linked_coa=cash_ledger
+                        site_id=site_id
                     )
+                except Exception as e:
+                    logger.warning(f"Finance: Could not create Cash Drawer: {e}")
             
             # ── Step 4: Auto-map Posting Rules ────────────────────
             # Use kernel's ConfigurationService (no cross-module import needed)
@@ -187,15 +143,17 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
                 "pricingCostBasis": "AMC"
             })
         
+        coa_count = ChartOfAccount.objects.filter(organization=org, is_active=True).count()
+        
         logger.info(
             f"✅ Finance: Full financial infrastructure provisioned for org '{org.name}' "
-            f"(CoA={len(account_map)} accounts, FY={fiscal_year.name})"
+            f"(CoA={coa_count} accounts, FY={fiscal_year.name})"
         )
         
         return {
             'success': True,
             'fiscal_year': fiscal_year.name,
-            'accounts_created': len(account_map),
+            'accounts_created': coa_count,
         }
         
     except Exception as e:
