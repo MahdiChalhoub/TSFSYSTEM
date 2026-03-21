@@ -1,7 +1,7 @@
 {
     "key": "USA_GAAP",
     "name": "USA GAAP",
-    "description": "Generally Accepted Accounting Principles (US) — Standard US accounting framework",
+    "description": "Generally Accepted Accounting Principles (United States) — Full professional chart with 6 root classes",
     "accounts": [
         {
             "code": "1000",
@@ -10,25 +10,263 @@
             "children": [
                 {
                     "code": "1100",
-                    "name": "Cash and Cash Equivalents",
+                    "name": "Current Assets",
                     "type": "ASSET",
-                    "subType": "CASH"
-                },
-                {
-                    "code": "1200",
-                    "name": "Accounts Receivable",
-                    "type": "ASSET",
-                    "subType": "RECEIVABLE"
-                },
-                {
-                    "code": "1300",
-                    "name": "Inventory",
-                    "type": "ASSET"
+                    "children": [
+                        {
+                            "code": "1110",
+                            "name": "Cash and Cash Equivalents",
+                            "type": "ASSET",
+                            "subType": "CASH",
+                            "children": [
+                                {
+                                    "code": "1111",
+                                    "name": "Petty Cash",
+                                    "type": "ASSET",
+                                    "subType": "CASH"
+                                },
+                                {
+                                    "code": "1112",
+                                    "name": "Cash in Bank — Checking",
+                                    "type": "ASSET",
+                                    "subType": "BANK"
+                                },
+                                {
+                                    "code": "1113",
+                                    "name": "Cash in Bank — Savings",
+                                    "type": "ASSET",
+                                    "subType": "BANK"
+                                },
+                                {
+                                    "code": "1114",
+                                    "name": "Money Market Accounts",
+                                    "type": "ASSET",
+                                    "subType": "BANK"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1120",
+                            "name": "Short-term Investments",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1200",
+                            "name": "Accounts Receivable",
+                            "type": "ASSET",
+                            "subType": "RECEIVABLE",
+                            "children": [
+                                {
+                                    "code": "1210",
+                                    "name": "Trade Receivables",
+                                    "type": "ASSET",
+                                    "subType": "RECEIVABLE"
+                                },
+                                {
+                                    "code": "1220",
+                                    "name": "Allowance for Doubtful Accounts",
+                                    "type": "ASSET"
+                                },
+                                {
+                                    "code": "1230",
+                                    "name": "Notes Receivable",
+                                    "type": "ASSET",
+                                    "subType": "RECEIVABLE"
+                                },
+                                {
+                                    "code": "1240",
+                                    "name": "Employee Advances",
+                                    "type": "ASSET",
+                                    "subType": "RECEIVABLE"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1300",
+                            "name": "Inventory",
+                            "type": "ASSET",
+                            "children": [
+                                {
+                                    "code": "1310",
+                                    "name": "Raw Materials",
+                                    "type": "ASSET"
+                                },
+                                {
+                                    "code": "1320",
+                                    "name": "Work in Process",
+                                    "type": "ASSET"
+                                },
+                                {
+                                    "code": "1330",
+                                    "name": "Finished Goods",
+                                    "type": "ASSET"
+                                },
+                                {
+                                    "code": "1340",
+                                    "name": "Merchandise Inventory",
+                                    "type": "ASSET"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1400",
+                            "name": "Prepaid Expenses",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1410",
+                            "name": "Prepaid Insurance",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1420",
+                            "name": "Prepaid Rent",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1450",
+                            "name": "Other Current Assets",
+                            "type": "ASSET"
+                        }
+                    ]
                 },
                 {
                     "code": "1500",
-                    "name": "Fixed Assets",
-                    "type": "ASSET"
+                    "name": "Fixed Assets (Property, Plant & Equipment)",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1510",
+                            "name": "Land",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1520",
+                            "name": "Buildings",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1530",
+                            "name": "Leasehold Improvements",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1540",
+                            "name": "Machinery and Equipment",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1550",
+                            "name": "Furniture and Fixtures",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1560",
+                            "name": "Vehicles",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1570",
+                            "name": "Computer Equipment",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1580",
+                            "name": "Construction in Progress",
+                            "type": "ASSET"
+                        }
+                    ]
+                },
+                {
+                    "code": "1600",
+                    "name": "Intangible Assets",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1610",
+                            "name": "Goodwill",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1620",
+                            "name": "Patents",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1630",
+                            "name": "Trademarks",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1640",
+                            "name": "Software",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1650",
+                            "name": "Copyrights",
+                            "type": "ASSET"
+                        }
+                    ]
+                },
+                {
+                    "code": "1700",
+                    "name": "Accumulated Depreciation & Amortization",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1710",
+                            "name": "Accum. Deprec. — Buildings",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1720",
+                            "name": "Accum. Deprec. — Equipment",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1730",
+                            "name": "Accum. Deprec. — Vehicles",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1740",
+                            "name": "Accum. Deprec. — Furniture",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1750",
+                            "name": "Accum. Amort. — Software",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1760",
+                            "name": "Accum. Amort. — Intangibles",
+                            "type": "ASSET"
+                        }
+                    ]
+                },
+                {
+                    "code": "1800",
+                    "name": "Other Non-Current Assets",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1810",
+                            "name": "Long-term Investments",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1820",
+                            "name": "Security Deposits",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "1830",
+                            "name": "Deferred Tax Asset",
+                            "type": "ASSET"
+                        }
+                    ]
                 }
             ]
         },
@@ -39,19 +277,150 @@
             "children": [
                 {
                     "code": "2100",
-                    "name": "Accounts Payable",
+                    "name": "Current Liabilities",
                     "type": "LIABILITY",
-                    "subType": "PAYABLE"
-                },
-                {
-                    "code": "2200",
-                    "name": "Accrued Liabilities",
-                    "type": "LIABILITY"
+                    "children": [
+                        {
+                            "code": "2110",
+                            "name": "Accounts Payable",
+                            "type": "LIABILITY",
+                            "subType": "PAYABLE",
+                            "children": [
+                                {
+                                    "code": "2111",
+                                    "name": "Trade Payables",
+                                    "type": "LIABILITY",
+                                    "subType": "PAYABLE"
+                                },
+                                {
+                                    "code": "2112",
+                                    "name": "Accrued Liabilities",
+                                    "type": "LIABILITY"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "2120",
+                            "name": "Notes Payable — Short-term",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2130",
+                            "name": "Current Portion of Long-term Debt",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2200",
+                            "name": "Accrued Expenses",
+                            "type": "LIABILITY",
+                            "children": [
+                                {
+                                    "code": "2210",
+                                    "name": "Salaries and Wages Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2220",
+                                    "name": "Payroll Taxes Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2230",
+                                    "name": "Benefits Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2240",
+                                    "name": "Interest Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2250",
+                                    "name": "Rent Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2260",
+                                    "name": "Utilities Payable",
+                                    "type": "LIABILITY"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "2300",
+                            "name": "Taxes Payable",
+                            "type": "LIABILITY",
+                            "children": [
+                                {
+                                    "code": "2310",
+                                    "name": "Sales Tax Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2320",
+                                    "name": "Federal Income Tax Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2330",
+                                    "name": "State Income Tax Payable",
+                                    "type": "LIABILITY"
+                                },
+                                {
+                                    "code": "2340",
+                                    "name": "FICA Payable",
+                                    "type": "LIABILITY"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "2400",
+                            "name": "Deferred Revenue",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2410",
+                            "name": "Customer Deposits",
+                            "type": "LIABILITY"
+                        }
+                    ]
                 },
                 {
                     "code": "2500",
-                    "name": "Long-term Debt",
-                    "type": "LIABILITY"
+                    "name": "Long-term Liabilities",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "2510",
+                            "name": "Notes Payable — Long-term",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2520",
+                            "name": "Mortgage Payable",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2530",
+                            "name": "Bonds Payable",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2540",
+                            "name": "Capital Lease Obligations",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2550",
+                            "name": "Deferred Tax Liability",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "2560",
+                            "name": "Pension Obligation",
+                            "type": "LIABILITY"
+                        }
+                    ]
                 }
             ]
         },
@@ -62,12 +431,37 @@
             "children": [
                 {
                     "code": "3100",
-                    "name": "Owner's Capital",
+                    "name": "Common Stock",
                     "type": "EQUITY"
                 },
                 {
                     "code": "3200",
+                    "name": "Preferred Stock",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3300",
+                    "name": "Additional Paid-in Capital",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3400",
                     "name": "Retained Earnings",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3500",
+                    "name": "Treasury Stock",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3600",
+                    "name": "Owner's Draws / Distributions",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3700",
+                    "name": "Accumulated Other Comprehensive Income",
                     "type": "EQUITY"
                 }
             ]
@@ -80,19 +474,117 @@
                 {
                     "code": "4100",
                     "name": "Sales Revenue",
-                    "type": "INCOME"
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "4110",
+                            "name": "Product Sales",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4120",
+                            "name": "Sales Returns and Allowances",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4130",
+                            "name": "Sales Discounts",
+                            "type": "INCOME"
+                        }
+                    ]
                 },
                 {
                     "code": "4500",
                     "name": "Service Revenue",
-                    "type": "INCOME"
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "4510",
+                            "name": "Consulting Revenue",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4520",
+                            "name": "Professional Services Revenue",
+                            "type": "INCOME"
+                        }
+                    ]
+                },
+                {
+                    "code": "4800",
+                    "name": "Other Income",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "4810",
+                            "name": "Interest Income",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4820",
+                            "name": "Dividend Income",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4830",
+                            "name": "Rental Income",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4840",
+                            "name": "Gain on Sale of Assets",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "4850",
+                            "name": "Foreign Exchange Gain",
+                            "type": "INCOME"
+                        }
+                    ]
                 }
             ]
         },
         {
             "code": "5000",
             "name": "Cost of Goods Sold",
-            "type": "EXPENSE"
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "5100",
+                    "name": "Cost of Goods Purchased",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5200",
+                    "name": "Direct Labor",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5300",
+                    "name": "Manufacturing Overhead",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5400",
+                    "name": "Freight In",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5500",
+                    "name": "Purchase Discounts",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5600",
+                    "name": "Purchase Returns and Allowances",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "5700",
+                    "name": "Inventory Adjustments",
+                    "type": "EXPENSE"
+                }
+            ]
         },
         {
             "code": "6000",
@@ -102,16 +594,210 @@
                 {
                     "code": "6100",
                     "name": "Payroll Expenses",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6110",
+                            "name": "Salaries and Wages",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6120",
+                            "name": "Payroll Taxes",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6130",
+                            "name": "Employee Benefits",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6140",
+                            "name": "Workers' Compensation",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6150",
+                            "name": "Retirement Plan Contributions",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "6200",
-                    "name": "Rent or Lease",
-                    "type": "EXPENSE"
+                    "name": "Occupancy Expenses",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6210",
+                            "name": "Rent Expense",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6220",
+                            "name": "Utilities",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6230",
+                            "name": "Property Taxes",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6240",
+                            "name": "Building Maintenance",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6250",
+                            "name": "Security",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "6300",
-                    "name": "Utilities",
+                    "name": "General and Administrative",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6310",
+                            "name": "Office Supplies",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6320",
+                            "name": "Postage and Shipping",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6330",
+                            "name": "Telephone and Internet",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6340",
+                            "name": "Software and Subscriptions",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6350",
+                            "name": "Professional Fees (Legal, Accounting)",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6360",
+                            "name": "Insurance Expense",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6370",
+                            "name": "Licenses and Permits",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6380",
+                            "name": "Bad Debt Expense",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "6400",
+                    "name": "Marketing and Advertising",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6410",
+                            "name": "Advertising",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6420",
+                            "name": "Marketing Materials",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6430",
+                            "name": "Trade Shows and Events",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "6500",
+                    "name": "Travel and Entertainment",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6510",
+                            "name": "Travel Expense",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6520",
+                            "name": "Meals and Entertainment",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6530",
+                            "name": "Auto Expense",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "6600",
+                    "name": "Depreciation and Amortization",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6610",
+                            "name": "Depreciation Expense",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6620",
+                            "name": "Amortization Expense",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "6700",
+                    "name": "Financial Expenses",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6710",
+                            "name": "Bank Service Charges",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6720",
+                            "name": "Interest Expense",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6730",
+                            "name": "Foreign Exchange Loss",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "6740",
+                            "name": "Credit Card Fees",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "6800",
+                    "name": "Miscellaneous Expense",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "6900",
+                    "name": "Income Tax Expense",
                     "type": "EXPENSE"
                 }
             ]

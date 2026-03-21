@@ -35,10 +35,10 @@ JSON seed files → seed_coa_templates command → COATemplate DB table → Ledg
 | Key | Name | Accounts | Root Classes |
 |---|---|---|---|
 | IFRS_COA | IFRS COA | 115 | 7 |
-| LEBANESE_PCN | Lebanese PCN | 33 | 7 |
-| FRENCH_PCG | French PCG | 44 | 7 |
-| USA_GAAP | USA GAAP | 20 | 6 |
-| SYSCOHADA_REVISED | SYSCOHADA Revised | 38 | 7 |
+| LEBANESE_PCN | Lebanese PCN | 125+ | 7 |
+| FRENCH_PCG | French PCG | 202 | 7 |
+| USA_GAAP | USA GAAP | 146 | 6 |
+| SYSCOHADA_REVISED | SYSCOHADA Revised | 256 | 7 |
 
 ## Step-by-Step Workflow
 

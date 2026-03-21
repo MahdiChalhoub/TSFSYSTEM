@@ -1,7 +1,7 @@
 {
     "key": "LEBANESE_PCN",
     "name": "Lebanese PCN",
-    "description": "Plan Comptable National Libanais — Standard accounting framework for Lebanese businesses",
+    "description": "Plan Comptable National Libanais — Full professional chart with 7 root classes",
     "accounts": [
         {
             "code": "1",
@@ -11,22 +11,95 @@
                 {
                     "code": "10",
                     "name": "Capital",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "children": [
+                        {
+                            "code": "101",
+                            "name": "Capital social",
+                            "type": "EQUITY"
+                        },
+                        {
+                            "code": "104",
+                            "name": "Primes liees au capital",
+                            "type": "EQUITY"
+                        }
+                    ]
                 },
                 {
                     "code": "11",
                     "name": "Reserves",
-                    "type": "EQUITY"
+                    "type": "EQUITY",
+                    "children": [
+                        {
+                            "code": "111",
+                            "name": "Reserve legale",
+                            "type": "EQUITY"
+                        },
+                        {
+                            "code": "112",
+                            "name": "Reserves statutaires",
+                            "type": "EQUITY"
+                        },
+                        {
+                            "code": "118",
+                            "name": "Autres reserves",
+                            "type": "EQUITY"
+                        }
+                    ]
                 },
                 {
                     "code": "12",
-                    "name": "Resultat reporté",
+                    "name": "Resultat reporte",
                     "type": "EQUITY"
                 },
                 {
                     "code": "13",
                     "name": "Resultat de l'exercice",
                     "type": "EQUITY"
+                },
+                {
+                    "code": "15",
+                    "name": "Provisions pour risques et charges",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "151",
+                            "name": "Provisions pour risques",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "155",
+                            "name": "Provisions pour charges",
+                            "type": "LIABILITY"
+                        }
+                    ]
+                },
+                {
+                    "code": "16",
+                    "name": "Emprunts et dettes assimilees",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "161",
+                            "name": "Emprunts obligataires",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "164",
+                            "name": "Emprunts aupres des etablissements de credit",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "165",
+                            "name": "Emprunts et dettes financieres divers",
+                            "type": "LIABILITY"
+                        }
+                    ]
+                },
+                {
+                    "code": "17",
+                    "name": "Dettes rattachees a des participations",
+                    "type": "LIABILITY"
                 }
             ]
         },
@@ -38,17 +111,122 @@
                 {
                     "code": "21",
                     "name": "Immobilisations Incorporelles",
-                    "type": "ASSET"
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "211",
+                            "name": "Frais d'etablissement",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "212",
+                            "name": "Brevets, licences, marques",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "213",
+                            "name": "Logiciels informatiques",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "215",
+                            "name": "Fonds commercial",
+                            "type": "ASSET"
+                        }
+                    ]
                 },
                 {
                     "code": "22",
                     "name": "Immobilisations Corporelles",
-                    "type": "ASSET"
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "221",
+                            "name": "Terrains",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "222",
+                            "name": "Constructions",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "223",
+                            "name": "Installations techniques, materiel et outillage",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "224",
+                            "name": "Materiel de transport",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "225",
+                            "name": "Mobilier et materiel de bureau",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "226",
+                            "name": "Agencements et amenagements",
+                            "type": "ASSET"
+                        }
+                    ]
                 },
                 {
                     "code": "24",
-                    "name": "Immobilisations Financières",
-                    "type": "ASSET"
+                    "name": "Immobilisations Financieres",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "241",
+                            "name": "Participations",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "245",
+                            "name": "Prets",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "247",
+                            "name": "Depots et cautionnements verses",
+                            "type": "ASSET"
+                        }
+                    ]
+                },
+                {
+                    "code": "28",
+                    "name": "Amortissements des Immobilisations",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "281",
+                            "name": "Amort. des immob. incorporelles",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "282",
+                            "name": "Amort. des immob. corporelles",
+                            "type": "ASSET"
+                        }
+                    ]
+                },
+                {
+                    "code": "29",
+                    "name": "Depreciations des Immobilisations",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "291",
+                            "name": "Deprec. des immob. incorporelles",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "292",
+                            "name": "Deprec. des immob. corporelles",
+                            "type": "ASSET"
+                        }
+                    ]
                 }
             ]
         },
@@ -64,7 +242,32 @@
                 },
                 {
                     "code": "32",
-                    "name": "Matières Premières",
+                    "name": "Matieres premieres et fournitures",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "33",
+                    "name": "En-cours de production de biens",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "34",
+                    "name": "En-cours de production de services",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "35",
+                    "name": "Produits finis",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "37",
+                    "name": "Stocks en cours de route",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "39",
+                    "name": "Depreciations des stocks",
                     "type": "ASSET"
                 }
             ]
@@ -76,30 +279,173 @@
             "children": [
                 {
                     "code": "40",
-                    "name": "Fournisseurs",
+                    "name": "Fournisseurs et comptes rattaches",
                     "type": "LIABILITY",
-                    "subType": "PAYABLE"
+                    "subType": "PAYABLE",
+                    "children": [
+                        {
+                            "code": "401",
+                            "name": "Fournisseurs",
+                            "type": "LIABILITY",
+                            "subType": "PAYABLE"
+                        },
+                        {
+                            "code": "403",
+                            "name": "Fournisseurs - Effets a payer",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "404",
+                            "name": "Fournisseurs d'immobilisations",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "409",
+                            "name": "Fournisseurs debiteurs",
+                            "type": "ASSET"
+                        }
+                    ]
                 },
                 {
                     "code": "41",
-                    "name": "Clients (Créances)",
+                    "name": "Clients et comptes rattaches",
                     "type": "ASSET",
-                    "subType": "RECEIVABLE"
+                    "subType": "RECEIVABLE",
+                    "children": [
+                        {
+                            "code": "411",
+                            "name": "Clients",
+                            "type": "ASSET",
+                            "subType": "RECEIVABLE"
+                        },
+                        {
+                            "code": "413",
+                            "name": "Clients - Effets a recevoir",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "416",
+                            "name": "Clients douteux",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "419",
+                            "name": "Clients crediteurs",
+                            "type": "LIABILITY"
+                        }
+                    ]
                 },
                 {
                     "code": "42",
-                    "name": "Personnel",
-                    "type": "LIABILITY"
+                    "name": "Personnel et comptes rattaches",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "421",
+                            "name": "Personnel - Remunerations dues",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "425",
+                            "name": "Personnel - Avances et acomptes",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "428",
+                            "name": "Personnel - Charges a payer",
+                            "type": "LIABILITY"
+                        }
+                    ]
                 },
                 {
                     "code": "43",
-                    "name": "Organismes Sociaux",
-                    "type": "LIABILITY"
+                    "name": "Organismes sociaux",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "431",
+                            "name": "CNSS et mutuelles",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "438",
+                            "name": "Organismes sociaux - Charges a payer",
+                            "type": "LIABILITY"
+                        }
+                    ]
                 },
                 {
                     "code": "44",
-                    "name": "Etat et Collectivités Publiques",
-                    "type": "LIABILITY"
+                    "name": "Etat et collectivites publiques",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "441",
+                            "name": "Etat - Impot sur les benefices",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "443",
+                            "name": "TVA facturee",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "445",
+                            "name": "TVA deductible",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "447",
+                            "name": "Autres impots et taxes",
+                            "type": "LIABILITY"
+                        }
+                    ]
+                },
+                {
+                    "code": "46",
+                    "name": "Debiteurs et crediteurs divers",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "461",
+                            "name": "Associes - Comptes courants",
+                            "type": "LIABILITY"
+                        },
+                        {
+                            "code": "467",
+                            "name": "Autres comptes debiteurs ou crediteurs",
+                            "type": "LIABILITY"
+                        }
+                    ]
+                },
+                {
+                    "code": "47",
+                    "name": "Comptes transitoires ou d'attente",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "471",
+                            "name": "Charges constatees d'avance",
+                            "type": "ASSET"
+                        },
+                        {
+                            "code": "472",
+                            "name": "Produits constates d'avance",
+                            "type": "LIABILITY"
+                        }
+                    ]
+                },
+                {
+                    "code": "49",
+                    "name": "Depreciations des comptes de tiers",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "491",
+                            "name": "Deprec. comptes clients",
+                            "type": "ASSET"
+                        }
+                    ]
                 }
             ]
         },
@@ -110,15 +456,53 @@
             "children": [
                 {
                     "code": "51",
-                    "name": "Banques",
+                    "name": "Banques et etablissements financiers",
                     "type": "ASSET",
-                    "subType": "BANK"
+                    "subType": "BANK",
+                    "children": [
+                        {
+                            "code": "511",
+                            "name": "Banques en monnaie nationale",
+                            "type": "ASSET",
+                            "subType": "BANK"
+                        },
+                        {
+                            "code": "512",
+                            "name": "Banques en devises",
+                            "type": "ASSET",
+                            "subType": "BANK"
+                        }
+                    ]
+                },
+                {
+                    "code": "52",
+                    "name": "Instruments de tresorerie",
+                    "type": "ASSET"
                 },
                 {
                     "code": "53",
                     "name": "Caisse",
                     "type": "ASSET",
-                    "subType": "CASH"
+                    "subType": "CASH",
+                    "children": [
+                        {
+                            "code": "531",
+                            "name": "Caisse en monnaie nationale",
+                            "type": "ASSET",
+                            "subType": "CASH"
+                        },
+                        {
+                            "code": "532",
+                            "name": "Caisse en devises",
+                            "type": "ASSET",
+                            "subType": "CASH"
+                        }
+                    ]
+                },
+                {
+                    "code": "58",
+                    "name": "Virements internes",
+                    "type": "ASSET"
                 }
             ]
         },
@@ -130,32 +514,225 @@
                 {
                     "code": "60",
                     "name": "Achats",
-                    "type": "EXPENSE"
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "601",
+                            "name": "Achats de marchandises",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "602",
+                            "name": "Achats de matieres premieres",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "604",
+                            "name": "Achats d'etudes et prestations de services",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "605",
+                            "name": "Achats de fournitures non stockables",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "608",
+                            "name": "Frais accessoires d'achat",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "609",
+                            "name": "Rabais, remises et ristournes obtenus",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "61",
-                    "name": "Services Extérieurs",
-                    "type": "EXPENSE"
+                    "name": "Services exterieurs",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "611",
+                            "name": "Sous-traitance generale",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "613",
+                            "name": "Locations",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "614",
+                            "name": "Charges locatives et de copropriete",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "615",
+                            "name": "Entretien et reparations",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "616",
+                            "name": "Primes d'assurance",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "62",
-                    "name": "Autres Services Extérieurs",
-                    "type": "EXPENSE"
+                    "name": "Autres services exterieurs",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "621",
+                            "name": "Personnel exterieur",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "622",
+                            "name": "Remunerations d'intermediaires et honoraires",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "623",
+                            "name": "Publicite, publications, relations publiques",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "625",
+                            "name": "Deplacements, missions et receptions",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "626",
+                            "name": "Frais postaux et telecommunications",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "627",
+                            "name": "Services bancaires",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "63",
-                    "name": "Impôts et Taxes",
-                    "type": "EXPENSE"
+                    "name": "Impots, taxes et versements assimiles",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "631",
+                            "name": "Impots et taxes sur remunerations",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "635",
+                            "name": "Autres impots et taxes",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "64",
-                    "name": "Charges de Personnel",
-                    "type": "EXPENSE"
+                    "name": "Charges de personnel",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "641",
+                            "name": "Remunerations du personnel",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "645",
+                            "name": "Charges de securite sociale et de prevoyance",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "648",
+                            "name": "Autres charges de personnel",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "65",
+                    "name": "Autres charges de gestion courante",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "651",
+                            "name": "Redevances pour concessions, brevets",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "654",
+                            "name": "Pertes sur creances irrecouvrables",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 },
                 {
                     "code": "66",
-                    "name": "Charges Financières",
-                    "type": "EXPENSE"
+                    "name": "Charges financieres",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "661",
+                            "name": "Charges d'interets",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "665",
+                            "name": "Escomptes accordes",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "666",
+                            "name": "Pertes de change",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "67",
+                    "name": "Charges exceptionnelles",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "671",
+                            "name": "Charges except. sur operations de gestion",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "675",
+                            "name": "Valeur comptable des elements d'actif cedes",
+                            "type": "EXPENSE"
+                        }
+                    ]
+                },
+                {
+                    "code": "68",
+                    "name": "Dotations aux amortissements, depreciations et provisions",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "681",
+                            "name": "Dotations aux amortissements",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "686",
+                            "name": "Dotations aux depreciations",
+                            "type": "EXPENSE"
+                        },
+                        {
+                            "code": "687",
+                            "name": "Dotations aux provisions",
+                            "type": "EXPENSE"
+                        }
+                    ]
                 }
             ]
         },
@@ -166,23 +743,125 @@
             "children": [
                 {
                     "code": "70",
-                    "name": "Ventes de Marchandises",
-                    "type": "INCOME"
+                    "name": "Ventes de marchandises et de produits",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "701",
+                            "name": "Ventes de marchandises",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "702",
+                            "name": "Ventes de produits finis",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "706",
+                            "name": "Prestations de services",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "709",
+                            "name": "Rabais, remises et ristournes accordes",
+                            "type": "INCOME"
+                        }
+                    ]
                 },
                 {
                     "code": "71",
-                    "name": "Production Vendue",
+                    "name": "Production stockee",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "713",
+                            "name": "Variation du stock de produits",
+                            "type": "INCOME"
+                        }
+                    ]
+                },
+                {
+                    "code": "72",
+                    "name": "Production immobilisee",
                     "type": "INCOME"
+                },
+                {
+                    "code": "74",
+                    "name": "Subventions d'exploitation",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "75",
+                    "name": "Autres produits de gestion courante",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "751",
+                            "name": "Redevances pour concessions, brevets",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "755",
+                            "name": "Quotes-parts de resultat",
+                            "type": "INCOME"
+                        }
+                    ]
                 },
                 {
                     "code": "76",
-                    "name": "Produits Financiers",
-                    "type": "INCOME"
+                    "name": "Produits financiers",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "761",
+                            "name": "Produits de participations",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "765",
+                            "name": "Escomptes obtenus",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "766",
+                            "name": "Gains de change",
+                            "type": "INCOME"
+                        }
+                    ]
                 },
                 {
                     "code": "77",
-                    "name": "Produits Exceptionnels",
-                    "type": "INCOME"
+                    "name": "Produits exceptionnels",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "771",
+                            "name": "Produits except. sur operations de gestion",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "775",
+                            "name": "Produits de cession d'elements d'actif",
+                            "type": "INCOME"
+                        }
+                    ]
+                },
+                {
+                    "code": "78",
+                    "name": "Reprises sur amortissements et provisions",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "781",
+                            "name": "Reprises sur amortissements",
+                            "type": "INCOME"
+                        },
+                        {
+                            "code": "786",
+                            "name": "Reprises sur depreciations",
+                            "type": "INCOME"
+                        }
+                    ]
                 }
             ]
         }
