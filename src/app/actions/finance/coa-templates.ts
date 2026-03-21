@@ -66,7 +66,3 @@ export async function migrateBalances(data: { mappings: Record<string, any>[], d
         throw error
     }
 }
-
-export async function sweepInactiveBalances(mapping: Record<string, any>) {
-    throw new Error("Sweep logic must be moved to Django Backend via erpFetch.")
-}
