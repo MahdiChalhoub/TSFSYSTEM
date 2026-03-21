@@ -25,7 +25,6 @@ Warehouse = get_model('Warehouse')
 FinancialAccount = get_model('FinancialAccount')
 
 FiscalYear = get_model('FiscalYear')
-ChartOfAccount = get_model('ChartOfAccount')
 SystemSettings = get_model('SystemSettings')
 Product = get_model('Product')
 SystemModule = get_model('SystemModule')
@@ -176,70 +175,22 @@ def run_seed():
     )
     print("📅 Fiscal Year 2026 Seeded")
 
-    # 10. Chart of Accounts
-    def upsert_account(code, name, type, parent=None, sub_type=None):
-        acc, _ = ChartOfAccount.objects.get_or_create(
-            code=code, organization=org,
-            defaults={
-                'name': name, 'type': type, 
-                'parent': parent, 'sub_type': sub_type
-            }
-        )
-        return acc
+    # 10. Chart of Accounts (via database template — NOT hardcoded)
+    from apps.finance.services import LedgerService
+    try:
+        LedgerService.apply_coa_template(org, 'IFRS_COA', reset=False)
+        print("📊 Chart of Accounts applied from IFRS_COA template")
+    except Exception as e:
+        print(f"⚠️ COA template error: {e}")
+        print("   → Run: python manage.py seed_coa_templates  first!")
 
-    assets = upsert_account('1000', 'ASSETS', 'ASSET')
-    liabilities = upsert_account('2000', 'LIABILITIES', 'LIABILITY')
-    equity = upsert_account('3000', 'EQUITY', 'EQUITY')
-    revenue = upsert_account('4000', 'REVENUE', 'INCOME')
-    expenses = upsert_account('5000', 'COST OF GOODS SOLD (COGS)', 'EXPENSE')
-    opex = upsert_account('6000', 'OPERATING EXPENSES', 'EXPENSE')
-
-    # Detailed
-    # Assets
-    curr_assets = upsert_account('1100', 'Current Assets', 'ASSET', assets)
-    ar = upsert_account('1110', 'Accounts Receivable', 'ASSET', curr_assets)
-    inventory = upsert_account('1120', 'Inventory', 'ASSET', curr_assets)
-    
-    # Cash / Bank Roots
-    cash_root = upsert_account('5700', 'Cash Accounts', 'ASSET', curr_assets, 'CASH')
-    bank_root = upsert_account('5120', 'Bank Accounts', 'ASSET', curr_assets, 'BANK')
-
-    # Liabilities
-    curr_liab = upsert_account('2100', 'Current Liabilities', 'LIABILITY', liabilities)
-    ap = upsert_account('2101', 'Accounts Payable', 'LIABILITY', curr_liab)
-    vat = upsert_account('2111', 'VAT Payable', 'LIABILITY', curr_liab)
-    payroll = upsert_account('2121', 'Salaries Payable', 'LIABILITY', curr_liab)
-
-    # Income/Expense
-    sales = upsert_account('4100', 'Sales Revenue', 'INCOME', revenue)
-    cogs = upsert_account('5100', 'Cost of Sales', 'EXPENSE', expenses)
-    inv_adj = upsert_account('5104', 'Inventory Adjustment', 'EXPENSE', expenses)
-
-    depr_exp = upsert_account('6303', 'Depreciation Expense', 'EXPENSE', opex)
-    accum_depr = upsert_account('1210', 'Accumulated Depreciation', 'ASSET', assets)
-
-    print("📊 Chart of Accounts Seeded")
-
-    # 11. Posting Rules
-    rules = {
-        'sales': {
-            'receivable': ar.id, 'revenue': sales.id, 'cogs': cogs.id, 'inventory': inventory.id
-        },
-        'purchases': {
-            'payable': ap.id, 'inventory': inventory.id, 'tax': vat.id
-        },
-        'inventory': {
-            'adjustment': inv_adj.id, 'transfer': inventory.id
-        },
-        'automation': {
-            'customerRoot': ar.id, 'supplierRoot': ap.id, 'payrollRoot': payroll.id
-        }
-    }
-    
-    SystemSettings.objects.get_or_create(
-        key='finance_posting_rules', organization=org,
-        defaults={'value': json.dumps(rules)}
-    )
+    # 11. Posting Rules (auto-wired from COA patterns)
+    from erp.services import ConfigurationService
+    try:
+        ConfigurationService.apply_smart_posting_rules(org)
+        print("📋 Posting rules auto-wired")
+    except Exception as e:
+        print(f"⚠️ Posting rules error: {e}")
 
     # 12. Financial Accounts
     accounts = [

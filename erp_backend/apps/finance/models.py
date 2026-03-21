@@ -10,6 +10,46 @@ from erp.models import TenantModel, VerifiableModel, Organization, Site, Country
 
 
 # =============================================================================
+# COA TEMPLATES (Global, not tenant-scoped)
+# =============================================================================
+
+class COATemplate(models.Model):
+    """
+    Stores Chart of Accounts templates as JSON seed data.
+    Not tenant-scoped — templates are global and shared across all organizations.
+    Seeded via: python manage.py seed_coa_templates
+    """
+    key = models.CharField(max_length=50, unique=True, help_text='Template key, e.g. IFRS_COA')
+    name = models.CharField(max_length=100, help_text='Display name, e.g. IFRS COA')
+    description = models.TextField(null=True, blank=True)
+    accounts = models.JSONField(help_text='Nested account tree [{code, name, type, children?, ...}]')
+    account_count = models.IntegerField(default=0, help_text='Total flattened account count')
+    root_count = models.IntegerField(default=0, help_text='Number of root classes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'coa_template'
+
+    def __str__(self):
+        return f"{self.name} ({self.account_count} accounts)"
+
+    def flatten(self):
+        """Flatten the nested tree to a list of dicts with parent_code references."""
+        result = []
+        def _walk(items, parent_code=None):
+            for item in items:
+                flat = {k: v for k, v in item.items() if k != 'children'}
+                if parent_code:
+                    flat['parent_code'] = parent_code
+                result.append(flat)
+                if 'children' in item:
+                    _walk(item['children'], item['code'])
+        _walk(self.accounts)
+        return result
+
+
+# =============================================================================
 # CHART OF ACCOUNTS & GENERAL LEDGER
 # =============================================================================
 

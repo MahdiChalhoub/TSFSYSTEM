@@ -164,17 +164,17 @@ class LedgerService:
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
-        from apps.finance.models import ChartOfAccount, JournalEntry
-        from erp.coa_templates import TEMPLATES
+        from apps.finance.models import ChartOfAccount, JournalEntry, COATemplate
         from erp.services import ConfigurationService
 
-        template = TEMPLATES.get(template_key)
-        if not template:
-            raise ValidationError(f"Template {template_key} not found")
+        # Read template from database (seeded via: python manage.py seed_coa_templates)
+        try:
+            template = COATemplate.objects.get(key=template_key)
+        except COATemplate.DoesNotExist:
+            raise ValidationError(f"Template '{template_key}' not found in database. Run: python manage.py seed_coa_templates")
 
-        accounts_data = template.get('accounts', [])
-        if not accounts_data:
-            raise ValidationError(f"Template {template_key} has no accounts")
+        # Flatten nested tree to flat list with parent_code references
+        accounts_data = template.flatten()
 
         with transaction.atomic():
             has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()

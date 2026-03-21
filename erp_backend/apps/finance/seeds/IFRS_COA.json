@@ -1,0 +1,833 @@
+{
+    "key": "IFRS_COA",
+    "name": "IFRS COA",
+    "description": "International Financial Reporting Standards — Full professional chart with 7 root classes",
+    "accounts": [
+        {
+            "code": "1000",
+            "name": "ASSETS",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "1100",
+                    "name": "Current Assets",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1101",
+                            "name": "Cash & Cash Equivalents",
+                            "type": "ASSET",
+                            "children": [
+                                {
+                                    "code": "1101.01",
+                                    "name": "Cash in Hand",
+                                    "type": "ASSET",
+                                    "subType": "CASH",
+                                    "syscohadaCode": "57",
+                                    "syscohadaClass": "Class 5"
+                                },
+                                {
+                                    "code": "1101.02",
+                                    "name": "Cash Register (POS)",
+                                    "type": "ASSET",
+                                    "subType": "CASH",
+                                    "syscohadaCode": "57",
+                                    "syscohadaClass": "Class 5"
+                                },
+                                {
+                                    "code": "1101.03",
+                                    "name": "Main Bank Account",
+                                    "type": "ASSET",
+                                    "subType": "BANK",
+                                    "syscohadaCode": "52",
+                                    "syscohadaClass": "Class 5"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1105",
+                            "name": "Short-term Investments",
+                            "type": "ASSET",
+                            "syscohadaCode": "50",
+                            "syscohadaClass": "Class 5"
+                        },
+                        {
+                            "code": "1110",
+                            "name": "Accounts Receivable",
+                            "type": "ASSET",
+                            "subType": "RECEIVABLE",
+                            "syscohadaCode": "41",
+                            "syscohadaClass": "Class 4",
+                            "children": [
+                                {
+                                    "code": "1111",
+                                    "name": "Trade Receivables",
+                                    "type": "ASSET",
+                                    "subType": "RECEIVABLE",
+                                    "syscohadaCode": "41",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "1112",
+                                    "name": "Notes Receivable",
+                                    "type": "ASSET",
+                                    "subType": "RECEIVABLE",
+                                    "syscohadaCode": "41",
+                                    "syscohadaClass": "Class 4"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1115",
+                            "name": "VAT Receivable (Input Tax)",
+                            "type": "ASSET",
+                            "syscohadaCode": "44",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "1120",
+                            "name": "Inventory",
+                            "type": "ASSET",
+                            "syscohadaCode": "31",
+                            "syscohadaClass": "Class 3",
+                            "children": [
+                                {
+                                    "code": "1121",
+                                    "name": "Raw Materials",
+                                    "type": "ASSET",
+                                    "syscohadaCode": "31",
+                                    "syscohadaClass": "Class 3"
+                                },
+                                {
+                                    "code": "1122",
+                                    "name": "Work in Progress",
+                                    "type": "ASSET",
+                                    "syscohadaCode": "33",
+                                    "syscohadaClass": "Class 3"
+                                },
+                                {
+                                    "code": "1123",
+                                    "name": "Finished Goods",
+                                    "type": "ASSET",
+                                    "syscohadaCode": "35",
+                                    "syscohadaClass": "Class 3"
+                                },
+                                {
+                                    "code": "1124",
+                                    "name": "Merchandise",
+                                    "type": "ASSET",
+                                    "syscohadaCode": "37",
+                                    "syscohadaClass": "Class 3"
+                                },
+                                {
+                                    "code": "1125",
+                                    "name": "Goods in Transit",
+                                    "type": "ASSET",
+                                    "syscohadaCode": "38",
+                                    "syscohadaClass": "Class 3"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "1130",
+                            "name": "Prepaid Expenses",
+                            "type": "ASSET",
+                            "syscohadaCode": "47",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "1140",
+                            "name": "Employee Advances",
+                            "type": "ASSET",
+                            "subType": "RECEIVABLE",
+                            "syscohadaCode": "42",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "1150",
+                            "name": "Deposits & Guarantees",
+                            "type": "ASSET",
+                            "syscohadaCode": "27",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1160",
+                            "name": "Advances to Suppliers",
+                            "type": "ASSET",
+                            "syscohadaCode": "40",
+                            "syscohadaClass": "Class 4"
+                        }
+                    ]
+                },
+                {
+                    "code": "1200",
+                    "name": "Non-Current Assets",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1201",
+                            "name": "Land",
+                            "type": "ASSET",
+                            "syscohadaCode": "22",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1202",
+                            "name": "Buildings",
+                            "type": "ASSET",
+                            "syscohadaCode": "23",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1203",
+                            "name": "Furniture & Fixtures",
+                            "type": "ASSET",
+                            "syscohadaCode": "24",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1204",
+                            "name": "Equipment",
+                            "type": "ASSET",
+                            "syscohadaCode": "24",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1205",
+                            "name": "Vehicles",
+                            "type": "ASSET",
+                            "syscohadaCode": "25",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1206",
+                            "name": "Software / Intangible Assets",
+                            "type": "ASSET",
+                            "syscohadaCode": "21",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1207",
+                            "name": "Leasehold Improvements",
+                            "type": "ASSET",
+                            "syscohadaCode": "23",
+                            "syscohadaClass": "Class 2"
+                        }
+                    ]
+                },
+                {
+                    "code": "1210",
+                    "name": "Accumulated Depreciation (CONTRA-ASSET)",
+                    "type": "ASSET",
+                    "children": [
+                        {
+                            "code": "1211",
+                            "name": "Accum. Depr. — Buildings",
+                            "type": "ASSET",
+                            "syscohadaCode": "28",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1212",
+                            "name": "Accum. Depr. — Equipment",
+                            "type": "ASSET",
+                            "syscohadaCode": "28",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1213",
+                            "name": "Accum. Depr. — Vehicles",
+                            "type": "ASSET",
+                            "syscohadaCode": "28",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1214",
+                            "name": "Accum. Amort. — Software",
+                            "type": "ASSET",
+                            "syscohadaCode": "28",
+                            "syscohadaClass": "Class 2"
+                        },
+                        {
+                            "code": "1215",
+                            "name": "Accum. Depr. — Furniture",
+                            "type": "ASSET",
+                            "syscohadaCode": "28",
+                            "syscohadaClass": "Class 2"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "code": "2000",
+            "name": "LIABILITIES",
+            "type": "LIABILITY",
+            "children": [
+                {
+                    "code": "2100",
+                    "name": "Current Liabilities",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "2101",
+                            "name": "Accounts Payable",
+                            "type": "LIABILITY",
+                            "subType": "PAYABLE",
+                            "syscohadaCode": "40",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "2102",
+                            "name": "Accrued Liabilities (GRNI)",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "40",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "2103",
+                            "name": "Customer Deposits Received",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "41",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "2104",
+                            "name": "Deferred Revenue",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "47",
+                            "syscohadaClass": "Class 4"
+                        },
+                        {
+                            "code": "2110",
+                            "name": "Taxes Payable",
+                            "type": "LIABILITY",
+                            "children": [
+                                {
+                                    "code": "2111",
+                                    "name": "VAT Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "44",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2112",
+                                    "name": "Income Tax Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "44",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2113",
+                                    "name": "Payroll Tax Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "44",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2114",
+                                    "name": "Social Security Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "43",
+                                    "syscohadaClass": "Class 4"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "2120",
+                            "name": "Accrued Expenses",
+                            "type": "LIABILITY",
+                            "children": [
+                                {
+                                    "code": "2121",
+                                    "name": "Salaries Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "42",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2122",
+                                    "name": "Rent Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "40",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2123",
+                                    "name": "Utilities Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "40",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2124",
+                                    "name": "Insurance Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "40",
+                                    "syscohadaClass": "Class 4"
+                                },
+                                {
+                                    "code": "2125",
+                                    "name": "Bonus & Commission Payable",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "42",
+                                    "syscohadaClass": "Class 4"
+                                }
+                            ]
+                        },
+                        {
+                            "code": "2130",
+                            "name": "Provisions",
+                            "type": "LIABILITY",
+                            "children": [
+                                {
+                                    "code": "2131",
+                                    "name": "Provision for Litigation",
+                                    "type": "LIABILITY",
+                                    "syscohadaCode": "15",
+                                    "syscohadaClass": "Class 1"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "code": "2200",
+                    "name": "Long-Term Liabilities",
+                    "type": "LIABILITY",
+                    "children": [
+                        {
+                            "code": "2201",
+                            "name": "Bank Loan",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "16",
+                            "syscohadaClass": "Class 1"
+                        },
+                        {
+                            "code": "2202",
+                            "name": "Lease Liability",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "16",
+                            "syscohadaClass": "Class 1"
+                        },
+                        {
+                            "code": "2203",
+                            "name": "Shareholder Loans",
+                            "type": "LIABILITY",
+                            "syscohadaCode": "16",
+                            "syscohadaClass": "Class 1"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "code": "3000",
+            "name": "EQUITY",
+            "type": "EQUITY",
+            "children": [
+                {
+                    "code": "3001",
+                    "name": "Capital",
+                    "type": "EQUITY",
+                    "syscohadaCode": "10",
+                    "syscohadaClass": "Class 1"
+                },
+                {
+                    "code": "3002",
+                    "name": "Additional Capital",
+                    "type": "EQUITY",
+                    "syscohadaCode": "10",
+                    "syscohadaClass": "Class 1"
+                },
+                {
+                    "code": "3003",
+                    "name": "Retained Earnings",
+                    "type": "EQUITY",
+                    "syscohadaCode": "11",
+                    "syscohadaClass": "Class 1"
+                },
+                {
+                    "code": "3004",
+                    "name": "Current Year Profit / Loss",
+                    "type": "EQUITY",
+                    "syscohadaCode": "13",
+                    "syscohadaClass": "Class 1"
+                },
+                {
+                    "code": "3005",
+                    "name": "Owner's Draws / Withdrawals",
+                    "type": "EQUITY",
+                    "syscohadaCode": "10",
+                    "syscohadaClass": "Class 1"
+                },
+                {
+                    "code": "3006",
+                    "name": "Other Comprehensive Income",
+                    "type": "EQUITY",
+                    "syscohadaCode": "10",
+                    "syscohadaClass": "Class 1"
+                }
+            ]
+        },
+        {
+            "code": "4000",
+            "name": "REVENUE",
+            "type": "INCOME",
+            "children": [
+                {
+                    "code": "4100",
+                    "name": "Sales Revenue",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "4101",
+                            "name": "Sales — Cash",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4102",
+                            "name": "Sales — Credit",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4103",
+                            "name": "Sales — Online",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4104",
+                            "name": "Sales Returns & Allowances",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4105",
+                            "name": "Sales Discounts Given",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        }
+                    ]
+                },
+                {
+                    "code": "4200",
+                    "name": "Other Income",
+                    "type": "INCOME",
+                    "children": [
+                        {
+                            "code": "4201",
+                            "name": "Discount Received",
+                            "type": "INCOME",
+                            "syscohadaCode": "77",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4202",
+                            "name": "Interest Income",
+                            "type": "INCOME",
+                            "syscohadaCode": "76",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4203",
+                            "name": "Commission Income",
+                            "type": "INCOME",
+                            "syscohadaCode": "70",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4204",
+                            "name": "Rental Income",
+                            "type": "INCOME",
+                            "syscohadaCode": "75",
+                            "syscohadaClass": "Class 7"
+                        },
+                        {
+                            "code": "4205",
+                            "name": "Gain on Asset Disposal",
+                            "type": "INCOME",
+                            "syscohadaCode": "77",
+                            "syscohadaClass": "Class 7"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "code": "5000",
+            "name": "COST OF GOODS SOLD (COGS)",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "5100",
+                    "name": "Cost of Sales",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "5101",
+                            "name": "Cost of Goods Purchased",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "60",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "5102",
+                            "name": "Freight In",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "61",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "5103",
+                            "name": "Import Duties",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "64",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "5104",
+                            "name": "Inventory Adjustment",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "60",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "5105",
+                            "name": "Direct Labor",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "64",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "5106",
+                            "name": "Packaging & Shipping Out",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "61",
+                            "syscohadaClass": "Class 6"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "code": "6000",
+            "name": "OPERATING EXPENSES",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "6100",
+                    "name": "Operating Expenses",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6101",
+                            "name": "Salaries & Wages",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "64",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6102",
+                            "name": "Transport Allowance",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "64",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6103",
+                            "name": "Rent Expense",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6104",
+                            "name": "Utilities Expense",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6105",
+                            "name": "Internet & Phone",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6106",
+                            "name": "Maintenance",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6107",
+                            "name": "Cleaning",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6108",
+                            "name": "Security",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6109",
+                            "name": "Insurance Expense",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        }
+                    ]
+                },
+                {
+                    "code": "6200",
+                    "name": "Administrative Expenses",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6201",
+                            "name": "Office Supplies",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "60",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6202",
+                            "name": "Software / POS Subscription",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6203",
+                            "name": "Professional Fees",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6204",
+                            "name": "Marketing & Advertising",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6205",
+                            "name": "Travel & Entertainment",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6206",
+                            "name": "Training & Development",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "62",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6207",
+                            "name": "Printing & Stationery",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "60",
+                            "syscohadaClass": "Class 6"
+                        }
+                    ]
+                },
+                {
+                    "code": "6300",
+                    "name": "Financial Expenses",
+                    "type": "EXPENSE",
+                    "children": [
+                        {
+                            "code": "6301",
+                            "name": "Bank Charges",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "67",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6302",
+                            "name": "Interest Expense",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "67",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6303",
+                            "name": "Depreciation & Amortization",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "68",
+                            "syscohadaClass": "Class 6"
+                        },
+                        {
+                            "code": "6304",
+                            "name": "Foreign Exchange Loss",
+                            "type": "EXPENSE",
+                            "syscohadaCode": "67",
+                            "syscohadaClass": "Class 6"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "code": "9000",
+            "name": "SYSTEM & CLEARING ACCOUNTS",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "9001",
+                    "name": "Stock Adjustment Control",
+                    "type": "EXPENSE",
+                    "syscohadaCode": "60",
+                    "syscohadaClass": "Class 6",
+                    "isSystemOnly": true,
+                    "isHidden": true,
+                    "requiresZeroBalance": true
+                },
+                {
+                    "code": "9002",
+                    "name": "POS Rounding Difference",
+                    "type": "INCOME",
+                    "syscohadaCode": "77",
+                    "syscohadaClass": "Class 7",
+                    "isSystemOnly": true,
+                    "isHidden": true
+                },
+                {
+                    "code": "9003",
+                    "name": "Exchange Difference",
+                    "type": "INCOME",
+                    "syscohadaCode": "76",
+                    "syscohadaClass": "Class 7",
+                    "isSystemOnly": true,
+                    "isHidden": true
+                },
+                {
+                    "code": "9004",
+                    "name": "Suspense / Clearing Account",
+                    "type": "EXPENSE",
+                    "syscohadaCode": "47",
+                    "syscohadaClass": "Class 4",
+                    "isSystemOnly": true,
+                    "requiresZeroBalance": true
+                }
+            ]
+        }
+    ]
+}

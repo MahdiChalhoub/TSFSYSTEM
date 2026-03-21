@@ -1,0 +1,190 @@
+{
+    "key": "LEBANESE_PCN",
+    "name": "Lebanese PCN",
+    "description": "Plan Comptable National Libanais — Standard accounting framework for Lebanese businesses",
+    "accounts": [
+        {
+            "code": "1",
+            "name": "Capitaux et Passif Non Courant",
+            "type": "EQUITY",
+            "children": [
+                {
+                    "code": "10",
+                    "name": "Capital",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "11",
+                    "name": "Reserves",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "12",
+                    "name": "Resultat reporté",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "13",
+                    "name": "Resultat de l'exercice",
+                    "type": "EQUITY"
+                }
+            ]
+        },
+        {
+            "code": "2",
+            "name": "Actif Non Courant (Immobilisations)",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "21",
+                    "name": "Immobilisations Incorporelles",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "22",
+                    "name": "Immobilisations Corporelles",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "24",
+                    "name": "Immobilisations Financières",
+                    "type": "ASSET"
+                }
+            ]
+        },
+        {
+            "code": "3",
+            "name": "Stocks et En-cours",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "31",
+                    "name": "Marchandises",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "32",
+                    "name": "Matières Premières",
+                    "type": "ASSET"
+                }
+            ]
+        },
+        {
+            "code": "4",
+            "name": "Comptes de Tiers",
+            "type": "LIABILITY",
+            "children": [
+                {
+                    "code": "40",
+                    "name": "Fournisseurs",
+                    "type": "LIABILITY",
+                    "subType": "PAYABLE"
+                },
+                {
+                    "code": "41",
+                    "name": "Clients (Créances)",
+                    "type": "ASSET",
+                    "subType": "RECEIVABLE"
+                },
+                {
+                    "code": "42",
+                    "name": "Personnel",
+                    "type": "LIABILITY"
+                },
+                {
+                    "code": "43",
+                    "name": "Organismes Sociaux",
+                    "type": "LIABILITY"
+                },
+                {
+                    "code": "44",
+                    "name": "Etat et Collectivités Publiques",
+                    "type": "LIABILITY"
+                }
+            ]
+        },
+        {
+            "code": "5",
+            "name": "Comptes Financiers",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "51",
+                    "name": "Banques",
+                    "type": "ASSET",
+                    "subType": "BANK"
+                },
+                {
+                    "code": "53",
+                    "name": "Caisse",
+                    "type": "ASSET",
+                    "subType": "CASH"
+                }
+            ]
+        },
+        {
+            "code": "6",
+            "name": "Comptes de Charges",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "60",
+                    "name": "Achats",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "61",
+                    "name": "Services Extérieurs",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "62",
+                    "name": "Autres Services Extérieurs",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "63",
+                    "name": "Impôts et Taxes",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "64",
+                    "name": "Charges de Personnel",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "66",
+                    "name": "Charges Financières",
+                    "type": "EXPENSE"
+                }
+            ]
+        },
+        {
+            "code": "7",
+            "name": "Comptes de Produits",
+            "type": "INCOME",
+            "children": [
+                {
+                    "code": "70",
+                    "name": "Ventes de Marchandises",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "71",
+                    "name": "Production Vendue",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "76",
+                    "name": "Produits Financiers",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "77",
+                    "name": "Produits Exceptionnels",
+                    "type": "INCOME"
+                }
+            ]
+        }
+    ]
+}

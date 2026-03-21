@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from erp.models import Organization
-        from erp.coa_templates import TEMPLATES
+        from apps.finance.models import COATemplate
 
         # Import finance models — gated for safety
         try:
@@ -40,11 +40,13 @@ class Command(BaseCommand):
         slug = options['org_slug']
         template_key = options['template']
 
-        # Validate template
-        if template_key not in TEMPLATES:
+        # Validate template exists in database
+        available = list(COATemplate.objects.values_list('key', flat=True))
+        if template_key not in available:
             raise CommandError(
-                f"Template '{template_key}' not found. "
-                f"Available: {', '.join(TEMPLATES.keys())}"
+                f"Template '{template_key}' not found in database. "
+                f"Available: {', '.join(available)}. "
+                f"Run: python manage.py seed_coa_templates"
             )
 
         # Find organization

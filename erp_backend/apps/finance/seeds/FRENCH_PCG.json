@@ -1,0 +1,225 @@
+{
+    "key": "FRENCH_PCG",
+    "name": "French PCG",
+    "description": "Plan Comptable Général (France) — Standard French accounting framework",
+    "accounts": [
+        {
+            "code": "1",
+            "name": "Comptes de capitaux",
+            "type": "EQUITY",
+            "children": [
+                {
+                    "code": "10",
+                    "name": "Capital et reserves",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "11",
+                    "name": "Report à nouveau",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "12",
+                    "name": "Resultat de l'exercice",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "16",
+                    "name": "Emprunts et dettes assimilées",
+                    "type": "LIABILITY"
+                }
+            ]
+        },
+        {
+            "code": "2",
+            "name": "Comptes d'immobilisations",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "20",
+                    "name": "Immobilisations incorporelles",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "21",
+                    "name": "Immobilisations corporelles",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "27",
+                    "name": "Autres immobilisations financières",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "28",
+                    "name": "Amortissements des immobilisations",
+                    "type": "ASSET"
+                }
+            ]
+        },
+        {
+            "code": "3",
+            "name": "Comptes de stocks et d'en-cours",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "31",
+                    "name": "Matières premières",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "37",
+                    "name": "Stocks de marchandises",
+                    "type": "ASSET"
+                }
+            ]
+        },
+        {
+            "code": "4",
+            "name": "Comptes de tiers",
+            "type": "LIABILITY",
+            "children": [
+                {
+                    "code": "40",
+                    "name": "Fournisseurs et comptes rattachés",
+                    "type": "LIABILITY",
+                    "subType": "PAYABLE"
+                },
+                {
+                    "code": "41",
+                    "name": "Clients et comptes rattachés",
+                    "type": "ASSET",
+                    "subType": "RECEIVABLE"
+                },
+                {
+                    "code": "42",
+                    "name": "Personnel et comptes rattachés",
+                    "type": "LIABILITY"
+                },
+                {
+                    "code": "43",
+                    "name": "Sécurité sociale et organismes sociaux",
+                    "type": "LIABILITY"
+                },
+                {
+                    "code": "44",
+                    "name": "Etat et autres collectivités publiques",
+                    "type": "LIABILITY"
+                }
+            ]
+        },
+        {
+            "code": "5",
+            "name": "Comptes financiers",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "51",
+                    "name": "Banques",
+                    "type": "ASSET",
+                    "subType": "BANK"
+                },
+                {
+                    "code": "53",
+                    "name": "Caisse",
+                    "type": "ASSET",
+                    "subType": "CASH"
+                }
+            ]
+        },
+        {
+            "code": "6",
+            "name": "Comptes de charges",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "60",
+                    "name": "Achats",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "61",
+                    "name": "Services extérieurs",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "62",
+                    "name": "Autres services extérieurs",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "63",
+                    "name": "Impôts, taxes et versements assimilés",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "64",
+                    "name": "Charges de personnel",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "65",
+                    "name": "Autres charges de gestion courante",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "66",
+                    "name": "Charges financières",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "67",
+                    "name": "Charges exceptionnelles",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "68",
+                    "name": "Dotations aux amortissements et provisions",
+                    "type": "EXPENSE"
+                }
+            ]
+        },
+        {
+            "code": "7",
+            "name": "Comptes de produits",
+            "type": "INCOME",
+            "children": [
+                {
+                    "code": "70",
+                    "name": "Ventes de produits et services",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "71",
+                    "name": "Production stockée",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "74",
+                    "name": "Subventions d'exploitation",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "75",
+                    "name": "Autres produits de gestion courante",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "76",
+                    "name": "Produits financiers",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "77",
+                    "name": "Produits exceptionnels",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "78",
+                    "name": "Reprises sur amortissements et provisions",
+                    "type": "INCOME"
+                }
+            ]
+        }
+    ]
+}

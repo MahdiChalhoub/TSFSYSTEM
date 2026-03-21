@@ -163,8 +163,16 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
     @action(detail=False, methods=['get'])
     def templates(self, request):
-        from erp.coa_templates import TEMPLATES
-        data = [{"key": k, "name": k.replace('_', ' ')} for k in TEMPLATES.keys()]
+        from apps.finance.models import COATemplate
+        templates = COATemplate.objects.all().order_by('key')
+        data = [{
+            "key": t.key,
+            "name": t.name,
+            "description": t.description,
+            "accounts": t.accounts,
+            "account_count": t.account_count,
+            "root_count": t.root_count,
+        } for t in templates]
         return Response(data)
 
     @action(detail=False, methods=['get'])

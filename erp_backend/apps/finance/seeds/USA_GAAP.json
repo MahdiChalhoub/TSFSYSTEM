@@ -1,0 +1,120 @@
+{
+    "key": "USA_GAAP",
+    "name": "USA GAAP",
+    "description": "Generally Accepted Accounting Principles (US) — Standard US accounting framework",
+    "accounts": [
+        {
+            "code": "1000",
+            "name": "Assets",
+            "type": "ASSET",
+            "children": [
+                {
+                    "code": "1100",
+                    "name": "Cash and Cash Equivalents",
+                    "type": "ASSET",
+                    "subType": "CASH"
+                },
+                {
+                    "code": "1200",
+                    "name": "Accounts Receivable",
+                    "type": "ASSET",
+                    "subType": "RECEIVABLE"
+                },
+                {
+                    "code": "1300",
+                    "name": "Inventory",
+                    "type": "ASSET"
+                },
+                {
+                    "code": "1500",
+                    "name": "Fixed Assets",
+                    "type": "ASSET"
+                }
+            ]
+        },
+        {
+            "code": "2000",
+            "name": "Liabilities",
+            "type": "LIABILITY",
+            "children": [
+                {
+                    "code": "2100",
+                    "name": "Accounts Payable",
+                    "type": "LIABILITY",
+                    "subType": "PAYABLE"
+                },
+                {
+                    "code": "2200",
+                    "name": "Accrued Liabilities",
+                    "type": "LIABILITY"
+                },
+                {
+                    "code": "2500",
+                    "name": "Long-term Debt",
+                    "type": "LIABILITY"
+                }
+            ]
+        },
+        {
+            "code": "3000",
+            "name": "Equity",
+            "type": "EQUITY",
+            "children": [
+                {
+                    "code": "3100",
+                    "name": "Owner's Capital",
+                    "type": "EQUITY"
+                },
+                {
+                    "code": "3200",
+                    "name": "Retained Earnings",
+                    "type": "EQUITY"
+                }
+            ]
+        },
+        {
+            "code": "4000",
+            "name": "Revenue",
+            "type": "INCOME",
+            "children": [
+                {
+                    "code": "4100",
+                    "name": "Sales Revenue",
+                    "type": "INCOME"
+                },
+                {
+                    "code": "4500",
+                    "name": "Service Revenue",
+                    "type": "INCOME"
+                }
+            ]
+        },
+        {
+            "code": "5000",
+            "name": "Cost of Goods Sold",
+            "type": "EXPENSE"
+        },
+        {
+            "code": "6000",
+            "name": "Operating Expenses",
+            "type": "EXPENSE",
+            "children": [
+                {
+                    "code": "6100",
+                    "name": "Payroll Expenses",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "6200",
+                    "name": "Rent or Lease",
+                    "type": "EXPENSE"
+                },
+                {
+                    "code": "6300",
+                    "name": "Utilities",
+                    "type": "EXPENSE"
+                }
+            ]
+        }
+    ]
+}
