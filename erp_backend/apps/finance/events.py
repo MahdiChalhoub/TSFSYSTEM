@@ -105,9 +105,27 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
             
             # ── Step 2: Chart of Accounts (via centralized template system) ──
             # Uses LedgerService.apply_coa_template to prevent dual-standard
-            # pollution. The hardcoded mini-COA was causing conflicts when users
-            # later applied a different template from the UI.
+            # pollution. Auto-seeds templates from JSON if not yet in database.
             from .services import LedgerService
+            from .models import COATemplate
+            
+            # Auto-seed templates if DB is empty (first org provisioned before seed_coa_templates ran)
+            if not COATemplate.objects.exists():
+                import json, glob, os
+                seeds_dir = os.path.join(os.path.dirname(__file__), 'seeds')
+                for fp in sorted(glob.glob(os.path.join(seeds_dir, '*.json'))):
+                    with open(fp, 'r', encoding='utf-8') as f:
+                        d = json.load(f)
+                    def _cnt(items):
+                        return sum(1 + _cnt(i.get('children', [])) for i in items)
+                    COATemplate.objects.update_or_create(
+                        key=d['key'],
+                        defaults={'name': d['name'], 'description': d.get('description', ''),
+                                  'accounts': d['accounts'], 'account_count': _cnt(d['accounts']),
+                                  'root_count': len(d['accounts'])}
+                    )
+                logger.info("Finance: Auto-seeded COA templates from JSON files")
+            
             LedgerService.apply_coa_template(org, 'IFRS_COA', reset=False)
             
             # ── Step 3: Default Financial Account (Cash Drawer) ───

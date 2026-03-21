@@ -175,6 +175,34 @@ def run_seed():
     )
     print("📅 Fiscal Year 2026 Seeded")
 
+    # 9b. Seed COA Templates into database (from JSON files)
+    from apps.finance.models import COATemplate
+    import glob
+    seeds_dir = os.path.join(os.path.dirname(__file__), 'apps', 'finance', 'seeds')
+    json_files = glob.glob(os.path.join(seeds_dir, '*.json'))
+    for filepath in sorted(json_files):
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        def _count(items):
+            c = 0
+            for i in items:
+                c += 1
+                if 'children' in i:
+                    c += _count(i['children'])
+            return c
+        account_count = _count(data['accounts'])
+        COATemplate.objects.update_or_create(
+            key=data['key'],
+            defaults={
+                'name': data['name'],
+                'description': data.get('description', ''),
+                'accounts': data['accounts'],
+                'account_count': account_count,
+                'root_count': len(data['accounts']),
+            }
+        )
+    print(f"📦 COA Templates seeded: {len(json_files)} templates loaded from JSON")
+
     # 10. Chart of Accounts (via database template — NOT hardcoded)
     from apps.finance.services import LedgerService
     try:
@@ -182,7 +210,6 @@ def run_seed():
         print("📊 Chart of Accounts applied from IFRS_COA template")
     except Exception as e:
         print(f"⚠️ COA template error: {e}")
-        print("   → Run: python manage.py seed_coa_templates  first!")
 
     # 11. Posting Rules (auto-wired from COA patterns)
     from erp.services import ConfigurationService

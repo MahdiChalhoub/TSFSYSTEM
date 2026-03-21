@@ -67,12 +67,18 @@ python manage.py makemigrations finance
 # 2. Apply migration
 python manage.py migrate
 
-# 3. Seed templates into database
+# 3. Seed templates into database (also auto-runs in seed.py and on first org provisioning)
 python manage.py seed_coa_templates
 
 # 4. (Optional) Reset org COA
 python manage.py reset_coa saas --template IFRS_COA
 ```
+
+> **Note:** COA templates are automatically seeded in two places:
+> - `seed.py` (step 9b) — runs during `python seed.py` for fresh install
+> - `events.py` (`_on_org_provisioned`) — auto-seeds if DB is empty when first org is created
+>
+> You only need to run `seed_coa_templates` manually if you update the JSON files after initial setup.
 
 ## Files Modified
 
