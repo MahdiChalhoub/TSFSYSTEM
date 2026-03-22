@@ -57,9 +57,10 @@ export default async function middleware(req: NextRequest) {
     const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
-    const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
+    const allRootDomains = [rootDomain, 'developos.shop']; // Production + Dev domains
+    const isRootDomain = allRootDomains.some(d => hostname === d || hostname === `www.${d}`);
     // Enhanced Localhost Subdomain detection
-    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
+    const isSaaSSubdomain = allRootDomains.some(d => hostname === `saas.${d}`) || (hostname.startsWith("saas.") && hostname.includes("localhost"));
 
     // ROOT / SAAS PLATFORM LOGIC
     if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
@@ -106,8 +107,11 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // TENANT SUBDOMAIN (e.g. pos.tsf.ci)
-    const currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`, "");
+    // TENANT SUBDOMAIN (e.g. pos.tsf.ci or pos.developos.shop)
+    let currentHost = hostname;
+    for (const d of allRootDomains) {
+        currentHost = currentHost.replace(`.${d}`, "");
+    }
 
     // Check for reserved subdomains just in case
     if (currentHost === 'app' || currentHost === 'www') {
