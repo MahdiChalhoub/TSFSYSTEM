@@ -98,9 +98,9 @@ python manage.py reset_coa saas --template IFRS_COA
 - `erp/management/commands/reset_coa.py` → Validates template from DB
 - `seed.py` → Uses `LedgerService.apply_coa_template` instead of hardcoded accounts
 
-### Deleted (hardcoded data removed from)
-- `erp/coa_templates.py` → No longer imported anywhere (can be deleted)
-- `src/app/actions/finance/coa-templates.ts` → Removed 350+ lines of hardcoded template data
+### Deleted (NO hardcoded data remains)
+- `erp/coa_templates.py` → **DELETED** (v1.4.0-b008) — was the old hardcoded TEMPLATES dict
+- `src/app/actions/finance/coa-templates.ts` → Removed 350+ lines of hardcoded template data, now reads from API
 
 ## Tables Affected
 | Table | Read By | Written By |
