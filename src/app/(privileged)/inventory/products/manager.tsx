@@ -1,0 +1,351 @@
+'use client'
+
+/**
+ * Product Master — Orchestrator
+ * ==============================
+ * Central registry of all products with comprehensive filtering.
+ *
+ * Design Language: COA / Categories pattern (Dajingo Pro V2)
+ *
+ * REFACTORED: April 2026
+ * Decomposed from a 2,165-line monolith into modular components.
+ * See _lib/ for types, constants, filters, profiles.
+ * See _components/ for ProductRow, FiltersPanel, CustomizePanel, etc.
+ */
+
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { getListViewPolicy } from '@/app/actions/listview-policies'
+import { useRouter } from 'next/navigation'
+import { useAdmin } from '@/context/AdminContext'
+import { erpFetch } from '@/lib/erp-api'
+import {
+  Plus, Search, Package, Box, Layers,
+  X, Maximize2, Minimize2, SlidersHorizontal,
+  AlertTriangle, RefreshCcw, Settings2, DollarSign,
+  ShoppingCart, ArrowRightLeft, Edit,
+} from 'lucide-react'
+
+/* ── Lib imports ── */
+import type { Product, Filters, Lookups, ViewProfile } from './_lib/types'
+import {
+  ALL_COLUMNS, COLUMN_WIDTHS, RIGHT_ALIGNED_COLS, CENTER_ALIGNED_COLS, GROW_COLS,
+  EMPTY_FILTERS, EMPTY_LOOKUPS, DEFAULT_VISIBLE_COLS, DEFAULT_VISIBLE_FILTERS, fmt,
+  TYPE_CONFIG,
+} from './_lib/constants'
+import { applyFilters, countActiveFilters } from './_lib/filters'
+import { loadProfiles, saveProfiles, loadActiveProfileId, saveActiveProfileId, syncProfileToBackend, loadProfileFromBackend } from './_lib/profiles'
+
+/* ── Component imports ── */
+import { FiltersPanel } from './_components/FiltersPanel'
+import { CustomizePanel } from './_components/CustomizePanel'
+import { KPIStrip } from '@/components/ui/KPIStrip'
+import type { KPIStat } from '@/components/ui/KPIStrip'
+import { DajingoListView } from '@/components/common/DajingoListView'
+import { ProductDetailCards } from './_components/ProductDetailCards'
+import { renderProductCell } from './_components/ProductColumns'
+
+/* ═══════════════════════════════════════════════════════════
+ *  MAIN PAGE
+ * ═══════════════════════════════════════════════════════════ */
+
+export default function ProductMasterManager({ initialProducts = [], lookups = EMPTY_LOOKUPS }: { initialProducts?: Product[]; lookups?: Lookups }) {
+  const router = useRouter()
+  const { openTab } = useAdmin()
+  const [items, setItems] = useState<Product[]>(initialProducts)
+  const [loading, setLoading] = useState(initialProducts.length === 0)
+  const [search, setSearch] = useState('')
+  const [focusMode, setFocusMode] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [showCustomize, setShowCustomize] = useState(false)
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
+  const [profiles, setProfiles] = useState<ViewProfile[]>(() => loadProfiles())
+  const [activeProfileId, setActiveProfileId] = useState(() => loadActiveProfileId())
+  const activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0]
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(activeProfile?.columns || DEFAULT_VISIBLE_COLS)
+  const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>(activeProfile?.filters || DEFAULT_VISIBLE_FILTERS)
+  const [columnOrder, setColumnOrder] = useState<string[]>(activeProfile?.columnOrder || ALL_COLUMNS.map(c => c.key))
+  const searchRef = useRef<HTMLInputElement>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [pageSize, setPageSize] = useState(50)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // ── SaaS ListViewPolicy enforcement ──
+  const [policyHiddenColumns, setPolicyHiddenColumns] = useState<Set<string>>(new Set())
+  const [policyHiddenFilters, setPolicyHiddenFilters] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    getListViewPolicy('inventory_products').then(policy => {
+      if (policy) {
+        if (policy.hidden_columns?.length) setPolicyHiddenColumns(new Set(policy.hidden_columns))
+        if (policy.hidden_filters?.length) setPolicyHiddenFilters(new Set(policy.hidden_filters))
+      }
+    }).catch(() => { /* no policy — allow everything */ })
+  }, [])
+
+  // ── Backend sync: load saved preferences on mount ──
+  useEffect(() => {
+    loadProfileFromBackend(profiles, activeProfileId).then(result => {
+      if (result) {
+        setProfiles(result.profiles)
+        setVisibleColumns(result.columns)
+        setVisibleFilters(result.filters)
+        setColumnOrder(result.columnOrder)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Effective columns: user prefs minus policy-hidden
+  const effectiveVisibleColumns = useMemo<Record<string, boolean>>(() => {
+    if (policyHiddenColumns.size === 0) return visibleColumns
+    const eff = { ...visibleColumns }
+    for (const key of policyHiddenColumns) eff[key] = false
+    return eff
+  }, [visibleColumns, policyHiddenColumns])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await erpFetch('inventory/products/')
+      setItems(Array.isArray(data) ? data : data?.results || [])
+    } catch { /* empty */ }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { if (initialProducts.length === 0) fetchData() }, [fetchData, initialProducts.length])
+
+  // ── Filtering (delegated to _lib/filters.ts) ──
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters])
+  const filtered = useMemo(() => applyFilters(items, search, filters), [items, search, filters])
+  const hasFilters = !!search || activeFilterCount > 0
+
+  // Reset to page 1 when filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setCurrentPage(1) }, [search, filters])
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const clampedPage = Math.min(currentPage, totalPages)
+  const paginated = useMemo(() => {
+    const start = (clampedPage - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, clampedPage, pageSize])
+
+  // Selection helpers
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
+  }
+  const isAllPageSelected = paginated.length > 0 && paginated.every(p => selectedIds.has(p.id))
+  const toggleSelectAll = () => {
+    if (isAllPageSelected) {
+      setSelectedIds(prev => { const next = new Set(prev); paginated.forEach(p => next.delete(p.id)); return next })
+    } else {
+      setSelectedIds(prev => { const next = new Set(prev); paginated.forEach(p => next.add(p.id)); return next })
+    }
+  }
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = items.length
+    const combos = items.filter(p => p.product_type === 'COMBO').length
+    const outOfStock = items.filter(p => (p.on_hand_qty ?? 0) <= 0).length
+    const avgPrice = total > 0 ? items.reduce((s, p) => s + (parseFloat(p.selling_price_ttc) || 0), 0) / total : 0
+    return { total, combos, outOfStock, avgPrice }
+  }, [items])
+
+  const kpiStats: KPIStat[] = useMemo(() => [
+    { label: 'Total Products', value: stats.total, icon: <Package size={11} />, color: 'var(--app-primary)' },
+    { label: 'Combos', value: stats.combos, icon: <Layers size={11} />, color: '#8b5cf6' },
+    { label: 'Out of Stock', value: stats.outOfStock, icon: <AlertTriangle size={11} />, color: 'var(--app-error, #ef4444)' },
+    { label: 'Avg Price', value: fmt(Math.round(stats.avgPrice)), icon: <DollarSign size={11} />, color: 'var(--app-success, #22c55e)' },
+  ], [stats])
+
+  /* ═══════════════════════════════════════════════════════════
+   *  RENDER
+   * ═══════════════════════════════════════════════════════════ */
+  return (
+    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-300 transition-all">
+      <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
+
+        {focusMode ? (
+          /* ── FOCUS MODE ── */
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
+                <Package size={14} className="text-white" />
+              </div>
+              <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Products</span>
+              <span className="text-[10px] font-bold text-app-muted-foreground">{filtered.length}/{stats.total}</span>
+            </div>
+
+            <div className="flex-1 relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+              <input ref={searchRef} type="text" value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
+            </div>
+
+            <button onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-lg border transition-all flex-shrink-0 ${showFilters ? 'border-app-primary text-app-primary bg-app-primary/5' : 'border-app-border text-app-muted-foreground'}`}>
+              <SlidersHorizontal size={13} />
+              {activeFilterCount > 0 && <span className="text-[9px] font-black bg-app-primary text-white px-1.5 rounded-full">{activeFilterCount}</span>}
+            </button>
+
+            <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+              <Minimize2 size={13} />
+            </button>
+          </div>
+        ) : (
+          /* ── NORMAL MODE ── */
+          <>
+            {/* Title Row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                  <Package size={20} className="text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">Product Master</h1>
+                  <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                    {stats.total} Products · {stats.combos} Combos · {stats.outOfStock} Out of Stock
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                <button onClick={() => openTab('New Product', '/products/new')}
+                  className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                  style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                  <Plus size={14} /><span className="hidden sm:inline">New Product</span>
+                </button>
+                <button onClick={fetchData} title="Refresh"
+                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  <RefreshCcw size={13} />
+                </button>
+                <button onClick={() => setFocusMode(true)} title="Focus mode — Ctrl+Q"
+                  className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                  <Maximize2 size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* KPI Strip */}
+            <KPIStrip stats={kpiStats} />
+
+            {/* Advanced Filters Panel (rendered ABOVE the table, BELOW KPIs) */}
+            <FiltersPanel items={items} filters={filters} setFilters={setFilters} isOpen={showFilters} lookups={lookups} visibleFilters={visibleFilters} />
+          </>
+        )}
+
+        {/* Focus mode filter panel */}
+        {focusMode && <FiltersPanel items={items} filters={filters} setFilters={setFilters} isOpen={showFilters} lookups={lookups} visibleFilters={visibleFilters} />}
+      </div>
+
+      {/* ═══════════════ TREE TABLE (DajingoListView) ═══════════════ */}
+      <DajingoListView<Product>
+        data={paginated}
+        allData={filtered}
+        loading={loading}
+        getRowId={r => r.id}
+        columns={ALL_COLUMNS}
+        visibleColumns={effectiveVisibleColumns}
+        columnWidths={COLUMN_WIDTHS}
+        rightAlignedCols={RIGHT_ALIGNED_COLS}
+        centerAlignedCols={CENTER_ALIGNED_COLS}
+        growCols={GROW_COLS}
+        columnOrder={columnOrder}
+        onColumnReorder={newOrder => {
+          setColumnOrder(newOrder)
+          const updated = profiles.map(p => p.id === activeProfileId ? { ...p, columnOrder: newOrder } : p)
+          setProfiles(updated); saveProfiles(updated)
+          const ap = updated.find(p => p.id === activeProfileId)
+          if (ap) syncProfileToBackend(ap)
+        }}
+        policyHiddenColumns={policyHiddenColumns}
+        entityLabel="Product"
+        /* ── Integrated Toolbar ── */
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name, SKU, or barcode... (Ctrl+K)"
+        searchRef={searchRef}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        activeFilterCount={activeFilterCount}
+        onToggleCustomize={() => setShowCustomize(true)}
+        /* ── Row rendering ── */
+        renderRowIcon={product => {
+          const tc = TYPE_CONFIG[product.product_type] || { label: product.product_type || '—', color: 'var(--app-muted-foreground)' }
+          return (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: `color-mix(in srgb, ${tc.color} 12%, transparent)`, color: tc.color }}>
+              {product.product_type === 'COMBO' ? <Layers size={13} /> : product.product_type === 'STOCKABLE' ? <Box size={13} /> : <Package size={13} />}
+            </div>
+          )
+        }}
+        renderRowTitle={product => (
+          <div className="flex-1 min-w-0">
+            <div className="truncate text-[12px] font-bold text-app-foreground">{product.name}</div>
+            <div className="text-[10px] font-mono text-app-muted-foreground">
+              {product.sku}
+              {product.barcode && <span className="ml-2 opacity-60">⎸ {product.barcode}</span>}
+            </div>
+          </div>
+        )}
+        renderColumnCell={(key, product) => renderProductCell(key, product)}
+        renderExpanded={product => <ProductDetailCards product={product} marginPct={(() => { const sellHt = parseFloat(product.selling_price_ht) || 0; const costP = parseFloat(product.cost_price) || 0; return sellHt > 0 ? (((sellHt - costP)) / (sellHt) * 100).toFixed(1) : '—' })()} onView={id => router.push(`/inventory/products/${id}`)} />}
+        onView={product => router.push(`/inventory/products/${product.id}`)}
+        menuActions={product => [
+          { label: 'Request Purchase', icon: <ShoppingCart size={12} className="text-app-info" />, onClick: () => { window.location.href = `/procurement/purchase-orders/new?product=${product.id}` } },
+          { label: 'Request Transfer', icon: <ArrowRightLeft size={12} className="text-app-warning" />, onClick: () => { window.location.href = `/inventory/transfers/new?product=${product.id}` } },
+          { label: 'Edit Product', icon: <Edit size={12} className="text-app-muted-foreground" />, onClick: () => { window.location.href = `/inventory/products/${product.id}` }, separator: true },
+        ]}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
+        isAllPageSelected={isAllPageSelected}
+        onToggleSelectAll={toggleSelectAll}
+        bulkActions={
+          <>
+            <button onClick={() => { window.location.href = `/procurement/purchase-orders/new?products=${Array.from(selectedIds).join(',')}` }}
+              className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-info/30 text-app-info hover:bg-app-info/10 transition-all">
+              <ShoppingCart size={11} /> Request Purchase
+            </button>
+            <button onClick={() => { window.location.href = `/inventory/transfers/new?products=${Array.from(selectedIds).join(',')}` }}
+              className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-app-warning/30 text-app-warning hover:bg-app-warning/10 transition-all">
+              <ArrowRightLeft size={11} /> Request Transfer
+            </button>
+          </>
+        }
+        hasFilters={hasFilters}
+        onClearFilters={() => { setSearch(''); setFilters(EMPTY_FILTERS) }}
+        emptyIcon={<Package size={36} />}
+        pagination={{
+          totalItems: filtered.length,
+          activeFilterCount,
+          currentPage: clampedPage,
+          totalPages,
+          pageSize,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: n => { setPageSize(n); setCurrentPage(1) },
+        }}
+      />
+
+      {/* Customize Panel */}
+      <CustomizePanel isOpen={showCustomize} onClose={() => setShowCustomize(false)}
+        visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns}
+        visibleFilters={visibleFilters} setVisibleFilters={setVisibleFilters}
+        columnOrder={columnOrder} setColumnOrder={setColumnOrder}
+        profiles={profiles} setProfiles={setProfiles}
+        activeProfileId={activeProfileId} setActiveProfileId={setActiveProfileId}
+        policyHiddenColumns={policyHiddenColumns} policyHiddenFilters={policyHiddenFilters} />
+    </div>
+  )
+}

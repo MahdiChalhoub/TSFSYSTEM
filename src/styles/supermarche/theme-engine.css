@@ -1,0 +1,149 @@
+/* ============================================================
+   SUPERMARCHÉ THEME ENGINE — CSS Custom Properties Foundation
+   All supermarché components use --sm-* vars defined per theme.
+   ThemeProvider.tsx injects the active theme's token map here.
+   ============================================================ */
+
+/* ── Default token skeleton (overridden by ThemeProvider) ── */
+:root {
+  --sm-bg:              #020617;
+  --sm-surface:         #0F172A;
+  --sm-surface-2:       rgba(255, 255, 255, 0.05);
+  --sm-surface-hover:   rgba(255, 255, 255, 0.08);
+  --sm-primary:         #10B981;
+  --sm-primary-glow:    rgba(16, 185, 129, 0.25);
+  --sm-primary-dark:    #059669;
+  --sm-accent:          #F59E0B;
+  --sm-accent-glow:     rgba(245, 158, 11, 0.2);
+  --sm-danger:          #EF4444;
+  --sm-text:            #F1F5F9;
+  --sm-text-muted:      #94A3B8;
+  --sm-text-subtle:     #475569;
+  --sm-border:          rgba(255, 255, 255, 0.08);
+  --sm-border-strong:   rgba(255, 255, 255, 0.16);
+  --sm-radius:          1rem;
+  --sm-radius-sm:       0.5rem;
+  --sm-radius-lg:       1.5rem;
+  --sm-font:            'Outfit', sans-serif;
+  --sm-font-display:    'Outfit', sans-serif;
+  --sm-shadow:          0 8px 32px rgba(0, 0, 0, 0.6);
+  --sm-shadow-sm:       0 2px 8px rgba(0, 0, 0, 0.4);
+  --sm-shadow-glow:     0 0 24px var(--sm-primary-glow);
+  --sm-backdrop:        blur(20px) saturate(180%);
+  --sm-transition:      all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Root container ── */
+.supermarche-root {
+  background-color: var(--sm-bg);
+  color:            var(--sm-text);
+  font-family:      var(--sm-font);
+  min-height:       100vh;
+  transition:       background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Surface cards ── */
+.sm-surface {
+  background:    var(--sm-surface);
+  border:        1px solid var(--sm-border);
+  border-radius: var(--sm-radius);
+  box-shadow:    var(--sm-shadow-sm);
+}
+.sm-surface-glass {
+  background:         var(--sm-surface-2);
+  backdrop-filter:    var(--sm-backdrop);
+  -webkit-backdrop-filter: var(--sm-backdrop);
+  border:             1px solid var(--sm-border);
+  border-radius:      var(--sm-radius);
+}
+.sm-surface:hover,
+.sm-surface-glass:hover {
+  background: var(--sm-surface-hover);
+}
+
+/* ── Primary button ── */
+.sm-btn-primary {
+  background:    var(--sm-primary);
+  color:         #fff;
+  border-radius: var(--sm-radius-sm);
+  font-family:   var(--sm-font);
+  font-weight:   700;
+  letter-spacing: 0.025em;
+  transition:    var(--sm-transition);
+  box-shadow:    var(--sm-shadow-glow);
+}
+.sm-btn-primary:hover {
+  background:  var(--sm-primary-dark);
+  transform:   translateY(-1px);
+  box-shadow:  0 0 32px var(--sm-primary-glow);
+}
+.sm-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ── Ghost button ── */
+.sm-btn-ghost {
+  background:    transparent;
+  color:         var(--sm-text-muted);
+  border:        1px solid var(--sm-border);
+  border-radius: var(--sm-radius-sm);
+  transition:    var(--sm-transition);
+}
+.sm-btn-ghost:hover {
+  background: var(--sm-surface-hover);
+  color:      var(--sm-text);
+  border-color: var(--sm-border-strong);
+}
+
+/* ── Text utilities ── */
+.sm-text-primary { color: var(--sm-primary); }
+.sm-text-muted   { color: var(--sm-text-muted); }
+.sm-text-accent  { color: var(--sm-accent); }
+.sm-text-danger  { color: var(--sm-danger); }
+
+/* ── Input field ── */
+.sm-input {
+  background:    var(--sm-surface);
+  border:        1px solid var(--sm-border);
+  border-radius: var(--sm-radius-sm);
+  color:         var(--sm-text);
+  font-family:   var(--sm-font);
+  transition:    var(--sm-transition);
+}
+.sm-input:focus {
+  outline:      none;
+  border-color: var(--sm-primary);
+  box-shadow:   0 0 0 3px var(--sm-primary-glow);
+}
+.sm-input::placeholder {
+  color: var(--sm-text-subtle);
+}
+
+/* ── Badge ── */
+.sm-badge-primary {
+  background:    var(--sm-primary-glow);
+  color:         var(--sm-primary);
+  border-radius: 9999px;
+  font-size:     0.75rem;
+  font-weight:   600;
+}
+.sm-badge-accent {
+  background:    var(--sm-accent-glow);
+  color:         var(--sm-accent);
+  border-radius: 9999px;
+  font-size:     0.75rem;
+  font-weight:   600;
+}
+
+/* ── Divider ── */
+.sm-divider {
+  border-color: var(--sm-border);
+}
+
+/* ── Scrollbar styling ── */
+.supermarche-root ::-webkit-scrollbar { width: 4px; height: 4px; }
+.supermarche-root ::-webkit-scrollbar-track { background: transparent; }
+.supermarche-root ::-webkit-scrollbar-thumb {
+  background: var(--sm-border-strong);
+  border-radius: 9999px;
+}

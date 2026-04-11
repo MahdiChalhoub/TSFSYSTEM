@@ -1,0 +1,22 @@
+{
+    "code": "storage",
+    "name": "Cloud Storage",
+    "version": "1.0.0",
+    "description": "Cloud file storage with chunked/resumable uploads, per-organization buckets, and SaaS package management.",
+    "category": "infrastructure",
+    "isolation": "shared",
+    "icon": "Cloud",
+    "routes": [
+        "/storage/*"
+    ],
+    "permissions": [
+        "storage.view",
+        "storage.upload",
+        "storage.delete",
+        "storage.admin"
+    ],
+    "dependencies": [],
+    "backend": {
+        "app": "apps.storage"
+    }
+}

@@ -1,0 +1,1305 @@
+{
+  "metadata": {
+    "key": "USA_GAAP",
+    "name": "USA GAAP",
+    "region": "United States",
+    "description": "Generally Accepted Accounting Principles — standard chart of accounts for US companies",
+    "icon": "Scale",
+    "accent_color": "#6366f1",
+    "version": "1.0.0",
+    "last_updated": "2026-03-24"
+  },
+  "accounts": [
+    {
+      "code": "1000",
+      "name": "Assets",
+      "type": "ASSET",
+      "children": [
+        {
+          "code": "1100",
+          "name": "Current Assets",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1110",
+              "name": "Cash and Cash Equivalents",
+              "type": "ASSET",
+              "subType": "CASH",
+              "children": [
+                {
+                  "code": "1111",
+                  "name": "Operating Cash Account",
+                  "type": "ASSET",
+                  "subType": "BANK"
+                },
+                {
+                  "code": "1112",
+                  "name": "Petty Cash",
+                  "type": "ASSET",
+                  "subType": "CASH"
+                },
+                {
+                  "code": "1113",
+                  "name": "Savings Account",
+                  "type": "ASSET",
+                  "subType": "BANK"
+                }
+              ]
+            },
+            {
+              "code": "1120",
+              "name": "Accounts Receivable",
+              "type": "ASSET",
+              "subType": "RECEIVABLE"
+            },
+            {
+              "code": "1125",
+              "name": "Allowance for Doubtful Accounts (CONTRA)",
+              "type": "ASSET"
+            },
+            {
+              "code": "1130",
+              "name": "Notes Receivable",
+              "type": "ASSET"
+            },
+            {
+              "code": "1140",
+              "name": "Inventory",
+              "type": "ASSET",
+              "subType": "INVENTORY",
+              "children": [
+                {
+                  "code": "1141",
+                  "name": "Raw Materials",
+                  "type": "ASSET"
+                },
+                {
+                  "code": "1142",
+                  "name": "Work in Process",
+                  "type": "ASSET"
+                },
+                {
+                  "code": "1143",
+                  "name": "Finished Goods",
+                  "type": "ASSET"
+                },
+                {
+                  "code": "1144",
+                  "name": "Merchandise Inventory",
+                  "type": "ASSET"
+                }
+              ]
+            },
+            {
+              "code": "1150",
+              "name": "Prepaid Expenses",
+              "type": "ASSET",
+              "children": [
+                {
+                  "code": "1151",
+                  "name": "Prepaid Insurance",
+                  "type": "ASSET"
+                },
+                {
+                  "code": "1152",
+                  "name": "Prepaid Rent",
+                  "type": "ASSET"
+                }
+              ]
+            },
+            {
+              "code": "1160",
+              "name": "Short-Term Investments",
+              "type": "ASSET"
+            },
+            {
+              "code": "1170",
+              "name": "Employee Advances",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "1500",
+          "name": "Non-Current Assets (PP&E)",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1510",
+              "name": "Land",
+              "type": "ASSET"
+            },
+            {
+              "code": "1520",
+              "name": "Buildings",
+              "type": "ASSET"
+            },
+            {
+              "code": "1530",
+              "name": "Machinery & Equipment",
+              "type": "ASSET"
+            },
+            {
+              "code": "1540",
+              "name": "Furniture & Fixtures",
+              "type": "ASSET"
+            },
+            {
+              "code": "1550",
+              "name": "Vehicles",
+              "type": "ASSET"
+            },
+            {
+              "code": "1560",
+              "name": "Leasehold Improvements",
+              "type": "ASSET"
+            },
+            {
+              "code": "1570",
+              "name": "Computer Equipment",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "1600",
+          "name": "Accumulated Depreciation (CONTRA)",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1610",
+              "name": "Accum. Depr. – Buildings",
+              "type": "ASSET"
+            },
+            {
+              "code": "1620",
+              "name": "Accum. Depr. – Equipment",
+              "type": "ASSET"
+            },
+            {
+              "code": "1630",
+              "name": "Accum. Depr. – Vehicles",
+              "type": "ASSET"
+            },
+            {
+              "code": "1640",
+              "name": "Accum. Depr. – Furniture",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "1700",
+          "name": "Intangible Assets",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1710",
+              "name": "Goodwill",
+              "type": "ASSET"
+            },
+            {
+              "code": "1720",
+              "name": "Patents & Trademarks",
+              "type": "ASSET"
+            },
+            {
+              "code": "1730",
+              "name": "Software",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "1800",
+          "name": "Other Assets",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1810",
+              "name": "Security Deposits",
+              "type": "ASSET"
+            },
+            {
+              "code": "1820",
+              "name": "Long-Term Investments",
+              "type": "ASSET"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "2000",
+      "name": "Liabilities",
+      "type": "LIABILITY",
+      "children": [
+        {
+          "code": "2100",
+          "name": "Current Liabilities",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "2110",
+              "name": "Accounts Payable",
+              "type": "LIABILITY",
+              "subType": "PAYABLE"
+            },
+            {
+              "code": "2120",
+              "name": "Accrued Expenses",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2130",
+              "name": "Unearned Revenue",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2140",
+              "name": "Sales Tax Payable",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2150",
+              "name": "Payroll Liabilities",
+              "type": "LIABILITY",
+              "children": [
+                {
+                  "code": "2151",
+                  "name": "Federal Income Tax Withholding",
+                  "type": "LIABILITY"
+                },
+                {
+                  "code": "2152",
+                  "name": "State Income Tax Withholding",
+                  "type": "LIABILITY"
+                },
+                {
+                  "code": "2153",
+                  "name": "FICA Payable",
+                  "type": "LIABILITY"
+                },
+                {
+                  "code": "2154",
+                  "name": "Health Insurance Payable",
+                  "type": "LIABILITY"
+                }
+              ]
+            },
+            {
+              "code": "2160",
+              "name": "Current Portion of Long-Term Debt",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2170",
+              "name": "Credit Card Payable",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2180",
+              "name": "Notes Payable (Short-Term)",
+              "type": "LIABILITY"
+            }
+          ]
+        },
+        {
+          "code": "2500",
+          "name": "Long-Term Liabilities",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "2510",
+              "name": "Notes Payable (Long-Term)",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2520",
+              "name": "Mortgage Payable",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2530",
+              "name": "Bonds Payable",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "2540",
+              "name": "Lease Obligations (ASC 842)",
+              "type": "LIABILITY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "3000",
+      "name": "Equity",
+      "type": "EQUITY",
+      "children": [
+        {
+          "code": "3100",
+          "name": "Common Stock",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3110",
+          "name": "Preferred Stock",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3200",
+          "name": "Additional Paid-In Capital",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3300",
+          "name": "Retained Earnings",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3400",
+          "name": "Treasury Stock (CONTRA)",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3500",
+          "name": "Owner's Draws / Distributions",
+          "type": "EQUITY"
+        },
+        {
+          "code": "3600",
+          "name": "Accumulated Other Comprehensive Income",
+          "type": "EQUITY"
+        }
+      ]
+    },
+    {
+      "code": "4000",
+      "name": "Revenue",
+      "type": "INCOME",
+      "children": [
+        {
+          "code": "4100",
+          "name": "Sales Revenue",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "4110",
+              "name": "Product Sales",
+              "type": "INCOME"
+            },
+            {
+              "code": "4120",
+              "name": "Service Revenue",
+              "type": "INCOME"
+            },
+            {
+              "code": "4130",
+              "name": "Sales Returns & Allowances (CONTRA)",
+              "type": "INCOME"
+            },
+            {
+              "code": "4140",
+              "name": "Sales Discounts (CONTRA)",
+              "type": "INCOME"
+            }
+          ]
+        },
+        {
+          "code": "4500",
+          "name": "Other Operating Revenue",
+          "type": "INCOME"
+        }
+      ]
+    },
+    {
+      "code": "5000",
+      "name": "Cost of Goods Sold",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "5100",
+          "name": "Cost of Materials",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "5200",
+          "name": "Direct Labor",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "5300",
+          "name": "Manufacturing Overhead",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "5400",
+          "name": "Freight-In",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "5500",
+          "name": "Purchase Discounts (CONTRA)",
+          "type": "EXPENSE"
+        }
+      ]
+    },
+    {
+      "code": "6000",
+      "name": "Operating Expenses",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "6100",
+          "name": "Payroll Expense",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "6110",
+              "name": "Salaries & Wages",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "6120",
+              "name": "Payroll Tax Expense",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "6130",
+              "name": "Employee Benefits",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "6140",
+              "name": "Workers' Compensation",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "6200",
+          "name": "Rent Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6210",
+          "name": "Utilities",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6220",
+          "name": "Insurance Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6230",
+          "name": "Repairs & Maintenance",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6240",
+          "name": "Office Supplies",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6250",
+          "name": "Telephone & Internet",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6260",
+          "name": "Advertising & Marketing",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6270",
+          "name": "Travel & Entertainment",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6280",
+          "name": "Professional Fees (Legal, Accounting)",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6290",
+          "name": "Bank Charges & Fees",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6300",
+          "name": "Depreciation Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6310",
+          "name": "Amortization Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6320",
+          "name": "Bad Debt Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "6400",
+          "name": "Miscellaneous Expense",
+          "type": "EXPENSE"
+        }
+      ]
+    },
+    {
+      "code": "7000",
+      "name": "Other Income & Expense",
+      "type": "INCOME",
+      "children": [
+        {
+          "code": "7100",
+          "name": "Interest Income",
+          "type": "INCOME"
+        },
+        {
+          "code": "7200",
+          "name": "Interest Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "7300",
+          "name": "Gain on Sale of Assets",
+          "type": "INCOME"
+        },
+        {
+          "code": "7400",
+          "name": "Loss on Sale of Assets",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "7500",
+          "name": "Foreign Exchange Gain/Loss",
+          "type": "INCOME"
+        }
+      ]
+    },
+    {
+      "code": "8000",
+      "name": "Income Tax",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "8100",
+          "name": "Federal Income Tax Expense",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "8200",
+          "name": "State Income Tax Expense",
+          "type": "EXPENSE"
+        }
+      ]
+    }
+  ],
+  "posting_rules": [
+    {
+      "event_code": "sales.invoice.receivable",
+      "account_code": "1120",
+      "module": "sales",
+      "description": "Accounts Receivable"
+    },
+    {
+      "event_code": "sales.invoice.revenue",
+      "account_code": "4110",
+      "module": "sales",
+      "description": "Product Sales"
+    },
+    {
+      "event_code": "sales.invoice.vat_output",
+      "account_code": "2140",
+      "module": "sales",
+      "description": "Sales Tax Payable"
+    },
+    {
+      "event_code": "sales.invoice.discount",
+      "account_code": "4140",
+      "module": "sales",
+      "description": "Sales Discounts"
+    },
+    {
+      "event_code": "sales.invoice.rounding",
+      "account_code": "4500",
+      "module": "sales",
+      "description": "Other Operating Revenue"
+    },
+    {
+      "event_code": "sales.invoice.shipping_revenue",
+      "account_code": "4120",
+      "module": "sales",
+      "description": "Service Revenue"
+    },
+    {
+      "event_code": "sales.invoice.service_revenue",
+      "account_code": "4120",
+      "module": "sales",
+      "description": "Service Revenue"
+    },
+    {
+      "event_code": "sales.invoice.advance_offset",
+      "account_code": "2130",
+      "module": "sales",
+      "description": "Unearned Revenue"
+    },
+    {
+      "event_code": "sales.invoice.deposit_liability",
+      "account_code": "2130",
+      "module": "sales",
+      "description": "Unearned Revenue"
+    },
+    {
+      "event_code": "sales.invoice.loyalty_liability",
+      "account_code": "2130",
+      "module": "sales",
+      "description": "Unearned Revenue"
+    },
+    {
+      "event_code": "sales.credit_note.receivable_reversal",
+      "account_code": "1120",
+      "module": "sales",
+      "description": "Accounts Receivable"
+    },
+    {
+      "event_code": "sales.credit_note.revenue_reversal",
+      "account_code": "4110",
+      "module": "sales",
+      "description": "Revenue Reversal"
+    },
+    {
+      "event_code": "sales.credit_note.discount_reversal",
+      "account_code": "4140",
+      "module": "sales",
+      "description": "Discount Reversal"
+    },
+    {
+      "event_code": "sales.credit_note.vat_output_reversal",
+      "account_code": "2140",
+      "module": "sales",
+      "description": "Sales Tax Reversal"
+    },
+    {
+      "event_code": "sales.refund.cash",
+      "account_code": "1112",
+      "module": "sales",
+      "description": "Petty Cash"
+    },
+    {
+      "event_code": "sales.refund.bank",
+      "account_code": "1111",
+      "module": "sales",
+      "description": "Operating Cash"
+    },
+    {
+      "event_code": "sales.refund.receivable",
+      "account_code": "1120",
+      "module": "sales",
+      "description": "AR Refund"
+    },
+    {
+      "event_code": "sales.writeoff.bad_debt_expense",
+      "account_code": "6320",
+      "module": "sales",
+      "description": "Bad Debt Expense"
+    },
+    {
+      "event_code": "sales.writeoff.receivable",
+      "account_code": "1120",
+      "module": "sales",
+      "description": "AR Write Off"
+    },
+    {
+      "event_code": "sales.commission.expense",
+      "account_code": "6260",
+      "module": "sales",
+      "description": "Marketing Expense"
+    },
+    {
+      "event_code": "sales.commission.payable",
+      "account_code": "2110",
+      "module": "sales",
+      "description": "Commissions Payable"
+    },
+    {
+      "event_code": "purchases.invoice.payable",
+      "account_code": "2110",
+      "module": "purchases",
+      "description": "Accounts Payable"
+    },
+    {
+      "event_code": "purchases.invoice.expense",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Cost of Materials"
+    },
+    {
+      "event_code": "purchases.invoice.inventory",
+      "account_code": "1144",
+      "module": "purchases",
+      "description": "Inventory"
+    },
+    {
+      "event_code": "purchases.invoice.vat_input",
+      "account_code": "1120",
+      "module": "purchases",
+      "description": "Sales Tax Rec"
+    },
+    {
+      "event_code": "purchases.invoice.discount",
+      "account_code": "5500",
+      "module": "purchases",
+      "description": "Purchase Discounts"
+    },
+    {
+      "event_code": "purchases.invoice.freight",
+      "account_code": "5400",
+      "module": "purchases",
+      "description": "Freight-In"
+    },
+    {
+      "event_code": "purchases.invoice.rounding",
+      "account_code": "6400",
+      "module": "purchases",
+      "description": "Misc Expense"
+    },
+    {
+      "event_code": "purchases.return.payable_reversal",
+      "account_code": "2110",
+      "module": "purchases",
+      "description": "Return AP"
+    },
+    {
+      "event_code": "purchases.return.inventory_reversal",
+      "account_code": "1144",
+      "module": "purchases",
+      "description": "Return Inventory"
+    },
+    {
+      "event_code": "purchases.return.vat_input_reversal",
+      "account_code": "1120",
+      "module": "purchases",
+      "description": "VAT Return"
+    },
+    {
+      "event_code": "purchases.payment.cash",
+      "account_code": "1112",
+      "module": "purchases",
+      "description": "Cash Payment"
+    },
+    {
+      "event_code": "purchases.payment.bank",
+      "account_code": "1111",
+      "module": "purchases",
+      "description": "Bank Payment"
+    },
+    {
+      "event_code": "purchases.payment.payable",
+      "account_code": "2110",
+      "module": "purchases",
+      "description": "Payment AP"
+    },
+    {
+      "event_code": "purchases.vendor_credit.payable",
+      "account_code": "2110",
+      "module": "purchases",
+      "description": "AP Credit"
+    },
+    {
+      "event_code": "purchases.vendor_credit.expense_reversal",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Expense Credit"
+    },
+    {
+      "event_code": "purchases.vendor_credit.inventory_reversal",
+      "account_code": "1144",
+      "module": "purchases",
+      "description": "Inventory Credit"
+    },
+    {
+      "event_code": "purchases.writeoff.payable",
+      "account_code": "2110",
+      "module": "purchases",
+      "description": "AP Write Off"
+    },
+    {
+      "event_code": "purchases.writeoff.expense",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Expense Reversal"
+    },
+    {
+      "event_code": "inventory.receipt.inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Inventory Assets"
+    },
+    {
+      "event_code": "inventory.receipt.grni",
+      "account_code": "2110",
+      "module": "inventory",
+      "description": "Unbilled Receipts"
+    },
+    {
+      "event_code": "inventory.issue.cogs",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "COGS Materials"
+    },
+    {
+      "event_code": "inventory.issue.inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Stock Issue"
+    },
+    {
+      "event_code": "inventory.adjustment.loss",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "Inventory Loss"
+    },
+    {
+      "event_code": "inventory.adjustment.gain",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "Inventory Gain"
+    },
+    {
+      "event_code": "inventory.adjustment.inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Stock Adj"
+    },
+    {
+      "event_code": "inventory.transfer.source_inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Source WH"
+    },
+    {
+      "event_code": "inventory.transfer.destination_inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Dest WH"
+    },
+    {
+      "event_code": "inventory.production.raw_material",
+      "account_code": "1141",
+      "module": "inventory",
+      "description": "Raw Materials"
+    },
+    {
+      "event_code": "inventory.production.wip",
+      "account_code": "1142",
+      "module": "inventory",
+      "description": "WIP Assets"
+    },
+    {
+      "event_code": "inventory.production.finished_goods",
+      "account_code": "1143",
+      "module": "inventory",
+      "description": "FG Assets"
+    },
+    {
+      "event_code": "inventory.production.variance",
+      "account_code": "5300",
+      "module": "inventory",
+      "description": "OH Variance"
+    },
+    {
+      "event_code": "inventory.writeoff.inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Stock WriteOff"
+    },
+    {
+      "event_code": "inventory.writeoff.expense",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "COGS Adj"
+    },
+    {
+      "event_code": "inventory.expiry.inventory",
+      "account_code": "1144",
+      "module": "inventory",
+      "description": "Stock Expired"
+    },
+    {
+      "event_code": "inventory.expiry.loss",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "COGS Expired"
+    },
+    {
+      "event_code": "payments.customer.cash",
+      "account_code": "1112",
+      "module": "payments",
+      "description": "Petty Cash"
+    },
+    {
+      "event_code": "payments.customer.bank",
+      "account_code": "1111",
+      "module": "payments",
+      "description": "Operating Cash"
+    },
+    {
+      "event_code": "payments.customer.receivable",
+      "account_code": "1120",
+      "module": "payments",
+      "description": "Payment AR"
+    },
+    {
+      "event_code": "payments.supplier.cash",
+      "account_code": "1112",
+      "module": "payments",
+      "description": "Cash Disb"
+    },
+    {
+      "event_code": "payments.supplier.bank",
+      "account_code": "1111",
+      "module": "payments",
+      "description": "Bank Disb"
+    },
+    {
+      "event_code": "payments.supplier.payable",
+      "account_code": "2110",
+      "module": "payments",
+      "description": "Payment AP"
+    },
+    {
+      "event_code": "payments.fee.bank_charge",
+      "account_code": "6290",
+      "module": "payments",
+      "description": "Bank Fees"
+    },
+    {
+      "event_code": "payments.fee.processor_fee",
+      "account_code": "6290",
+      "module": "payments",
+      "description": "CC Fees"
+    },
+    {
+      "event_code": "payments.adjustment.receivable",
+      "account_code": "1120",
+      "module": "payments",
+      "description": "AR Adj"
+    },
+    {
+      "event_code": "payments.adjustment.payable",
+      "account_code": "2110",
+      "module": "payments",
+      "description": "AP Adj"
+    },
+    {
+      "event_code": "payments.refund.cash",
+      "account_code": "1112",
+      "module": "payments",
+      "description": "Cash Refund"
+    },
+    {
+      "event_code": "payments.refund.bank",
+      "account_code": "1111",
+      "module": "payments",
+      "description": "Bank Refund"
+    },
+    {
+      "event_code": "tax.vat.output",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "Sales Tax"
+    },
+    {
+      "event_code": "tax.vat.input",
+      "account_code": "1120",
+      "module": "tax",
+      "description": "Tax Rec"
+    },
+    {
+      "event_code": "tax.vat.payable",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "Tax Liab"
+    },
+    {
+      "event_code": "tax.vat.recoverable",
+      "account_code": "1120",
+      "module": "tax",
+      "description": "Tax Asset"
+    },
+    {
+      "event_code": "tax.vat.adjustment",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "Tax Adj"
+    },
+    {
+      "event_code": "tax.vat.suspense",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "Tax Suspense"
+    },
+    {
+      "event_code": "tax.withholding.sales",
+      "account_code": "2150",
+      "module": "tax",
+      "description": "PR Withholding"
+    },
+    {
+      "event_code": "tax.withholding.purchases",
+      "account_code": "2150",
+      "module": "tax",
+      "description": "PR Withholding"
+    },
+    {
+      "event_code": "tax.withholding.payable",
+      "account_code": "2150",
+      "module": "tax",
+      "description": "PR Liab"
+    },
+    {
+      "event_code": "tax.airsi.purchases",
+      "account_code": "2150",
+      "module": "tax",
+      "description": "Withholding"
+    },
+    {
+      "event_code": "tax.airsi.payable",
+      "account_code": "2150",
+      "module": "tax",
+      "description": "Withholding Liab"
+    },
+    {
+      "event_code": "tax.airsi.expense",
+      "account_code": "6120",
+      "module": "tax",
+      "description": "PR Tax Exp"
+    },
+    {
+      "event_code": "tax.settlement.vat_payable",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "Tax Set"
+    },
+    {
+      "event_code": "tax.settlement.vat_recoverable",
+      "account_code": "1120",
+      "module": "tax",
+      "description": "Tax Rec Set"
+    },
+    {
+      "event_code": "tax.settlement.reverse_charge",
+      "account_code": "2140",
+      "module": "tax",
+      "description": "RC Set"
+    },
+    {
+      "event_code": "treasury.cash.deposit",
+      "account_code": "1112",
+      "module": "treasury",
+      "description": "Cash In"
+    },
+    {
+      "event_code": "treasury.cash.withdrawal",
+      "account_code": "1112",
+      "module": "treasury",
+      "description": "Cash Out"
+    },
+    {
+      "event_code": "treasury.bank.deposit",
+      "account_code": "1111",
+      "module": "treasury",
+      "description": "Bank In"
+    },
+    {
+      "event_code": "treasury.bank.withdrawal",
+      "account_code": "1111",
+      "module": "treasury",
+      "description": "Bank Out"
+    },
+    {
+      "event_code": "treasury.bank.transfer",
+      "account_code": "1111",
+      "module": "treasury",
+      "description": "Inter-Bank"
+    },
+    {
+      "event_code": "treasury.fx.gain",
+      "account_code": "7500",
+      "module": "treasury",
+      "description": "FX Gain"
+    },
+    {
+      "event_code": "treasury.fx.loss",
+      "account_code": "7500",
+      "module": "treasury",
+      "description": "FX Loss"
+    },
+    {
+      "event_code": "treasury.reconciliation.adjustment",
+      "account_code": "6400",
+      "module": "treasury",
+      "description": "Rec Adj"
+    },
+    {
+      "event_code": "assets.purchase.asset",
+      "account_code": "1530",
+      "module": "assets",
+      "description": "Equipment"
+    },
+    {
+      "event_code": "assets.purchase.payable",
+      "account_code": "2110",
+      "module": "assets",
+      "description": "Equipment Liab"
+    },
+    {
+      "event_code": "assets.purchase.vat_input",
+      "account_code": "1120",
+      "module": "assets",
+      "description": "Tax Shield"
+    },
+    {
+      "event_code": "assets.depreciation.expense",
+      "account_code": "6300",
+      "module": "assets",
+      "description": "Depr Exp"
+    },
+    {
+      "event_code": "assets.depreciation.accumulated",
+      "account_code": "1620",
+      "module": "assets",
+      "description": "Accum Depr"
+    },
+    {
+      "event_code": "assets.disposal.asset",
+      "account_code": "1530",
+      "module": "assets",
+      "description": "Asset Disp"
+    },
+    {
+      "event_code": "assets.disposal.accumulated",
+      "account_code": "1620",
+      "module": "assets",
+      "description": "Depr Rev"
+    },
+    {
+      "event_code": "assets.disposal.gain",
+      "account_code": "7300",
+      "module": "assets",
+      "description": "Gain Disp"
+    },
+    {
+      "event_code": "assets.disposal.loss",
+      "account_code": "7400",
+      "module": "assets",
+      "description": "Loss Disp"
+    },
+    {
+      "event_code": "equity.capital.contribution",
+      "account_code": "3100",
+      "module": "equity",
+      "description": "Common Stock"
+    },
+    {
+      "event_code": "equity.capital.withdrawal",
+      "account_code": "3500",
+      "module": "equity",
+      "description": "Distributions"
+    },
+    {
+      "event_code": "equity.dividend.declaration",
+      "account_code": "3300",
+      "module": "equity",
+      "description": "RE Dividend"
+    },
+    {
+      "event_code": "equity.dividend.payment",
+      "account_code": "1111",
+      "module": "equity",
+      "description": "Bank Div"
+    },
+    {
+      "event_code": "equity.retained_earnings.transfer",
+      "account_code": "3300",
+      "module": "equity",
+      "description": "Retained Earnings"
+    },
+    {
+      "event_code": "adjustment.journal.debit",
+      "account_code": "6400",
+      "module": "adjustment",
+      "description": "Journal Debit"
+    },
+    {
+      "event_code": "adjustment.journal.credit",
+      "account_code": "4500",
+      "module": "adjustment",
+      "description": "Journal Credit"
+    },
+    {
+      "event_code": "adjustment.accrual.expense",
+      "account_code": "2120",
+      "module": "adjustment",
+      "description": "Accrued Exp"
+    },
+    {
+      "event_code": "adjustment.accrual.revenue",
+      "account_code": "1120",
+      "module": "adjustment",
+      "description": "Accrued Rev"
+    },
+    {
+      "event_code": "adjustment.deferral.expense",
+      "account_code": "1150",
+      "module": "adjustment",
+      "description": "Prepaid Exp"
+    },
+    {
+      "event_code": "adjustment.deferral.revenue",
+      "account_code": "2130",
+      "module": "adjustment",
+      "description": "Unearned Rev"
+    },
+    {
+      "event_code": "adjustment.provision.expense",
+      "account_code": "6320",
+      "module": "adjustment",
+      "description": "Provision Exp"
+    },
+    {
+      "event_code": "adjustment.provision.liability",
+      "account_code": "2120",
+      "module": "adjustment",
+      "description": "Provision Liab"
+    },
+    {
+      "event_code": "suspense.reception",
+      "module": "purchases",
+      "description": "Goods received not invoiced",
+      "account_code": "2110"
+    }
+  ],
+  "migration_hints": {
+    "to_IFRS_COA": {
+      "1120": "1110",
+      "2110": "2101",
+      "1144": "1122",
+      "2140": "2117",
+      "1111": "1101.03",
+      "1112": "1101.01",
+      "3100": "3001",
+      "3300": "3003",
+      "4110": "4101",
+      "5100": "5101",
+      "6110": "6101",
+      "6200": "6103"
+    }
+  }
+}

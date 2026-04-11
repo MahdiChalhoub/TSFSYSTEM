@@ -1,0 +1,136 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Delete } from 'lucide-react';
+import clsx from 'clsx';
+
+export type NumpadMode = 'qty' | 'disc' | 'price';
+
+export function Numpad({
+ onValueConfirm,
+ mode: activeMode = 'qty',
+ onModeChange
+}: {
+ onValueConfirm: (value: number, mode: NumpadMode) => void;
+ mode?: NumpadMode;
+ onModeChange?: (mode: NumpadMode) => void;
+}) {
+ const [buffer, setBuffer] = useState('');
+ const [localMode, setLocalMode] = useState<NumpadMode>(activeMode);
+
+ const mode = onModeChange ? activeMode : localMode;
+ const setMode = onModeChange || setLocalMode;
+
+ const handleDigit = useCallback((d: string) => {
+ setBuffer(prev => {
+ if (d === '.' && prev.includes('.')) return prev;
+ return prev + d;
+ });
+ }, []);
+
+ const handleBackspace = useCallback(() => setBuffer(prev => prev.slice(0, -1)), []);
+
+ const handleConfirm = useCallback(() => {
+ const val = parseFloat(buffer);
+ if (!isNaN(val) && val >= 0) {
+ onValueConfirm(val, mode);
+ setBuffer('');
+ }
+ }, [buffer, mode, onValueConfirm]);
+
+ // Keyboard Support
+ useEffect(() => {
+ const handleKeyDown = (e: KeyboardEvent) => {
+ // Ignore if typing in an input or textarea
+ if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+ return;
+ }
+
+ if (e.key >= '0' && e.key <= '9') {
+ handleDigit(e.key);
+ } else if (e.key === '.' || e.key === ',') {
+ handleDigit('.');
+ } else if (e.key === 'Backspace') {
+ handleBackspace();
+ } else if (e.key === 'Enter') {
+ handleConfirm();
+ }
+ };
+
+ window.addEventListener('keydown', handleKeyDown);
+ return () => window.removeEventListener('keydown', handleKeyDown);
+ }, [handleDigit, handleBackspace, handleConfirm]);
+
+ const modeLabels: Record<NumpadMode, string> = {
+ qty: 'Qty',
+ disc: 'Disc %',
+ price: 'Price',
+ };
+
+ const modeColors: Record<NumpadMode, string> = {
+ qty: 'bg-indigo-600 text-app-text',
+ disc: 'bg-app-warning text-app-text',
+ price: 'bg-app-primary text-app-text',
+ };
+
+ return (
+ <div className="flex flex-col gap-2">
+ {/* Display */}
+ <div className="flex items-center gap-2 bg-app-bg rounded-xl px-4 py-3 border border-app-border">
+ <span className="text-[9px] font-black uppercase tracking-widest text-app-text-faint">{modeLabels[mode]}</span>
+ <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-app-text">
+ {buffer || '0'}
+ </span>
+ </div>
+
+ {/* Mode Selectors */}
+ <div className="grid grid-cols-3 gap-1.5">
+ {(['qty', 'disc', 'price'] as NumpadMode[]).map(m => (
+ <button
+ key={m}
+ onClick={() => setMode(m)}
+ className={clsx(
+ "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+ mode === m ? modeColors[m] : "bg-app-surface-2 text-app-text-muted hover:bg-app-surface-3"
+ )}
+ >
+ {modeLabels[m]}
+ </button>
+ ))}
+ </div>
+
+ {/* Number Pad */}
+ <div className="grid grid-cols-3 gap-1.5">
+ {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
+ <button
+ key={d}
+ onClick={() => handleDigit(d)}
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-lg text-app-text hover:bg-app-bg active:scale-95 transition-all shadow-sm"
+ >
+ {d}
+ </button>
+ ))}
+ <button
+ onClick={handleBackspace}
+ className="h-12 bg-app-surface border border-app-border rounded-xl font-black text-app-text-faint hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+ >
+ <Delete size={18} />
+ </button>
+ </div>
+
+ {/* Confirm */}
+ <button
+ onClick={handleConfirm}
+ disabled={!buffer}
+ className={clsx(
+ "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+ buffer
+ ? `${modeColors[mode]} shadow-lg hover:opacity-90 active:scale-[0.98]`
+ : "bg-app-surface-2 text-app-text-muted cursor-not-allowed"
+ )}
+ >
+ Confirm {modeLabels[mode]}
+ </button>
+ </div>
+ );
+}

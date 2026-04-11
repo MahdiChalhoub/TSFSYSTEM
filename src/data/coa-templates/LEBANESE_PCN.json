@@ -1,0 +1,1418 @@
+{
+  "metadata": {
+    "key": "LEBANESE_PCN",
+    "name": "Lebanese PCN",
+    "region": "Lebanon",
+    "description": "Plan Comptable National Libanais — standard Lebanese chart of accounts",
+    "icon": "Building2",
+    "accent_color": "var(--app-success)",
+    "version": "1.0.0",
+    "last_updated": "2026-03-24"
+  },
+  "accounts": [
+    {
+      "code": "1",
+      "name": "Capitaux et Passif Non Courant",
+      "type": "EQUITY",
+      "children": [
+        {
+          "code": "10",
+          "name": "Capital",
+          "type": "EQUITY",
+          "children": [
+            {
+              "code": "101",
+              "name": "Capital social",
+              "type": "EQUITY"
+            },
+            {
+              "code": "106",
+              "name": "Primes liées au capital",
+              "type": "EQUITY"
+            }
+          ]
+        },
+        {
+          "code": "11",
+          "name": "Réserves",
+          "type": "EQUITY",
+          "children": [
+            {
+              "code": "111",
+              "name": "Réserve légale",
+              "type": "EQUITY"
+            },
+            {
+              "code": "112",
+              "name": "Réserves statutaires",
+              "type": "EQUITY"
+            },
+            {
+              "code": "115",
+              "name": "Réserves facultatives",
+              "type": "EQUITY"
+            }
+          ]
+        },
+        {
+          "code": "12",
+          "name": "Résultat reporté",
+          "type": "EQUITY"
+        },
+        {
+          "code": "13",
+          "name": "Résultat de l'exercice",
+          "type": "EQUITY"
+        },
+        {
+          "code": "15",
+          "name": "Provisions pour risques",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "151",
+              "name": "Provisions pour litiges",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "153",
+              "name": "Provisions pour restructurations",
+              "type": "LIABILITY"
+            }
+          ]
+        },
+        {
+          "code": "16",
+          "name": "Emprunts et dettes assimilées",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "161",
+              "name": "Emprunts bancaires long terme",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "164",
+              "name": "Dettes envers établissements de crédit",
+              "type": "LIABILITY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "2",
+      "name": "Actif Non Courant (Immobilisations)",
+      "type": "ASSET",
+      "children": [
+        {
+          "code": "21",
+          "name": "Immobilisations incorporelles",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "211",
+              "name": "Fonds commercial",
+              "type": "ASSET"
+            },
+            {
+              "code": "212",
+              "name": "Brevets et licences",
+              "type": "ASSET"
+            },
+            {
+              "code": "215",
+              "name": "Logiciels",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "22",
+          "name": "Terrains",
+          "type": "ASSET"
+        },
+        {
+          "code": "23",
+          "name": "Constructions",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "231",
+              "name": "Bâtiments",
+              "type": "ASSET"
+            },
+            {
+              "code": "232",
+              "name": "Agencements des constructions",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "24",
+          "name": "Matériel et outillage",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "241",
+              "name": "Matériel industriel",
+              "type": "ASSET"
+            },
+            {
+              "code": "244",
+              "name": "Mobilier de bureau",
+              "type": "ASSET"
+            },
+            {
+              "code": "245",
+              "name": "Matériel informatique",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "25",
+          "name": "Matériel de transport",
+          "type": "ASSET"
+        },
+        {
+          "code": "27",
+          "name": "Dépôts et cautionnements",
+          "type": "ASSET"
+        },
+        {
+          "code": "28",
+          "name": "Amortissements des immobilisations",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "281",
+              "name": "Amort. immobilisations incorporelles",
+              "type": "ASSET"
+            },
+            {
+              "code": "282",
+              "name": "Amort. constructions",
+              "type": "ASSET"
+            },
+            {
+              "code": "283",
+              "name": "Amort. matériel et outillage",
+              "type": "ASSET"
+            },
+            {
+              "code": "284",
+              "name": "Amort. matériel de transport",
+              "type": "ASSET"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "3",
+      "name": "Stocks et En-cours",
+      "type": "ASSET",
+      "children": [
+        {
+          "code": "31",
+          "name": "Marchandises",
+          "type": "ASSET",
+          "subType": "INVENTORY"
+        },
+        {
+          "code": "32",
+          "name": "Matières premières",
+          "type": "ASSET"
+        },
+        {
+          "code": "33",
+          "name": "En-cours de production",
+          "type": "ASSET"
+        },
+        {
+          "code": "35",
+          "name": "Produits finis",
+          "type": "ASSET"
+        },
+        {
+          "code": "37",
+          "name": "Stocks en consignation",
+          "type": "ASSET"
+        },
+        {
+          "code": "39",
+          "name": "Provisions pour dépréciation des stocks",
+          "type": "ASSET"
+        }
+      ]
+    },
+    {
+      "code": "4",
+      "name": "Comptes de Tiers",
+      "type": "LIABILITY",
+      "children": [
+        {
+          "code": "40",
+          "name": "Fournisseurs",
+          "type": "LIABILITY",
+          "subType": "PAYABLE",
+          "children": [
+            {
+              "code": "401",
+              "name": "Fournisseurs locaux",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "404",
+              "name": "Fournisseurs étrangers",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "408",
+              "name": "Fournisseurs – factures non parvenues",
+              "type": "LIABILITY"
+            }
+          ]
+        },
+        {
+          "code": "41",
+          "name": "Clients (Créances)",
+          "type": "ASSET",
+          "subType": "RECEIVABLE",
+          "children": [
+            {
+              "code": "411",
+              "name": "Clients locaux",
+              "type": "ASSET"
+            },
+            {
+              "code": "414",
+              "name": "Clients étrangers",
+              "type": "ASSET"
+            },
+            {
+              "code": "416",
+              "name": "Clients douteux",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "42",
+          "name": "Personnel et comptes rattachés",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "421",
+              "name": "Rémunérations dues",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "425",
+              "name": "Avances au personnel",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "43",
+          "name": "Organismes sociaux (CNSS)",
+          "type": "LIABILITY"
+        },
+        {
+          "code": "44",
+          "name": "État et collectivités publiques",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "441",
+              "name": "TVA collectée",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "442",
+              "name": "TVA déductible",
+              "type": "ASSET"
+            },
+            {
+              "code": "443",
+              "name": "Impôt sur le revenu",
+              "type": "LIABILITY"
+            },
+            {
+              "code": "445",
+              "name": "Impôt sur les sociétés",
+              "type": "LIABILITY"
+            }
+          ]
+        },
+        {
+          "code": "46",
+          "name": "Débiteurs et créditeurs divers",
+          "type": "LIABILITY"
+        },
+        {
+          "code": "47",
+          "name": "Comptes transitoires",
+          "type": "LIABILITY"
+        }
+      ]
+    },
+    {
+      "code": "5",
+      "name": "Comptes Financiers",
+      "type": "ASSET",
+      "children": [
+        {
+          "code": "51",
+          "name": "Banques",
+          "type": "ASSET",
+          "subType": "BANK",
+          "children": [
+            {
+              "code": "511",
+              "name": "Banque principale (LBP)",
+              "type": "ASSET"
+            },
+            {
+              "code": "512",
+              "name": "Banque secondaire (USD)",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "53",
+          "name": "Caisse",
+          "type": "ASSET",
+          "subType": "CASH",
+          "children": [
+            {
+              "code": "531",
+              "name": "Caisse locale",
+              "type": "ASSET"
+            },
+            {
+              "code": "532",
+              "name": "Caisse devises",
+              "type": "ASSET"
+            }
+          ]
+        },
+        {
+          "code": "58",
+          "name": "Virements internes",
+          "type": "ASSET"
+        },
+        {
+          "code": "59",
+          "name": "Provisions pour dépréciation comptes financiers",
+          "type": "ASSET"
+        }
+      ]
+    },
+    {
+      "code": "6",
+      "name": "Comptes de Charges",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "60",
+          "name": "Achats",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "601",
+              "name": "Achats de marchandises",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "602",
+              "name": "Achats de matières premières",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "604",
+              "name": "Achats d'emballages",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "607",
+              "name": "Frais accessoires sur achats",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "61",
+          "name": "Services extérieurs",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "611",
+              "name": "Sous-traitance",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "613",
+              "name": "Loyers et charges locatives",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "615",
+              "name": "Entretien et réparations",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "616",
+              "name": "Assurances",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "62",
+          "name": "Autres services extérieurs",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "621",
+              "name": "Honoraires professionnels",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "622",
+              "name": "Publicité et marketing",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "624",
+              "name": "Transport et déplacements",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "625",
+              "name": "Télécommunications",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "626",
+              "name": "Frais bancaires",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "63",
+          "name": "Impôts et taxes",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "631",
+              "name": "Taxes municipales",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "635",
+              "name": "Droits d'enregistrement",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "64",
+          "name": "Charges de personnel",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "641",
+              "name": "Salaires et appointements",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "645",
+              "name": "Charges sociales (CNSS)",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "647",
+              "name": "Indemnités de fin de service",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "65",
+          "name": "Autres charges opérationnelles",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "66",
+          "name": "Charges financières",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "661",
+              "name": "Intérêts des emprunts",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "665",
+              "name": "Pertes de change",
+              "type": "EXPENSE"
+            },
+            {
+              "code": "666",
+              "name": "Frais sur opérations bancaires",
+              "type": "EXPENSE"
+            }
+          ]
+        },
+        {
+          "code": "67",
+          "name": "Charges exceptionnelles",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "68",
+          "name": "Dotations aux amortissements",
+          "type": "EXPENSE"
+        },
+        {
+          "code": "69",
+          "name": "Impôts sur les bénéfices",
+          "type": "EXPENSE"
+        }
+      ]
+    },
+    {
+      "code": "7",
+      "name": "Comptes de Produits",
+      "type": "INCOME",
+      "children": [
+        {
+          "code": "70",
+          "name": "Ventes de marchandises",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "701",
+              "name": "Ventes de marchandises locales",
+              "type": "INCOME"
+            },
+            {
+              "code": "702",
+              "name": "Ventes de marchandises export",
+              "type": "INCOME"
+            }
+          ]
+        },
+        {
+          "code": "71",
+          "name": "Production vendue",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "711",
+              "name": "Ventes de produits finis",
+              "type": "INCOME"
+            },
+            {
+              "code": "712",
+              "name": "Prestations de services",
+              "type": "INCOME"
+            }
+          ]
+        },
+        {
+          "code": "74",
+          "name": "Subventions d'exploitation",
+          "type": "INCOME"
+        },
+        {
+          "code": "75",
+          "name": "Autres produits opérationnels",
+          "type": "INCOME"
+        },
+        {
+          "code": "76",
+          "name": "Produits financiers",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "761",
+              "name": "Intérêts et produits assimilés",
+              "type": "INCOME"
+            },
+            {
+              "code": "765",
+              "name": "Gains de change",
+              "type": "INCOME"
+            }
+          ]
+        },
+        {
+          "code": "77",
+          "name": "Produits exceptionnels",
+          "type": "INCOME"
+        },
+        {
+          "code": "78",
+          "name": "Reprises sur amortissements et provisions",
+          "type": "INCOME"
+        },
+        {
+          "code": "79",
+          "name": "Rabais, remises et ristournes obtenus",
+          "type": "INCOME"
+        }
+      ]
+    }
+  ],
+  "posting_rules": [
+    {
+      "event_code": "sales.invoice.receivable",
+      "account_code": "411",
+      "module": "sales",
+      "description": "Clients locaux"
+    },
+    {
+      "event_code": "sales.invoice.revenue",
+      "account_code": "701",
+      "module": "sales",
+      "description": "Ventes de marchandises locales"
+    },
+    {
+      "event_code": "sales.invoice.vat_output",
+      "account_code": "441",
+      "module": "sales",
+      "description": "TVA collectée"
+    },
+    {
+      "event_code": "sales.invoice.discount",
+      "account_code": "709",
+      "module": "sales",
+      "description": "Rabais accordés"
+    },
+    {
+      "event_code": "sales.invoice.rounding",
+      "account_code": "758",
+      "module": "sales",
+      "description": "Écarts arrondis"
+    },
+    {
+      "event_code": "sales.invoice.shipping_revenue",
+      "account_code": "708",
+      "module": "sales",
+      "description": "Produits des services"
+    },
+    {
+      "event_code": "sales.invoice.service_revenue",
+      "account_code": "706",
+      "module": "sales",
+      "description": "Prestations de services"
+    },
+    {
+      "event_code": "sales.invoice.advance_offset",
+      "account_code": "419",
+      "module": "sales",
+      "description": "Avances clients"
+    },
+    {
+      "event_code": "sales.invoice.deposit_liability",
+      "account_code": "419",
+      "module": "sales",
+      "description": "Acomptes clients"
+    },
+    {
+      "event_code": "sales.invoice.loyalty_liability",
+      "account_code": "419",
+      "module": "sales",
+      "description": "Fidélité clients"
+    },
+    {
+      "event_code": "sales.credit_note.receivable_reversal",
+      "account_code": "411",
+      "module": "sales",
+      "description": "Avoir client"
+    },
+    {
+      "event_code": "sales.credit_note.revenue_reversal",
+      "account_code": "701",
+      "module": "sales",
+      "description": "Annulation vente"
+    },
+    {
+      "event_code": "sales.credit_note.discount_reversal",
+      "account_code": "709",
+      "module": "sales",
+      "description": "Annulation rabais"
+    },
+    {
+      "event_code": "sales.credit_note.vat_output_reversal",
+      "account_code": "441",
+      "module": "sales",
+      "description": "Annulation TVA"
+    },
+    {
+      "event_code": "sales.refund.cash",
+      "account_code": "531",
+      "module": "sales",
+      "description": "Remboursement caisse"
+    },
+    {
+      "event_code": "sales.refund.bank",
+      "account_code": "511",
+      "module": "sales",
+      "description": "Remboursement banque"
+    },
+    {
+      "event_code": "sales.refund.receivable",
+      "account_code": "411",
+      "module": "sales",
+      "description": "Client remboursé"
+    },
+    {
+      "event_code": "sales.writeoff.bad_debt_expense",
+      "account_code": "654",
+      "module": "sales",
+      "description": "Créances irrécouvrables"
+    },
+    {
+      "event_code": "sales.writeoff.receivable",
+      "account_code": "411",
+      "module": "sales",
+      "description": "Passage en perte"
+    },
+    {
+      "event_code": "sales.commission.expense",
+      "account_code": "622",
+      "module": "sales",
+      "description": "Commissions"
+    },
+    {
+      "event_code": "sales.commission.payable",
+      "account_code": "401",
+      "module": "sales",
+      "description": "Commissions à payer"
+    },
+    {
+      "event_code": "purchases.invoice.payable",
+      "account_code": "401",
+      "module": "purchases",
+      "description": "Fournisseurs locaux"
+    },
+    {
+      "event_code": "purchases.invoice.expense",
+      "account_code": "601",
+      "module": "purchases",
+      "description": "Achats de marchandises"
+    },
+    {
+      "event_code": "purchases.invoice.inventory",
+      "account_code": "31",
+      "module": "purchases",
+      "description": "Marchandises"
+    },
+    {
+      "event_code": "purchases.invoice.vat_input",
+      "account_code": "442",
+      "module": "purchases",
+      "description": "TVA déductible"
+    },
+    {
+      "event_code": "purchases.invoice.discount",
+      "account_code": "609",
+      "module": "purchases",
+      "description": "RRR obtenus"
+    },
+    {
+      "event_code": "purchases.invoice.freight",
+      "account_code": "624",
+      "module": "purchases",
+      "description": "Transport et fret"
+    },
+    {
+      "event_code": "purchases.invoice.rounding",
+      "account_code": "758",
+      "module": "purchases",
+      "description": "Arrondi achat"
+    },
+    {
+      "event_code": "purchases.return.payable_reversal",
+      "account_code": "401",
+      "module": "purchases",
+      "description": "Retour fournisseur"
+    },
+    {
+      "event_code": "purchases.return.inventory_reversal",
+      "account_code": "31",
+      "module": "purchases",
+      "description": "Retour marchandises"
+    },
+    {
+      "event_code": "purchases.return.vat_input_reversal",
+      "account_code": "442",
+      "module": "purchases",
+      "description": "TVA retour"
+    },
+    {
+      "event_code": "purchases.payment.cash",
+      "account_code": "531",
+      "module": "purchases",
+      "description": "Paiement caisse"
+    },
+    {
+      "event_code": "purchases.payment.bank",
+      "account_code": "511",
+      "module": "purchases",
+      "description": "Paiement banque"
+    },
+    {
+      "event_code": "purchases.payment.payable",
+      "account_code": "401",
+      "module": "purchases",
+      "description": "Règlement fournisseur"
+    },
+    {
+      "event_code": "purchases.vendor_credit.payable",
+      "account_code": "401",
+      "module": "purchases",
+      "description": "Avoir fournisseur"
+    },
+    {
+      "event_code": "purchases.vendor_credit.expense_reversal",
+      "account_code": "601",
+      "module": "purchases",
+      "description": "Annulation charge"
+    },
+    {
+      "event_code": "purchases.vendor_credit.inventory_reversal",
+      "account_code": "31",
+      "module": "purchases",
+      "description": "Crédit stock"
+    },
+    {
+      "event_code": "purchases.writeoff.payable",
+      "account_code": "401",
+      "module": "purchases",
+      "description": "AP Write Off"
+    },
+    {
+      "event_code": "purchases.writeoff.expense",
+      "account_code": "601",
+      "module": "purchases",
+      "description": "Charge annulée"
+    },
+    {
+      "event_code": "inventory.receipt.inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Marchandises"
+    },
+    {
+      "event_code": "inventory.receipt.grni",
+      "account_code": "408",
+      "module": "inventory",
+      "description": "Réception non facturée"
+    },
+    {
+      "event_code": "inventory.issue.cogs",
+      "account_code": "601",
+      "module": "inventory",
+      "description": "Coût marchandises vendues"
+    },
+    {
+      "event_code": "inventory.issue.inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Sortie marchandises"
+    },
+    {
+      "event_code": "inventory.adjustment.loss",
+      "account_code": "657",
+      "module": "inventory",
+      "description": "Perte sur inventaire"
+    },
+    {
+      "event_code": "inventory.adjustment.gain",
+      "account_code": "757",
+      "module": "inventory",
+      "description": "Gain sur inventaire"
+    },
+    {
+      "event_code": "inventory.adjustment.inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Ajustement stock"
+    },
+    {
+      "event_code": "inventory.transfer.source_inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Entrepôt source"
+    },
+    {
+      "event_code": "inventory.transfer.destination_inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Entrepôt destination"
+    },
+    {
+      "event_code": "inventory.production.raw_material",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Matières premières"
+    },
+    {
+      "event_code": "inventory.production.wip",
+      "account_code": "33",
+      "module": "inventory",
+      "description": "En-cours production"
+    },
+    {
+      "event_code": "inventory.production.finished_goods",
+      "account_code": "35",
+      "module": "inventory",
+      "description": "Produits finis"
+    },
+    {
+      "event_code": "inventory.production.variance",
+      "account_code": "658",
+      "module": "inventory",
+      "description": "Écart production"
+    },
+    {
+      "event_code": "inventory.writeoff.inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Stock radié"
+    },
+    {
+      "event_code": "inventory.writeoff.expense",
+      "account_code": "657",
+      "module": "inventory",
+      "description": "Charge radiation"
+    },
+    {
+      "event_code": "inventory.expiry.inventory",
+      "account_code": "31",
+      "module": "inventory",
+      "description": "Stock périmé"
+    },
+    {
+      "event_code": "inventory.expiry.loss",
+      "account_code": "657",
+      "module": "inventory",
+      "description": "Perte péremption"
+    },
+    {
+      "event_code": "payments.customer.cash",
+      "account_code": "531",
+      "module": "payments",
+      "description": "Caisse locale"
+    },
+    {
+      "event_code": "payments.customer.bank",
+      "account_code": "511",
+      "module": "payments",
+      "description": "Banque principale"
+    },
+    {
+      "event_code": "payments.customer.receivable",
+      "account_code": "411",
+      "module": "payments",
+      "description": "Règlement client"
+    },
+    {
+      "event_code": "payments.supplier.cash",
+      "account_code": "531",
+      "module": "payments",
+      "description": "Paiement caisse"
+    },
+    {
+      "event_code": "payments.supplier.bank",
+      "account_code": "511",
+      "module": "payments",
+      "description": "Paiement banque"
+    },
+    {
+      "event_code": "payments.supplier.payable",
+      "account_code": "401",
+      "module": "payments",
+      "description": "Règlement fournisseur"
+    },
+    {
+      "event_code": "payments.fee.bank_charge",
+      "account_code": "626",
+      "module": "payments",
+      "description": "Frais bancaires"
+    },
+    {
+      "event_code": "payments.fee.processor_fee",
+      "account_code": "627",
+      "module": "payments",
+      "description": "Services paiement"
+    },
+    {
+      "event_code": "payments.adjustment.receivable",
+      "account_code": "411",
+      "module": "payments",
+      "description": "Ajustement AR"
+    },
+    {
+      "event_code": "payments.adjustment.payable",
+      "account_code": "401",
+      "module": "payments",
+      "description": "Ajustement AP"
+    },
+    {
+      "event_code": "payments.refund.cash",
+      "account_code": "531",
+      "module": "payments",
+      "description": "Remboursement caisse"
+    },
+    {
+      "event_code": "payments.refund.bank",
+      "account_code": "511",
+      "module": "payments",
+      "description": "Remboursement banque"
+    },
+    {
+      "event_code": "tax.vat.output",
+      "account_code": "441",
+      "module": "tax",
+      "description": "TVA collectée"
+    },
+    {
+      "event_code": "tax.vat.input",
+      "account_code": "442",
+      "module": "tax",
+      "description": "TVA déductible"
+    },
+    {
+      "event_code": "tax.vat.payable",
+      "account_code": "443",
+      "module": "tax",
+      "description": "TVA à payer"
+    },
+    {
+      "event_code": "tax.vat.recoverable",
+      "account_code": "442",
+      "module": "tax",
+      "description": "TVA récupérable"
+    },
+    {
+      "event_code": "tax.vat.adjustment",
+      "account_code": "443",
+      "module": "tax",
+      "description": "Ajustement TVA"
+    },
+    {
+      "event_code": "tax.vat.suspense",
+      "account_code": "447",
+      "module": "tax",
+      "description": "TVA en suspens"
+    },
+    {
+      "event_code": "tax.withholding.sales",
+      "account_code": "444",
+      "module": "tax",
+      "description": "Retenue à la source ventes"
+    },
+    {
+      "event_code": "tax.withholding.purchases",
+      "account_code": "444",
+      "module": "tax",
+      "description": "Retenue à la source achats"
+    },
+    {
+      "event_code": "tax.withholding.payable",
+      "account_code": "444",
+      "module": "tax",
+      "description": "Retenue à payer"
+    },
+    {
+      "event_code": "tax.airsi.purchases",
+      "account_code": "446",
+      "module": "tax",
+      "description": "AIRSI sur achats"
+    },
+    {
+      "event_code": "tax.airsi.payable",
+      "account_code": "446",
+      "module": "tax",
+      "description": "AIRSI à payer"
+    },
+    {
+      "event_code": "tax.airsi.expense",
+      "account_code": "635",
+      "module": "tax",
+      "description": "Charge AIRSI"
+    },
+    {
+      "event_code": "tax.settlement.vat_payable",
+      "account_code": "443",
+      "module": "tax",
+      "description": "Règlement TVA"
+    },
+    {
+      "event_code": "tax.settlement.vat_recoverable",
+      "account_code": "442",
+      "module": "tax",
+      "description": "Recouvrement TVA"
+    },
+    {
+      "event_code": "tax.settlement.reverse_charge",
+      "account_code": "443",
+      "module": "tax",
+      "description": "Autoliquidation TVA"
+    },
+    {
+      "event_code": "treasury.cash.deposit",
+      "account_code": "531",
+      "module": "treasury",
+      "description": "Dépôt caisse"
+    },
+    {
+      "event_code": "treasury.cash.withdrawal",
+      "account_code": "531",
+      "module": "treasury",
+      "description": "Retrait caisse"
+    },
+    {
+      "event_code": "treasury.bank.deposit",
+      "account_code": "511",
+      "module": "treasury",
+      "description": "Dépôt banque"
+    },
+    {
+      "event_code": "treasury.bank.withdrawal",
+      "account_code": "511",
+      "module": "treasury",
+      "description": "Retrait banque"
+    },
+    {
+      "event_code": "treasury.bank.transfer",
+      "account_code": "511",
+      "module": "treasury",
+      "description": "Virement interne"
+    },
+    {
+      "event_code": "treasury.fx.gain",
+      "account_code": "766",
+      "module": "treasury",
+      "description": "Gain de change"
+    },
+    {
+      "event_code": "treasury.fx.loss",
+      "account_code": "666",
+      "module": "treasury",
+      "description": "Perte de change"
+    },
+    {
+      "event_code": "treasury.reconciliation.adjustment",
+      "account_code": "758",
+      "module": "treasury",
+      "description": "Ajustement rapprochement"
+    },
+    {
+      "event_code": "assets.purchase.asset",
+      "account_code": "21",
+      "module": "assets",
+      "description": "Immobilisations corporelles"
+    },
+    {
+      "event_code": "assets.purchase.payable",
+      "account_code": "404",
+      "module": "assets",
+      "description": "Fournisseurs immobilisations"
+    },
+    {
+      "event_code": "assets.purchase.vat_input",
+      "account_code": "442",
+      "module": "assets",
+      "description": "TVA sur immobilisations"
+    },
+    {
+      "event_code": "assets.depreciation.expense",
+      "account_code": "68",
+      "module": "assets",
+      "description": "Dotations aux amortissements"
+    },
+    {
+      "event_code": "assets.depreciation.accumulated",
+      "account_code": "281",
+      "module": "assets",
+      "description": "Amort. immobilisations"
+    },
+    {
+      "event_code": "assets.disposal.asset",
+      "account_code": "21",
+      "module": "assets",
+      "description": "Cession immobilisation"
+    },
+    {
+      "event_code": "assets.disposal.accumulated",
+      "account_code": "281",
+      "module": "assets",
+      "description": "Reprise amortissement"
+    },
+    {
+      "event_code": "assets.disposal.gain",
+      "account_code": "775",
+      "module": "assets",
+      "description": "Plus-value cession"
+    },
+    {
+      "event_code": "assets.disposal.loss",
+      "account_code": "675",
+      "module": "assets",
+      "description": "Moins-value cession"
+    },
+    {
+      "event_code": "equity.capital.contribution",
+      "account_code": "101",
+      "module": "equity",
+      "description": "Capital social"
+    },
+    {
+      "event_code": "equity.capital.withdrawal",
+      "account_code": "108",
+      "module": "equity",
+      "description": "Prélèvement exploitant"
+    },
+    {
+      "event_code": "equity.dividend.declaration",
+      "account_code": "457",
+      "module": "equity",
+      "description": "Dividendes à payer"
+    },
+    {
+      "event_code": "equity.dividend.payment",
+      "account_code": "511",
+      "module": "equity",
+      "description": "Paiement dividendes"
+    },
+    {
+      "event_code": "equity.retained_earnings.transfer",
+      "account_code": "12",
+      "module": "equity",
+      "description": "Report à nouveau"
+    },
+    {
+      "event_code": "adjustment.journal.debit",
+      "account_code": "658",
+      "module": "adjustment",
+      "description": "Écriture manuelle débit"
+    },
+    {
+      "event_code": "adjustment.journal.credit",
+      "account_code": "758",
+      "module": "adjustment",
+      "description": "Écriture manuelle crédit"
+    },
+    {
+      "event_code": "adjustment.accrual.expense",
+      "account_code": "681",
+      "module": "adjustment",
+      "description": "Charge à payer"
+    },
+    {
+      "event_code": "adjustment.accrual.revenue",
+      "account_code": "487",
+      "module": "adjustment",
+      "description": "Produit à recevoir"
+    },
+    {
+      "event_code": "adjustment.deferral.expense",
+      "account_code": "486",
+      "module": "adjustment",
+      "description": "Charge constatée d'avance"
+    },
+    {
+      "event_code": "adjustment.deferral.revenue",
+      "account_code": "487",
+      "module": "adjustment",
+      "description": "Produit constaté d'avance"
+    },
+    {
+      "event_code": "adjustment.provision.expense",
+      "account_code": "681",
+      "module": "adjustment",
+      "description": "Dotation provision"
+    },
+    {
+      "event_code": "adjustment.provision.liability",
+      "account_code": "15",
+      "module": "adjustment",
+      "description": "Provisions pour risques"
+    },
+    {
+      "event_code": "suspense.reception",
+      "module": "purchases",
+      "description": "Goods received not invoiced",
+      "account_code": "401"
+    }
+  ],
+  "migration_hints": {
+    "to_IFRS_COA": {
+      "411": "1110",
+      "401": "2101",
+      "31": "1122",
+      "441": "2117",
+      "442": "2118",
+      "511": "1101.03",
+      "531": "1101.01",
+      "101": "3001",
+      "12": "3003",
+      "701": "4101",
+      "601": "5101",
+      "641": "6101",
+      "613": "6103",
+      "41": "1110",
+      "414": "1110",
+      "416": "1110",
+      "425": "1130",
+      "5": "1101",
+      "58": "1101.03",
+      "79": "4101"
+    },
+    "to_FRENCH_PCG": {
+      "531": "53",
+      "532": "53",
+      "511": "512",
+      "411": "411",
+      "31": "37",
+      "401": "401",
+      "441": "4457",
+      "442": "4456",
+      "101": "101",
+      "12": "11",
+      "701": "707",
+      "601": "607",
+      "41": "41",
+      "414": "411",
+      "416": "416",
+      "425": "425",
+      "5": "5",
+      "58": "58",
+      "79": "709"
+    },
+    "to_SYSCOHADA_REVISED": {
+      "411": "411",
+      "401": "401",
+      "31": "31",
+      "441": "443",
+      "442": "445",
+      "511": "521",
+      "531": "571",
+      "101": "101",
+      "12": "12",
+      "701": "701",
+      "601": "601"
+    }
+  }
+}

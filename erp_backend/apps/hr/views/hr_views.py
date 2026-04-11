@@ -1,0 +1,136 @@
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from erp.views import TenantModelViewSet
+from erp.middleware import get_current_tenant_id
+from apps.hr.models import Department, Shift, Attendance, Leave, Employee
+from apps.hr.serializers import DepartmentSerializer, ShiftSerializer, AttendanceSerializer, LeaveSerializer
+
+class DepartmentViewSet(TenantModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+    @action(detail=False, methods=['get'], url_path='tree')
+    def tree(self, request):
+        depts = self.get_queryset().select_related('manager', 'parent')
+        data = [{
+            'id': str(d.id), 'name': d.name, 'code': d.code,
+            'parent_id': str(d.parent_id) if d.parent_id else None,
+            'manager_name': str(d.manager) if d.manager else None,
+            'is_active': d.is_active,
+        } for d in depts]
+        return Response(data)
+
+class ShiftViewSet(TenantModelViewSet):
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
+
+class AttendanceViewSet(TenantModelViewSet):
+    queryset = Attendance.objects.all().select_related('employee', 'shift')
+    serializer_class = AttendanceSerializer
+
+    def _validate_employee_ownership(self, data, org_id):
+        employee = data.get('employee')
+        if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
+            raise ValidationError("Cross-organization employee assignment blocked.")
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='check-in')
+    def check_in(self, request, pk=None):
+        from django.utils import timezone
+        record = self.get_object()
+        now = timezone.now()
+        record.check_in = now
+        record.status = 'PRESENT'
+        
+        # Late detection logic
+        if record.shift and now.time() > record.shift.start_time:
+            record.status = 'LATE'
+            try:
+                from kernel.events import emit_event
+                emit_event('hr.attendance.late', {
+                    'employee_id': record.employee_id,
+                    'check_in': now.isoformat(),
+                    'shift_start': record.shift.start_time.isoformat(),
+                    'minutes_late': int((now - now.replace(
+                        hour=record.shift.start_time.hour,
+                        minute=record.shift.start_time.minute,
+                        second=0, microsecond=0
+                    )).total_seconds() / 60),
+                    'organization_id': record.organization_id
+                }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
+            except Exception:
+                pass
+        else:
+            # On-time or early arrival — reward
+            try:
+                from kernel.events import emit_event
+                emit_event('hr.attendance.on_time', {
+                    'employee_id': record.employee_id,
+                    'check_in': now.isoformat(),
+                    'organization_id': record.organization_id
+                }, aggregate_type='attendance', aggregate_id=record.id, triggered_by=request.user)
+            except Exception:
+                pass
+
+        record.save(update_fields=['check_in', 'status'])
+        return Response({"message": "Checked in", "check_in": record.check_in.isoformat(), "status": record.status})
+    @action(detail=True, methods=['post'], url_path='check-out')
+    def check_out(self, request, pk=None):
+        from django.utils import timezone
+        record = self.get_object()
+        record.check_out = timezone.now()
+        record.save(update_fields=['check_out'])
+        return Response({"message": "Checked out", "check_out": record.check_out.isoformat(), "hours_worked": record.hours_worked})
+
+class LeaveViewSet(TenantModelViewSet):
+    queryset = Leave.objects.all().select_related('employee', 'approved_by')
+    serializer_class = LeaveSerializer
+
+    def _validate_employee_ownership(self, data, org_id):
+        employee = data.get('employee')
+        if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
+            raise ValidationError("Cross-organization employee assignment blocked.")
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save()
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        leave = self.get_object()
+        if leave.status != 'PENDING': return Response({"error": "Only pending leaves can be approved"}, status=400)
+        leave.approve(request.user)
+        return Response({"message": f"Leave approved for {leave.employee}"})
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        leave = self.get_object()
+        if leave.status != 'PENDING': return Response({"error": "Only pending leaves can be rejected"}, status=400)
+        leave.reject(request.user)
+        # Rejected leave = unexcused absence signal
+        try:
+            from kernel.events import emit_event
+            emit_event('hr.absence.unexcused', {
+                'employee_id': leave.employee_id,
+                'leave_date': str(leave.start_date),
+                'reason': 'Leave request rejected',
+                'organization_id': leave.organization_id
+            }, aggregate_type='leave', aggregate_id=leave.id, triggered_by=request.user)
+        except Exception:
+            pass
+        return Response({"message": f"Leave rejected for {leave.employee}"})

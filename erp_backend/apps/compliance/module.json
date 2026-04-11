@@ -1,0 +1,27 @@
+{
+    "name": "compliance",
+    "version": "1.0.0",
+    "label": "Compliance",
+    "description": "Government price regulation enforcement, audit trail, and compliance management",
+    "icon": "shield-check",
+    "dependencies": [
+        "inventory",
+        "reference"
+    ],
+    "optional_dependencies": [
+        "pos"
+    ],
+    "provides": [
+        "compliance.price.validate"
+    ],
+    "sidebar": {
+        "section": "Inventory",
+        "items": [
+            {
+                "label": "Price Regulations",
+                "href": "/inventory/price-regulations",
+                "icon": "scale"
+            }
+        ]
+    }
+}

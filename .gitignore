@@ -85,3 +85,8 @@ erp_backend/check_tables.py
 erp_backend/clear_migrations.py
 erp_backend/list_applied_migrations.py
 erp_backend/list_all_migrations.py
+
+# Large files
+*.sql
+erp_backend/media/
+*.pdf

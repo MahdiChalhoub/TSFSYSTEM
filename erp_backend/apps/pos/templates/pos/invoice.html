@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Invoice {{ order.invoice_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            color: #333333;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            max-width: 150px;
+            max-height: 80px;
+        }
+
+        .company-details {
+            float: left;
+            width: 50%;
+        }
+
+        .company-details img {
+            max-width: 150px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .client-details {
+            float: right;
+            width: 45%;
+            text-align: right;
+        }
+
+        .invoice-meta {
+            clear: both;
+            padding-top: 20px;
+            margin-bottom: 30px;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+
+        .totals {
+            width: 40%;
+            float: right;
+        }
+
+        .totals table th {
+            background-color: transparent;
+            text-align: right;
+        }
+
+        .totals table td {
+            text-align: right;
+        }
+
+        .grand-total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px solid #333;
+        }
+
+        #footerContent {
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+
+        .clear {
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="company-details">
+            {% if pos_settings.invoice_show_logo and organization.logo %}
+            <img src="{{ organization.logo.url }}" alt="Logo">
+            {% endif %}
+            <h2>{{ organization.name }}</h2>
+            {% if pos_settings.invoice_header_text %}
+            <p>{{ pos_settings.invoice_header_text|linebreaksbr }}</p>
+            {% endif %}
+            {% if organization.address %}
+            <p>{{ organization.address|linebreaksbr }}</p>
+            {% endif %}
+            {% if organization.phone %}
+            <p>Tel: {{ organization.phone }}</p>
+            {% endif %}
+            {% if organization.email %}
+            <p>Email: {{ organization.email }}</p>
+            {% endif %}
+        </div>
+
+        <div class="client-details">
+            <h2>INVOICE</h2>
+            {% if contact %}
+            <p><strong>Billed To:</strong><br>
+                {{ contact.name }}<br>
+                {% if contact.phone %}{{ contact.phone }}<br>{% endif %}
+                {% if contact.email %}{{ contact.email }}<br>{% endif %}
+            </p>
+            {% else %}
+            <p><strong>Walk-in Customer</strong></p>
+            {% endif %}
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div class="invoice-meta">
+        <table style="border: none;">
+            <tr style="border: none;">
+                <td style="border: none;"><strong>Invoice No:</strong> {{ order.invoice_number|default:order.id }}</td>
+                <td style="border: none;"><strong>Date:</strong> {{ date }}</td>
+                <td style="border: none;"><strong>Payment Method:</strong> {{ order.payment_method|default:"N/A" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Item Description</th>
+                <th style="text-align: right;">Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr>
+                <td>{{ line.product.name }}</td>
+                <td style="text-align: right;">{{ line.quantity|floatformat:"0" }}</td>
+                <td style="text-align: right;">{{ line.unit_price|floatformat:"2" }} {{ currency }}</td>
+                <td style="text-align: right;">{{ line.subtotal|floatformat:"2" }} {{ currency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <table>
+            <tr>
+                <th>Subtotal:</th>
+                <td>{{ subtotal|floatformat:"2" }} {{ currency }}</td>
+            </tr>
+            {% if discount > 0 %}
+            <tr>
+                <th>Discount:</th>
+                <td>- {{ discount|floatformat:"2" }} {{ currency }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th>Tax (VAT):</th>
+                <td>{{ tax|floatformat:"2" }} {{ currency }}</td>
+            </tr>
+            <tr class="grand-total">
+                <th>TOTAL:</th>
+                <td>{{ total|floatformat:"2" }} {{ currency }}</td>
+            </tr>
+        </table>
+    </div>
+    <div class="clear"></div>
+
+    <div style="margin-top: 50px;">
+        <p><strong>Notes:</strong></p>
+        <p>{{ order.notes|default:"" }}</p>
+        {% if pos_settings.invoice_footer_text %}
+        <p style="margin-top: 20px; font-size: 12px; color: #555;">{{ pos_settings.invoice_footer_text|linebreaksbr }}
+        </p>
+        {% else %}
+        <p style="margin-top: 20px; font-size: 12px; color: #555;">Thank you for your business.</p>
+        {% endif %}
+    </div>
+
+    <div id="footerContent">
+        Page <pdf:pagenumber> of <pdf:pagecount> &nbsp; | &nbsp; Generated by TSF System
+    </div>
+
+</body>
+
+</html>

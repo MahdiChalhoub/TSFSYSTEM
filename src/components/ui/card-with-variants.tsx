@@ -1,0 +1,222 @@
+/**
+ * Card Component with Multiple Visual Variants
+ * ==============================================
+ *
+ * This component supports multiple design variants:
+ * - default: Your current shadcn/ui style (unchanged)
+ * - modern: Purple accent theme you liked (#9b87f5)
+ * - glass: Frosted glass effect (glassmorphism)
+ *
+ * Usage:
+ *   <Card variant="default">...</Card>  // Current style
+ *   <Card variant="modern">...</Card>   // Your preferred purple theme
+ *   <Card variant="glass">...</Card>    // Beautiful glass effect
+ *
+ * IMPORTANT: All your existing <Card> components will keep working!
+ * Only add variant="..." when you want a different style.
+ */
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+// Import variant components
+import {
+  CardGlass,
+  CardGlassHeader,
+  CardGlassTitle,
+  CardGlassDescription,
+  CardGlassContent,
+  CardGlassFooter
+} from "./variants/card-glass"
+
+import {
+  CardModern,
+  CardModernHeader,
+  CardModernTitle,
+  CardModernDescription,
+  CardModernContent,
+  CardModernFooter
+} from "./variants/card-modern"
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export type CardVariant = "default" | "modern" | "glass"
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: CardVariant
+  isActive?: boolean  // For modern variant
+}
+
+// ============================================================================
+// DEFAULT VARIANT (Your Current shadcn/ui Style - UNCHANGED)
+// ============================================================================
+
+const CardDefault = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-[var(--layout-card-radius)] border bg-card text-card-foreground shadow-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+)
+CardDefault.displayName = "CardDefault"
+
+const CardDefaultHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex flex-col space-y-1.5 p-[var(--layout-container-padding)]", className)}
+      {...props}
+    />
+  )
+)
+CardDefaultHeader.displayName = "CardDefaultHeader"
+
+const CardDefaultTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn(
+        "text-2xl font-semibold leading-none tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  )
+)
+CardDefaultTitle.displayName = "CardDefaultTitle"
+
+const CardDefaultDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => (
+    <p
+      ref={ref}
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+)
+CardDefaultDescription.displayName = "CardDefaultDescription"
+
+const CardDefaultContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-[var(--layout-container-padding)] pt-0", className)} {...props} />
+  )
+)
+CardDefaultContent.displayName = "CardDefaultContent"
+
+const CardDefaultFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex items-center p-[var(--layout-container-padding)] pt-0", className)}
+      {...props}
+    />
+  )
+)
+CardDefaultFooter.displayName = "CardDefaultFooter"
+
+// ============================================================================
+// MAIN CARD COMPONENT (Switches between variants)
+// ============================================================================
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = "default", isActive, ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlass ref={ref} {...props} />
+      case "modern":
+        return <CardModern ref={ref} isActive={isActive} {...props} />
+      default:
+        return <CardDefault ref={ref} {...props} />
+    }
+  }
+)
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = "default", ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlassHeader ref={ref} {...props} />
+      case "modern":
+        return <CardModernHeader ref={ref} {...props} />
+      default:
+        return <CardDefaultHeader ref={ref} {...props} />
+    }
+  }
+)
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, CardProps & React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ variant = "default", ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlassTitle ref={ref} {...props} />
+      case "modern":
+        return <CardModernTitle ref={ref} {...props} />
+      default:
+        return <CardDefaultTitle ref={ref} {...props} />
+    }
+  }
+)
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<HTMLParagraphElement, CardProps>(
+  ({ variant = "default", ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlassDescription ref={ref} {...props} />
+      case "modern":
+        return <CardModernDescription ref={ref} {...props} />
+      default:
+        return <CardDefaultDescription ref={ref} {...props} />
+    }
+  }
+)
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = "default", ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlassContent ref={ref} {...props} />
+      case "modern":
+        return <CardModernContent ref={ref} {...props} />
+      default:
+        return <CardDefaultContent ref={ref} {...props} />
+    }
+  }
+)
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = "default", ...props }, ref) => {
+    switch (variant) {
+      case "glass":
+        return <CardGlassFooter ref={ref} {...props} />
+      case "modern":
+        return <CardModernFooter ref={ref} {...props} />
+      default:
+        return <CardDefaultFooter ref={ref} {...props} />
+    }
+  }
+)
+CardFooter.displayName = "CardFooter"
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent
+}

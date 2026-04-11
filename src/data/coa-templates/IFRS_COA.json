@@ -1,0 +1,1713 @@
+{
+  "metadata": {
+    "key": "IFRS_COA",
+    "name": "IFRS COA",
+    "region": "International",
+    "description": "Universal standard for global enterprises — International Financial Reporting Standards",
+    "icon": "Globe",
+    "accent_color": "var(--app-info)",
+    "version": "1.0.0",
+    "last_updated": "2026-03-24"
+  },
+  "accounts": [
+    {
+      "code": "1000",
+      "name": "ASSETS",
+      "type": "ASSET",
+      "children": [
+        {
+          "code": "1100",
+          "name": "Current Assets",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1101",
+              "name": "Cash & Cash Equivalents",
+              "type": "ASSET",
+              "children": [
+                {
+                  "code": "1101.01",
+                  "name": "Cash in Hand",
+                  "type": "ASSET",
+                  "subType": "CASH",
+                  "syscohadaCode": "57",
+                  "syscohadaClass": "Class 5"
+                },
+                {
+                  "code": "1101.02",
+                  "name": "Cash Register (POS)",
+                  "type": "ASSET",
+                  "subType": "CASH",
+                  "syscohadaCode": "57",
+                  "syscohadaClass": "Class 5"
+                },
+                {
+                  "code": "1101.03",
+                  "name": "Main Bank Account",
+                  "type": "ASSET",
+                  "subType": "BANK",
+                  "syscohadaCode": "52",
+                  "syscohadaClass": "Class 5"
+                }
+              ]
+            },
+            {
+              "code": "1110",
+              "name": "Accounts Receivable",
+              "type": "ASSET",
+              "subType": "RECEIVABLE",
+              "syscohadaCode": "41",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "1120",
+              "name": "Inventory",
+              "type": "ASSET",
+              "syscohadaCode": "31",
+              "syscohadaClass": "Class 3",
+              "children": [
+                {
+                  "code": "1121",
+                  "name": "Raw Materials",
+                  "type": "ASSET",
+                  "subType": "INVENTORY",
+                  "syscohadaCode": "31",
+                  "syscohadaClass": "Class 3"
+                },
+                {
+                  "code": "1122",
+                  "name": "Finished Goods",
+                  "type": "ASSET",
+                  "subType": "INVENTORY",
+                  "syscohadaCode": "31",
+                  "syscohadaClass": "Class 3"
+                },
+                {
+                  "code": "1123",
+                  "name": "Work in Progress",
+                  "type": "ASSET",
+                  "subType": "INVENTORY",
+                  "syscohadaCode": "31",
+                  "syscohadaClass": "Class 3"
+                },
+                {
+                  "code": "1124",
+                  "name": "Goods in Transit",
+                  "type": "ASSET",
+                  "subType": "INVENTORY",
+                  "syscohadaCode": "31",
+                  "syscohadaClass": "Class 3"
+                }
+              ]
+            },
+            {
+              "code": "1130",
+              "name": "Prepaid Expenses",
+              "type": "ASSET",
+              "syscohadaCode": "47",
+              "syscohadaClass": "Class 4",
+              "children": [
+                {
+                  "code": "1131",
+                  "name": "Prepaid Insurance",
+                  "type": "ASSET",
+                  "syscohadaCode": "47",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "1132",
+                  "name": "Prepaid Rent",
+                  "type": "ASSET",
+                  "syscohadaCode": "47",
+                  "syscohadaClass": "Class 4"
+                }
+              ]
+            },
+            {
+              "code": "1140",
+              "name": "Employee Advances",
+              "type": "ASSET",
+              "subType": "RECEIVABLE",
+              "syscohadaCode": "42",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "1150",
+              "name": "Deposits & Guarantees",
+              "type": "ASSET",
+              "syscohadaCode": "27",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1160",
+              "name": "Short-Term Investments",
+              "type": "ASSET",
+              "syscohadaCode": "50",
+              "syscohadaClass": "Class 5"
+            }
+          ]
+        },
+        {
+          "code": "1200",
+          "name": "Non-Current Assets",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1201",
+              "name": "Land",
+              "type": "ASSET",
+              "syscohadaCode": "21",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1202",
+              "name": "Buildings",
+              "type": "ASSET",
+              "syscohadaCode": "23",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1203",
+              "name": "Furniture & Fixtures",
+              "type": "ASSET",
+              "syscohadaCode": "24",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1204",
+              "name": "Equipment",
+              "type": "ASSET",
+              "syscohadaCode": "24",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1205",
+              "name": "Vehicles",
+              "type": "ASSET",
+              "syscohadaCode": "25",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1206",
+              "name": "Software / Intangible Assets",
+              "type": "ASSET",
+              "syscohadaCode": "21",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1207",
+              "name": "Leasehold Improvements",
+              "type": "ASSET",
+              "syscohadaCode": "23",
+              "syscohadaClass": "Class 2"
+            }
+          ]
+        },
+        {
+          "code": "1210",
+          "name": "Accumulated Depreciation (CONTRA-ASSET)",
+          "type": "ASSET",
+          "children": [
+            {
+              "code": "1211",
+              "name": "Accumulated Depreciation – Equipment",
+              "type": "ASSET",
+              "syscohadaCode": "28",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1212",
+              "name": "Accumulated Depreciation – Vehicles",
+              "type": "ASSET",
+              "syscohadaCode": "28",
+              "syscohadaClass": "Class 2"
+            },
+            {
+              "code": "1213",
+              "name": "Accumulated Amortization – Software",
+              "type": "ASSET",
+              "syscohadaCode": "28",
+              "syscohadaClass": "Class 2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "2000",
+      "name": "LIABILITIES",
+      "type": "LIABILITY",
+      "children": [
+        {
+          "code": "2100",
+          "name": "Current Liabilities",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "2101",
+              "name": "Accounts Payable",
+              "type": "LIABILITY",
+              "subType": "PAYABLE",
+              "syscohadaCode": "40",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2102",
+              "name": "Accrued Liabilities",
+              "type": "LIABILITY",
+              "syscohadaCode": "40",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2103",
+              "name": "Customer Deposits",
+              "type": "LIABILITY",
+              "syscohadaCode": "41",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2104",
+              "name": "Goods Received Not Invoiced",
+              "type": "LIABILITY",
+              "syscohadaCode": "40",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2110",
+              "name": "Taxes Payable",
+              "type": "LIABILITY",
+              "children": [
+                {
+                  "code": "2111",
+                  "name": "VAT Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2112",
+                  "name": "Income Tax Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2113",
+                  "name": "Payroll Tax Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2114",
+                  "name": "Reverse Charge VAT",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2115",
+                  "name": "VAT Refund Receivable",
+                  "type": "ASSET",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2116",
+                  "name": "VAT Suspense (Cash-Basis)",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2117",
+                  "name": "VAT Collected (Output)",
+                  "type": "LIABILITY",
+                  "subType": "TAX",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2118",
+                  "name": "VAT Deductible (Input)",
+                  "type": "ASSET",
+                  "subType": "TAX",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2119",
+                  "name": "Withholding Tax – AIRSI",
+                  "type": "LIABILITY",
+                  "subType": "TAX",
+                  "syscohadaCode": "44",
+                  "syscohadaClass": "Class 4"
+                }
+              ]
+            },
+            {
+              "code": "2120",
+              "name": "Accrued Expenses",
+              "type": "LIABILITY",
+              "children": [
+                {
+                  "code": "2121",
+                  "name": "Salaries Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "42",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2122",
+                  "name": "Rent Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "40",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2123",
+                  "name": "Utilities Payable",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "40",
+                  "syscohadaClass": "Class 4"
+                },
+                {
+                  "code": "2124",
+                  "name": "Accrued Interest",
+                  "type": "LIABILITY",
+                  "syscohadaCode": "40",
+                  "syscohadaClass": "Class 4"
+                }
+              ]
+            },
+            {
+              "code": "2106",
+              "name": "Customer Advances & Deposits",
+              "type": "LIABILITY",
+              "syscohadaCode": "41",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2107",
+              "name": "Deferred Revenue (Unearned)",
+              "type": "LIABILITY",
+              "syscohadaCode": "47",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2108",
+              "name": "Loyalty Points Liability",
+              "type": "LIABILITY",
+              "syscohadaCode": "47",
+              "syscohadaClass": "Class 4"
+            },
+            {
+              "code": "2109",
+              "name": "Provision for Liabilities",
+              "type": "LIABILITY",
+              "syscohadaCode": "15",
+              "syscohadaClass": "Class 1"
+            },
+            {
+              "code": "2130",
+              "name": "Deferred Revenue",
+              "type": "LIABILITY",
+              "syscohadaCode": "47",
+              "syscohadaClass": "Class 4"
+            }
+          ]
+        },
+        {
+          "code": "2200",
+          "name": "Long-Term Liabilities",
+          "type": "LIABILITY",
+          "children": [
+            {
+              "code": "2201",
+              "name": "Bank Loan",
+              "type": "LIABILITY",
+              "syscohadaCode": "16",
+              "syscohadaClass": "Class 1"
+            },
+            {
+              "code": "2202",
+              "name": "Lease Liability",
+              "type": "LIABILITY",
+              "syscohadaCode": "16",
+              "syscohadaClass": "Class 1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "3000",
+      "name": "EQUITY",
+      "type": "EQUITY",
+      "children": [
+        {
+          "code": "3001",
+          "name": "Owner Capital",
+          "type": "EQUITY",
+          "syscohadaCode": "10",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3002",
+          "name": "Additional Capital",
+          "type": "EQUITY",
+          "syscohadaCode": "10",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3003",
+          "name": "Retained Earnings",
+          "type": "EQUITY",
+          "syscohadaCode": "11",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3004",
+          "name": "Current Year Profit / Loss",
+          "type": "EQUITY",
+          "syscohadaCode": "13",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3005",
+          "name": "Owner Draws / Withdrawals",
+          "type": "EQUITY",
+          "syscohadaCode": "10",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3006",
+          "name": "Reserves",
+          "type": "EQUITY",
+          "syscohadaCode": "11",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3100",
+          "name": "Share Capital",
+          "type": "EQUITY",
+          "syscohadaCode": "10",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3200",
+          "name": "Owner Draws",
+          "type": "EQUITY",
+          "syscohadaCode": "10",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3300",
+          "name": "Dividends Declared",
+          "type": "EQUITY",
+          "syscohadaCode": "12",
+          "syscohadaClass": "Class 1"
+        },
+        {
+          "code": "3400",
+          "name": "Retained Earnings Transfer",
+          "type": "EQUITY",
+          "syscohadaCode": "11",
+          "syscohadaClass": "Class 1"
+        }
+      ]
+    },
+    {
+      "code": "4000",
+      "name": "REVENUE",
+      "type": "INCOME",
+      "children": [
+        {
+          "code": "4100",
+          "name": "Sales Revenue",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "4101",
+              "name": "Sales – Cash",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4102",
+              "name": "Sales – Credit",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4103",
+              "name": "Sales – Online",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4104",
+              "name": "Sales Returns & Allowances",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4105",
+              "name": "Shipping & Delivery Revenue",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4110",
+              "name": "Sales Discounts",
+              "type": "INCOME",
+              "syscohadaCode": "70",
+              "syscohadaClass": "Class 7"
+            }
+          ]
+        },
+        {
+          "code": "4200",
+          "name": "Other Income",
+          "type": "INCOME",
+          "children": [
+            {
+              "code": "4201",
+              "name": "Discount Received",
+              "type": "INCOME",
+              "syscohadaCode": "77",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4202",
+              "name": "Interest Income",
+              "type": "INCOME",
+              "syscohadaCode": "77",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4203",
+              "name": "Inventory Adjustment Gain",
+              "type": "INCOME",
+              "syscohadaCode": "75",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4204",
+              "name": "Foreign Exchange Gain",
+              "type": "INCOME",
+              "syscohadaCode": "76",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4205",
+              "name": "Commission Income",
+              "type": "INCOME",
+              "syscohadaCode": "75",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4800",
+              "name": "Gain on Disposal / FX Gain",
+              "type": "INCOME",
+              "syscohadaCode": "77",
+              "syscohadaClass": "Class 7"
+            },
+            {
+              "code": "4900",
+              "name": "Other Revenue & Adjustments",
+              "type": "INCOME",
+              "syscohadaCode": "75",
+              "syscohadaClass": "Class 7"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "5000",
+      "name": "COST OF GOODS SOLD (COGS)",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "5100",
+          "name": "Cost of Sales",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "5101",
+              "name": "Cost of Goods Purchased",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5102",
+              "name": "Freight In",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5103",
+              "name": "Import Duties",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5104",
+              "name": "Inventory Adjustment",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5105",
+              "name": "Packaging & Materials",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5110",
+              "name": "Purchase Discounts",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            }
+          ]
+        },
+        {
+          "code": "5200",
+          "name": "Depreciation & Amortization",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "5220",
+              "name": "Inventory Write-off & Loss",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5230",
+              "name": "Production Variance",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5240",
+              "name": "Commission Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "63",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5250",
+              "name": "Bad Debt Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5260",
+              "name": "Bank Charges",
+              "type": "EXPENSE",
+              "syscohadaCode": "63",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5261",
+              "name": "Payment Processor Fees",
+              "type": "EXPENSE",
+              "syscohadaCode": "63",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5270",
+              "name": "FX Loss / Loss on Disposal",
+              "type": "EXPENSE",
+              "syscohadaCode": "66",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5291",
+              "name": "AIRSI Tax Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "64",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5295",
+              "name": "Accrued Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5296",
+              "name": "Provision Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "69",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "5299",
+              "name": "Rounding & Miscellaneous Adjustments",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "6000",
+      "name": "OPERATING EXPENSES",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "6100",
+          "name": "Operating Expenses",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "6101",
+              "name": "Salaries & Wages",
+              "type": "EXPENSE",
+              "syscohadaCode": "64",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6102",
+              "name": "Transport Allowance",
+              "type": "EXPENSE",
+              "syscohadaCode": "64",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6103",
+              "name": "Rent Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6104",
+              "name": "Utilities Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6105",
+              "name": "Internet & Phone",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6106",
+              "name": "Maintenance",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6107",
+              "name": "Cleaning",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6108",
+              "name": "Security",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            }
+          ]
+        },
+        {
+          "code": "6200",
+          "name": "Administrative Expenses",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "6201",
+              "name": "Office Supplies",
+              "type": "EXPENSE",
+              "syscohadaCode": "60",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6202",
+              "name": "Software / POS Subscription",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6203",
+              "name": "Professional Fees",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6204",
+              "name": "Travel & Entertainment",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6205",
+              "name": "Marketing & Advertising",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6206",
+              "name": "Legal Fees",
+              "type": "EXPENSE",
+              "syscohadaCode": "62",
+              "syscohadaClass": "Class 6"
+            }
+          ]
+        },
+        {
+          "code": "6300",
+          "name": "Financial Expenses",
+          "type": "EXPENSE",
+          "children": [
+            {
+              "code": "6301",
+              "name": "Bank Charges",
+              "type": "EXPENSE",
+              "syscohadaCode": "67",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6302",
+              "name": "Interest Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "67",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6303",
+              "name": "Depreciation & Amortization Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "68",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6304",
+              "name": "Bad Debt Expense",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6305",
+              "name": "Foreign Exchange Loss",
+              "type": "EXPENSE",
+              "syscohadaCode": "66",
+              "syscohadaClass": "Class 6"
+            },
+            {
+              "code": "6306",
+              "name": "Discount Given",
+              "type": "EXPENSE",
+              "syscohadaCode": "65",
+              "syscohadaClass": "Class 6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "9000",
+      "name": "SYSTEM & CLEARING ACCOUNTS",
+      "type": "EXPENSE",
+      "children": [
+        {
+          "code": "9001",
+          "name": "Stock Adjustment Control",
+          "type": "EXPENSE",
+          "syscohadaCode": "60",
+          "syscohadaClass": "Class 6",
+          "isSystemOnly": true,
+          "isHidden": true,
+          "requiresZeroBalance": true
+        },
+        {
+          "code": "9002",
+          "name": "POS Rounding Difference",
+          "type": "INCOME",
+          "syscohadaCode": "77",
+          "syscohadaClass": "Class 7",
+          "isSystemOnly": true,
+          "isHidden": true
+        },
+        {
+          "code": "9003",
+          "name": "Exchange Difference",
+          "type": "INCOME",
+          "syscohadaCode": "76",
+          "syscohadaClass": "Class 7",
+          "isSystemOnly": true,
+          "isHidden": true
+        }
+      ]
+    }
+  ],
+  "posting_rules": [
+    {
+      "event_code": "sales.invoice.receivable",
+      "account_code": "1110",
+      "module": "sales",
+      "description": "Accounts Receivable"
+    },
+    {
+      "event_code": "sales.invoice.revenue",
+      "account_code": "4101",
+      "module": "sales",
+      "description": "Sales Revenue"
+    },
+    {
+      "event_code": "sales.invoice.vat_output",
+      "account_code": "2111",
+      "module": "sales",
+      "description": "VAT Payable / Output"
+    },
+    {
+      "event_code": "sales.invoice.discount",
+      "account_code": "4110",
+      "module": "sales",
+      "description": "Sales Discounts"
+    },
+    {
+      "event_code": "sales.invoice.rounding",
+      "account_code": "5299",
+      "module": "sales",
+      "description": "Rounding Adjustment"
+    },
+    {
+      "event_code": "sales.invoice.shipping_revenue",
+      "account_code": "4105",
+      "module": "sales",
+      "description": "Shipping Revenue"
+    },
+    {
+      "event_code": "sales.invoice.service_revenue",
+      "account_code": "4102",
+      "module": "sales",
+      "description": "Service Revenue"
+    },
+    {
+      "event_code": "sales.invoice.advance_offset",
+      "account_code": "2106",
+      "module": "sales",
+      "description": "Customer Advance Offset"
+    },
+    {
+      "event_code": "sales.invoice.deposit_liability",
+      "account_code": "2106",
+      "module": "sales",
+      "description": "Customer Deposit Liability"
+    },
+    {
+      "event_code": "sales.invoice.loyalty_liability",
+      "account_code": "2108",
+      "module": "sales",
+      "description": "Loyalty Points Liability"
+    },
+    {
+      "event_code": "sales.credit_note.receivable_reversal",
+      "account_code": "1110",
+      "module": "sales",
+      "description": "AR Credit Note"
+    },
+    {
+      "event_code": "sales.credit_note.revenue_reversal",
+      "account_code": "4101",
+      "module": "sales",
+      "description": "Revenue Reversal"
+    },
+    {
+      "event_code": "sales.credit_note.discount_reversal",
+      "account_code": "4110",
+      "module": "sales",
+      "description": "Discount Reversal"
+    },
+    {
+      "event_code": "sales.credit_note.vat_output_reversal",
+      "account_code": "2111",
+      "module": "sales",
+      "description": "VAT Output Reversal"
+    },
+    {
+      "event_code": "sales.refund.cash",
+      "account_code": "1101.01",
+      "module": "sales",
+      "description": "Cash Refund"
+    },
+    {
+      "event_code": "sales.refund.bank",
+      "account_code": "1101.03",
+      "module": "sales",
+      "description": "Bank Refund"
+    },
+    {
+      "event_code": "sales.refund.receivable",
+      "account_code": "1110",
+      "module": "sales",
+      "description": "AR Refund Offset"
+    },
+    {
+      "event_code": "sales.writeoff.bad_debt_expense",
+      "account_code": "5250",
+      "module": "sales",
+      "description": "Bad Debt Expense"
+    },
+    {
+      "event_code": "sales.writeoff.receivable",
+      "account_code": "1110",
+      "module": "sales",
+      "description": "Write Off AR"
+    },
+    {
+      "event_code": "sales.commission.expense",
+      "account_code": "5240",
+      "module": "sales",
+      "description": "Commission Expense"
+    },
+    {
+      "event_code": "sales.commission.payable",
+      "account_code": "2103",
+      "module": "sales",
+      "description": "Commission Payable"
+    },
+    {
+      "event_code": "purchases.invoice.payable",
+      "account_code": "2101",
+      "module": "purchases",
+      "description": "Accounts Payable"
+    },
+    {
+      "event_code": "purchases.invoice.expense",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Purchase Expense / COGS"
+    },
+    {
+      "event_code": "purchases.invoice.inventory",
+      "account_code": "1122",
+      "module": "purchases",
+      "description": "Inventory from Purchase"
+    },
+    {
+      "event_code": "purchases.invoice.vat_input",
+      "account_code": "2114",
+      "module": "purchases",
+      "description": "VAT Recoverable / Input"
+    },
+    {
+      "event_code": "purchases.invoice.discount",
+      "account_code": "5110",
+      "module": "purchases",
+      "description": "Purchase Discounts"
+    },
+    {
+      "event_code": "purchases.invoice.freight",
+      "account_code": "5104",
+      "module": "purchases",
+      "description": "Freight In"
+    },
+    {
+      "event_code": "purchases.invoice.rounding",
+      "account_code": "5299",
+      "module": "purchases",
+      "description": "Rounding"
+    },
+    {
+      "event_code": "purchases.return.payable_reversal",
+      "account_code": "2101",
+      "module": "purchases",
+      "description": "AP Reversal"
+    },
+    {
+      "event_code": "purchases.return.inventory_reversal",
+      "account_code": "1122",
+      "module": "purchases",
+      "description": "Inventory Return"
+    },
+    {
+      "event_code": "purchases.return.vat_input_reversal",
+      "account_code": "2114",
+      "module": "purchases",
+      "description": "VAT Input Reversal"
+    },
+    {
+      "event_code": "purchases.payment.cash",
+      "account_code": "1101.01",
+      "module": "purchases",
+      "description": "Cash to Vendor"
+    },
+    {
+      "event_code": "purchases.payment.bank",
+      "account_code": "1101.03",
+      "module": "purchases",
+      "description": "Bank to Vendor"
+    },
+    {
+      "event_code": "purchases.payment.payable",
+      "account_code": "2101",
+      "module": "purchases",
+      "description": "AP Settlement"
+    },
+    {
+      "event_code": "purchases.vendor_credit.payable",
+      "account_code": "2101",
+      "module": "purchases",
+      "description": "Vendor Credit AP"
+    },
+    {
+      "event_code": "purchases.vendor_credit.expense_reversal",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Expense Reversal"
+    },
+    {
+      "event_code": "purchases.vendor_credit.inventory_reversal",
+      "account_code": "1122",
+      "module": "purchases",
+      "description": "Inventory Credit"
+    },
+    {
+      "event_code": "purchases.writeoff.payable",
+      "account_code": "2101",
+      "module": "purchases",
+      "description": "Write Off AP"
+    },
+    {
+      "event_code": "purchases.writeoff.expense",
+      "account_code": "5100",
+      "module": "purchases",
+      "description": "Write Off Expense"
+    },
+    {
+      "event_code": "inventory.receipt.inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Inventory"
+    },
+    {
+      "event_code": "inventory.receipt.grni",
+      "account_code": "2104",
+      "module": "inventory",
+      "description": "Goods Received Not Invoiced"
+    },
+    {
+      "event_code": "inventory.issue.cogs",
+      "account_code": "5100",
+      "module": "inventory",
+      "description": "COGS"
+    },
+    {
+      "event_code": "inventory.issue.inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Inventory Issue"
+    },
+    {
+      "event_code": "inventory.adjustment.loss",
+      "account_code": "5220",
+      "module": "inventory",
+      "description": "Adjustment Loss"
+    },
+    {
+      "event_code": "inventory.adjustment.gain",
+      "account_code": "4900",
+      "module": "inventory",
+      "description": "Adjustment Gain"
+    },
+    {
+      "event_code": "inventory.adjustment.inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Inventory Adjustment"
+    },
+    {
+      "event_code": "inventory.transfer.source_inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Source Warehouse"
+    },
+    {
+      "event_code": "inventory.transfer.destination_inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Dest Warehouse"
+    },
+    {
+      "event_code": "inventory.production.raw_material",
+      "account_code": "1121",
+      "module": "inventory",
+      "description": "Raw Materials"
+    },
+    {
+      "event_code": "inventory.production.wip",
+      "account_code": "1123",
+      "module": "inventory",
+      "description": "Work In Progress"
+    },
+    {
+      "event_code": "inventory.production.finished_goods",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Finished Goods"
+    },
+    {
+      "event_code": "inventory.production.variance",
+      "account_code": "5230",
+      "module": "inventory",
+      "description": "Production Variance"
+    },
+    {
+      "event_code": "inventory.writeoff.inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Inventory Write-off"
+    },
+    {
+      "event_code": "inventory.writeoff.expense",
+      "account_code": "5220",
+      "module": "inventory",
+      "description": "Write-off Expense"
+    },
+    {
+      "event_code": "inventory.expiry.inventory",
+      "account_code": "1122",
+      "module": "inventory",
+      "description": "Expired Inventory"
+    },
+    {
+      "event_code": "inventory.expiry.loss",
+      "account_code": "5220",
+      "module": "inventory",
+      "description": "Expiry Loss"
+    },
+    {
+      "event_code": "payments.customer.cash",
+      "account_code": "1101.01",
+      "module": "payments",
+      "description": "Cash in Hand"
+    },
+    {
+      "event_code": "payments.customer.bank",
+      "account_code": "1101.03",
+      "module": "payments",
+      "description": "Bank Account"
+    },
+    {
+      "event_code": "payments.customer.receivable",
+      "account_code": "1110",
+      "module": "payments",
+      "description": "AR Settlement"
+    },
+    {
+      "event_code": "payments.supplier.cash",
+      "account_code": "1101.01",
+      "module": "payments",
+      "description": "Cash Out"
+    },
+    {
+      "event_code": "payments.supplier.bank",
+      "account_code": "1101.03",
+      "module": "payments",
+      "description": "Bank Payment"
+    },
+    {
+      "event_code": "payments.supplier.payable",
+      "account_code": "2101",
+      "module": "payments",
+      "description": "AP Settlement"
+    },
+    {
+      "event_code": "payments.fee.bank_charge",
+      "account_code": "5260",
+      "module": "payments",
+      "description": "Bank Charges"
+    },
+    {
+      "event_code": "payments.fee.processor_fee",
+      "account_code": "5261",
+      "module": "payments",
+      "description": "Processor Fees"
+    },
+    {
+      "event_code": "payments.adjustment.receivable",
+      "account_code": "1110",
+      "module": "payments",
+      "description": "AR Adjustment"
+    },
+    {
+      "event_code": "payments.adjustment.payable",
+      "account_code": "2101",
+      "module": "payments",
+      "description": "AP Adjustment"
+    },
+    {
+      "event_code": "payments.refund.cash",
+      "account_code": "1101.01",
+      "module": "payments",
+      "description": "Cash Refund"
+    },
+    {
+      "event_code": "payments.refund.bank",
+      "account_code": "1101.03",
+      "module": "payments",
+      "description": "Bank Refund"
+    },
+    {
+      "event_code": "tax.vat.output",
+      "account_code": "2111",
+      "module": "tax",
+      "description": "VAT Output"
+    },
+    {
+      "event_code": "tax.vat.input",
+      "account_code": "2114",
+      "module": "tax",
+      "description": "VAT Input"
+    },
+    {
+      "event_code": "tax.vat.payable",
+      "account_code": "2115",
+      "module": "tax",
+      "description": "Net VAT Payable"
+    },
+    {
+      "event_code": "tax.vat.recoverable",
+      "account_code": "2114",
+      "module": "tax",
+      "description": "VAT Recoverable"
+    },
+    {
+      "event_code": "tax.vat.adjustment",
+      "account_code": "2115",
+      "module": "tax",
+      "description": "VAT Adjustment"
+    },
+    {
+      "event_code": "tax.vat.suspense",
+      "account_code": "2116",
+      "module": "tax",
+      "description": "VAT Suspense"
+    },
+    {
+      "event_code": "tax.withholding.sales",
+      "account_code": "2117",
+      "module": "tax",
+      "description": "WHT on Sales"
+    },
+    {
+      "event_code": "tax.withholding.purchases",
+      "account_code": "2117",
+      "module": "tax",
+      "description": "WHT on Purchases"
+    },
+    {
+      "event_code": "tax.withholding.payable",
+      "account_code": "2117",
+      "module": "tax",
+      "description": "WHT Payable"
+    },
+    {
+      "event_code": "tax.airsi.purchases",
+      "account_code": "2118",
+      "module": "tax",
+      "description": "AIRSI Withheld"
+    },
+    {
+      "event_code": "tax.airsi.payable",
+      "account_code": "2118",
+      "module": "tax",
+      "description": "AIRSI Payable"
+    },
+    {
+      "event_code": "tax.airsi.expense",
+      "account_code": "5291",
+      "module": "tax",
+      "description": "AIRSI Expense"
+    },
+    {
+      "event_code": "tax.settlement.vat_payable",
+      "account_code": "2115",
+      "module": "tax",
+      "description": "VAT Settlement"
+    },
+    {
+      "event_code": "tax.settlement.vat_recoverable",
+      "account_code": "2114",
+      "module": "tax",
+      "description": "VAT Recovery"
+    },
+    {
+      "event_code": "tax.settlement.reverse_charge",
+      "account_code": "2115",
+      "module": "tax",
+      "description": "Reverse Charge VAT"
+    },
+    {
+      "event_code": "treasury.cash.deposit",
+      "account_code": "1101.01",
+      "module": "treasury",
+      "description": "Cash Deposit"
+    },
+    {
+      "event_code": "treasury.cash.withdrawal",
+      "account_code": "1101.01",
+      "module": "treasury",
+      "description": "Cash Withdrawal"
+    },
+    {
+      "event_code": "treasury.bank.deposit",
+      "account_code": "1101.03",
+      "module": "treasury",
+      "description": "Bank Deposit"
+    },
+    {
+      "event_code": "treasury.bank.withdrawal",
+      "account_code": "1101.03",
+      "module": "treasury",
+      "description": "Bank Withdrawal"
+    },
+    {
+      "event_code": "treasury.bank.transfer",
+      "account_code": "1101.03",
+      "module": "treasury",
+      "description": "Inter-bank Transfer"
+    },
+    {
+      "event_code": "treasury.fx.gain",
+      "account_code": "4800",
+      "module": "treasury",
+      "description": "FX Gain"
+    },
+    {
+      "event_code": "treasury.fx.loss",
+      "account_code": "5270",
+      "module": "treasury",
+      "description": "FX Loss"
+    },
+    {
+      "event_code": "treasury.reconciliation.adjustment",
+      "account_code": "5299",
+      "module": "treasury",
+      "description": "Reconciliation Adj."
+    },
+    {
+      "event_code": "assets.purchase.asset",
+      "account_code": "1200",
+      "module": "assets",
+      "description": "Fixed Asset"
+    },
+    {
+      "event_code": "assets.purchase.payable",
+      "account_code": "2101",
+      "module": "assets",
+      "description": "Asset AP"
+    },
+    {
+      "event_code": "assets.purchase.vat_input",
+      "account_code": "2114",
+      "module": "assets",
+      "description": "VAT on Asset"
+    },
+    {
+      "event_code": "assets.depreciation.expense",
+      "account_code": "5200",
+      "module": "assets",
+      "description": "Depreciation Expense"
+    },
+    {
+      "event_code": "assets.depreciation.accumulated",
+      "account_code": "1211",
+      "module": "assets",
+      "description": "Accumulated Depreciation"
+    },
+    {
+      "event_code": "assets.disposal.asset",
+      "account_code": "1200",
+      "module": "assets",
+      "description": "Dispose Asset"
+    },
+    {
+      "event_code": "assets.disposal.accumulated",
+      "account_code": "1211",
+      "module": "assets",
+      "description": "Clear Accum Depr"
+    },
+    {
+      "event_code": "assets.disposal.gain",
+      "account_code": "4800",
+      "module": "assets",
+      "description": "Gain on Disposal"
+    },
+    {
+      "event_code": "assets.disposal.loss",
+      "account_code": "5270",
+      "module": "assets",
+      "description": "Loss on Disposal"
+    },
+    {
+      "event_code": "equity.capital.contribution",
+      "account_code": "3100",
+      "module": "equity",
+      "description": "Owner Capital"
+    },
+    {
+      "event_code": "equity.capital.withdrawal",
+      "account_code": "3200",
+      "module": "equity",
+      "description": "Owner Draws"
+    },
+    {
+      "event_code": "equity.dividend.declaration",
+      "account_code": "3300",
+      "module": "equity",
+      "description": "Dividends Declared"
+    },
+    {
+      "event_code": "equity.dividend.payment",
+      "account_code": "1101.03",
+      "module": "equity",
+      "description": "Dividend Payment"
+    },
+    {
+      "event_code": "equity.retained_earnings.transfer",
+      "account_code": "3400",
+      "module": "equity",
+      "description": "Retained Earnings"
+    },
+    {
+      "event_code": "adjustment.journal.debit",
+      "account_code": "5299",
+      "module": "adjustment",
+      "description": "Manual JE Debit"
+    },
+    {
+      "event_code": "adjustment.journal.credit",
+      "account_code": "4900",
+      "module": "adjustment",
+      "description": "Manual JE Credit"
+    },
+    {
+      "event_code": "adjustment.accrual.expense",
+      "account_code": "5295",
+      "module": "adjustment",
+      "description": "Accrued Expense"
+    },
+    {
+      "event_code": "adjustment.accrual.revenue",
+      "account_code": "4900",
+      "module": "adjustment",
+      "description": "Accrued Revenue"
+    },
+    {
+      "event_code": "adjustment.deferral.expense",
+      "account_code": "1130",
+      "module": "adjustment",
+      "description": "Prepaid Expense"
+    },
+    {
+      "event_code": "adjustment.deferral.revenue",
+      "account_code": "2107",
+      "module": "adjustment",
+      "description": "Deferred Revenue"
+    },
+    {
+      "event_code": "adjustment.provision.expense",
+      "account_code": "5296",
+      "module": "adjustment",
+      "description": "Provision Expense"
+    },
+    {
+      "event_code": "adjustment.provision.liability",
+      "account_code": "2109",
+      "module": "adjustment",
+      "description": "Provision Liability"
+    },
+    {
+      "event_code": "suspense.reception",
+      "account_code": "2104",
+      "module": "purchases",
+      "description": "Goods received not invoiced"
+    }
+  ],
+  "migration_hints": {
+    "to_SYSCOHADA_REVISED": {
+      "1101.01": "571",
+      "1101.02": "571",
+      "1101.03": "521",
+      "1110": "411",
+      "1121": "31",
+      "1122": "31",
+      "2101": "401",
+      "2111": "443",
+      "2118": "445",
+      "3001": "101",
+      "3003": "12",
+      "4101": "701",
+      "5101": "601",
+      "6101": "661",
+      "6103": "622"
+    },
+    "to_FRENCH_PCG": {
+      "1101.01": "53",
+      "1101.03": "512",
+      "1110": "411",
+      "1121": "31",
+      "1122": "37",
+      "2101": "401",
+      "2111": "4457",
+      "2118": "4456",
+      "3001": "101",
+      "3003": "11",
+      "4101": "707",
+      "5101": "607",
+      "6101": "641",
+      "6103": "613"
+    },
+    "to_LEBANESE_PCN": {
+      "1101.01": "531",
+      "1101.02": "532",
+      "1101.03": "511",
+      "1110": "411",
+      "1122": "31",
+      "2101": "401",
+      "2111": "441",
+      "2118": "442",
+      "3001": "101",
+      "3003": "12",
+      "4101": "701",
+      "5101": "601",
+      "6101": "641",
+      "6103": "613"
+    }
+  }
+}

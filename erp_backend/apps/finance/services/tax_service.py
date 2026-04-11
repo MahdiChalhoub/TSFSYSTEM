@@ -1,0 +1,72 @@
+from decimal import Decimal
+from django.db.models import Sum
+from django.core.exceptions import ValidationError
+
+class TaxService:
+    @staticmethod
+    def get_declared_report(organization, start_date, end_date):
+        """
+        Generates the 'Virtual Reclassification' Report for Mixed/Regular modes.
+        """
+        from erp.connector_registry import connector
+        Order = connector.require('pos.orders.get_model', org_id=0, source='finance')
+        OrderLine = connector.require('pos.order_lines.get_model', org_id=0, source='finance')
+        if not Order:
+            raise ValidationError("POS module is required for tax reports.")
+        from erp.services import ConfigurationService
+        from django.db.models import Sum
+        
+        settings = ConfigurationService.get_global_settings(organization)
+        company_type = settings.get('companyType', 'REGULAR')
+        
+        if company_type == 'MICRO':
+            sales = Order.objects.filter(
+                organization=organization,
+                type='SALE',
+                scope='OFFICIAL',
+                created_at__range=[start_date, end_date]
+            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+            
+            micro_rate = Decimal(str(settings.get('microTaxPercentage', 0))) / 100
+            tax_due = sales * micro_rate
+            
+            return {
+                "type": "MICRO",
+                "period": f"{start_date} to {end_date}",
+                "sales_revenue": sales,
+                "tax_due": tax_due,
+                "note": f"Calculated at {micro_rate*100}% of Revenue"
+            }
+            
+        else:
+            purchase_lines = OrderLine.objects.filter(
+                organization=organization,
+                order__type='PURCHASE',
+                order__scope='OFFICIAL',
+                order__status__in=['COMPLETED', 'RECEIVED'],
+                order__created_at__range=[start_date, end_date]
+            )
+            
+            total_ht = Decimal('0')
+            total_vat_recoverable = Decimal('0')
+            total_ttc = Decimal('0')
+            
+            for line in purchase_lines:
+                ttc = line.subtotal
+                rate = line.tax_rate  # stored directly as fraction e.g. 0.18
+                
+                ht = (ttc / (Decimal('1') + rate)) if rate else ttc
+                vat = ttc - ht
+                
+                total_ht += ht.quantize(Decimal('0.01'))
+                total_vat_recoverable += vat.quantize(Decimal('0.01'))
+                total_ttc += ttc.quantize(Decimal('0.01'))
+                
+            return {
+                "type": "STANDARD_RECLASSIFIED",
+                "period": f"{start_date} to {end_date}",
+                "purchases_ht": total_ht,
+                "vat_recoverable": total_vat_recoverable,
+                "purchases_ttc_internal": total_ttc,
+                "note": "Virtual Reclassification: Ledger=TTC, Report=HT+VAT"
+            }

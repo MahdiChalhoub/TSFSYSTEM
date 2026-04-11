@@ -1,0 +1,97 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TSFSYSTEM — Docker Compose for Development
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build      # start all
+#   docker compose -f docker-compose.dev.yml restart frontend # restart one
+#   docker compose -f docker-compose.dev.yml logs -f frontend # follow logs
+#   docker compose -f docker-compose.dev.yml down             # stop all
+#
+# Hot Reload:
+#   Source code is volume-mounted. Save a file → auto-recompile.
+#   Next.js Turbopack + Django runserver both watch for changes.
+#
+# Crash Isolation:
+#   Each service has memory limits and auto-restart.
+#   If frontend OOMs → only frontend restarts. Backend stays alive.
+#
+# Database:
+#   Uses host PostgreSQL (your existing tsfdb with all data).
+#   No new DB container — no data migration needed.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── Django Backend ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    restart: unless-stopped
+    volumes:
+      - ./erp_backend:/app/erp_backend
+      - ./.env:/app/.env:ro
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_NAME=tsfdb
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=*
+    mem_limit: 1g
+    memswap_limit: 1g
+    networks:
+      - tsf-dev
+
+  # ─── Next.js Frontend ────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./.env:/app/.env:ro
+    ports:
+      - "3000:3000"
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - DJANGO_URL=http://backend:8000
+      - NEXT_PUBLIC_ROOT_DOMAIN=developos.shop
+      - NEXT_PUBLIC_API_URL=/api
+      - ROOT_DOMAIN=developos.shop
+    mem_limit: 3g
+    memswap_limit: 3g
+    networks:
+      - tsf-dev
+
+  # ─── Redis (for Celery, optional) ────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - tsf-dev
+
+networks:
+  tsf-dev:
+    driver: bridge

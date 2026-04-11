@@ -1,0 +1,36 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TSFSYSTEM — Backend Dev Dockerfile
+# Hot-reload Django development server with auto-restart on crash
+# ═══════════════════════════════════════════════════════════════════════════════
+
+FROM python:3.12-slim
+
+# System dependencies for psycopg2, Pillow, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies (cached layer)
+COPY erp_backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the .env for Django settings to read
+COPY .env /app/.env
+
+# The actual source code is volume-mounted at runtime
+# This COPY is just for the initial build / fallback
+COPY erp_backend /app/erp_backend
+
+WORKDIR /app/erp_backend
+
+EXPOSE 8000
+
+# Run migrations then start the dev server
+# --nothreading is removed to allow background tasks
+# --noreload is NOT used — we WANT auto-reload on code changes
+CMD ["sh", "-c", "python manage.py migrate --noinput 2>/dev/null; python manage.py runserver 0.0.0.0:8000"]

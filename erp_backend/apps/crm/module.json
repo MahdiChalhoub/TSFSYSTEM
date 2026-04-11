@@ -1,0 +1,129 @@
+{
+  "name": "crm",
+  "display_name": "Customer Relationship Management",
+  "version": "1.2.1",
+  "description": "Contact management, lifecycle governance, pricing engine, loyalty program, supplier performance, commercial relationship intelligence, merge workflows, type conversions, and bulk import/export",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "crm",
+  "depends_on": [
+    "core"
+  ],
+  "permissions": [
+    "crm.view_contact",
+    "crm.create_contact",
+    "crm.edit_contact",
+    "crm.delete_contact",
+    "crm.merge_contact",
+    "crm.manage_tags",
+    "crm.manage_contact_people",
+    "crm.view_supplier_scorecard",
+    "crm.rate_supplier",
+    "crm.manage_loyalty",
+    "crm.adjust_loyalty",
+    "crm.view_pricing",
+    "crm.manage_price_groups",
+    "crm.manage_price_rules",
+    "crm.view_customer_financials",
+    "crm.export_data",
+    "crm.import_data",
+    "crm.convert_contact_type",
+    "crm.view_audit_log",
+    "crm.block_contact",
+    "crm.archive_contact"
+  ],
+  "events_emitted": [
+    "crm.customer_created",
+    "crm.customer_updated",
+    "crm.contact_created",
+    "crm.contact_status_changed",
+    "crm.contact_merged",
+    "crm.lead_created",
+    "crm.lead_converted"
+  ],
+  "events_consumed": [
+    "invoice.created",
+    "payment.received",
+    "sales.order_created"
+  ],
+  "config_schema": {
+    "lead_stages": {
+      "type": "array",
+      "default": [
+        "New",
+        "Contacted",
+        "Qualified",
+        "Proposal",
+        "Won",
+        "Lost"
+      ],
+      "description": "Lead pipeline stages"
+    },
+    "auto_create_customer_from_lead": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically create customer when lead is won"
+    },
+    "crm_contact_lifecycle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable lifecycle status model (DRAFT, ACTIVE, BLOCKED, etc.)"
+    },
+    "crm_duplicate_detection": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable duplicate detection on contact creation"
+    },
+    "crm_require_audit_reason_for_credit_change": {
+      "type": "boolean",
+      "default": true,
+      "description": "Require reason/comment when changing credit_limit, payment_terms, or tax_profile"
+    },
+    "crm_degraded_contact_creation_without_finance": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow contact creation when finance service is unavailable (sets finance_link_status=PENDING)"
+    },
+    "crm_merge_contacts": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable contact merge workflow with dependent record reassignment"
+    },
+    "crm_type_conversion": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable contact type conversions with COA re-linking"
+    },
+    "crm_bulk_import": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable bulk CSV import with duplicate detection"
+    }
+  },
+  "models": [
+    "Contact",
+    "ContactTag",
+    "ContactPerson",
+    "ContactAuditLog",
+    "PriceGroup",
+    "PriceGroupMember",
+    "ClientPriceRule"
+  ],
+  "api_endpoints": [
+    "/api/crm/contacts",
+    "/api/crm/contacts/{id}/merge",
+    "/api/crm/contacts/{id}/convert-type",
+    "/api/crm/contacts/{id}/allowed-conversions",
+    "/api/crm/contacts/{id}/rate",
+    "/api/crm/contacts/{id}/audit-log",
+    "/api/crm/contacts/{id}/scorecard",
+    "/api/crm/contacts/{id}/check-duplicates",
+    "/api/crm/contacts/import-preview",
+    "/api/crm/contacts/import-execute",
+    "/api/crm/contacts/export",
+    "/api/crm/contact-tags",
+    "/api/crm/contact-persons",
+    "/api/crm/price-groups",
+    "/api/crm/price-rules"
+  ]
+}

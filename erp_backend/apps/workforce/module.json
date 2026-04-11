@@ -1,0 +1,123 @@
+{
+    "name": "workforce",
+    "display_name": "Workforce Intelligence & Scoring Engine (WISE)",
+    "version": "2.0.0",
+    "description": "Enterprise performance scoring engine. Tracks employee events across all modules, calculates family and dimension scores, manages risk levels, and awards performance badges.",
+    "author": "TSFSYSTEM Team",
+    "license": "Proprietary",
+    "category": "hr",
+    "depends_on": [
+        "core",
+        "hr",
+        "finance",
+        "crm",
+        "sales",
+        "inventory",
+        "workspace"
+    ],
+    "permissions": [
+        "workforce.view_own_summary",
+        "workforce.view_all_summaries",
+        "workforce.apply_adjustment",
+        "workforce.manage_rules",
+        "workforce.view_risk_heatmap",
+        "workforce.reverse_event"
+    ],
+    "events_emitted": [
+        "workforce.risk_increased",
+        "workforce.badges_awarded",
+        "workforce.score_updated"
+    ],
+    "events_consumed": [
+        "crm.interaction.recorded",
+        "crm.contact.type_converted",
+        "invoice.created",
+        "invoice.paid",
+        "finance.expense.unauthorized",
+        "hr.attendance.late",
+        "hr.attendance.on_time",
+        "hr.absence.unexcused",
+        "order.completed",
+        "pos.session.closed",
+        "inventory.insufficient_stock",
+        "inventory.expiry_waste",
+        "inventory.stock_count.accurate",
+        "task.completed",
+        "workspace.task.overdue",
+        "procurement.po.on_time",
+        "procurement.po.late"
+    ],
+    "models": [
+        "ScoreRule",
+        "EmployeeScoreEvent",
+        "EmployeeScoreSummary",
+        "EmployeeScorePeriod",
+        "EmployeeScoreAdjustment",
+        "EmployeeBadge"
+    ],
+    "scoring": {
+        "normalization": "sigmoid",
+        "neutral_baseline": 50,
+        "family_weights": {
+            "PERFORMANCE": 0.30,
+            "TRUST": 0.25,
+            "COMPLIANCE": 0.20,
+            "RELIABILITY": 0.15,
+            "LEADERSHIP": 0.10
+        },
+        "risk_thresholds": {
+            "CRITICAL": {
+                "max_score": 40,
+                "or_criticals": 5
+            },
+            "HIGH_RISK": {
+                "max_score": 60,
+                "or_criticals": 2
+            },
+            "AT_RISK": {
+                "max_score": 75
+            },
+            "STABLE": {
+                "min_score": 75
+            }
+        },
+        "badge_thresholds": {
+            "PLATINUM": 90,
+            "GOLD": 80,
+            "SILVER": 70,
+            "BRONZE": 60,
+            "WATCHLIST": 0
+        }
+    },
+    "scheduled_tasks": [
+        {
+            "command": "snapshot_workforce_scores",
+            "cron": "0 1 1 * *",
+            "description": "Take monthly score snapshots for all employees (runs 1st of each month at 01:00)"
+        },
+        {
+            "command": "award_workforce_badges",
+            "cron": "0 5 1 * *",
+            "description": "Award performance badges for the closed period (runs 1st of each month at 05:00)"
+        },
+        {
+            "command": "recalculate_all_scores",
+            "cron": "0 3 * * 0",
+            "description": "Full score rebuild from events (runs every Sunday at 03:00 for data integrity)"
+        }
+    ],
+    "api_endpoints": [
+        "GET  /api/workforce/summaries/",
+        "GET  /api/workforce/summaries/my_summary/",
+        "GET  /api/workforce/summaries/my_performance/",
+        "GET  /api/workforce/summaries/leaderboard/",
+        "GET  /api/workforce/summaries/risk_heatmap/",
+        "POST /api/workforce/summaries/adjust/",
+        "GET  /api/workforce/events/",
+        "POST /api/workforce/events/{id}/reverse/",
+        "GET  /api/workforce/periods/",
+        "GET  /api/workforce/badges/",
+        "GET  /api/workforce/rules/",
+        "GET  /api/workforce/rules/by_module/"
+    ]
+}

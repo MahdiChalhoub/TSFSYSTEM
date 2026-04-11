@@ -1,0 +1,69 @@
+{
+  "name": "pos",
+  "display_name": "Point of Sale",
+  "version": "1.4.0",
+  "description": "Point of sale terminal for retail operations including register management, sales processing, and cash handling",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "pos",
+  "depends_on": ["core", "inventory", "finance"],
+  "permissions": [
+    "pos.open_register",
+    "pos.close_register",
+    "pos.process_sale",
+    "pos.void_sale",
+    "pos.apply_discount",
+    "pos.view_reports",
+    "pos.manage_settings"
+  ],
+  "events_emitted": [
+    "pos.register_opened",
+    "pos.register_closed",
+    "pos.sale_completed",
+    "pos.sale_voided",
+    "pos.cash_variance_detected"
+  ],
+  "events_consumed": [
+    "inventory.stock_moved",
+    "finance.payment_created"
+  ],
+  "config_schema": {
+    "require_pin": {
+      "type": "boolean",
+      "default": true,
+      "description": "Require PIN to open register"
+    },
+    "allow_discounts": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow cashiers to apply discounts"
+    },
+    "max_discount_percent": {
+      "type": "number",
+      "default": 20,
+      "description": "Maximum discount percentage allowed"
+    },
+    "cash_variance_threshold": {
+      "type": "number",
+      "default": 10.00,
+      "description": "Alert if cash variance exceeds this amount"
+    }
+  },
+  "models": [
+    "POSRegister",
+    "RegisterSession",
+    "POSSale",
+    "POSTransaction"
+  ],
+  "migrations": [
+    "0001_initial.py",
+    "0002_add_register_sessions.py",
+    "0046_posregister_account_book_rules_override.py"
+  ],
+  "api_endpoints": [
+    "/api/pos/registers",
+    "/api/pos/sales",
+    "/api/pos/transactions",
+    "/api/pos/reports"
+  ]
+}

@@ -1,0 +1,201 @@
+"""
+Advanced Inventory Models
+=========================
+ProductBatch, ProductSerial, ExpiryAlert, and StockValuationEntry
+for batch tracking, serial tracking, expiry management, and
+FIFO/LIFO/Weighted Average cost valuation.
+"""
+from django.db import models
+from django.core.exceptions import ValidationError
+from decimal import Decimal
+from kernel.tenancy.models import TenantOwnedModel
+from kernel.audit.mixins import AuditLogMixin
+
+
+# =============================================================================
+# PRODUCT BATCHES (Full lifecycle)
+# =============================================================================
+
+class ProductBatch(AuditLogMixin, TenantOwnedModel):
+    """
+    Full batch tracking with manufacturing date, expiry, cost, and lifecycle.
+    Extends the basic StockBatch concept with status management.
+    """
+    STATUS_CHOICES = (
+        ('ACTIVE', 'Active'),
+        ('QUARANTINE', 'In Quarantine'),
+        ('EXPIRED', 'Expired'),
+        ('CONSUMED', 'Consumed'),
+    )
+    product = models.ForeignKey('inventory.Product', on_delete=models.PROTECT, related_name='batches')
+    batch_number = models.CharField(max_length=100)
+    lot_number = models.CharField(max_length=100, null=True, blank=True)
+    manufacturing_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    received_date = models.DateField(auto_now_add=True)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ACTIVE')
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    supplier = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'product_batch'
+        unique_together = ('batch_number', 'product', 'organization')
+        ordering = ['expiry_date', 'received_date']
+
+    def __str__(self):
+        return f"Batch {self.batch_number} — {self.product.name}"
+
+
+# =============================================================================
+# PRODUCT SERIALS
+# =============================================================================
+
+class ProductSerial(AuditLogMixin, TenantOwnedModel):
+    """
+    Individual serial number tracking per product unit.
+    Each serial records what batch it belongs to and its lifecycle.
+    """
+    STATUS_CHOICES = (
+        ('AVAILABLE', 'Available'),
+        ('SOLD', 'Sold'),
+        ('RETURNED', 'Returned'),
+        ('DAMAGED', 'Damaged'),
+        ('RESERVED', 'Reserved'),
+    )
+    product = models.ForeignKey('inventory.Product', on_delete=models.PROTECT, related_name='serials')
+    serial_number = models.CharField(max_length=200)
+    batch = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='serials')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='AVAILABLE')
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    sold_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    sold_date = models.DateTimeField(null=True, blank=True)
+    sold_to = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'product_serial'
+        unique_together = ('serial_number', 'product', 'organization')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'serial_number']),
+            models.Index(fields=['organization', 'product', 'status']),
+            models.Index(fields=['organization', 'warehouse', 'status']),
+        ]
+
+    def __str__(self):
+        return f"S/N {self.serial_number} — {self.product.name} [{self.status}]"
+
+
+class SerialLog(AuditLogMixin, TenantOwnedModel):
+    """
+    Audit trail for a specific serial number.
+    """
+    serial = models.ForeignKey(ProductSerial, on_delete=models.CASCADE, related_name='logs')
+    action = models.CharField(max_length=100) # PURCHASE, SALE, TRANSFER, ADJUSTMENT
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    user_name = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'product_serial_log'
+        ordering = ['-created_at']
+
+
+# =============================================================================
+# EXPIRY ALERTS
+# =============================================================================
+
+class ExpiryAlert(AuditLogMixin, TenantOwnedModel):
+    """
+    Alert for near-expiry or expired batches.
+    Generated by ValuationService.check_expiry_alerts().
+    """
+    SEVERITY_CHOICES = (
+        ('WARNING', 'Warning (30-60 days)'),
+        ('CRITICAL', 'Critical (0-30 days)'),
+        ('EXPIRED', 'Expired'),
+    )
+    batch = models.ForeignKey(ProductBatch, on_delete=models.CASCADE, related_name='expiry_alerts')
+    product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    days_until_expiry = models.IntegerField(help_text='Negative = already expired')
+    quantity_at_risk = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    value_at_risk = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    is_acknowledged = models.BooleanField(default=False)
+    acknowledged_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'expiry_alert'
+        ordering = ['days_until_expiry', '-quantity_at_risk']
+
+    def __str__(self):
+        return f"[{self.severity}] {self.product.name} — Batch {self.batch.batch_number}"
+
+
+# =============================================================================
+# STOCK VALUATION ENTRIES
+# =============================================================================
+
+class StockValuationEntry(AuditLogMixin, TenantOwnedModel):
+    """
+    Per-movement valuation record for FIFO/LIFO/Weighted Average costing.
+    Tracks running balance of quantity and value per product/warehouse.
+    """
+    METHOD_CHOICES = (
+        ('FIFO', 'First In First Out'),
+        ('LIFO', 'Last In First Out'),
+        ('WEIGHTED_AVG', 'Weighted Average'),
+    )
+    MOVEMENT_CHOICES = (
+        ('IN', 'Stock In'),
+        ('OUT', 'Stock Out'),
+        ('ADJUSTMENT', 'Adjustment'),
+        ('TRANSFER_IN', 'Transfer In'),
+        ('TRANSFER_OUT', 'Transfer Out'),
+    )
+    product = models.ForeignKey('inventory.Product', on_delete=models.PROTECT, related_name='valuation_entries')
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    movement_type = models.CharField(max_length=20, choices=MOVEMENT_CHOICES)
+    movement_date = models.DateTimeField()
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=15, decimal_places=2)
+    total_value = models.DecimalField(max_digits=15, decimal_places=2)
+    valuation_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='WEIGHTED_AVG')
+
+    VALUATION_SCOPE_CHOICES = (
+        ('GLOBAL', 'Global — single cost across all warehouses'),
+        ('PER_WAREHOUSE', 'Per Warehouse — cost differs by location'),
+        ('PER_BATCH', 'Per Batch — cost tracked at batch level'),
+    )
+    valuation_scope = models.CharField(
+        max_length=15, choices=VALUATION_SCOPE_CHOICES, default='GLOBAL',
+        help_text='Determines costing granularity'
+    )
+
+    reference = models.CharField(max_length=100, null=True, blank=True, help_text='E.g., PUR-123, SALE-456')
+    batch = models.ForeignKey(ProductBatch, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Running balance after this entry
+    running_quantity = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    running_value = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+    running_avg_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'stock_valuation_entry'
+        ordering = ['-movement_date', '-created_at']
+        indexes = [
+            models.Index(fields=['organization', 'product', 'warehouse', 'movement_date']),
+        ]
+
+    def __str__(self):
+        return f"VAL {self.movement_type}: {self.product.name} × {self.quantity} @ {self.unit_cost}"

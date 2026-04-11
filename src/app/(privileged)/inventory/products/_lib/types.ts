@@ -1,0 +1,54 @@
+/**
+ * Product Manager — Shared Types
+ * ===============================
+ */
+
+// NumericRange is defined in @/components/ui/NumericRangeFilter — re-exported for local convenience
+import type { NumericRange } from '@/components/ui/NumericRangeFilter'
+export type { NumericRange }
+
+export type Product = Record<string, any>
+
+export interface Filters {
+  type: string
+  category: string
+  brand: string
+  unit: string
+  country: string
+  parfum: string
+  status: string
+  completeness: string
+  verified: string
+  isActive: string
+  catalogReady: string
+  expiryTracked: string
+  tracksLots: string
+  tracksSerials: string
+  lotMgmt: string
+  valuation: string
+  productGroup: string
+  pricingSource: string
+  syncStatus: string
+  stockLevel: NumericRange
+  priceRange: NumericRange
+  costRange: NumericRange
+  margin: NumericRange
+  tvaRange: NumericRange
+  availableRange: NumericRange
+  reservedRange: NumericRange
+  expiryDays: NumericRange
+}
+
+export type Lookup = { id: number; name: string; short_name?: string }
+export type Lookups = { categories: Lookup[]; brands: Lookup[]; units: Lookup[]; countries: Lookup[] }
+
+export type ViewProfile = {
+  id: string
+  name: string
+  columns: Record<string, boolean>
+  filters: Record<string, boolean>
+  columnOrder?: string[]  // custom column ordering — keys from ALL_COLUMNS
+}
+
+export type ColumnDef = { key: string; label: string; defaultVisible: boolean }
+export type FilterDef = { key: string; label: string; defaultVisible: boolean }

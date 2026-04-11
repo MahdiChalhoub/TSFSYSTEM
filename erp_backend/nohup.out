@@ -1,0 +1,70 @@
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+{"ts": "2026-04-03T01:35:18", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Auto-discovered capabilities from hr", "module": "connector_registry", "func": "_auto_discover", "line": 175}
+/usr/local/lib/python3.12/dist-packages/django/db/backends/utils.py:98: RuntimeWarning: Accessing the database during app initialization is discouraged. To fix this warning, avoid executing queries in AppConfig.ready() or when your app modules are imported.
+  warnings.warn(self.APPS_NOT_READY_WARNING_MSG, category=RuntimeWarning)
+{"ts": "2026-04-03T01:35:18", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'hr' is missing \u2014 applying fallback for 'hr.employees.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:18", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'hr' is missing \u2014 applying fallback for 'hr.employees.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:18", "level": "WARNING", "logger": "apps.core", "msg": "Core startup warning (non-fatal): relation \"erp_contract\" does not exist\nLINE 1: ...n\", \"erp_contract\".\"replacement_contract_id\" FROM \"erp_contr...\n                                                             ^\n", "module": "apps", "func": "ready", "line": 40}
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+No organization context, returning default value
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Auto-discovered capabilities from hr", "module": "connector_registry", "func": "_auto_discover", "line": 175}
+/usr/local/lib/python3.12/dist-packages/django/db/backends/utils.py:98: RuntimeWarning: Accessing the database during app initialization is discouraged. To fix this warning, avoid executing queries in AppConfig.ready() or when your app modules are imported.
+  warnings.warn(self.APPS_NOT_READY_WARNING_MSG, category=RuntimeWarning)
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'hr' is missing \u2014 applying fallback for 'hr.employees.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'hr' is missing \u2014 applying fallback for 'hr.employees.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:19", "level": "WARNING", "logger": "apps.core", "msg": "Core startup warning (non-fatal): relation \"erp_contract\" does not exist\nLINE 1: ...n\", \"erp_contract\".\"replacement_contract_id\" FROM \"erp_contr...\n                                                             ^\n", "module": "apps", "func": "ready", "line": 40}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Auto-discovered capabilities from inventory", "module": "connector_registry", "func": "_auto_discover", "line": 175}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'inventory' is missing \u2014 applying fallback for 'inventory.services.get_inventory_service'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:19", "level": "WARNING", "logger": "erp.urls", "msg": "[URLs] Skipping module client_portal: INVENTORY module is required.", "module": "urls", "func": "<module>", "line": 200}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: compliance (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: core (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: crm (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: ecommerce (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: finance (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: hr (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: iam (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:19", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: integrations (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: inventory (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: mcp (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: migration (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: migration_v2 (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'inventory' is missing \u2014 applying fallback for 'inventory.warehouses.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.connector_registry", "msg": "\ud83d\udd0c Module 'inventory' is missing \u2014 applying fallback for 'inventory.products.get_model'", "module": "connector_registry", "func": "require", "line": 273}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: pos (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: reference (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: storage (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: supplier_portal (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: workforce (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+{"ts": "2026-04-03T01:35:20", "level": "INFO", "logger": "erp.urls", "msg": "[URLs] Registered module: workspace (flat + namespaced)", "module": "urls", "func": "<module>", "line": 198}
+System check identified some issues:
+
+WARNINGS:
+?: (urls.W005) URL namespace 'compliance' isn't unique. You may not be able to reverse all URLs in this namespace
+?: (urls.W005) URL namespace 'core' isn't unique. You may not be able to reverse all URLs in this namespace
+erp.User: (auth.W004) 'User.username' is named as the 'USERNAME_FIELD', but it is not unique.
+	HINT: Ensure that your authentication backend(s) can handle non-unique usernames.
+
+System check identified 3 issues (0 silenced).
+Error: That port is already in use.
+Platform Integrity Verified: PostgreSQL Engine Active.
+⚠️  Core startup warning: relation "erp_contract" does not exist
+LINE 1: ...n", "erp_contract"."replacement_contract_id" FROM "erp_contr...
+                                                             ^
+

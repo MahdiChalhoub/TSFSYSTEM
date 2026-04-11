@@ -1,0 +1,244 @@
+'use client';
+
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import {
+ Cloud, Upload, RefreshCcw, Loader2, X, Download, Trash2,
+ FileText, Plus, AlertTriangle, CheckCircle2, Eye, FolderOpen
+} from 'lucide-react';
+import { listFiles, deleteFile, getDownloadUrl } from '@/modules/storage/actions';
+import { useChunkedUpload } from '@/modules/storage/hooks';
+import { CATEGORY_COLORS, getFileIcon, formatBytes } from '@/modules/storage/constants';
+
+interface StoredFile {
+ uuid: string;
+ original_filename: string;
+ file_size: number;
+ file_size_display: string;
+ content_type: string;
+ category: string;
+ uploaded_by_name: string | null;
+ uploaded_at: string;
+ checksum: string;
+}
+
+interface AttachmentManagerProps {
+ linkedModel: string; // e.g., 'finance.Invoice'
+ linkedId: number;
+ category?: string; // Initial category for uploads
+ title?: string;
+ compact?: boolean;
+}
+
+export default function AttachmentManager({
+ linkedModel,
+ linkedId,
+ category = 'ATTACHMENT',
+ title = 'Attachments',
+ compact = false
+}: AttachmentManagerProps) {
+ const [files, setFiles] = useState<StoredFile[]>([]);
+ const [loading, setLoading] = useState(true);
+ const [isDragging, setIsDragging] = useState(false);
+
+ const chunked = useChunkedUpload();
+ const fileInputRef = useRef<HTMLInputElement>(null);
+
+ const fetchFiles = useCallback(async () => {
+ if (!linkedId) return;
+ setLoading(true);
+ try {
+ const res = await listFiles({ linked_model: linkedModel, linked_id: linkedId });
+ if (Array.isArray(res)) setFiles(res);
+ else if (res?.results) setFiles(res.results);
+ } catch (err) {
+ console.error('Failed to load attachments', err);
+ }
+ setLoading(false);
+ }, [linkedModel, linkedId]);
+
+ useEffect(() => {
+ fetchFiles();
+ }, [fetchFiles]);
+
+ const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const file = e.target.files?.[0];
+ if (!file) return;
+ handleUpload(file);
+ };
+
+ const handleUpload = async (file: globalThis.File) => {
+ const result = await chunked.upload(file, {
+ category,
+ linked_model: linkedModel,
+ linked_id: linkedId
+ });
+ if (result && !result.error) {
+ fetchFiles();
+ }
+ };
+
+ const handleDownload = async (file: StoredFile) => {
+ const res = await getDownloadUrl(file.uuid);
+ if (res?.download_url) {
+ window.open(res.download_url, '_blank');
+ }
+ };
+
+ const handleDelete = async (file: StoredFile) => {
+ if (!confirm(`Delete "${file.original_filename}"?`)) return;
+ await deleteFile(file.uuid);
+ setFiles(prev => prev.filter(f => f.uuid !== file.uuid));
+ };
+
+ // Drag and Drop handlers
+ const onDragOver = (e: React.DragEvent) => {
+ e.preventDefault();
+ setIsDragging(true);
+ };
+ const onDragLeave = () => setIsDragging(false);
+ const onDrop = (e: React.DragEvent) => {
+ e.preventDefault();
+ setIsDragging(false);
+ const file = e.dataTransfer.files?.[0];
+ if (file) handleUpload(file);
+ };
+
+ if (loading && files.length === 0) {
+ return (
+ <div className="flex items-center justify-center p-8 bg-app-surface-2 rounded-[2rem] border border-dashed border-app-border">
+ <RefreshCcw className="animate-spin text-app-primary" size={24} />
+ </div>
+ );
+ }
+
+ return (
+ <div className={`space-y-4 animate-in fade-in duration-300 ${compact ? '' : 'mt-6'}`}>
+ <div className="flex items-center justify-between">
+ <h3 className="text-lg font-black text-app-text flex items-center gap-2">
+ <Cloud size={20} className="text-app-info" />
+ {title}
+ <span className="ml-2 px-2 py-0.5 rounded-full bg-app-surface-2 text-app-text-muted text-[10px] font-bold">
+ {files.length}
+ </span>
+ </h3>
+ <button
+ onClick={() => fileInputRef.current?.click()}
+ disabled={chunked.uploading}
+ className="flex items-center gap-2 px-4 py-2 rounded-xl bg-app-surface hover:bg-app-bg text-app-text-muted hover:text-app-text border border-app-border shadow-sm transition-all text-sm font-bold disabled:opacity-50"
+ >
+ <Plus size={16} /> Add File
+ </button>
+ <input ref={fileInputRef} type="file" className="hidden" onChange={onFileSelect} />
+ </div>
+
+ {/* Upload Progress */}
+ {chunked.uploading && (
+ <div className="bg-app-info-bg border border-app-info rounded-2xl p-4">
+ <div className="flex items-center justify-between mb-2">
+ <div className="flex items-center gap-2">
+ <Loader2 size={16} className="animate-spin text-app-info" />
+ <span className="text-xs font-bold text-app-text">Uploading...</span>
+ </div>
+ <span className="text-xs font-mono font-bold text-app-info">{chunked.progress}%</span>
+ </div>
+ <div className="w-full bg-app-info-bg rounded-full h-1.5 overflow-hidden">
+ <div
+ className="bg-blue-500 h-full rounded-full transition-all duration-300"
+ style={{ width: `${chunked.progress}%` }}
+ />
+ </div>
+ {chunked.speed && <p className="text-[10px] text-app-text-muted mt-1 mt-1 font-medium">{chunked.speed}</p>}
+ </div>
+ )}
+
+ {chunked.error && (
+ <div className="p-3 bg-app-error-bg border border-app-error rounded-xl text-app-error text-xs font-bold flex items-center gap-2">
+ <AlertTriangle size={14} />
+ {chunked.error}
+ <button onClick={() => chunked.abort()} className="ml-auto text-app-error hover:text-app-error">
+ <X size={14} />
+ </button>
+ </div>
+ )}
+
+ {/* Drop Zone / Empty State */}
+ {files.length === 0 && !chunked.uploading ? (
+ <div
+ onDragOver={onDragOver}
+ onDragLeave={onDragLeave}
+ onDrop={onDrop}
+ onClick={() => fileInputRef.current?.click()}
+ className={`p-10 text-center rounded-[2rem] border-2 border-dashed transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:bg-app-bg hover:border-app-border'
+ }`}
+ >
+ <div className="w-16 h-16 rounded-2xl bg-app-surface shadow-sm flex items-center justify-center mx-auto mb-4 border border-app-border">
+ <Upload size={24} className="text-gray-300" />
+ </div>
+ <p className="text-app-text-muted font-bold">No attachments yet</p>
+ <p className="text-xs text-app-text-faint mt-1 font-medium">Drag and drop or click to upload</p>
+ </div>
+ ) : (
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ {files.map(file => {
+ const Icon = getFileIcon(file.content_type);
+ const isImage = file.content_type?.startsWith('image/');
+ const catColor = CATEGORY_COLORS[file.category] || CATEGORY_COLORS.OTHER;
+
+ return (
+ <div
+ key={file.uuid}
+ className="group relative bg-app-surface border border-app-border rounded-2xl p-3 shadow-sm hover:shadow-md transition-all flex items-center gap-3"
+ >
+ <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${isImage ? 'bg-purple-50' : 'bg-app-info-bg'}`}>
+ <Icon size={20} className={isImage ? 'text-purple-500' : 'text-app-info'} />
+ </div>
+ <div className="min-w-0 flex-1">
+ <p className="text-sm font-bold text-app-text truncate" title={file.original_filename}>
+ {file.original_filename}
+ </p>
+ <div className="flex items-center gap-2 mt-0.5">
+ <span className="text-[10px] text-app-text-faint font-bold">{file.file_size_display || formatBytes(file.file_size)}</span>
+ <span className={`text-[8px] px-1.5 py-0.5 rounded uppercase tracking-widest font-black border ${catColor}`}>
+ {file.category.replace('_', ' ')}
+ </span>
+ </div>
+ </div>
+ <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+ <button
+ onClick={() => handleDownload(file)}
+ className="p-1.5 rounded-lg text-app-text-faint hover:text-app-info hover:bg-app-info-bg transition-all"
+ title="Download"
+ >
+ <Download size={14} />
+ </button>
+ <button
+ onClick={() => handleDelete(file)}
+ className="p-1.5 rounded-lg text-app-text-faint hover:text-app-error hover:bg-app-error-bg transition-all"
+ title="Delete"
+ >
+ <Trash2 size={14} />
+ </button>
+ </div>
+ </div>
+ );
+ })}
+
+ {/* Compact "Add More" box if files exist */}
+ {files.length > 0 && (
+ <div
+ onDragOver={onDragOver}
+ onDragLeave={onDragLeave}
+ onDrop={onDrop}
+ onClick={() => fileInputRef.current?.click()}
+ className={`flex items-center justify-center border-2 border-dashed rounded-2xl p-3 transition-all cursor-pointer ${isDragging ? 'border-blue-400 bg-app-info-bg' : 'border-app-border bg-app-surface-2 hover:border-app-border'
+ }`}
+ >
+ <Plus size={16} className="text-gray-300 mr-2" />
+ <span className="text-xs font-bold text-app-text-faint">Add More</span>
+ </div>
+ )}
+ </div>
+ )}
+ </div>
+ );
+}

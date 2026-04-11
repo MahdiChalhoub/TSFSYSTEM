@@ -1,0 +1,19 @@
+{
+    "name": "reference",
+    "version": "1.0.0",
+    "label": "Reference Data",
+    "description": "Global reference master data: countries, currencies, and organization activation tables",
+    "icon": "globe",
+    "dependencies": [],
+    "events_produced": [
+        "reference.org_country_enabled",
+        "reference.org_country_disabled",
+        "reference.org_currency_enabled",
+        "reference.org_currency_disabled",
+        "reference.org_default_country_changed",
+        "reference.org_default_currency_changed"
+    ],
+    "events_consumed": [],
+    "is_core": true,
+    "sidebar": false
+}

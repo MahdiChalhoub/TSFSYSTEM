@@ -1,0 +1,82 @@
+{
+  "name": "finance",
+  "display_name": "Finance & Accounting",
+  "version": "1.2.0",
+  "description": "Financial management including invoices, payments, journal entries, taxes, and financial reports",
+  "author": "TSFSYSTEM Team",
+  "license": "Proprietary",
+  "category": "finance",
+  "depends_on": ["core", "crm"],
+  "permissions": [
+    "finance.view_invoice",
+    "finance.create_invoice",
+    "finance.edit_invoice",
+    "finance.delete_invoice",
+    "finance.void_invoice",
+    "finance.view_payment",
+    "finance.create_payment",
+    "finance.void_payment",
+    "finance.view_journal",
+    "finance.create_journal",
+    "finance.view_tax",
+    "finance.manage_tax",
+    "finance.view_reports",
+    "finance.export_data"
+  ],
+  "events_emitted": [
+    "invoice.created",
+    "invoice.updated",
+    "invoice.voided",
+    "invoice.sent",
+    "invoice.paid",
+    "payment.created",
+    "payment.voided",
+    "journal.posted",
+    "tax.calculated"
+  ],
+  "events_consumed": [
+    "sales.order_created",
+    "crm.customer_created"
+  ],
+  "config_schema": {
+    "default_currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Default currency for transactions"
+    },
+    "default_tax_rate": {
+      "type": "number",
+      "default": 0.15,
+      "description": "Default tax rate (0.15 = 15%)"
+    },
+    "invoice_prefix": {
+      "type": "string",
+      "default": "INV-",
+      "description": "Invoice number prefix"
+    },
+    "tax_inclusive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether prices include tax by default"
+    }
+  },
+  "models": [
+    "Invoice",
+    "InvoiceItem",
+    "Payment",
+    "JournalEntry",
+    "TaxConfiguration"
+  ],
+  "migrations": [
+    "0001_initial.py",
+    "0002_add_tax_config.py",
+    "0003_add_payment_methods.py"
+  ],
+  "api_endpoints": [
+    "/api/finance/invoices",
+    "/api/finance/payments",
+    "/api/finance/journal",
+    "/api/finance/taxes",
+    "/api/finance/reports"
+  ]
+}

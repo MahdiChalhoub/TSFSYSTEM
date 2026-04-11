@@ -1,0 +1,385 @@
+/**
+ * Theme Server Actions
+ * ====================
+ * Server-side API calls for theme management.
+ */
+
+'use server'
+
+import { cookies } from 'next/headers'
+import type {
+  ThemesListResponse,
+  CurrentThemeResponse,
+  ThemePreset,
+  CreateThemeInput,
+  ImportThemeInput,
+  ThemeActivateResponse,
+  ColorModeToggleResponse,
+  ThemeValidationResult,
+} from '@/types/theme'
+
+const API_BASE = process.env.DJANGO_URL || 'http://backend:8000'
+
+// Helper to get auth token from cookies
+async function getAuthToken() {
+  const cookieStore = await cookies()
+  return cookieStore.get('auth_token')?.value
+}
+
+// Helper to darken a color by a percentage
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16)
+  const amt = Math.round(2.55 * percent)
+  const R = (num >> 16) - amt
+  const G = ((num >> 8) & 0x00ff) - amt
+  const B = (num & 0x0000ff) - amt
+  return (
+    '#' +
+    (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)
+  )
+}
+
+// Helper to enrich color schemes with computed fields
+function enrichColors(colors: any) {
+  return {
+    primary: colors.primary || '#10B981',
+    primaryDark: colors.primaryDark || darkenColor(colors.primary || '#10B981', 10),
+    bg: colors.bg || '#020617',
+    surface: colors.surface || '#0F172A',
+    surfaceHover: colors.surfaceHover || 'rgba(255, 255, 255, 0.07)',
+    text: colors.text || '#F1F5F9',
+    textMuted: colors.textMuted || colors.muted || '#94A3B8',
+    border: colors.border || 'rgba(255, 255, 255, 0.08)',
+  }
+}
+
+// Helper to transform snake_case API response to camelCase for TypeScript
+function transformThemeFromAPI(apiTheme: any): ThemePreset {
+  return {
+    id: apiTheme.id,
+    slug: apiTheme.slug,
+    name: apiTheme.name,
+    description: apiTheme.description,
+    category: apiTheme.category,
+    isSystem: apiTheme.is_system,
+    isActive: apiTheme.is_active ?? true,
+    isDefault: apiTheme.is_default ?? false,
+    tags: apiTheme.tags || [],
+    presetData: {
+      colors: {
+        dark: enrichColors(apiTheme.preset_data?.colors?.dark || {}),
+        light: enrichColors(apiTheme.preset_data?.colors?.light || {}),
+      },
+      layout: apiTheme.preset_data?.layout || {
+        density: 'medium',
+        whitespace: 'balanced',
+        structure: 'single-column',
+        spacing: {
+          container: '1.5rem',
+          section: '1.75rem',
+          card: '1.25rem',
+          element: '0.875rem',
+        },
+      },
+      components: apiTheme.preset_data?.components || {
+        cards: { borderRadius: '0.75rem', shadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid var(--app-border)', padding: '1.25rem', style: 'subtle' },
+        buttons: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 1.25rem', fontSize: '0.875rem', fontWeight: '500' },
+        inputs: { borderRadius: '0.5rem', height: '2.5rem', padding: '0 0.875rem', fontSize: '0.875rem', border: '1px solid var(--app-border)' },
+        typography: { headingFont: 'Inter, sans-serif', bodyFont: 'Inter, sans-serif', h1Size: '2rem', h2Size: '1.5rem', h3Size: '1.25rem', bodySize: '0.875rem', smallSize: '0.75rem', fontWeight: 'medium', lineHeight: 'normal', letterSpacing: 'normal' },
+        tables: { rowHeight: '3rem', headerStyle: 'bold', borderStyle: 'rows', striped: true, hoverEffect: true, density: 'comfortable' },
+        modals: { maxWidth: '600px', borderRadius: '0.75rem', padding: '1.5rem', backdrop: 'blur', animation: 'scale', shadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
+        forms: { labelPosition: 'top', labelStyle: 'bold', fieldSpacing: '1rem', groupSpacing: '1.5rem', validationStyle: 'inline' },
+        tabs: { style: 'underline', size: 'md', spacing: '1.5rem', activeIndicator: 'underline' },
+        badges: { size: 'sm', style: 'soft', borderRadius: '0.375rem', fontWeight: '600', textTransform: 'uppercase' },
+        alerts: { style: 'soft', borderRadius: '0.5rem', padding: '1rem', iconSize: '1.25rem', showIcon: true }
+      },
+      navigation: apiTheme.preset_data?.navigation || {
+        position: 'side',
+        style: 'minimal',
+        width: '240px',
+        collapsible: true,
+      },
+    },
+    usageCount: apiTheme.usage_count,
+    lastUsedAt: apiTheme.last_used_at,
+    createdAt: apiTheme.created_at,
+    updatedAt: apiTheme.updated_at,
+  }
+}
+
+// Helper for authenticated API calls
+async function apiCall<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = await getAuthToken()
+  const url = `${API_BASE}/api/${endpoint}`
+
+  console.log('[API Call]', {
+    endpoint,
+    url,
+    hasToken: !!token,
+    tokenPreview: token ? `${token.substring(0, 10)}...` : 'none'
+  })
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Token ${token}` }),
+      ...options.headers,
+    },
+  })
+
+  console.log('[API Response]', {
+    endpoint,
+    status: response.status,
+    ok: response.ok
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('[API Error]', {
+      endpoint,
+      status: response.status,
+      error: error.substring(0, 200)
+    })
+    throw new Error(`API Error: ${response.status} - ${error}`)
+  }
+
+  return response.json()
+}
+
+// ============================================================================
+// THEME QUERIES
+// ============================================================================
+
+/**
+ * Get all available themes (system + custom)
+ */
+export async function getThemes(): Promise<ThemesListResponse> {
+  try {
+    console.log('[Theme Action] Fetching themes from:', `${API_BASE}/api/themes/`)
+    const result = await apiCall<any>('themes/')
+    console.log('[Theme Action] Successfully loaded themes:', {
+      systemCount: result.system?.length || 0,
+      customCount: result.custom?.length || 0
+    })
+
+    // Transform snake_case to camelCase for TypeScript
+    return {
+      system: (result.system || []).map(transformThemeFromAPI),
+      custom: (result.custom || []).map(transformThemeFromAPI),
+      current: {
+        theme_slug: result.current?.theme_slug || 'finance-pro',
+        color_mode: result.current?.color_mode || 'dark'
+      }
+    }
+  } catch (error) {
+    console.error('[Theme Action] Failed to fetch themes:', error)
+    console.error('[Theme Action] API_BASE:', API_BASE)
+    // Return empty data instead of throwing
+    return {
+      system: [],
+      custom: [],
+      current: {
+        theme_slug: 'finance-pro',
+        color_mode: 'dark'
+      }
+    }
+  }
+}
+
+/**
+ * Get current user's active theme
+ */
+export async function getCurrentTheme(): Promise<CurrentThemeResponse> {
+  return apiCall<CurrentThemeResponse>('themes/current/')
+}
+
+/**
+ * Get specific theme by ID
+ */
+export async function getThemeById(themeId: number): Promise<ThemePreset> {
+  return apiCall<ThemePreset>(`themes/${themeId}/`)
+}
+
+// ============================================================================
+// THEME MUTATIONS
+// ============================================================================
+
+/**
+ * Activate a theme for current user
+ */
+export async function activateTheme(
+  themeId: number
+): Promise<ThemeActivateResponse> {
+  return apiCall<ThemeActivateResponse>(`themes/${themeId}/activate/`, {
+    method: 'POST',
+  })
+}
+
+/**
+ * Toggle between dark and light mode
+ */
+export async function toggleColorMode(): Promise<ColorModeToggleResponse> {
+  return apiCall<ColorModeToggleResponse>('themes/toggle-mode/', {
+    method: 'POST',
+  })
+}
+
+/**
+ * Set specific color mode
+ */
+export async function setColorMode(
+  mode: 'dark' | 'light' | 'auto'
+): Promise<ColorModeToggleResponse> {
+  return apiCall<ColorModeToggleResponse>('themes/toggle-mode/', {
+    method: 'POST',
+    body: JSON.stringify({ mode }),
+  })
+}
+
+/**
+ * Create a new custom theme
+ */
+export async function createTheme(
+  themeData: CreateThemeInput
+): Promise<ThemePreset> {
+  return apiCall<ThemePreset>('themes/create/', {
+    method: 'POST',
+    body: JSON.stringify(themeData),
+  })
+}
+
+/**
+ * Update an existing custom theme
+ */
+export async function updateTheme(
+  themeId: number,
+  updates: Partial<ThemePreset>
+): Promise<ThemePreset> {
+  return apiCall<ThemePreset>(`themes/${themeId}/update/`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+}
+
+/**
+ * Delete a custom theme
+ */
+export async function deleteTheme(themeId: number): Promise<void> {
+  await apiCall<void>(`themes/${themeId}/delete/`, {
+    method: 'DELETE',
+  })
+}
+
+// ============================================================================
+// IMPORT/EXPORT
+// ============================================================================
+
+/**
+ * Export theme as JSON
+ */
+export async function exportTheme(themeId: number): Promise<string> {
+  const data = await apiCall<any>(`themes/${themeId}/export/`)
+  return JSON.stringify(data, null, 2)
+}
+
+/**
+ * Import theme from JSON
+ */
+export async function importTheme(json: string): Promise<ThemePreset> {
+  const themeData = JSON.parse(json) as ImportThemeInput
+  return apiCall<ThemePreset>('themes/import/', {
+    method: 'POST',
+    body: JSON.stringify(themeData),
+  })
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Validate theme JSON structure
+ */
+export async function validateThemeJson(json: string): Promise<ThemeValidationResult> {
+  const errors: string[] = []
+
+  try {
+    const data = JSON.parse(json)
+
+    // Required fields
+    if (!data.name) errors.push('Missing required field: name')
+    if (!data.preset_data) errors.push('Missing required field: preset_data')
+
+    // Validate preset_data structure
+    if (data.preset_data) {
+      if (!data.preset_data.colors) errors.push('Missing colors in preset_data')
+      if (!data.preset_data.layout) errors.push('Missing layout in preset_data')
+      if (!data.preset_data.components)
+        errors.push('Missing components in preset_data')
+      if (!data.preset_data.navigation)
+        errors.push('Missing navigation in preset_data')
+
+      // Validate colors have dark and light variants
+      if (data.preset_data.colors) {
+        if (!data.preset_data.colors.dark)
+          errors.push('Missing dark color scheme')
+        if (!data.preset_data.colors.light)
+          errors.push('Missing light color scheme')
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    }
+  } catch (e) {
+    return {
+      valid: false,
+      errors: ['Invalid JSON format'],
+    }
+  }
+}
+
+/**
+ * Get theme by slug from themes list
+ */
+export async function findThemeBySlug(
+  themes: ThemePreset[],
+  slug: string
+): Promise<ThemePreset | undefined> {
+  return themes.find((t) => t.slug === slug)
+}
+
+/**
+ * Filter themes by category
+ */
+export async function filterThemesByCategory(
+  themes: ThemePreset[],
+  category: string
+): Promise<ThemePreset[]> {
+  return themes.filter((t) => t.category === category)
+}
+
+/**
+ * Search themes by name or tag
+ */
+export async function searchThemes(themes: ThemePreset[], query: string): Promise<ThemePreset[]> {
+  const lowerQuery = query.toLowerCase()
+  return themes.filter(
+    (t) =>
+      t.name.toLowerCase().includes(lowerQuery) ||
+      t.description.toLowerCase().includes(lowerQuery) ||
+      t.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+  )
+}

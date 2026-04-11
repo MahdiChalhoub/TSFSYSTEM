@@ -1,0 +1,34 @@
+from django.db import models
+from decimal import Decimal
+from erp.models import TenantModel, User
+
+class Employee(TenantModel):
+    EMPLOYEE_TYPE_CHOICES = [
+        ('EMPLOYEE', 'Employee'),
+        ('PARTNER', 'Partner'),
+        ('BOTH', 'Partner & Employee'),
+    ]
+
+    employee_id = models.CharField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    job_title = models.CharField(max_length=255, null=True, blank=True)
+    employee_type = models.CharField(max_length=10, choices=EMPLOYEE_TYPE_CHOICES, default='EMPLOYEE')
+    salary = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
+    dividends_account_id = models.IntegerField(null=True, blank=True, help_text='GL account for dividends payable (partners only)')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
+    home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    address_line = models.TextField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    nationality = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = 'employee'
+
+    def __str__(self):
+        return f"{self.first_name or ''} {self.last_name or ''}".strip() or self.employee_id

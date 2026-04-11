@@ -1,0 +1,37 @@
+# ═══════════════════════════════════════
+# Docker Ignore — Keep builds fast
+# ═══════════════════════════════════════
+
+# Dependencies (installed inside container)
+node_modules
+erp_backend/venv
+erp_backend/.venv
+
+# Build outputs
+.next
+__pycache__
+*.pyc
+*.pyo
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs & non-essential
+*.md
+LICENSE
+docs/
+
+# Knowledge base (agent files, not needed in container)
+.gemini/
+.agents/
