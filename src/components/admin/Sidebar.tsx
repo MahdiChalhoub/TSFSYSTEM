@@ -162,6 +162,20 @@ export const MENU_ITEMS = [
                 icon: Package,
                 children: [
                     { title: 'POS Settings', path: '/sales/pos-settings' },
+                    { title: 'POS Terminal (Alt)', path: '/pos/pos' },
+                    { title: 'POS Registers', path: '/pos/pos-registers' },
+                    { title: 'POS Settings (Alt)', path: '/pos/pos-settings' },
+                    { title: 'POS Orders', path: '/pos/orders' },
+                    { title: 'POS Deliveries', path: '/pos/deliveries' },
+                    { title: 'POS Delivery Zones', path: '/pos/delivery-zones' },
+                    { title: 'POS Discount Rules', path: '/pos/discount-rules' },
+                    { title: 'POS Quotations', path: '/pos/quotations' },
+                    { title: 'POS Consignment', path: '/pos/consignment-settlements' },
+                    { title: 'POS Sales Returns', path: '/pos/sales-returns' },
+                    { title: 'POS Credit Notes', path: '/pos/credit-notes' },
+                    { title: 'POS Purchase', path: '/pos/purchase' },
+                    { title: 'POS Purchase Returns', path: '/pos/purchase-returns' },
+                    { title: 'Supplier Package Prices', path: '/pos/supplier-package-prices' },
                     { title: 'POS Audit Events', path: '/pos/pos-audit-events' },
                     { title: 'POS Audit Rules', path: '/pos/pos-audit-rules' },
                     { title: 'Supplier Pricing', path: '/pos/supplier-pricing' },
@@ -178,6 +192,7 @@ export const MENU_ITEMS = [
                     { title: 'Procurement Center', path: '/purchases' },
                     { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                     { title: 'New RFQ / Order', path: '/purchases/new-order' },
+                    { title: 'New Order v2', path: '/purchases/new-order-v2' },
                     { title: 'Quick Purchase', path: '/purchases/new' },
                     { title: 'Purchase Orders', path: '/purchases/purchase-orders' },
                     { title: 'Quotations', path: '/purchases/quotations' },
@@ -212,6 +227,7 @@ export const MENU_ITEMS = [
                     { title: 'Label Printing', path: '/inventory/labels' },
                     { title: 'Product Groups', path: '/inventory/product-groups' },
                     { title: 'Inventory Groups', path: '/inventory/inventory-groups' },
+                    { title: 'Inventory Group Members', path: '/inventory/inventory-group-members' },
                     { title: 'Parfums', path: '/inventory/parfums' },
                     { title: 'Barcodes', path: '/inventory/product-barcodes' },
                     { title: 'Product Audit Trail', path: '/inventory/product-audit-trail' },
@@ -250,6 +266,7 @@ export const MENU_ITEMS = [
                     { title: 'Goods Receipts', path: '/inventory/goods-receipts' },
                     { title: 'Internal Consumption', path: '/inventory/internal-consumption' },
                     { title: 'Gift & Sample', path: '/inventory/gift-sample' },
+                    { title: 'Counting Lines', path: '/inventory/counting-lines' },
                     { title: 'Operational Requests', path: '/inventory/requests' },
                     { title: 'Import Declarations', path: '/procurement/import-declarations' },
                 ]
@@ -339,6 +356,8 @@ export const MENU_ITEMS = [
                     { title: 'COA Management', path: '/finance/coa' },
                     { title: 'General Ledger', path: '/finance/ledger' },
                     { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                    { title: 'Opening Balance List', path: '/finance/ledger/opening/list' },
+                    { title: 'CSV Import', path: '/finance/ledger/import' },
                     { title: 'Journal Entries', path: '/finance/journal' },
                     { title: 'Sequences', path: '/finance/sequences' },
                 ]
@@ -420,6 +439,8 @@ export const MENU_ITEMS = [
                     { title: 'Period Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
                     { title: 'Revenue Breakdown', path: '/finance/revenue' },
+                    { title: 'Audit', path: '/finance/audit' },
+                    { title: 'Audit Logs', path: '/finance/audit-logs' },
                 ]
             },
             {
@@ -565,6 +586,10 @@ export const MENU_ITEMS = [
             { title: 'Scores', path: '/workspace/scores' },
             { title: 'Tenders', path: '/workspace/tenders' },
             { title: 'Requests', path: '/workspace/requests' },
+            { title: 'Checklist Items', path: '/workspace/checklist-items' },
+            { title: 'Comments', path: '/workspace/comments' },
+            { title: 'Client Portal', path: '/workspace/client-portal' },
+            { title: 'Supplier Portal', path: '/workspace/supplier-portal' },
             {
                 title: 'Automation',
                 icon: Zap,
@@ -705,6 +730,7 @@ export const MENU_ITEMS = [
         module: 'core',
         children: [
             { title: 'Users', path: '/users' },
+            { title: 'All Users', path: '/access/users' },
             { title: 'Access Roles', path: '/access/roles' },
             { title: 'Client Access', path: '/access/client-access' },
             { title: 'Supplier Access', path: '/access/supplier-access' },
@@ -729,6 +755,7 @@ export const MENU_ITEMS = [
             { title: 'Appearance', path: '/settings/appearance' },
             { title: 'Domains', path: '/settings/domains' },
             { title: 'E-Invoicing Monitor', path: '/settings/e-invoicing' },
+            { title: 'E-Invoicing Live Monitor', path: '/settings/e-invoicing/monitor' },
             { title: 'Features', path: '/settings/features' },
             { title: 'Payment Terms', path: '/settings/payment-terms' },
             { title: 'POS Settings', path: '/settings/pos-settings' },
@@ -743,6 +770,15 @@ export const MENU_ITEMS = [
                     { title: 'Webhooks', path: '/integrations/webhooks' },
                 ]
             },
+        ]
+    },
+    {
+        title: 'Products',
+        icon: Tag,
+        module: 'inventory',
+        children: [
+            { title: 'Product Master', path: '/products' },
+            { title: 'Create Group', path: '/products/create-group' },
         ]
     },
     { title: 'Marketplace', icon: ShoppingBag, path: '/marketplace', module: 'core' },
