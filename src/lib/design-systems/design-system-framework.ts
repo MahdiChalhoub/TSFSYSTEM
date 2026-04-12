@@ -473,11 +473,12 @@ export function applyDesignSystem(
     [data-design-system="${id}"] .font-bold     { font-weight: ${fwBold}; }
 
     /* ── 6. Transitions ───────────────────────────────────────────── */
+    /* Note: btnTransition already includes "all" prefix (e.g. "all 0.2s ease-in-out") */
     [data-design-system="${id}"] .transition-all,
-    [data-design-system="${id}"] .transition     { transition: all ${btnTransition}; }
-    [data-design-system="${id}"] .transition-colors { transition: color, background-color, border-color, fill, stroke ${btnTransition}; }
-    [data-design-system="${id}"] .transition-shadow { transition: box-shadow ${btnTransition}; }
-    [data-design-system="${id}"] .transition-transform { transition: transform ${btnTransition}; }
+    [data-design-system="${id}"] .transition     { transition: ${btnTransition}; }
+    [data-design-system="${id}"] .transition-colors { transition: color, background-color, border-color, fill, stroke ${btnTransition.replace(/^all\s+/, '')}; }
+    [data-design-system="${id}"] .transition-shadow { transition: box-shadow ${btnTransition.replace(/^all\s+/, '')}; }
+    [data-design-system="${id}"] .transition-transform { transition: transform ${btnTransition.replace(/^all\s+/, '')}; }
 
     /* ── 7. Button heights & padding ──────────────────────────────── */
     [data-design-system="${id}"] .btn-sm,

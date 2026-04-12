@@ -890,20 +890,22 @@ export function Sidebar({
                 />
             )}
 
-            <aside className={clsx(
-                "fixed md:relative inset-y-0 left-0 shrink-0 overflow-hidden z-50 transition-all duration-300 transform",
-                sidebarOpen
-                    ? "w-[var(--nav-width)] translate-x-0 opacity-100"
-                    : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:pointer-events-none"
-            )} style={{
-                // Critical layout as inline style — immune to CSS class overrides
+            <aside className="fixed md:relative inset-y-0 left-0 shrink-0 overflow-hidden z-50"
+            style={{
+                // All layout-critical properties as inline styles — immune to any CSS override
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
+                width: sidebarOpen ? 'var(--nav-width, 240px)' : '0px',
+                minWidth: sidebarOpen ? 'var(--nav-width, 240px)' : '0px',
+                opacity: sidebarOpen ? 1 : 0,
+                pointerEvents: sidebarOpen ? 'auto' : 'none',
+                transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+                transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1), min-width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1)',
                 background: 'var(--app-sidebar-bg)',
                 borderRight: '1px solid var(--app-sidebar-border)',
                 color: 'var(--app-sidebar-text)',
-                boxShadow: '4px 0 24px -8px rgba(0,0,0,0.15)',
+                boxShadow: sidebarOpen ? '4px 0 24px -8px rgba(0,0,0,0.15)' : 'none',
             }}>
                 {/* ── Branding ── */}
                 <div className="px-5 py-4 flex items-center gap-3 shrink-0" style={{
