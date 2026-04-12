@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
 import { Palette, Sun, Moon, Monitor, Check, Layers, Type, Layout, Sparkles, RotateCcw } from 'lucide-react'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
@@ -58,6 +58,8 @@ function AppearancePageInner() {
 
   const [activeTab, setActiveTab] = useState<'color' | 'design-system' | 'typography'>('color')
   const [search, setSearch] = useState('')
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // Group themes by category
   const allGrouped = CATEGORY_ORDER.reduce<Record<string, typeof allThemes>>((acc, cat) => {
@@ -84,8 +86,8 @@ function AppearancePageInner() {
             <h1 className="text-2xl font-black tracking-tight">Appearance <span style={{ color: 'var(--app-primary)' }}>&amp; Themes</span></h1>
           </div>
 
-          {/* Active theme pill */}
-          {currentTheme && (
+          {/* Active theme pill — mounted guard prevents SSR/client mismatch */}
+          {mounted && currentTheme && (
             <div className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
               <div className="w-3 h-3 rounded-full" style={{ background: 'var(--app-primary)' }} />
               <span className="text-sm font-semibold">{currentTheme.name}</span>
@@ -166,7 +168,7 @@ function AppearancePageInner() {
                     const colors = theme.presetData?.colors?.[mode] || theme.presetData?.colors?.dark
                     return (
                       <button
-                        key={theme.slug}
+                        key={theme.id ?? theme.slug}
                         onClick={() => setTheme(theme.slug)}
                         className="relative rounded-xl p-3 text-left transition-all hover:scale-[1.03] hover:-translate-y-0.5"
                         style={{
