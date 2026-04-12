@@ -151,10 +151,11 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                             border: '1px solid var(--app-border)',
                             color: 'var(--app-text)',
                         }}
-                        title={`Theme: ${themeName}`}
+                        title={mounted ? `Theme: ${themeName}` : 'Theme'}
+                        suppressHydrationWarning
                     >
-                        <div className="w-4 h-4 rounded-full flex-shrink-0 shadow-inner" style={{ background: activeColors.primary }} />
-                        <span className="text-xs font-bold hidden sm:inline truncate max-w-[80px]">{themeName}</span>
+                        <div className="w-4 h-4 rounded-full flex-shrink-0 shadow-inner" style={{ background: mounted ? activeColors.primary : 'var(--app-primary)' }} suppressHydrationWarning />
+                        <span className="text-xs font-bold hidden sm:inline truncate max-w-[80px]" suppressHydrationWarning>{mounted ? themeName : ''}</span>
                         <Palette size={14} style={{ color: 'var(--app-text-muted)' }} />
                     </button>
 
