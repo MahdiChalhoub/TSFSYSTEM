@@ -1,7 +1,7 @@
 'use client';
 
 import { useAdmin } from '@/context/AdminContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Search, User, Menu, Settings, LogOut, HelpCircle, Palette, Sun, Moon } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
@@ -12,6 +12,8 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
     const { toggleSidebar } = useAdmin();
     const [profileOpen, setProfileOpen] = useState(false);
     const [themeOpen, setThemeOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
     const {
         currentTheme,
         allThemes,
@@ -29,9 +31,10 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
         <header
             className="h-20 sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 shrink-0 transition-all backdrop-blur-md"
             style={{
-                background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.70)',
+                background: mounted ? (isDark ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.70)') : 'rgba(15, 23, 42, 0.75)',
                 borderBottom: `1px solid var(--app-border)`,
             }}
+            suppressHydrationWarning
         >
             <div className="flex items-center gap-1.5 md:gap-4 flex-1">
                 <button
@@ -132,9 +135,10 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                         color: 'var(--app-text-muted)',
                         border: '1px solid var(--app-border)',
                     }}
-                    title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    title={mounted ? (isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode') : 'Toggle color mode'}
+                    suppressHydrationWarning
                 >
-                    {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                    {mounted ? (isDark ? <Sun size={16} /> : <Moon size={16} />) : <Moon size={16} />}
                 </button>
 
                 {/* ── Theme Switcher ── */}
