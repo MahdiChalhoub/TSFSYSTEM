@@ -26,7 +26,16 @@ const DS_META: Record<string, { icon: string; desc: string }> = {
   'tailwind':         { icon: '🌊', desc: 'Utility-first by Tailwind Labs' },
 }
 
+// Wrap with DesignSystemProvider so useDesignSystem() has a provider in tree
 export default function AppearancePage() {
+  return (
+    <DesignSystemProvider>
+      <AppearancePageInner />
+    </DesignSystemProvider>
+  )
+}
+
+function AppearancePageInner() {
   const {
     currentTheme,
     colorMode,
@@ -62,7 +71,6 @@ export default function AppearancePage() {
   const totalThemes = systemThemes.length + customThemes.length
 
   return (
-    <DesignSystemProvider>
     <div className="min-h-full" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
 
       {/* ── Page Header ─────────────────────────────────────────── */}
@@ -308,6 +316,5 @@ export default function AppearancePage() {
         )}
       </div>
     </div>
-    </DesignSystemProvider>
   )
 }
