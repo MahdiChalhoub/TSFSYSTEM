@@ -77,11 +77,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
                 setOpenTabs(uniqueTabs);
             } catch (e) {
                 console.error("Failed to parse tabs", e);
-                setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
+                setOpenTabs([{ id: 'home', title: 'Home', path: '/home' }]);
             }
         } else {
-            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
-            setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
+            setOpenTabs([{ id: 'home', title: 'Home', path: '/home' }]);
         }
 
         const savedScope = localStorage.getItem(SCOPE_KEY);
@@ -156,15 +155,13 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         if (pathname === id && newTabs.length > 0) {
             router.push(newTabs[newTabs.length - 1].path);
         } else if (newTabs.length === 0) {
-            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
-            router.push(defaultPath);
+            router.push('/home');
         }
     };
 
     const clearTabs = () => {
-        const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
-        setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
-        router.push(defaultPath);
+        setOpenTabs([{ id: 'home', title: 'Home', path: '/home' }]);
+        router.push('/home');
     };
 
     return (
