@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
 import { Palette, Sun, Moon, Monitor, Check, Layers, Type, Layout, Sparkles, RotateCcw } from 'lucide-react'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { useDesignSystem } from '@/contexts/DesignSystemContext'
@@ -61,6 +62,7 @@ export default function AppearancePage() {
   const totalThemes = systemThemes.length + customThemes.length
 
   return (
+    <DesignSystemProvider>
     <div className="min-h-full" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
 
       {/* ── Page Header ─────────────────────────────────────────── */}
@@ -306,5 +308,6 @@ export default function AppearancePage() {
         )}
       </div>
     </div>
+    </DesignSystemProvider>
   )
 }
