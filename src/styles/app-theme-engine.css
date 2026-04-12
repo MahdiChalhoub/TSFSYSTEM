@@ -75,6 +75,9 @@
   --app-sidebar-active: rgba(16, 185, 129, 0.06);
   --app-sidebar-border: rgba(255, 255, 255, 0.06);
 
+  /* Layout geometry — must be defined here so sidebar has width before JS hydrates */
+  --nav-width: 240px;
+
   /* Status — semantic (consistent across all themes) */
   --app-success: #10B981;
   --app-success-bg: rgba(16, 185, 129, 0.12);
