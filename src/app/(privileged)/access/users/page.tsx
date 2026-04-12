@@ -183,7 +183,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
     const name = `${user.first_name} ${user.last_name}`.trim() || user.username
 
     useEffect(() => {
-        erpFetch(`erp/users/${user.id}/linked-contacts/`).then(c => {
+        erpFetch(`users/${user.id}/linked-contacts/`).then(c => {
             if (Array.isArray(c)) setLinkedContacts(c)
         }).catch(() => {})
     }, [user.id])
@@ -191,7 +191,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
     const handleSave = async () => {
         setSaving(true)
         try {
-            await erpFetch(`erp/users/${user.id}/`, { method: 'PATCH', body: JSON.stringify({ ...form, role: form.role || null }), headers: { 'Content-Type': 'application/json' } })
+            await erpFetch(`users/${user.id}/`, { method: 'PATCH', body: JSON.stringify({ ...form, role: form.role || null }), headers: { 'Content-Type': 'application/json' } })
             toast.success('User updated'); onRefresh()
         } catch { toast.error('Failed to save') }
         setSaving(false)
@@ -200,7 +200,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
     const handleResetPw = async () => {
         if (newPw.length < 4) { toast.error('Min 4 characters'); return }
         try {
-            await erpFetch(`erp/users/${user.id}/reset-password/`, { method: 'POST', body: JSON.stringify({ new_password: newPw }), headers: { 'Content-Type': 'application/json' } })
+            await erpFetch(`users/${user.id}/reset-password/`, { method: 'POST', body: JSON.stringify({ new_password: newPw }), headers: { 'Content-Type': 'application/json' } })
             toast.success('Password reset'); setShowPwReset(false); setNewPw('')
         } catch { toast.error('Failed') }
     }
@@ -218,7 +218,7 @@ function EditDrawer({ user, roles, onClose, onRefresh }: {
     const handleDelete = async () => {
         if (!confirm(`Delete user "${name}"?\n\nUsers with transactions will be deactivated instead.`)) return
         try {
-            const res = await erpFetch(`erp/users/${user.id}/`, { method: 'DELETE' })
+            const res = await erpFetch(`users/${user.id}/`, { method: 'DELETE' })
             toast.success(res?.soft_deleted ? res.message : 'User deleted'); onRefresh()
         } catch { toast.error('Failed to delete') }
     }
@@ -376,7 +376,7 @@ function CreateModal({ roles, onClose, onCreated }: { roles: RoleItem[]; onClose
         if (!form.username || !form.password) { toast.error('Username and password required'); return }
         setSaving(true)
         try {
-            await erpFetch('erp/users/', { method: 'POST', body: JSON.stringify({ ...form, role: form.role || undefined }), headers: { 'Content-Type': 'application/json' } })
+            await erpFetch('users/', { method: 'POST', body: JSON.stringify({ ...form, role: form.role || undefined }), headers: { 'Content-Type': 'application/json' } })
             toast.success(`User ${form.username} created!`); onCreated()
         } catch (e: any) { toast.error(e?.message || 'Failed') }
         setSaving(false)
@@ -447,8 +447,8 @@ export default function AccessUsersPage() {
         setLoading(true)
         try {
             const [uData, rData, pData] = await Promise.all([
-                erpFetch('erp/users/'),
-                erpFetch('erp/roles/'),
+                erpFetch('users/'),
+                erpFetch('roles/'),
                 erpFetch('manager/approvals/pending/').catch(() => []),
             ])
             setUsers(Array.isArray(uData) ? uData : uData?.results ?? [])
@@ -488,11 +488,11 @@ export default function AccessUsersPage() {
     }), [users, pending])
 
     const handleBlock = async (u: User) => {
-        await erpFetch(`erp/users/${u.id}/`, { method: 'PATCH', body: JSON.stringify({ account_status: 'BLOCKED' }), headers: { 'Content-Type': 'application/json' } })
+        await erpFetch(`users/${u.id}/`, { method: 'PATCH', body: JSON.stringify({ account_status: 'BLOCKED' }), headers: { 'Content-Type': 'application/json' } })
         toast.success(`${u.first_name || u.username} blocked`); load()
     }
     const handleActivate = async (u: User) => {
-        await erpFetch(`erp/users/${u.id}/`, { method: 'PATCH', body: JSON.stringify({ account_status: 'ACTIVE' }), headers: { 'Content-Type': 'application/json' } })
+        await erpFetch(`users/${u.id}/`, { method: 'PATCH', body: JSON.stringify({ account_status: 'ACTIVE' }), headers: { 'Content-Type': 'application/json' } })
         toast.success(`${u.first_name || u.username} activated`); load()
     }
     const handleApprove = async (id: number) => {
