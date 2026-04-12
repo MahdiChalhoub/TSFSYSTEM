@@ -90,5 +90,7 @@ __all__ = [
     'GiftSampleEvent', 'InternalConsumptionEvent',
     # Backward-compat aliases
     'GiftSampleVAT', 'SelfSupplyVATEvent',
+    # Dynamic Form Builder
+    'FormDefinition', 'FormResponse',
 ]
 

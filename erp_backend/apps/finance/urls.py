@@ -16,6 +16,7 @@ from apps.finance.views import (
     InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
     GatewayConfigViewSet, ReportViewSet,
     EInvoiceViewSet,
+    FormDefinitionViewSet, FormResponseViewSet,
 )
 
 router = SimpleRouter()
@@ -45,6 +46,8 @@ router.register(r'payment-allocations', PaymentAllocationViewSet, basename='paym
 router.register(r'gateway-configs', GatewayConfigViewSet, basename='gateway-config')
 router.register(r'reports', ReportViewSet, basename='report')
 router.register(r'einvoice', EInvoiceViewSet, basename='einvoice')
+router.register(r'form-definitions', FormDefinitionViewSet, basename='form-definition')
+router.register(r'form-responses', FormResponseViewSet, basename='form-response')
 
 urlpatterns = [
     path('', include(router.urls)),

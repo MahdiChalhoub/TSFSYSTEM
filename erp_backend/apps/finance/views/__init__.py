@@ -16,6 +16,7 @@ from .invoice_views import InvoiceViewSet, InvoiceLineViewSet, PaymentAllocation
 from .gateway_views import GatewayConfigViewSet
 from .report_views import ReportViewSet
 from .einvoice_views import EInvoiceViewSet
+from .form_views import FormDefinitionViewSet, FormResponseViewSet
 from .payment_method_views import PaymentMethodViewSet
 from .tax_engine_ext_views import (
     WithholdingTaxRuleViewSet, BadDebtVATClaimViewSet, ImportDeclarationViewSet,
@@ -58,4 +59,5 @@ __all__ = [
     'CreditNoteVATReversalViewSet', 'GiftSampleVATViewSet',
     'MarginSchemeTransactionViewSet', 'IntraBranchVATTransferViewSet',
     'ReverseChargeSelfAssessmentViewSet', 'VATRateChangeHistoryViewSet',
+    'FormDefinitionViewSet', 'FormResponseViewSet',
 ]

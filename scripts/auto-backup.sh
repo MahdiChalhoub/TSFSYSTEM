@@ -39,3 +39,15 @@ git -c user.name="TSF Agent" \
 
 HASH=$(git rev-parse --short HEAD)
 log "OK: Committed ${CHANGED} file(s) as ${HASH}. ${STAT}"
+
+# ── Health check: restart frontend if stuck ───────────────
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 8 http://127.0.0.1:3000/ 2>/dev/null || echo "000")
+if [[ "$FRONTEND_STATUS" == "000" || "$FRONTEND_STATUS" == "502" || "$FRONTEND_STATUS" == "504" ]]; then
+    log "HEALTH: Frontend unresponsive (HTTP ${FRONTEND_STATUS}) — restarting container..."
+    docker restart tsfsystem-frontend-1 >> "$LOG" 2>&1 && log "HEALTH: Container restarted." || log "HEALTH: Restart failed."
+elif docker stats tsfsystem-frontend-1 --no-stream --format "{{.MemPerc}}" 2>/dev/null | awk -F'%' '$1+0 > 85 {exit 1}'; then
+    :  # memory OK
+else
+    log "HEALTH: Frontend memory >85% — restarting container to free memory..."
+    docker restart tsfsystem-frontend-1 >> "$LOG" 2>&1 && log "HEALTH: Container restarted." || log "HEALTH: Restart failed."
+fi
