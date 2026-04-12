@@ -166,8 +166,8 @@ async function apiCall<T>(
  */
 export async function getThemes(): Promise<ThemesListResponse> {
   try {
-    console.log('[Theme Action] Fetching themes from:', `${API_BASE}/api/themes/`)
-    const result = await apiCall<any>('themes/')
+    console.log('[Theme Action] Fetching themes from:', `${API_BASE}/api/ui-themes/`)
+    const result = await apiCall<any>('ui-themes/')
     console.log('[Theme Action] Successfully loaded themes:', {
       systemCount: result.system?.length || 0,
       customCount: result.custom?.length || 0
@@ -201,14 +201,14 @@ export async function getThemes(): Promise<ThemesListResponse> {
  * Get current user's active theme
  */
 export async function getCurrentTheme(): Promise<CurrentThemeResponse> {
-  return apiCall<CurrentThemeResponse>('themes/current/')
+  return apiCall<CurrentThemeResponse>('ui-themes/current/')
 }
 
 /**
  * Get specific theme by ID
  */
 export async function getThemeById(themeId: number): Promise<ThemePreset> {
-  return apiCall<ThemePreset>(`themes/${themeId}/`)
+  return apiCall<ThemePreset>(`ui-themes/${themeId}/`)
 }
 
 // ============================================================================
@@ -221,7 +221,7 @@ export async function getThemeById(themeId: number): Promise<ThemePreset> {
 export async function activateTheme(
   themeId: number
 ): Promise<ThemeActivateResponse> {
-  return apiCall<ThemeActivateResponse>(`themes/${themeId}/activate/`, {
+  return apiCall<ThemeActivateResponse>(`ui-themes/${themeId}/activate/`, {
     method: 'POST',
   })
 }
@@ -230,7 +230,7 @@ export async function activateTheme(
  * Toggle between dark and light mode
  */
 export async function toggleColorMode(): Promise<ColorModeToggleResponse> {
-  return apiCall<ColorModeToggleResponse>('themes/toggle-mode/', {
+  return apiCall<ColorModeToggleResponse>('ui-themes/toggle-mode/', {
     method: 'POST',
   })
 }
@@ -241,7 +241,7 @@ export async function toggleColorMode(): Promise<ColorModeToggleResponse> {
 export async function setColorMode(
   mode: 'dark' | 'light' | 'auto'
 ): Promise<ColorModeToggleResponse> {
-  return apiCall<ColorModeToggleResponse>('themes/toggle-mode/', {
+  return apiCall<ColorModeToggleResponse>('ui-themes/toggle-mode/', {
     method: 'POST',
     body: JSON.stringify({ mode }),
   })
@@ -253,7 +253,7 @@ export async function setColorMode(
 export async function createTheme(
   themeData: CreateThemeInput
 ): Promise<ThemePreset> {
-  return apiCall<ThemePreset>('themes/create/', {
+  return apiCall<ThemePreset>('ui-themes/create/', {
     method: 'POST',
     body: JSON.stringify(themeData),
   })
@@ -266,7 +266,7 @@ export async function updateTheme(
   themeId: number,
   updates: Partial<ThemePreset>
 ): Promise<ThemePreset> {
-  return apiCall<ThemePreset>(`themes/${themeId}/update/`, {
+  return apiCall<ThemePreset>(`ui-themes/${themeId}/update/`, {
     method: 'PATCH',
     body: JSON.stringify(updates),
   })
@@ -276,7 +276,7 @@ export async function updateTheme(
  * Delete a custom theme
  */
 export async function deleteTheme(themeId: number): Promise<void> {
-  await apiCall<void>(`themes/${themeId}/delete/`, {
+  await apiCall<void>(`ui-themes/${themeId}/delete/`, {
     method: 'DELETE',
   })
 }
@@ -289,7 +289,7 @@ export async function deleteTheme(themeId: number): Promise<void> {
  * Export theme as JSON
  */
 export async function exportTheme(themeId: number): Promise<string> {
-  const data = await apiCall<any>(`themes/${themeId}/export/`)
+  const data = await apiCall<any>(`ui-themes/${themeId}/export/`)
   return JSON.stringify(data, null, 2)
 }
 
@@ -298,7 +298,7 @@ export async function exportTheme(themeId: number): Promise<string> {
  */
 export async function importTheme(json: string): Promise<ThemePreset> {
   const themeData = JSON.parse(json) as ImportThemeInput
-  return apiCall<ThemePreset>('themes/import/', {
+  return apiCall<ThemePreset>('ui-themes/import/', {
     method: 'POST',
     body: JSON.stringify(themeData),
   })

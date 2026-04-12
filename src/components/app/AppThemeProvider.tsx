@@ -326,7 +326,7 @@ export function AppThemeProvider({
             setError(null);
 
             // Client-side fetch via proxy
-            const response = await fetch('/api/proxy/themes', {
+            const response = await fetch('/api/proxy/ui-themes', {
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -372,7 +372,7 @@ export function AppThemeProvider({
             .catch(() => { /* non-fatal */ });
 
         // Activate on backend
-        fetch(`/api/proxy/themes/${theme.id}/activate`, {
+        fetch(`/api/proxy/ui-themes/${theme.id}/activate`, {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -384,7 +384,7 @@ export function AppThemeProvider({
         setColorModeState(newMode);
 
         // Persist
-        fetch('/api/proxy/themes/toggle-mode', {
+        fetch('/api/proxy/ui-themes/toggle-mode', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -402,7 +402,7 @@ export function AppThemeProvider({
 
     // ── CRUD for settings  ──
     const createThemeFn = useCallback(async (input: CreateThemeInput): Promise<ThemePreset> => {
-        const res = await fetch('/api/proxy/themes/create', {
+        const res = await fetch('/api/proxy/ui-themes/create', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input),
@@ -415,7 +415,7 @@ export function AppThemeProvider({
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updateThemeFn = useCallback(async (id: number, updates: Partial<ThemePreset>): Promise<ThemePreset> => {
-        const res = await fetch(`/api/proxy/themes/${id}/update`, {
+        const res = await fetch(`/api/proxy/ui-themes/${id}/update`, {
             method: 'PATCH', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updates),
@@ -464,7 +464,7 @@ export function AppThemeProvider({
     }, [currentTheme, updateThemeFn]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const deleteThemeFn = useCallback(async (id: number): Promise<void> => {
-        const res = await fetch(`/api/proxy/themes/${id}/delete`, {
+        const res = await fetch(`/api/proxy/ui-themes/${id}/delete`, {
             method: 'DELETE', credentials: 'include',
         });
         if (!res.ok) throw new Error('Failed to delete theme');
@@ -474,7 +474,7 @@ export function AppThemeProvider({
     const exportThemeFn = useCallback(async (slug: string): Promise<string> => {
         const theme = allThemes.find(t => t.slug === slug);
         if (!theme) throw new Error('Theme not found');
-        const res = await fetch(`/api/proxy/themes/${theme.id}/export`, { credentials: 'include' });
+        const res = await fetch(`/api/proxy/ui-themes/${theme.id}/export`, { credentials: 'include' });
         if (!res.ok) throw new Error('Export failed');
         const data = await res.json();
         return JSON.stringify(data, null, 2);
@@ -482,7 +482,7 @@ export function AppThemeProvider({
 
     const importThemeFn = useCallback(async (json: string): Promise<ThemePreset> => {
         const themeData = JSON.parse(json);
-        const res = await fetch('/api/proxy/themes/import', {
+        const res = await fetch('/api/proxy/ui-themes/import', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(themeData),
