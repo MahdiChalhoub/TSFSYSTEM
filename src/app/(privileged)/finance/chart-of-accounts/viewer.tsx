@@ -1,130 +1,213 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react'
 import type { ChartOfAccount } from '@/types/erp'
-import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X } from 'lucide-react'
+import {
+    ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText,
+    RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X,
+    Search, BarChart3, TrendingUp, TrendingDown, Scale, Wallet,
+    Maximize2, Minimize2, Loader2, BookOpen
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-// Recursive Tree Node Component
-const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, level: number, accounts: Record<string, any>[] }) => {
-    const isParent = node.children && node.children.length > 0
-    const [isOpen, setIsOpen] = useState(level < 1) // Only open first level by default
+// ─── Type color map (V2 CSS variables) ────────────────────────
+const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
+    ASSET:     { color: 'var(--app-info, #3B82F6)',    bg: 'color-mix(in srgb, var(--app-info, #3B82F6) 10%, transparent)',    icon: <Wallet size={13} />,       label: 'Asset' },
+    LIABILITY: { color: 'var(--app-error, #EF4444)',   bg: 'color-mix(in srgb, var(--app-error, #EF4444) 10%, transparent)',   icon: <TrendingDown size={13} />, label: 'Liability' },
+    EQUITY:    { color: '#8b5cf6',                     bg: 'color-mix(in srgb, #8b5cf6 10%, transparent)',                    icon: <Scale size={13} />,        label: 'Equity' },
+    INCOME:    { color: 'var(--app-success, #10B981)', bg: 'color-mix(in srgb, var(--app-success, #10B981) 10%, transparent)', icon: <TrendingUp size={13} />,   label: 'Income' },
+    EXPENSE:   { color: 'var(--app-warning, #F59E0B)', bg: 'color-mix(in srgb, var(--app-warning, #F59E0B) 10%, transparent)', icon: <BarChart3 size={13} />,     label: 'Expense' },
+}
 
-    const toggle = () => setIsOpen(!isOpen)
+// ─── Account Tree Node ─────────────────────────────────────────
+const AccountNode = ({
+    node, level, accounts, onEdit, onAddChild, onReactivate
+}: {
+    node: Record<string, any>
+    level: number
+    accounts: Record<string, any>[]
+    onEdit: (node: Record<string, any>) => void
+    onAddChild: (parentId: number) => void
+    onReactivate: (id: number) => void
+}) => {
+    const isParent = node.children && node.children.length > 0
+    const [isOpen, setIsOpen] = useState(level < 1)
+    const typeConf = TYPE_CONFIG[node.type] ?? TYPE_CONFIG.ASSET
+    const isRoot = level === 0
 
     return (
-        <div className={`flex flex-col border-stone-100 ${!node.isActive ? 'opacity-50 grayscale-[0.5]' : ''}`}>
-            {/* Account Row */}
+        <div className={!node.isActive ? 'opacity-40' : ''}>
+            {/* Row */}
             <div
-                className={`flex items-center group hover:bg-stone-50 transition-colors py-2 border-b border-stone-50 ${level === 0 ? 'bg-white' : ''}`}
-                style={{ paddingLeft: `${level * 24}px` }}
+                className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b"
+                style={{
+                    paddingLeft: isRoot ? '12px' : `${12 + level * 20}px`,
+                    paddingRight: '12px',
+                    paddingTop: isRoot ? '10px' : '7px',
+                    paddingBottom: isRoot ? '10px' : '7px',
+                    background: isRoot
+                        ? 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))'
+                        : 'transparent',
+                    borderLeft: isRoot
+                        ? '3px solid var(--app-primary)'
+                        : `3px solid transparent`,
+                    borderBottomColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                }}
+                onMouseEnter={e => {
+                    if (!isRoot) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-hover, rgba(255,255,255,0.04))'
+                }}
+                onMouseLeave={e => {
+                    if (!isRoot) (e.currentTarget as HTMLElement).style.background = 'transparent'
+                }}
             >
-                <div className="flex-1 flex items-center gap-2">
-                    {/* Expand/Collapse Toggle */}
-                    <div className="w-6 flex justify-center">
-                        {isParent ? (
-                            <button onClick={toggle} className="p-1 hover:bg-stone-200 rounded text-stone-400">
-                                {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            </button>
-                        ) : (
-                            <div className="w-4 h-4 rounded-full border border-stone-100 flex items-center justify-center opacity-30">
-                                <div className="w-1 h-1 bg-stone-300 rounded-full" />
-                            </div>
-                        )}
-                    </div>
+                {/* Toggle */}
+                <button
+                    onClick={() => isParent && setIsOpen(o => !o)}
+                    className="w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0"
+                    style={{ color: isParent ? 'var(--app-muted-foreground, #94A3B8)' : 'var(--app-border)' }}
+                >
+                    {isParent
+                        ? (isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />)
+                        : <div className="w-1.5 h-1.5 rounded-full" style={{ background: typeConf.color, opacity: 0.5 }} />
+                    }
+                </button>
 
-                    {/* Icon based on status */}
-                    <div className="text-stone-400">
-                        {isParent ? (isOpen ? <FolderOpen size={16} className="text-amber-400" /> : <Folder size={16} className="text-amber-200" />) : <FileText size={16} />}
-                    </div>
-
-                    {/* Account Info */}
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-bold text-stone-400 w-12">{node.code}</span>
-                            <span className={`text-sm font-medium ${level === 0 ? 'text-stone-900 font-bold' : 'text-stone-600'}`}>
-                                {node.name}
-                            </span>
-                        </div>
-                        {node.subType && (
-                            <span className="text-[10px] text-stone-400 uppercase tracking-tighter">[{node.subType}]</span>
-                        )}
-                    </div>
+                {/* Icon */}
+                <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: typeConf.bg, color: typeConf.color }}
+                >
+                    {isParent
+                        ? (isOpen ? <FolderOpen size={14} /> : <Folder size={14} />)
+                        : <FileText size={13} />
+                    }
                 </div>
 
-                {/* Regulatory Mapping */}
-                <div className="w-48 flex flex-col justify-center">
+                {/* Code + Name */}
+                <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <span
+                        className="font-mono text-[11px] font-bold flex-shrink-0"
+                        style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}
+                    >
+                        {node.code}
+                    </span>
+                    <span
+                        className={`truncate text-[13px] ${isRoot ? 'font-bold' : 'font-medium'}`}
+                        style={{ color: 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
+                    >
+                        {node.name}
+                    </span>
+                    {node.subType && (
+                        <span
+                            className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 hidden md:inline"
+                            style={{ background: typeConf.bg, color: typeConf.color, border: `1px solid ${typeConf.bg}` }}
+                        >
+                            {node.subType}
+                        </span>
+                    )}
+                    {!node.isActive && (
+                        <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded flex-shrink-0"
+                            style={{ background: 'var(--app-error-bg, rgba(239,68,68,0.12))', color: 'var(--app-error, #EF4444)' }}>
+                            Inactive
+                        </span>
+                    )}
+                </div>
+
+                {/* SYSCOHADA */}
+                <div className="w-36 hidden lg:flex items-center gap-1.5 flex-shrink-0">
                     {node.syscohadaCode && (
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-black bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded border border-stone-200">
+                        <>
+                            <span
+                                className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                    color: 'var(--app-muted-foreground, #94A3B8)',
+                                    border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                }}
+                            >
                                 {node.syscohadaCode}
                             </span>
                             {node.syscohadaClass && (
-                                <span className="text-[9px] text-stone-400 font-medium truncate max-w-[120px]">
+                                <span className="text-[9px] truncate max-w-[80px]"
+                                    style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}>
                                     {node.syscohadaClass}
                                 </span>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
 
                 {/* Type Badge */}
-                <div className="w-32 flex items-center">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${node.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                        node.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border-red-100' :
-                            node.type === 'EQUITY' ? 'bg-stone-100 text-stone-600 border-stone-200' :
-                                node.type === 'INCOME' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                                    'bg-amber-100 text-amber-700 border-amber-200'
-                        }`}>
-                        {node.type}
+                <div className="w-24 flex-shrink-0 hidden sm:flex items-center">
+                    <span
+                        className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1"
+                        style={{ background: typeConf.bg, color: typeConf.color, border: `1px solid ${typeConf.bg}` }}
+                    >
+                        {typeConf.icon}
+                        {typeConf.label}
                     </span>
-                    {!node.isActive && (
-                        <span className="ml-1 text-[8px] font-black text-rose-500 bg-rose-50 px-1 rounded uppercase">Inactive</span>
-                    )}
                 </div>
 
                 {/* Balance */}
-                <div className={`w-32 text-right pr-4 font-mono text-sm ${node.balance < 0 ? 'text-red-500' : 'text-stone-900'}`}>
+                <div
+                    className="w-28 text-right font-mono text-[12px] font-bold flex-shrink-0 tabular-nums"
+                    style={{ color: node.balance < 0 ? 'var(--app-error, #EF4444)' : 'var(--app-foreground, var(--app-text, #F1F5F9))' }}
+                >
                     {node.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
 
                 {/* Actions */}
-                <div className="w-16 flex items-center justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-16 justify-end">
                     <button
-                        title="Edit / Revise Account"
-                        onClick={() => (window as any).openEditModal(node)}
-                        className="p-1.5 hover:bg-stone-200 rounded-md text-stone-500"
+                        title="Edit Account"
+                        onClick={() => onEdit(node)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 50%, transparent)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
                         <Pencil size={12} />
                     </button>
                     <button
                         title="Add Sub-Account"
-                        onClick={() => (window as any).openAddModal(node.id)}
-                        className="p-1.5 hover:bg-stone-200 rounded-md text-stone-500"
+                        onClick={() => onAddChild(node.id)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--app-muted-foreground)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-primary) 12%, transparent)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
-                        <Plus size={14} />
+                        <Plus size={13} />
                     </button>
                     {!node.isActive && (
                         <button
-                            title="Reactivate Account"
-                            onClick={() => (window as any).reactivateAccount(node.id)}
-                            className="p-1.5 hover:bg-emerald-100 rounded-md text-emerald-600"
+                            title="Reactivate"
+                            onClick={() => onReactivate(node.id)}
+                            className="p-1.5 rounded-lg transition-colors"
+                            style={{ color: 'var(--app-success, #10B981)' }}
                         >
-                            <Power size={14} />
+                            <Power size={12} />
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Render Children */}
+            {/* Children */}
             {isParent && isOpen && (
-                <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
                     {node.children.map((child: Record<string, any>) => (
-                        <AccountNode key={child.id} node={child} level={level + 1} accounts={accounts} />
+                        <AccountNode
+                            key={child.id}
+                            node={child}
+                            level={level + 1}
+                            accounts={accounts}
+                            onEdit={onEdit}
+                            onAddChild={onAddChild}
+                            onReactivate={onReactivate}
+                        />
                     ))}
                 </div>
             )}
@@ -132,71 +215,112 @@ const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, lev
     )
 }
 
+// ─── Main Viewer ───────────────────────────────────────────────
 export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, any>[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [isAdding, setIsAdding] = useState(false)
-    const [editingAccount, setEditingAccount] = useState<ChartOfAccount | null>(null)
-    const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
+    const [searchQuery, setSearchQuery] = useState('')
     const [showInactive, setShowInactive] = useState(false)
+    const [focusMode, setFocusMode] = useState(false)
+    const [isAdding, setIsAdding] = useState(false)
+    const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
+    const [editingAccount, setEditingAccount] = useState<Record<string, any> | null>(null)
+    const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info'; id?: number } | null>(null)
+    const searchRef = useRef<HTMLInputElement>(null)
 
-    // Build hierarchical tree
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(p => !p) }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
+
+    // KPI stats
+    const stats = useMemo(() => {
+        const active = accounts.filter(a => a.isActive)
+        const byType = (t: string) => active.filter(a => a.type === t)
+        const sum = (arr: Record<string, any>[]) => arr.reduce((s, a) => s + (Number(a.balance) || 0), 0)
+        return [
+            { label: 'Total Accounts', value: accounts.length, color: 'var(--app-primary)', icon: <BookOpen size={14} /> },
+            { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info, #3B82F6)', icon: <Wallet size={14} /> },
+            { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error, #EF4444)', icon: <TrendingDown size={14} /> },
+            { label: 'Equity', value: byType('EQUITY').length, color: '#8b5cf6', icon: <Scale size={14} /> },
+            { label: 'Income', value: byType('INCOME').length, color: 'var(--app-success, #10B981)', icon: <TrendingUp size={14} /> },
+            { label: 'Expenses', value: byType('EXPENSE').length, color: 'var(--app-warning, #F59E0B)', icon: <BarChart3 size={14} /> },
+        ]
+    }, [accounts])
+
+    // Filter + build tree
     const tree = useMemo(() => {
-        const filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
-
-        const dataMap: Record<string, any> = {}
-        filtered.forEach(acc => {
-            dataMap[acc.id] = { ...acc, children: [] }
+        let filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase()
+            filtered = filtered.filter(a =>
+                a.name.toLowerCase().includes(q) ||
+                a.code.toLowerCase().includes(q) ||
+                (a.syscohadaCode?.toLowerCase().includes(q))
+            )
+        }
+        const map: Record<string, any> = {}
+        filtered.forEach(a => { map[a.id] = { ...a, children: [] } })
+        const roots: Record<string, any>[] = []
+        filtered.forEach(a => {
+            if (a.parentId && map[a.parentId]) map[a.parentId].children.push(map[a.id])
+            else if (!a.parentId) roots.push(map[a.id])
         })
+        return roots
+    }, [accounts, showInactive, searchQuery])
 
-        const rootNodes: Record<string, any>[] = []
-        filtered.forEach(acc => {
-            if (acc.parentId && dataMap[acc.parentId]) {
-                dataMap[acc.parentId].children.push(dataMap[acc.id])
-            } else if (!acc.parentId) {
-                rootNodes.push(dataMap[acc.id])
-            }
-        })
-
-        return rootNodes
-    }, [accounts, showInactive])
-
+    // Handlers
     async function handleCreate(formData: FormData) {
-        const code = formData.get('code') as string
-        const name = formData.get('name') as string
-        const type = formData.get('type') as string
-        const subType = formData.get('subType') as string
-        const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : undefined
-        const syscohadaCode = formData.get('syscohadaCode') as string
-        const syscohadaClass = formData.get('syscohadaClass') as string
-
+        const data = {
+            code: formData.get('code') as string,
+            name: formData.get('name') as string,
+            type: formData.get('type') as string,
+            subType: formData.get('subType') as string,
+            parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : undefined,
+            syscohadaCode: formData.get('syscohadaCode') as string,
+            syscohadaClass: formData.get('syscohadaClass') as string,
+        }
         startTransition(async () => {
             const { createAccount } = await import('@/app/actions/finance/accounts')
             try {
-                await createAccount({ code, name, type, subType, parentId, syscohadaCode, syscohadaClass })
+                await createAccount(data)
                 setIsAdding(false)
                 setPreselectedParentId(undefined)
                 router.refresh()
+                toast.success('Account created.')
             } catch (e: unknown) {
                 toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
             }
         })
     }
 
-    const openAddModal = (parentId?: number) => {
-        setPreselectedParentId(parentId)
-        setIsAdding(true)
-    }
-
-    const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info'; id?: number } | null>(null)
-
-    const reactivateAccount = (id: number) => {
-        setPendingAction({
-            type: 'reactivate',
-            title: 'Reactivate Account?',
-            description: 'This will reactivate the deactivated account.',
-            variant: 'warning',
-            id,
+    async function handleUpdate(formData: FormData) {
+        if (!editingAccount) return
+        const data = {
+            code: formData.get('code') as string,
+            name: formData.get('name') as string,
+            type: formData.get('type') as string,
+            subType: formData.get('subType') as string,
+            parentId: formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null,
+            syscohadaCode: formData.get('syscohadaCode') as string,
+            syscohadaClass: formData.get('syscohadaClass') as string,
+            isActive: true,
+        }
+        startTransition(async () => {
+            const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')
+            try {
+                await updateChartOfAccount(editingAccount.id, data)
+                setEditingAccount(null)
+                router.refresh()
+                toast.success('Account updated.')
+            } catch (err: unknown) {
+                toast.error('Update Error: ' + (err instanceof Error ? err.message : String(err)))
+            }
         })
     }
 
@@ -205,145 +329,209 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
         if (pendingAction.type === 'reactivate' && pendingAction.id) {
             startTransition(async () => {
                 const { reactivateChartOfAccount } = await import('@/app/actions/finance/accounts')
-                try {
-                    await reactivateChartOfAccount(pendingAction.id!)
-                    router.refresh()
-                } catch (e: unknown) {
-                    toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
-                }
+                try { await reactivateChartOfAccount(pendingAction.id!); router.refresh() }
+                catch (e: unknown) { toast.error('Error: ' + (e instanceof Error ? e.message : String(e))) }
             })
         } else if (pendingAction.type === 'recalculate') {
             startTransition(async () => {
                 await recalculateAccountBalances()
                 router.refresh()
-                toast.success('System balances recalculated successfully.')
+                toast.success('Balances recalculated.')
             })
         }
         setPendingAction(null)
     }
 
-    const openEditModal = (account: Record<string, any>) => {
-        setEditingAccount(account)
-    }
-
-    // Expose globally for children to use
-    if (typeof window !== 'undefined') {
-        (window as any).openAddModal = openAddModal;
-        (window as any).openEditModal = openEditModal;
-        (window as any).reactivateAccount = reactivateAccount;
-    }
-
-    async function handleUpdate(formData: FormData) {
-        if (!editingAccount) return
-        const code = formData.get('code') as string
-        const name = formData.get('name') as string
-        const type = formData.get('type') as string
-        const subType = formData.get('subType') as string
-        const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null
-        const syscohadaCode = formData.get('syscohadaCode') as string
-        const syscohadaClass = formData.get('syscohadaClass') as string
-
-        startTransition(async () => {
-            const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')
-            try {
-                await updateChartOfAccount(editingAccount.id, {
-                    code, name, type, subType, parentId, syscohadaCode, syscohadaClass, isActive: true
-                })
-                setEditingAccount(null)
-                router.refresh()
-            } catch (err: unknown) {
-                toast.error('Update Error: ' + (err instanceof Error ? err.message : String(err)))
-            }
-        })
-    }
+    const openAddModal = (parentId?: number) => { setPreselectedParentId(parentId); setIsAdding(true) }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
-            {/* Toolbar */}
-            <div className="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <FolderOpen className="text-stone-400" />
-                    <h2 className="text-lg font-bold text-stone-900">Account Hierarchy</h2>
-                    <span className="bg-stone-200 text-stone-600 text-xs px-2 py-0.5 rounded-full">{accounts.length} Total</span>
+        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
 
-                    {accounts.some(a => !a.isActive) && (
-                        <button
-                            onClick={() => setShowInactive(!showInactive)}
-                            className={`flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full transition-all ${showInactive ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-stone-100 text-stone-400 border border-stone-200 hover:text-stone-600'}`}
-                        >
-                            {showInactive ? <Eye size={12} /> : <EyeOff size={12} />}
-                            {showInactive ? 'Showing Inactive' : 'Show Inactive'}
-                        </button>
-                    )}
-                </div>
+            {/* ── Page Header ───────────────────────────────── */}
+            <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0">
                 <div className="flex items-center gap-3">
+                    <div
+                        className="page-header-icon bg-app-primary"
+                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                    >
+                        <BookOpen size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                            Chart of Accounts
+                        </h1>
+                        <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                            {accounts.length} Accounts · Account Hierarchy
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap justify-end">
                     <button
                         onClick={() => router.push('/finance/chart-of-accounts/migrate')}
-                        className="flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 border border-amber-100 px-3 py-1.5 rounded-md hover:bg-amber-50 transition-all shadow-sm"
+                        className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
+                        style={{
+                            color: 'var(--app-warning, #F59E0B)',
+                            borderColor: 'color-mix(in srgb, var(--app-warning, #F59E0B) 30%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-warning, #F59E0B) 8%, transparent)',
+                        }}
                     >
-                        <Zap size={14} />
-                        Migration Tool
+                        <Zap size={13} /> Migration
                     </button>
                     <button
                         onClick={() => router.push('/finance/chart-of-accounts/templates')}
-                        className="flex items-center gap-2 text-xs font-bold text-stone-500 hover:text-stone-900 border border-stone-200 px-3 py-1.5 rounded-md hover:bg-white transition-all shadow-sm"
+                        className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
+                        style={{
+                            color: 'var(--app-muted-foreground)',
+                            borderColor: 'var(--app-border)',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
-                        <Library size={14} />
-                        Templates Library
+                        <Library size={13} /> Templates
                     </button>
                     <button
-                        onClick={() => {
-                            setPendingAction({
-                                type: 'recalculate',
-                                title: 'Recalculate Account Balances?',
-                                description: 'This will rebuild all account balances from scratch using posted journal entries.',
-                                variant: 'danger',
-                            })
-                        }}
+                        onClick={() => setPendingAction({ type: 'recalculate', title: 'Recalculate Balances?', description: 'Rebuild all account balances from posted journal entries.', variant: 'warning' })}
                         disabled={isPending}
-                        title="Audit & Recalculate System Balances"
-                        className="flex items-center gap-2 text-xs font-bold text-stone-500 hover:text-stone-900 border border-stone-200 px-3 py-1.5 rounded-md hover:bg-white transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all disabled:opacity-50"
+                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
                     >
-                        <RefreshCcw size={14} className={isPending ? 'animate-spin' : ''} />
-                        Audit Integrity
+                        <RefreshCcw size={13} className={isPending ? 'animate-spin' : ''} /> Audit
                     </button>
                     <button
                         onClick={() => openAddModal()}
-                        className="flex items-center gap-2 text-sm bg-black text-white px-3 py-1.5 rounded-md hover:bg-stone-800 transition-colors shadow-sm"
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                        style={{
+                            background: 'var(--app-primary)',
+                            color: '#fff',
+                            boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                        }}
                     >
-                        <Plus size={16} /> New Account
+                        <Plus size={14} /> New Account
+                    </button>
+                    <button
+                        onClick={() => setFocusMode(p => !p)}
+                        title="Toggle Focus Mode (Ctrl+Q)"
+                        className="p-1.5 rounded-xl border transition-all"
+                        style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}
+                    >
+                        {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                     </button>
                 </div>
             </div>
 
-            {/* Quick Add Form - Main Toolbar Version */}
+            {/* ── KPI Strip ─────────────────────────────────── */}
+            <div className="flex-shrink-0 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                {stats.map(s => (
+                    <div
+                        key={s.label}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        }}
+                    >
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
+                            {s.icon}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-[9px] font-bold uppercase tracking-wider truncate"
+                                style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}>{s.label}</div>
+                            <div className="text-sm font-black tabular-nums"
+                                style={{ color: 'var(--app-foreground, var(--app-text))' }}>{s.value}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Toolbar Row ────────────────────────────────── */}
+            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                {/* Search */}
+                <div className="flex-1 relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
+                    <input
+                        ref={searchRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Search by name, code, SYSCOHADA... (Ctrl+K)"
+                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] rounded-xl outline-none transition-all"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            color: 'var(--app-foreground, var(--app-text))',
+                        }}
+                        onFocus={e => { (e.target as HTMLElement).style.borderColor = 'var(--app-border)'; (e.target as HTMLElement).style.background = 'var(--app-surface)' }}
+                        onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                    />
+                </div>
+                {/* Show Inactive Toggle */}
+                {accounts.some(a => !a.isActive) && (
+                    <button
+                        onClick={() => setShowInactive(p => !p)}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
+                        style={{
+                            background: showInactive ? 'color-mix(in srgb, var(--app-warning, #F59E0B) 10%, transparent)' : 'transparent',
+                            color: showInactive ? 'var(--app-warning, #F59E0B)' : 'var(--app-muted-foreground)',
+                            borderColor: showInactive ? 'color-mix(in srgb, var(--app-warning, #F59E0B) 30%, transparent)' : 'var(--app-border)',
+                        }}
+                    >
+                        {showInactive ? <Eye size={13} /> : <EyeOff size={13} />}
+                        <span className="hidden sm:inline">{showInactive ? 'Showing Inactive' : 'Show Inactive'}</span>
+                    </button>
+                )}
+            </div>
+
+            {/* ── Inline Add Form ────────────────────────────── */}
             {isAdding && (
-                <div className="p-4 border-b border-2 border-blue-100 bg-blue-50/50">
-                    <h3 className="text-sm font-bold text-stone-900 mb-3">
-                        {preselectedParentId ? `Adding Sub-Account` : 'Adding New Root Account'}
-                    </h3>
-                    <form action={handleCreate} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                        <div className="md:col-span-1">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">Code</label>
-                            <input name="code" placeholder="1010" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black" required />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">Name</label>
-                            <input name="name" placeholder="Account Name" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black" required />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">Type</label>
-                            <select name="type" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black">
-                                <option value="ASSET">Asset</option>
-                                <option value="LIABILITY">Liability</option>
-                                <option value="EQUITY">Equity</option>
-                                <option value="INCOME">Income</option>
-                                <option value="EXPENSE">Expense</option>
+                <div
+                    className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
+                        borderColor: 'var(--app-border)',
+                        borderLeft: '3px solid var(--app-primary)',
+                    }}
+                >
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[12px] font-black uppercase tracking-wider" style={{ color: 'var(--app-foreground)' }}>
+                            {preselectedParentId ? 'Add Sub-Account' : 'Add Root Account'}
+                        </h3>
+                        <button
+                            onClick={() => { setIsAdding(false); setPreselectedParentId(undefined) }}
+                            className="p-1 rounded-lg transition-colors"
+                            style={{ color: 'var(--app-muted-foreground)' }}
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                    <form action={handleCreate} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', alignItems: 'end' }}>
+                        {[
+                            { name: 'code', label: 'Code', placeholder: '1010', type: 'input', mono: true },
+                            { name: 'name', label: 'Name', placeholder: 'Account Name', type: 'input' },
+                        ].map(f => (
+                            <div key={f.name}>
+                                <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>{f.label}</label>
+                                <input
+                                    name={f.name}
+                                    placeholder={f.placeholder}
+                                    required
+                                    className={`w-full text-[12px] px-2.5 py-2 rounded-xl outline-none transition-all ${f.mono ? 'font-mono font-bold' : ''}`}
+                                    style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}
+                                />
+                            </div>
+                        ))}
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Type</label>
+                            <select name="type" className="w-full text-[12px] px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
+                                {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                             </select>
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">Sub-Type</label>
-                            <select name="subType" className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black">
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Sub-Type</label>
+                            <select name="subType" className="w-full text-[12px] px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                                 <option value="">None</option>
                                 <option value="CASH">Cash</option>
                                 <option value="BANK">Bank</option>
@@ -351,156 +539,217 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                                 <option value="PAYABLE">Payable</option>
                             </select>
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">Parent</label>
-                            <select
-                                name="parentId"
-                                defaultValue={preselectedParentId || ''}
-                                className="w-full text-sm border p-2 rounded focus:ring-black focus:border-black font-mono text-xs"
-                            >
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>Parent</label>
+                            <select name="parentId" defaultValue={preselectedParentId || ''} className="w-full text-[11px] font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }}>
                                 <option value="">(Root)</option>
-                                {accounts.map(a => (
-                                    <option key={a.id} value={a.id}>
-                                        {a.code} - {a.name}
-                                    </option>
-                                ))}
+                                {accounts.map(a => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}
                             </select>
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-stone-500 mb-1">SYSCOHADA</label>
-                            <div className="flex gap-1">
-                                <input name="syscohadaCode" placeholder="Code (57)" className="w-1/3 text-[10px] border p-1.5 rounded" />
-                                <input name="syscohadaClass" placeholder="Class" className="w-2/3 text-[10px] border p-1.5 rounded" />
-                            </div>
+                        <div>
+                            <label className="text-[9px] font-black uppercase tracking-widest mb-1 block" style={{ color: 'var(--app-muted-foreground)' }}>SYSCOHADA Code</label>
+                            <input name="syscohadaCode" placeholder="e.g. 57" className="w-full text-[11px] font-mono px-2.5 py-2 rounded-xl outline-none" style={{ background: 'var(--app-bg, #020617)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)', color: 'var(--app-foreground)' }} />
                         </div>
-                        <div className="md:col-span-1 flex gap-2">
-                            <button disabled={isPending} type="submit" className="w-full bg-blue-600 text-white p-2 rounded text-sm font-medium hover:bg-blue-700">
-                                {isPending ? '...' : 'Save'}
+                        <div className="flex gap-2 items-end">
+                            <button
+                                type="submit"
+                                disabled={isPending}
+                                className="flex-1 py-2 rounded-xl text-[12px] font-black text-white transition-all disabled:opacity-50"
+                                style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                            >
+                                {isPending ? <Loader2 size={14} className="animate-spin mx-auto" /> : 'Save'}
                             </button>
-                            <button type="button" onClick={() => setIsAdding(false)} className="bg-white border border-stone-300 text-stone-600 p-2 rounded text-sm hover:bg-stone-50">X</button>
                         </div>
                     </form>
                 </div>
             )}
 
-            {/* Tree List */}
-            <div className="min-w-[800px] overflow-x-auto">
-                <div className="bg-stone-50 border-b p-2 flex text-xs font-bold text-stone-400 uppercase">
-                    <div className="flex-1 pl-8">Account</div>
-                    <div className="w-48 text-emerald-600">SYSCOHADA Mapping</div>
-                    <div className="w-32">Type</div>
-                    <div className="w-32 text-right pr-4">Balance</div>
-                    <div className="w-16"></div>
+            {/* ── Tree Table ─────────────────────────────────── */}
+            <div
+                className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                }}
+            >
+                {/* Column Headers */}
+                <div
+                    className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 border-b text-[10px] font-black uppercase tracking-wider"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                        borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)',
+                        color: 'var(--app-muted-foreground)',
+                    }}
+                >
+                    <div className="w-5 flex-shrink-0" />
+                    <div className="w-7 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">Account</div>
+                    <div className="w-36 hidden lg:block flex-shrink-0" style={{ color: 'var(--app-success, #10B981)' }}>SYSCOHADA</div>
+                    <div className="w-24 hidden sm:block flex-shrink-0">Type</div>
+                    <div className="w-28 text-right flex-shrink-0">Balance</div>
+                    <div className="w-16 flex-shrink-0" />
                 </div>
 
-                {tree.map((node: Record<string, any>) => (
-                    <AccountNode key={node.id} node={node} level={0} accounts={accounts} />
-                ))}
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
+                    {isPending && (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 size={22} className="animate-spin" style={{ color: 'var(--app-primary)' }} />
+                        </div>
+                    )}
 
-                {tree.length === 0 && (
-                    <div className="p-12 text-center text-stone-400 italic">
-                        No accounts defined yet. Start building your chart of accounts.
-                    </div>
-                )}
+                    {!isPending && tree.map(node => (
+                        <AccountNode
+                            key={node.id}
+                            node={node}
+                            level={0}
+                            accounts={accounts}
+                            onEdit={setEditingAccount}
+                            onAddChild={openAddModal}
+                            onReactivate={(id) => setPendingAction({
+                                type: 'reactivate', title: 'Reactivate Account?',
+                                description: 'This will reactivate the deactivated account.',
+                                variant: 'warning', id,
+                            })}
+                        />
+                    ))}
+
+                    {!isPending && tree.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <BookOpen size={36} className="mb-3 opacity-30" style={{ color: 'var(--app-muted-foreground)' }} />
+                            <p className="text-sm font-bold" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {searchQuery ? 'No accounts match your search' : 'No accounts defined yet'}
+                            </p>
+                            <p className="text-[11px] mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {searchQuery ? 'Try a different code or name.' : 'Click "New Account" to start building your chart of accounts.'}
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Edit / Revise Modal */}
+            {/* ── Edit Modal ─────────────────────────────────── */}
             {editingAccount && (
-                <EditModal
-                    account={editingAccount}
-                    accounts={accounts}
-                    onUpdate={handleUpdate}
-                    onClose={() => setEditingAccount(null)}
-                    isPending={isPending}
-                />
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+                    onClick={e => { if (e.target === e.currentTarget) setEditingAccount(null) }}
+                >
+                    <div
+                        className="w-full max-w-xl mx-4 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}
+                    >
+                        {/* Modal Header */}
+                        <div
+                            className="px-5 py-3.5 flex items-center justify-between flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 6%, var(--app-surface))', borderBottom: '1px solid var(--app-border)' }}
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div
+                                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                    style={{ background: 'var(--app-primary)', boxShadow: '0 4px 12px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                                >
+                                    <Pencil size={15} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black" style={{ color: 'var(--app-foreground)' }}>Edit Account</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {editingAccount.code} · {editingAccount.name}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditingAccount(null)}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                                style={{ color: 'var(--app-muted-foreground)' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto p-5">
+                            <form action={handleUpdate}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                                    {[
+                                        { name: 'code', label: 'Account Code', defaultValue: editingAccount.code, mono: true },
+                                        { name: 'name', label: 'Display Name', defaultValue: editingAccount.name },
+                                        { name: 'syscohadaCode', label: 'SYSCOHADA Code', defaultValue: editingAccount.syscohadaCode || '', mono: true },
+                                        { name: 'syscohadaClass', label: 'SYSCOHADA Class', defaultValue: editingAccount.syscohadaClass || '' },
+                                    ].map(f => (
+                                        <div key={f.name} className="space-y-1">
+                                            <label className="text-[9px] font-black uppercase tracking-widest block" style={{ color: 'var(--app-muted-foreground)' }}>{f.label}</label>
+                                            <input
+                                                name={f.name}
+                                                defaultValue={f.defaultValue}
+                                                className={`w-full px-3 py-2.5 rounded-xl outline-none transition-all text-[13px] ${f.mono ? 'font-mono font-bold' : 'font-medium'}`}
+                                                style={{ background: 'color-mix(in srgb, var(--app-bg, #020617) 50%, var(--app-surface))', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}
+                                            />
+                                        </div>
+                                    ))}
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] font-black uppercase tracking-widest block" style={{ color: 'var(--app-muted-foreground)' }}>Financial Type</label>
+                                        <select name="type" defaultValue={editingAccount.type} className="w-full px-3 py-2.5 rounded-xl outline-none text-[13px] font-bold" style={{ background: 'color-mix(in srgb, var(--app-bg, #020617) 50%, var(--app-surface))', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                            {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[9px] font-black uppercase tracking-widest block" style={{ color: 'var(--app-muted-foreground)' }}>Sub-Type</label>
+                                        <select name="subType" defaultValue={editingAccount.subType || ''} className="w-full px-3 py-2.5 rounded-xl outline-none text-[13px] font-medium" style={{ background: 'color-mix(in srgb, var(--app-bg, #020617) 50%, var(--app-surface))', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                            <option value="">Standard Ledger</option>
+                                            <option value="CASH">Cash</option>
+                                            <option value="BANK">Bank</option>
+                                            <option value="RECEIVABLE">Receivable</option>
+                                            <option value="PAYABLE">Payable</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="text-[9px] font-black uppercase tracking-widest block" style={{ color: 'var(--app-muted-foreground)' }}>Parent Account</label>
+                                        <select name="parentId" defaultValue={editingAccount.parentId || ''} className="w-full px-3 py-2.5 rounded-xl outline-none text-[12px] font-mono" style={{ background: 'color-mix(in srgb, var(--app-bg, #020617) 50%, var(--app-surface))', border: '1px solid var(--app-border)', color: 'var(--app-foreground)' }}>
+                                            <option value="">[Top Level Root]</option>
+                                            {accounts.filter(a => a.id !== editingAccount.id).map(a => (
+                                                <option key={a.id} value={a.id}>{a.code} — {a.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingAccount(null)}
+                                        className="flex-1 py-3 rounded-xl text-[13px] font-bold border transition-all"
+                                        style={{ borderColor: 'var(--app-border)', color: 'var(--app-muted-foreground)' }}
+                                    >
+                                        Discard
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isPending}
+                                        className="flex-2 px-8 py-3 rounded-xl text-[13px] font-black text-white transition-all disabled:opacity-50 flex items-center gap-2"
+                                        style={{ background: 'var(--app-primary)', boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}
+                                    >
+                                        {isPending ? <Loader2 size={16} className="animate-spin" /> : <RefreshCcw size={15} />}
+                                        {isPending ? 'Saving...' : 'Apply Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <ConfirmDialog
                 open={pendingAction !== null}
-                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onOpenChange={open => { if (!open) setPendingAction(null) }}
                 onConfirm={handleConfirmAction}
                 title={pendingAction?.title ?? ''}
                 description={pendingAction?.description ?? ''}
                 confirmText="Confirm"
                 variant={pendingAction?.variant ?? 'warning'}
             />
-        </div>
-    )
-}
-
-const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<string, any>) => {
-    return (
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                    <div>
-                        <h3 className="text-xl font-bold text-stone-900">Revise Account Hierarchy</h3>
-                        <p className="text-xs text-stone-500 font-bold uppercase tracking-widest mt-1">Modifying: {account.name}</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
-                        <X size={20} className="text-stone-400" />
-                    </button>
-                </div>
-                <form action={onUpdate} className="p-8 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Account Code</label>
-                            <input name="code" defaultValue={account.code} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono font-bold" required />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Display Name</label>
-                            <input name="name" defaultValue={account.name} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold" required />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Financial Type</label>
-                            <select name="type" defaultValue={account.type} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
-                                <option value="ASSET">Asset</option>
-                                <option value="LIABILITY">Liability</option>
-                                <option value="EQUITY">Equity</option>
-                                <option value="INCOME">Income</option>
-                                <option value="EXPENSE">Expense</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Account Category (Sub-Type)</label>
-                            <select name="subType" defaultValue={account.subType || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
-                                <option value="">Standard Ledger Account</option>
-                                <option value="CASH">Liquid Cash</option>
-                                <option value="BANK">Bank Holding</option>
-                                <option value="RECEIVABLE">Trade Receivable (Customers)</option>
-                                <option value="PAYABLE">Trade Payable (Suppliers)</option>
-                            </select>
-                        </div>
-                        <div className="col-span-2 space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Parent Node (Hierarchy Position)</label>
-                            <select name="parentId" defaultValue={account.parentId || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono text-sm">
-                                <option value="">[TOP LEVEL ROOT]</option>
-                                {accounts.filter((a: Record<string, any>) => a.id !== account.id).map((a: Record<string, any>) => (
-                                    <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">SYSCOHADA Code</label>
-                            <input name="syscohadaCode" defaultValue={account.syscohadaCode || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">SYSCOHADA Classification</label>
-                            <input name="syscohadaClass" defaultValue={account.syscohadaClass || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all" />
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="flex-1 p-4 rounded-2xl border border-stone-200 font-bold hover:bg-stone-50 transition-all">
-                            Discard Changes
-                        </button>
-                        <button type="submit" disabled={isPending} className="flex-2 bg-stone-900 text-white px-12 rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
-                            {isPending ? 'Saving Revisions...' : 'Apply Hierarchy Changes'}
-                            <RefreshCcw size={18} className={isPending ? 'animate-spin text-amber-400' : 'text-emerald-400'} />
-                        </button>
-                    </div>
-                </form>
-            </div>
         </div>
     )
 }
