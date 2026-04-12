@@ -672,7 +672,8 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/dashboard', icon: Globe },
+            { title: 'SaaS Home', path: '/saas-home', icon: Globe },
+            { title: 'SaaS Dashboard', path: '/dashboard', icon: BarChart3 },
             {
                 title: 'Organizations',
                 icon: Building2,
@@ -684,17 +685,25 @@ export const MENU_ITEMS = [
                 ]
             },
             {
-                title: 'Infrastructure',
-                icon: Shield,
+                title: 'Reference Data',
+                icon: Globe,
                 children: [
-                    { title: 'Platform Health', path: '/health' },
-                    { title: 'Kernel Updates', path: '/updates' },
-                    { title: 'Global Registry', path: '/modules' },
-                    { title: 'Countries', path: '/countries' },
+                    { title: 'Countries & Regions', path: '/countries' },
                     { title: 'Currencies', path: '/currencies' },
                     { title: 'Country Tax Templates', path: '/country-tax-templates' },
                     { title: 'E-Invoice Standards', path: '/e-invoice-standards' },
                     { title: 'Listview Policies', path: '/listview-policies' },
+                ]
+            },
+            {
+                title: 'Infrastructure',
+                icon: Shield,
+                children: [
+                    { title: 'Platform Health', path: '/health' },
+                    { title: 'Kernel Manager', path: '/kernel' },
+                    { title: 'Kernel Updates', path: '/updates' },
+                    { title: 'Global Registry', path: '/modules' },
+                    { title: 'AES-256 Encryption', path: '/encryption' },
                     {
                         title: 'Connector',
                         icon: ServerCog,
@@ -705,22 +714,29 @@ export const MENU_ITEMS = [
                             { title: 'Connector Policies', path: '/connector/policies' },
                         ]
                     },
-                    {
-                        title: 'MCP AI',
-                        icon: Bot,
-                        children: [
-                            { title: 'MCP Dashboard', path: '/mcp' },
-                            { title: 'MCP Chat', path: '/mcp/chat' },
-                            { title: 'Conversations', path: '/mcp/conversations' },
-                            { title: 'Agents', path: '/mcp/agents' },
-                            { title: 'Agent Logs', path: '/mcp/agent-logs' },
-                            { title: 'Providers', path: '/mcp/providers' },
-                            { title: 'Tools', path: '/mcp/tools' },
-                            { title: 'Usage', path: '/mcp/usage' },
-                            { title: 'MCP Settings', path: '/mcp/settings' },
-                        ]
-                    },
-                    { title: 'AES-256 Encryption', path: '/encryption' },
+                ]
+            },
+            {
+                title: 'AI & Automation',
+                icon: Bot,
+                children: [
+                    { title: 'MCP Dashboard', path: '/mcp' },
+                    { title: 'MCP Chat', path: '/mcp/chat' },
+                    { title: 'Conversations', path: '/mcp/conversations' },
+                    { title: 'Agents', path: '/mcp/agents' },
+                    { title: 'Agent Logs', path: '/mcp/agent-logs' },
+                    { title: 'Providers', path: '/mcp/providers' },
+                    { title: 'Tools', path: '/mcp/tools' },
+                    { title: 'Usage', path: '/mcp/usage' },
+                    { title: 'MCP Settings', path: '/mcp/settings' },
+                ]
+            },
+            {
+                title: 'Developer',
+                icon: Wrench,
+                children: [
+                    { title: 'Theme Demo', path: '/theme-demo' },
+                    { title: 'UI Kit', path: '/ui-kit' },
                 ]
             },
         ]
@@ -791,7 +807,7 @@ export const MENU_ITEMS = [
 
 export function Sidebar({
     isSaas = false,
-    isSuperuser: _isSuperuser = false,
+    isSuperuser = false,
     dualViewEnabled = false
 }: {
     isSaas?: boolean;
@@ -846,8 +862,8 @@ export function Sidebar({
     const allItems = [...MENU_ITEMS, ...dynamicItems];
 
     const processedItems = allItems.filter(item => {
-        // 1. Filter by SaaS Panel visibility logic
-        if (!isSaas && item.visibility === 'saas') return false;
+        // 1. Filter by SaaS Panel visibility — superusers ALWAYS see SaaS Control
+        if (!isSaas && !isSuperuser && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module (only when modules have been loaded from server)
         if (installedModules !== null && item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {

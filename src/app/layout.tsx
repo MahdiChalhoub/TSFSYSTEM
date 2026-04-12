@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Outfit } from 'next/font/google';
+import { Outfit, Roboto, Inter } from 'next/font/google';
 import "./globals.css";
 import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider';
 
-const outfit = Outfit({ subsets: ['latin'] });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+const roboto = Roboto({ subsets: ['latin'], weight: ['400', '500', '700'], variable: '--font-roboto' });
+const inter  = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 import { PLATFORM_CONFIG } from "@/lib/branding";
 
@@ -24,7 +26,7 @@ export default function RootLayout({
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#6366f1" />
             </head>
-            <body className={outfit.className}>
+            <body className={`${outfit.variable} ${roboto.variable} ${inter.variable} ${outfit.className}`}>
                 <AppThemeProvider>
                     {children}
                 </AppThemeProvider>

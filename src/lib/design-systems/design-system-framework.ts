@@ -359,16 +359,13 @@ export function applyDesignSystem(
 
   // ── 11. Inject <style> that directly overrides Tailwind's compiled classes ──
   //
-  // Tailwind v4 with @theme inline BAKES border-radius values at build time:
-  //   .rounded-xl { border-radius: 0.75rem }  ← static, not var(--radius-xl)
-  // Changing CSS custom properties at runtime has NO effect on these classes.
+  // Tailwind v4 with @theme inline BAKES values at build time — shadow-*, rounded-*,
+  // font-*, transition-* are all static. Runtime CSS var changes have ZERO effect.
   //
-  // Fix: use [data-design-system="id"] .rounded-* selector rules.
-  // Specificity (0,2,0) beats Tailwind's (0,1,0) — no !important needed.
-  // data-design-system is set on <html> above, so all page elements match.
+  // Fix: [data-design-system="id"] .class — specificity (0,2,0) beats Tailwind's (0,1,0).
+  // data-design-system lives on <html>, so all page elements are matched.
   //
-  // For CSS custom properties that actual components read via var(), we still
-  // use :root !important because those ARE live custom properties.
+  // CSS custom properties (var() references in components) still use :root !important.
   const cardR  = system.components.card.borderRadius;
   const btnR   = system.components.button.borderRadius;
   const inputR = system.components.input.borderRadius;
@@ -376,7 +373,7 @@ export function applyDesignSystem(
   const base   = baseRadius;
   const id     = system.id;
 
-  // Calculate each rounded tier from base
+  // ── Border radius tiers from base ──
   const rSm  = Math.max(0, base - 4);
   const rMd  = Math.max(0, base - 2);
   const rLg  = base;
@@ -384,6 +381,44 @@ export function applyDesignSystem(
   const r2xl = base + 8;
   const r3xl = base + 12;
   const r4xl = base + 16;
+
+  // ── Font family (strip CSS var() wrapper for direct body use) ──
+  const fontStack = system.typography.fontFamily;
+
+  // ── Component heights ──
+  const btnH   = system.components.button.height.base;
+  const btnHSm = system.components.button.height.sm;
+  const btnHLg = system.components.button.height.lg;
+  const inputH   = system.components.input.height.base;
+  const inputHSm = system.components.input.height.sm;
+  const inputHLg = system.components.input.height.lg;
+
+  // ── Table density ──
+  const rowCompact = system.components.table.rowHeight.compact;
+  const rowComfy   = system.components.table.rowHeight.comfortable;
+  const headerH    = system.components.table.headerHeight;
+  const cellPad    = system.components.table.cellPadding;
+
+  // ── Typography ──
+  const fwNormal  = system.typography.fontWeights.normal;
+  const fwMedium  = system.typography.fontWeights.medium;
+  const fwSemibold = system.typography.fontWeights.semibold;
+  const fwBold    = system.typography.fontWeights.bold;
+  const fsBase    = system.typography.sizes.base;
+  const fsSm      = system.typography.sizes.sm;
+  const fsLg      = system.typography.sizes.lg;
+  const lhNormal  = system.typography.lineHeights.normal;
+
+  // ── Shadows ──
+  const shadowSm  = system.shadows.sm;
+  const shadowBase = system.shadows.base;
+  const shadowMd  = system.shadows.md;
+  const shadowLg  = system.shadows.lg;
+  const shadowXl  = system.shadows.xl;
+
+  // ── Transitions ──
+  const btnTransition = system.components.button.transition;
+  const easeDefault   = system.animations.easeInOut;
 
   const styleId = 'tsf-ds-shape-overrides';
   let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -393,33 +428,137 @@ export function applyDesignSystem(
     document.head.appendChild(styleEl);
   }
   styleEl.textContent = `
-    /* ── Direct Tailwind class overrides — specificity (0,2,0) beats Tailwind (0,1,0) ── */
-    [data-design-system="${id}"] .rounded-sm  { border-radius: ${rSm}px; }
-    [data-design-system="${id}"] .rounded     { border-radius: ${rLg}px; }
-    [data-design-system="${id}"] .rounded-md  { border-radius: ${rMd}px; }
-    [data-design-system="${id}"] .rounded-lg  { border-radius: ${rLg}px; }
-    [data-design-system="${id}"] .rounded-xl  { border-radius: ${rXl}px; }
-    [data-design-system="${id}"] .rounded-2xl { border-radius: ${r2xl}px; }
-    [data-design-system="${id}"] .rounded-3xl { border-radius: ${r3xl}px; }
-    [data-design-system="${id}"] .rounded-4xl { border-radius: ${r4xl}px; }
+    /* ════════════════════════════════════════════════════════════════
+       TSF Design System Override Sheet
+       Specificity (0,2,0) beats Tailwind v4 compiled classes (0,1,0)
+       ════════════════════════════════════════════════════════════════ */
+
+    /* ── 1. Border Radius ─────────────────────────────────────────── */
+    [data-design-system="${id}"] .rounded-none { border-radius: 0px; }
+    [data-design-system="${id}"] .rounded-sm   { border-radius: ${rSm}px; }
+    [data-design-system="${id}"] .rounded      { border-radius: ${rLg}px; }
+    [data-design-system="${id}"] .rounded-md   { border-radius: ${rMd}px; }
+    [data-design-system="${id}"] .rounded-lg   { border-radius: ${rLg}px; }
+    [data-design-system="${id}"] .rounded-xl   { border-radius: ${rXl}px; }
+    [data-design-system="${id}"] .rounded-2xl  { border-radius: ${r2xl}px; }
+    [data-design-system="${id}"] .rounded-3xl  { border-radius: ${r3xl}px; }
+    [data-design-system="${id}"] .rounded-4xl  { border-radius: ${r4xl}px; }
     [data-design-system="${id}"] .rounded-full { border-radius: 9999px; }
 
-    /* ── CSS custom properties for components using var() ── */
-    /* !important wins over AppThemeProvider's inline setProperty() calls  */
+    /* ── 2. Shadows ───────────────────────────────────────────────── */
+    [data-design-system="${id}"] .shadow-none { box-shadow: none; }
+    [data-design-system="${id}"] .shadow-sm   { box-shadow: ${shadowSm}; }
+    [data-design-system="${id}"] .shadow      { box-shadow: ${shadowBase}; }
+    [data-design-system="${id}"] .shadow-md   { box-shadow: ${shadowMd}; }
+    [data-design-system="${id}"] .shadow-lg   { box-shadow: ${shadowLg}; }
+    [data-design-system="${id}"] .shadow-xl   { box-shadow: ${shadowXl}; }
+
+    /* ── 3. Typography — font family ──────────────────────────────── */
+    /* Set on html+body and let CSS inherit; avoid * to not break icon fonts */
+    [data-design-system="${id}"] { font-family: ${fontStack}; }
+    [data-design-system="${id}"] body { font-family: ${fontStack}; }
+    [data-design-system="${id}"] p,
+    [data-design-system="${id}"] span,
+    [data-design-system="${id}"] div,
+    [data-design-system="${id}"] a,
+    [data-design-system="${id}"] button,
+    [data-design-system="${id}"] input,
+    [data-design-system="${id}"] select,
+    [data-design-system="${id}"] textarea,
+    [data-design-system="${id}"] label,
+    [data-design-system="${id}"] th,
+    [data-design-system="${id}"] td,
+    [data-design-system="${id}"] h1,
+    [data-design-system="${id}"] h2,
+    [data-design-system="${id}"] h3,
+    [data-design-system="${id}"] h4,
+    [data-design-system="${id}"] h5,
+    [data-design-system="${id}"] h6 { font-family: ${fontStack}; }
+    [data-design-system="${id}"] .font-sans { font-family: ${fontStack}; }
+
+    /* ── 4. Font sizes ────────────────────────────────────────────── */
+    [data-design-system="${id}"] .text-sm   { font-size: ${fsSm}px; line-height: ${lhNormal}; }
+    [data-design-system="${id}"] .text-base { font-size: ${fsBase}px; line-height: ${lhNormal}; }
+    [data-design-system="${id}"] .text-lg   { font-size: ${fsLg}px; line-height: ${lhNormal}; }
+
+    /* ── 5. Font weights ──────────────────────────────────────────── */
+    [data-design-system="${id}"] .font-normal   { font-weight: ${fwNormal}; }
+    [data-design-system="${id}"] .font-medium   { font-weight: ${fwMedium}; }
+    [data-design-system="${id}"] .font-semibold { font-weight: ${fwSemibold}; }
+    [data-design-system="${id}"] .font-bold     { font-weight: ${fwBold}; }
+
+    /* ── 6. Transitions ───────────────────────────────────────────── */
+    [data-design-system="${id}"] .transition-all,
+    [data-design-system="${id}"] .transition     { transition: all ${btnTransition}; }
+    [data-design-system="${id}"] .transition-colors { transition: color, background-color, border-color, fill, stroke ${btnTransition}; }
+    [data-design-system="${id}"] .transition-shadow { transition: box-shadow ${btnTransition}; }
+    [data-design-system="${id}"] .transition-transform { transition: transform ${btnTransition}; }
+
+    /* ── 7. Button heights & padding ──────────────────────────────── */
+    [data-design-system="${id}"] .btn-sm,
+    [data-design-system="${id}"] [data-size="sm"] button,
+    [data-design-system="${id}"] button.btn-sm  { height: ${btnHSm}px; min-height: ${btnHSm}px; }
+    [data-design-system="${id}"] .btn,
+    [data-design-system="${id}"] button.btn     { height: ${btnH}px; min-height: ${btnH}px; }
+    [data-design-system="${id}"] .btn-lg,
+    [data-design-system="${id}"] button.btn-lg  { height: ${btnHLg}px; min-height: ${btnHLg}px; }
+
+    /* ── 8. Input heights ─────────────────────────────────────────── */
+    [data-design-system="${id}"] input.input-sm,
+    [data-design-system="${id}"] .input-sm      { height: ${inputHSm}px; }
+    [data-design-system="${id}"] input,
+    [data-design-system="${id}"] .input         { height: ${inputH}px; }
+    [data-design-system="${id}"] input.input-lg,
+    [data-design-system="${id}"] .input-lg      { height: ${inputHLg}px; }
+
+    /* ── 9. Table density ─────────────────────────────────────────── */
+    [data-design-system="${id}"] th { height: ${headerH}px; padding: ${cellPad}; }
+    [data-design-system="${id}"] td { padding: ${cellPad}; }
+    [data-design-system="${id}"] tr { min-height: ${rowComfy}px; }
+    [data-design-system="${id}"] .table-compact tr { min-height: ${rowCompact}px; }
+
+    /* ── 10. CSS custom properties — used by component var() refs ─── */
+    /* !important beats AppThemeProvider's normal inline setProperty() */
     :root {
-      --app-radius:    ${cardR}px !important;
-      --card-radius:   ${cardR}px !important;
-      --button-radius: ${btnR}px !important;
-      --input-radius:  ${inputR}px !important;
-      --modal-radius:  ${modalR}px !important;
-      --app-font:         ${system.typography.fontFamily} !important;
-      --app-font-display: ${system.typography.fontFamily} !important;
-      --app-shadow-sm: ${system.shadows.sm} !important;
-      --card-shadow:   ${system.components.card.shadow} !important;
+      --app-radius:        ${cardR}px !important;
+      --card-radius:       ${cardR}px !important;
+      --button-radius:     ${btnR}px !important;
+      --input-radius:      ${inputR}px !important;
+      --modal-radius:      ${modalR}px !important;
+
+      --app-font:          ${fontStack} !important;
+      --app-font-display:  ${fontStack} !important;
+      --font-family:       ${fontStack} !important;
+
+      --app-shadow-sm:     ${shadowSm} !important;
+      --app-shadow-base:   ${shadowBase} !important;
+      --app-shadow-md:     ${shadowMd} !important;
+      --app-shadow-lg:     ${shadowLg} !important;
+      --card-shadow:       ${system.components.card.shadow} !important;
+
+      --ds-btn-height:     ${btnH}px !important;
+      --ds-btn-height-sm:  ${btnHSm}px !important;
+      --ds-btn-height-lg:  ${btnHLg}px !important;
+      --ds-input-height:   ${inputH}px !important;
+      --ds-input-height-sm:${inputHSm}px !important;
+      --ds-input-height-lg:${inputHLg}px !important;
+
+      --ds-ease-default:   ${easeDefault} !important;
+      --ds-transition-btn: ${btnTransition} !important;
+
+      --ds-font-size-sm:   ${fsSm}px !important;
+      --ds-font-size-base: ${fsBase}px !important;
+      --ds-font-size-lg:   ${fsLg}px !important;
+      --font-size-base:    ${fsBase}px !important;
+
+      --ds-fw-normal:      ${fwNormal} !important;
+      --ds-fw-medium:      ${fwMedium} !important;
+      --ds-fw-semibold:    ${fwSemibold} !important;
+      --ds-fw-bold:        ${fwBold} !important;
     }
   `;
 
-  console.log(`🎨 [DesignSystem] Applied: ${system.name} — base=${base}px btn=${btnR}px card=${cardR}px`);
+  console.log(`🎨 [DesignSystem] Applied: ${system.name} — font="${system.typography.fontFamily.split(',')[0]}" base=${base}px btn=${btnR}px btnH=${btnH}px shadow="${shadowSm.substring(0,30)}..."`);
 }
 
 /**
