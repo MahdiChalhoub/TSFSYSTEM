@@ -468,15 +468,125 @@ class SettingsViewSet(viewsets.ViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         organization = Organization.objects.get(id=organization_id)
-        
+
         if request.method == 'POST':
             ConfigurationService.save_setting(organization, key, request.data)
             return Response({"message": f"Setting '{key}' saved successfully"})
-        
+
         value = ConfigurationService.get_setting(organization, key)
         return Response(value)
+
+    @action(detail=False, methods=['get', 'post'])
+    def coa_setup(self, request):
+        """COA Setup Wizard status tracker.
+
+        Auto-detects COMPLETED status: if the org has COA accounts (e.g. from
+        an imported template) but the explicit status was never updated, we
+        treat it as COMPLETED so the finance module is fully accessible.
+        """
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+
+        organization = Organization.objects.get(id=organization_id)
+
+        if request.method == 'POST':
+            reset = request.query_params.get('reset') == 'true' or request.data.get('reset') is True
+
+            if reset:
+                try:
+                    from django.db import transaction as db_transaction
+                    with db_transaction.atomic():
+                        from apps.finance.models import ChartOfAccount as FinanceChartOfAccount, JournalEntry, PostingRule, ContextualPostingRule, OpeningBalance, TaxAccountMapping
+
+                        has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()
+                        if has_journal_entries:
+                            return Response({
+                                "error": "Cannot reset: existing journal entries detected. Reversing transactions or deleting ledger history is required first."
+                            }, status=status.HTTP_400_BAD_REQUEST)
+
+                        PostingRule.objects.filter(organization=organization).delete()
+                        ContextualPostingRule.objects.filter(organization=organization).delete()
+
+                        try:
+                            from apps.finance.models.posting_event import PostingRuleHistory
+                            PostingRuleHistory.objects.filter(organization=organization).delete()
+                        except Exception:
+                            pass
+
+                        OpeningBalance.objects.filter(organization=organization).delete()
+
+                        try:
+                            from apps.finance.models.budget_models import BudgetLine
+                            BudgetLine.objects.filter(organization=organization).delete()
+                        except Exception:
+                            pass
+
+                        try:
+                            from apps.finance.models.recurring_journal_models import RecurringJournalLine
+                            RecurringJournalLine.objects.filter(organization=organization).delete()
+                        except Exception:
+                            pass
+
+                        TaxAccountMapping.objects.filter(organization=organization).delete()
+                        FinanceChartOfAccount.objects.filter(organization=organization).delete()
+
+                        settings_data = organization.settings or {}
+                        settings_data.pop('finance_posting_rules', None)
+                        settings_data.pop('imported_coa_filename', None)
+                        settings_data['coa_setup'] = {
+                            'status': 'NOT_STARTED',
+                            'selectedTemplate': None,
+                            'importedAt': None,
+                            'postingRulesConfigured': False,
+                            'migrationNeeded': False,
+                            'migrationCompleted': False,
+                            'completedAt': None,
+                        }
+                        organization.settings = settings_data
+                        organization.save(update_fields=['settings'])
+
+                        return Response({"message": "Chart of Accounts setup has been completely reset", "status": "NOT_STARTED"})
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    return Response({"error": f"Reset failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            current = ConfigurationService.get_setting(organization, 'coa_setup', {})
+            if not isinstance(current, dict):
+                current = {}
+            current.update(request.data)
+            ConfigurationService.save_setting(organization, 'coa_setup', current)
+            return Response({"message": "COA setup status updated", **current})
+
+        # GET
+        default = {
+            'status': 'NOT_STARTED',
+            'selectedTemplate': None,
+            'importedAt': None,
+            'postingRulesConfigured': False,
+            'migrationNeeded': False,
+            'migrationCompleted': False,
+            'completedAt': None,
+        }
+        stored = ConfigurationService.get_setting(organization, 'coa_setup', {})
+        if isinstance(stored, dict):
+            default.update(stored)
+
+        # Auto-detect: if COA has accounts, setup is COMPLETED
+        if default['status'] != 'COMPLETED':
+            try:
+                coa_count = ChartOfAccount.objects.filter(organization=organization).count() if ChartOfAccount else 0
+                if coa_count > 0:
+                    default['status'] = 'COMPLETED'
+                    default['completedAt'] = default.get('completedAt') or timezone.now().isoformat()
+                    ConfigurationService.save_setting(organization, 'coa_setup', default)
+            except Exception:
+                pass
+
+        return Response(default)
 
 
 @api_view(['GET'])
