@@ -41,7 +41,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
-    const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(null);
+    // Initialize from server prop so SSR and first client render match — no pop-in flash
+    const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(initialScopeAccess ?? null);
 
     // After hydration: close sidebar on small viewports so it doesn't block content
     useEffect(() => {
@@ -81,13 +82,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             setViewScope(savedScope);
         }
 
-        // scope_access is now httpOnly — read from server-side prop
+        // scopeAccess already initialized from initialScopeAccess prop (zero-flicker)
+        // Just set viewScope if official-only access
         if (initialScopeAccess === 'official') {
-            setScopeAccess('official');
             setViewScope('OFFICIAL');
-        } else {
-            // Default to full access if not specified or 'internal'
-            setScopeAccess('internal');
         }
 
         setIsLoaded(true);
