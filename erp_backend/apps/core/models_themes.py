@@ -159,7 +159,12 @@ class OrganizationTheme(AuditLogMixin, TenantOwnedModel):
         # Validate preset_data structure
         self._validate_preset_data()
 
-        super().save(*args, **kwargs)
+        # System themes have no organization — bypass the tenant guard in TenantOwnedModel
+        if self.is_system:
+            from django.db.models import Model
+            Model.save(self, *args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
     def _validate_preset_data(self):
         """Validate theme data structure — auto-fill missing keys with defaults instead of crashing."""
