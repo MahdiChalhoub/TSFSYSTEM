@@ -814,7 +814,10 @@ export function Sidebar({
     isSuperuser?: boolean;
     dualViewEnabled?: boolean;
 }) {
-    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope } = useAdmin();
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout } = useAdmin();
+
+    // In topnav mode the sidebar is hidden — navigation lives in the header
+    if (navLayout === 'topnav') return null;
     // null = not yet fetched (show all); Set = fetched (filter by installed)
     const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);

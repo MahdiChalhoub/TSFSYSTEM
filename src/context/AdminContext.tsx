@@ -31,6 +31,9 @@ type AdminContextType = {
     scopeAccess: ScopeAccess;
     /** Whether the scope toggle should be visible (only in 'internal' access mode) */
     canToggleScope: boolean;
+    /** Navigation layout: vertical sidebar or horizontal top-nav */
+    navLayout: 'sidebar' | 'topnav';
+    setNavLayout: (layout: 'sidebar' | 'topnav') => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -43,6 +46,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const [isLoaded, setIsLoaded] = useState(false);
     // Initialize from server prop so SSR and first client render match — no pop-in flash
     const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(initialScopeAccess ?? null);
+    const [navLayout, setNavLayoutState] = useState<'sidebar' | 'topnav'>(() => {
+        if (typeof window === 'undefined') return 'sidebar';
+        return (localStorage.getItem('tsf_nav_layout') as 'sidebar' | 'topnav') || 'sidebar';
+    });
 
     // After hydration: close sidebar on small viewports so it doesn't block content
     useEffect(() => {
@@ -97,6 +104,14 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         localStorage.setItem(SCOPE_KEY, viewScope);
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
     }, [viewScope, isLoaded, SCOPE_KEY]);
+
+    const setNavLayout = (layout: 'sidebar' | 'topnav') => {
+        setNavLayoutState(layout);
+        localStorage.setItem('tsf_nav_layout', layout);
+        // Close sidebar when switching to topnav
+        if (layout === 'topnav') setSidebarOpen(false);
+        else setSidebarOpen(true);
+    };
 
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
         // If official-only access, cannot switch to internal
@@ -165,6 +180,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             setViewScope: handleSetViewScope,
             scopeAccess,
             canToggleScope,
+            navLayout,
+            setNavLayout,
         }}>
             {children}
         </AdminContext.Provider>
