@@ -36,11 +36,17 @@ type AdminContextType = {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children, contextKey = 'default', initialScopeAccess }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null }) {
+    // Start open on desktop, closed on mobile — avoids the fixed-overlay blocking content
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
     const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(null);
+
+    // After hydration: close sidebar on small viewports so it doesn't block content
+    useEffect(() => {
+        if (window.innerWidth < 768) setSidebarOpen(false);
+    }, []);
     const pathname = usePathname();
     const router = useRouter();
 

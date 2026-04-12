@@ -868,16 +868,16 @@ export function Sidebar({
             {/* Mobile Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
                     onClick={toggleSidebar}
                 />
             )}
 
             <aside className={clsx(
-                "fixed lg:relative inset-y-0 left-0 bg-[var(--app-sidebar-bg)] border-r border-[var(--app-sidebar-border)] flex flex-col shrink-0 overflow-hidden h-full text-[var(--app-sidebar-text)] shadow-2xl z-50 transition-all duration-300 transform",
+                "fixed md:relative inset-y-0 left-0 bg-[var(--app-sidebar-bg)] border-r border-[var(--app-sidebar-border)] flex flex-col shrink-0 overflow-hidden h-full text-[var(--app-sidebar-text)] shadow-2xl z-50 transition-all duration-300 transform",
                 sidebarOpen
                     ? "w-[var(--nav-width)] translate-x-0 opacity-100"
-                    : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none"
+                    : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:pointer-events-none"
             )}>
                 <div className="p-8 border-b border-[var(--app-sidebar-border)] flex items-center gap-4 shrink-0">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--app-primary)] to-[var(--app-primary-dark)] flex items-center justify-center shadow-lg shadow-[var(--app-primary-glow)] text-white font-bold text-xl">
