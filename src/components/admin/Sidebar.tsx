@@ -891,11 +891,15 @@ export function Sidebar({
             )}
 
             <aside className={clsx(
-                "fixed md:relative inset-y-0 left-0 flex flex-col shrink-0 overflow-hidden h-full z-50 transition-all duration-300 transform",
+                "fixed md:relative inset-y-0 left-0 shrink-0 overflow-hidden z-50 transition-all duration-300 transform",
                 sidebarOpen
                     ? "w-[var(--nav-width)] translate-x-0 opacity-100"
                     : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:pointer-events-none"
             )} style={{
+                // Critical layout as inline style — immune to CSS class overrides
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
                 background: 'var(--app-sidebar-bg)',
                 borderRight: '1px solid var(--app-sidebar-border)',
                 color: 'var(--app-sidebar-text)',
@@ -969,7 +973,7 @@ export function Sidebar({
                 )}
 
                 {/* ── Menu ── */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-0.5">
+                <div className="overflow-y-auto custom-scrollbar px-3 py-3 space-y-0.5" style={{ flex: '1 1 0', minHeight: 0 }}>
                     {filteredItems.map((item, idx) => (
                         <React.Fragment key={idx}>
                             {/* Section separator for major module boundaries */}

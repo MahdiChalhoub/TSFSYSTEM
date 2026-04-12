@@ -454,26 +454,11 @@ export function applyDesignSystem(
     [data-design-system="${id}"] .shadow-xl   { box-shadow: ${shadowXl}; }
 
     /* ── 3. Typography — font family ──────────────────────────────── */
-    /* Set on html+body and let CSS inherit; avoid * to not break icon fonts */
+    /* Rely on CSS inheritance — set on html+body, everything inherits.
+       Avoid element-type selectors (div, span, etc.) which raise specificity to (0,1,1)
+       and can override Tailwind layout utilities at (0,1,0). */
     [data-design-system="${id}"] { font-family: ${fontStack}; }
     [data-design-system="${id}"] body { font-family: ${fontStack}; }
-    [data-design-system="${id}"] p,
-    [data-design-system="${id}"] span,
-    [data-design-system="${id}"] div,
-    [data-design-system="${id}"] a,
-    [data-design-system="${id}"] button,
-    [data-design-system="${id}"] input,
-    [data-design-system="${id}"] select,
-    [data-design-system="${id}"] textarea,
-    [data-design-system="${id}"] label,
-    [data-design-system="${id}"] th,
-    [data-design-system="${id}"] td,
-    [data-design-system="${id}"] h1,
-    [data-design-system="${id}"] h2,
-    [data-design-system="${id}"] h3,
-    [data-design-system="${id}"] h4,
-    [data-design-system="${id}"] h5,
-    [data-design-system="${id}"] h6 { font-family: ${fontStack}; }
     [data-design-system="${id}"] .font-sans { font-family: ${fontStack}; }
 
     /* ── 4. Font sizes ────────────────────────────────────────────── */
