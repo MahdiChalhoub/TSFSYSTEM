@@ -42,60 +42,127 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Attributes</h1>
-                    <p className="text-gray-500">Manage scents, flavors, and other variant attributes.</p>
+            {/* V2 Icon-Box Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{
+                            background: 'var(--app-primary-bg, color-mix(in srgb, var(--app-primary) 10%, transparent))',
+                            border: '1px solid var(--app-primary-border, color-mix(in srgb, var(--app-primary) 20%, transparent))',
+                        }}
+                    >
+                        <Sparkles size={26} style={{ color: 'var(--app-primary)' }} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            Inventory / Taxonomy
+                        </p>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            Attributes
+                        </h1>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                            Manage scents, flavors, and other variant attributes.
+                        </p>
+                    </div>
                 </div>
                 <button
                     onClick={handleCreate}
-                    className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl font-bold text-[12px] flex items-center gap-2 transition-all shadow-lg"
+                    style={{
+                        background: 'var(--app-primary)',
+                        color: 'white',
+                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                    }}
                 >
-                    <Plus size={20} />
-                    <span>Add Attribute</span>
+                    <Plus size={18} />
+                    Add Attribute
                 </button>
+            </header>
+
+            {/* KPI Strip */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: 'Total Attributes', value: attributes.length },
+                    { label: 'With Products', value: attributes.filter(a => (a.product_count || 0) > 0).length },
+                    { label: 'Categories Used', value: new Set(attributes.flatMap((a: Record<string, any>) => (a.categories || []).map((c: Record<string, any>) => c.id))).size },
+                ].map(kpi => (
+                    <div key={kpi.label} className="p-4 rounded-xl" style={{
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{kpi.label}</p>
+                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-text)' }}>{kpi.value}</p>
+                    </div>
+                ))}
             </div>
 
-            <div className="card-premium p-6">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+            {/* Content */}
+            <div className="p-5 rounded-2xl" style={{
+                background: 'var(--app-surface)',
+                border: '1px solid var(--app-border)',
+            }}>
+                {/* Toolbar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-5 pb-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex flex-1 items-center gap-3 w-full">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
                             <input
                                 type="text"
                                 placeholder="Search attributes..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 w-full transition-all"
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 rounded-xl text-[12px] w-full transition-all outline-none"
+                                style={{
+                                    background: 'var(--app-bg)',
+                                    border: '1px solid var(--app-border)',
+                                    color: 'var(--app-text)',
+                                }}
                             />
                         </div>
 
                         <div className="relative">
                             <select
                                 value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
+                                onChange={e => setSelectedCategory(e.target.value)}
+                                className="appearance-none pl-8 pr-8 py-2 rounded-xl text-[12px] cursor-pointer min-w-[150px] outline-none"
+                                style={{
+                                    background: 'var(--app-bg)',
+                                    border: '1px solid var(--app-border)',
+                                    color: 'var(--app-text)',
+                                }}
                             >
                                 <option value="all">All Categories</option>
                                 {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-text-muted)' }} />
                         </div>
 
                         {(searchTerm || selectedCategory !== 'all') && (
-                            <button onClick={clearFilters} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                <X size={18} />
+                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-text-muted)' }}>
+                                <X size={16} />
                             </button>
                         )}
                     </div>
 
-                    <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 shrink-0">
-                        <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}><LayoutList size={18} /></button>
-                        <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}><LayoutGrid size={18} /></button>
+                    <div className="flex items-center p-1 rounded-xl shrink-0" style={{
+                        background: 'var(--app-bg)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                        {(['list', 'grid'] as const).map(m => (
+                            <button key={m} onClick={() => setViewMode(m)} className="p-2 rounded-lg transition-all" style={{
+                                background: viewMode === m ? 'var(--app-surface)' : 'transparent',
+                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                boxShadow: viewMode === m ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                            }}>
+                                {m === 'list' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+                {/* Items */}
+                <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                     {filteredAttributes.map((attr: Record<string, any>) => (
                         viewMode === 'list' ? (
                             <AttributeRow key={attr.id} attribute={attr} onEdit={handleEdit} />
@@ -103,6 +170,11 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                             <AttributeCard key={attr.id} attribute={attr} onEdit={handleEdit} />
                         )
                     ))}
+                    {filteredAttributes.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-[13px]" style={{ color: 'var(--app-text-muted)' }}>
+                            No attributes found.
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -113,21 +185,40 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
 
 function AttributeCard({ attribute, onEdit }: Record<string, any>) {
     return (
-        <div className="group border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white relative overflow-hidden flex flex-col cursor-pointer hover:border-emerald-200" onClick={() => onEdit(attribute)}>
-            <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-xl font-bold text-orange-600 border border-orange-100">
-                    <Sparkles size={24} />
+        <div
+            className="group rounded-2xl p-5 transition-all cursor-pointer flex flex-col border"
+            style={{
+                background: 'var(--app-surface)',
+                borderColor: 'var(--app-border)',
+            }}
+            onClick={() => onEdit(attribute)}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.style.boxShadow = '0 4px 16px color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+            <div className="flex justify-between items-start mb-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+                    background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
+                    color: 'var(--app-warning, #f59e0b)',
+                }}>
+                    <Sparkles size={20} />
                 </div>
-                <div className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{
+                    background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
+                    color: 'var(--app-text-muted)',
+                }}>
                     {attribute.product_count || 0} products
-                </div>
+                </span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">{attribute.name}</h3>
-            {attribute.short_name && <p className="text-sm text-gray-500">{attribute.short_name}</p>}
+            <h3 className="text-[14px] font-bold mb-1" style={{ color: 'var(--app-text)' }}>{attribute.name}</h3>
+            {attribute.short_name && <p className="text-[11px]" style={{ color: 'var(--app-text-muted)' }}>{attribute.short_name}</p>}
 
-            <div className="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-1">
+            <div className="mt-3 pt-3 flex flex-wrap gap-1" style={{ borderTop: '1px solid var(--app-border)' }}>
                 {attribute.categories && attribute.categories.map((c: Record<string, any>) => (
-                    <span key={c.id} className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100">{c.name}</span>
+                    <span key={c.id} className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{
+                        background: 'color-mix(in srgb, var(--app-info, #8b5cf6) 8%, transparent)',
+                        color: 'var(--app-info, #8b5cf6)',
+                        border: '1px solid color-mix(in srgb, var(--app-info, #8b5cf6) 15%, transparent)',
+                    }}>{c.name}</span>
                 ))}
             </div>
         </div>
@@ -152,55 +243,93 @@ function AttributeRow({ attribute, onEdit }: Record<string, any>) {
     }
 
     return (
-        <div className={`bg-white border transition-all rounded-xl ${isExpanded ? 'border-emerald-200 ring-4 ring-emerald-50/50 shadow-md' : 'border-gray-200 hover:border-emerald-200 hover:shadow-sm'}`}>
-            <div className="p-4 flex items-center justify-between gap-4 cursor-pointer" onClick={toggleExpand}>
-                <div className="flex items-center gap-4 flex-1">
-                    <button className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'bg-emerald-100 text-emerald-700' : 'text-gray-400 hover:bg-gray-100'}`}>
-                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+        <div className="rounded-xl border transition-all" style={{
+            background: 'var(--app-surface)',
+            borderColor: isExpanded ? 'var(--app-primary)' : 'var(--app-border)',
+            boxShadow: isExpanded ? '0 2px 12px color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'none',
+        }}>
+            <div className="p-3 flex items-center justify-between gap-4 cursor-pointer" onClick={toggleExpand}>
+                <div className="flex items-center gap-3 flex-1">
+                    <button className="p-1 rounded-lg transition-colors" style={{
+                        background: isExpanded ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                    }}>
+                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                     </button>
-                    <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100"><Sparkles size={20} /></div>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{
+                        background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
+                        color: 'var(--app-warning, #f59e0b)',
+                    }}><Sparkles size={18} /></div>
                     <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{attribute.name}</h3>
-                        <div className="flex gap-2 text-xs text-gray-500">
-                            {attribute.short_name && <span className="font-mono bg-gray-100 px-1 rounded">{attribute.short_name}</span>}
+                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-text)' }}>{attribute.name}</h3>
+                        <div className="flex gap-2 text-[11px]" style={{ color: 'var(--app-text-muted)' }}>
+                            {attribute.short_name && <span className="font-mono px-1 rounded" style={{ background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)' }}>{attribute.short_name}</span>}
                             <span>{attribute.product_count || 0} products</span>
                         </div>
                     </div>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); onEdit(attribute) }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
+                <button
+                    onClick={e => { e.stopPropagation(); onEdit(attribute) }}
+                    className="p-1.5 rounded-lg transition-colors"
+                    style={{ color: 'var(--app-text-muted)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                    <Edit2 size={14} />
+                </button>
             </div>
 
             {isExpanded && (
-                <div className="border-t border-gray-100 bg-slate-50/50 p-4 animate-in slide-in-from-top-2">
-                    {isLoading && <div className="text-center py-4 text-emerald-600"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current inline-block"></div></div>}
+                <div className="p-4 animate-in slide-in-from-top-2" style={{
+                    borderTop: '1px solid var(--app-border)',
+                    background: 'color-mix(in srgb, var(--app-bg) 50%, transparent)',
+                }}>
+                    {isLoading && (
+                        <div className="text-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 inline-block" style={{ borderColor: 'var(--app-primary)' }}></div>
+                        </div>
+                    )}
                     {!isLoading && data && (
-                        <div className="space-y-4 pl-0 md:pl-12">
+                        <div className="space-y-3 pl-0 md:pl-10">
                             {data.map((brand: Record<string, any>) => (
-                                <div key={brand.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                    <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
+                                <div key={brand.id} className="rounded-xl overflow-hidden border" style={{
+                                    background: 'var(--app-surface)',
+                                    borderColor: 'var(--app-border)',
+                                }}>
+                                    <div className="px-4 py-2 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
                                         <div className="flex items-center gap-2">
-                                            <Factory size={14} className="text-purple-500" />
-                                            <span className="font-bold text-sm text-gray-800">{brand.name}</span>
+                                            <Factory size={13} style={{ color: 'var(--app-info, #8b5cf6)' }} />
+                                            <span className="font-bold text-[12px]" style={{ color: 'var(--app-text)' }}>{brand.name}</span>
                                         </div>
-                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Stock: {brand.totalStock}</span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                                            background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                                            color: 'var(--app-primary)',
+                                        }}>Stock: {brand.totalStock}</span>
                                     </div>
-                                    <div className="divide-y divide-gray-50">
+                                    <div>
                                         {brand.products.map((p: Record<string, any>) => (
-                                            <div key={p.id} className="px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-50">
+                                            <div key={p.id} className="px-4 py-2 flex justify-between items-center text-[12px] transition-colors" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-bg)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                                            >
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-border)' }}></div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-gray-700 font-medium">{p.name} {p.size && `- ${p.size}${p.unit_name || ''}`}</span>
-                                                        {p.country_name && <div className="flex items-center gap-1 text-[10px] text-gray-400 uppercase tracking-wider"><Globe size={10} /> {p.country_name}</div>}
+                                                        <span className="font-medium" style={{ color: 'var(--app-text)' }}>{p.name} {p.size && `- ${p.size}${p.unit_name || ''}`}</span>
+                                                        {p.country_name && (
+                                                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>
+                                                                <Globe size={9} /> {p.country_name}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <span className={`font-mono font-bold ${p.stock > 0 ? 'text-gray-700' : 'text-red-400'}`}>{p.stock}</span>
+                                                <span className="font-mono font-bold" style={{ color: p.stock > 0 ? 'var(--app-text)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             ))}
-                            {data.length === 0 && <p className="text-gray-400 italic text-sm p-2">No items found with this attribute.</p>}
+                            {data.length === 0 && <p className="italic text-[12px] p-2" style={{ color: 'var(--app-text-muted)' }}>No items found with this attribute.</p>}
                         </div>
                     )}
                 </div>

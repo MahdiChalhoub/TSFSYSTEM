@@ -1,45 +1,38 @@
 import { erpFetch } from "@/lib/erp-api";
 import { CategoryTree } from "@/components/admin/categories/CategoryTree";
 import { CreateCategoryButton } from "@/components/admin/categories/CreateCategoryButton";
-import { Wrench } from 'lucide-react';
+import { Wrench, FolderTree } from 'lucide-react';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 async function getCategoriesData() {
-    // erpFetch returns raw array for standard ViewSet list, but we implemented 'with_counts'
-    // which returns the enriched list.
     const categories = await erpFetch('categories/with_counts/');
 
-    // Build Tree (Client-side logic moved here or kept? Logic is pure JS, can stay)
     const categoryMap = new Map();
     const roots: Record<string, any>[] = [];
 
     if (Array.isArray(categories)) {
-        // Initialize Map with empty children array
         categories.forEach((c: Record<string, any>) => {
             categoryMap.set(c.id, {
                 ...c,
                 children: [],
-                // Normalize: backend may send productCount (camelCase from with_counts) or product_count
                 product_count: c.product_count ?? c.productCount ?? 0,
             });
         });
 
-        // Link Children to Parents
-        // DRF sends FK as 'parent' (the field name on the model), value is the parent's PK
         categories.forEach((c: Record<string, any>) => {
             const node = categoryMap.get(c.id);
-            const parentId = c.parent; // DRF FK field = model field name = 'parent'
+            const parentId = c.parent;
             if (parentId) {
                 const parent = categoryMap.get(parentId);
                 if (parent) {
                     parent.children.push(node);
                 } else {
-                    roots.push(node); // Parent not in current org's data
+                    roots.push(node);
                 }
             } else {
-                roots.push(node); // Root category (no parent)
+                roots.push(node);
             }
         });
     }
@@ -52,12 +45,8 @@ async function getCategoriesData() {
 
 async function getOrgContext() {
     try {
-        // Fetch all organizations (saas and user own)
         const orgs = await erpFetch('organizations/');
-        // Find the one that matches our context, or just the first one if only one returned
-        if (Array.isArray(orgs)) {
-            return orgs[0];
-        }
+        if (Array.isArray(orgs)) return orgs[0];
         return null;
     } catch {
         return null;
@@ -70,50 +59,103 @@ export default async function CategoriesPage() {
         getOrgContext()
     ]);
 
+    const totalCategories = flatCategories?.length || 0;
+    const rootCount = hierarchicalCategories?.length || 0;
+    const totalProducts = flatCategories?.reduce((sum: number, c: Record<string, any>) => sum + (c.product_count ?? c.productCount ?? 0), 0) || 0;
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-4xl font-bold text-app-foreground tracking-tight">Product Categories</h1>
-                        {orgContext?.business_type_name && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 animate-in zoom-in duration-300">
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Industry Vector</span>
-                                <span className="text-sm font-bold">{orgContext.business_type_name}</span>
-                            </div>
-                        )}
+            {/* V2 Icon-Box Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{
+                            background: 'var(--app-primary-bg, color-mix(in srgb, var(--app-primary) 10%, transparent))',
+                            border: '1px solid var(--app-primary-border, color-mix(in srgb, var(--app-primary) 20%, transparent))',
+                        }}
+                    >
+                        <FolderTree size={26} style={{ color: 'var(--app-primary)' }} />
                     </div>
-                    <p className="text-app-muted-foreground font-medium">Organize your inventory with a flexible category hierarchy.</p>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            Inventory / Taxonomy
+                        </p>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            Product Categories
+                        </h1>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                            Organize your inventory with a flexible category hierarchy.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {orgContext?.business_type_name && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest" style={{
+                            background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                            color: 'var(--app-primary)',
+                            border: '1px solid color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                        }}>
+                            Industry: {orgContext.business_type_name}
+                        </div>
+                    )}
                     <Link
                         href="/inventory/maintenance?tab=category"
-                        className="bg-app-surface border border-app-border text-app-foreground hover:bg-app-surface hover:text-emerald-600 px-4 py-3 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"
+                        className="px-4 py-2.5 rounded-xl font-bold text-[12px] flex items-center gap-2 transition-all"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-text)',
+                        }}
                     >
-                        <Wrench size={18} />
-                        <span>Maintenance tool</span>
+                        <Wrench size={16} />
+                        Maintenance
                     </Link>
                     <CreateCategoryButton potentialParents={flatCategories || []} />
                 </div>
+            </header>
+
+            {/* KPI Strip */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: 'Total Categories', value: totalCategories },
+                    { label: 'Root Categories', value: rootCount },
+                    { label: 'Linked Products', value: totalProducts },
+                ].map(kpi => (
+                    <div key={kpi.label} className="p-4 rounded-xl" style={{
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{kpi.label}</p>
+                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-text)' }}>{kpi.value}</p>
+                    </div>
+                ))}
             </div>
 
             {/* Content */}
-            <div className="card-premium p-6">
-                {/* Tree Header */}
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-app-border">
-                    <h3 className="text-xl font-bold text-app-foreground">Category Structure</h3>
+            <div className="p-5 rounded-2xl" style={{
+                background: 'var(--app-surface)',
+                border: '1px solid var(--app-border)',
+            }}>
+                <div className="flex justify-between items-center mb-5 pb-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                    <h3 className="text-lg font-black" style={{ color: 'var(--app-text)' }}>Category Structure</h3>
                     <input
                         type="text"
                         placeholder="Search categories..."
-                        className="px-4 py-2 border border-app-border rounded-lg text-sm focus:outline-none focus:border-emerald-500 w-64 transition-all"
+                        className="px-4 py-2 rounded-xl text-[12px] w-64 transition-all outline-none"
+                        style={{
+                            background: 'var(--app-bg)',
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-text)',
+                        }}
                     />
                 </div>
 
                 {hierarchicalCategories.length > 0 ? (
                     <CategoryTree categories={hierarchicalCategories} allCategories={flatCategories || []} />
                 ) : (
-                    <div className="py-12 text-center text-app-muted-foreground">
+                    <div className="py-12 text-center" style={{ color: 'var(--app-text-muted)' }}>
                         <p>No categories defined yet.</p>
                     </div>
                 )}

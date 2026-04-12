@@ -2,13 +2,12 @@
 
 import { AdminEntity, AdminCountryHierarchyItem } from "@/types/erp"
 import { useState } from 'react';
-import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Package, Save, Loader2 } from "lucide-react";
+import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Package, Save, Loader2, Globe2 } from "lucide-react";
 import { getCountryHierarchy, createCountry, updateCountry, CountryState } from '@/app/actions/countries';
 import { useActionState, useEffect } from 'react';
 
 type CountryManagerProps = {
     countries: Record<string, any>[];
-    // Make categories optional in case parent doesn't provide it yet, but we updated parent.
     categories?: Record<string, any>[];
 };
 
@@ -22,10 +21,8 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
     const filteredCountries = countries.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             c.code.toLowerCase().includes(searchTerm.toLowerCase());
-
         const matchesCategory = selectedCategory === 'all' ||
             (c.products && c.products.some((p: Record<string, any>) => p.category === Number(selectedCategory)));
-
         return matchesSearch && matchesCategory;
     });
 
@@ -44,62 +41,131 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
         setSelectedCategory('all');
     };
 
+    const totalProducts = countries.reduce((sum, c) => sum + (c.product_count || c._count?.products || 0), 0);
+
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Countries</h1>
-                    <p className="text-gray-500">Manage manufacturing origins.</p>
+            {/* V2 Icon-Box Header */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in-up">
+                <div className="flex items-center gap-4">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                        style={{
+                            background: 'var(--app-primary-bg, color-mix(in srgb, var(--app-primary) 10%, transparent))',
+                            border: '1px solid var(--app-primary-border, color-mix(in srgb, var(--app-primary) 20%, transparent))',
+                        }}
+                    >
+                        <Globe2 size={26} style={{ color: 'var(--app-primary)' }} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                            Inventory / Taxonomy
+                        </p>
+                        <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            Countries
+                        </h1>
+                        <p className="text-sm mt-0.5" style={{ color: 'var(--app-text-muted)' }}>
+                            Manage manufacturing origins and product provenance.
+                        </p>
+                    </div>
                 </div>
                 <button
                     onClick={handleCreate}
-                    className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl font-bold text-[12px] flex items-center gap-2 transition-all shadow-lg"
+                    style={{
+                        background: 'var(--app-primary)',
+                        color: 'white',
+                        boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                    }}
                 >
-                    <Plus size={20} />
-                    <span>Add Country</span>
+                    <Plus size={18} />
+                    Add Country
                 </button>
+            </header>
+
+            {/* KPI Strip */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: 'Total Countries', value: countries.length },
+                    { label: 'With Products', value: countries.filter(c => (c.product_count || c._count?.products || 0) > 0).length },
+                    { label: 'Linked Products', value: totalProducts },
+                ].map(kpi => (
+                    <div key={kpi.label} className="p-4 rounded-xl" style={{
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                        <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{kpi.label}</p>
+                        <p className="text-2xl font-black mt-1" style={{ color: 'var(--app-text)' }}>{kpi.value}</p>
+                    </div>
+                ))}
             </div>
 
-            <div className="card-premium p-6">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+            {/* Content */}
+            <div className="p-5 rounded-2xl" style={{
+                background: 'var(--app-surface)',
+                border: '1px solid var(--app-border)',
+            }}>
+                {/* Toolbar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-5 pb-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
                     <div className="flex flex-1 items-center gap-3 w-full">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'var(--app-text-muted)' }} />
                             <input
                                 type="text"
                                 placeholder="Search countries..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 w-full transition-all"
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 rounded-xl text-[12px] w-full transition-all outline-none"
+                                style={{
+                                    background: 'var(--app-bg)',
+                                    border: '1px solid var(--app-border)',
+                                    color: 'var(--app-text)',
+                                }}
                             />
                         </div>
 
                         <div className="relative">
                             <select
                                 value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
+                                onChange={e => setSelectedCategory(e.target.value)}
+                                className="appearance-none pl-8 pr-8 py-2 rounded-xl text-[12px] cursor-pointer min-w-[150px] outline-none"
+                                style={{
+                                    background: 'var(--app-bg)',
+                                    border: '1px solid var(--app-border)',
+                                    color: 'var(--app-text)',
+                                }}
                             >
                                 <option value="all">All Categories</option>
                                 {categories?.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2" size={13} style={{ color: 'var(--app-text-muted)' }} />
                         </div>
 
                         {(searchTerm || selectedCategory !== 'all') && (
-                            <button onClick={clearFilters} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                <X size={18} />
+                            <button onClick={clearFilters} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--app-text-muted)' }}>
+                                <X size={16} />
                             </button>
                         )}
                     </div>
 
-                    <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 shrink-0">
-                        <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}><LayoutList size={18} /></button>
-                        <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}><LayoutGrid size={18} /></button>
+                    <div className="flex items-center p-1 rounded-xl shrink-0" style={{
+                        background: 'var(--app-bg)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                        {(['list', 'grid'] as const).map(m => (
+                            <button key={m} onClick={() => setViewMode(m)} className="p-2 rounded-lg transition-all" style={{
+                                background: viewMode === m ? 'var(--app-surface)' : 'transparent',
+                                color: viewMode === m ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                                boxShadow: viewMode === m ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                            }}>
+                                {m === 'list' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+                {/* Items */}
+                <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                     {filteredCountries.map((country: Record<string, any>) => (
                         viewMode === 'list' ? (
                             <CountryRow key={country.id} country={country} onEdit={handleEdit} />
@@ -107,6 +173,11 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                             <CountryCard key={country.id} country={country} onEdit={handleEdit} />
                         )
                     ))}
+                    {filteredCountries.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-[13px]" style={{ color: 'var(--app-text-muted)' }}>
+                            No countries found.
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -117,17 +188,30 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
 
 function CountryCard({ country, onEdit }: Record<string, any>) {
     return (
-        <div className="group border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white relative overflow-hidden flex flex-col cursor-pointer hover:border-emerald-200" onClick={() => onEdit(country)}>
-            <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-xl font-bold text-indigo-700 uppercase border border-indigo-100">
+        <div
+            className="group rounded-2xl p-5 transition-all cursor-pointer flex flex-col border"
+            style={{ background: 'var(--app-surface)', borderColor: 'var(--app-border)' }}
+            onClick={() => onEdit(country)}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.style.boxShadow = '0 4px 16px color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.boxShadow = 'none'; }}
+        >
+            <div className="flex justify-between items-start mb-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[14px] font-black uppercase" style={{
+                    background: 'color-mix(in srgb, var(--app-info, #6366f1) 10%, transparent)',
+                    color: 'var(--app-info, #6366f1)',
+                    border: '1px solid color-mix(in srgb, var(--app-info, #6366f1) 15%, transparent)',
+                }}>
                     {country.code}
                 </div>
-                <div className="flex items-center gap-1 text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
-                    <Package size={12} />
-                    {country.product_count || 0} products
-                </div>
+                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg" style={{
+                    background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
+                    color: 'var(--app-text-muted)',
+                }}>
+                    <Package size={10} />
+                    {country.product_count || country._count?.products || 0} products
+                </span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">{country.name}</h3>
+            <h3 className="text-[14px] font-bold" style={{ color: 'var(--app-text)' }}>{country.name}</h3>
         </div>
     );
 }
@@ -150,52 +234,87 @@ function CountryRow({ country, onEdit }: Record<string, any>) {
     }
 
     return (
-        <div className={`bg-white border transition-all rounded-xl ${isExpanded ? 'border-emerald-200 ring-4 ring-emerald-50/50 shadow-md' : 'border-gray-200 hover:border-emerald-200 hover:shadow-sm'}`}>
-            <div className="p-4 flex items-center justify-between gap-4 cursor-pointer" onClick={toggleExpand}>
-                <div className="flex items-center gap-4 flex-1">
-                    <button className={`p-1.5 rounded-lg transition-colors ${isExpanded ? 'bg-emerald-100 text-emerald-700' : 'text-gray-400 hover:bg-gray-100'}`}>
-                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+        <div className="rounded-xl border transition-all" style={{
+            background: 'var(--app-surface)',
+            borderColor: isExpanded ? 'var(--app-primary)' : 'var(--app-border)',
+            boxShadow: isExpanded ? '0 2px 12px color-mix(in srgb, var(--app-primary) 8%, transparent)' : 'none',
+        }}>
+            <div className="p-3 flex items-center justify-between gap-4 cursor-pointer" onClick={toggleExpand}>
+                <div className="flex items-center gap-3 flex-1">
+                    <button className="p-1 rounded-lg transition-colors" style={{
+                        background: isExpanded ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'transparent',
+                        color: isExpanded ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                    }}>
+                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                     </button>
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-sm font-bold text-indigo-600 border border-indigo-100">{country.code}</div>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-black uppercase" style={{
+                        background: 'color-mix(in srgb, var(--app-info, #6366f1) 10%, transparent)',
+                        color: 'var(--app-info, #6366f1)',
+                        border: '1px solid color-mix(in srgb, var(--app-info, #6366f1) 15%, transparent)',
+                    }}>{country.code}</div>
                     <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{country.name}</h3>
-                        <span className="text-xs font-mono text-gray-400">{country.product_count || 0} products</span>
+                        <h3 className="font-bold text-[14px]" style={{ color: 'var(--app-text)' }}>{country.name}</h3>
+                        <span className="text-[11px] font-mono" style={{ color: 'var(--app-text-muted)' }}>{country.product_count || country._count?.products || 0} products</span>
                     </div>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); onEdit(country) }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
+                <button
+                    onClick={e => { e.stopPropagation(); onEdit(country) }}
+                    className="p-1.5 rounded-lg transition-colors"
+                    style={{ color: 'var(--app-text-muted)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                >
+                    <Edit2 size={14} />
+                </button>
             </div>
 
             {isExpanded && (
-                <div className="border-t border-gray-100 bg-slate-50/50 p-4 animate-in slide-in-from-top-2">
-                    {isLoading && <div className="text-center py-4 text-emerald-600"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current inline-block"></div></div>}
+                <div className="p-4 animate-in slide-in-from-top-2" style={{
+                    borderTop: '1px solid var(--app-border)',
+                    background: 'color-mix(in srgb, var(--app-bg) 50%, transparent)',
+                }}>
+                    {isLoading && (
+                        <div className="text-center py-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 inline-block" style={{ borderColor: 'var(--app-primary)' }}></div>
+                        </div>
+                    )}
                     {!isLoading && data && (
-                        <div className="space-y-4 pl-0 md:pl-12">
+                        <div className="space-y-3 pl-0 md:pl-10">
                             {data.map((brand: Record<string, any>) => (
-                                <div key={brand.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                    <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
+                                <div key={brand.id} className="rounded-xl overflow-hidden border" style={{
+                                    background: 'var(--app-surface)',
+                                    borderColor: 'var(--app-border)',
+                                }}>
+                                    <div className="px-4 py-2 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
                                         <div className="flex items-center gap-2">
-                                            <Factory size={14} className="text-purple-500" />
-                                            <span className="font-bold text-sm text-gray-800">{brand.name}</span>
+                                            <Factory size={13} style={{ color: 'var(--app-info, #8b5cf6)' }} />
+                                            <span className="font-bold text-[12px]" style={{ color: 'var(--app-text)' }}>{brand.name}</span>
                                         </div>
-                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Stock: {brand.totalStock}</span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{
+                                            background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                                            color: 'var(--app-primary)',
+                                        }}>Stock: {brand.totalStock}</span>
                                     </div>
-                                    <div className="divide-y divide-gray-50">
+                                    <div>
                                         {brand.products.map((p: Record<string, any>) => (
-                                            <div key={p.id} className="px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-50">
+                                            <div key={p.id} className="px-4 py-2 flex justify-between items-center text-[12px] transition-colors" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-bg)'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                                            >
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-border)' }}></div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-gray-700 font-medium">{p.name} {p.size && `- ${p.size}${p.unit ? p.unit.name : ''}`}</span>
-                                                        {p.sku && <span className="text-[10px] text-gray-400 font-mono">{p.sku}</span>}
+                                                        <span className="font-medium" style={{ color: 'var(--app-text)' }}>{p.name} {p.size && `- ${p.size}${p.unit ? p.unit.name : ''}`}</span>
+                                                        {p.sku && <span className="text-[9px] font-mono" style={{ color: 'var(--app-text-muted)' }}>{p.sku}</span>}
                                                     </div>
                                                 </div>
-                                                <span className={`font-mono font-bold ${p.stock > 0 ? 'text-gray-700' : 'text-red-400'}`}>{p.stock}</span>
+                                                <span className="font-mono font-bold" style={{ color: p.stock > 0 ? 'var(--app-text)' : 'var(--app-error, #ef4444)' }}>{p.stock}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             ))}
-                            {data.length === 0 && <p className="text-gray-400 italic text-sm p-2">No inventory found.</p>}
+                            {data.length === 0 && <p className="italic text-[12px] p-2" style={{ color: 'var(--app-text-muted)' }}>No inventory found.</p>}
                         </div>
                     )}
                 </div>
@@ -218,37 +337,58 @@ function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-lg text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+            <div className="rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200" style={{
+                background: 'var(--app-surface)',
+                border: '1px solid var(--app-border)',
+            }}>
+                <div className="px-6 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-bg)' }}>
+                    <h3 className="font-bold text-[16px]" style={{ color: 'var(--app-text)' }}>
                         {country ? 'Edit Country' : 'Add New Country'}
                     </h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors">
+                    <button onClick={onClose} className="p-1 rounded-full transition-colors" style={{ color: 'var(--app-text-muted)' }}>
                         <X size={18} />
                     </button>
                 </div>
 
                 <form action={(formData) => { setPending(true); formAction(formData); setPending(false); }} className="p-6 space-y-4">
                     {state.message && state.message !== 'success' && (
-                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                        <div className="p-3 text-[12px] rounded-lg" style={{
+                            background: 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)',
+                            color: 'var(--app-error, #ef4444)',
+                            border: '1px solid color-mix(in srgb, var(--app-error, #ef4444) 15%, transparent)',
+                        }}>
                             {state.message}
                         </div>
                     )}
 
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Name</label>
-                        <input name="name" defaultValue={country?.name} className="input-field w-full" placeholder="Turkey" required />
+                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Name</label>
+                        <input name="name" defaultValue={country?.name} className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none" style={{
+                            background: 'var(--app-bg)',
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-text)',
+                        }} placeholder="Turkey" required />
                     </div>
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Code</label>
-                        <input name="code" defaultValue={country?.code} className="input-field w-full uppercase" placeholder="TR" required maxLength={3} />
+                        <label className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>Code</label>
+                        <input name="code" defaultValue={country?.code} className="w-full px-4 py-2.5 rounded-xl text-[13px] uppercase outline-none" style={{
+                            background: 'var(--app-bg)',
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-text)',
+                        }} placeholder="TR" required maxLength={3} />
                     </div>
 
                     <div className="pt-2 flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl border font-semibold text-gray-600">Cancel</button>
-                        <button type="submit" disabled={pending} className="flex-1 py-2 rounded-xl bg-emerald-600 text-white font-semibold flex items-center justify-center gap-2">
-                            {pending ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />} Save
+                        <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl font-bold text-[12px]" style={{
+                            border: '1px solid var(--app-border)',
+                            color: 'var(--app-text-muted)',
+                        }}>Cancel</button>
+                        <button type="submit" disabled={pending} className="flex-1 py-2.5 rounded-xl font-bold text-[12px] flex items-center justify-center gap-2" style={{
+                            background: 'var(--app-primary)',
+                            color: 'white',
+                        }}>
+                            {pending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />} Save
                         </button>
                     </div>
                 </form>

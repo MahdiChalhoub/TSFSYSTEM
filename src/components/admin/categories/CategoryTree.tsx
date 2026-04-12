@@ -45,7 +45,7 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
     }, []);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             {categories.map((cat) => (
                 <CategoryTreeNode
                     key={cat.id}
@@ -58,7 +58,6 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                 />
             ))}
 
-            {/* Global Modals - Rendered only once! */}
             {activeModal.type !== 'none' && (
                 <CategoryFormModal
                     isOpen={true}
@@ -98,7 +97,6 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     onDelete: (cat: CategoryNode) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
-
     const hasChildren = category.children && category.children.length > 0;
 
     const handleDelete = () => {
@@ -112,48 +110,58 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     return (
         <div className="select-none">
             <div
-                className={`
-                    group flex items-center justify-between p-4 rounded-xl border transition-all duration-200
-                    ${level === 0 ? 'bg-white border-gray-100 shadow-sm mb-2' : 'bg-gray-50/50 border-gray-100/50 ml-8 mt-2'}
-                    hover:border-emerald-200 hover:shadow-md
-                `}
+                className="group flex items-center justify-between p-3 rounded-xl border transition-all duration-200"
+                style={{
+                    background: level === 0 ? 'var(--app-surface)' : 'color-mix(in srgb, var(--app-surface) 60%, transparent)',
+                    borderColor: 'var(--app-border)',
+                    marginLeft: level > 0 ? '2rem' : 0,
+                    marginTop: level > 0 ? '0.375rem' : 0,
+                    marginBottom: level === 0 ? '0.375rem' : 0,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--app-primary)'; e.currentTarget.style.boxShadow = '0 2px 8px color-mix(in srgb, var(--app-primary) 10%, transparent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--app-border)'; e.currentTarget.style.boxShadow = 'none'; }}
             >
-                <div className="flex items-center gap-4">
-                    {/* Expand Toggle */}
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className={`p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors ${!hasChildren && 'invisible'}`}
+                        className={`p-1 rounded-lg transition-colors ${!hasChildren && 'invisible'}`}
+                        style={{ color: 'var(--app-text-muted)' }}
                     >
-                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
 
-                    {/* Icon */}
-                    <div className={`
-                        w-10 h-10 rounded-lg flex items-center justify-center
-                        ${level === 0 ? 'bg-orange-100 text-orange-600' : 'bg-gray-200 text-gray-500'}
-                    `}>
-                        <Folder size={20} strokeWidth={2} />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{
+                        background: level === 0 ? 'color-mix(in srgb, var(--app-primary) 10%, transparent)' : 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
+                        color: level === 0 ? 'var(--app-primary)' : 'var(--app-text-muted)',
+                    }}>
+                        <Folder size={18} strokeWidth={2} />
                     </div>
 
-                    {/* Info */}
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-gray-900">{category.name}</h4>
+                            <h4 className="text-[13px] font-bold" style={{ color: 'var(--app-text)' }}>{category.name}</h4>
                             {category.code && (
-                                <span className="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{
+                                    background: 'color-mix(in srgb, var(--app-text-muted) 8%, transparent)',
+                                    color: 'var(--app-text-muted)',
+                                }}>
                                     {category.code}
                                 </span>
                             )}
                             {level === 0 && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-orange-50 text-orange-500 tracking-wide border border-orange-100">
-                                    Main
+                                <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest" style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 8%, transparent)',
+                                    color: 'var(--app-primary)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 15%, transparent)',
+                                }}>
+                                    Root
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-3">
+                        <p className="text-[11px] mt-0.5 flex items-center gap-2" style={{ color: 'var(--app-text-muted)' }}>
                             <span>{hasChildren ? `${category.children!.length} sub-categories` : 'No sub-categories'}</span>
                             {category.product_count != null && category.product_count > 0 && (
-                                <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                <span className="font-bold" style={{ color: 'var(--app-primary)' }}>
                                     · {category.product_count} Products
                                 </span>
                             )}
@@ -161,35 +169,45 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={() => onEdit(category)}
-                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--app-text-muted)' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-primary)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Edit"
                     >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} />
                     </button>
                     <button
                         onClick={() => onAddChild(category.id)}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--app-text-muted)' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--app-info, #3b82f6)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Add Sub-Category"
                     >
-                        <Plus size={16} />
+                        <Plus size={14} />
                     </button>
                     <button
                         onClick={handleDelete}
-                        className={`p-2 rounded-lg transition-colors ${hasChildren ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{
+                            color: hasChildren ? 'color-mix(in srgb, var(--app-text-muted) 40%, transparent)' : 'var(--app-text-muted)',
+                            cursor: hasChildren ? 'not-allowed' : 'pointer',
+                        }}
+                        onMouseEnter={e => { if (!hasChildren) { e.currentTarget.style.color = 'var(--app-error, #ef4444)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)'; } }}
+                        onMouseLeave={e => { e.currentTarget.style.color = hasChildren ? 'color-mix(in srgb, var(--app-text-muted) 40%, transparent)' : 'var(--app-text-muted)'; e.currentTarget.style.background = 'transparent'; }}
                         title={hasChildren ? "Delete sub-categories first" : "Delete"}
                     >
-                        {hasChildren ? <AlertCircle size={16} /> : <Trash2 size={16} />}
+                        {hasChildren ? <AlertCircle size={14} /> : <Trash2 size={14} />}
                     </button>
                 </div>
             </div>
 
-            {/* Children Recursive Render */}
             {isExpanded && hasChildren && (
-                <div className="border-l-2 border-gray-100 ml-6 pl-2">
+                <div className="ml-5 pl-3" style={{ borderLeft: '2px solid color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
                     {category.children!.map((child) => (
                         <CategoryTreeNode
                             key={child.id}
