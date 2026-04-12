@@ -1,46 +1,7 @@
-import AddProductForm from './form';
+import ProductFormWrapper from './form-wrapper';
 import { erpFetch } from '@/lib/erp-api';
-import { getProductNamingRule } from '@/app/actions/settings';
-import { getFinancialSettings } from '@/app/actions/finance/settings';
-import { serializeDecimals } from '@/lib/utils/serialization';
 
 export const dynamic = 'force-dynamic';
-
-async function getCategories() {
-    try {
-        return await erpFetch('categories/');
-    } catch (e) {
-        console.warn("Error fetching categories:", e);
-        return [];
-    }
-}
-
-async function getUnits() {
-    try {
-        return await erpFetch('units/');
-    } catch (e) {
-        console.warn("Error fetching units:", e);
-        return [];
-    }
-}
-
-async function getBrands() {
-    try {
-        return await erpFetch('brands/');
-    } catch (e) {
-        console.warn("Error fetching brands:", e);
-        return [];
-    }
-}
-
-async function getCountries() {
-    try {
-        return await erpFetch('countries/');
-    } catch (e) {
-        console.warn("Error fetching countries:", e);
-        return [];
-    }
-}
 
 export default async function NewProductPage(props: { searchParams: Promise<{ cloneId?: string }> }) {
     const searchParams = await props.searchParams;
@@ -51,7 +12,6 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
         try {
             clonedProduct = await erpFetch(`/inventory/products/${cloneId}/`);
             if (clonedProduct) {
-                // Reset unique fields
                 clonedProduct.sku = '';
                 clonedProduct.barcode = '';
                 clonedProduct.name = `${clonedProduct.name} (Copy)`;
@@ -61,35 +21,30 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
         }
     }
 
-    const [categories, units, brands, countries, namingRule, financialSettings] = await Promise.all([
-        getCategories(),
-        getUnits(),
-        getBrands(),
-        getCountries(),
-        getProductNamingRule(),
-        getFinancialSettings()
-    ]);
-
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-app-foreground">
-                    {cloneId ? 'Clone Product' : 'Add New Product'}
-                </h1>
-                <p className="text-app-muted-foreground">
-                    {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Create a new item in the TSF Catalog.'}
-                </p>
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+                        background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                        color: 'var(--app-primary)',
+                    }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 3v12M3 12h18M20 16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            {cloneId ? 'Clone Product' : 'Create Product'}
+                        </h1>
+                        <p className="text-[11px] font-medium" style={{ color: 'var(--app-text-muted)' }}>
+                            {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Smart product wizard with AI suggestions'}
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <AddProductForm
-                categories={categories}
-                units={units}
-                brands={brands}
-                countries={countries}
-                namingRule={namingRule}
-                initialData={clonedProduct}
-                worksInTTC={financialSettings?.worksInTTC ?? false}
-            />
+            <ProductFormWrapper initialData={clonedProduct} />
         </div>
     );
 }
