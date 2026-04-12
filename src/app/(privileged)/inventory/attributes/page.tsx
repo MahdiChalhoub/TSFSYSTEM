@@ -2,10 +2,11 @@ import { AttributeManager } from "@/components/admin/AttributeManager";
 import { getAttributes } from "@/app/actions/attributes";
 import { erpFetch } from "@/lib/erp-api";
 
+export const dynamic = 'force-dynamic';
+
 async function getCategories() {
     try {
         const categories = await erpFetch('categories/');
-        // Sort explicitly if backend doesn't guarantee order
         return categories.sort((a: Record<string, any>, b: Record<string, any>) => a.name.localeCompare(b.name));
     } catch (e) {
         console.error("Failed to fetch categories", e);
@@ -19,7 +20,6 @@ export default async function AttributesPage() {
         getCategories()
     ]);
 
-    // Parse to ensure clean JSON for client component
     const cleanAttributes = JSON.parse(JSON.stringify(attributes));
     const cleanCategories = JSON.parse(JSON.stringify(categories));
 
