@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DesignSystemProvider } from '@/contexts/DesignSystemContext'
 import { Palette, Sun, Moon, Monitor, Check, Layers, Type, Layout, Sparkles, RotateCcw } from 'lucide-react'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { useDesignSystem } from '@/contexts/DesignSystemContext'
@@ -26,13 +25,9 @@ const DS_META: Record<string, { icon: string; desc: string }> = {
   'tailwind':         { icon: '🌊', desc: 'Utility-first by Tailwind Labs' },
 }
 
-// Wrap with DesignSystemProvider so useDesignSystem() has a provider in tree
+// DesignSystemProvider lives in the privileged layout — no need to wrap here
 export default function AppearancePage() {
-  return (
-    <DesignSystemProvider>
-      <AppearancePageInner />
-    </DesignSystemProvider>
-  )
+  return <AppearancePageInner />
 }
 
 function AppearancePageInner() {
