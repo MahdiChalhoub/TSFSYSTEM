@@ -74,34 +74,20 @@ export function DesignSystemProvider({
   defaultSystem = "tailwind",
   defaultColorMode = "light",
 }: DesignSystemProviderProps) {
-  const [currentSystem, setCurrentSystem] =
-    useState<DesignSystemId>(defaultSystem);
-  const [colorMode, setColorModeState] = useState<"light" | "dark">(
-    defaultColorMode
-  );
+  // Lazy-initialize from localStorage so the design system is correct on first
+  // render — avoids the double-apply flash (default → saved) on page load.
+  const [currentSystem, setCurrentSystem] = useState<DesignSystemId>(() => {
+    if (typeof window === "undefined") return defaultSystem;
+    const saved = localStorage.getItem("design-system") as DesignSystemId | null;
+    return (saved && saved in DESIGN_SYSTEMS_REGISTRY) ? saved : defaultSystem;
+  });
+  const [colorMode, setColorModeState] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return defaultColorMode;
+    const saved = localStorage.getItem("design-system-color-mode") as "light" | "dark" | null;
+    return saved ?? defaultColorMode;
+  });
   const [currentSystemObject, setCurrentSystemObject] =
     useState<DesignSystem | null>(null);
-
-  // Load saved preferences from localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const savedSystem = localStorage.getItem(
-      "design-system"
-    ) as DesignSystemId | null;
-    const savedColorMode = localStorage.getItem("design-system-color-mode") as
-      | "light"
-      | "dark"
-      | null;
-
-    if (savedSystem && (savedSystem in DESIGN_SYSTEMS_REGISTRY)) {
-      setCurrentSystem(savedSystem);
-    }
-
-    if (savedColorMode) {
-      setColorModeState(savedColorMode);
-    }
-  }, []);
 
   // Apply design system whenever it changes
   useEffect(() => {

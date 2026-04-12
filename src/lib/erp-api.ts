@@ -64,8 +64,13 @@ export async function getTenantContext() {
     }
 
     try {
-        // Resolve via Django API to avoid direct DB access
-        const res = await fetch(`${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`, {
+        // Client: route through proxy (DJANGO_URL is null on client — can't call directly)
+        // Server: call Django directly (faster, no HTTP hop)
+        const tenantResolveUrl = isClient
+            ? `/api/proxy/tenant/resolve/?slug=${subdomain}`
+            : `${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`;
+
+        const res = await fetch(tenantResolveUrl, {
             cache: 'force-cache',
             next: { revalidate: 60 } // Cache resolution for 60s
         });
