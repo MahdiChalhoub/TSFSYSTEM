@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic';
 
 const POSClient = dynamic(() => import('./POSClient'), { ssr: false });

@@ -467,6 +467,7 @@ export const MENU_ITEMS = [
                     { title: 'General Settings', path: '/finance/settings' },
                     { title: 'Payment Methods', path: '/finance/settings/payment-methods' },
                     { title: 'Barcode Settings', path: '/finance/settings/barcode' },
+                    { title: 'Form Definitions', path: '/finance/settings/form-definitions' },
                 ]
             },
         ]
