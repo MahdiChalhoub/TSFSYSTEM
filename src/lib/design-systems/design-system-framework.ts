@@ -357,7 +357,59 @@ export function applyDesignSystem(
   root.setAttribute("data-design-system", system.id);
   root.setAttribute("data-color-mode", colorMode);
 
-  console.log(`🎨 [DesignSystem] Applied: ${system.name} (${colorMode}) — radius=${baseRadius}px, font=${system.typography.fontFamily.split(',')[0]}`);
+  // ── 11. Persistent shape overrides via injected <style> ──────
+  // AppThemeProvider writes --card-radius, --button-radius, --app-radius etc.
+  // as *normal* inline styles. An author stylesheet rule with !important wins
+  // over inline styles without !important (CSS cascade level 3), so these
+  // overrides survive theme switches without needing to coordinate with
+  // AppThemeProvider.  We also explicitly set every --radius-* tier because
+  // Tailwind v4's @theme inline may bake them as static values at build time
+  // rather than live CSS custom properties.
+  const cardR   = system.components.card.borderRadius;
+  const btnR    = system.components.button.borderRadius;
+  const inputR  = system.components.input.borderRadius;
+  const modalR  = system.components.modal.borderRadius;
+  const badgeR  = system.components.badge.borderRadius;
+  const base    = baseRadius;
+
+  const styleId = 'tsf-ds-shape-overrides';
+  let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `
+    :root {
+      /* Tailwind rounded-* tiers — explicit so @theme inline baking doesn't freeze them */
+      --radius:     ${base}px !important;
+      --radius-sm:  ${Math.max(0, base - 4)}px !important;
+      --radius-md:  ${Math.max(0, base - 2)}px !important;
+      --radius-lg:  ${base}px !important;
+      --radius-xl:  ${base + 4}px !important;
+      --radius-2xl: ${base + 8}px !important;
+      --radius-3xl: ${base + 12}px !important;
+      --radius-4xl: ${base + 16}px !important;
+
+      /* App component shape tokens (read by actual components) */
+      --app-radius:    ${cardR}px !important;
+      --card-radius:   ${cardR}px !important;
+      --button-radius: ${btnR}px !important;
+      --input-radius:  ${inputR}px !important;
+      --modal-radius:  ${modalR}px !important;
+
+      /* Font */
+      --app-font:         ${system.typography.fontFamily} !important;
+      --app-font-display: ${system.typography.fontFamily} !important;
+      --font-body:        ${system.typography.fontFamily} !important;
+
+      /* Shadows */
+      --app-shadow-sm:  ${system.shadows.sm} !important;
+      --card-shadow:    ${system.components.card.shadow} !important;
+    }
+  `;
+
+  console.log(`🎨 [DesignSystem] Applied: ${system.name} (${colorMode}) — radius=${base}px btn=${btnR}px card=${cardR}px`);
 }
 
 /**

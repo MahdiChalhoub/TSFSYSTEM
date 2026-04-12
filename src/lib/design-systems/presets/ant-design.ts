@@ -145,10 +145,10 @@ export const ANT_DESIGN_SYSTEM: DesignSystem = {
     aliases: {
       none: 0,
       sm: 2,
-      base: 6,
-      md: 6,
-      lg: 8,
-      xl: 16,
+      base: 2,   // Ant Design classic v4: sharp/rectangular enterprise aesthetic
+      md: 4,
+      lg: 6,
+      xl: 8,
       full: 9999,
     },
   },
@@ -174,7 +174,7 @@ export const ANT_DESIGN_SYSTEM: DesignSystem = {
     button: {
       height: { sm: 24, base: 32, lg: 40 },
       padding: { sm: "0 7px", base: "4px 15px", lg: "6px 15px" },
-      borderRadius: 6,
+      borderRadius: 2,   // Sharp rectangular buttons — classic Ant Design
       fontSize: { sm: 12, base: 14, lg: 16 },
       fontWeight: 400,
       transition: "all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1)",
@@ -183,14 +183,14 @@ export const ANT_DESIGN_SYSTEM: DesignSystem = {
     input: {
       height: { sm: 24, base: 32, lg: 40 },
       padding: "4px 11px",
-      borderRadius: 6,
+      borderRadius: 2,
       borderWidth: 1,
       fontSize: 14,
     },
 
     card: {
       padding: { sm: 12, base: 16, lg: 24 },
-      borderRadius: 8,
+      borderRadius: 4,   // Flat/rectangular card style
       shadow:
         "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02)",
       border: "1px solid rgba(5, 5, 5, 0.06)",
