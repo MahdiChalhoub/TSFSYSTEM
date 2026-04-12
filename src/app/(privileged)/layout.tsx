@@ -9,6 +9,7 @@ import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
 import { CommandPalette } from '@/components/admin/CommandPalette';
+import { DesignSystemProvider } from '@/contexts/DesignSystemContext';
 
 
 import { getSites } from '@/app/actions/sites';
@@ -94,6 +95,7 @@ export default async function AdminLayout({
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
 
     return (
+        <DesignSystemProvider>
         <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
             <DevProvider>
                 <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
@@ -124,5 +126,6 @@ export default async function AdminLayout({
                 </div>
             </DevProvider>
         </AdminProvider>
+        </DesignSystemProvider>
     );
 }
