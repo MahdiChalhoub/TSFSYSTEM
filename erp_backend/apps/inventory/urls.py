@@ -12,10 +12,10 @@ from apps.inventory.views import (
     OperationalRequestViewSet, ProductSerialViewSet, SerialLogViewSet,
     StockAlertViewSet,
 )
-from apps.inventory.counting_views import (
+from apps.inventory.views.counting_views import (
     InventorySessionViewSet, InventorySessionLineViewSet,
 )
-from apps.inventory.location_views import (
+from apps.inventory.views.location_views import (
     WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
     WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
 )

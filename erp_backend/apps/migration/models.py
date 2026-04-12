@@ -8,6 +8,8 @@ from erp.models import TenantModel
 
 class MigrationJob(TenantModel):
     """Tracks a single migration run from UltimatePOS."""
+    organization = models.ForeignKey('erp.Organization', on_delete=models.CASCADE, db_column='tenant_id', related_name='migration_jobs')
+
     SOURCE_TYPES = (
         ('SQL_DUMP', 'SQL Dump File'),
         ('DIRECT_DB', 'Direct MySQL Connection'),

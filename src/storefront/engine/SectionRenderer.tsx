@@ -1,7 +1,25 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import type { StorefrontPageLayout, ThemeComponents, Product, Category, Brand } from './types'
+import type { ThemeComponents, Product, Category } from './types'
+
+// Local type definitions for section engine types not yet in the types file
+interface SectionConfig {
+    id: string
+    type: string
+    settings?: Record<string, any>
+}
+
+interface StorefrontPageLayout {
+    sections: SectionConfig[]
+}
+
+interface Brand {
+    id: string
+    name: string
+    logo?: string
+    [key: string]: any
+}
 
 interface SectionRendererProps {
     layout: StorefrontPageLayout
@@ -28,7 +46,7 @@ export function SectionRenderer({
 
     return (
         <div className="section-engine">
-            {layout.sections.map((sectionConfig) => {
+            {layout.sections.map((sectionConfig: SectionConfig) => {
                 const Component = sectionsRegistry[sectionConfig.type]
 
                 if (!Component) {

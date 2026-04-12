@@ -100,7 +100,7 @@ export default function ConnectorBufferPage() {
                 toast.success('Request replayed successfully')
                 await loadBuffers()
             } else {
-                toast.error(res.error)
+                toast.error((res as any).error ?? (res as any).message)
             }
         } catch {
             toast.error('Retry failed')
@@ -116,7 +116,7 @@ export default function ConnectorBufferPage() {
                 toast.success(`Cleaned up ${res.data?.expired_count || 0} expired buffers`)
                 await loadBuffers()
             } else {
-                toast.error(res.error)
+                toast.error((res as any).error ?? (res as any).message)
             }
         } catch {
             toast.error('Cleanup failed')

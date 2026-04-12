@@ -59,3 +59,7 @@ export async function disburseLoan(loanId: number, targetAccountId: number) {
         throw e
     }
 }
+
+export async function getAmortizationSchedule(loanId: number) {
+    return await erpFetch(`finance/loans/${loanId}/schedule/`);
+}

@@ -56,7 +56,7 @@ export async function getTenantContext() {
 
     debug(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "www" || subdomain === "saas") {
+    if (!subdomain || subdomain === "www") {
         // Root Domain only - No Tenant Context (Fallback)
         return null;
     }
@@ -148,7 +148,10 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         };
 
         if (isReadRequest) {
-            fetchOptions.next = { revalidate: 30 };
+            // Respect explicit cache: 'no-store' from caller (e.g. auth/me must be fresh)
+            if (options.cache !== 'no-store') {
+                fetchOptions.next = { revalidate: 30 };
+            }
         } else {
             fetchOptions.cache = 'no-store';
         }
@@ -223,14 +226,19 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
         return await response.json();
     } catch (error: unknown) {
-        // Suppress noisy logs for expected auth redirection flows
+        // Suppress noisy logs for expected auth redirection flows and known SaaS-root context gaps
+        const msg = (error instanceof Error ? error.message : String(error)) || '';
         const isAuthError =
-            (error instanceof Error ? error.message : String(error))?.includes('Authentication credentials') ||
-            (error instanceof Error ? error.message : String(error))?.includes('Invalid token') ||
-            (error instanceof Error ? error.message : String(error))?.includes('401') ||
-            (error instanceof Error ? error.message : String(error))?.includes('403');
+            msg.includes('Authentication credentials') ||
+            msg.includes('Invalid token') ||
+            msg.includes('401') ||
+            msg.includes('403');
 
-        if (!isAuthError) {
+        // On SaaS root (no tenant context), "No organization context" is expected for
+        // tenant-scoped endpoints — don't spam the log for these.
+        const isExpectedContextError = !context && msg.includes('No organization context');
+
+        if (!isAuthError && !isExpectedContextError) {
             console.error(`[ERP_API] Request to ${path} failed:`, error);
         }
         throw error;

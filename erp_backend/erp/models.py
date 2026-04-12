@@ -250,7 +250,7 @@ class TenantManager(models.Manager):
 
 class TenantModel(models.Model):
     """Base model for all tenant-scoped data. Provides automatic organization filtering."""
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, db_column='tenant_id')
     objects = TenantManager()
     original_objects = models.Manager()
 

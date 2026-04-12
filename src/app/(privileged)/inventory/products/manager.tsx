@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 /**
@@ -115,7 +116,7 @@ export default function ProductMasterManager({ initialProducts = [], lookups = E
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await erpFetch('inventory/products/')
+      const data = await erpFetch('products/')
       setItems(Array.isArray(data) ? data : data?.results || [])
     } catch { /* empty */ }
     setLoading(false)

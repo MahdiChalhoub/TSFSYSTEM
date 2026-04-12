@@ -27,9 +27,9 @@ export default function UserRegisterPage() {
 
     if (state?.success) {
         return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
-                <Card className="w-full max-w-md bg-[#0f172a]/60 border-emerald-500/20 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10">
+            <div className="min-h-screen bg-app-bg flex items-center justify-center p-6 relative overflow-hidden text-app-foreground">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-primary/5 blur-[160px] rounded-full" />
+                <Card className="w-full max-w-md bg-app-surface/60 border-app-primary/20 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10">
                     <CardHeader className="text-center pt-10 pb-6">
                         <div className="flex justify-center mb-6">
                             <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -56,31 +56,31 @@ export default function UserRegisterPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
+        <div className="min-h-screen bg-app-bg flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
             {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-app-primary/5 blur-[160px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-app-primary/5 blur-[160px] rounded-full" />
 
 
             <div className="text-center mb-12 space-y-3 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/5 border border-cyan-500/10 rounded-full text-[10px] font-black uppercase tracking-widest text-cyan-400 mb-2 backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-app-primary/5 border border-app-primary/10 rounded-full text-[10px] font-black uppercase tracking-widest text-app-primary mb-2 backdrop-blur-md">
                     <Sparkles size={12} className="animate-pulse" />
                     New Employee Registration
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic">
-                    JOIN <span className="text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-emerald-400 not-italic">{tenantName.toUpperCase()}</span>
+                    JOIN <span className="text-transparent bg-clip-text bg-gradient-to-br from-app-primary to-app-primary-dark opacity-90 not-italic">{tenantName.toUpperCase()}</span>
                 </h1>
-                <p className="text-slate-500 max-w-md mx-auto text-sm font-medium">
+                <p className="text-app-muted-foreground max-w-md mx-auto text-sm font-medium">
                     Create your employee profile to join the team.
                 </p>
             </div>
 
-            <Card className="w-full max-w-lg bg-[#0f172a]/60 border-white/5 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+            <Card className="w-full max-w-lg bg-app-surface/60 border-app-border backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-app-primary/40 to-transparent" />
 
                 <CardHeader className="pt-10 px-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                        <div className="w-12 h-12 rounded-2xl bg-app-primary/10 border border-app-primary/20 flex items-center justify-center text-app-primary">
                             <UserPlus size={24} />
                         </div>
                         <div>
@@ -161,7 +161,7 @@ export default function UserRegisterPage() {
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-2xl shadow-lg shadow-cyan-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
+                        <Button type="submit" className="w-full h-16 bg-app-primary hover:brightness-110 text-white font-black rounded-2xl shadow-lg transition-all active:scale-[0.98]" style={{ boxShadow: '0 4px 12px var(--app-primary-glow)' }} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : (
                                 <div className="flex items-center gap-2">
                                     Submit Registration <ArrowRight size={18} />

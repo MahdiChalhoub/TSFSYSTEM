@@ -373,7 +373,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                 return Response({"error": "Admin access required to change org theme"}, status=status.HTTP_403_FORBIDDEN)
 
             theme = request.data.get('default_theme')
-            valid_themes = ['midnight-pro', 'ivory-market', 'neon-rush', 'savane-earth', 'arctic-glass']
+            valid_themes = ['midnight-pro', 'ivory-market', 'neon-rush', 'savane-earth', 'arctic-glass', 'lumina-sky', 'warm-enterprise']
             if theme is not None and theme not in valid_themes:
                 return Response(
                     {"error": f"Invalid theme. Choose from: {', '.join(valid_themes)}"},

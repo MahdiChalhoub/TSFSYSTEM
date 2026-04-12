@@ -53,7 +53,7 @@ interface FieldMeta {
     required: boolean;
     sortable: boolean;
     filterable: boolean;
-    choices?: { value: Record<string, any>; label: string }[];
+    choices?: { value: string | number; label: string }[];
 }
 
 interface UDLEMeta {
@@ -476,7 +476,7 @@ export function UniversalDataTable({
                         ) : (
                             data.map((row, idx) => (
                                 <TableRow
-                                    key={row.id || idx}
+                                    key={(row.id as string | number) || idx}
                                     onClick={() => onRowClick?.(row)}
                                     className={`group cursor-pointer border-gray-50 ${onRowClick ? 'hover:bg-slate-50/80 transition-all' : ''}`}
                                 >

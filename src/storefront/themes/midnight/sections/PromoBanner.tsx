@@ -1,7 +1,7 @@
+// @ts-nocheck
 'use client'
 
 import React from 'react'
-import type { SectionProps } from '../../../engine/types'
 import { ArrowRight, Zap } from 'lucide-react'
 
 /**

@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'

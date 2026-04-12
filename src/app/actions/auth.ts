@@ -2,7 +2,11 @@
 
 export async function meAction() {
     const { erpFetch } = await import("@/lib/erp-api")
-    return erpFetch('auth/me/')
+    try {
+        return await erpFetch('auth/me/')
+    } catch {
+        return null
+    }
 }
 
 import { cache } from 'react'
@@ -296,7 +300,8 @@ export async function logoutAction() {
 export const getUser = cache(async function getUser() {
     const { erpFetch } = await import("@/lib/erp-api")
     try {
-        const user = await erpFetch('auth/me/')
+        // Always fetch fresh — never use stale cache for auth checks
+        const user = await erpFetch('auth/me/', { cache: 'no-store' })
         return user
     } catch (error: unknown) {
         // Robust check for session expiry / invalid credentials
@@ -323,7 +328,11 @@ export const getUser = cache(async function getUser() {
  */
 export async function getNotifications() {
     const { erpFetch } = await import("@/lib/erp-api")
-    return erpFetch('notifications/')
+    try {
+        return await erpFetch('notifications/')
+    } catch {
+        return []
+    }
 }
 
 export async function markNotificationAsRead(id: number) {

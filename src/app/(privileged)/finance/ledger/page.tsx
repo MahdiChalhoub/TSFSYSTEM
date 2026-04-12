@@ -5,7 +5,7 @@ import { getLedgerEntries } from '@/app/actions/finance/ledger'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import { LedgerEntryActions } from './ledger-actions'
 import Link from 'next/link'
-import { Search, Filter, Calendar, BookOpen, ChevronDown } from 'lucide-react'
+import { Search, Filter, Calendar, BookOpen, ChevronDown, Upload } from 'lucide-react'
 
 const STATUS_OPTIONS = [
     { value: '', label: 'All Status' },
@@ -88,6 +88,10 @@ export default function GeneralLedgerPage() {
                 <div className="flex gap-3">
                     <Link href="/finance/ledger/opening/list" className="bg-white text-stone-600 border border-stone-200 px-5 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         📋 Opening Balances
+                    </Link>
+                    <Link href="/finance/ledger/import" className="bg-white text-stone-600 border border-stone-200 px-5 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        Import CSV
                     </Link>
                     <Link href="/finance/ledger/new" className="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         + New Journal Entry

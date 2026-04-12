@@ -108,7 +108,7 @@ export function usePOSTerminal() {
             toast.error("Cloud engine unreachable. Working in Offline Secure Mode.");
             return;
         }
-        toast.promise(syncOfflineOrders(), {
+        toast.promise(syncOfflineOrders([]), {
             loading: 'Reconciling cloud ledger...',
             success: 'Cloud synchronization complete',
             error: 'Forensic sync failed'

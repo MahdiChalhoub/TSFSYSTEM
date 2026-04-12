@@ -59,10 +59,10 @@ export default function ProductsDetailPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await erpFetch(`inventory/products/${id}/`)
+      const data = await erpFetch(`products/${id}/`)
       setItem(data)
       try {
-        const memberships = await erpFetch(`inventory/inventory-group-members/?product=${id}`)
+        const memberships = await erpFetch(`inventory-group-members/?product=${id}`)
         setInvMemberships(Array.isArray(memberships) ? memberships : (memberships?.results || []))
       } catch { setInvMemberships([]) }
     } catch (error) {
@@ -77,7 +77,7 @@ export default function ProductsDetailPage() {
   async function handleDelete() {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
     try {
-      await erpFetch(`inventory/products/${id}/`, { method: 'DELETE' })
+      await erpFetch(`products/${id}/`, { method: 'DELETE' })
       toast.success('Product deleted')
       router.push('/inventory/products')
     } catch (error: any) {
@@ -89,7 +89,7 @@ export default function ProductsDetailPage() {
     if (!item) return
     const newSource = item.pricing_source === 'GROUP' ? 'LOCAL' : 'GROUP'
     try {
-      await erpFetch(`inventory/products/${id}/`, {
+      await erpFetch(`products/${id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

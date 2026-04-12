@@ -1,5 +1,15 @@
 import { prisma } from "@/lib/db";
-import { Decimal } from "@prisma/client/runtime/library";
+
+// Minimal Decimal-like class for unit conversion math
+class Decimal {
+    private value: number;
+    constructor(val: string | number) {
+        this.value = typeof val === 'string' ? parseFloat(val) : val;
+    }
+    mul(other: Decimal): Decimal { return new Decimal(this.value * other.value); }
+    div(other: Decimal): Decimal { return new Decimal(this.value / other.value); }
+    toString(): string { return String(this.value); }
+}
 
 /**
  * Converts a quantity from a source unit to a target unit.
@@ -17,7 +27,7 @@ export async function convertQuantity(
 
     if (!fromUnit || !toUnit) throw new Error("Units not found");
 
-    // Logic: 
+    // Logic:
     // All units should eventually relate to the same "Base Unit" for conversion.
     // Case 1: From Child to Parent (Base)
     if (fromUnit.baseUnitId === toUnitId) {

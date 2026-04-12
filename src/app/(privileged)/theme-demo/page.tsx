@@ -1,14 +1,26 @@
 "use client"
 
-import { useTheme } from '@/contexts/ThemeContext'
-import { useLayout } from '@/contexts/LayoutContext'
+import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Zap, TrendingUp, Users, DollarSign, Package, ShoppingCart, BarChart } from 'lucide-react'
 
 export default function ThemeDemoPage() {
-  const { theme, themeConfig, availableThemes, setTheme } = useTheme()
-  const { layout, layoutConfig, availableLayouts, setLayout } = useLayout()
+  const { currentTheme, allThemes, setTheme, activeColors, activeLayout } = useAppTheme()
+  const theme = currentTheme?.slug || 'midnight-pro'
+  const themeConfig = {
+    name: currentTheme?.name || 'Default',
+    description: currentTheme?.description || '',
+    colors: activeColors,
+  }
+  const layoutConfig = {
+    name: activeLayout?.density || 'medium',
+    description: `${activeLayout?.whitespace || 'balanced'} whitespace`,
+    characteristics: { density: activeLayout?.density || 'medium', whitespace: activeLayout?.whitespace || 'balanced' },
+    spacing: activeLayout?.spacing || { container: '1.5rem', section: '1.75rem', card: '1.25rem', element: '0.875rem' },
+    cards: { borderRadius: 'var(--card-radius)' },
+  }
+  const availableThemes = allThemes.map(t => ({ id: t.slug, name: t.name, colors: t.presetData?.colors?.dark || activeColors }))
 
   return (
     <div style={{ padding: 'var(--layout-container-padding)' }}>
@@ -154,7 +166,7 @@ export default function ThemeDemoPage() {
         </div>
       </div>
 
-      {/* Quick Layout Switcher */}
+      {/* Current Layout Info */}
       <div
         className="p-6 rounded-lg mb-6"
         style={{
@@ -163,24 +175,23 @@ export default function ThemeDemoPage() {
         }}
       >
         <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--theme-text)' }}>
-          Quick Layout Switch
+          Active Layout Config
         </h2>
-        <div className="grid md:grid-cols-5 gap-3">
-          {availableLayouts.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => setLayout(l.id)}
+        <div className="grid md:grid-cols-3 gap-3">
+          {(['sparse', 'medium', 'dense'] as const).map((d) => (
+            <div
+              key={d}
               className="p-3 rounded-lg transition-all text-left"
               style={{
-                background: layout === l.id ? 'var(--theme-primary)' : 'var(--theme-bg)',
+                background: activeLayout?.density === d ? 'var(--theme-primary)' : 'var(--theme-bg)',
                 border: '2px solid',
-                borderColor: layout === l.id ? 'var(--theme-primary)' : 'var(--theme-border)',
-                color: layout === l.id ? '#fff' : 'var(--theme-text)',
+                borderColor: activeLayout?.density === d ? 'var(--theme-primary)' : 'var(--theme-border)',
+                color: activeLayout?.density === d ? '#fff' : 'var(--theme-text)',
               }}
             >
-              <div className="text-sm font-semibold mb-1">{l.name}</div>
-              <div className="text-xs opacity-75">{l.characteristics.density}</div>
-            </button>
+              <div className="text-sm font-semibold mb-1 capitalize">{d}</div>
+              <div className="text-xs opacity-75">Density</div>
+            </div>
           ))}
         </div>
       </div>

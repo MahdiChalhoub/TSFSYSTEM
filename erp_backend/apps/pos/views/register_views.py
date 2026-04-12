@@ -18,10 +18,19 @@ from .register_lobby import RegisterLobbyMixin
 from .register_session import RegisterSessionMixin
 from .register_order import RegisterOrderMixin
 from .register_address_book import RegisterAddressBookMixin
+from apps.pos.serializers.register_serializers import POSRegisterSerializer
 
 class POSRegisterViewSet(RegisterLobbyMixin, RegisterSessionMixin, RegisterOrderMixin, RegisterAddressBookMixin, viewsets.ModelViewSet):
-
     """Manages POS registers and sessions."""
+    serializer_class = POSRegisterSerializer
+
+    def get_queryset(self):
+        from apps.pos.models import POSRegister
+        from .base import get_current_tenant_id
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return POSRegister.objects.none()
+        return POSRegister.objects.filter(organization_id=org_id).select_related('branch', 'warehouse', 'cash_account')
 
     @action(detail=False, methods=['get', 'patch'], url_path='pos-settings')
     def pos_settings(self, request):

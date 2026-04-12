@@ -79,6 +79,7 @@ function renderCell(key: string, product: Product, marginPct: string): React.Rea
     case 'verified': return <span className="text-[11px]">{product.is_verified ? '✅' : '—'}</span>
     case 'verifiedAt': return <span className="text-[9px] text-app-muted-foreground truncate">{product.verified_at ? new Date(product.verified_at).toLocaleDateString() : '—'}</span>
     case 'catalogReady': return <span className="text-[10px]">{product.catalog_ready ? '✅' : '—'}</span>
+    case 'expiry': return <span className="text-[10px]">{product.is_expiry_tracked ? '✅' : '—'}</span>
     case 'shelfLife': return <span className="text-[10px] font-mono text-app-muted-foreground">{product.manufacturer_shelf_life_days ? `${product.manufacturer_shelf_life_days}d` : '—'}</span>
     case 'tracksLots': return <span className="text-[10px]">{product.tracks_lots ? '✅' : '—'}</span>
     case 'tracksSerials': return <span className="text-[10px]">{product.tracks_serials ? '✅' : '—'}</span>

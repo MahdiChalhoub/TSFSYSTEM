@@ -71,7 +71,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
                 <div className="h-64 border rounded-xl overflow-hidden">
                     {/* Reuse existing component, ensuring types match */}
                     <CategoryTreeSelector
-                        categories={targetEntities}
+                        categories={targetEntities as any}
                         selectedIds={targetId ? [targetId] : []}
                         onChange={(ids) => setTargetId(ids[0] || null)} // Single select
                         maxHeight="h-full"

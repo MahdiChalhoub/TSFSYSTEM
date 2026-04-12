@@ -188,4 +188,42 @@ class Migration(migrations.Migration):
                 'ordering': ['-created_at'],
             },
         ),
+        migrations.CreateModel(
+            name='QuoteRequest',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('quote_number', models.CharField(blank=True, max_length=50, null=True, unique=True)),
+                ('full_name', models.CharField(max_length=255)),
+                ('email', models.EmailField(max_length=254)),
+                ('phone', models.CharField(blank=True, default='', max_length=50)),
+                ('company_name', models.CharField(blank=True, default='', max_length=255)),
+                ('message', models.TextField()),
+                ('internal_notes', models.TextField(blank=True, default='')),
+                ('status', models.CharField(choices=[('PENDING', 'Pending Assessment'), ('REPLIED', 'Proposal Sent'), ('CONVERTED', 'Converted to Order'), ('DECLINED', 'Declined'), ('EXPIRED', 'Expired')], default='PENDING', max_length=20)),
+                ('source_url', models.URLField(blank=True, default='')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('contact', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='quote_requests', to='crm.contact')),
+                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
+            ],
+            options={
+                'db_table': 'client_quote_request',
+                'ordering': ['-created_at'],
+            },
+        ),
+        migrations.CreateModel(
+            name='QuoteItem',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('product_name', models.CharField(max_length=255)),
+                ('quantity', models.DecimalField(decimal_places=2, default=1, max_digits=15)),
+                ('notes', models.TextField(blank=True, default='')),
+                ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
+                ('product', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='inventory.product')),
+                ('quote_request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='client_portal.quoterequest')),
+            ],
+            options={
+                'db_table': 'client_quote_item',
+            },
+        ),
     ]

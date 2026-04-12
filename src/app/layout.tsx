@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from 'next/font/google';
 import "./globals.css";
+import { ThemeScript, AppThemeProvider } from '@/components/app/AppThemeProvider';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -19,11 +20,14 @@ export default function RootLayout({
     return (
         <html lang="en" className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
             <head>
+                <ThemeScript />
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#6366f1" />
             </head>
             <body className={outfit.className}>
-                {children}
+                <AppThemeProvider>
+                    {children}
+                </AppThemeProvider>
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     if ('serviceWorker' in navigator) {

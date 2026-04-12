@@ -1229,3 +1229,55 @@ export interface ActionResult<T = Record<string, unknown>> {
     error?: string
     result?: T
 }
+
+// ─── Reference Module Types ──────────────────────────────────────
+
+export interface RefCountry {
+    id: number
+    name: string
+    code: string
+    region?: string
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+export interface RefCurrency {
+    id: number
+    code: string
+    name: string
+    symbol?: string
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+export interface CountryCurrencyMap {
+    id: number
+    country: number
+    country_name?: string
+    currency: number
+    currency_code?: string
+    is_primary?: boolean
+    [key: string]: unknown
+}
+
+export interface OrgCountry {
+    id: number
+    country: number
+    country_name?: string
+    country_code?: string
+    is_enabled?: boolean
+    is_default?: boolean
+    [key: string]: unknown
+}
+
+export interface OrgCurrency {
+    id: number
+    currency: number
+    currency_code?: string
+    currency_name?: string
+    is_enabled?: boolean
+    is_default?: boolean
+    is_transaction_currency?: boolean
+    is_reporting_currency?: boolean
+    [key: string]: unknown
+}

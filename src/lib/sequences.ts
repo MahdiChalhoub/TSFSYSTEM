@@ -9,7 +9,7 @@ import { prisma } from "@/lib/db"
  */
 export async function generateTransactionNumber(type: string) {
     // We use a transaction to ensure we lock the sequence row and increment atomically
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
         // 1. Fetch current sequence
         let seq = await (tx as any).transactionSequence.findUnique({
             where: { type }

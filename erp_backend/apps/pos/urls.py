@@ -5,17 +5,23 @@ Routes for sales and purchase transactions.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from apps.pos.views import (
-    POSViewSet, PurchaseViewSet,
+    POSViewSet, PosTicketViewSet, PurchaseViewSet,
     SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet,
     QuotationViewSet, DeliveryZoneViewSet, DeliveryOrderViewSet,
     DiscountRuleViewSet, OrderViewSet,
     ConsignmentSettlementViewSet,
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
     PurchaseOrderViewSet, PurchaseOrderLineViewSet,
+    POSRegisterViewSet,
+    POSAuditRuleViewSet, POSAuditEventViewSet,
+    POSSettingsViewSet,
+    ManagerAddressBookViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')
+router.register(r'pos-tickets', PosTicketViewSet, basename='pos-tickets')
+router.register(r'pos-registers', POSRegisterViewSet, basename='pos-registers')
 router.register(r'purchase', PurchaseViewSet, basename='purchase')
 router.register(r'sales-returns', SalesReturnViewSet)
 router.register(r'credit-notes', CreditNoteViewSet)
@@ -30,6 +36,10 @@ router.register(r'sourcing', ProductSupplierViewSet, basename='sourcing')
 router.register(r'supplier-pricing', SupplierPriceHistoryViewSet, basename='supplier-pricing')
 router.register(r'purchase-orders', PurchaseOrderViewSet, basename='purchase-orders')
 router.register(r'po-lines', PurchaseOrderLineViewSet, basename='po-lines')
+router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rules')
+router.register(r'pos-audit-events', POSAuditEventViewSet, basename='pos-audit-events')
+router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
+router.register(r'manager-address-book', ManagerAddressBookViewSet, basename='manager-address-book')
 
 urlpatterns = [
     path('', include(router.urls)),

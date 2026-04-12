@@ -65,3 +65,27 @@ export async function deleteContact(id: number) {
         method: 'DELETE'
     })
 }
+export async function getContactTags() {
+    return await erpFetch('crm/tags/');
+}
+export async function createContactTag(data: unknown) {
+    return await erpFetch('crm/tags/', { method: 'POST', body: JSON.stringify(data) });
+}
+export async function updateContactTag(id: number, data: unknown) {
+    return await erpFetch(`crm/tags/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export async function deleteContactTag(id: number) {
+    return await erpFetch(`crm/tags/${id}/`, { method: 'DELETE' });
+}
+export async function getFollowUpContacts(params?: unknown) {
+    return await erpFetch('crm/contacts/follow-ups/');
+}
+
+export async function searchContacts(query: string) {
+    try {
+        const data = await erpFetch(`contacts/?search=${encodeURIComponent(query)}`)
+        return Array.isArray(data) ? data : (data as any)?.results || []
+    } catch {
+        return []
+    }
+}

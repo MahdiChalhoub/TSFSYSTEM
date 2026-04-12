@@ -43,7 +43,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
         return { message: 'success' };
     } catch (e: unknown) {
         console.error('[createCategory] Exception:', e);
-        const detail = e?.message || 'Failed to create category';
+        const detail = (e as any)?.message || 'Failed to create category';
         return { message: detail };
     }
 }

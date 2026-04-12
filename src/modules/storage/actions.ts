@@ -87,3 +87,31 @@ export async function testStorageConnection() {
         method: 'POST',
     });
 }
+
+export async function listPackages() {
+    return await erpFetch('storage/packages/');
+}
+export async function uploadPackage(formData: FormData) {
+    return await erpFetch('storage/packages/upload/', { method: 'POST', body: formData });
+}
+export async function applyPackage(id: number) {
+    return await erpFetch(`storage/packages/${id}/apply/`, { method: 'POST' });
+}
+export async function rollbackPackage(id: number) {
+    return await erpFetch(`storage/packages/${id}/rollback/`, { method: 'POST' });
+}
+export async function schedulePackage(id: number, data: unknown) {
+    return await erpFetch(`storage/packages/${id}/schedule/`, { method: 'POST', body: JSON.stringify(data) });
+}
+export async function getPackageStats() {
+    return await erpFetch('storage/packages/stats/');
+}
+export async function initChunkedUpload(data: unknown) {
+    return await erpFetch('storage/packages/chunked/init/', { method: 'POST', body: JSON.stringify(data) });
+}
+export async function completeChunkedUpload(uploadId: string) {
+    return await erpFetch(`storage/packages/chunked/${uploadId}/complete/`, { method: 'POST' });
+}
+export async function getActiveUploads() {
+    return await erpFetch('storage/packages/chunked/active/');
+}

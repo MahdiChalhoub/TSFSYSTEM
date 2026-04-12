@@ -12,10 +12,10 @@ async function safeLoad(url: string) {
 
 export default async function ProductMasterPage() {
   const [products, categories, brands, units, countries] = await Promise.all([
-    safeLoad('inventory/products/?page_size=500'),
-    safeLoad('inventory/categories/'),
-    safeLoad('inventory/brands/'),
-    safeLoad('inventory/units/'),
+    safeLoad('products/?page_size=500'),
+    safeLoad('categories/'),
+    safeLoad('brands/'),
+    safeLoad('units/'),
     safeLoad('reference/countries/'),
   ])
 

@@ -26,7 +26,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
     });
 
     const handleEdit = (attr: Record<string, any>) => {
-        setEditingAttribute(attr);
+        setEditingAttribute(attr as any);
         setIsModalOpen(true);
     };
 
@@ -106,7 +106,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                 </div>
             </div>
 
-            <AttributeFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} attribute={editingAttribute} categories={categories} />
+            <AttributeFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} attribute={editingAttribute as any} categories={categories} />
         </div>
     );
 }

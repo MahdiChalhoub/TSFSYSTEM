@@ -59,7 +59,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                 setFilteredBrands(filtered);
 
                 // Reset brand selection if current brand is not in filtered list
-                if (master.brandId && !filtered.find(b => b.id === Number(master.brandId))) {
+                if (master.brandId && !filtered.find((b: any) => b.id === Number(master.brandId))) {
                     setMaster(prev => ({ ...prev, brandId: '' }));
                 }
             } catch (error) {
@@ -111,7 +111,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         setVariants(variants.filter(v => v.id !== id));
     };
 
-    const updateVariant = (id: number, field: keyof VariantRow, value: Record<string, any>) => {
+    const updateVariant = (id: number, field: keyof VariantRow, value: any) => {
         setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v));
     };
 

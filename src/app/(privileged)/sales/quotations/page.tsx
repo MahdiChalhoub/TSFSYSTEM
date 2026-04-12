@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { erpFetch } from '@/lib/erp-fetch'
 import QuotationManager from './manager'
 

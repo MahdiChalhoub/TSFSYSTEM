@@ -5,8 +5,6 @@
  * Handles authentication, base URL, and headers automatically.
  */
 
-import { cookies } from 'next/headers'
-
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
 const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000'
 
@@ -35,6 +33,7 @@ export async function erpFetch(
     // Add auth token from cookies if available
     if (!skipAuth) {
         try {
+            const { cookies } = await import('next/headers')
             const cookieStore = await cookies()
             const sessionId = cookieStore.get('sessionid')?.value
             const csrfToken = cookieStore.get('csrftoken')?.value
@@ -93,4 +92,19 @@ export async function erpPost(endpoint: string, data: unknown, options?: ErpFetc
         method: 'POST',
         body: JSON.stringify(data),
     })
+}
+
+/**
+ * Convenience method that parses the JSON response body.
+ * Used by API clients that need typed responses.
+ */
+export async function erpFetchJSON<T = unknown>(
+    endpoint: string,
+    options: ErpFetchOptions = {}
+): Promise<T> {
+    const res = await erpFetch(endpoint, options)
+    if (!res.ok) {
+        throw new Error(`[erpFetchJSON] ${res.status} ${res.statusText} — ${endpoint}`)
+    }
+    return res.json() as Promise<T>
 }

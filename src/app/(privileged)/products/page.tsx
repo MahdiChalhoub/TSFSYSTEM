@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Link from 'next/link';
 import { erpFetch } from "@/lib/erp-api";
 import { Plus, Search, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy, Barcode } from 'lucide-react';

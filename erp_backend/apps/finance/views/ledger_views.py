@@ -260,6 +260,213 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+    @action(detail=False, methods=['post'], url_path='import')
+    def import_csv(self, request):
+        """
+        Bulk import journal entries from CSV or JSON payload.
+
+        Accepts multipart/form-data with:
+          - file: CSV file (text/csv)
+          - status: 'DRAFT' | 'POSTED' (default 'DRAFT')
+
+        Or application/json with:
+          - rows: list of { date, description, debit_account_code,
+                            credit_account_code, amount, reference?, currency? }
+          - status: 'DRAFT' | 'POSTED'
+
+        Returns { created: int, errors: [{ row, message }] }
+        """
+        import csv, io
+        from decimal import Decimal, InvalidOperation
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        target_status = request.data.get('status', 'DRAFT')
+        if target_status not in ('DRAFT', 'POSTED'):
+            target_status = 'DRAFT'
+
+        # ── Parse rows ────────────────────────────────────────────
+        rows = []
+        if 'file' in request.FILES:
+            f = request.FILES['file']
+            text = f.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(text))
+            for row in reader:
+                rows.append({k.strip().lower().replace(' ', '_'): v.strip() for k, v in row.items()})
+        elif isinstance(request.data.get('rows'), list):
+            rows = request.data['rows']
+        else:
+            return Response({"error": "Provide either a CSV file or a 'rows' list"}, status=400)
+
+        if not rows:
+            return Response({"error": "No rows found in input"}, status=400)
+
+        # ── Build account code → id map ───────────────────────────
+        codes = set()
+        for r in rows:
+            if r.get('debit_account_code'):
+                codes.add(str(r['debit_account_code']).strip())
+            if r.get('credit_account_code'):
+                codes.add(str(r['credit_account_code']).strip())
+
+        account_map = {
+            acc.code: acc.id
+            for acc in ChartOfAccount.objects.filter(
+                organization=organization, code__in=codes
+            )
+        }
+
+        created = 0
+        errors = []
+
+        for i, row in enumerate(rows, start=1):
+            try:
+                date_val = str(row.get('date', '') or '').strip()
+                description = str(row.get('description', '') or '').strip() or f'Imported row {i}'
+                debit_code = str(row.get('debit_account_code', '') or '').strip()
+                credit_code = str(row.get('credit_account_code', '') or '').strip()
+                amount_raw = str(row.get('amount', '0') or '0').strip().replace(',', '')
+                reference = str(row.get('reference', '') or '').strip() or None
+
+                if not date_val:
+                    raise ValueError("date is required")
+                if not debit_code:
+                    raise ValueError("debit_account_code is required")
+                if not credit_code:
+                    raise ValueError("credit_account_code is required")
+
+                try:
+                    amount = Decimal(amount_raw)
+                except InvalidOperation:
+                    raise ValueError(f"Invalid amount: {amount_raw!r}")
+
+                if amount <= 0:
+                    raise ValueError("amount must be positive")
+
+                if debit_code not in account_map:
+                    raise ValueError(f"Debit account code not found: {debit_code!r}")
+                if credit_code not in account_map:
+                    raise ValueError(f"Credit account code not found: {credit_code!r}")
+
+                lines = [
+                    {'account_id': account_map[debit_code],  'debit': str(amount), 'credit': '0'},
+                    {'account_id': account_map[credit_code], 'debit': '0', 'credit': str(amount)},
+                ]
+
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=date_val,
+                    description=description,
+                    lines=lines,
+                    reference=reference,
+                    status=target_status,
+                    scope='OFFICIAL',
+                    user=request.user,
+                )
+                created += 1
+
+            except Exception as e:
+                errors.append({'row': i, 'message': str(e)})
+
+        return Response({
+            'created': created,
+            'errors': errors,
+            'total': len(rows),
+        }, status=status.HTTP_207_MULTI_STATUS if errors else status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='preview-import')
+    def preview_import(self, request):
+        """
+        Preview CSV import without creating entries.
+        Returns parsed rows with validation results and account resolutions.
+        """
+        import csv, io
+        from decimal import Decimal, InvalidOperation
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        rows = []
+        if 'file' in request.FILES:
+            f = request.FILES['file']
+            text = f.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(text))
+            for row in reader:
+                rows.append({k.strip().lower().replace(' ', '_'): v.strip() for k, v in row.items()})
+        elif isinstance(request.data.get('rows'), list):
+            rows = request.data['rows']
+        else:
+            return Response({"error": "Provide either a CSV file or a 'rows' list"}, status=400)
+
+        codes = set()
+        for r in rows:
+            if r.get('debit_account_code'):
+                codes.add(str(r['debit_account_code']).strip())
+            if r.get('credit_account_code'):
+                codes.add(str(r['credit_account_code']).strip())
+
+        account_map = {
+            acc.code: {'id': acc.id, 'name': acc.name, 'type': acc.type}
+            for acc in ChartOfAccount.objects.filter(
+                organization=organization, code__in=codes
+            )
+        }
+
+        preview_rows = []
+        for i, row in enumerate(rows, start=1):
+            date_val = str(row.get('date', '') or '').strip()
+            description = str(row.get('description', '') or '').strip()
+            debit_code = str(row.get('debit_account_code', '') or '').strip()
+            credit_code = str(row.get('credit_account_code', '') or '').strip()
+            amount_raw = str(row.get('amount', '0') or '0').strip().replace(',', '')
+            reference = str(row.get('reference', '') or '').strip()
+
+            errs = []
+            if not date_val:
+                errs.append('date required')
+            if not debit_code:
+                errs.append('debit_account_code required')
+            elif debit_code not in account_map:
+                errs.append(f'debit account {debit_code!r} not found')
+            if not credit_code:
+                errs.append('credit_account_code required')
+            elif credit_code not in account_map:
+                errs.append(f'credit account {credit_code!r} not found')
+            try:
+                amount = float(Decimal(amount_raw)) if amount_raw else 0
+                if amount <= 0:
+                    errs.append('amount must be positive')
+            except InvalidOperation:
+                amount = 0
+                errs.append(f'invalid amount: {amount_raw!r}')
+
+            preview_rows.append({
+                'row': i,
+                'date': date_val,
+                'description': description,
+                'debit_code': debit_code,
+                'debit_account': account_map.get(debit_code),
+                'credit_code': credit_code,
+                'credit_account': account_map.get(credit_code),
+                'amount': amount,
+                'reference': reference,
+                'errors': errs,
+                'valid': len(errs) == 0,
+            })
+
+        valid_count = sum(1 for r in preview_rows if r['valid'])
+        return Response({
+            'total': len(preview_rows),
+            'valid': valid_count,
+            'invalid': len(preview_rows) - valid_count,
+            'rows': preview_rows,
+        })
+
     @action(detail=False, methods=['get'], url_path='bank-reconciliation')
     def bank_reconciliation(self, request):
         """Bank reconciliation — unreconciled entries on bank/cash accounts."""

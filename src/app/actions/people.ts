@@ -104,3 +104,7 @@ export async function linkGLAccount(employeeId: string, employeeType?: 'EMPLOYEE
         return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to link GL account' };
     }
 }
+
+export async function updateContact(id: number, data: unknown) {
+    return await erpFetch(`contacts/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+}

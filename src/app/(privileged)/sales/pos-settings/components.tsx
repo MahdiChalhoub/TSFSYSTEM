@@ -522,19 +522,14 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     const [section, setSection] = useState<'security' | 'delivery'>('security')
 
     useEffect(() => {
-        Promise.all([
-            erpFetch('pos/pos-settings/').catch(() => ({})),
-            erpFetch('pos-registers/pos-settings/').catch(() => ({})),
-        ]).then(([sec, reg]) => { setRules(r => ({ ...r, ...sec, ...reg })) }).finally(() => setLoading(false))
+        erpFetch('pos-settings/').catch(() => ({}))
+        .then((sec) => { setRules(r => ({ ...r, ...sec })) }).finally(() => setLoading(false))
     }, [])
 
     const handleSave = async () => {
         setSaving(true)
         try {
-            await Promise.all([
-                erpFetch('pos/pos-settings/', { method: 'PATCH', body: JSON.stringify(rules) }),
-                erpFetch('pos-registers/pos-settings/', { method: 'PATCH', body: JSON.stringify({ restrict_unique_cash_account: rules.restrict_unique_cash_account }) }),
-            ])
+            await erpFetch('pos-settings/', { method: 'PATCH', body: JSON.stringify(rules) })
             toast.success('Settings saved!')
         } catch { toast.error('Failed to save') }
         setSaving(false)
@@ -568,7 +563,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
     /* Delivery sub-section */
     const [ds, setDs] = useState<Record<string, any>>({ delivery_code_mode: 'auto', delivery_code_digits: 6, delivery_code_expiry_hours: 72, sms_provider: 'none' })
     const [dLoading, setDLoading] = useState(true)
-    useEffect(() => { erpFetch('pos/pos-settings/').then((d: any) => { if (d) setDs(x => ({ ...x, ...d })) }).catch(() => { }).finally(() => setDLoading(false)) }, [])
+    useEffect(() => { erpFetch('pos-settings/').then((d: any) => { if (d) setDs(x => ({ ...x, ...d })) }).catch(() => { }).finally(() => setDLoading(false)) }, [])
 
     if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={22} className="animate-spin text-app-text-muted" /></div>
 

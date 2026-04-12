@@ -115,7 +115,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                     {isSubCategory && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                             <CategoryCascader
-                                allCategories={availableParents}
+                                allCategories={availableParents as any}
                                 selectedId={typeof selectedParent === 'number' ? selectedParent : parseInt(selectedParent as string) || null}
                                 onSelect={(id) => setSelectedParent(id || '')}
                                 excludeId={category?.id}

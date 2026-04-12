@@ -4,7 +4,7 @@ Migration v2 Models
 Tracks migration jobs and entity mappings with full audit trail.
 """
 from django.db import models
-from erp.models import TenantOwnedModel
+from erp.models import TenantModel as TenantOwnedModel
 
 
 class MigrationJob(TenantOwnedModel):
@@ -16,6 +16,7 @@ class MigrationJob(TenantOwnedModel):
     - Uses AuditLogMixin for full audit trail
     - Stores posting rules snapshot to preserve migration context
     """
+    organization = models.ForeignKey('erp.Organization', on_delete=models.CASCADE, db_column='tenant_id', related_name='migration_v2_jobs')
     name = models.CharField(max_length=255, help_text='Migration job name')
     created_by = models.ForeignKey(
         'erp.User',

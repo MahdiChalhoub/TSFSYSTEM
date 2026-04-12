@@ -21,7 +21,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useUnifiedThemeEngine } from '@/contexts/UnifiedThemeEngine'
+import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { Button } from '@/components/ui/button'
 import { Moon, Sun, Palette, Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -75,7 +75,7 @@ export function ThemeSwitcher({
     toggleColorMode,
     setTheme,
     isLoading,
-  } = useUnifiedThemeEngine()
+  } = useAppTheme()
 
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -347,7 +347,7 @@ export function ThemeSwitcher({
  */
 export function CompactThemeSwitcher() {
   const { currentTheme, colorMode, systemThemes, customThemes, toggleColorMode, setTheme, isLoading } =
-    useUnifiedThemeEngine()
+    useAppTheme()
 
   const categories = buildThemeCategories(systemThemes, customThemes)
 
@@ -402,7 +402,7 @@ export function CompactThemeSwitcher() {
  * Now dynamically renders ALL categories including design-system and custom.
  */
 export function SimpleThemeSwitcher() {
-  const { currentTheme, systemThemes, customThemes, setTheme, isLoading } = useUnifiedThemeEngine()
+  const { currentTheme, systemThemes, customThemes, setTheme, isLoading } = useAppTheme()
 
   const categories = buildThemeCategories(systemThemes, customThemes)
 

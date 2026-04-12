@@ -62,7 +62,7 @@ async function fetchUserPermissions(): Promise<string[]> {
         _cachedPermissions = [];
     }
 
-    return _cachedPermissions;
+    return _cachedPermissions!;
 }
 
 /**

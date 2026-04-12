@@ -11,6 +11,7 @@ from .views import (
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
     NotificationViewSet, PermissionViewSet, import_sales_csv_view
 )
+from .list_preferences_views import user_list_preference, org_list_default
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
     password_reset_request_view, password_reset_confirm_view,
@@ -74,6 +75,10 @@ urlpatterns = [
 
     # Kernel Router
     path('', include(router.urls)),
+
+    # List Preferences
+    path('list-preferences/<str:list_key>/', user_list_preference, name='user_list_preference'),
+    path('list-preferences/org/<str:list_key>/', org_list_default, name='org_list_default'),
 ]
 
 # ── Dynamic Module URL Registration ─────────────────────────────────────────

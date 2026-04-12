@@ -10,7 +10,6 @@ import {
     FileText,
     ShieldCheck,
     ChevronRight,
-    ChevronDown,
     LayoutDashboard,
     Settings,
     LogOut,
@@ -21,9 +20,7 @@ import {
     Package,
     CreditCard,
     Bot,
-    Sparkles,
     Cloud,
-    MessageSquare,
     Wrench,
     BookOpen,
     TrendingUp,
@@ -42,11 +39,24 @@ import {
     Globe,
     ListChecks,
     Trophy,
-    Eye
+    Eye,
+    Truck,
+    Network,
+    UserCheck,
+    GitBranch,
+    Sparkles,
+    MessageSquare,
+    Database,
+    Store,
+    Archive,
+    Target,
+    Map,
+    Receipt,
+    Percent
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
-import { usePathname } from 'next/navigation';
+
 import { logoutAction } from "@/app/actions/auth";
 import { PLATFORM_CONFIG } from '@/lib/saas_config';
 
@@ -88,7 +98,19 @@ const ICON_MAP: Record<string, any> = {
     Wallet,
     Globe,
     ListChecks,
-    Trophy
+    Trophy,
+    Eye,
+    Truck,
+    Network,
+    Database,
+    UserCheck,
+    Store,
+    GitBranch,
+    Archive,
+    Target,
+    Map,
+    Receipt,
+    Percent
 };
 
 function getIcon(name: string) {
@@ -114,15 +136,39 @@ export const MENU_ITEMS = [
                 icon: ShoppingCart,
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
+                    { title: 'POS Registers', path: '/sales/registers' },
+                    { title: 'POS Tickets', path: '/pos/pos-tickets' },
                     { title: 'Order History', path: '/sales/history' },
+                    { title: 'Sales Orders', path: '/sales/orders' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
+                    { title: 'Sales Summary', path: '/sales/summary' },
+                    { title: 'POS Sessions', path: '/sales/sessions' },
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
                     { title: 'Discount Rules', path: '/sales/discounts' },
                     { title: 'Consignment', path: '/sales/consignment' },
+                    { title: 'Consignment Settlements', path: '/sales/consignment-settlements' },
                     { title: 'Delivery Zones', path: '/sales/delivery-zones' },
                     { title: 'Sales Returns', path: '/sales/returns' },
+                    { title: 'Credit Notes', path: '/sales/credit-notes' },
+                    { title: 'Drivers', path: '/sales/drivers' },
                     { title: 'Import Sales', path: '/sales/import' },
+                    { title: 'Sales Audit', path: '/sales/audit' },
+                    { title: 'Supermarché', path: '/sales/supermarche' },
+                ]
+            },
+            {
+                title: 'POS Settings & Audit',
+                icon: Package,
+                children: [
+                    { title: 'POS Settings', path: '/sales/pos-settings' },
+                    { title: 'POS Audit Events', path: '/pos/pos-audit-events' },
+                    { title: 'POS Audit Rules', path: '/pos/pos-audit-rules' },
+                    { title: 'Supplier Pricing', path: '/pos/supplier-pricing' },
+                    { title: 'Sourcing', path: '/pos/sourcing' },
+                    { title: 'Purchase Orders', path: '/pos/purchase-orders' },
+                    { title: 'PO Lines', path: '/pos/po-lines' },
+                    { title: 'Address Book', path: '/pos/manager-address-book' },
                 ]
             },
             {
@@ -133,8 +179,19 @@ export const MENU_ITEMS = [
                     { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                     { title: 'New RFQ / Order', path: '/purchases/new-order' },
                     { title: 'Quick Purchase', path: '/purchases/new' },
+                    { title: 'Purchase Orders', path: '/purchases/purchase-orders' },
+                    { title: 'Quotations', path: '/purchases/quotations' },
+                    { title: 'Receiving', path: '/purchases/receiving' },
+                    { title: 'Receipts', path: '/purchases/receipts' },
+                    { title: 'Invoicing', path: '/purchases/invoicing' },
+                    { title: 'Invoice Verification', path: '/purchases/invoice-verification' },
+                    { title: 'Consignments', path: '/purchases/consignments' },
+                    { title: 'Approvals', path: '/purchases/approvals' },
                     { title: 'Purchase Returns', path: '/purchases/returns' },
+                    { title: 'Credit Notes', path: '/purchases/credit-notes' },
                     { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
+                    { title: 'Invoices', path: '/purchases/invoices' },
+                    { title: 'Verification', path: '/purchases/verification' },
                 ]
             },
         ]
@@ -148,38 +205,67 @@ export const MENU_ITEMS = [
                 title: 'Products',
                 icon: Tag,
                 children: [
-                    { title: 'Product Master', path: '/products' },
+                    { title: 'Product Master', path: '/inventory/products' },
                     { title: 'Product Analytics', path: '/inventory/analytics' },
+                    { title: 'Product Explorer', path: '/inventory/product-explorer' },
                     { title: 'Combo & Bundles', path: '/inventory/combo' },
                     { title: 'Label Printing', path: '/inventory/labels' },
-                    { title: 'Product Groups', path: '/products?view=grouped' },
-                    { title: 'New Product Group', path: '/products/create-group' },
+                    { title: 'Product Groups', path: '/inventory/product-groups' },
+                    { title: 'Inventory Groups', path: '/inventory/inventory-groups' },
+                    { title: 'Parfums', path: '/inventory/parfums' },
+                    { title: 'Barcodes', path: '/inventory/product-barcodes' },
+                    { title: 'Product Audit Trail', path: '/inventory/product-audit-trail' },
+                    { title: 'Product Tasks', path: '/inventory/product-tasks' },
                 ]
             },
             {
                 title: 'Warehousing',
                 icon: Warehouse,
                 children: [
-                    { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
-                    { title: 'Stock Adjustments', path: '/inventory/adjustments' },
+                    { title: 'Warehouses', path: '/inventory/warehouses' },
+                    { title: 'Zones', path: '/inventory/zones' },
+                    { title: 'Aisles', path: '/inventory/aisles' },
+                    { title: 'Racks', path: '/inventory/racks' },
+                    { title: 'Shelves', path: '/inventory/shelves' },
+                    { title: 'Bins', path: '/inventory/bins' },
+                    { title: 'Product Locations', path: '/inventory/product-locations' },
                     { title: 'Global Inventory', path: '/inventory/global' },
-                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
-                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
-                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
-                    { title: 'Stock Movements', path: '/inventory/movements' },
-                    { title: 'Inventory Alerts', path: '/inventory/alerts' },
-                    { title: 'Serial Numbers', path: '/inventory/serials' },
-                    { title: 'Stock Count', path: '/inventory/stock-count' },
+                    { title: 'Inventory', path: '/inventory/inventory' },
                 ]
             },
             {
-                title: 'Stock Orders',
+                title: 'Stock',
                 icon: ClipboardList,
                 children: [
+                    { title: 'Stock Adjustments', path: '/inventory/adjustments' },
                     { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
+                    { title: 'Stock Count', path: '/inventory/stock-count' },
+                    { title: 'Counting Sessions', path: '/inventory/counting-sessions' },
                     { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
-                    { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Transfers', path: '/inventory/transfers' },
+                    { title: 'Stock Moves', path: '/inventory/stock-moves' },
+                    { title: 'Inventory Movements', path: '/inventory/inventory-movements' },
                     { title: 'Stock Valuation', path: '/inventory/valuation' },
+                    { title: 'Stock Matrix', path: '/inventory/stock-matrix' },
+                    { title: 'Goods Receipts', path: '/inventory/goods-receipts' },
+                    { title: 'Internal Consumption', path: '/inventory/internal-consumption' },
+                    { title: 'Gift & Sample', path: '/inventory/gift-sample' },
+                    { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Import Declarations', path: '/procurement/import-declarations' },
+                ]
+            },
+            {
+                title: 'Alerts & Intelligence',
+                icon: Bell,
+                children: [
+                    { title: 'Inventory Alerts', path: '/inventory/alerts' },
+                    { title: 'Stock Alerts', path: '/inventory/stock-alerts' },
+                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
+                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
+                    { title: 'Serial Logs', path: '/inventory/serial-logs' },
+                    { title: 'Intelligence', path: '/inventory/intelligence' },
+                    { title: 'Readiness', path: '/inventory/readiness' },
                 ]
             },
             {
@@ -188,10 +274,37 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Categories', path: '/inventory/categories' },
                     { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
+                    { title: 'Category Rules', path: '/inventory/category-rules' },
                     { title: 'Units & Packaging', path: '/inventory/units' },
+                    { title: 'Packaging', path: '/inventory/packaging' },
                     { title: 'Brands', path: '/inventory/brands' },
                     { title: 'Countries', path: '/inventory/countries' },
                     { title: 'Attributes', path: '/inventory/attributes' },
+                    { title: 'Fresh Produce', path: '/inventory/fresh' },
+                    { title: 'Fresh Profiles', path: '/inventory/fresh-profiles' },
+                ]
+            },
+            {
+                title: 'Barcode & Labels',
+                icon: Tag,
+                children: [
+                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
+                    { title: 'Barcode Policy', path: '/inventory/barcode-policy' },
+                    { title: 'Label Policy', path: '/inventory/label-policy' },
+                    { title: 'Label Records', path: '/inventory/label-records' },
+                ]
+            },
+            {
+                title: 'Pricing & Policy',
+                icon: DollarSign,
+                children: [
+                    { title: 'Price Governance', path: '/inventory/price-governance' },
+                    { title: 'Price Change Requests', path: '/inventory/price-change-requests' },
+                    { title: 'Price Regulations', path: '/inventory/price-regulations' },
+                    { title: 'Stock Movements', path: '/inventory/movements' },
+                    { title: 'Weight Policy', path: '/inventory/weight-policy' },
+                    { title: 'Policies', path: '/inventory/policies' },
+                    { title: 'Sync', path: '/inventory/sync' },
                 ]
             },
             {
@@ -200,6 +313,8 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'Maintenance Dashboard', path: '/inventory/maintenance' },
                     { title: 'Data Quality', path: '/inventory/maintenance/data-quality' },
+                    { title: 'Listview Settings', path: '/inventory/listview-settings' },
+                    { title: 'POS Settings', path: '/inventory/pos-settings' },
                 ]
             },
         ]
@@ -210,16 +325,31 @@ export const MENU_ITEMS = [
         module: 'finance',
         children: [
             { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
+            { title: 'Financial Setup', path: '/finance/setup', icon: Settings },
             {
                 title: 'Accounts & Ledger',
                 icon: BookOpen,
                 children: [
                     { title: 'Accounts & Drawers', path: '/finance/accounts' },
+                    { title: 'Account Categories', path: '/finance/account-categories' },
+                    { title: 'Account Book', path: '/finance/account-book' },
                     { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
                     { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
                     { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
+                    { title: 'COA Management', path: '/finance/coa' },
                     { title: 'General Ledger', path: '/finance/ledger' },
                     { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                    { title: 'Journal Entries', path: '/finance/journal' },
+                    { title: 'Sequences', path: '/finance/sequences' },
+                ]
+            },
+            {
+                title: 'Balances',
+                icon: Wallet,
+                children: [
+                    { title: 'Balances Overview', path: '/finance/balances' },
+                    { title: 'Customer Balances', path: '/finance/customer-balances' },
+                    { title: 'Supplier Balances', path: '/finance/supplier-balances' },
                 ]
             },
             {
@@ -227,33 +357,81 @@ export const MENU_ITEMS = [
                 icon: ClipboardList,
                 children: [
                     { title: 'Invoices', path: '/finance/invoices' },
+                    { title: 'Invoice Lines', path: '/finance/invoice-lines' },
                     { title: 'Payments', path: '/finance/payments' },
+                    { title: 'Payment Allocations', path: '/finance/payment-allocations' },
+                    { title: 'Payment Approvals', path: '/finance/payment-approvals' },
                     { title: 'Vouchers', path: '/finance/vouchers' },
                     { title: 'Expenses', path: '/finance/expenses' },
+                    { title: 'Expense Approvals', path: '/finance/expense-approvals' },
                     { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
                     { title: 'Assets & Depreciation', path: '/finance/assets' },
                     { title: 'Purchase Returns', path: '/finance/purchase-returns' },
                     { title: 'Sales Returns', path: '/finance/sales-returns' },
+                    { title: 'Financial Events', path: '/finance/financial-events' },
+                ]
+            },
+            {
+                title: 'Tax & Compliance',
+                icon: ShieldCheck,
+                children: [
+                    { title: 'Tax Groups', path: '/finance/tax-groups' },
+                    { title: 'Tax Policy', path: '/finance/tax-policy' },
+                    { title: 'Org Tax Policies', path: '/finance/org-tax-policies' },
+                    { title: 'Custom Tax Rules', path: '/finance/custom-tax-rules' },
+                    { title: 'Counterparty Tax Profiles', path: '/finance/counterparty-tax-profiles' },
+                    { title: 'Withholding Tax Rules', path: '/finance/withholding-tax-rules' },
+                    { title: 'VAT Return', path: '/finance/vat-return' },
+                    { title: 'VAT Settlement', path: '/finance/vat-settlement' },
+                    { title: 'VAT Rate History', path: '/finance/vat-rate-history' },
+                    { title: 'Periodic Tax', path: '/finance/periodic-tax' },
+                    { title: 'Advance Payment VAT', path: '/finance/advance-payment-vat' },
+                    { title: 'Bad Debt VAT Claims', path: '/finance/bad-debt-vat-claims' },
+                    { title: 'Credit Note VAT', path: '/finance/credit-note-vat' },
+                    { title: 'Gift & Sample VAT', path: '/finance/gift-sample-vat' },
+                    { title: 'Intra-Branch VAT', path: '/finance/intra-branch-vat' },
+                    { title: 'Reverse Charge', path: '/finance/reverse-charge' },
+                    { title: 'Self-Supply VAT', path: '/finance/self-supply-vat' },
+                    { title: 'Margin Scheme', path: '/finance/margin-scheme' },
+                    { title: 'Import Declarations', path: '/finance/import-declarations' },
+                    { title: 'E-Invoicing', path: '/finance/einvoicing' },
+                    { title: 'E-Invoice', path: '/finance/einvoice' },
                 ]
             },
             {
                 title: 'Reports',
                 icon: TrendingUp,
                 children: [
+                    { title: 'Reports Dashboard', path: '/finance/reports/dashboard' },
+                    { title: 'Report Builder', path: '/finance/reports/builder' },
+                    { title: 'All Reports', path: '/finance/reports' },
                     { title: 'Account Statement', path: '/finance/reports/statement' },
                     { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
-                    { title: 'Aging Report', path: '/finance/aging' },
+                    { title: 'Cash Flow', path: '/finance/reports/cash-flow' },
+                    { title: 'Aging Report', path: '/finance/reports/aging' },
+                    { title: 'Aging Overview', path: '/finance/aging' },
                     { title: 'Audit Trail', path: '/finance/audit-trail' },
                     { title: 'Cash Register', path: '/finance/cash-register' },
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
+                    { title: 'Reconciliation Sessions', path: '/finance/reconciliation-sessions' },
+                    { title: 'Bank Statements', path: '/finance/bank-statements' },
                     { title: 'Period Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
+                    { title: 'Revenue Breakdown', path: '/finance/revenue' },
+                ]
+            },
+            {
+                title: 'Budget & Planning',
+                icon: BarChart3,
+                children: [
+                    { title: 'Budgets', path: '/finance/budgets' },
+                    { title: 'Budget Alerts', path: '/finance/budgets/alerts' },
+                    { title: 'Budget Lines', path: '/finance/budget-lines' },
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
-                    { title: 'Revenue Breakdown', path: '/finance/revenue' },
-
+                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
                 ]
             },
             {
@@ -261,15 +439,17 @@ export const MENU_ITEMS = [
                 icon: Calendar,
                 children: [
                     { title: 'Fiscal Years', path: '/finance/fiscal-years' },
-                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
+                    { title: 'Fiscal Periods', path: '/finance/fiscal-periods' },
                 ]
             },
             {
-                title: 'Loans & Pricing',
+                title: 'Loans & Gateway',
                 icon: DollarSign,
                 children: [
                     { title: 'Loan Contracts', path: '/finance/loans' },
                     { title: 'Pricing Engine', path: '/finance/pricing' },
+                    { title: 'Payment Gateway', path: '/finance/gateway' },
+                    { title: 'Gateway Configs', path: '/finance/gateway-configs' },
                 ]
             },
             {
@@ -280,8 +460,15 @@ export const MENU_ITEMS = [
                     { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
                 ]
             },
-            { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
-
+            {
+                title: 'Finance Settings',
+                icon: Settings,
+                children: [
+                    { title: 'General Settings', path: '/finance/settings' },
+                    { title: 'Payment Methods', path: '/finance/settings/payment-methods' },
+                    { title: 'Barcode Settings', path: '/finance/settings/barcode' },
+                ]
+            },
         ]
     },
     {
@@ -289,10 +476,22 @@ export const MENU_ITEMS = [
         icon: Users,
         module: 'crm',
         children: [
+            { title: 'CRM Dashboard', path: '/crm/dashboard' },
             { title: 'Contact Center', path: '/crm/contacts' },
+            { title: 'Follow-ups', path: '/crm/followups' },
             { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
+            { title: 'Price Groups', path: '/crm/price-groups' },
+            { title: 'Price Rules', path: '/crm/price-rules' },
             { title: 'Supplier Performance', path: '/crm/supplier-performance' },
             { title: 'Customer Insights', path: '/crm/insights' },
+            {
+                title: 'CRM Settings',
+                icon: Settings,
+                children: [
+                    { title: 'CRM Settings', path: '/crm/settings' },
+                    { title: 'Contact Tags', path: '/crm/settings/tags' },
+                ]
+            },
             {
                 title: 'Supplier Gate',
                 icon: Briefcase,
@@ -324,9 +523,16 @@ export const MENU_ITEMS = [
         children: [
             { title: 'Storefront Overview', path: '/ecommerce/dashboard', icon: BarChart3 },
             { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
+            { title: 'Storefront Config', path: '/ecommerce/storefront-config' },
             { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
             { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
             { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+            { title: 'Catalog Reviews', path: '/ecommerce/catalog/reviews' },
+            { title: 'Coupons', path: '/ecommerce/coupons' },
+            { title: 'Promotions', path: '/ecommerce/promotions' },
+            { title: 'Quotes', path: '/ecommerce/quotes' },
+            { title: 'Shipping', path: '/ecommerce/shipping' },
+            { title: 'Webhooks', path: '/ecommerce/webhooks' },
         ]
     },
     {
@@ -334,6 +540,7 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
+            { title: 'HR Overview', path: '/hr/overview' },
             { title: 'Employee Manager', path: '/hr/employees' },
             { title: 'Departments', path: '/hr/departments' },
             { title: 'Shifts', path: '/hr/shifts' },
@@ -350,13 +557,89 @@ export const MENU_ITEMS = [
         children: [
             { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
             { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
+            { title: 'Checklist Templates', path: '/workspace/checklist-templates' },
             { title: 'Performance', path: '/workspace/performance', icon: Trophy },
+            { title: 'Evaluations', path: '/workspace/evaluations' },
+            { title: 'KPI Config', path: '/workspace/kpi-config' },
+            { title: 'Scores', path: '/workspace/scores' },
+            { title: 'Tenders', path: '/workspace/tenders' },
+            { title: 'Requests', path: '/workspace/requests' },
+            {
+                title: 'Automation',
+                icon: Zap,
+                children: [
+                    { title: 'Auto Rules', path: '/workspace/auto-rules' },
+                    { title: 'Auto Task Rules', path: '/workspace/auto-task-rules' },
+                    { title: 'Auto Task Settings', path: '/workspace/auto-task-settings' },
+                    { title: 'WISE Console', path: '/workspace/wise-console' },
+                    { title: 'WISE Rules', path: '/workspace/wise-rules' },
+                    { title: 'WISE Adjustments', path: '/workspace/wise-adjustments' },
+                ]
+            },
+            {
+                title: 'Config',
+                icon: Settings,
+                children: [
+                    { title: 'Workspace Config', path: '/workspace/config' },
+                    { title: 'Categories', path: '/workspace/categories' },
+                    { title: 'Templates', path: '/workspace/templates' },
+                    { title: 'Questionnaires', path: '/workspace/questionnaires' },
+                    { title: 'Questions', path: '/workspace/questions' },
+                ]
+            },
         ]
     },
     {
-        title: 'Import from Third Party',
-        icon: Globe,
-        path: '/migration',
+        title: 'Client Portal',
+        icon: Users,
+        module: 'crm',
+        children: [
+            { title: 'Dashboard', path: '/client_portal/dashboard' },
+            { title: 'Client Access', path: '/client_portal/client-access' },
+            { title: 'Admin Orders', path: '/client_portal/admin-orders' },
+            { title: 'My Orders', path: '/client_portal/my-orders' },
+            { title: 'Admin Tickets', path: '/client_portal/admin-tickets' },
+            { title: 'My Tickets', path: '/client_portal/my-tickets' },
+            { title: 'Admin Wallets', path: '/client_portal/admin-wallets' },
+            { title: 'My Wallet', path: '/client_portal/my-wallet' },
+            { title: 'Coupons', path: '/client_portal/coupons' },
+            { title: 'Cart Promotions', path: '/client_portal/cart-promotions' },
+            { title: 'Shipping Rates', path: '/client_portal/shipping-rates' },
+            { title: 'Quote Requests', path: '/client_portal/quote-requests' },
+            { title: 'Order Lines', path: '/client_portal/order-lines' },
+            { title: 'Reviews', path: '/client_portal/reviews' },
+            { title: 'Wishlist', path: '/client_portal/wishlist' },
+            { title: 'Portal Config', path: '/client_portal/config' },
+        ]
+    },
+    {
+        title: 'Supplier Portal',
+        icon: Briefcase,
+        module: 'crm',
+        children: [
+            { title: 'Dashboard', path: '/supplier_portal/dashboard' },
+            { title: 'Portal Config', path: '/supplier_portal/config' },
+            { title: 'Portal Access', path: '/supplier_portal/portal-access' },
+            { title: 'Admin Proformas', path: '/supplier_portal/admin-proformas' },
+            { title: 'Proforma Lines', path: '/supplier_portal/proforma-lines' },
+            { title: 'Admin Price Requests', path: '/supplier_portal/admin-price-requests' },
+            { title: 'My Orders', path: '/supplier_portal/my-orders' },
+            { title: 'My Stock', path: '/supplier_portal/my-stock' },
+            { title: 'My Proformas', path: '/supplier_portal/my-proformas' },
+            { title: 'My Price Requests', path: '/supplier_portal/my-price-requests' },
+            { title: 'Notifications', path: '/supplier_portal/my-notifications' },
+        ]
+    },
+    {
+        title: 'Import & Migration',
+        icon: GitBranch,
+        children: [
+            { title: 'Migration Overview', path: '/migration' },
+            { title: 'Migration Audit', path: '/migration/audit' },
+            { title: 'Migration Jobs', path: '/migration/jobs' },
+            { title: 'Migration v2', path: '/migration_v2' },
+            { title: 'Migration v2 Jobs', path: '/migration_v2/jobs' },
+        ]
     },
     {
         title: 'SaaS Control',
@@ -382,6 +665,9 @@ export const MENU_ITEMS = [
                     { title: 'Kernel Updates', path: '/updates' },
                     { title: 'Global Registry', path: '/modules' },
                     { title: 'Currencies', path: '/currencies' },
+                    { title: 'Country Tax Templates', path: '/country-tax-templates' },
+                    { title: 'E-Invoice Standards', path: '/e-invoice-standards' },
+                    { title: 'Listview Policies', path: '/listview-policies' },
                     {
                         title: 'Connector',
                         icon: ServerCog,
@@ -399,6 +685,8 @@ export const MENU_ITEMS = [
                             { title: 'MCP Dashboard', path: '/mcp' },
                             { title: 'MCP Chat', path: '/mcp/chat' },
                             { title: 'Conversations', path: '/mcp/conversations' },
+                            { title: 'Agents', path: '/mcp/agents' },
+                            { title: 'Agent Logs', path: '/mcp/agent-logs' },
                             { title: 'Providers', path: '/mcp/providers' },
                             { title: 'Tools', path: '/mcp/tools' },
                             { title: 'Usage', path: '/mcp/usage' },
@@ -411,31 +699,70 @@ export const MENU_ITEMS = [
         ]
     },
     {
+        title: 'Users & Access',
+        icon: UserCheck,
+        module: 'core',
+        children: [
+            { title: 'Users', path: '/users' },
+            { title: 'Access Roles', path: '/access/roles' },
+            { title: 'Client Access', path: '/access/client-access' },
+            { title: 'Supplier Access', path: '/access/supplier-access' },
+            { title: 'Supplier Dashboard', path: '/access/supplier-dashboard' },
+            { title: 'Approvals', path: '/approvals' },
+            { title: 'Access Approvals', path: '/access/approvals' },
+        ]
+    },
+    {
         title: 'System Settings',
         icon: Settings,
         module: 'core',
         children: [
             { title: 'Cloud Storage', path: '/storage', icon: Cloud },
+            { title: 'Storage Files', path: '/storage/files' },
+            { title: 'Storage Packages', path: '/storage/packages' },
             { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
             { title: 'Notifications', path: '/settings/notifications', icon: Bell },
             { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
+            { title: 'Appearance', path: '/settings/appearance' },
+            { title: 'Domains', path: '/settings/domains' },
+            { title: 'E-Invoicing Monitor', path: '/settings/e-invoicing' },
+            { title: 'Features', path: '/settings/features' },
+            { title: 'Payment Terms', path: '/settings/payment-terms' },
+            { title: 'POS Settings', path: '/settings/pos-settings' },
+            { title: 'Purchase Analytics', path: '/settings/purchase-analytics' },
+            { title: 'Regional Settings', path: '/settings/regional' },
+            { title: 'Sequences', path: '/settings/sequences' },
+            { title: 'WhatsApp', path: '/settings/whatsapp' },
+            {
+                title: 'Integrations',
+                icon: Network,
+                children: [
+                    { title: 'Webhooks', path: '/integrations/webhooks' },
+                ]
+            },
         ]
     },
+    { title: 'Marketplace', icon: ShoppingBag, path: '/marketplace', module: 'core' },
+    { title: 'Platform Dashboard', icon: LayoutDashboard, path: '/platform-dashboard', module: 'core' },
+    { title: 'AI Agents', icon: Bot, path: '/agents', module: 'core' },
+    { title: 'Delivery', icon: Truck, path: '/delivery', module: 'core' },
+    { title: 'Setup Wizard', icon: Wrench, path: '/setup-wizard', module: 'core' },
 ];
 
 export function Sidebar({
     isSaas = false,
-    isSuperuser = false,
+    isSuperuser: _isSuperuser = false,
     dualViewEnabled = false
 }: {
     isSaas?: boolean;
     isSuperuser?: boolean;
     dualViewEnabled?: boolean;
 }) {
-    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess } = useAdmin();
-    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope } = useAdmin();
+    // null = not yet fetched (show all); Set = fetched (filter by installed)
+    const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
     useEffect(() => {
@@ -446,9 +773,10 @@ export function Sidebar({
                     getDynamicSidebar()
                 ]);
 
-                if (Array.isArray(modules)) {
+                if (Array.isArray(modules) && modules.length > 0) {
                     setInstalledModules(new Set(modules.map((m: Record<string, unknown>) => m.code as string)));
                 }
+                // If modules list is empty (not seeded), leave null → show everything
 
                 if (Array.isArray(sidebarData)) {
                     // Convert icon strings to Components and prefix paths for isolation
@@ -483,8 +811,8 @@ export function Sidebar({
         // 1. Filter by SaaS Panel visibility logic
         if (!isSaas && item.visibility === 'saas') return false;
 
-        // 2. Filter by Installed Module
-        if (item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {
+        // 2. Filter by Installed Module (only when modules have been loaded from server)
+        if (installedModules !== null && item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {
             return false;
         }
         return true;
@@ -509,33 +837,33 @@ export function Sidebar({
             )}
 
             <aside className={clsx(
-                "fixed lg:relative inset-y-0 left-0 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 overflow-hidden h-full text-gray-300 shadow-2xl z-50 transition-all duration-300 transform",
+                "fixed lg:relative inset-y-0 left-0 bg-[var(--app-sidebar-bg)] border-r border-[var(--app-sidebar-border)] flex flex-col shrink-0 overflow-hidden h-full text-[var(--app-sidebar-text)] shadow-2xl z-50 transition-all duration-300 transform",
                 sidebarOpen
-                    ? "w-72 md:w-80 translate-x-0 opacity-100"
+                    ? "w-[var(--nav-width)] translate-x-0 opacity-100"
                     : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none"
             )}>
-                <div className="p-8 border-b border-gray-800/50 flex items-center gap-4 shrink-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
+                <div className="p-8 border-b border-[var(--app-sidebar-border)] flex items-center gap-4 shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--app-primary)] to-[var(--app-primary-dark)] flex items-center justify-center shadow-lg shadow-[var(--app-primary-glow)] text-white font-bold text-xl">
                         {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
-                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
+                        <h1 className="text-xl font-bold text-[var(--app-sidebar-text)] tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
+                        <p className="text-xs text-[var(--app-primary)] font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
                     </div>
                 </div>
 
                 {/* View Scope Switcher — only visible for full-access users */}
                 {dualViewEnabled && canToggleScope && (
                     <div className="mx-6 mt-6 shrink-0">
-                        <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
+                        <div className="p-1.5 bg-[var(--app-sidebar-bg)] rounded-2xl border border-[var(--app-sidebar-border)] flex gap-1">
                             <button
                                 onClick={() => setViewScope('OFFICIAL')}
                                 suppressHydrationWarning={true}
                                 className={clsx(
                                     "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                                     viewScope === 'OFFICIAL'
-                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                        ? "bg-[var(--app-primary)] text-white shadow-lg shadow-[var(--app-primary-glow)]"
+                                        : "text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] hover:bg-[var(--app-sidebar-active)]"
                                 )}
                             >
                                 <Layers size={14} />
@@ -547,8 +875,8 @@ export function Sidebar({
                                 className={clsx(
                                     "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                                     viewScope === 'INTERNAL'
-                                        ? "bg-gray-700 text-white shadow-lg"
-                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                        ? "bg-[var(--app-sidebar-surface)] text-[var(--app-sidebar-text)] shadow-lg"
+                                        : "text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] hover:bg-[var(--app-sidebar-active)]"
                                 )}
                             >
                                 <BarChart3 size={14} />
@@ -559,19 +887,19 @@ export function Sidebar({
                 )}
 
                 <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
+                    <div className="text-xs font-bold text-[var(--app-sidebar-muted)] uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
                     {filteredItems.map((item, idx) => (
                         <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
                     ))}
                 </div>
 
-                <div className="p-6 border-t border-gray-800/50 bg-[#0B1120] shrink-0">
+                <div className="p-6 border-t border-[var(--app-sidebar-border)] bg-[var(--app-sidebar-bg)] shrink-0 opacity-80">
                     <button
                         onClick={() => logoutAction()}
                         suppressHydrationWarning={true}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-[var(--app-sidebar-active)] text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] transition-all group"
                     >
-                        <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
+                        <LogOut size={20} className="group-hover:text-[var(--app-error)] transition-colors" />
                         <span className="text-sm font-medium">Sign Out</span>
                     </button>
                 </div>
@@ -588,13 +916,13 @@ function MenuItem({
     level = 0
 }: {
     item: Record<string, any>,
-    openTab: Record<string, any>,
+    openTab: (...args: any[]) => any,
     activeTab: string,
-    installedModules: Set<string>,
+    installedModules: Set<string> | null,
     level?: number
 }) {
-    // 1. Module & Visibility Filter
-    if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+    // 1. Module & Visibility Filter (null = not loaded yet, show everything)
+    if (installedModules !== null && item.module && item.module !== 'core' && !installedModules.has(item.module)) {
         return null;
     }
 
@@ -632,18 +960,18 @@ function MenuItem({
                 className={clsx(
                     "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer select-none transition-all duration-200 group relative overflow-hidden",
                     isActive || isChildActive
-                        ? "bg-emerald-600/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20"
-                        : "text-gray-400 hover:bg-gray-800/60 hover:text-white",
+                        ? "bg-[var(--app-sidebar-active)] text-[var(--app-primary)] shadow-[0_0_20px_var(--app-primary-glow)] ring-1 ring-[var(--app-primary)]/20"
+                        : "text-[var(--app-sidebar-muted)] hover:bg-[var(--app-sidebar-active)] hover:text-[var(--app-sidebar-text)]",
                     level > 0 && "py-2.5 rounded-xl text-[13px]"
                 )}
             >
                 {/* Active Indicator Strip */}
                 {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-full" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--app-primary)] rounded-r-full" />
                 )}
 
                 {Icon && (
-                    <Icon size={level === 0 ? 22 : 18} className={clsx(isActive || isChildActive ? "text-emerald-400" : "group-hover:text-white transition-colors")} />
+                    <Icon size={level === 0 ? 22 : 18} className={clsx(isActive || isChildActive ? "text-[var(--app-primary)]" : "group-hover:text-[var(--app-sidebar-text)] transition-colors")} />
                 )}
 
                 <span className={clsx("flex-1 truncate", level === 0 ? "font-medium" : "font-normal")}>
@@ -658,7 +986,7 @@ function MenuItem({
             </div>
 
             {hasChildren && expanded && (
-                <div className="ml-6 pl-4 border-l border-gray-800/50 my-1.5 space-y-1">
+                <div className="ml-6 pl-4 border-l border-[var(--app-sidebar-border)] my-1.5 space-y-1">
                     {item.children.map((child: Record<string, any>, idx: number) => (
                         <MenuItem
                             key={idx}

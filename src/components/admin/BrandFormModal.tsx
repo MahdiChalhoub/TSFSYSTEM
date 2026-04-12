@@ -161,7 +161,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                         </label>
 
                         <CategoryTreeSelector
-                            categories={buildCategoryTree(categories)}
+                            categories={buildCategoryTree(categories) as any}
                             selectedIds={selectedCategoryIds}
                             onChange={setSelectedCategoryIds}
                             maxHeight="max-h-56"

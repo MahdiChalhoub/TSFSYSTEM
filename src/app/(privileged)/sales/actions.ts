@@ -49,6 +49,46 @@ export async function getCategories() {
     }
 }
 
+export async function syncOfflineOrders(orders: Record<string, any>[]) {
+    try {
+        const res = await erpFetch('pos/sync-offline/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orders }),
+        });
+        return res;
+    } catch (e: unknown) {
+        console.error('[syncOfflineOrders] Error:', e);
+        return { success: false };
+    }
+}
+
+export async function getPosSettings() {
+    try {
+        const res = await erpFetch('pos/settings/');
+        return res || { loyaltyPointValue: 0.01 };
+    } catch {
+        return { loyaltyPointValue: 0.01 };
+    }
+}
+
+export async function getClientFidelity(clientId: number) {
+    try {
+        return await erpFetch(`pos/clients/${clientId}/fidelity/`);
+    } catch {
+        return null;
+    }
+}
+
+export async function getDeliveryZones() {
+    try {
+        const res = await erpFetch('pos/delivery-zones/');
+        return Array.isArray(res) ? res : [];
+    } catch {
+        return [];
+    }
+}
+
 export async function processSale(data: {
     cart: Record<string, any>[],
     paymentMethod: string,
@@ -56,7 +96,13 @@ export async function processSale(data: {
     scope?: string,
     notes?: string,
     warehouseId?: number,
-    paymentAccountId?: number
+    paymentAccountId?: number,
+    clientId?: number,
+    storeChangeInWallet?: boolean,
+    pointsRedeemed?: number,
+    cashReceived?: number,
+    globalDiscount?: number,
+    paymentLegs?: Record<string, any>[],
 }) {
     try {
         const response = await erpFetch('pos/checkout/', {
@@ -75,7 +121,7 @@ export async function processSale(data: {
             })
         });
 
-        return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB" };
+        return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB", fneStatus: response.fne_status, fneReference: response.fne_reference, fneToken: response.fne_token };
     } catch (e: unknown) {
         console.error("POS Checkout Error:", e);
         throw new Error((e instanceof Error ? e.message : String(e)) || "Checkout Failed");

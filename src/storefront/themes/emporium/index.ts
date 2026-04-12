@@ -32,7 +32,6 @@ const components = {
 const themeModule: ThemeModule = {
     config: THEME_CONFIGS.emporium,
     components,
-    sections: {},
 }
 
 export default themeModule

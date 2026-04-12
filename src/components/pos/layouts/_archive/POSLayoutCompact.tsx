@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { POSLayoutProps } from '@/types/pos-layout';

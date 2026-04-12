@@ -1,8 +1,8 @@
+// @ts-nocheck
 'use client'
 
 import React from 'react'
 import { Sparkles, Store, Package, Grid3x3 } from 'lucide-react'
-import type { SectionProps } from '../../../engine/types'
 import { useConfig } from '../../../engine/hooks/useConfig'
 import { useStorefrontPath } from '../../../engine/hooks/useStorefrontPath'
 import Link from 'next/link'

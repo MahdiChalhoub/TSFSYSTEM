@@ -214,3 +214,68 @@ export async function createOpeningBalanceEntry(data: unknown) {
         entry_type: 'OPENING_BALANCE'
     })
 }
+
+export type ImportRow = {
+    date: string
+    description: string
+    debit_account_code: string
+    credit_account_code: string
+    amount: number | string
+    reference?: string
+}
+
+export type ImportPreviewRow = {
+    row: number
+    date: string
+    description: string
+    debit_code: string
+    debit_account: { id: number; name: string; type: string } | null
+    credit_code: string
+    credit_account: { id: number; name: string; type: string } | null
+    amount: number
+    reference: string
+    errors: string[]
+    valid: boolean
+}
+
+export type ImportPreviewResult = {
+    total: number
+    valid: number
+    invalid: number
+    rows: ImportPreviewRow[]
+}
+
+export type ImportResult = {
+    created: number
+    errors: { row: number; message: string }[]
+    total: number
+}
+
+export async function previewImport(formData: FormData): Promise<ImportPreviewResult> {
+    try {
+        const result = await erpFetch('journal/preview-import/', {
+            method: 'POST',
+            body: formData,
+        })
+        return result as ImportPreviewResult
+    } catch (error) {
+        console.error('Failed to preview import:', error)
+        throw error
+    }
+}
+
+export async function importJournalEntries(
+    formData: FormData
+): Promise<ImportResult> {
+    try {
+        const result = await erpFetch('journal/import/', {
+            method: 'POST',
+            body: formData,
+        })
+        revalidatePath('/finance/ledger')
+        return result as ImportResult
+    } catch (error) {
+        console.error('Failed to import journal entries:', error)
+        throw error
+    }
+}

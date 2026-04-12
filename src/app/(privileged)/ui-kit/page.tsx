@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/select'
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher'
 import { LayoutSwitcher } from '@/components/layouts/LayoutSwitcher'
-import { useTheme } from '@/contexts/ThemeContext'
-import { useLayout } from '@/contexts/LayoutContext'
+import { useAppTheme } from '@/components/app/AppThemeProvider'
 import {
   Palette, Layout, Check, Star, Heart, Zap, Bell,
   Settings, Users, Mail, Calendar, Search, Filter,
@@ -27,8 +26,9 @@ import {
 } from 'lucide-react'
 
 export default function UIKitShowcasePage() {
-  const { theme, themeConfig } = useTheme()
-  const { layout, layoutConfig } = useLayout()
+  const { currentTheme, activeLayout } = useAppTheme()
+  const themeConfig = currentTheme || { name: 'Default' }
+  const layoutConfig = { name: activeLayout?.density || 'medium' }
 
   return (
     <div className="min-h-screen layout-container-padding space-y-[var(--layout-section-spacing)] pb-20 max-w-[1600px] mx-auto">

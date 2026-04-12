@@ -75,3 +75,19 @@ export async function rollbackMigration(jobId: number) {
     });
     return res;
 }
+
+export async function getAllMigrationRecords(params?: unknown) {
+    return await erpFetch('migration/records/');
+}
+export async function getAuditSummary(jobId?: number) {
+    return await erpFetch(jobId ? `migration/jobs/${jobId}/audit/` : 'migration/audit/');
+}
+export async function bulkLinkLedger(data: unknown) {
+    return await erpFetch('migration/records/bulk-link/', { method: 'POST', body: JSON.stringify(data) });
+}
+export async function approveMigrationEntity(entityId: number) {
+    return await erpFetch(`migration/records/${entityId}/approve/`, { method: 'POST' });
+}
+export async function repostMigrationJournals(data: unknown) {
+    return await erpFetch('migration/records/repost-journals/', { method: 'POST', body: JSON.stringify(data) });
+}

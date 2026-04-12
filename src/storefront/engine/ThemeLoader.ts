@@ -12,15 +12,15 @@ export async function loadTheme(themeId: string): Promise<ThemeModule | null> {
         switch (themeId) {
             case 'midnight': {
                 const mod = await import('../themes/midnight')
-                return mod.default
+                return mod.default as unknown as ThemeModule
             }
             case 'boutique': {
                 const mod = await import('../themes/boutique')
-                return mod.default
+                return mod.default as unknown as ThemeModule
             }
             case 'emporium': {
                 const mod = await import('../themes/emporium')
-                return mod.default
+                return mod.default as unknown as ThemeModule
             }
             default:
                 return null

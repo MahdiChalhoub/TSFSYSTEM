@@ -35,7 +35,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
     });
 
     const handleEdit = (brand: Record<string, any>) => {
-        setEditingBrand(brand);
+        setEditingBrand(brand as any);
         setIsModalOpen(true);
     };
 
@@ -165,7 +165,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                 <BrandFormModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
-                    brand={editingBrand}
+                    brand={editingBrand as any}
                     countries={countries}
                     categories={categories}
                 />

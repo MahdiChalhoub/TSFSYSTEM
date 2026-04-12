@@ -97,7 +97,7 @@ export class OfflinePOSManager {
         }
 
         // Offline or online failure: queue it
-        await queueOrder({ data: orderData, headers });
+        await queueOrder({ data: orderData as any, headers });
         return { offline: true, message: "Order stored locally and will be synced when online." };
     }
 

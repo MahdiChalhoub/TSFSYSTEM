@@ -16,6 +16,28 @@ from decimal import Decimal
 from erp.models import TenantModel, User
 
 
+ZERO = Decimal('0')
+
+PAYMENT_TERM_DAYS = {
+    'IMMEDIATE': 0,
+    'NET_7': 7,
+    'NET_15': 15,
+    'NET_30': 30,
+    'NET_45': 45,
+    'NET_60': 60,
+    'NET_90': 90,
+}
+
+
+class InvoiceStatus:
+    DRAFT = 'DRAFT'
+    SENT = 'SENT'
+    PARTIAL_PAID = 'PARTIAL_PAID'
+    PAID = 'PAID'
+    CANCELLED = 'CANCELLED'
+    OVERDUE = 'OVERDUE'
+
+
 # =============================================================================
 # INVOICE
 # =============================================================================

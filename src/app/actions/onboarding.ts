@@ -24,7 +24,7 @@ export async function getPublicPlans() {
     }
 }
 
-export async function registerBusinessAction(prevState: Record<string, any>, formData: FormData) {
+export async function registerBusinessAction(prevState: null | Record<string, any>, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
     // Build payload for Django (as FormData to support Logo)
@@ -96,7 +96,7 @@ export async function registerBusinessAction(prevState: Record<string, any>, for
         return { success: true, login_url: data.login_url };
 
     } catch (error: unknown) {
-        const msg = error?.message || 'Unknown error';
+        const msg = (error as any)?.message || 'Unknown error';
         // Try to parse as JSON first (erpFetch sometimes wraps errors as JSON strings)
         try {
             const errData = JSON.parse(msg);
@@ -121,7 +121,7 @@ export async function registerBusinessAction(prevState: Record<string, any>, for
     }
 }
 
-export async function registerUserAction(prevState: Record<string, any>, formData: FormData) {
+export async function registerUserAction(prevState: null | Record<string, any>, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
     const payload = {
@@ -153,7 +153,7 @@ export async function registerUserAction(prevState: Record<string, any>, formDat
 
     } catch (error: unknown) {
         console.error("User Register Error", error);
-        const msg = error?.message || 'Unknown error';
+        const msg = (error as any)?.message || 'Unknown error';
         try {
             const errData = JSON.parse(msg);
             return { error: errData };

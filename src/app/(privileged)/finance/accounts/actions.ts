@@ -117,3 +117,21 @@ export async function togglePosAccess(accountId: number, enabled: boolean) {
         throw e;
     }
 }
+export async function getChartOfAccounts() {
+    return await erpFetch('finance/coa/');
+}
+export async function getAccountCategories() {
+    return await erpFetch('finance/account-categories/');
+}
+export async function createAccountCategory(data: unknown) {
+    revalidatePath('/finance/account-categories');
+    return await erpFetch('finance/account-categories/', { method: 'POST', body: JSON.stringify(data) });
+}
+export async function updateAccountCategory(id: number, data: unknown) {
+    revalidatePath('/finance/account-categories');
+    return await erpFetch(`finance/account-categories/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export async function deleteAccountCategory(id: number) {
+    revalidatePath('/finance/account-categories');
+    return await erpFetch(`finance/account-categories/${id}/`, { method: 'DELETE' });
+}

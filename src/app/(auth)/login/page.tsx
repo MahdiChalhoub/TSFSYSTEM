@@ -71,14 +71,14 @@ function LoginContent() {
     return (
         <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
             {/* Left Column: Visual Branding */}
-            <div className="relative hidden lg:flex flex-col justify-end p-16 bg-[#020617] overflow-hidden">
+            <div className="relative hidden lg:flex flex-col justify-end p-16 bg-app-bg overflow-hidden border-r border-app-border">
                 <div className="absolute inset-0 z-0">
                     <img
                         src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop"
                         alt="Background"
                         className="w-full h-full object-cover opacity-20"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-app-bg via-transparent to-transparent" />
                 </div>
 
                 <div className="relative z-10 space-y-6">
@@ -101,7 +101,7 @@ function LoginContent() {
             </div>
 
             {/* Right Column: Login Form */}
-            <div className="flex flex-col items-center justify-center p-8 lg:p-16 bg-[#0f172a] text-white">
+            <div className="flex flex-col items-center justify-center p-8 lg:p-16 bg-app-surface text-app-foreground">
                 <div className="w-full max-w-md space-y-8">
                     <div className="space-y-2 text-center lg:text-left">
                         <h2 className="text-3xl font-black tracking-tight text-white">Welcome Back</h2>
@@ -138,7 +138,7 @@ function LoginContent() {
                                 <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
                                 {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
 
-                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                <Button className="w-full h-14 bg-app-primary hover:brightness-110 text-white font-black text-lg rounded-lg shadow-lg transition-all uppercase tracking-tighter" style={{ boxShadow: '0 4px 12px var(--app-primary-glow)' }} disabled={isPending}>
                                     {isPending ? <Loader2 className="animate-spin" /> : "Verify"}
                                 </Button>
 
@@ -167,7 +167,7 @@ function LoginContent() {
                                                     required
                                                     defaultValue={searchParams.get('slug') || ''}
                                                     suppressHydrationWarning
-                                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
+                                                    className="bg-app-surface-2 border-app-border h-14 rounded-lg text-app-foreground font-mono pl-4 pr-32 focus:ring-app-primary focus:border-app-primary"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
                                                     {branding.suffix}
@@ -226,28 +226,26 @@ function LoginContent() {
                                     )}
                                 </div>
 
-                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                <Button className="w-full h-14 bg-app-primary hover:brightness-110 text-white font-black text-lg rounded-lg shadow-lg transition-all uppercase tracking-tighter" style={{ boxShadow: '0 4px 12px var(--app-primary-glow)' }} disabled={isPending}>
                                     {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
                                 </Button>
                             </>
                         )}
 
                         {!isRoot && (
-                            <div className="space-y-3 pt-2 border-t border-slate-700/50">
+                            <div className="space-y-3 pt-2 border-t border-app-border">
                                 <a href="/register/business">
-                                    <Button variant="outline" className="w-full h-12 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 font-bold uppercase tracking-tight text-sm">
+                                    <Button variant="outline" className="w-full h-12 border-app-primary/30 bg-app-primary/10 text-app-primary hover:bg-app-primary/20 hover:text-app-primary-dark font-bold uppercase tracking-tight text-sm">
                                         <Building2 size={16} className="mr-2" />
                                         Register My Business
                                     </Button>
                                 </a>
-                                <p className="text-center text-[10px] text-slate-600">
+                                <p className="text-center text-[10px] text-app-muted-foreground">
                                     Need access to an existing business?{' '}
-                                    <a href="/register/user" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Request Employee Access</a>
+                                    <a href="/register/user" className="text-app-primary hover:text-emerald-300 font-bold underline">Request Employee Access</a>
                                 </p>
                             </div>
                         )}
-
-
                     </form>
                 </div>
             </div>
@@ -257,7 +255,7 @@ function LoginContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#020617] flex items-center justify-center"><Loader2 className="animate-spin text-white" /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-app-bg flex items-center justify-center"><Loader2 className="animate-spin text-app-foreground" /></div>}>
             <LoginContent />
         </Suspense>
     );

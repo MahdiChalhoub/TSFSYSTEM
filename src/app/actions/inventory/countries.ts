@@ -64,15 +64,15 @@ export async function getInventoryCountries(): Promise<InventoryCountry[]> {
         // Map org countries to inventory countries
         return orgCountries.map(oc => {
             const ref = refMap.get(oc.country)
-            const iso2 = ref?.iso2 || oc.country_iso2 || ''
+            const iso2 = String(ref?.iso2 || oc.country_iso2 || '')
             return {
                 id: oc.country,
                 name: ref?.name || oc.country_name || 'Unknown',
                 iso2,
-                iso3: ref?.iso3,
+                iso3: String(ref?.iso3 ?? ''),
                 region: ref?.region,
-                phone_code: ref?.phone_code,
-                currency_code: ref?.default_currency_code,
+                phone_code: String(ref?.phone_code ?? ''),
+                currency_code: String(ref?.default_currency_code ?? ''),
                 flag: iso2 ? String.fromCodePoint(
                     ...([...iso2.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
                 ) : '🏳️',

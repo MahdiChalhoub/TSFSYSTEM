@@ -1,13 +1,13 @@
 /**
- * Unified Theme Wrapper
- * =====================
- * Wraps UnifiedThemeEngine provider around the app.
- * Place this in your layout hierarchy.
+ * Unified Theme Wrapper — LEGACY COMPATIBILITY SHIM
+ * ==================================================
+ * Now just re-exports AppThemeProvider.
+ * All theme logic lives in @/components/app/AppThemeProvider.tsx
  */
 
 'use client'
 
-import { UnifiedThemeEngineProvider } from '@/contexts/UnifiedThemeEngine'
+import { AppThemeProvider } from '@/components/app/AppThemeProvider'
 
 interface UnifiedThemeWrapperProps {
   children: React.ReactNode
@@ -15,8 +15,8 @@ interface UnifiedThemeWrapperProps {
 
 export function UnifiedThemeWrapper({ children }: UnifiedThemeWrapperProps) {
   return (
-    <UnifiedThemeEngineProvider defaultTheme="finance-pro" defaultColorMode="dark">
+    <AppThemeProvider>
       {children}
-    </UnifiedThemeEngineProvider>
+    </AppThemeProvider>
   )
 }

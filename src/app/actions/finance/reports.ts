@@ -35,3 +35,28 @@ export async function getCustomerBalances() {
 export async function getSupplierBalances() {
     return await erpFetch('finance/supplier-balances/')
 }
+
+export async function getReportDefinitions() {
+    return await erpFetch('finance/reports/definitions/');
+}
+export async function createReportDefinition(data: unknown) {
+    return await erpFetch('finance/reports/definitions/', { method: 'POST', body: JSON.stringify(data) });
+}
+export async function deleteReportDefinition(id: number) {
+    return await erpFetch(`finance/reports/definitions/${id}/`, { method: 'DELETE' });
+}
+export async function runReport(id: number, params?: unknown) {
+    return await erpFetch(`finance/reports/definitions/${id}/run/`, { method: 'POST', body: JSON.stringify(params || {}) });
+}
+export async function getReportExecutions(id: number) {
+    return await erpFetch(`finance/reports/definitions/${id}/executions/`);
+}
+export async function getReportDataSources() {
+    return await erpFetch('finance/reports/data-sources/');
+}
+export async function getFinancialReportsDashboard() {
+    return await erpFetch('finance/reports/dashboard/');
+}
+export async function getCashFlowStatement(params?: unknown) {
+    return await erpFetch('finance/reports/cash-flow/');
+}

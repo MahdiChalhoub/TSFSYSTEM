@@ -26,7 +26,7 @@ const MCPToolSchema = z.object({
     description: z.string().optional(),
     tool_type: z.string().optional(),
     endpoint_url: z.string().optional(),
-    parameters_schema: z.record(z.any()).optional(),
+    parameters_schema: z.record(z.string(), z.any()).optional(),
     is_active: z.boolean().optional(),
 }).passthrough()
 

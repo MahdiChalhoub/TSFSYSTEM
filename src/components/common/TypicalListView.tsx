@@ -328,7 +328,7 @@ export function TypicalListView<T, D = any>(props: TypicalListViewProps<T, D>) {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder={`Search ${title.toLowerCase()}... (Ctrl+K)`}
-        searchRef={searchRef}
+        searchRef={searchRef as React.RefObject<HTMLInputElement>}
         hasFilters={!!search}
         onClearFilters={() => setSearch('')}
         onSetVisibleColumns={handleSetVisibleCols}

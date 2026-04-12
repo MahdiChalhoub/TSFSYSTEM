@@ -21,7 +21,10 @@ const APPROVED_DIRS = [
     'switcher',
     'updates',
     'users',
-    'apps' // The Dynamic Mounter
+    'apps', // The Dynamic Mounter
+    'country-tax-templates',
+    'e-invoice-standards',
+    'listview-policies'
 ];
 
 console.log('🛡️  Checking Kernel Integrity...');

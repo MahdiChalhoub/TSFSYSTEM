@@ -12,7 +12,7 @@ from erp.models import Organization as Tenant
 User = get_user_model()
 
 
-class Permission(models.Model):
+class KernelPermission(models.Model):
     """
     System-wide permissions.
 
@@ -47,7 +47,7 @@ class Permission(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'erp'
+        app_label = 'apps_core'
         db_table = 'kernel_permission'
         indexes = [
             models.Index(fields=['code']),
@@ -74,7 +74,7 @@ class Role(TenantOwnedModel):
     description = models.TextField(blank=True)
 
     # Permissions granted to this role
-    permissions = models.ManyToManyField(Permission, related_name='roles', blank=True)
+    permissions = models.ManyToManyField(KernelPermission, related_name='roles', blank=True)
 
     # Role hierarchy (optional)
     parent_role = models.ForeignKey(
@@ -94,7 +94,7 @@ class Role(TenantOwnedModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        app_label = 'erp'
+        app_label = 'apps_core'
         db_table = 'kernel_role'
         unique_together = [['organization', 'name']]
         indexes = [
@@ -155,7 +155,7 @@ class UserRole(TenantOwnedModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'erp'
+        app_label = 'apps_core'
         db_table = 'kernel_user_role'
         unique_together = [['organization', 'user', 'role', 'resource_type', 'resource_id']]
         indexes = [
@@ -197,7 +197,7 @@ class ResourcePermission(TenantOwnedModel):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+    permission = models.ForeignKey(KernelPermission, on_delete=models.CASCADE)
 
     # Resource identification
     resource_type = models.CharField(max_length=50)  # e.g., 'invoice', 'product'
@@ -216,7 +216,7 @@ class ResourcePermission(TenantOwnedModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        app_label = 'erp'
+        app_label = 'apps_core'
         db_table = 'kernel_resource_permission'
         unique_together = [['organization', 'user', 'permission', 'resource_type', 'resource_id']]
         indexes = [
@@ -225,3 +225,6 @@ class ResourcePermission(TenantOwnedModel):
 
     def __str__(self):
         return f"{self.user} - {self.permission.code} on {self.resource_type}#{self.resource_id}"
+
+# Backward-compatible alias — external code imports 'Permission' from this module
+Permission = KernelPermission

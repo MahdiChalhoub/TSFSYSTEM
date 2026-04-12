@@ -116,4 +116,8 @@ export const PERMISSIONS = {
         APPROVE_REQUESTS: 'audit.approve_requests',
         VIEW_TASKS: 'audit.view_tasks',
     },
+    // App Module
+    APP: {
+        CHANGE_THEME: 'app.change_theme',
+    },
 } as const;
