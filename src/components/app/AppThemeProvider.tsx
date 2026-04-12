@@ -178,7 +178,11 @@ function applyFullThemeToDOM(
     r.setProperty('--form-field-spacing', components.forms?.fieldSpacing || '1rem');
     r.setProperty('--form-group-spacing', components.forms?.groupSpacing || '1.5rem');
     // Navigation
-    r.setProperty('--nav-width', navigation.width || '240px');
+    // Guard: only set --nav-width if it's a valid pixel value (not 100%, 100vw, etc.)
+    // Theme presets with position:'top' may set width:'100%' which breaks the sidebar.
+    const rawNavWidth = navigation.width || '240px';
+    const safeNavWidth = /^\d+px$/.test(rawNavWidth) ? rawNavWidth : '240px';
+    r.setProperty('--nav-width', safeNavWidth);
 
     // ── Theme class + dark mode ──
     const allClasses = Array.from(root.classList).filter(c => c.startsWith('theme-'));

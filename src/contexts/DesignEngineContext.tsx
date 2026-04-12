@@ -977,7 +977,12 @@ export function DesignEngineProvider({
     root.style.setProperty('--font-size-small', config.components.typography.smallSize)
 
     // Apply NAVIGATION variables
-    root.style.setProperty('--nav-width', config.navigation.width)
+    // Guard: presets with position:'top' set width:'100%' which breaks the sidebar layout.
+    // Only apply pixel values; ignore percentage/viewport-based widths.
+    const rawNavWidth = config.navigation.width || '240px';
+    if (/^\d+px$/.test(rawNavWidth)) {
+      root.style.setProperty('--nav-width', rawNavWidth);
+    }
 
     // Set data attributes for CSS targeting
     root.setAttribute('data-design-preset', preset)

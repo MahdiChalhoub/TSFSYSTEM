@@ -892,12 +892,14 @@ export function Sidebar({
 
             <aside className="fixed md:relative inset-y-0 left-0 shrink-0 overflow-hidden z-50"
             style={{
-                // All layout-critical properties as inline styles — immune to any CSS override
+                // All layout-critical values are HARDCODED — never read from CSS vars
+                // (CSS vars like --nav-width can be overridden by theme engines to 100%,
+                //  breaking the layout entirely)
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
-                width: sidebarOpen ? 'var(--nav-width, 240px)' : '0px',
-                minWidth: sidebarOpen ? 'var(--nav-width, 240px)' : '0px',
+                width: sidebarOpen ? '240px' : '0px',
+                minWidth: sidebarOpen ? '240px' : '0px',
                 opacity: sidebarOpen ? 1 : 0,
                 pointerEvents: sidebarOpen ? 'auto' : 'none',
                 transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
