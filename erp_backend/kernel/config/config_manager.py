@@ -48,7 +48,7 @@ class ConfigManager:
             organization = get_current_tenant()
 
         if not organization:
-            logger.warning("No organization context, returning default value")
+            logger.debug("No organization context, returning default value")
             return default
 
         # Try cache first
@@ -241,7 +241,7 @@ def is_feature_enabled(feature_key: str, user=None, organization=None) -> bool:
         organization = get_current_tenant()
 
     if not organization:
-        logger.warning("No organization context, feature disabled by default")
+        logger.debug("No organization context, feature disabled by default")
         return False
 
     try:

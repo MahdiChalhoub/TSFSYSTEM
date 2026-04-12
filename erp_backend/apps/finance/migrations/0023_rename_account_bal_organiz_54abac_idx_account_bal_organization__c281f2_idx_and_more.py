@@ -12,6 +12,35 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # ZATCAConfig was created outside the normal migration flow.
+        # This SeparateDatabaseAndState registers it in the migration state
+        # so subsequent AlterField operations can reference it.
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.CreateModel(
+                    name='ZATCAConfig',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
+                        ('vat_registration_number', models.CharField(max_length=15)),
+                        ('seller_name', models.CharField(max_length=255)),
+                        ('certificate_pem', models.TextField(blank=True, null=True)),
+                        ('private_key_pem', models.TextField(blank=True, null=True)),
+                        ('csr_request_id', models.CharField(blank=True, max_length=255, null=True)),
+                        ('compliance_certificate_pem', models.TextField(blank=True, null=True)),
+                        ('production_certificate_pem', models.TextField(blank=True, null=True)),
+                        ('is_sandbox', models.BooleanField(default=True)),
+                        ('is_active', models.BooleanField(default=False)),
+                        ('last_invoice_hash', models.CharField(default='0' * 64, max_length=64)),
+                        ('invoice_counter', models.IntegerField(default=0)),
+                        ('created_at', models.DateTimeField(auto_now_add=True, null=True)),
+                        ('updated_at', models.DateTimeField(auto_now=True, null=True)),
+                    ],
+                    options={'db_table': 'zatca_config'},
+                ),
+            ],
+            database_operations=[],  # Table already exists in DB
+        ),
         migrations.RenameIndex(
             model_name='accountbalancesnapshot',
             new_name='account_bal_organization__c281f2_idx',
