@@ -872,8 +872,8 @@ export function Sidebar({
         return true;
     });
 
-    // Pin SaaS Control to top if in SaaS context
-    const filteredItems = isSaas
+    // Pin SaaS Control to top if in SaaS or superuser context
+    const filteredItems = (isSaas || isSuperuser)
         ? [
             ...processedItems.filter(i => i.title === 'SaaS Control'),
             ...processedItems.filter(i => i.title !== 'SaaS Control')
@@ -891,70 +891,120 @@ export function Sidebar({
             )}
 
             <aside className={clsx(
-                "fixed md:relative inset-y-0 left-0 bg-[var(--app-sidebar-bg)] border-r border-[var(--app-sidebar-border)] flex flex-col shrink-0 overflow-hidden h-full text-[var(--app-sidebar-text)] shadow-2xl z-50 transition-all duration-300 transform",
+                "fixed md:relative inset-y-0 left-0 flex flex-col shrink-0 overflow-hidden h-full z-50 transition-all duration-300 transform",
                 sidebarOpen
                     ? "w-[var(--nav-width)] translate-x-0 opacity-100"
                     : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:pointer-events-none"
-            )}>
-                <div className="p-8 border-b border-[var(--app-sidebar-border)] flex items-center gap-4 shrink-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--app-primary)] to-[var(--app-primary-dark)] flex items-center justify-center shadow-lg shadow-[var(--app-primary-glow)] text-white font-bold text-xl">
+            )} style={{
+                background: 'var(--app-sidebar-bg)',
+                borderRight: '1px solid var(--app-sidebar-border)',
+                color: 'var(--app-sidebar-text)',
+                boxShadow: '4px 0 24px -8px rgba(0,0,0,0.15)',
+            }}>
+                {/* ── Branding ── */}
+                <div className="px-5 py-4 flex items-center gap-3 shrink-0" style={{
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-sidebar-border) 50%, transparent)',
+                }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm"
+                        style={{
+                            background: 'linear-gradient(135deg, var(--app-primary), var(--app-primary-dark, var(--app-primary)))',
+                            boxShadow: '0 2px 8px var(--app-primary-glow, rgba(0,0,0,0.2))',
+                        }}>
                         {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-[var(--app-sidebar-text)] tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
-                        <p className="text-xs text-[var(--app-primary)] font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
+                    <div className="min-w-0">
+                        <h1 className="text-sm font-black tracking-tight leading-none truncate" style={{ color: 'var(--app-sidebar-text)' }}>
+                            {PLATFORM_CONFIG.name}
+                        </h1>
+                        <p className="text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: 'var(--app-primary)' }}>
+                            {isSaas ? 'Platform Admin' : 'Workspace'}
+                        </p>
                     </div>
                 </div>
 
-                {/* View Scope Switcher — only visible for full-access users */}
+                {/* ── Scope Switcher ── */}
                 {dualViewEnabled && canToggleScope && (
-                    <div className="mx-6 mt-6 shrink-0">
-                        <div className="p-1.5 bg-[var(--app-sidebar-bg)] rounded-2xl border border-[var(--app-sidebar-border)] flex gap-1">
+                    <div className="mx-4 mt-3 shrink-0">
+                        <div className="p-1 rounded-xl flex gap-0.5" style={{
+                            background: 'color-mix(in srgb, var(--app-sidebar-border) 30%, transparent)',
+                        }}>
                             <button
                                 onClick={() => setViewScope('OFFICIAL')}
                                 suppressHydrationWarning={true}
                                 className={clsx(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                     viewScope === 'OFFICIAL'
-                                        ? "bg-[var(--app-primary)] text-white shadow-lg shadow-[var(--app-primary-glow)]"
-                                        : "text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] hover:bg-[var(--app-sidebar-active)]"
+                                        ? "text-white"
+                                        : "hover:bg-[var(--app-sidebar-active)]"
                                 )}
+                                style={viewScope === 'OFFICIAL' ? {
+                                    background: 'var(--app-primary)',
+                                    color: 'white',
+                                    boxShadow: '0 2px 6px var(--app-primary-glow, rgba(0,0,0,0.2))',
+                                } : { color: 'var(--app-sidebar-muted)' }}
                             >
-                                <Layers size={14} />
+                                <Layers size={12} />
                                 Official
                             </button>
                             <button
                                 onClick={() => setViewScope('INTERNAL')}
                                 suppressHydrationWarning={true}
                                 className={clsx(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                     viewScope === 'INTERNAL'
-                                        ? "bg-[var(--app-sidebar-surface)] text-[var(--app-sidebar-text)] shadow-lg"
-                                        : "text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] hover:bg-[var(--app-sidebar-active)]"
+                                        ? ""
+                                        : "hover:bg-[var(--app-sidebar-active)]"
                                 )}
+                                style={viewScope === 'INTERNAL' ? {
+                                    background: 'var(--app-sidebar-surface, var(--app-sidebar-active))',
+                                    color: 'var(--app-sidebar-text)',
+                                    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                                } : { color: 'var(--app-sidebar-muted)' }}
                             >
-                                <BarChart3 size={14} />
+                                <BarChart3 size={12} />
                                 Internal
                             </button>
                         </div>
                     </div>
                 )}
 
-                <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="text-xs font-bold text-[var(--app-sidebar-muted)] uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
+                {/* ── Menu ── */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-0.5">
                     {filteredItems.map((item, idx) => (
-                        <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                        <React.Fragment key={idx}>
+                            {/* Section separator for major module boundaries */}
+                            {idx > 0 && item.visibility === 'saas' && (
+                                <div className="my-2 mx-2 flex items-center gap-2">
+                                    <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                    <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                    <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                </div>
+                            )}
+                            <MenuItem item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                        </React.Fragment>
                     ))}
                 </div>
 
-                <div className="p-6 border-t border-[var(--app-sidebar-border)] bg-[var(--app-sidebar-bg)] shrink-0 opacity-80">
+                {/* ── Footer ── */}
+                <div className="px-3 py-3 shrink-0" style={{
+                    borderTop: '1px solid color-mix(in srgb, var(--app-sidebar-border) 50%, transparent)',
+                }}>
                     <button
                         onClick={() => logoutAction()}
                         suppressHydrationWarning={true}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-[var(--app-sidebar-active)] text-[var(--app-sidebar-muted)] hover:text-[var(--app-sidebar-text)] transition-all group"
+                        className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl transition-all group"
+                        style={{ color: 'var(--app-sidebar-muted)' }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.background = 'color-mix(in srgb, var(--app-error, #ef4444) 8%, transparent)';
+                            e.currentTarget.style.color = 'var(--app-error, #ef4444)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = 'var(--app-sidebar-muted)';
+                        }}
                     >
-                        <LogOut size={20} className="group-hover:text-[var(--app-error)] transition-colors" />
-                        <span className="text-sm font-medium">Sign Out</span>
+                        <LogOut size={16} />
+                        <span className="text-xs font-bold">Sign Out</span>
                     </button>
                 </div>
             </aside>
@@ -1007,40 +1057,64 @@ function MenuItem({
         }
     };
 
+
     return (
-        <div className={level > 0 ? "mt-1" : "mt-2"}>
+        <div className={level > 0 ? "mt-0.5" : "mt-0.5"}>
             <div
                 onClick={handleClick}
                 className={clsx(
-                    "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer select-none transition-all duration-200 group relative overflow-hidden",
-                    isActive || isChildActive
-                        ? "bg-[var(--app-sidebar-active)] text-[var(--app-primary)] shadow-[0_0_20px_var(--app-primary-glow)] ring-1 ring-[var(--app-primary)]/20"
-                        : "text-[var(--app-sidebar-muted)] hover:bg-[var(--app-sidebar-active)] hover:text-[var(--app-sidebar-text)]",
-                    level > 0 && "py-2.5 rounded-xl text-[13px]"
+                    "flex items-center gap-2.5 px-3 cursor-pointer select-none transition-all duration-150 group relative overflow-hidden",
+                    level === 0 ? "py-2 rounded-xl" : "py-1.5 rounded-lg",
+                    isActive
+                        ? "font-bold"
+                        : isChildActive
+                            ? ""
+                            : "hover:bg-[var(--app-sidebar-active)]"
                 )}
+                style={
+                    isActive ? {
+                        background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)',
+                        color: 'var(--app-primary)',
+                    } : isChildActive ? {
+                        background: 'color-mix(in srgb, var(--app-sidebar-active) 50%, transparent)',
+                        color: 'var(--app-sidebar-text)',
+                    } : {
+                        color: 'var(--app-sidebar-muted)',
+                    }
+                }
             >
-                {/* Active Indicator Strip */}
+                {/* Active Accent Strip */}
                 {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--app-primary)] rounded-r-full" />
+                    <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full" style={{ background: 'var(--app-primary)' }} />
                 )}
 
                 {Icon && (
-                    <Icon size={level === 0 ? 22 : 18} className={clsx(isActive || isChildActive ? "text-[var(--app-primary)]" : "group-hover:text-[var(--app-sidebar-text)] transition-colors")} />
+                    <Icon size={level === 0 ? 18 : 15} style={
+                        isActive || isChildActive
+                            ? { color: 'var(--app-primary)' }
+                            : undefined
+                    } className={isActive || isChildActive ? "" : "group-hover:text-[var(--app-sidebar-text)] transition-colors"} />
                 )}
 
-                <span className={clsx("flex-1 truncate", level === 0 ? "font-medium" : "font-normal")}>
+                <span className={clsx(
+                    "flex-1 truncate",
+                    level === 0 ? "text-[13px] font-medium" : "text-[12px] font-normal"
+                )}>
                     {item.title}
                 </span>
 
                 {hasChildren && (
-                    <div className={clsx("transition-transform duration-200 text-gray-500", expanded ? "rotate-90 text-emerald-500" : "")}>
-                        <ChevronRight size={18} />
+                    <div className={clsx("transition-transform duration-200", expanded ? "rotate-90" : "")}
+                        style={{ color: expanded ? 'var(--app-primary)' : 'inherit', opacity: 0.5 }}>
+                        <ChevronRight size={14} />
                     </div>
                 )}
             </div>
 
             {hasChildren && expanded && (
-                <div className="ml-6 pl-4 border-l border-[var(--app-sidebar-border)] my-1.5 space-y-1">
+                <div className="ml-5 pl-3 my-0.5 space-y-0" style={{
+                    borderLeft: '1px solid color-mix(in srgb, var(--app-sidebar-border) 60%, transparent)',
+                }}>
                     {item.children.map((child: Record<string, any>, idx: number) => (
                         <MenuItem
                             key={idx}

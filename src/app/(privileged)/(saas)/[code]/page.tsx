@@ -12,6 +12,7 @@ const STATIC_SIBLING_ROUTES = [
     'apps', 'connector', 'countries', 'country-tax-templates', 'currencies',
     'e-invoice-standards', 'encryption', 'health', 'kernel',
     'listview-policies', 'modules', 'organizations', 'saas-home', 'settings',
+    'theme-demo', 'ui-kit',
 ]
 
 export default function DynamicModulePage() {

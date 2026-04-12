@@ -1,10 +1,12 @@
 // Detect if running in browser or server
 const isClient = typeof window !== 'undefined';
 
-// Server-side: call Django directly on the same machine (fast, no Nginx hop)
-// Client-side: use relative URL — Nginx proxies /api/* to Django automatically
+// Server-side: call Django directly (fast, no Nginx hop)
+// Client-side: route through /api/proxy/[...path] — the Next.js proxy reads the
+//              httpOnly auth_token cookie server-side and injects Authorization header.
+//              Calling /api/... directly from the browser sends NO auth (httpOnly = unreadable).
 const DJANGO_URL = isClient
-    ? ''  // Relative URL — browser calls /api/... and Nginx forwards to Django
+    ? null  // Client uses /api/proxy/ — see URL construction below
     : (process.env.DJANGO_URL || 'http://127.0.0.1:8000');
 
 // Performance: Only log in development to avoid I/O overhead in production
@@ -110,7 +112,12 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
-    let url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+    // Client: proxy route handles auth injection (reads httpOnly cookie server-side)
+    // Server: call Django directly with token already injected above
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    let url = isClient
+        ? `/api/proxy/${cleanPath}`
+        : `${DJANGO_URL}/api/${cleanPath}`;
 
     // Support for complex query params (UDLE Filtering)
     if (options.body === undefined && (options.method === 'GET' || !options.method)) {
