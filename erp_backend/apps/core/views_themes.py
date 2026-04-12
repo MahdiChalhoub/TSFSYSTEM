@@ -60,8 +60,9 @@ def list_themes(request):
         "current": {"theme_slug": "...", "color_mode": "..."}
     }
     """
-    # System themes (no tenant, available to all)
-    system_themes = OrganizationTheme.objects.filter(
+    # System themes — use original_objects (unscoped) so tenant auto-filter
+    # doesn't exclude org=None system themes when a user is logged in
+    system_themes = OrganizationTheme.original_objects.filter(
         is_system=True,
         is_active=True
     )
@@ -69,9 +70,9 @@ def list_themes(request):
     # Tenant custom themes
     custom_themes = []
     org = _get_org_context(request)
-    
+
     if org:
-        custom_themes = OrganizationTheme.objects.filter(
+        custom_themes = OrganizationTheme.original_objects.filter(
             organization=org,
             is_active=True,
             is_system=False
