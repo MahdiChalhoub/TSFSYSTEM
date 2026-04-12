@@ -81,12 +81,21 @@ function AppearancePageInner() {
             <h1 className="text-2xl font-black tracking-tight">Appearance <span style={{ color: 'var(--app-primary)' }}>&amp; Themes</span></h1>
           </div>
 
-          {/* Active theme pill — mounted guard prevents SSR/client mismatch */}
-          {mounted && currentTheme && (
+          {/* Context-aware active pill — shows color theme OR design system depending on tab */}
+          {mounted && (
             <div className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
               <div className="w-3 h-3 rounded-full" style={{ background: 'var(--app-primary)' }} />
-              <span className="text-sm font-semibold">{currentTheme.name}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>Active</span>
+              {activeTab === 'design-system' ? (
+                <>
+                  <span className="text-sm font-semibold">{DS_META[currentSystem]?.badge ?? currentSystem}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>Design System</span>
+                </>
+              ) : currentTheme ? (
+                <>
+                  <span className="text-sm font-semibold">{currentTheme.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>Color Theme</span>
+                </>
+              ) : null}
             </div>
           )}
         </div>
@@ -226,7 +235,7 @@ function AppearancePageInner() {
             <div>
               <h2 className="text-lg font-bold mb-1">Design Language</h2>
               <p className="text-sm" style={{ color: 'var(--app-text-muted)' }}>
-                Controls component shapes, spacing, and interaction patterns across the entire system.
+                Controls <strong>component shapes, spacing and corner radius</strong> across the whole app — independent of the color theme. Click a card to apply it.
               </p>
             </div>
 
