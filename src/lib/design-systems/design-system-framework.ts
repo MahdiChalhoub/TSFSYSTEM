@@ -357,20 +357,33 @@ export function applyDesignSystem(
   root.setAttribute("data-design-system", system.id);
   root.setAttribute("data-color-mode", colorMode);
 
-  // ── 11. Persistent shape overrides via injected <style> ──────
-  // AppThemeProvider writes --card-radius, --button-radius, --app-radius etc.
-  // as *normal* inline styles. An author stylesheet rule with !important wins
-  // over inline styles without !important (CSS cascade level 3), so these
-  // overrides survive theme switches without needing to coordinate with
-  // AppThemeProvider.  We also explicitly set every --radius-* tier because
-  // Tailwind v4's @theme inline may bake them as static values at build time
-  // rather than live CSS custom properties.
-  const cardR   = system.components.card.borderRadius;
-  const btnR    = system.components.button.borderRadius;
-  const inputR  = system.components.input.borderRadius;
-  const modalR  = system.components.modal.borderRadius;
-  const badgeR  = system.components.badge.borderRadius;
-  const base    = baseRadius;
+  // ── 11. Inject <style> that directly overrides Tailwind's compiled classes ──
+  //
+  // Tailwind v4 with @theme inline BAKES border-radius values at build time:
+  //   .rounded-xl { border-radius: 0.75rem }  ← static, not var(--radius-xl)
+  // Changing CSS custom properties at runtime has NO effect on these classes.
+  //
+  // Fix: use [data-design-system="id"] .rounded-* selector rules.
+  // Specificity (0,2,0) beats Tailwind's (0,1,0) — no !important needed.
+  // data-design-system is set on <html> above, so all page elements match.
+  //
+  // For CSS custom properties that actual components read via var(), we still
+  // use :root !important because those ARE live custom properties.
+  const cardR  = system.components.card.borderRadius;
+  const btnR   = system.components.button.borderRadius;
+  const inputR = system.components.input.borderRadius;
+  const modalR = system.components.modal.borderRadius;
+  const base   = baseRadius;
+  const id     = system.id;
+
+  // Calculate each rounded tier from base
+  const rSm  = Math.max(0, base - 4);
+  const rMd  = Math.max(0, base - 2);
+  const rLg  = base;
+  const rXl  = base + 4;
+  const r2xl = base + 8;
+  const r3xl = base + 12;
+  const r4xl = base + 16;
 
   const styleId = 'tsf-ds-shape-overrides';
   let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -380,36 +393,33 @@ export function applyDesignSystem(
     document.head.appendChild(styleEl);
   }
   styleEl.textContent = `
-    :root {
-      /* Tailwind rounded-* tiers — explicit so @theme inline baking doesn't freeze them */
-      --radius:     ${base}px !important;
-      --radius-sm:  ${Math.max(0, base - 4)}px !important;
-      --radius-md:  ${Math.max(0, base - 2)}px !important;
-      --radius-lg:  ${base}px !important;
-      --radius-xl:  ${base + 4}px !important;
-      --radius-2xl: ${base + 8}px !important;
-      --radius-3xl: ${base + 12}px !important;
-      --radius-4xl: ${base + 16}px !important;
+    /* ── Direct Tailwind class overrides — specificity (0,2,0) beats Tailwind (0,1,0) ── */
+    [data-design-system="${id}"] .rounded-sm  { border-radius: ${rSm}px; }
+    [data-design-system="${id}"] .rounded     { border-radius: ${rLg}px; }
+    [data-design-system="${id}"] .rounded-md  { border-radius: ${rMd}px; }
+    [data-design-system="${id}"] .rounded-lg  { border-radius: ${rLg}px; }
+    [data-design-system="${id}"] .rounded-xl  { border-radius: ${rXl}px; }
+    [data-design-system="${id}"] .rounded-2xl { border-radius: ${r2xl}px; }
+    [data-design-system="${id}"] .rounded-3xl { border-radius: ${r3xl}px; }
+    [data-design-system="${id}"] .rounded-4xl { border-radius: ${r4xl}px; }
+    [data-design-system="${id}"] .rounded-full { border-radius: 9999px; }
 
-      /* App component shape tokens (read by actual components) */
+    /* ── CSS custom properties for components using var() ── */
+    /* !important wins over AppThemeProvider's inline setProperty() calls  */
+    :root {
       --app-radius:    ${cardR}px !important;
       --card-radius:   ${cardR}px !important;
       --button-radius: ${btnR}px !important;
       --input-radius:  ${inputR}px !important;
       --modal-radius:  ${modalR}px !important;
-
-      /* Font */
       --app-font:         ${system.typography.fontFamily} !important;
       --app-font-display: ${system.typography.fontFamily} !important;
-      --font-body:        ${system.typography.fontFamily} !important;
-
-      /* Shadows */
-      --app-shadow-sm:  ${system.shadows.sm} !important;
-      --card-shadow:    ${system.components.card.shadow} !important;
+      --app-shadow-sm: ${system.shadows.sm} !important;
+      --card-shadow:   ${system.components.card.shadow} !important;
     }
   `;
 
-  console.log(`🎨 [DesignSystem] Applied: ${system.name} (${colorMode}) — radius=${base}px btn=${btnR}px card=${cardR}px`);
+  console.log(`🎨 [DesignSystem] Applied: ${system.name} — base=${base}px btn=${btnR}px card=${cardR}px`);
 }
 
 /**
