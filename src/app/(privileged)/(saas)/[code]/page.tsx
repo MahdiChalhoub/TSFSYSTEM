@@ -1,12 +1,27 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Box, Layers, Zap, Info } from "lucide-react"
+
+/**
+ * Known static routes that live as siblings inside (saas).
+ * If Next.js resolves any of these to [code], redirect to the static page.
+ */
+const STATIC_SIBLING_ROUTES = [
+    'apps', 'connector', 'countries', 'country-tax-templates', 'currencies',
+    'e-invoice-standards', 'encryption', 'health', 'kernel',
+    'listview-policies', 'modules', 'organizations', 'saas-home', 'settings',
+]
 
 export default function DynamicModulePage() {
     const params = useParams()
     const code = params.code as string
+
+    // Guard: if this is a known static route, force Next.js to the correct page
+    if (STATIC_SIBLING_ROUTES.includes(code)) {
+        redirect(`/${code}`)
+    }
 
     // [FUTURE] Here we will fetch specific dashboard components/widgets from the Registry
     // For now, we show a professional fallback that works for ALL modules instantly.

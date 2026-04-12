@@ -690,6 +690,7 @@ export const MENU_ITEMS = [
                     { title: 'Platform Health', path: '/health' },
                     { title: 'Kernel Updates', path: '/updates' },
                     { title: 'Global Registry', path: '/modules' },
+                    { title: 'Countries', path: '/countries' },
                     { title: 'Currencies', path: '/currencies' },
                     { title: 'Country Tax Templates', path: '/country-tax-templates' },
                     { title: 'E-Invoice Standards', path: '/e-invoice-standards' },
