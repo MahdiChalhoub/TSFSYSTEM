@@ -91,7 +91,7 @@ export function TabNavigator() {
                 style={{
                     width: 52,
                     background: 'var(--app-surface-2)',
-                    borderRight: '1px solid var(--app-border)',
+                    borderLeft: '1px solid var(--app-border)',
                 }}
             >
                 {/* Switch back to horizontal */}

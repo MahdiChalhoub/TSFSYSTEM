@@ -15,12 +15,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     if (tabLayout === 'vertical') {
         return (
             <div className="flex flex-1 min-h-0 overflow-hidden">
-                <TabNavigator />
                 <main className="flex-1 overflow-auto relative p-6 md:p-8">
                     <Suspense fallback={null}>
                         {children}
                     </Suspense>
                 </main>
+                <TabNavigator />
             </div>
         );
     }
