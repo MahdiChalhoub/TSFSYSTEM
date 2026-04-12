@@ -545,47 +545,102 @@ export function useAppTheme(): AppThemeContextValue {
 }
 
 // ── ThemeScript — inject synchronously into <head> ────────────────
-// Sets theme class BEFORE first paint. Zero flicker.
+// Applies the FULL cached theme before first paint → zero flicker.
+// Must mirror every setProperty call in applyFullThemeToDOM() above.
 export function ThemeScript() {
     const script = `
 (function(){
  try {
- var k = '${LOCAL_STORAGE_KEY}';
- var kFull = '${LOCAL_STORAGE_FULL}';
- var stored = localStorage.getItem(k);
- if (!stored) {
-   var match = document.cookie.match(new RegExp('(^| )' + k + '=([^;]+)'));
-   if (match) stored = match[2];
- }
- var theme = stored || '${DEFAULT_SLUG}';
- var root = document.documentElement;
- // Remove old theme classes
- var classes = Array.from(root.classList).filter(function(c){ return c.indexOf('theme-') === 0; });
- classes.forEach(function(c){ root.classList.remove(c); });
- root.classList.add('theme-' + theme);
- // Apply dark mode from cached preset if available
- var colorMode = 'dark';
- try {
-   var full = JSON.parse(localStorage.getItem(kFull) || '{}');
-   if (full.colorMode) colorMode = full.colorMode;
-   // Apply cached colors immediately for zero-flicker
-   var colors = full.currentTheme && full.currentTheme.presetData && full.currentTheme.presetData.colors;
-   if (colors) {
-     var c = colors[colorMode] || colors.dark;
-     if (c) {
-       var s = root.style;
-       s.setProperty('--app-bg', c.bg || '');
-       s.setProperty('--app-surface', c.surface || '');
-       s.setProperty('--app-text', c.text || '');
-       s.setProperty('--app-primary', c.primary || '');
-       s.setProperty('--app-border', c.border || '');
-       s.setProperty('--app-text-muted', c.textMuted || '');
-     }
-   }
+  var kFull = '${LOCAL_STORAGE_FULL}';
+  var kSlug = '${LOCAL_STORAGE_KEY}';
+  var root = document.documentElement;
+  var s = root.style;
+
+  // ── Read cached full theme ──
+  var full = {};
+  try { full = JSON.parse(localStorage.getItem(kFull) || '{}'); } catch(e){}
+
+  var slug = (full.currentTheme && full.currentTheme.slug) || localStorage.getItem(kSlug) || '${DEFAULT_SLUG}';
+  var colorMode = full.colorMode || 'dark';
+  var presetData = (full.currentTheme && full.currentTheme.presetData) || {};
+  var colors = presetData.colors || {};
+  var layout = presetData.layout || {};
+  var components = presetData.components || {};
+  var navigation = presetData.navigation || {};
+
+  var effectiveMode = colorMode === 'auto'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : colorMode;
+  var c = colors[effectiveMode] || colors.dark || {};
+
+  // ── Colors ──
+  if (c.primary)    { s.setProperty('--app-primary', c.primary); s.setProperty('--app-primary-dark', c.primaryDark || c.primary); s.setProperty('--app-primary-light', c.primary + '1f'); s.setProperty('--app-primary-glow', c.primary + '59'); }
+  if (c.bg)         { s.setProperty('--app-bg', c.bg); }
+  if (c.surface)    { s.setProperty('--app-surface', c.surface); s.setProperty('--app-surface-2', c.surfaceHover || c.surface); s.setProperty('--app-surface-hover', c.surfaceHover || c.surface); }
+  if (c.text)       { s.setProperty('--app-text', c.text); }
+  if (c.textMuted)  { s.setProperty('--app-text-muted', c.textMuted); s.setProperty('--app-text-faint', c.textMuted); }
+  if (c.border)     { s.setProperty('--app-border', c.border); s.setProperty('--app-border-strong', c.border); }
+  // Sidebar (derived from colors)
+  if (c.bg)         { s.setProperty('--app-sidebar-bg', c.bg); }
+  if (c.text)       { s.setProperty('--app-sidebar-text', c.text); }
+  if (c.textMuted)  { s.setProperty('--app-sidebar-muted', c.textMuted); }
+  if (c.border)     { s.setProperty('--app-sidebar-border', c.border); }
+
+  // ── Components ──
+  var cards = components.cards || {};
+  var buttons = components.buttons || {};
+  var inputs = components.inputs || {};
+  var typo = components.typography || {};
+  var modals = components.modals || {};
+  var forms = components.forms || {};
+
+  if (cards.borderRadius) { s.setProperty('--card-radius', cards.borderRadius); s.setProperty('--app-radius', cards.borderRadius); }
+  if (cards.shadow)       { s.setProperty('--card-shadow', cards.shadow); s.setProperty('--app-shadow-sm', cards.shadow); }
+  if (cards.border)       s.setProperty('--card-border', cards.border);
+  if (cards.padding)      s.setProperty('--card-padding', cards.padding);
+
+  if (buttons.borderRadius) s.setProperty('--button-radius', buttons.borderRadius);
+  if (buttons.height)       s.setProperty('--button-height', buttons.height);
+  if (buttons.padding)      s.setProperty('--button-padding', buttons.padding);
+  if (buttons.fontSize)     s.setProperty('--button-font-size', buttons.fontSize);
+  if (buttons.fontWeight)   s.setProperty('--button-font-weight', buttons.fontWeight);
+
+  if (inputs.borderRadius)  s.setProperty('--input-radius', inputs.borderRadius);
+  if (inputs.height)        s.setProperty('--input-height', inputs.height);
+  if (inputs.padding)       s.setProperty('--input-padding', inputs.padding);
+  if (inputs.fontSize)      s.setProperty('--input-font-size', inputs.fontSize);
+  if (inputs.border)        s.setProperty('--input-border', inputs.border);
+
+  if (typo.headingFont) { s.setProperty('--font-heading', typo.headingFont); s.setProperty('--app-font-display', typo.headingFont); }
+  if (typo.bodyFont)    { s.setProperty('--font-body', typo.bodyFont); s.setProperty('--app-font', typo.bodyFont); }
+  if (typo.h1Size)      s.setProperty('--font-size-h1', typo.h1Size);
+  if (typo.h2Size)      s.setProperty('--font-size-h2', typo.h2Size);
+  if (typo.h3Size)      s.setProperty('--font-size-h3', typo.h3Size);
+  if (typo.bodySize)    s.setProperty('--font-size-body', typo.bodySize);
+  if (typo.smallSize)   s.setProperty('--font-size-small', typo.smallSize);
+
+  if (modals.borderRadius) s.setProperty('--modal-radius', modals.borderRadius);
+  if (modals.maxWidth)     s.setProperty('--modal-max-width', modals.maxWidth);
+  if (modals.padding)      s.setProperty('--modal-padding', modals.padding);
+  if (modals.shadow)       s.setProperty('--modal-shadow', modals.shadow);
+
+  if (forms.fieldSpacing)  s.setProperty('--form-field-spacing', forms.fieldSpacing);
+  if (forms.groupSpacing)  s.setProperty('--form-group-spacing', forms.groupSpacing);
+
+  var spacing = layout.spacing || {};
+  if (spacing.container) s.setProperty('--layout-container-padding', spacing.container);
+  if (spacing.section)   s.setProperty('--layout-section-spacing', spacing.section);
+  if (spacing.card)      s.setProperty('--layout-card-padding', spacing.card);
+  if (spacing.element)   s.setProperty('--layout-element-gap', spacing.element);
+  if (layout.density)    { s.setProperty('--layout-density', layout.density); root.setAttribute('data-density', layout.density); }
+
+  // ── Theme class, dark mode, data attrs ──
+  Array.from(root.classList).filter(function(cl){ return cl.indexOf('theme-') === 0; }).forEach(function(cl){ root.classList.remove(cl); });
+  root.classList.add('theme-' + slug);
+  if (effectiveMode === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+  root.setAttribute('data-theme', slug);
+  root.setAttribute('data-color-mode', effectiveMode);
  } catch(e){}
- if (colorMode === 'dark') root.classList.add('dark');
- else root.classList.remove('dark');
- } catch(e) {}
 })();
 `.trim();
 
