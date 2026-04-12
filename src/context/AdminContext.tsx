@@ -34,6 +34,9 @@ type AdminContextType = {
     /** Navigation layout: vertical sidebar or horizontal top-nav */
     navLayout: 'sidebar' | 'topnav';
     setNavLayout: (layout: 'sidebar' | 'topnav') => void;
+    /** Tab bar layout: horizontal strip or vertical rail */
+    tabLayout: 'horizontal' | 'vertical';
+    setTabLayout: (layout: 'horizontal' | 'vertical') => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -49,6 +52,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const [navLayout, setNavLayoutState] = useState<'sidebar' | 'topnav'>(() => {
         if (typeof window === 'undefined') return 'sidebar';
         return (localStorage.getItem('tsf_nav_layout') as 'sidebar' | 'topnav') || 'sidebar';
+    });
+    const [tabLayout, setTabLayoutState] = useState<'horizontal' | 'vertical'>(() => {
+        if (typeof window === 'undefined') return 'horizontal';
+        return (localStorage.getItem('tsf_tab_layout') as 'horizontal' | 'vertical') || 'horizontal';
     });
 
     // After hydration: close sidebar on small viewports so it doesn't block content
@@ -103,6 +110,11 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         localStorage.setItem(SCOPE_KEY, viewScope);
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
     }, [viewScope, isLoaded, SCOPE_KEY]);
+
+    const setTabLayout = (layout: 'horizontal' | 'vertical') => {
+        setTabLayoutState(layout);
+        localStorage.setItem('tsf_tab_layout', layout);
+    };
 
     const setNavLayout = (layout: 'sidebar' | 'topnav') => {
         setNavLayoutState(layout);
@@ -179,6 +191,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             canToggleScope,
             navLayout,
             setNavLayout,
+            tabLayout,
+            setTabLayout,
         }}>
             {children}
         </AdminContext.Provider>

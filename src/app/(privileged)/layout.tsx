@@ -5,7 +5,7 @@ import '../globals.css';
 import { AdminProvider } from '@/context/AdminContext';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { TopHeader } from '@/components/admin/TopHeader';
-import { TabNavigator } from '@/components/admin/TabNavigator';
+import { AdminShell } from '@/components/admin/AdminShell';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
 import { CommandPalette } from '@/components/admin/CommandPalette';
@@ -108,18 +108,11 @@ export default async function AdminLayout({
 
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">
-                        {/* 1. Global Header (Search, Profile) */}
+                        {/* 1. Global Header */}
                         <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
 
-                        {/* 2. Tab Navigation Bar */}
-                        <TabNavigator />
-
-                        {/* 3. The Page Content */}
-                        <main className="flex-1 overflow-auto relative p-6 md:p-8">
-                            <Suspense fallback={null}>
-                                {children}
-                            </Suspense>
-                        </main>
+                        {/* 2. Tab bar (horizontal strip or vertical rail) + main content */}
+                        <AdminShell>{children}</AdminShell>
                     </div>
                     <DebugOverlay />
                     <CommandPalette />
