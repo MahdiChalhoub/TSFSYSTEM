@@ -30,12 +30,12 @@ export default function CatchAllPage() {
                 </div>
 
                 {/* Title */}
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight capitalize">
+                <h1 className="text-2xl font-black text-app-foreground tracking-tight capitalize">
                     {moduleName}
                 </h1>
 
                 {/* Subtitle */}
-                <p className="mt-2 text-sm text-gray-400 font-mono">
+                <p className="mt-2 text-sm text-app-muted-foreground font-mono">
                     /{fullPath}
                 </p>
 
@@ -56,8 +56,8 @@ export default function CatchAllPage() {
                     <Link
                         href="/dashboard"
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                            bg-gray-900 text-white text-sm font-semibold
-                            hover:bg-gray-800 transition-all shadow-md shadow-gray-900/20"
+                            bg-app-bg text-white text-sm font-semibold
+                            hover:bg-app-surface transition-all shadow-md shadow-gray-900/20"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Dashboard
@@ -65,9 +65,9 @@ export default function CatchAllPage() {
                     <Link
                         href="/modules"
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                            bg-white text-gray-700 text-sm font-semibold
-                            border border-gray-200 hover:border-gray-300 
-                            hover:bg-gray-50 transition-all"
+                            bg-app-surface text-app-foreground text-sm font-semibold
+                            border border-app-border hover:border-app-border 
+                            hover:bg-app-surface transition-all"
                     >
                         <Package className="w-4 h-4" />
                         Browse Modules
@@ -75,7 +75,7 @@ export default function CatchAllPage() {
                 </div>
 
                 {/* Tech Info */}
-                <p className="mt-10 text-xs text-gray-300 font-mono">
+                <p className="mt-10 text-xs text-app-faint font-mono">
                     Engine v1.3.0 • Catch-All Route • Layout Preserved
                 </p>
             </div>

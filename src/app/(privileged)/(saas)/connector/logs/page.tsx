@@ -48,7 +48,7 @@ interface LogEntry {
 const decisionColors: Record<string, string> = {
     forwarded: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     cached: 'bg-blue-100 text-blue-700 border-blue-200',
-    empty: 'bg-gray-100 text-gray-700 border-gray-200',
+    empty: 'bg-app-surface-2 text-app-foreground border-app-border',
     buffered: 'bg-amber-100 text-amber-700 border-amber-200',
     dropped: 'bg-red-100 text-red-700 border-red-200',
     error: 'bg-red-100 text-red-700 border-red-200',
@@ -92,7 +92,7 @@ export default function ConnectorLogsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/connector" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
+                    <Link href="/connector" className="text-app-muted-foreground hover:text-app-muted-foreground flex items-center gap-2 mb-4 text-sm font-medium">
                         <ArrowLeft size={16} />
                         Back to Connector Dashboard
                     </Link>
@@ -101,8 +101,8 @@ export default function ConnectorLogsPage() {
                             <FileText size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Routing Logs</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Audit trail of Connector routing decisions</p>
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Routing Logs</h2>
+                    <p className="text-app-muted-foreground mt-2 font-medium">Audit trail of Connector routing decisions</p>
                 </div>
                 <Button
                     onClick={() => loadLogs()}
@@ -116,11 +116,11 @@ export default function ConnectorLogsPage() {
             </div>
 
             {/* Filters */}
-            <Card className="rounded-2xl border-gray-100">
+            <Card className="rounded-2xl border-app-border">
                 <CardContent className="p-4 flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2">
-                        <Search size={18} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-600">Filters:</span>
+                        <Search size={18} className="text-app-muted-foreground" />
+                        <span className="text-sm font-medium text-app-muted-foreground">Filters:</span>
                     </div>
                     <Input
                         placeholder="Filter by module..."
@@ -146,14 +146,14 @@ export default function ConnectorLogsPage() {
             </Card>
 
             {/* Logs List */}
-            <Card className="rounded-3xl shadow-xl border-gray-100">
+            <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                            <RefreshCw className="w-8 h-8 animate-spin text-app-muted-foreground" />
                         </div>
                     ) : logs.length === 0 ? (
-                        <div className="text-center py-20 text-gray-400">
+                        <div className="text-center py-20 text-app-muted-foreground">
                             <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="font-medium">No routing logs found</p>
                             <p className="text-sm mt-1">Logs are created when the Connector routes requests</p>
@@ -161,22 +161,22 @@ export default function ConnectorLogsPage() {
                     ) : (
                         <div className="divide-y divide-gray-50">
                             {logs.map((log) => (
-                                <div key={log.id} className="p-5 hover:bg-gray-50/50 transition-colors">
+                                <div key={log.id} className="p-5 hover:bg-app-surface/50 transition-colors">
                                     <div className="flex items-center justify-between gap-4 mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                                            <span className="font-mono text-sm font-medium text-gray-900">
+                                            <span className="font-mono text-sm font-medium text-app-foreground">
                                                 {log.source_module}
                                             </span>
-                                            <ArrowRight size={14} className="text-gray-300" />
-                                            <span className="font-mono text-sm font-medium text-gray-900">
+                                            <ArrowRight size={14} className="text-app-faint" />
+                                            <span className="font-mono text-sm font-medium text-app-foreground">
                                                 {log.target_module}
                                             </span>
                                             <Badge variant="outline" className="font-mono text-[10px] uppercase">
                                                 {log.operation}
                                             </Badge>
                                         </div>
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-app-muted-foreground">
                                             {new Date(log.created_at).toLocaleString()}
                                         </span>
                                     </div>
@@ -189,22 +189,22 @@ export default function ConnectorLogsPage() {
                                         </Badge>
                                         <Badge
                                             variant="outline"
-                                            className={decisionColors[log.decision] || 'border-gray-200'}
+                                            className={decisionColors[log.decision] || 'border-app-border'}
                                         >
                                             {log.decision}
                                         </Badge>
                                         {log.response_time_ms > 0 && (
-                                            <span className="text-xs text-gray-400 font-mono">
+                                            <span className="text-xs text-app-muted-foreground font-mono">
                                                 {log.response_time_ms}ms
                                             </span>
                                         )}
                                     </div>
 
-                                    <div className="text-xs text-gray-500 font-mono">
+                                    <div className="text-xs text-app-muted-foreground font-mono">
                                         {log.target_endpoint}
                                     </div>
 
-                                    <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-400">
+                                    <div className="flex flex-wrap gap-4 mt-2 text-xs text-app-muted-foreground">
                                         {log.organization_name && (
                                             <span>Org: {log.organization_name}</span>
                                         )}
@@ -229,8 +229,8 @@ export default function ConnectorLogsPage() {
             </Card>
 
             {/* Info Footer */}
-            <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 text-sm text-gray-500">
-                <strong className="text-gray-700">Note:</strong> Logs are capped at 1,000 entries for performance.
+            <div className="p-6 bg-app-surface rounded-2xl border border-app-border text-sm text-app-muted-foreground">
+                <strong className="text-app-foreground">Note:</strong> Logs are capped at 1,000 entries for performance.
                 Use filters to narrow down results. Logs older than 30 days may be automatically archived.
             </div>
         </div>

@@ -91,7 +91,7 @@ export default function CustomerInsightsPage() {
     const TIER_STYLE: Record<string, string> = {
         Diamond: 'bg-violet-100 text-violet-700',
         Gold: 'bg-amber-100 text-amber-700',
-        Silver: 'bg-gray-200 text-gray-700',
+        Silver: 'bg-app-surface-2 text-app-foreground',
         Bronze: 'bg-orange-100 text-orange-700',
     }
 
@@ -109,16 +109,16 @@ export default function CustomerInsightsPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center">
                             <Crown size={20} className="text-white" />
                         </div>
                         Customer Insights
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Customer segmentation, tier analysis & spending patterns</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Customer segmentation, tier analysis & spending patterns</p>
                 </div>
                 <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -129,7 +129,7 @@ export default function CustomerInsightsPage() {
                         <div className="flex items-center gap-3">
                             <Users size={24} className="text-violet-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Customers</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Customers</p>
                                 <p className="text-2xl font-bold">{contacts.length}</p>
                             </div>
                         </div>
@@ -140,7 +140,7 @@ export default function CustomerInsightsPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-green-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Active (30d)</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Active (30d)</p>
                                 <p className="text-2xl font-bold text-green-700">{activeCustomers}</p>
                             </div>
                         </div>
@@ -151,7 +151,7 @@ export default function CustomerInsightsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Revenue</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Revenue</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(totalRevenue)}</p>
                             </div>
                         </div>
@@ -162,7 +162,7 @@ export default function CustomerInsightsPage() {
                         <div className="flex items-center gap-3">
                             <ShoppingCart size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Order Value</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Avg Order Value</p>
                                 <p className="text-xl font-bold text-blue-700">{fmt(avgOrderVal)}</p>
                             </div>
                         </div>
@@ -198,14 +198,14 @@ export default function CustomerInsightsPage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Users size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No customers found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>#</TableHead>
                                     <TableHead>Customer</TableHead>
                                     <TableHead>Tier</TableHead>
@@ -218,8 +218,8 @@ export default function CustomerInsightsPage() {
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((c: Record<string, any>, i: number) => (
-                                    <TableRow key={c.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                    <TableRow key={c.id} className="hover:bg-app-surface/50">
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center">
@@ -229,7 +229,7 @@ export default function CustomerInsightsPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-sm">{c.name || 'Unknown'}</p>
-                                                    {c.phone && <p className="text-[10px] text-gray-400">{c.phone}</p>}
+                                                    {c.phone && <p className="text-[10px] text-app-muted-foreground">{c.phone}</p>}
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -249,7 +249,7 @@ export default function CustomerInsightsPage() {
                                                 {c.daysSinceLast < 999 ? `${c.daysSinceLast}d` : 'Never'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-xs text-gray-500">
+                                        <TableCell className="text-xs text-app-muted-foreground">
                                             {c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString('fr-FR') : '\u2014'}
                                         </TableCell>
                                     </TableRow>

@@ -19,7 +19,7 @@ export default function DynamicModulePage() {
                 </div>
                 <div>
                     <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
-                    <p className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-emerald-400">{code}</code></p>
+                    <p className="text-xs md:text-sm text-app-muted-foreground mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-emerald-400">{code}</code></p>
                 </div>
             </div>
 
@@ -32,7 +32,7 @@ export default function DynamicModulePage() {
                         <CardTitle className="text-xl font-bold text-white">Live Instance</CardTitle>
                         <CardDescription>Direct injection from Global Registry</CardDescription>
                     </CardHeader>
-                    <CardContent className="text-sm text-gray-400 leading-relaxed">
+                    <CardContent className="text-sm text-app-muted-foreground leading-relaxed">
                         This interface was dynamically enabled for this organization. No code deploy was required.
                     </CardContent>
                 </Card>
@@ -45,7 +45,7 @@ export default function DynamicModulePage() {
                         <CardTitle className="text-xl font-bold text-white">Modular State</CardTitle>
                         <CardDescription>Context-aware data layer active</CardDescription>
                     </CardHeader>
-                    <CardContent className="text-sm text-gray-400 leading-relaxed">
+                    <CardContent className="text-sm text-app-muted-foreground leading-relaxed">
                         Securely isolated data and permissions are currently being enforced for the <strong>{code}</strong> module.
                     </CardContent>
                 </Card>
@@ -58,7 +58,7 @@ export default function DynamicModulePage() {
                         <CardTitle className="text-xl font-bold text-white">Ready for Logic</CardTitle>
                         <CardDescription>Template rendering successful</CardDescription>
                     </CardHeader>
-                    <CardContent className="text-sm text-gray-400 leading-relaxed">
+                    <CardContent className="text-sm text-app-muted-foreground leading-relaxed">
                         Foundations are ready. You can now start adding business-specific widgets and reports.
                     </CardContent>
                 </Card>

@@ -42,34 +42,34 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Controls */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-wrap items-end justify-between gap-4 print:hidden">
+            <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
                 <div className="flex gap-4 items-end">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-stone-500 flex items-center gap-1">
+                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
                             <Calendar size={12} /> Start Date
                         </label>
                         <input
                             type="date"
                             value={startDate}
                             onChange={e => setStartDate(e.target.value)}
-                            className="border border-stone-200 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-stone-500 flex items-center gap-1">
+                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
                             <Calendar size={12} /> End Date
                         </label>
                         <input
                             type="date"
                             value={endDate}
                             onChange={e => setEndDate(e.target.value)}
-                            className="border border-stone-200 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
                         />
                     </div>
                     <button
                         onClick={handleRefresh}
                         disabled={isPending}
-                        className="bg-stone-900 text-white px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                        className="bg-app-bg text-white px-6 py-2.5 rounded-lg hover:bg-app-foreground font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
                     >
                         {isPending ? 'Calculating...' : 'Update Report'}
                     </button>
@@ -78,7 +78,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
                 <div className="flex gap-2">
                     <button
                         onClick={() => window.print()}
-                        className="bg-white text-stone-600 border border-stone-200 px-4 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm flex items-center gap-2"
+                        className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm flex items-center gap-2"
                     >
                         <Printer size={18} /> Print PDF
                     </button>
@@ -101,7 +101,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
                     color="rose"
                     formatAmount={formatAmount}
                 />
-                <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-stone-900 border-stone-800 text-white shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-white shadow-xl shadow-rose-200'}`}>
+                <div className={`p-6 rounded-2xl border-2 flex flex-col justify-center ${netProfit >= 0 ? 'bg-app-bg border-stone-800 text-white shadow-xl shadow-stone-200' : 'bg-rose-900 border-rose-800 text-white shadow-xl shadow-rose-200'}`}>
                     <p className="text-[10px] font-bold uppercase opacity-60 tracking-[0.2em] mb-1">Net Profit / Loss</p>
                     <p className="text-3xl font-mono font-bold">
                         {formatAmount(netProfit)}
@@ -111,10 +111,10 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
             </div>
 
             {/* Detailed Table */}
-            <div className="bg-white rounded-3xl shadow-xl shadow-stone-100 border border-stone-200 overflow-hidden">
+            <div className="bg-app-surface rounded-3xl shadow-xl shadow-stone-100 border border-app-border overflow-hidden">
                 <table className="w-full text-sm border-collapse">
                     <thead>
-                        <tr className="bg-stone-50 text-stone-400 uppercase text-[10px] tracking-[0.2em] font-bold border-b border-stone-100">
+                        <tr className="bg-app-surface text-app-muted-foreground uppercase text-[10px] tracking-[0.2em] font-bold border-b border-app-border">
                             <th className="p-6 text-left">Account Description</th>
                             <th className="p-6 text-right w-48">Amount</th>
                         </tr>
@@ -139,7 +139,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
                         <TotalRow title="Total Expenses" amount={expenses.reduce((sum, a) => sum + a.balance, 0)} color="rose" formatAmount={formatAmount} />
 
                         {/* Final Net */}
-                        <tr className="bg-stone-900 text-white border-t-4 border-white">
+                        <tr className="bg-app-bg text-white border-t-4 border-white">
                             <td className="p-8 text-xl font-serif font-bold italic">Net Profit / Loss</td>
                             <td className="p-8 text-right text-2xl font-mono font-bold">
                                 {formatAmount(netProfit)}
@@ -158,10 +158,10 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
 
 function SummaryCard({ title, amount, icon, color, formatAmount }: Record<string, any>) {
     return (
-        <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
+        <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm flex items-center justify-between">
             <div>
-                <p className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1">{title}</p>
-                <p className="text-2xl font-mono font-bold text-stone-900">{formatAmount(amount)}</p>
+                <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-wider mb-1">{title}</p>
+                <p className="text-2xl font-mono font-bold text-app-foreground">{formatAmount(amount)}</p>
             </div>
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-50`}>
                 {icon}
@@ -179,19 +179,19 @@ function ReportRow({ account, level, allAccounts, formatAmount }: Record<string,
 
     return (
         <>
-            <tr className={`group transition-colors ${isParent ? 'bg-stone-50/40 font-bold' : 'hover:bg-stone-50/30'}`}>
+            <tr className={`group transition-colors ${isParent ? 'bg-app-surface/40 font-bold' : 'hover:bg-app-surface/30'}`}>
                 <td className="p-4" style={{ paddingLeft: `${level * 24 + 24}px` }}>
                     <div className="flex items-center gap-3">
                         {isParent && (
-                            <button onClick={() => setExpanded(!expanded)} className="text-stone-300 hover:text-stone-900 transition-colors">
+                            <button onClick={() => setExpanded(!expanded)} className="text-app-faint hover:text-app-foreground transition-colors">
                                 {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                             </button>
                         )}
-                        <span className="text-stone-400 font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
-                        <span className={isParent ? 'text-stone-900' : 'text-stone-600'}>{account.name}</span>
+                        <span className="text-app-muted-foreground font-mono text-[10px] mr-2 opacity-0 group-hover:opacity-100 transition-opacity">{account.code}</span>
+                        <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
                     </div>
                 </td>
-                <td className="p-4 text-right font-mono font-medium text-stone-800">
+                <td className="p-4 text-right font-mono font-medium text-app-foreground">
                     {formatAmount(account.balance)}
                 </td>
             </tr>
@@ -208,7 +208,7 @@ function TotalRow({ title, amount, color, formatAmount }: Record<string, any>) {
     const isEmerald = color === 'emerald'
     return (
         <tr className={isEmerald ? 'bg-emerald-50/50' : 'bg-rose-50/50'}>
-            <td className="p-6 text-right font-bold uppercase tracking-widest text-xs text-stone-400">{title}</td>
+            <td className="p-6 text-right font-bold uppercase tracking-widest text-xs text-app-muted-foreground">{title}</td>
             <td className={`p-6 text-right font-mono font-black text-lg ${isEmerald ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {formatAmount(amount)}
             </td>

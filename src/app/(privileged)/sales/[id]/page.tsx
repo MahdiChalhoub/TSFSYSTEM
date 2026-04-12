@@ -29,7 +29,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Sale Not Found</h1>
+                <h1 className="text-2xl font-black text-app-foreground tracking-tighter">Sale Not Found</h1>
                 <Link href="/sales/history" className="text-emerald-500 font-bold hover:underline">Return to History</Link>
             </div>
         );
@@ -42,18 +42,18 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             {/* Header & Breadcrumbs */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <Link href="/sales/history" className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-emerald-500 transition-all mb-4">
+                    <Link href="/sales/history" className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-emerald-500 transition-all mb-4">
                         <ArrowLeft size={14} /> Back to Sales History
                     </Link>
                     <div className="flex items-center gap-4">
-                        <h1 className="text-3xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                        <h1 className="text-3xl lg:text-5xl font-black text-app-foreground tracking-tighter">
                             Sale Record <span className="text-emerald-500">{order.invoice_number || order.ref_code || `#${order.id}`}</span>
                         </h1>
                     </div>
                 </div>
 
                 <div className="flex gap-3">
-                    <button className="p-3.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2">
+                    <button className="p-3.5 bg-app-surface border border-app-border rounded-2xl text-app-muted-foreground hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2">
                         <Printer size={20} />
                         <span className="text-xs font-bold uppercase tracking-wider">Print Invoice</span>
                     </button>
@@ -72,19 +72,19 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
 
             {/* Status & Summary Cards */}
             <div className="grid md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</div>
-                    <div className="text-xl font-black text-gray-900">{order.status}</div>
+                <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
+                    <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Status</div>
+                    <div className="text-xl font-black text-app-foreground">{order.status}</div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</div>
-                    <div className="text-xl font-black text-gray-900">{new Date(order.created_at).toLocaleDateString('fr-FR')}</div>
+                <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
+                    <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Date</div>
+                    <div className="text-xl font-black text-app-foreground">{new Date(order.created_at).toLocaleDateString('fr-FR')}</div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</div>
-                    <div className="text-xl font-black text-gray-900 truncate">{order.contact_name || 'Walking Customer'}</div>
+                <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
+                    <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Customer</div>
+                    <div className="text-xl font-black text-app-foreground truncate">{order.contact_name || 'Walking Customer'}</div>
                 </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-emerald-100 bg-emerald-50/30 shadow-sm">
+                <div className="bg-app-surface p-6 rounded-[2rem] border border-emerald-100 bg-emerald-50/30 shadow-sm">
                     <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
                     <div className="text-xl font-black text-emerald-700">{fmt(parseFloat(order.total_amount))}</div>
                 </div>
@@ -94,15 +94,15 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             <div className="grid lg:grid-cols-3 gap-8">
                 {/* Left: Items */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden">
-                        <div className="p-6 bg-gray-50 border-b border-gray-100 flex items-center justify-between font-black text-[10px] text-gray-400 uppercase tracking-widest">
+                    <div className="bg-app-surface rounded-[2rem] shadow-xl border border-app-border overflow-hidden">
+                        <div className="p-6 bg-app-surface border-b border-app-border flex items-center justify-between font-black text-[10px] text-app-muted-foreground uppercase tracking-widest">
                             <span>Sold Items</span>
                             <span>{order.lines?.length || 0} Products</span>
                         </div>
                         <div className="p-0 overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    <tr className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
                                         <th className="p-6">Product</th>
                                         <th className="p-6 text-center">Qty</th>
                                         <th className="p-6 text-right">Unit Price</th>
@@ -114,19 +114,19 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                     {order.lines?.map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">
-                                                <div className="font-bold text-gray-900">{line.product_name}</div>
-                                                <div className="text-[10px] text-gray-400 font-mono">SKU: {line.product_sku || 'N/A'}</div>
+                                                <div className="font-bold text-app-foreground">{line.product_name}</div>
+                                                <div className="text-[10px] text-app-muted-foreground font-mono">SKU: {line.product_sku || 'N/A'}</div>
                                             </td>
-                                            <td className="p-6 text-center font-bold text-gray-900">
+                                            <td className="p-6 text-center font-bold text-app-foreground">
                                                 {line.quantity}
                                             </td>
-                                            <td className="p-6 text-right font-medium text-gray-500">
+                                            <td className="p-6 text-right font-medium text-app-muted-foreground">
                                                 {fmt(parseFloat(line.unit_price))}
                                             </td>
-                                            <td className="p-6 text-right text-gray-400">
+                                            <td className="p-6 text-right text-app-muted-foreground">
                                                 {fmt(parseFloat(line.vat_amount || 0))}
                                             </td>
-                                            <td className="p-6 text-right font-black text-gray-900">
+                                            <td className="p-6 text-right font-black text-app-foreground">
                                                 {fmt(parseFloat(line.total))}
                                             </td>
                                         </tr>
@@ -137,19 +137,19 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                     </div>
 
                     {/* Summary Footer */}
-                    <div className="bg-gray-900 text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="bg-app-bg text-white p-10 rounded-[3rem] shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8">
                         <div className="flex gap-8">
                             <div>
-                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Subtotal</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Subtotal</div>
                                 <div className="text-xl font-bold">{fmt(parseFloat(order.total_amount) - parseFloat(order.tax_amount))}</div>
                             </div>
                             <div>
-                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Total Tax</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Total Tax</div>
                                 <div className="text-xl font-bold">{fmt(parseFloat(order.tax_amount))}</div>
                             </div>
                         </div>
                         <div className="text-right">
-                            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Grand Total Collected</div>
+                            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-1">Grand Total Collected</div>
                             <div className="text-5xl font-black text-emerald-400 tracking-tighter">{fmt(parseFloat(order.total_amount))}</div>
                         </div>
                     </div>
@@ -157,14 +157,14 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
 
                 {/* Right: Info Panels */}
                 <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+                    <div className="bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm space-y-6">
                         <div className="flex items-start gap-4">
                             <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
                                 <Receipt size={20} />
                             </div>
                             <div>
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Info</div>
-                                <div className="text-sm font-black text-gray-900">{order.payment_method || 'N/A'}</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Payment Info</div>
+                                <div className="text-sm font-black text-app-foreground">{order.payment_method || 'N/A'}</div>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
@@ -172,8 +172,8 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                 <Clock size={20} />
                             </div>
                             <div>
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaction Time</div>
-                                <div className="text-sm font-black text-gray-900">{new Date(order.created_at).toLocaleTimeString('fr-FR')}</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Transaction Time</div>
+                                <div className="text-sm font-black text-app-foreground">{new Date(order.created_at).toLocaleTimeString('fr-FR')}</div>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
@@ -181,8 +181,8 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                 <MapPin size={20} />
                             </div>
                             <div>
-                                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Processing Site</div>
-                                <div className="text-sm font-black text-gray-900">{order.site_name || 'Main Warehouse'}</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Processing Site</div>
+                                <div className="text-sm font-black text-app-foreground">{order.site_name || 'Main Warehouse'}</div>
                             </div>
                         </div>
                     </div>

@@ -56,22 +56,22 @@ export default function SalesAnalyticsPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center">
                             <BarChart3 size={20} className="text-white" />
                         </div>
                         Sales Analytics
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-app-muted-foreground mt-1">
                         {data.period?.start} → {data.period?.end}
                     </p>
                 </div>
-                <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                <div className="flex gap-1 bg-app-surface-2 rounded-lg p-1">
                     {[7, 30, 90].map(d => (
                         <button
                             key={d}
                             onClick={() => setPeriod(d)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${period === d ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${period === d ? 'bg-app-surface shadow text-app-foreground' : 'text-app-muted-foreground hover:text-app-foreground'
                                 }`}
                         >
                             {d}d
@@ -87,7 +87,7 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={22} className="text-violet-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Revenue</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase">Revenue</p>
                                 <p className="text-lg font-bold text-violet-700">{fmt(overall.revenue)}</p>
                             </div>
                         </div>
@@ -98,7 +98,7 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <ShoppingCart size={22} className="text-blue-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Orders</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase">Orders</p>
                                 <p className="text-lg font-bold text-blue-700">{overall.orders}</p>
                             </div>
                         </div>
@@ -109,7 +109,7 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={22} className="text-emerald-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Avg Order</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase">Avg Order</p>
                                 <p className="text-lg font-bold text-emerald-700">{fmt(overall.avg_order)}</p>
                             </div>
                         </div>
@@ -120,7 +120,7 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={22} className="text-rose-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Tax</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase">Tax</p>
                                 <p className="text-lg font-bold text-rose-700">{fmt(overall.tax)}</p>
                             </div>
                         </div>
@@ -131,7 +131,7 @@ export default function SalesAnalyticsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={22} className="text-orange-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500 uppercase">Discounts</p>
+                                <p className="text-[10px] text-app-muted-foreground uppercase">Discounts</p>
                                 <p className="text-lg font-bold text-orange-700">{fmt(overall.discount)}</p>
                             </div>
                         </div>
@@ -144,7 +144,7 @@ export default function SalesAnalyticsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <TrendingUp size={18} className="text-gray-400" /> Daily Revenue Trend
+                            <TrendingUp size={18} className="text-app-muted-foreground" /> Daily Revenue Trend
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -154,14 +154,14 @@ export default function SalesAnalyticsPage() {
                                 const pct = max ? (d.revenue / max * 100) : 0
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                                        <div className="invisible group-hover:visible text-[10px] text-gray-500 whitespace-nowrap">
+                                        <div className="invisible group-hover:visible text-[10px] text-app-muted-foreground whitespace-nowrap">
                                             {fmt(d.revenue)}
                                         </div>
                                         <div
                                             className="w-full bg-violet-400 rounded-t hover:bg-violet-600 transition-all"
                                             style={{ height: `${Math.max(pct, 2)}%` }}
                                         />
-                                        <div className="text-[9px] text-gray-400 transform -rotate-45 origin-top-left whitespace-nowrap">
+                                        <div className="text-[9px] text-app-muted-foreground transform -rotate-45 origin-top-left whitespace-nowrap">
                                             {new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                                         </div>
                                     </div>
@@ -177,13 +177,13 @@ export default function SalesAnalyticsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <Package size={18} className="text-gray-400" /> Top Products
+                            <Package size={18} className="text-app-muted-foreground" /> Top Products
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>#</TableHead>
                                     <TableHead>Product</TableHead>
                                     <TableHead className="text-right">Qty</TableHead>
@@ -193,7 +193,7 @@ export default function SalesAnalyticsPage() {
                             <TableBody>
                                 {top_products?.map((p: Record<string, any>, i: number) => (
                                     <TableRow key={i}>
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell className="font-medium">{p.name || 'Unknown'}</TableCell>
                                         <TableCell className="text-right text-sm">{Math.round(p.qty)}</TableCell>
                                         <TableCell className="text-right font-bold text-violet-600">{fmt(p.revenue)}</TableCell>
@@ -201,7 +201,7 @@ export default function SalesAnalyticsPage() {
                                 ))}
                                 {(!top_products?.length) && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-8 text-gray-400">No product data</TableCell>
+                                        <TableCell colSpan={4} className="text-center py-8 text-app-muted-foreground">No product data</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -213,13 +213,13 @@ export default function SalesAnalyticsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <Users size={18} className="text-gray-400" /> Top Customers
+                            <Users size={18} className="text-app-muted-foreground" /> Top Customers
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>#</TableHead>
                                     <TableHead>Customer</TableHead>
                                     <TableHead className="text-right">Orders</TableHead>
@@ -229,7 +229,7 @@ export default function SalesAnalyticsPage() {
                             <TableBody>
                                 {top_customers?.map((c: Record<string, any>, i: number) => (
                                     <TableRow key={i}>
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell className="font-medium">{c.name || 'Walk-in'}</TableCell>
                                         <TableCell className="text-right text-sm">{c.orders}</TableCell>
                                         <TableCell className="text-right font-bold text-emerald-600">{fmt(c.spent)}</TableCell>
@@ -237,7 +237,7 @@ export default function SalesAnalyticsPage() {
                                 ))}
                                 {(!top_customers?.length) && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-8 text-gray-400">No customer data</TableCell>
+                                        <TableCell colSpan={4} className="text-center py-8 text-app-muted-foreground">No customer data</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -251,7 +251,7 @@ export default function SalesAnalyticsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <CreditCard size={18} className="text-gray-400" /> Payment Methods
+                            <CreditCard size={18} className="text-app-muted-foreground" /> Payment Methods
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -265,9 +265,9 @@ export default function SalesAnalyticsPage() {
                                         <div className="flex-1">
                                             <div className="flex justify-between text-sm mb-1">
                                                 <span className="font-medium">{p.method}</span>
-                                                <span className="text-gray-500">{p.count} orders</span>
+                                                <span className="text-app-muted-foreground">{p.count} orders</span>
                                             </div>
-                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                 <div className="h-full bg-violet-400 rounded-full" style={{ width: `${pct}%` }} />
                                             </div>
                                         </div>
@@ -276,7 +276,7 @@ export default function SalesAnalyticsPage() {
                                 )
                             })}
                             {(!payment_methods?.length) && (
-                                <p className="text-center py-4 text-gray-400">No payment data</p>
+                                <p className="text-center py-4 text-app-muted-foreground">No payment data</p>
                             )}
                         </div>
                     </CardContent>
@@ -286,7 +286,7 @@ export default function SalesAnalyticsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <Building2 size={18} className="text-gray-400" /> Site Performance
+                            <Building2 size={18} className="text-app-muted-foreground" /> Site Performance
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -302,9 +302,9 @@ export default function SalesAnalyticsPage() {
                                         <div className="flex-1">
                                             <div className="flex justify-between text-sm mb-1">
                                                 <span className="font-medium">{s.site || 'Unknown'}</span>
-                                                <span className="text-gray-500">{s.count} orders</span>
+                                                <span className="text-app-muted-foreground">{s.count} orders</span>
                                             </div>
-                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                 <div className="h-full bg-blue-400 rounded-full" style={{ width: `${pct}%` }} />
                                             </div>
                                         </div>
@@ -313,7 +313,7 @@ export default function SalesAnalyticsPage() {
                                 )
                             })}
                             {(!site_performance?.length) && (
-                                <p className="text-center py-4 text-gray-400">No site data</p>
+                                <p className="text-center py-4 text-app-muted-foreground">No site data</p>
                             )}
                         </div>
                     </CardContent>

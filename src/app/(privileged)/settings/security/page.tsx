@@ -9,15 +9,15 @@ export default async function SecurityPage() {
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-app-surface p-6 rounded-[2rem] border border-app-border shadow-sm">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter flex items-center gap-3">
+                    <h1 className="text-3xl font-black text-app-foreground uppercase tracking-tighter flex items-center gap-3">
                         <div className="p-2 bg-slate-900 rounded-xl">
                             <Shield className="text-emerald-400" size={28} />
                         </div>
                         Security Center
                     </h1>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-[10px] text-app-muted-foreground font-bold uppercase tracking-widest mt-1">
                         Protect your account with advanced security protocols
                     </p>
                 </div>
@@ -27,26 +27,26 @@ export default async function SecurityPage() {
                 <div className="lg:col-span-2 space-y-8">
                     <TwoFactorSettings initialEnabled={user.is_2fa_enabled} />
 
-                    <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+                    <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm">
                         <div className="flex items-center gap-4 mb-6">
                             <div className="p-3 bg-blue-50 rounded-2xl">
                                 <Key className="text-blue-600" size={24} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Session Management</h2>
-                                <p className="text-xs text-gray-400 font-medium tracking-tight">Active devices and login history</p>
+                                <h2 className="text-lg font-black text-app-foreground uppercase tracking-tighter">Session Management</h2>
+                                <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Active devices and login history</p>
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                            <div className="flex items-center justify-between p-4 bg-app-surface rounded-2xl">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100">
-                                        <SquareTerminal size={18} className="text-gray-400" />
+                                    <div className="w-10 h-10 bg-app-surface rounded-xl flex items-center justify-center border border-app-border">
+                                        <SquareTerminal size={18} className="text-app-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-black text-gray-900 tracking-tight">Current Session</p>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Windows 11 • Chrome • 192.168.1.1</p>
+                                        <p className="text-sm font-black text-app-foreground tracking-tight">Current Session</p>
+                                        <p className="text-[10px] text-app-muted-foreground font-bold uppercase">Windows 11 • Chrome • 192.168.1.1</p>
                                     </div>
                                 </div>
                                 <Badge className="bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>
@@ -61,7 +61,7 @@ export default async function SecurityPage() {
                             <Shield size={120} />
                         </div>
                         <h3 className="text-xl font-black uppercase tracking-tighter mb-2 relative z-10">Account Health</h3>
-                        <p className="text-xs text-slate-400 font-medium mb-6 relative z-10">Security score and recommendations</p>
+                        <p className="text-xs text-app-muted-foreground font-medium mb-6 relative z-10">Security score and recommendations</p>
 
                         <div className="space-y-4 relative z-10">
                             <div className="h-2 bg-slate-800 rounded-full overflow-hidden">

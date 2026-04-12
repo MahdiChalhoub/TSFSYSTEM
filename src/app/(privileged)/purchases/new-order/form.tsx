@@ -80,26 +80,26 @@ export default function FormalOrderForm({
         <form action={formAction} className="space-y-6">
             <div className="grid lg:grid-cols-4 gap-4">
                 {/* Scope */}
-                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
-                    <div className="flex p-1 bg-gray-50 rounded-2xl h-11">
-                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}>OFFICIAL</button>
-                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400'}`}>INTERNAL</button>
+                <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Procurement Scope</label>
+                    <div className="flex p-1 bg-app-surface rounded-2xl h-11">
+                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>OFFICIAL</button>
+                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-xl text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>INTERNAL</button>
                     </div>
                     <input type="hidden" name="scope" value={scope} />
                 </div>
 
                 {/* Logistics */}
-                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Destination Site</label>
+                <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Destination Site</label>
                     <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
                         <option value="">Select Destination...</option>
                         {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Warehouse</label>
+                <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Warehouse</label>
                     <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600" name="warehouseId" required>
                         <option value="">Warehouse...</option>
                         {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -107,8 +107,8 @@ export default function FormalOrderForm({
                 </div>
 
                 {/* Supplier */}
-                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Supplier</label>
+                <div className="bg-app-surface p-5 rounded-3xl border border-app-border shadow-sm flex flex-col justify-center">
+                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-2 text-center">Supplier</label>
                     <select
                         className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center"
                         name="supplierId"
@@ -123,17 +123,17 @@ export default function FormalOrderForm({
             </div>
 
             {/* Items Table */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="p-4 bg-gray-50 border-b flex items-center gap-4">
+            <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
+                <div className="p-4 bg-app-surface border-b flex items-center gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
                         <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-[#F8FAFC] text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                        <thead className="bg-[#F8FAFC] text-[10px] font-black text-app-muted-foreground uppercase tracking-widest border-b border-app-border">
                             <tr>
                                 <th className="p-6">Product</th>
                                 <th className="p-6 w-32 text-center">Quantity</th>
@@ -145,22 +145,22 @@ export default function FormalOrderForm({
                         <tbody className="divide-y divide-gray-50 text-sm">
                             {lines.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="p-20 text-center text-gray-400 italic">
+                                    <td colSpan={5} className="p-20 text-center text-app-muted-foreground italic">
                                         No items added to the quotation yet.
                                     </td>
                                 </tr>
                             ) : (
                                 lines.map((line, idx) => (
-                                    <tr key={line.productId} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr key={line.productId} className="hover:bg-app-surface/50 transition-colors">
                                         <td className="p-6">
-                                            <div className="font-bold text-gray-900">{line.productName}</div>
-                                            <div className="text-[10px] text-gray-400 font-mono mt-1">{line.sku}</div>
+                                            <div className="font-bold text-app-foreground">{line.productName}</div>
+                                            <div className="text-[10px] text-app-muted-foreground font-mono mt-1">{line.sku}</div>
                                             <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
                                         </td>
                                         <td className="p-6">
                                             <input
                                                 type="number"
-                                                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                                className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                                                 value={line.quantity}
                                                 onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
                                                 name={`lines[${idx}][quantity]`}
@@ -170,12 +170,12 @@ export default function FormalOrderForm({
                                             <div className="relative flex items-center">
                                                 <input
                                                     type="number" step="0.01"
-                                                    className="w-full bg-white border border-gray-200 rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                                    className="w-full bg-app-surface border border-app-border rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                                                     value={line.unitPrice}
                                                     onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
                                                     name={`lines[${idx}][unitPrice]`}
                                                 />
-                                                <span className="absolute right-3 text-[10px] font-black text-gray-300">XOF</span>
+                                                <span className="absolute right-3 text-[10px] font-black text-app-faint">XOF</span>
                                                 {supplierPriceHints[line.productId] && (
                                                     <div className="absolute -top-6 left-0 right-0 text-center">
                                                         <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-100">
@@ -185,11 +185,11 @@ export default function FormalOrderForm({
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="p-6 text-right font-black text-gray-900 whitespace-nowrap">
+                                        <td className="p-6 text-right font-black text-app-foreground whitespace-nowrap">
                                             {(line.quantity * line.unitPrice).toLocaleString()} XOF
                                         </td>
                                         <td className="p-6 text-center">
-                                            <button type="button" onClick={() => removeLine(idx)} className="p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
+                                            <button type="button" onClick={() => removeLine(idx)} className="p-2 text-app-faint hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
                                                 <Trash2 size={16} />
                                             </button>
                                         </td>
@@ -202,22 +202,22 @@ export default function FormalOrderForm({
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                <div className="flex-1 w-full bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Conditions & Observations</label>
+                <div className="flex-1 w-full bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm">
+                    <label className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-3 block">Conditions & Observations</label>
                     <textarea
                         name="notes"
                         rows={4}
-                        className="w-full border border-gray-100 rounded-2xl p-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none"
+                        className="w-full border border-app-border rounded-2xl p-4 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none"
                         placeholder="Specify delivery terms, payment conditions, or reference codes..."
                     />
                 </div>
 
                 <div className="w-full md:w-96 space-y-4">
-                    <div className="bg-gray-900 text-white p-8 rounded-[2rem] shadow-2xl">
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-800 pb-4">Quotation Summary</div>
+                    <div className="bg-app-bg text-white p-8 rounded-[2rem] shadow-2xl">
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-6 border-b border-gray-800 pb-4">Quotation Summary</div>
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-500">Items Count</span>
+                                <span className="text-app-muted-foreground">Items Count</span>
                                 <span className="font-bold">{lines.length}</span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -271,14 +271,14 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
         <div className="relative">
             <input
                 type="text"
-                className="w-full bg-transparent p-2 pl-4 text-sm font-bold text-gray-900 placeholder:text-gray-400 outline-none"
+                className="w-full bg-transparent p-2 pl-4 text-sm font-bold text-app-foreground placeholder:text-app-muted-foreground outline-none"
                 placeholder="Search products to replenish..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => query.length > 1 && setOpen(true)}
             />
             {open && results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                <div className="absolute top-full left-0 right-0 mt-3 bg-app-surface rounded-2xl shadow-2xl border border-app-border z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
                     {results.map(r => (
                         <button
                             key={r.id}
@@ -291,8 +291,8 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                             className="w-full p-4 text-left hover:bg-indigo-50 flex items-center justify-between group transition-all"
                         >
                             <div>
-                                <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-700">{r.name}</div>
-                                <div className="text-[10px] text-gray-400">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm text-app-foreground group-hover:text-indigo-700">{r.name}</div>
+                                <div className="text-[10px] text-app-muted-foreground">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
                             </div>
                             <div className="text-right whitespace-nowrap">
                                 <div className="text-xs font-black text-indigo-600">{r.costPriceHT?.toLocaleString()} XOF HT</div>

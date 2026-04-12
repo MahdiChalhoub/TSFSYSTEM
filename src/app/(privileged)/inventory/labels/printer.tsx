@@ -200,7 +200,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">Select Products</CardTitle>
                     <div className="relative mt-2">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
                             className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                             placeholder="Search by name, SKU, or barcode..."
@@ -218,27 +218,27 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                 onClick={() => addProduct(p)}
                                 className={`w-full text-left flex items-center gap-3 p-2.5 rounded-xl transition-all ${isAdded
                                         ? 'bg-emerald-50 border border-emerald-200'
-                                        : 'hover:bg-gray-50 border border-transparent'
+                                        : 'hover:bg-app-surface border border-transparent'
                                     }`}
                             >
-                                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 shrink-0">
+                                <div className="w-8 h-8 bg-app-surface-2 rounded-lg flex items-center justify-center text-app-muted-foreground shrink-0">
                                     <Tag size={14} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{p.name}</p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <div className="flex items-center gap-2 text-xs text-app-muted-foreground">
                                         <span>{p.sku}</span>
                                         {p.barcode && <span>· {p.barcode}</span>}
                                     </div>
                                 </div>
-                                <span className="text-xs font-semibold text-gray-600 shrink-0">
+                                <span className="text-xs font-semibold text-app-muted-foreground shrink-0">
                                     {fmt(p.selling_price_ttc)}
                                 </span>
                             </button>
                         )
                     })}
                     {filteredProducts.length === 0 && (
-                        <p className="text-sm text-gray-400 text-center py-8">No products found</p>
+                        <p className="text-sm text-app-muted-foreground text-center py-8">No products found</p>
                     )}
                 </CardContent>
             </Card>
@@ -251,14 +251,14 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                         <div className="flex flex-wrap items-center gap-4">
                             {/* Label Size */}
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-500">Size:</span>
+                                <span className="text-xs font-medium text-app-muted-foreground">Size:</span>
                                 {(['small', 'medium', 'large'] as LabelSize[]).map(size => (
                                     <button
                                         key={size}
                                         onClick={() => setLabelSize(size)}
                                         className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${labelSize === size
                                                 ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                                             }`}
                                     >
                                         {sizeLabels[size]}
@@ -266,7 +266,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                 ))}
                             </div>
 
-                            <div className="h-6 w-px bg-gray-200" />
+                            <div className="h-6 w-px bg-app-surface-2" />
 
                             {/* Toggle Options */}
                             <label className="flex items-center gap-1.5 text-xs cursor-pointer">
@@ -333,7 +333,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                     </CardHeader>
                     <CardContent>
                         {labelItems.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-app-muted-foreground">
                                 <Tag size={40} className="mx-auto mb-3 opacity-30" />
                                 <p className="text-sm">No products in print queue</p>
                                 <p className="text-xs mt-1">Click products from the left panel to add</p>
@@ -343,11 +343,11 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                 {labelItems.map(item => (
                                     <div
                                         key={item.product.id}
-                                        className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl"
+                                        className="flex items-center gap-4 p-3 bg-app-surface rounded-xl"
                                     >
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium truncate">{item.product.name}</p>
-                                            <div className="flex gap-3 text-xs text-gray-400 mt-0.5">
+                                            <div className="flex gap-3 text-xs text-app-muted-foreground mt-0.5">
                                                 <span>{item.product.sku}</span>
                                                 {item.product.barcode && <span>{item.product.barcode}</span>}
                                                 <span>{fmt(item.product.selling_price_ttc)}</span>
@@ -358,7 +358,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                         <div className="flex items-center gap-1 shrink-0">
                                             <button
                                                 onClick={() => updateQty(item.product.id, -1)}
-                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors"
+                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-app-surface-2 hover:bg-gray-300 text-app-muted-foreground transition-colors"
                                             >
                                                 <Minus size={12} />
                                             </button>
@@ -401,7 +401,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                         .map((_, idx) => (
                                             <div
                                                 key={`${item.product.id}-${idx}`}
-                                                className={`border border-gray-300 rounded p-2 flex flex-col justify-between ${labelSize === 'small'
+                                                className={`border border-app-border rounded p-2 flex flex-col justify-between ${labelSize === 'small'
                                                         ? 'w-[132px] h-[83px]'
                                                         : labelSize === 'medium'
                                                             ? 'w-[189px] h-[113px]'
@@ -416,7 +416,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                                         {item.product.name}
                                                     </p>
                                                     {showBrand && item.product.brand_name && (
-                                                        <p className="text-[7px] text-gray-500">{item.product.brand_name}</p>
+                                                        <p className="text-[7px] text-app-muted-foreground">{item.product.brand_name}</p>
                                                     )}
                                                 </div>
                                                 {showBarcode && item.product.barcode && (
@@ -429,7 +429,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                                 )}
                                                 <div className="flex justify-between items-end">
                                                     {showSku && (
-                                                        <span className="text-[7px] text-gray-400">{item.product.sku}</span>
+                                                        <span className="text-[7px] text-app-muted-foreground">{item.product.sku}</span>
                                                     )}
                                                     {showPrice && (
                                                         <span
@@ -448,7 +448,7 @@ export default function LabelPrinter({ products }: { products: Product[] }) {
                                         )),
                                 )}
                                 {totalLabels > labelItems.reduce((s, i) => s + Math.min(i.quantity, 4), 0) && (
-                                    <div className="w-full text-center text-xs text-gray-400 pt-2">
+                                    <div className="w-full text-center text-xs text-app-muted-foreground pt-2">
                                         Showing preview of first 4 labels per product. Full set prints when you click Print.
                                     </div>
                                 )}

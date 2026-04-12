@@ -179,10 +179,10 @@ export default function InvoicingScreen() {
                         onClick={() => setAutoReceive(!autoReceive)}
                         className={`flex items-center gap-4 px-6 py-4 rounded-[24px] border transition-all ${autoReceive
                             ? 'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-600/20'
-                            : 'bg-white text-app-foreground border-app-border hover:border-purple-300'
+                            : 'bg-app-surface text-app-foreground border-app-border hover:border-purple-300'
                             }`}
                     >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${autoReceive ? 'bg-white/20' : 'bg-app-surface border border-app-border'}`}>
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${autoReceive ? 'bg-app-surface/20' : 'bg-app-surface border border-app-border'}`}>
                             <ArrowRight size={16} className={autoReceive ? 'text-white' : 'text-app-muted-foreground'} />
                         </div>
                         <div className="text-left">
@@ -200,7 +200,7 @@ export default function InvoicingScreen() {
                     <div className="lg:col-span-8 space-y-8">
 
                         {/* Invoice Metadata */}
-                        <Card className="rounded-[40px] border border-app-border overflow-hidden bg-white shadow-sm">
+                        <Card className="rounded-[40px] border border-app-border overflow-hidden bg-app-surface shadow-sm">
                             <CardHeader className="bg-purple-50/50 border-b border-app-border p-8">
                                 <CardTitle className="text-lg font-black uppercase flex items-center gap-3">
                                     <Receipt className="text-purple-500" size={20} />
@@ -260,7 +260,7 @@ export default function InvoicingScreen() {
                                             disabled={isDisabled}
                                             className={`w-full text-left p-6 rounded-[32px] border transition-all flex items-center gap-6 ${isDisabled ? 'opacity-50 grayscale bg-app-surface cursor-not-allowed' :
                                                 isSelected ? 'bg-purple-50 border-purple-500 shadow-md ring-4 ring-purple-500/10' :
-                                                    'bg-white border-app-border hover:border-purple-300'
+                                                    'bg-app-surface border-app-border hover:border-purple-300'
                                                 }`}
                                         >
                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? 'bg-purple-500 text-white' : 'bg-app-surface text-app-muted-foreground border border-app-border'}`}>
@@ -298,7 +298,7 @@ export default function InvoicingScreen() {
 
                     {/* ── Right Column: Summary & Actions ── */}
                     <div className="lg:col-span-4 space-y-6">
-                        <Card className="rounded-[40px] border border-app-border overflow-hidden bg-white shadow-xl sticky top-8">
+                        <Card className="rounded-[40px] border border-app-border overflow-hidden bg-app-surface shadow-xl sticky top-8">
                             <CardHeader className="bg-app-primary/5 border-b border-app-border p-8">
                                 <CardTitle className="text-sm font-black uppercase tracking-widest text-app-primary">Invoicing Summary</CardTitle>
                             </CardHeader>
@@ -331,7 +331,7 @@ export default function InvoicingScreen() {
                                         onClick={() => setWaitForRest(!waitForRest)}
                                         className={`w-full p-6 rounded-[32px] border transition-all text-left flex items-start gap-4 ${waitForRest
                                             ? 'bg-purple-50 border-purple-500 shadow-md ring-4 ring-purple-500/10'
-                                            : 'bg-white border-app-border hover:border-purple-300'
+                                            : 'bg-app-surface border-app-border hover:border-purple-300'
                                             }`}
                                     >
                                         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${waitForRest ? 'bg-purple-600 text-white' : 'bg-app-surface text-app-muted-foreground border border-app-border'}`}>

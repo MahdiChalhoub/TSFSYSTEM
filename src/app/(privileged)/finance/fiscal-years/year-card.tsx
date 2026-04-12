@@ -103,21 +103,21 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
 
     return (
         <div className={`
-            bg-white border rounded-lg p-5 shadow-sm transition-all hover:shadow-md
-            ${year.isHardLocked ? 'border-red-200 bg-stone-50/50' : 'border-stone-200'}
+            bg-app-surface border rounded-lg p-5 shadow-sm transition-all hover:shadow-md
+            ${year.isHardLocked ? 'border-red-200 bg-app-surface/50' : 'border-app-border'}
         `}>
-            <div className="flex justify-between items-start mb-6 border-b border-stone-100 pb-4">
+            <div className="flex justify-between items-start mb-6 border-b border-app-border pb-4">
                 <div className="flex items-center gap-4">
                     <div>
-                        <h3 className="text-xl font-bold text-stone-900 flex items-center gap-3">
+                        <h3 className="text-xl font-bold text-app-foreground flex items-center gap-3">
                             {year.name}
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${year.status === 'OPEN' ? 'bg-green-100 text-green-800' :
-                                year.isHardLocked ? 'bg-red-600 text-white' : 'bg-stone-100 text-stone-600'
+                                year.isHardLocked ? 'bg-red-600 text-white' : 'bg-app-surface-2 text-app-muted-foreground'
                                 }`}>
                                 {year.isHardLocked ? 'FINALIZED' : year.status}
                             </span>
                         </h3>
-                        <p className="text-sm text-stone-500 mt-1 font-medium">
+                        <p className="text-sm text-app-muted-foreground mt-1 font-medium">
                             {new Date(year.startDate).toLocaleDateString()} — {new Date(year.endDate).toLocaleDateString()}
                         </p>
                     </div>
@@ -128,7 +128,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                         <button
                             onClick={handleCloseYear}
                             disabled={isPending}
-                            className="text-stone-400 hover:text-orange-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-stone-200 rounded hover:bg-orange-50 transition-colors"
+                            className="text-app-muted-foreground hover:text-orange-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-orange-50 transition-colors"
                         >
                             Soft Close
                         </button>
@@ -138,7 +138,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                         <button
                             onClick={handleRollForward}
                             disabled={isPending}
-                            className="text-stone-400 hover:text-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-stone-200 rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
+                            className="text-app-muted-foreground hover:text-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-app-border rounded hover:bg-blue-50 transition-colors flex items-center gap-1"
                         >
                             <Forward size={14} /> Roll Forward
                         </button>
@@ -163,7 +163,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                     <button
                         onClick={handleDelete}
                         disabled={isPending || year.isHardLocked}
-                        className={`p-2 rounded-full transition-colors ${year.isHardLocked ? 'text-stone-300' : 'text-stone-400 hover:text-red-600 hover:bg-red-50'}`}
+                        className={`p-2 rounded-full transition-colors ${year.isHardLocked ? 'text-app-faint' : 'text-app-muted-foreground hover:text-red-600 hover:bg-red-50'}`}
                         title="Delete Year"
                     >
                         <Trash2 size={18} />
@@ -180,8 +180,8 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             key={p.id}
                             className={`
                                 relative group p-3 rounded-lg border text-center transition-all
-                                ${periodStatus === 'OPEN' ? 'bg-white border-green-200 shadow-sm' : ''}
-                                ${periodStatus === 'CLOSED' ? 'bg-stone-50 border-stone-200 opacity-75' : ''}
+                                ${periodStatus === 'OPEN' ? 'bg-app-surface border-green-200 shadow-sm' : ''}
+                                ${periodStatus === 'CLOSED' ? 'bg-app-surface border-app-border opacity-75' : ''}
                                 ${periodStatus === 'FUTURE' ? 'bg-blue-50 border-blue-100' : ''}
                             `}
                         >
@@ -194,7 +194,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
 
                             <div className="flex justify-center items-center gap-1 mt-2">
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${periodStatus === 'OPEN' ? 'bg-green-100 text-green-700' :
-                                    periodStatus === 'CLOSED' ? 'bg-stone-200 text-stone-600' :
+                                    periodStatus === 'CLOSED' ? 'bg-app-surface-2 text-app-muted-foreground' :
                                         'bg-blue-100 text-blue-700'
                                     }`}>
                                     {periodStatus}
@@ -203,7 +203,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
 
                             {/* Hover Actions */}
                             {!year.isHardLocked && (
-                                <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-stone-600">
+                                <div className="absolute inset-0 bg-app-surface/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-app-muted-foreground">
 
                                     <div className="flex gap-2">
                                         <button
@@ -215,7 +215,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                                         </button>
                                         <button
                                             onClick={() => handleChangeStatus(p.id, 'CLOSED')}
-                                            className={`p-1.5 rounded hover:bg-stone-200 hover:text-stone-800 ${periodStatus === 'CLOSED' ? 'bg-stone-200 text-stone-800' : ''}`}
+                                            className={`p-1.5 rounded hover:bg-app-surface-2 hover:text-app-foreground ${periodStatus === 'CLOSED' ? 'bg-app-surface-2 text-app-foreground' : ''}`}
                                             title="Close"
                                         >
                                             <Lock size={14} />

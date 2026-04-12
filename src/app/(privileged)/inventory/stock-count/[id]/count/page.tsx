@@ -164,7 +164,7 @@ export default function CountingPage() {
                     <Progress value={progress} className="h-3" />
                     <div className="flex gap-6 mt-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> {countedCount} counted</span>
-                        <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-gray-400" /> {totalCount - countedCount} remaining</span>
+                        <span className="flex items-center gap-1"><Package className="w-3.5 h-3.5 text-app-muted-foreground" /> {totalCount - countedCount} remaining</span>
                         {diffCount > 0 && <span className="flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-yellow-500" /> {diffCount} differences</span>}
                     </div>
                 </CardContent>

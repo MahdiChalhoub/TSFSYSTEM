@@ -81,7 +81,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                                 placeholder="Search by name..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="bg-white/5 border border-app-border rounded-2xl pl-12 pr-6 py-2.5 text-sm outline-none focus:border-violet-500/50 transition-all w-64 shadow-inner"
+                                className="bg-app-surface/5 border border-app-border rounded-2xl pl-12 pr-6 py-2.5 text-sm outline-none focus:border-violet-500/50 transition-all w-64 shadow-inner"
                             />
                         </div>
                     </div>
@@ -89,8 +89,8 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         {filteredEmps.map(emp => (
                             <button key={emp.id} onClick={() => openAdjust(emp)}
-                                className="flex items-center gap-4 p-5 rounded-3xl bg-white/[0.03] border border-app-border hover:border-violet-500/40 hover:bg-violet-500/10 transition-all text-left group">
-                                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center font-black tabular-nums shrink-0 group-hover:scale-110 transition-transform">
+                                className="flex items-center gap-4 p-5 rounded-3xl bg-app-surface/[0.03] border border-app-border hover:border-violet-500/40 hover:bg-violet-500/10 transition-all text-left group">
+                                <div className="w-12 h-12 rounded-2xl bg-app-surface/5 flex items-center justify-center font-black tabular-nums shrink-0 group-hover:scale-110 transition-transform">
                                     {Math.round(parseFloat(emp.global_score))}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -115,11 +115,11 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                             <p className="text-[10px] font-black uppercase tracking-widest text-violet-400">Target Employee</p>
                             <h2 className="text-2xl font-black italic truncate">{adjustTarget.employee_name}</h2>
                             <div className="flex gap-3 items-center mt-1">
-                                <span className="text-[10px] font-black uppercase bg-white/5 px-2 py-0.5 rounded opacity-40">Current Score: {Math.round(parseFloat(adjustTarget.global_score))}</span>
+                                <span className="text-[10px] font-black uppercase bg-app-surface/5 px-2 py-0.5 rounded opacity-40">Current Score: {Math.round(parseFloat(adjustTarget.global_score))}</span>
                                 <span className={clsx("text-[10px] font-black uppercase tracking-widest", RISK_COLORS[adjustTarget.risk_level])}>{adjustTarget.risk_level}</span>
                             </div>
                         </div>
-                        <button onClick={() => setAdjustTarget(null)} className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                        <button onClick={() => setAdjustTarget(null)} className="p-3 rounded-2xl bg-app-surface/5 hover:bg-app-surface/10 transition-all group">
                             <X size={20} className="text-white/40 group-hover:text-white" />
                         </button>
                     </div>
@@ -139,7 +139,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                                                 ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500 shadow-xl shadow-emerald-500/40 scale-105"
                                                     : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500 shadow-xl shadow-rose-500/40 scale-105"
                                                         : "bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-500/40 scale-105"
-                                                : "bg-white/[0.03] text-white/30 border-app-border hover:text-white hover:bg-white/10"
+                                                : "bg-app-surface/[0.03] text-white/30 border-app-border hover:text-white hover:bg-app-surface/10"
                                         )}>{t}</button>
                                 ))}
                             </div>
@@ -149,7 +149,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Dimension</label>
                                 <select value={form.dimension} onChange={e => setForm(f => ({ ...f, dimension: e.target.value }))}
-                                    className="w-full bg-white/5 border border-app-border rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-violet-500/50 transition-colors cursor-pointer">
+                                    className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-violet-500/50 transition-colors cursor-pointer">
                                     {['PRODUCTIVITY', 'ACCURACY', 'TIMELINESS', 'ATTENDANCE', 'COMPLIANCE', 'LEADERSHIP', 'TEAMWORK', 'CUSTOMER_IMPACT', 'FINANCIAL_DISCIPLINE', 'INVENTORY_DISCIPLINE'].map(d => (
                                         <option key={d} value={d} className="bg-app-surface">{d.replace(/_/g, ' ')}</option>
                                     ))}
@@ -164,7 +164,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                                     onChange={e => setForm(f => ({ ...f, points: e.target.value }))}
                                     placeholder="e.g. 25"
                                     required
-                                    className="w-full bg-white/5 border border-app-border rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-violet-500/50 transition-colors shadow-inner"
+                                    className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-5 py-3.5 text-sm outline-none focus:border-violet-500/50 transition-colors shadow-inner"
                                 />
                             </div>
                         </div>
@@ -178,7 +178,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
                                 rows={4}
                                 placeholder="State the clear reason for this override..."
                                 required
-                                className="w-full bg-white/5 border border-app-border rounded-2xl px-5 py-4 text-sm outline-none focus:border-violet-500/50 transition-colors resize-none shadow-inner leading-relaxed"
+                                className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-5 py-4 text-sm outline-none focus:border-violet-500/50 transition-colors resize-none shadow-inner leading-relaxed"
                             />
                         </div>
 
@@ -197,7 +197,7 @@ export default function WiseAdjustmentClient({ leaderboard, atRisk }: Props) {
 
                         <div className="flex gap-4">
                             <button type="button" onClick={() => setAdjustTarget(null)}
-                                className="px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all border border-app-border text-white/40 hover:bg-white/5">
+                                className="px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all border border-app-border text-white/40 hover:bg-app-surface/5">
                                 Cancel
                             </button>
                             <button type="submit" disabled={isPending}

@@ -107,7 +107,7 @@ export default function ConsignmentManager({
                                 <p className="text-white/80 text-sm font-medium">In-Stock Consignment</p>
                                 <h3 className="text-3xl font-bold mt-1">{totalConsignmentValue.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
                             </div>
-                            <div className="bg-white/20 p-2 rounded-lg">
+                            <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <Package size={24} />
                             </div>
                         </div>
@@ -125,7 +125,7 @@ export default function ConsignmentManager({
                                 <p className="text-white/80 text-sm font-medium">Pending Payouts</p>
                                 <h3 className="text-3xl font-bold mt-1">{totalPendingPayout.toLocaleString()} <span className="text-sm font-normal text-white/70">XOF</span></h3>
                             </div>
-                            <div className="bg-white/20 p-2 rounded-lg">
+                            <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <DollarSign size={24} />
                             </div>
                         </div>
@@ -143,7 +143,7 @@ export default function ConsignmentManager({
                                 <p className="text-white/80 text-sm font-medium">Completed Settlements</p>
                                 <h3 className="text-3xl font-bold mt-1">{totalSettledCount}</h3>
                             </div>
-                            <div className="bg-white/20 p-2 rounded-lg">
+                            <div className="bg-app-surface/20 p-2 rounded-lg">
                                 <History size={24} />
                             </div>
                         </div>
@@ -156,16 +156,16 @@ export default function ConsignmentManager({
             </div>
 
             <Tabs defaultValue="stock" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-14 bg-gray-100 p-1 rounded-xl">
-                    <TabsTrigger value="stock" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <TabsList className="grid w-full grid-cols-3 h-14 bg-app-surface-2 p-1 rounded-xl">
+                    <TabsTrigger value="stock" className="rounded-lg data-[state=active]:bg-app-surface data-[state=active]:shadow-sm">
                         <Package size={18} className="mr-2" />
                         Stock Overview
                     </TabsTrigger>
-                    <TabsTrigger value="payouts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                    <TabsTrigger value="payouts" className="rounded-lg data-[state=active]:bg-app-surface data-[state=active]:shadow-sm">
                         <DollarSign size={18} className="mr-2" />
                         Payout Desk
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                    <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-app-surface data-[state=active]:shadow-sm">
                         <History size={18} className="mr-2" />
                         Settlement History
                     </TabsTrigger>
@@ -183,7 +183,7 @@ export default function ConsignmentManager({
                         <CardContent>
                             <div className="overflow-x-auto ring-1 ring-gray-100 rounded-xl">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="text-xs uppercase bg-gray-50/50 text-gray-500 font-bold border-b border-gray-100">
+                                    <thead className="text-xs uppercase bg-app-surface/50 text-app-muted-foreground font-bold border-b border-app-border">
                                         <tr>
                                             <th className="px-6 py-4">Product</th>
                                             <th className="px-6 py-4">Warehouse</th>
@@ -196,18 +196,18 @@ export default function ConsignmentManager({
                                     <tbody className="divide-y divide-gray-50">
                                         {availableStock.length === 0 && (
                                             <tr>
-                                                <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                                <td colSpan={6} className="px-6 py-12 text-center text-app-muted-foreground">
                                                     No consignment stock currently available.
                                                 </td>
                                             </tr>
                                         )}
                                         {availableStock.map((inv) => (
-                                            <tr key={inv.id} className="hover:bg-gray-50/30 transition-colors">
+                                            <tr key={inv.id} className="hover:bg-app-surface/30 transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <div className="font-semibold text-gray-900">{inv.product_name}</div>
-                                                    <div className="text-xs text-gray-400 font-mono tracking-tighter uppercase">{inv.sku}</div>
+                                                    <div className="font-semibold text-app-foreground">{inv.product_name}</div>
+                                                    <div className="text-xs text-app-muted-foreground font-mono tracking-tighter uppercase">{inv.sku}</div>
                                                 </td>
-                                                <td className="px-6 py-4 text-gray-600">{inv.warehouse_name}</td>
+                                                <td className="px-6 py-4 text-app-muted-foreground">{inv.warehouse_name}</td>
                                                 <td className="px-6 py-4">
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
                                                         <Users size={12} className="mr-1" />
@@ -215,8 +215,8 @@ export default function ConsignmentManager({
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right font-medium">{inv.quantity}</td>
-                                                <td className="px-6 py-4 text-right text-gray-500">{Number(inv.consignment_cost).toLocaleString()}</td>
-                                                <td className="px-6 py-4 text-right font-bold text-gray-900">
+                                                <td className="px-6 py-4 text-right text-app-muted-foreground">{Number(inv.consignment_cost).toLocaleString()}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-app-foreground">
                                                     {(Number(inv.consignment_cost) * Number(inv.quantity)).toLocaleString()}
                                                 </td>
                                             </tr>
@@ -237,8 +237,8 @@ export default function ConsignmentManager({
                                     <div className="bg-amber-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500">
                                         <CheckCircle2 size={32} />
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-900">All Clear!</h3>
-                                    <p className="text-gray-400 mt-1 max-w-sm mx-auto">All sold items have been settled with suppliers. Check your history for details.</p>
+                                    <h3 className="text-lg font-bold text-app-foreground">All Clear!</h3>
+                                    <p className="text-app-muted-foreground mt-1 max-w-sm mx-auto">All sold items have been settled with suppliers. Check your history for details.</p>
                                 </CardContent>
                             </Card>
                         )}
@@ -255,7 +255,7 @@ export default function ConsignmentManager({
                                     <button
                                         onClick={() => handleGenerateSettlement(supplier.id)}
                                         disabled={isGenerating || !supplier.items.some((i: Record<string, any>) => selectedItems.includes(i.id))}
-                                        className="bg-white text-gray-900 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-400 transition-colors disabled:opacity-50"
+                                        className="bg-app-surface text-app-foreground px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-400 transition-colors disabled:opacity-50"
                                     >
                                         {isGenerating ? "Processing..." : "Generate Settlement"}
                                         <ArrowUpRight size={18} />
@@ -263,7 +263,7 @@ export default function ConsignmentManager({
                                 </div>
                                 <CardContent className="p-0">
                                     <table className="w-full text-sm text-left">
-                                        <thead className="bg-gray-50/50 text-[10px] uppercase text-gray-400 font-bold border-b border-gray-100">
+                                        <thead className="bg-app-surface/50 text-[10px] uppercase text-app-muted-foreground font-bold border-b border-app-border">
                                             <tr>
                                                 <th className="w-12 px-6 py-3">Select</th>
                                                 <th className="px-6 py-3">Date</th>
@@ -275,24 +275,24 @@ export default function ConsignmentManager({
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
                                             {supplier.items.map((line: Record<string, any>) => (
-                                                <tr key={line.id} className="hover:bg-gray-50/20">
+                                                <tr key={line.id} className="hover:bg-app-surface/20">
                                                     <td className="px-6 py-4">
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedItems.includes(line.id)}
                                                             onChange={() => handleToggleItem(line.id)}
-                                                            className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                                                            className="w-4 h-4 rounded border-app-border text-amber-500 focus:ring-amber-500"
                                                         />
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-500">
+                                                    <td className="px-6 py-4 text-app-muted-foreground">
                                                         {new Date(line.sold_at).toLocaleDateString()}
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="font-semibold text-gray-900">{line.product_name}</div>
-                                                        <div className="text-[10px] text-gray-400 uppercase tracking-tighter">Order #{line.order_ref}</div>
+                                                        <div className="font-semibold text-app-foreground">{line.product_name}</div>
+                                                        <div className="text-[10px] text-app-muted-foreground uppercase tracking-tighter">Order #{line.order_ref}</div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-medium">{line.quantity}</td>
-                                                    <td className="px-6 py-4 text-right text-gray-500">{Number(Number(line.payout_amount) / (Number(line.quantity) || 1)).toLocaleString()}</td>
+                                                    <td className="px-6 py-4 text-right text-app-muted-foreground">{Number(Number(line.payout_amount) / (Number(line.quantity) || 1)).toLocaleString()}</td>
                                                     <td className="px-6 py-4 text-right font-bold text-emerald-600">{Number(line.payout_amount).toLocaleString()}</td>
                                                 </tr>
                                             ))}
@@ -316,14 +316,14 @@ export default function ConsignmentManager({
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {settlements.length === 0 && (
-                                    <div className="col-span-full py-12 text-center text-gray-400">
+                                    <div className="col-span-full py-12 text-center text-app-muted-foreground">
                                         No settlement records found.
                                     </div>
                                 )}
                                 {settlements.map((settle) => (
-                                    <div key={settle.id} className="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 hover:border-emerald-200 hover:bg-emerald-50/10 transition-all group">
+                                    <div key={settle.id} className="bg-app-surface/50 border border-app-border rounded-2xl p-5 hover:border-emerald-200 hover:bg-emerald-50/10 transition-all group">
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="bg-white p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                            <div className="bg-app-surface p-2.5 rounded-xl shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                                                 <FileText size={20} />
                                             </div>
                                             <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${settle.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
@@ -331,17 +331,17 @@ export default function ConsignmentManager({
                                                 {settle.status}
                                             </span>
                                         </div>
-                                        <h4 className="font-bold text-gray-900">{settle.reference}</h4>
-                                        <p className="text-xs text-gray-400 mt-1 mb-4 flex items-center">
+                                        <h4 className="font-bold text-app-foreground">{settle.reference}</h4>
+                                        <p className="text-xs text-app-muted-foreground mt-1 mb-4 flex items-center">
                                             <Users size={12} className="mr-1" />
                                             {settle.supplier_name}
                                         </p>
-                                        <div className="flex justify-between items-end border-t border-gray-100 pt-4">
+                                        <div className="flex justify-between items-end border-t border-app-border pt-4">
                                             <div>
-                                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Settlement Total</p>
-                                                <p className="font-black text-lg text-gray-900">{Number(settle.total_amount).toLocaleString()} <span className="text-[10px] font-normal">XOF</span></p>
+                                                <p className="text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Settlement Total</p>
+                                                <p className="font-black text-lg text-app-foreground">{Number(settle.total_amount).toLocaleString()} <span className="text-[10px] font-normal">XOF</span></p>
                                             </div>
-                                            <button className="p-2 text-gray-400 hover:bg-white hover:shadow-sm hover:text-gray-900 rounded-lg transition-all">
+                                            <button className="p-2 text-app-muted-foreground hover:bg-app-surface hover:shadow-sm hover:text-app-foreground rounded-lg transition-all">
                                                 <Printer size={18} />
                                             </button>
                                         </div>

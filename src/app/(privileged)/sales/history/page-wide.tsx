@@ -369,7 +369,7 @@ export default function OrderHistoryPageWide() {
   }
 
   return (
-    <div className="w-full min-h-screen p-8 space-y-8 animate-in fade-in duration-500 bg-stone-50/30">
+    <div className="w-full min-h-screen p-8 space-y-8 animate-in fade-in duration-500 bg-app-surface/30">
       {/* Header */}
       <header className="flex justify-between items-end mb-10">
         <div>
@@ -377,12 +377,12 @@ export default function OrderHistoryPageWide() {
             <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
               Node: POS Registry
             </Badge>
-            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+            <span className="text-[10px] font-bold text-app-faint uppercase tracking-widest flex items-center gap-1">
               <Activity size={12} /> Transaction Stream
             </span>
           </div>
           <h1 className="page-header-title tracking-tighter text-app-text flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
+            <div className="w-16 h-16 rounded-[1.8rem] bg-app-bg flex items-center justify-center shadow-2xl shadow-stone-200">
               <History size={32} className="text-app-text" />
             </div>
             Transaction <span className="text-indigo-600">History</span>

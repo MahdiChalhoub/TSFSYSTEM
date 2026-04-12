@@ -37,14 +37,14 @@ function StepBar({ step }: { step: Step }) {
             {STEPS.map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-                        s === step ? 'bg-stone-900 text-white' :
+                        s === step ? 'bg-app-bg text-white' :
                         i < idx ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                        'bg-stone-100 text-stone-400'
+                        'bg-app-surface-2 text-app-muted-foreground'
                     }`}>
                         {i < idx && <CheckCircle className="h-3 w-3" />}
                         {s}
                     </div>
-                    {i < 3 && <ArrowRight className="h-3 w-3 text-stone-300" />}
+                    {i < 3 && <ArrowRight className="h-3 w-3 text-app-faint" />}
                 </div>
             ))}
         </div>
@@ -69,9 +69,9 @@ function DropZone({ file, onFile }: { file: File | null; onFile: (f: File) => vo
             onDrop={handleDrop}
             onClick={() => ref.current?.click()}
             className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${
-                dragging ? 'border-stone-600 bg-stone-50 scale-[1.01]' :
+                dragging ? 'border-stone-600 bg-app-surface scale-[1.01]' :
                 file ? 'border-emerald-400 bg-emerald-50' :
-                'border-stone-200 hover:border-stone-400 hover:bg-stone-50'
+                'border-app-border hover:border-stone-400 hover:bg-app-surface'
             }`}
         >
             <input ref={ref} type="file" accept=".csv,text/csv" className="hidden"
@@ -80,16 +80,16 @@ function DropZone({ file, onFile }: { file: File | null; onFile: (f: File) => vo
                 <div className="flex flex-col items-center gap-3">
                     <CheckCircle className="h-10 w-10 text-emerald-500" />
                     <div>
-                        <div className="font-bold text-stone-900">{file.name}</div>
-                        <div className="text-sm text-stone-500 mt-1">{(file.size / 1024).toFixed(1)} KB — click to change</div>
+                        <div className="font-bold text-app-foreground">{file.name}</div>
+                        <div className="text-sm text-app-muted-foreground mt-1">{(file.size / 1024).toFixed(1)} KB — click to change</div>
                     </div>
                 </div>
             ) : (
                 <div className="flex flex-col items-center gap-3">
-                    <Upload className="h-10 w-10 text-stone-300" />
+                    <Upload className="h-10 w-10 text-app-faint" />
                     <div>
-                        <div className="font-bold text-stone-700">Drop your CSV here</div>
-                        <div className="text-sm text-stone-400 mt-1">or click to browse</div>
+                        <div className="font-bold text-app-foreground">Drop your CSV here</div>
+                        <div className="text-sm text-app-muted-foreground mt-1">or click to browse</div>
                     </div>
                 </div>
             )}
@@ -172,19 +172,19 @@ function JournalImport() {
                     <DropZone file={file} onFile={f => { setFile(f); setError(null) }} />
 
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-semibold text-stone-700">Import as:</span>
+                        <span className="text-sm font-semibold text-app-foreground">Import as:</span>
                         {(['DRAFT', 'POSTED'] as const).map(s => (
                             <label key={s} className="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="je-status" value={s} checked={targetStatus === s} onChange={() => setTargetStatus(s)} className="accent-stone-900" />
-                                <span className="text-sm font-medium text-stone-700">{s}</span>
-                                <span className="text-xs text-stone-400">{s === 'DRAFT' ? '(review before posting)' : '(post immediately)'}</span>
+                                <span className="text-sm font-medium text-app-foreground">{s}</span>
+                                <span className="text-xs text-app-muted-foreground">{s === 'DRAFT' ? '(review before posting)' : '(post immediately)'}</span>
                             </label>
                         ))}
                     </div>
 
                     <div className="flex justify-end">
                         <button onClick={handlePreview} disabled={!file || loading}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                             Preview Import <ArrowRight className="h-4 w-4" />
                         </button>
@@ -196,9 +196,9 @@ function JournalImport() {
                 <div className="space-y-6">
                     <div className="grid grid-cols-3 gap-4">
                         {[
-                            { label: 'Total Rows', value: preview.total, style: 'bg-stone-50 border-stone-200 text-stone-900' },
+                            { label: 'Total Rows', value: preview.total, style: 'bg-app-surface border-app-border text-app-foreground' },
                             { label: 'Valid', value: preview.valid, style: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-                            { label: 'Errors', value: preview.invalid, style: preview.invalid > 0 ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-stone-50 border-stone-200 text-stone-400' },
+                            { label: 'Errors', value: preview.invalid, style: preview.invalid > 0 ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-app-surface border-app-border text-app-muted-foreground' },
                         ].map(({ label, value, style }) => (
                             <div key={label} className={`border rounded-xl p-4 text-center ${style}`}>
                                 <div className="text-2xl font-bold">{value}</div>
@@ -214,43 +214,43 @@ function JournalImport() {
                         </div>
                     )}
 
-                    <div className="border border-stone-200 rounded-xl overflow-hidden">
-                        <div className="bg-stone-50 border-b border-stone-200 px-4 py-3">
-                            <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Preview</span>
+                    <div className="border border-app-border rounded-xl overflow-hidden">
+                        <div className="bg-app-surface border-b border-app-border px-4 py-3">
+                            <span className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Preview</span>
                         </div>
                         <div className="overflow-x-auto max-h-96 overflow-y-auto">
                             <table className="w-full text-xs">
-                                <thead className="sticky top-0 bg-stone-50 border-b border-stone-200">
+                                <thead className="sticky top-0 bg-app-surface border-b border-app-border">
                                     <tr>
                                         {['#', 'Date', 'Description', 'Debit', 'Credit', 'Amount', ''].map(h => (
-                                            <th key={h} className={`px-3 py-2 text-left font-bold text-stone-500 ${h === 'Amount' ? 'text-right' : ''}`}>{h}</th>
+                                            <th key={h} className={`px-3 py-2 text-left font-bold text-app-muted-foreground ${h === 'Amount' ? 'text-right' : ''}`}>{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-stone-100">
+                                <tbody className="divide-y divide-app-border">
                                     {preview.rows.map((row: any) => (
                                         <tr key={row.row} className={row.valid ? '' : 'bg-rose-50'}>
-                                            <td className="px-3 py-2 text-stone-400 font-mono">{row.row}</td>
-                                            <td className="px-3 py-2 font-mono text-stone-700">{row.date || <span className="text-rose-400 italic">missing</span>}</td>
-                                            <td className="px-3 py-2 text-stone-700 max-w-[160px] truncate">{row.description}</td>
+                                            <td className="px-3 py-2 text-app-muted-foreground font-mono">{row.row}</td>
+                                            <td className="px-3 py-2 font-mono text-app-foreground">{row.date || <span className="text-rose-400 italic">missing</span>}</td>
+                                            <td className="px-3 py-2 text-app-foreground max-w-[160px] truncate">{row.description}</td>
                                             <td className="px-3 py-2">
-                                                <div className="font-mono text-stone-800">{row.debit_code}</div>
-                                                {row.debit_account && <div className="text-stone-400 text-[10px] truncate max-w-[110px]">{row.debit_account.name}</div>}
+                                                <div className="font-mono text-app-foreground">{row.debit_code}</div>
+                                                {row.debit_account && <div className="text-app-muted-foreground text-[10px] truncate max-w-[110px]">{row.debit_account.name}</div>}
                                                 {!row.debit_account && row.debit_code && <div className="text-rose-500 text-[10px] italic">not found</div>}
                                             </td>
                                             <td className="px-3 py-2">
-                                                <div className="font-mono text-stone-800">{row.credit_code}</div>
-                                                {row.credit_account && <div className="text-stone-400 text-[10px] truncate max-w-[110px]">{row.credit_account.name}</div>}
+                                                <div className="font-mono text-app-foreground">{row.credit_code}</div>
+                                                {row.credit_account && <div className="text-app-muted-foreground text-[10px] truncate max-w-[110px]">{row.credit_account.name}</div>}
                                                 {!row.credit_account && row.credit_code && <div className="text-rose-500 text-[10px] italic">not found</div>}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono font-bold text-stone-900">
+                                            <td className="px-3 py-2 text-right font-mono font-bold text-app-foreground">
                                                 {row.amount > 0 ? row.amount.toLocaleString('en-US', { minimumFractionDigits: 2 }) : <span className="text-rose-400">—</span>}
                                             </td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-rose-500 mx-auto cursor-help" />
-                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
+                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
                                                             {row.errors.join('; ')}
                                                         </div>
                                                     </div>
@@ -264,11 +264,11 @@ function JournalImport() {
                     </div>
 
                     <div className="flex justify-between">
-                        <button onClick={reset} className="text-sm text-stone-500 hover:text-stone-900 font-bold flex items-center gap-1.5">
+                        <button onClick={reset} className="text-sm text-app-muted-foreground hover:text-app-foreground font-bold flex items-center gap-1.5">
                             <ChevronLeft className="h-4 w-4" /> Change File
                         </button>
                         <button onClick={() => preview.valid > 0 && setStep('confirm')} disabled={preview.valid === 0}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed">
                             Continue to Import <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -277,14 +277,14 @@ function JournalImport() {
 
             {step === 'confirm' && preview && (
                 <div className="space-y-6 max-w-lg mx-auto text-center">
-                    <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto">
-                        <Upload className="h-7 w-7 text-stone-700" />
+                    <div className="w-16 h-16 bg-app-surface-2 rounded-full flex items-center justify-center mx-auto">
+                        <Upload className="h-7 w-7 text-app-foreground" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-stone-900 mb-2">Confirm Import</h2>
-                        <p className="text-stone-500 text-sm">
-                            Creating <strong className="text-stone-900">{preview.valid} journal entries</strong> as{' '}
-                            <strong className={targetStatus === 'POSTED' ? 'text-emerald-700' : 'text-stone-900'}>{targetStatus}</strong>.
+                        <h2 className="text-xl font-bold text-app-foreground mb-2">Confirm Import</h2>
+                        <p className="text-app-muted-foreground text-sm">
+                            Creating <strong className="text-app-foreground">{preview.valid} journal entries</strong> as{' '}
+                            <strong className={targetStatus === 'POSTED' ? 'text-emerald-700' : 'text-app-foreground'}>{targetStatus}</strong>.
                         </p>
                         {targetStatus === 'POSTED' && (
                             <div className="mt-3 flex items-center gap-2 justify-center text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm">
@@ -294,11 +294,11 @@ function JournalImport() {
                         )}
                     </div>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={() => setStep('preview')} className="px-5 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-50">
+                        <button onClick={() => setStep('preview')} className="px-5 py-2.5 border border-app-border rounded-xl text-sm font-bold text-app-foreground hover:bg-app-surface">
                             Back to Preview
                         </button>
                         <button onClick={handleImport} disabled={loading}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40">
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                             Import {preview.valid} Entries
                         </button>
@@ -312,8 +312,8 @@ function JournalImport() {
                         {result.created > 0 ? <CheckCircle className="h-8 w-8 text-emerald-600" /> : <XCircle className="h-8 w-8 text-rose-600" />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-stone-900 mb-2">{result.created > 0 ? 'Import Complete' : 'Import Failed'}</h2>
-                        <p className="text-stone-500 text-sm">
+                        <h2 className="text-xl font-bold text-app-foreground mb-2">{result.created > 0 ? 'Import Complete' : 'Import Failed'}</h2>
+                        <p className="text-app-muted-foreground text-sm">
                             <strong className="text-emerald-700">{result.created}</strong> of <strong>{result.total}</strong> entries created.
                             {result.errors?.length > 0 && <> <strong className="text-rose-700">{result.errors.length}</strong> failed.</>}
                         </p>
@@ -332,11 +332,11 @@ function JournalImport() {
                         </div>
                     )}
                     <div className="flex gap-3 justify-center">
-                        <button onClick={reset} className="px-5 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-50">
+                        <button onClick={reset} className="px-5 py-2.5 border border-app-border rounded-xl text-sm font-bold text-app-foreground hover:bg-app-surface">
                             Import Another File
                         </button>
                         <button onClick={() => router.push('/finance/ledger')}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface">
                             View Ledger <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -433,17 +433,17 @@ function OpeningBalanceImport() {
 
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-semibold text-stone-700 mb-1.5">Opening Balance Date</label>
+                            <label className="block text-sm font-semibold text-app-foreground mb-1.5">Opening Balance Date</label>
                             <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                                className="w-full px-3 py-2 border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-stone-700 mb-1.5">Import as</label>
+                            <label className="block text-sm font-semibold text-app-foreground mb-1.5">Import as</label>
                             <div className="flex gap-4 mt-1">
                                 {(['DRAFT', 'POSTED'] as const).map(s => (
                                     <label key={s} className="flex items-center gap-2 cursor-pointer">
                                         <input type="radio" name="ob-status" value={s} checked={targetStatus === s} onChange={() => setTargetStatus(s)} className="accent-stone-900" />
-                                        <span className="text-sm font-medium text-stone-700">{s}</span>
+                                        <span className="text-sm font-medium text-app-foreground">{s}</span>
                                     </label>
                                 ))}
                             </div>
@@ -452,7 +452,7 @@ function OpeningBalanceImport() {
 
                     <div className="flex justify-end">
                         <button onClick={handlePreview} disabled={!file || loading}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed">
                             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                             Preview Balances <ArrowRight className="h-4 w-4" />
                         </button>
@@ -465,9 +465,9 @@ function OpeningBalanceImport() {
                     {/* Summary cards */}
                     <div className="grid grid-cols-4 gap-4">
                         {[
-                            { label: 'Accounts', value: preview.valid, style: 'bg-stone-50 border-stone-200 text-stone-900' },
-                            { label: 'Total Debits', value: preview.total_debit.toLocaleString('en-US', { minimumFractionDigits: 2 }), style: 'bg-stone-50 border-stone-200 text-stone-900' },
-                            { label: 'Total Credits', value: preview.total_credit.toLocaleString('en-US', { minimumFractionDigits: 2 }), style: 'bg-stone-50 border-stone-200 text-stone-900' },
+                            { label: 'Accounts', value: preview.valid, style: 'bg-app-surface border-app-border text-app-foreground' },
+                            { label: 'Total Debits', value: preview.total_debit.toLocaleString('en-US', { minimumFractionDigits: 2 }), style: 'bg-app-surface border-app-border text-app-foreground' },
+                            { label: 'Total Credits', value: preview.total_credit.toLocaleString('en-US', { minimumFractionDigits: 2 }), style: 'bg-app-surface border-app-border text-app-foreground' },
                             {
                                 label: isBalanced ? 'Balanced' : 'Difference',
                                 value: isBalanced ? '✓' : Math.abs(preview.difference).toLocaleString('en-US', { minimumFractionDigits: 2 }),
@@ -496,45 +496,45 @@ function OpeningBalanceImport() {
                         </div>
                     )}
 
-                    <div className="border border-stone-200 rounded-xl overflow-hidden">
-                        <div className="bg-stone-50 border-b border-stone-200 px-4 py-3">
-                            <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Account Balances ({preview.rows.length} rows)</span>
+                    <div className="border border-app-border rounded-xl overflow-hidden">
+                        <div className="bg-app-surface border-b border-app-border px-4 py-3">
+                            <span className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Account Balances ({preview.rows.length} rows)</span>
                         </div>
                         <div className="overflow-x-auto max-h-96 overflow-y-auto">
                             <table className="w-full text-xs">
-                                <thead className="sticky top-0 bg-stone-50 border-b border-stone-200">
+                                <thead className="sticky top-0 bg-app-surface border-b border-app-border">
                                     <tr>
                                         {['#', 'Account Code', 'Account Name', 'Type', 'Balance', 'Side', 'Debit', 'Credit', ''].map(h => (
-                                            <th key={h} className={`px-3 py-2 font-bold text-stone-500 text-left ${['Debit','Credit','Balance'].includes(h) ? 'text-right' : ''}`}>{h}</th>
+                                            <th key={h} className={`px-3 py-2 font-bold text-app-muted-foreground text-left ${['Debit','Credit','Balance'].includes(h) ? 'text-right' : ''}`}>{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-stone-100">
+                                <tbody className="divide-y divide-app-border">
                                     {preview.rows.map((row: any) => (
                                         <tr key={row.row} className={row.valid ? '' : 'bg-rose-50'}>
-                                            <td className="px-3 py-2 text-stone-400 font-mono">{row.row}</td>
-                                            <td className="px-3 py-2 font-mono text-stone-800 font-bold">{row.account_code || <span className="text-rose-400 italic">missing</span>}</td>
-                                            <td className="px-3 py-2 text-stone-700 max-w-[150px] truncate">
+                                            <td className="px-3 py-2 text-app-muted-foreground font-mono">{row.row}</td>
+                                            <td className="px-3 py-2 font-mono text-app-foreground font-bold">{row.account_code || <span className="text-rose-400 italic">missing</span>}</td>
+                                            <td className="px-3 py-2 text-app-foreground max-w-[150px] truncate">
                                                 {row.account?.name || (!row.account && row.account_code ? <span className="text-rose-500 italic">not found</span> : '—')}
                                             </td>
                                             <td className="px-3 py-2">
                                                 {row.account?.type && (
-                                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-stone-100 text-stone-600">{row.account.type}</span>
+                                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-app-surface-2 text-app-muted-foreground">{row.account.type}</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-stone-700">{row.balance !== 0 ? row.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.balance !== 0 ? row.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}</td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.side && (
                                                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${row.side === 'Dr' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{row.side}</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-right font-mono text-stone-900">{row.debit > 0 ? row.debit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
-                                            <td className="px-3 py-2 text-right font-mono text-stone-900">{row.credit > 0 ? row.credit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.debit > 0 ? row.debit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
+                                            <td className="px-3 py-2 text-right font-mono text-app-foreground">{row.credit > 0 ? row.credit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}</td>
                                             <td className="px-3 py-2 text-center">
                                                 {row.valid ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" /> : (
                                                     <div className="group relative inline-block">
                                                         <XCircle className="h-3.5 w-3.5 text-rose-500 mx-auto cursor-help" />
-                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
+                                                        <div className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 bg-app-bg text-white text-[10px] rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none">
                                                             {row.errors.join('; ')}
                                                         </div>
                                                     </div>
@@ -548,11 +548,11 @@ function OpeningBalanceImport() {
                     </div>
 
                     <div className="flex justify-between">
-                        <button onClick={reset} className="text-sm text-stone-500 hover:text-stone-900 font-bold flex items-center gap-1.5">
+                        <button onClick={reset} className="text-sm text-app-muted-foreground hover:text-app-foreground font-bold flex items-center gap-1.5">
                             <ChevronLeft className="h-4 w-4" /> Change File
                         </button>
                         <button onClick={() => preview.valid > 0 && setStep('confirm')} disabled={preview.valid === 0}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed">
                             Continue to Import <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -561,16 +561,16 @@ function OpeningBalanceImport() {
 
             {step === 'confirm' && preview && (
                 <div className="space-y-6 max-w-lg mx-auto text-center">
-                    <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto">
-                        <BookOpen className="h-7 w-7 text-stone-700" />
+                    <div className="w-16 h-16 bg-app-surface-2 rounded-full flex items-center justify-center mx-auto">
+                        <BookOpen className="h-7 w-7 text-app-foreground" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-stone-900 mb-2">Confirm Opening Balances</h2>
-                        <p className="text-stone-500 text-sm">
+                        <h2 className="text-xl font-bold text-app-foreground mb-2">Confirm Opening Balances</h2>
+                        <p className="text-app-muted-foreground text-sm">
                             One opening balance entry will be created for{' '}
-                            <strong className="text-stone-900">{date}</strong> with{' '}
-                            <strong className="text-stone-900">{preview.valid} account{preview.valid !== 1 ? 's' : ''}</strong> as{' '}
-                            <strong className={targetStatus === 'POSTED' ? 'text-emerald-700' : 'text-stone-900'}>{targetStatus}</strong>.
+                            <strong className="text-app-foreground">{date}</strong> with{' '}
+                            <strong className="text-app-foreground">{preview.valid} account{preview.valid !== 1 ? 's' : ''}</strong> as{' '}
+                            <strong className={targetStatus === 'POSTED' ? 'text-emerald-700' : 'text-app-foreground'}>{targetStatus}</strong>.
                         </p>
                         {!isBalanced && (
                             <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm flex items-start gap-2">
@@ -580,11 +580,11 @@ function OpeningBalanceImport() {
                         )}
                     </div>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={() => setStep('preview')} className="px-5 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-50">
+                        <button onClick={() => setStep('preview')} className="px-5 py-2.5 border border-app-border rounded-xl text-sm font-bold text-app-foreground hover:bg-app-surface">
                             Back to Preview
                         </button>
                         <button onClick={handleImport} disabled={loading}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700 disabled:opacity-40">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface disabled:opacity-40">
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
                             Create Opening Balance Entry
                         </button>
@@ -598,12 +598,12 @@ function OpeningBalanceImport() {
                         {result.created_entry_id ? <CheckCircle className="h-8 w-8 text-emerald-600" /> : <XCircle className="h-8 w-8 text-rose-600" />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-stone-900 mb-2">
+                        <h2 className="text-xl font-bold text-app-foreground mb-2">
                             {result.created_entry_id ? 'Opening Balances Imported' : 'Import Failed'}
                         </h2>
-                        <p className="text-stone-500 text-sm">
+                        <p className="text-app-muted-foreground text-sm">
                             {result.created_entry_id && <>
-                                Journal Entry <strong className="text-stone-900">#{result.created_entry_id}</strong> created with{' '}
+                                Journal Entry <strong className="text-app-foreground">#{result.created_entry_id}</strong> created with{' '}
                                 <strong className="text-emerald-700">{result.lines_ok} lines</strong>.
                                 {parseFloat(result.auto_balance_amount) > 0 && (
                                     <> Auto-balance adjustment of <strong className="text-amber-700">{parseFloat(result.auto_balance_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> posted to Opening Balance Equity.</>
@@ -627,11 +627,11 @@ function OpeningBalanceImport() {
                         </div>
                     )}
                     <div className="flex gap-3 justify-center">
-                        <button onClick={reset} className="px-5 py-2.5 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 hover:bg-stone-50">
+                        <button onClick={reset} className="px-5 py-2.5 border border-app-border rounded-xl text-sm font-bold text-app-foreground hover:bg-app-surface">
                             Import Another File
                         </button>
                         <button onClick={() => router.push('/finance/ledger')}
-                            className="flex items-center gap-2 bg-stone-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-700">
+                            className="flex items-center gap-2 bg-app-bg text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-app-surface">
                             View Ledger <ArrowRight className="h-4 w-4" />
                         </button>
                     </div>
@@ -655,11 +655,11 @@ export default function LedgerImportPage() {
     return (
         <div className="p-6 max-w-5xl mx-auto">
             <div className="flex items-center gap-3 mb-8">
-                <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-900 transition-colors">
+                <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-app-muted-foreground hover:text-app-foreground transition-colors">
                     <ChevronLeft className="h-4 w-4" /> Back to Ledger
                 </button>
-                <span className="text-stone-300">/</span>
-                <h1 className="text-xl font-bold text-stone-900">Import Financial Data</h1>
+                <span className="text-app-faint">/</span>
+                <h1 className="text-xl font-bold text-app-foreground">Import Financial Data</h1>
             </div>
 
             {/* Tab selector */}
@@ -670,15 +670,15 @@ export default function LedgerImportPage() {
                     return (
                         <button key={t.id} onClick={() => setTab(t.id as any)}
                             className={`flex-1 flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-                                active ? 'border-stone-900 bg-stone-50' : 'border-stone-200 hover:border-stone-400'
+                                active ? 'border-stone-900 bg-app-surface' : 'border-app-border hover:border-stone-400'
                             }`}
                         >
-                            <div className={`mt-0.5 p-1.5 rounded-lg ${active ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-500'}`}>
+                            <div className={`mt-0.5 p-1.5 rounded-lg ${active ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground'}`}>
                                 <Icon className="h-4 w-4" />
                             </div>
                             <div>
-                                <div className={`font-bold text-sm ${active ? 'text-stone-900' : 'text-stone-600'}`}>{t.label}</div>
-                                <div className="text-xs text-stone-400 mt-0.5">{t.desc}</div>
+                                <div className={`font-bold text-sm ${active ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>{t.label}</div>
+                                <div className="text-xs text-app-muted-foreground mt-0.5">{t.desc}</div>
                             </div>
                         </button>
                     )

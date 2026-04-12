@@ -12,10 +12,10 @@ export default async function FinanceDashboardPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center mb-10">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif">Finance Overview</h1>
-                    <p className="text-stone-500 font-medium">Real-time performance & liquidity tracking</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif">Finance Overview</h1>
+                    <p className="text-app-muted-foreground font-medium">Real-time performance & liquidity tracking</p>
                 </div>
-                <div className="bg-stone-50 border border-stone-200 px-4 py-2 rounded-xl text-xs font-bold text-stone-400 uppercase tracking-widest">
+                <div className="bg-app-surface border border-app-border px-4 py-2 rounded-xl text-xs font-bold text-app-muted-foreground uppercase tracking-widest">
                     Last Updated: {new Date().toLocaleTimeString()}
                 </div>
             </div>

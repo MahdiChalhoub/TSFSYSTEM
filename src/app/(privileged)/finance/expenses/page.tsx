@@ -71,13 +71,13 @@ export default function ExpenseTrackerPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center">
                         <TrendingDown size={20} className="text-white" />
                     </div>
                     Expense Tracker
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Detailed analysis of all expense accounts</p>
+                <p className="text-sm text-app-muted-foreground mt-1">Detailed analysis of all expense accounts</p>
             </header>
 
             <div className="grid grid-cols-4 gap-4">
@@ -86,7 +86,7 @@ export default function ExpenseTrackerPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-rose-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Expenses</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Expenses</p>
                                 <p className="text-xl font-bold text-rose-700">{fmt(totalExpense)}</p>
                             </div>
                         </div>
@@ -97,9 +97,9 @@ export default function ExpenseTrackerPage() {
                         <div className="flex items-center gap-3">
                             <BarChart3 size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Expense Accounts</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Expense Accounts</p>
                                 <p className="text-2xl font-bold text-blue-700">{accounts.length}</p>
-                                <p className="text-[10px] text-gray-400">{accountsWithActivity} active</p>
+                                <p className="text-[10px] text-app-muted-foreground">{accountsWithActivity} active</p>
                             </div>
                         </div>
                     </CardContent>
@@ -109,9 +109,9 @@ export default function ExpenseTrackerPage() {
                         <div className="flex items-center gap-3">
                             <AlertTriangle size={24} className="text-amber-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Top Expense</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Top Expense</p>
                                 <p className="text-sm font-bold text-amber-700 truncate">{topAccount?.name || '\u2014'}</p>
-                                <p className="text-[10px] text-gray-400">{topAccount ? fmt(topAccount.absBalance) : ''}</p>
+                                <p className="text-[10px] text-app-muted-foreground">{topAccount ? fmt(topAccount.absBalance) : ''}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -121,7 +121,7 @@ export default function ExpenseTrackerPage() {
                         <div className="flex items-center gap-3">
                             <Percent size={24} className="text-purple-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Top 3 Concentration</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Top 3 Concentration</p>
                                 <p className="text-2xl font-bold text-purple-700">{top3Pct.toFixed(0)}%</p>
                             </div>
                         </div>
@@ -140,9 +140,9 @@ export default function ExpenseTrackerPage() {
                             const pct = totalExpense > 0 ? (a.absBalance / totalExpense * 100) : 0
                             return (
                                 <div key={a.id} className="flex items-center gap-3">
-                                    <span className="font-mono text-xs text-gray-400 w-14">{a.code}</span>
+                                    <span className="font-mono text-xs text-app-muted-foreground w-14">{a.code}</span>
                                     <span className="text-sm w-48 truncate">{a.name}</span>
-                                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden relative">
+                                    <div className="flex-1 h-5 bg-app-surface-2 rounded-full overflow-hidden relative">
                                         <div
                                             className="h-full bg-gradient-to-r from-rose-400 to-rose-500 rounded-full transition-all"
                                             style={{ width: `${pct}%` }}
@@ -166,7 +166,7 @@ export default function ExpenseTrackerPage() {
                 <CardContent className="p-0">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-gray-50/50">
+                            <TableRow className="bg-app-surface/50">
                                 <TableHead>#</TableHead>
                                 <TableHead>Code</TableHead>
                                 <TableHead>Account Name</TableHead>
@@ -179,20 +179,20 @@ export default function ExpenseTrackerPage() {
                             {enriched.map((a: Record<string, any>, i: number) => {
                                 const pct = totalExpense > 0 ? (a.absBalance / totalExpense * 100) : 0
                                 return (
-                                    <TableRow key={a.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                    <TableRow key={a.id} className="hover:bg-app-surface/50">
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell className="font-mono text-xs">{a.code}</TableCell>
                                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                                         <TableCell className="text-right font-bold text-rose-600">{fmt(a.absBalance)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center gap-2 justify-end">
-                                                <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="w-12 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                     <div className="h-full bg-rose-400 rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
                                                 </div>
-                                                <span className="text-xs text-gray-500 w-10 text-right">{pct.toFixed(1)}%</span>
+                                                <span className="text-xs text-app-muted-foreground w-10 text-right">{pct.toFixed(1)}%</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right text-sm text-gray-500">{a.journalCount}</TableCell>
+                                        <TableCell className="text-right text-sm text-app-muted-foreground">{a.journalCount}</TableCell>
                                     </TableRow>
                                 )
                             })}

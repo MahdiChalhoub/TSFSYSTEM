@@ -125,8 +125,8 @@ export default function DeferredExpensesPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Deferred Expenses</h1>
-                    <p className="text-stone-500 font-medium mt-1">Manage long-term expenses recognized over multiple months</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Deferred Expenses</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Manage long-term expenses recognized over multiple months</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
@@ -141,36 +141,36 @@ export default function DeferredExpensesPage() {
                         </DialogHeader>
                         <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Name *</label>
                                 <Input name="name" required placeholder="Annual Software License" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Category *</label>
                                 <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Total Amount *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Total Amount *</label>
                                 <Input name="total_amount" type="number" step="0.01" min="0.01" required placeholder="12,000.00" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Duration (Months) *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Duration (Months) *</label>
                                 <Input name="duration_months" type="number" min="1" max="120" required placeholder="12" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Start Date *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Start Date *</label>
                                 <Input name="start_date" type="date" required className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Source Account *</label>
                                 <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="">Select account...</option>
                                     {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Description</label>
                                 <textarea name="description" rows={2} className="w-full px-3 py-2 border rounded-xl bg-background text-sm resize-none" placeholder="Optional description..." />
                             </div>
                             <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
@@ -229,15 +229,15 @@ export default function DeferredExpensesPage() {
 
             {/* Tabs + Search + Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-app-surface/50">
                     <div className="flex gap-1">
                         {tabs.map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                    ? "bg-white shadow-sm font-semibold text-stone-900"
-                                    : "text-stone-400 hover:text-stone-600"
+                                    ? "bg-app-surface shadow-sm font-semibold text-app-foreground"
+                                    : "text-app-muted-foreground hover:text-app-muted-foreground"
                                     }`}
                             >
                                 {tab.label}
@@ -245,26 +245,26 @@ export default function DeferredExpensesPage() {
                         ))}
                     </div>
                     <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input
                             placeholder="Search name or category..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                            className="pl-9 rounded-xl text-sm h-9 bg-app-surface"
                         />
                     </div>
                 </div>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Name</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Category</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Total</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Monthly</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Progress</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Remaining</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Name</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Category</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Total</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Monthly</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Progress</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Remaining</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -273,27 +273,27 @@ export default function DeferredExpensesPage() {
                             const sc = statusConfig[exp.status] || statusConfig.ACTIVE
                             const StatusIcon = sc.icon
                             return (
-                                <TableRow key={exp.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-semibold text-stone-800">{exp.name}</TableCell>
+                                <TableRow key={exp.id} className="hover:bg-app-surface/50 transition-colors">
+                                    <TableCell className="font-semibold text-app-foreground">{exp.name}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600">
+                                        <Badge variant="outline" className="rounded-lg text-[11px] border-app-border text-app-muted-foreground">
                                             {(exp.category || "").replace(/_/g, " ")}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right text-sm">{Number(exp.total_amount).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right text-sm text-stone-500">{Number(exp.monthly_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right text-sm text-app-muted-foreground">{Number(exp.monthly_amount).toLocaleString()}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2 justify-center">
-                                            <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                            <div className="w-20 h-2.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full transition-all ${progress >= 100 ? "bg-blue-400" : "bg-emerald-400"}`}
                                                     style={{ width: `${Math.min(progress, 100)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-xs font-semibold text-stone-400">{exp.months_recognized}/{exp.duration_months}</span>
+                                            <span className="text-xs font-semibold text-app-muted-foreground">{exp.months_recognized}/{exp.duration_months}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(exp.remaining_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-semibold text-app-foreground">{Number(exp.remaining_amount).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
                                             <StatusIcon size={12} /> {exp.status}
@@ -319,12 +319,12 @@ export default function DeferredExpensesPage() {
                             <TableRow>
                                 <TableCell colSpan={8} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <CalendarClock size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <CalendarClock size={28} className="text-app-faint" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-stone-600">No deferred expenses found</p>
-                                            <p className="text-sm text-stone-400 mt-1">Create a deferred expense to start amortization</p>
+                                            <p className="font-semibold text-app-muted-foreground">No deferred expenses found</p>
+                                            <p className="text-sm text-app-muted-foreground mt-1">Create a deferred expense to start amortization</p>
                                         </div>
                                         <Button variant="outline" onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 mt-2">
                                             <Plus size={14} /> New Deferred Expense

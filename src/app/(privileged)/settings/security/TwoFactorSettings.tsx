@@ -62,15 +62,15 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
     };
 
     return (
-        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm transition-all overflow-hidden">
+        <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm transition-all overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <div className={`p-4 rounded-2xl ${enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                         {enabled ? <ShieldCheck size={28} /> : <ShieldAlert size={28} />}
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Two-Factor Authentication</h2>
-                        <p className="text-xs text-gray-400 font-medium tracking-tight mt-0.5">
+                        <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Two-Factor Authentication</h2>
+                        <p className="text-xs text-app-muted-foreground font-medium tracking-tight mt-0.5">
                             {enabled
                                 ? "Your account is prioritized with an additional security layer."
                                 : "Strengthen your account security by requiring a code during login."}
@@ -82,7 +82,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                     <Button
                         onClick={handleStartSetup}
                         disabled={loading}
-                        className="h-14 px-10 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all"
+                        className="h-14 px-10 bg-app-bg text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-app-foreground transition-all"
                     >
                         {loading ? <Loader2 className="animate-spin" /> : "Initialize 2FA"}
                     </Button>
@@ -101,27 +101,27 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             </div>
 
             {step === 'SETUP' && setupData && (
-                <div className="mt-8 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 animate-in zoom-in-95 duration-500">
+                <div className="mt-8 p-10 bg-app-surface rounded-[2.5rem] border border-slate-100 animate-in zoom-in-95 duration-500">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
                         <div className="space-y-8">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">1</div>
-                                    <h3 className="text-md font-black text-gray-900 uppercase tracking-tighter">Scan QR Code</h3>
+                                    <h3 className="text-md font-black text-app-foreground uppercase tracking-tighter">Scan QR Code</h3>
                                 </div>
-                                <p className="text-[11px] text-gray-500 leading-relaxed font-medium pl-11">
+                                <p className="text-[11px] text-app-muted-foreground leading-relaxed font-medium pl-11">
                                     Open your authenticator app (e.g., Google Authenticator, Authy, or Microsoft Authenticator) and scan this QR code.
                                 </p>
                             </div>
 
-                            <div className="bg-white p-8 rounded-[2rem] flex justify-center border border-gray-100 shadow-sm w-fit mx-auto lg:ml-11">
+                            <div className="bg-app-surface p-8 rounded-[2rem] flex justify-center border border-app-border shadow-sm w-fit mx-auto lg:ml-11">
                                 <QRCodeSVG value={setupData.otp_uri} size={180} />
                             </div>
 
                             <div className="space-y-3 pl-11">
-                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Manual Setup Key</p>
+                                <p className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest">Manual Setup Key</p>
                                 <div className="flex items-center gap-2">
-                                    <code className="flex-1 p-4 bg-white rounded-xl text-xs font-mono text-gray-600 border border-gray-100">
+                                    <code className="flex-1 p-4 bg-app-surface rounded-xl text-xs font-mono text-app-muted-foreground border border-app-border">
                                         {setupData.secret}
                                     </code>
                                 </div>
@@ -132,9 +132,9 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">2</div>
-                                    <h3 className="text-md font-black text-gray-900 uppercase tracking-tighter">Verification</h3>
+                                    <h3 className="text-md font-black text-app-foreground uppercase tracking-tighter">Verification</h3>
                                 </div>
-                                <p className="text-[11px] text-gray-500 leading-relaxed font-medium pl-11">
+                                <p className="text-[11px] text-app-muted-foreground leading-relaxed font-medium pl-11">
                                     Enter the 6-digit verification code showing in your authenticator app to finalize the link.
                                 </p>
                             </div>
@@ -145,7 +145,7 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                     value={token}
                                     onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
                                     maxLength={6}
-                                    className="h-20 rounded-[1.5rem] border-gray-200 text-center text-4xl font-mono tracking-[0.3em] focus:ring-emerald-500/10 focus:border-emerald-500/50 shadow-inner bg-white"
+                                    className="h-20 rounded-[1.5rem] border-app-border text-center text-4xl font-mono tracking-[0.3em] focus:ring-emerald-500/10 focus:border-emerald-500/50 shadow-inner bg-app-surface"
                                 />
                                 <div className="flex gap-4">
                                     <Button

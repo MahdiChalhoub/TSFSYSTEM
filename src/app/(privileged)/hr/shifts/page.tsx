@@ -20,32 +20,32 @@ export default async function ShiftsPage() {
                         <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-2xl">
                             <Clock size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Scheduling</span>
+                        <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Scheduling</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
                         Shift <span className="text-amber-600">Manager</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
+                    <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Define work shifts with start/end times and break durations. Assign shifts to employees for workforce scheduling.
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-amber-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{shifts.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shifts</div>
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-amber-900/5 border border-gray-50">
+                    <div className="text-center px-8 border-r border-app-border">
+                        <div className="text-5xl font-black text-app-foreground tracking-tighter mb-1">{shifts.length}</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Shifts</div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
+                    <div className="text-center px-8 border-r border-app-border">
                         <div className="text-5xl font-black text-amber-600 tracking-tighter mb-1">
                             {shifts.filter((s: any) => s.shift_type === 'MORNING' || s.name?.toLowerCase().includes('morning')).length}
                         </div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Morning</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Morning</div>
                     </div>
                     <div className="text-center px-8">
                         <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">
                             {shifts.filter((s: any) => s.shift_type === 'NIGHT' || s.name?.toLowerCase().includes('night')).length}
                         </div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Night</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Night</div>
                     </div>
                 </div>
             </div>

@@ -139,7 +139,7 @@ const COLOR_MAP: Record<string, { bg: string, border: string, badge: string, tex
     blue: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-700', dot: 'bg-blue-500' },
     violet: { bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-700', dot: 'bg-violet-500' },
     amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700', dot: 'bg-amber-500' },
-    stone: { bg: 'bg-stone-50', border: 'border-stone-200', badge: 'bg-stone-200 text-stone-700', text: 'text-stone-700', dot: 'bg-stone-500' },
+    stone: { bg: 'bg-app-surface', border: 'border-app-border', badge: 'bg-app-surface-2 text-app-foreground', text: 'text-app-foreground', dot: 'bg-app-surface-2' },
 }
 
 // ─── Type Detail Card ───
@@ -151,7 +151,7 @@ function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[
                 <div className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
                 <h4 className={`text-sm font-bold ${colors.text}`}>{type.name}</h4>
             </div>
-            <p className={`text-xs text-stone-600 leading-relaxed ${compact ? 'line-clamp-3' : ''} mb-3`}>
+            <p className={`text-xs text-app-muted-foreground leading-relaxed ${compact ? 'line-clamp-3' : ''} mb-3`}>
                 {type.description}
             </p>
             <div className="flex flex-wrap gap-1.5 mb-2">
@@ -159,7 +159,7 @@ function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[
                     <span key={f} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>{f}</span>
                 ))}
             </div>
-            <p className="text-[10px] text-stone-400 italic mt-2">
+            <p className="text-[10px] text-app-muted-foreground italic mt-2">
                 Best for: {type.recommended}
             </p>
         </div>
@@ -170,24 +170,24 @@ function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[
 function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) {
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="bg-app-surface rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600">
                         <AlertTriangle size={22} />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-stone-900">Unlock Settings?</h3>
-                        <p className="text-xs text-stone-500">This will allow editing core financial settings</p>
+                        <h3 className="text-lg font-bold text-app-foreground">Unlock Settings?</h3>
+                        <p className="text-xs text-app-muted-foreground">This will allow editing core financial settings</p>
                     </div>
                 </div>
-                <p className="text-sm text-stone-600 mb-6 leading-relaxed">
+                <p className="text-sm text-app-muted-foreground mb-6 leading-relaxed">
                     These settings are locked because they have already been saved and applied. Modifying them
                     may affect existing transactions and reports. Are you sure you want to unlock and edit?
                 </p>
                 <div className="flex gap-3 justify-end">
                     <button
                         onClick={onCancel}
-                        className="px-4 py-2 text-sm font-medium text-stone-600 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-app-muted-foreground bg-app-surface-2 rounded-lg hover:bg-app-surface-2 transition-colors"
                     >
                         Cancel
                     </button>
@@ -291,7 +291,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
 
             {/* ─── LEFT COLUMN: Main Form ─── */}
             <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
                     {/* Lock Status Warning */}
                     {lock.isLocked && (
                         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
@@ -326,7 +326,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             <button
                                 type="button"
                                 onClick={handleUnlockRequest}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-app-surface border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
                             >
                                 <Pencil size={12} />
                                 Edit
@@ -336,11 +336,11 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
 
                     {/* ─── COMPANY TYPE ─── */}
                     <div>
-                        <h2 className="text-lg font-medium text-stone-900 mb-4">Core Configuration</h2>
+                        <h2 className="text-lg font-medium text-app-foreground mb-4">Core Configuration</h2>
 
                         <div>
                             <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-stone-700">Company Type</label>
+                                <label className="block text-sm font-medium text-app-foreground">Company Type</label>
                                 <button
                                     type="button"
                                     onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
@@ -354,13 +354,13 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             <select
                                 {...register('companyType')}
                                 disabled={isCoreFieldsLocked}
-                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                                className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-muted-foreground"
                             >
                                 {COMPANY_TYPES.map(t => (
                                     <option key={t.key} value={t.key}>{t.label}</option>
                                 ))}
                             </select>
-                            <p className="mt-1 text-xs text-stone-500">
+                            <p className="mt-1 text-xs text-app-muted-foreground">
                                 Determines how costs, prices, and taxes are calculated.
                             </p>
 
@@ -377,18 +377,18 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                         {/* Currency & Tax */}
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
+                                <label className="block text-sm font-medium text-app-foreground mb-1">Default Currency</label>
                                 <select
                                     {...register('currency')}
                                     disabled={isCoreFieldsLocked}
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                                    className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-app-surface-2 disabled:text-app-muted-foreground"
                                 >
                                     <option value="">Select currency...</option>
                                     {currencies.map(c => (
                                         <option key={c.id} value={c.code}>{c.symbol} {c.name} ({c.code})</option>
                                     ))}
                                 </select>
-                                <p className="mt-1 text-xs text-stone-400">
+                                <p className="mt-1 text-xs text-app-muted-foreground">
                                     Manage currencies in{' '}
                                     <a href="/saas/currencies" className="text-indigo-600 hover:underline">
                                         SaaS → Currencies
@@ -396,12 +396,12 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                 </p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
+                                <label className="block text-sm font-medium text-app-foreground mb-1">Standard TVA Rate</label>
                                 <input
                                     {...register('defaultTaxRate', { valueAsNumber: true })}
                                     disabled={isCoreFieldsLocked}
                                     type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-100 disabled:text-stone-500"
+                                    className="w-full px-3 py-2 border border-app-border rounded-md shadow-sm disabled:bg-app-surface-2 disabled:text-app-muted-foreground"
                                 />
                             </div>
                         </div>
@@ -424,22 +424,22 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
 
                             {/* Scope Preview */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                                        <span className="text-xs font-bold text-stone-900">Official</span>
+                                        <span className="text-xs font-bold text-app-foreground">Official</span>
                                     </div>
-                                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                                    <p className="text-[10px] text-app-muted-foreground leading-relaxed">
                                         Declared transactions only. Government-reported data.
                                         Access via <strong>Viewer Password</strong>.
                                     </p>
                                 </div>
-                                <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                <div className="p-3 bg-app-surface rounded-lg border border-amber-200">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
-                                        <span className="text-xs font-bold text-stone-900">Internal</span>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-app-surface-2" />
+                                        <span className="text-xs font-bold text-app-foreground">Internal</span>
                                     </div>
-                                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                                    <p className="text-[10px] text-app-muted-foreground leading-relaxed">
                                         Full picture — all operations including undeclared.
                                         Access via <strong>Full Access Password</strong>.
                                     </p>
@@ -447,25 +447,25 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             </div>
 
                             {/* Per-User Access Info */}
-                            <div className="bg-white rounded-lg border border-amber-200 p-4">
+                            <div className="bg-app-surface rounded-lg border border-amber-200 p-4">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Lock size={14} className="text-amber-600" />
-                                    <span className="text-sm font-bold text-stone-900">Scope Access Control</span>
+                                    <span className="text-sm font-bold text-app-foreground">Scope Access Control</span>
                                 </div>
-                                <p className="text-xs text-stone-600 leading-relaxed">
+                                <p className="text-xs text-app-muted-foreground leading-relaxed">
                                     Each user has <strong>two passwords</strong> when Dual View is enabled:
                                 </p>
-                                <ul className="mt-2 space-y-1.5 text-xs text-stone-600">
+                                <ul className="mt-2 space-y-1.5 text-xs text-app-muted-foreground">
                                     <li className="flex items-start gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                         <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
                                     </li>
                                     <li className="flex items-start gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
+                                        <span className="w-1.5 h-1.5 rounded-full bg-app-surface-2 mt-1.5 shrink-0" />
                                         <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
                                     </li>
                                 </ul>
-                                <p className="text-[10px] text-stone-400 mt-3 italic">
+                                <p className="text-[10px] text-app-muted-foreground mt-3 italic">
                                     Manage user scope passwords in HR &amp; Teams → Access Control.
                                 </p>
                             </div>
@@ -474,24 +474,24 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
 
                     {/* ─── CUSTOM FLAGS ─── */}
                     {companyType === 'CUSTOM' && (
-                        <div className="p-4 bg-stone-50 rounded-md border border-stone-100">
-                            <h3 className="text-sm font-medium text-stone-900 mb-3">Manual Configuration</h3>
+                        <div className="p-4 bg-app-surface rounded-md border border-app-border">
+                            <h3 className="text-sm font-medium text-app-foreground mb-3">Manual Configuration</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center">
-                                    <input {...register('worksInTTC')} disabled={isCoreFieldsLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
-                                    <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
+                                    <input {...register('worksInTTC')} disabled={isCoreFieldsLocked} type="checkbox" className="h-4 w-4 text-black border-app-border rounded disabled:opacity-50" />
+                                    <label className="ml-2 text-sm text-app-foreground">Works in TTC (Cost Effective Basis is TTC)</label>
                                 </div>
                                 <div className="flex items-center">
-                                    <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
+                                    <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+                                    <label className="ml-2 text-sm text-app-foreground">Allow HT Entry (Auto-convert to TTC)</label>
                                 </div>
                                 <div className="flex items-center">
-                                    <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
+                                    <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+                                    <label className="ml-2 text-sm text-app-foreground">Declare TVA (Official)</label>
                                 </div>
                                 <div className="flex items-center">
-                                    <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                    <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
+                                    <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-app-border rounded" />
+                                    <label className="ml-2 text-sm text-app-foreground">Enable Dual View (Official / Internal)</label>
                                 </div>
                             </div>
                         </div>
@@ -536,7 +536,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                         <button
                             type="button"
                             onClick={() => router.push('/finance/settings/posting-rules')}
-                            className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
+                            className="bg-app-surface border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
                         >
                             Configure Auto-Mapping
                         </button>
@@ -574,17 +574,17 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${tradeSubTypesEnabled ? 'bg-indigo-600' : 'bg-stone-300'
                                 }`}
                         >
-                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${tradeSubTypesEnabled ? 'translate-x-6' : 'translate-x-1'
+                            <span className={`inline-block h-5 w-5 transform rounded-full bg-app-surface shadow-sm transition-transform ${tradeSubTypesEnabled ? 'translate-x-6' : 'translate-x-1'
                                 }`} />
                         </button>
                     </div>
 
                     {/* ─── SUBMIT ─── */}
-                    <div className="pt-4 border-t border-stone-200">
+                    <div className="pt-4 border-t border-app-border">
                         <button
                             type="submit"
                             disabled={isPending || isCoreFieldsLocked}
-                            className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
+                            className="w-full bg-app-foreground text-white px-4 py-2 rounded-md hover:bg-app-surface disabled:opacity-50"
                         >
                             {isPending ? 'Saving...' : 'Save Configuration'}
                         </button>
@@ -592,7 +592,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                 </form>
 
                 {/* ─── MAINTENANCE ZONE ─── */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                <div className="bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
                     <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
                         <ShieldAlert size={20} />
                         Maintenance Zone
@@ -609,7 +609,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                 type="button"
                                 onClick={handleRecalculate}
                                 disabled={isRecalcPending}
-                                className="bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
+                                className="bg-app-surface border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
                             >
                                 {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
                             </button>
@@ -671,7 +671,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
             {/* ─── RIGHT COLUMN: Type Comparison ─── */}
             {showCompare && (
                 <div className="w-1/2 shrink-0 sticky top-6">
-                    <div className="bg-white rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
+                    <div className="bg-app-surface rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
                         {/* Panel Header */}
                         <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
                             <div className="flex items-center gap-2">
@@ -687,7 +687,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                         <div className="grid grid-cols-2 border-b border-indigo-100">
                             {/* Current Type Header */}
                             <div className="px-4 py-3 bg-indigo-50/40 border-r border-indigo-100">
-                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Current</p>
+                                <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Current</p>
                                 {selectedType && (
                                     <div className="flex items-center gap-1.5">
                                         <div className={`w-2.5 h-2.5 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
@@ -697,11 +697,11 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             </div>
                             {/* Compare Type Header */}
                             <div className="px-4 py-3">
-                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Compare With</p>
+                                <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Compare With</p>
                                 <select
                                     value={compareType}
                                     onChange={e => setCompareType(e.target.value)}
-                                    className="w-full px-2 py-1 border border-stone-200 rounded text-sm font-semibold bg-white focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-full px-2 py-1 border border-app-border rounded text-sm font-semibold bg-app-surface focus:ring-indigo-500 focus:border-indigo-500"
                                 >
                                     {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
                                         <option key={t.key} value={t.key}>{t.name}</option>
@@ -715,16 +715,16 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             {COMPARE_ROWS.map((row, i) => (
                                 <div key={row.key}>
                                     {/* Feature Label — full width */}
-                                    <div className={`px-4 py-1.5 bg-stone-50 ${i > 0 ? 'border-t border-stone-200' : ''}`}>
-                                        <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">{row.label}</span>
+                                    <div className={`px-4 py-1.5 bg-app-surface ${i > 0 ? 'border-t border-app-border' : ''}`}>
+                                        <span className="text-[11px] font-bold text-app-muted-foreground uppercase tracking-wider">{row.label}</span>
                                     </div>
                                     {/* Two value columns */}
                                     <div className="grid grid-cols-2">
-                                        <div className="px-4 py-2 bg-indigo-50/20 border-r border-stone-100">
-                                            <span className="text-[12px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
+                                        <div className="px-4 py-2 bg-indigo-50/20 border-r border-app-border">
+                                            <span className="text-[12px] text-app-foreground">{selectedType?.compare[row.key] || '—'}</span>
                                         </div>
                                         <div className="px-4 py-2">
-                                            <span className="text-[12px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
+                                            <span className="text-[12px] text-app-foreground">{compareTypeObj?.compare[row.key] || '—'}</span>
                                         </div>
                                     </div>
                                 </div>

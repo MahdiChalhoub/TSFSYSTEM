@@ -109,7 +109,7 @@ export default function ComboManager({
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">Combo Products</CardTitle>
                     <div className="relative mt-2">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
                             className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
                             placeholder="Search combos..."
@@ -120,7 +120,7 @@ export default function ComboManager({
                 </CardHeader>
                 <CardContent className="space-y-2 max-h-[500px] overflow-y-auto">
                     {filteredCombos.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400">
+                        <div className="text-center py-8 text-app-muted-foreground">
                             <Package size={40} className="mx-auto mb-2 opacity-30" />
                             <p className="text-sm">No combo products found</p>
                             <p className="text-xs mt-1">Set a product&apos;s type to &quot;Combo&quot; first</p>
@@ -132,14 +132,14 @@ export default function ComboManager({
                                 onClick={() => setSelectedCombo(p)}
                                 className={`w-full text-left p-3 rounded-xl border transition-all ${selectedCombo?.id === p.id
                                         ? 'border-purple-500 bg-purple-50 shadow-sm'
-                                        : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                                        : 'border-app-border hover:border-purple-300 hover:bg-app-surface'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="font-medium text-sm">{p.name}</span>
                                     <Badge className="bg-purple-100 text-purple-700 text-xs">COMBO</Badge>
                                 </div>
-                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                <div className="flex items-center gap-3 mt-1 text-xs text-app-muted-foreground">
                                     <span>{p.sku}</span>
                                     <span>{fmt(p.selling_price_ttc)}</span>
                                 </div>
@@ -173,14 +173,14 @@ export default function ComboManager({
                 </CardHeader>
                 <CardContent>
                     {!selectedCombo ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Layers size={48} className="mx-auto mb-3 opacity-30" />
                             <p>Select a combo product from the left panel</p>
                         </div>
                     ) : loading ? (
-                        <div className="text-center py-12 text-gray-400">Loading...</div>
+                        <div className="text-center py-12 text-app-muted-foreground">Loading...</div>
                     ) : components.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
+                        <div className="text-center py-12 text-app-muted-foreground">
                             <Package size={40} className="mx-auto mb-3 opacity-30" />
                             <p>No components yet</p>
                             <p className="text-xs mt-1">Click &quot;Add Component&quot; to build this bundle</p>
@@ -191,17 +191,17 @@ export default function ComboManager({
                                 {components.map(c => (
                                     <div
                                         key={c.id}
-                                        className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                                        className="flex items-center gap-4 p-3 bg-app-surface rounded-xl hover:bg-app-surface-2 transition-colors"
                                     >
                                         <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
                                             <Package size={16} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-sm truncate">{c.component_name}</p>
-                                            <p className="text-xs text-gray-500">{c.component_sku}</p>
+                                            <p className="text-xs text-app-muted-foreground">{c.component_sku}</p>
                                         </div>
                                         <div className="flex items-center gap-1 text-sm shrink-0">
-                                            <Hash size={12} className="text-gray-400" />
+                                            <Hash size={12} className="text-app-muted-foreground" />
                                             <span className="font-semibold">{c.quantity}</span>
                                         </div>
                                         <div className="text-right shrink-0">
@@ -224,12 +224,12 @@ export default function ComboManager({
 
                             {/* Summary row */}
                             <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                <div className="text-sm text-gray-500">
+                                <div className="text-sm text-app-muted-foreground">
                                     {components.length} component{components.length !== 1 ? 's' : ''} ·
-                                    Component value: <span className="font-semibold text-gray-900">{fmt(totalComponentValue)}</span>
+                                    Component value: <span className="font-semibold text-app-foreground">{fmt(totalComponentValue)}</span>
                                 </div>
                                 <div className="text-sm">
-                                    <span className="text-gray-500">Combo price: </span>
+                                    <span className="text-app-muted-foreground">Combo price: </span>
                                     <span className={`font-bold ${selectedCombo.selling_price_ttc < totalComponentValue ? 'text-emerald-600' : 'text-orange-600'}`}>
                                         {fmt(selectedCombo.selling_price_ttc)}
                                     </span>
@@ -248,14 +248,14 @@ export default function ComboManager({
             {/* Add Component Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl">
+                    <div className="bg-app-surface rounded-2xl w-full max-w-lg shadow-xl">
                         <div className="p-5 border-b">
                             <h3 className="text-lg font-bold">Add Component</h3>
-                            <p className="text-sm text-gray-500">Search for a product to add to this combo</p>
+                            <p className="text-sm text-app-muted-foreground">Search for a product to add to this combo</p>
                         </div>
                         <div className="p-5 space-y-4">
                             <div className="relative">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <input
                                     className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
                                     placeholder="Search products by name or SKU..."
@@ -267,7 +267,7 @@ export default function ComboManager({
 
                             <div className="flex gap-4">
                                 <div className="flex-1">
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
+                                    <label className="block text-xs font-medium text-app-muted-foreground mb-1">Quantity</label>
                                     <input
                                         type="number"
                                         min={1}
@@ -277,7 +277,7 @@ export default function ComboManager({
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Price Override (optional)</label>
+                                    <label className="block text-xs font-medium text-app-muted-foreground mb-1">Price Override (optional)</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -296,18 +296,18 @@ export default function ComboManager({
                                         onClick={() => handleAdd(p.id)}
                                         className="w-full text-left flex items-center gap-3 p-2.5 rounded-lg hover:bg-purple-50 transition-colors"
                                     >
-                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 shrink-0">
+                                        <div className="w-8 h-8 bg-app-surface-2 rounded-lg flex items-center justify-center text-app-muted-foreground shrink-0">
                                             <Package size={14} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium truncate">{p.name}</p>
-                                            <p className="text-xs text-gray-500">{p.sku}</p>
+                                            <p className="text-xs text-app-muted-foreground">{p.sku}</p>
                                         </div>
                                         <span className="text-sm font-semibold shrink-0">{fmt(p.selling_price_ttc)}</span>
                                     </button>
                                 ))}
                                 {filteredAddProducts.length === 0 && (
-                                    <p className="text-sm text-gray-400 text-center py-4">No products match your search</p>
+                                    <p className="text-sm text-app-muted-foreground text-center py-4">No products match your search</p>
                                 )}
                             </div>
                         </div>
@@ -319,7 +319,7 @@ export default function ComboManager({
                                     setAddQty(1)
                                     setAddPriceOverride('')
                                 }}
-                                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-app-muted-foreground bg-app-surface-2 rounded-lg hover:bg-app-surface-2 transition-colors"
                             >
                                 Close
                             </button>

@@ -27,7 +27,7 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <h1 className="text-3xl font-bold text-stone-900 font-serif mb-8">Edit Journal Voucher #{entry.id}</h1>
+            <h1 className="text-3xl font-bold text-app-foreground font-serif mb-8">Edit Journal Voucher #{entry.id}</h1>
             <JournalEntryForm
                 accounts={JSON.parse(JSON.stringify(accounts))}
                 fiscalYears={JSON.parse(JSON.stringify(fiscalYears))}

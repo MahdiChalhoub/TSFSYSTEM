@@ -46,8 +46,8 @@ export default function SwitcherPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Instance Switcher</h2>
-                <p className="text-gray-500 mt-2 font-medium">Switch between your authorized organization workspaces</p>
+                <h2 className="text-3xl font-black text-app-foreground tracking-tight">Instance Switcher</h2>
+                <p className="text-app-muted-foreground mt-2 font-medium">Switch between your authorized organization workspaces</p>
             </div>
 
             {loading ? (
@@ -65,13 +65,13 @@ export default function SwitcherPage() {
                                     <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                                         <Building size={20} />
                                     </div>
-                                    <Badge className={org.isActive ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"}>
+                                    <Badge className={org.isActive ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-muted-foreground"}>
                                         {org.isActive ? 'Active' : 'Suspended'}
                                     </Badge>
                                 </div>
                                 <CardTitle className="mt-4 flex items-center justify-between">
                                     {org.name}
-                                    <ArrowRight className="text-gray-300 group-hover:text-emerald-500 transition-colors" size={20} />
+                                    <ArrowRight className="text-app-faint group-hover:text-emerald-500 transition-colors" size={20} />
                                 </CardTitle>
                                 <CardDescription className="font-mono text-xs">{org.slug}</CardDescription>
                             </CardHeader>

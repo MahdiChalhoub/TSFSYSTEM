@@ -75,7 +75,7 @@ export default async function CategoriesPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Product Categories</h1>
+                        <h1 className="text-4xl font-bold text-app-foreground tracking-tight">Product Categories</h1>
                         {orgContext?.business_type_name && (
                             <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 animate-in zoom-in duration-300">
                                 <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Industry Vector</span>
@@ -83,13 +83,13 @@ export default async function CategoriesPage() {
                             </div>
                         )}
                     </div>
-                    <p className="text-gray-500 font-medium">Organize your inventory with a flexible category hierarchy.</p>
+                    <p className="text-app-muted-foreground font-medium">Organize your inventory with a flexible category hierarchy.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Link
                         href="/inventory/maintenance?tab=category"
-                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-emerald-600 px-4 py-3 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"
+                        className="bg-app-surface border border-app-border text-app-foreground hover:bg-app-surface hover:text-emerald-600 px-4 py-3 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"
                     >
                         <Wrench size={18} />
                         <span>Maintenance tool</span>
@@ -101,19 +101,19 @@ export default async function CategoriesPage() {
             {/* Content */}
             <div className="card-premium p-6">
                 {/* Tree Header */}
-                <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-                    <h3 className="text-xl font-bold text-gray-800">Category Structure</h3>
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-app-border">
+                    <h3 className="text-xl font-bold text-app-foreground">Category Structure</h3>
                     <input
                         type="text"
                         placeholder="Search categories..."
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 w-64 transition-all"
+                        className="px-4 py-2 border border-app-border rounded-lg text-sm focus:outline-none focus:border-emerald-500 w-64 transition-all"
                     />
                 </div>
 
                 {hierarchicalCategories.length > 0 ? (
                     <CategoryTree categories={hierarchicalCategories} allCategories={flatCategories || []} />
                 ) : (
-                    <div className="py-12 text-center text-gray-400">
+                    <div className="py-12 text-center text-app-muted-foreground">
                         <p>No categories defined yet.</p>
                     </div>
                 )}

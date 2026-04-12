@@ -99,13 +99,13 @@ export default function ProfitCentersPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center">
                         <Building2 size={20} className="text-white" />
                     </div>
                     Profit Centers
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">SYSCOHADA class-based profit center analysis</p>
+                <p className="text-sm text-app-muted-foreground mt-1">SYSCOHADA class-based profit center analysis</p>
             </header>
 
             <div className="grid grid-cols-4 gap-4">
@@ -114,9 +114,9 @@ export default function ProfitCentersPage() {
                         <div className="flex items-center gap-3">
                             <Building2 size={24} className="text-purple-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Centers</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Centers</p>
                                 <p className="text-2xl font-bold">{centers.length}</p>
-                                <p className="text-[10px] text-gray-400">{accounts.length} accounts</p>
+                                <p className="text-[10px] text-app-muted-foreground">{accounts.length} accounts</p>
                             </div>
                         </div>
                     </CardContent>
@@ -126,7 +126,7 @@ export default function ProfitCentersPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-green-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Debits</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Debits</p>
                                 <p className="text-xl font-bold text-green-700">{fmt(totalIncome)}</p>
                             </div>
                         </div>
@@ -137,7 +137,7 @@ export default function ProfitCentersPage() {
                         <div className="flex items-center gap-3">
                             <TrendingDown size={24} className="text-red-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Credits</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Credits</p>
                                 <p className="text-xl font-bold text-red-700">{fmt(totalExpense)}</p>
                             </div>
                         </div>
@@ -148,7 +148,7 @@ export default function ProfitCentersPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className={totalNet >= 0 ? 'text-emerald-500' : 'text-rose-500'} />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Net Position</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Net Position</p>
                                 <p className={`text-xl font-bold ${totalNet >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                                     {fmt(Math.abs(totalNet))}
                                 </p>
@@ -176,15 +176,15 @@ export default function ProfitCentersPage() {
                         <CardContent>
                             <div className="grid grid-cols-3 gap-3 mb-3">
                                 <div className="text-center p-2 bg-green-50 rounded-lg">
-                                    <p className="text-[10px] text-gray-500 uppercase">Debit</p>
+                                    <p className="text-[10px] text-app-muted-foreground uppercase">Debit</p>
                                     <p className="text-sm font-bold text-green-600">{fmt(c.income)}</p>
                                 </div>
                                 <div className="text-center p-2 bg-red-50 rounded-lg">
-                                    <p className="text-[10px] text-gray-500 uppercase">Credit</p>
+                                    <p className="text-[10px] text-app-muted-foreground uppercase">Credit</p>
                                     <p className="text-sm font-bold text-red-600">{fmt(c.expense)}</p>
                                 </div>
                                 <div className={`text-center p-2 rounded-lg ${c.net >= 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                                    <p className="text-[10px] text-gray-500 uppercase">Net</p>
+                                    <p className="text-[10px] text-app-muted-foreground uppercase">Net</p>
                                     <p className={`text-sm font-bold ${c.net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {fmt(Math.abs(c.net))}
                                     </p>
@@ -201,9 +201,9 @@ export default function ProfitCentersPage() {
                                         const pct = (Math.abs(bal) / total * 100)
                                         return (
                                             <div key={a.id} className="flex items-center gap-2 text-xs">
-                                                <span className="font-mono text-gray-400 w-14">{a.code}</span>
+                                                <span className="font-mono text-app-muted-foreground w-14">{a.code}</span>
                                                 <span className="flex-1 truncate">{a.name}</span>
-                                                <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="w-16 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                     <div className="h-full bg-purple-300 rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
                                                 </div>
                                                 <span className="font-bold w-20 text-right">{fmt(Math.abs(bal))}</span>

@@ -164,7 +164,7 @@ export default function VouchersPage() {
         else { setSortKey(key); setSortDir('asc') }
     }
     function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
             ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
             : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
@@ -229,8 +229,8 @@ export default function VouchersPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Vouchers</h1>
-                    <p className="text-stone-500 font-medium mt-1">Manage transfers, receipts, and payment vouchers</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Vouchers</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Manage transfers, receipts, and payment vouchers</p>
                 </div>
                 <Button onClick={openCreate} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
                     <Plus size={16} /> New Voucher
@@ -242,7 +242,7 @@ export default function VouchersPage() {
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            {editVoucher ? <><Pencil size={20} /> Edit Voucher <span className="text-xs font-mono text-stone-400 ml-2">{editVoucher.reference}</span></> : <><Receipt size={20} /> Create Voucher</>}
+                            {editVoucher ? <><Pencil size={20} /> Edit Voucher <span className="text-xs font-mono text-app-muted-foreground ml-2">{editVoucher.reference}</span></> : <><Receipt size={20} /> Create Voucher</>}
                         </DialogTitle>
                         <DialogDescription>
                             {editVoucher ? "Modify the voucher details below. Only OPEN vouchers can be edited." : "Select the voucher type and fill in the details below."}
@@ -262,7 +262,7 @@ export default function VouchersPage() {
                                         onClick={() => setVoucherType(t)}
                                         className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${voucherType === t
                                             ? `${cfg.bg} ${cfg.color} shadow-sm`
-                                            : "bg-stone-50 text-stone-400 border-stone-100 hover:bg-stone-100"
+                                            : "bg-app-surface text-app-muted-foreground border-app-border hover:bg-app-surface-2"
                                             }`}
                                     >
                                         <Icon size={14} />
@@ -284,21 +284,21 @@ export default function VouchersPage() {
 
                     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Amount *</label>
                             <Input name="amount" type="number" step="0.01" min="0.01" required placeholder="1,000.00" className="rounded-xl" defaultValue={editVoucher?.amount || ""} />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Date *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Date *</label>
                             <Input name="date" type="date" required className="rounded-xl" defaultValue={editVoucher?.date || ""} />
                         </div>
                         <div className="col-span-2 space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Description</label>
                             <Input name="description" placeholder="Optional description..." className="rounded-xl" defaultValue={editVoucher?.description || ""} />
                         </div>
 
                         {(activeType === "TRANSFER" || activeType === "PAYMENT") && (
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Source Account *</label>
                                 <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.source_account_id || editVoucher?.source_account || ""}>
                                     <option value="">Select source...</option>
                                     {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -307,7 +307,7 @@ export default function VouchersPage() {
                         )}
                         {(activeType === "TRANSFER" || activeType === "RECEIPT") && (
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Destination Account *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Destination Account *</label>
                                 <select name="destination_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.destination_account_id || editVoucher?.destination_account || ""}>
                                     <option value="">Select destination...</option>
                                     {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -316,7 +316,7 @@ export default function VouchersPage() {
                         )}
                         {(activeType === "RECEIPT" || activeType === "PAYMENT") && (
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Financial Event</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Financial Event</label>
                                 <select name="financial_event_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.financial_event_id || editVoucher?.financial_event || ""}>
                                     <option value="">Select event...</option>
                                     {events.map((e: Record<string, any>) => (
@@ -381,16 +381,16 @@ export default function VouchersPage() {
                         <DialogDescription>Complete audit trail for this voucher.</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-80 overflow-y-auto space-y-3">
-                        {historyDialog?.length === 0 && <p className="text-center text-stone-400 py-6">No history yet</p>}
+                        {historyDialog?.length === 0 && <p className="text-center text-app-muted-foreground py-6">No history yet</p>}
                         {historyDialog?.map((h: Record<string, any>, i: number) => (
-                            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-stone-50 border">
-                                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shrink-0">
-                                    <Clock size={14} className="text-stone-400" />
+                            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-app-surface border">
+                                <div className="w-8 h-8 rounded-lg bg-app-surface border flex items-center justify-center shrink-0">
+                                    <Clock size={14} className="text-app-muted-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-stone-800">{h.action}</p>
-                                    {h.comment && <p className="text-xs text-stone-500 mt-0.5">{h.comment}</p>}
-                                    <p className="text-xs text-stone-400 mt-1">
+                                    <p className="font-semibold text-sm text-app-foreground">{h.action}</p>
+                                    {h.comment && <p className="text-xs text-app-muted-foreground mt-0.5">{h.comment}</p>}
+                                    <p className="text-xs text-app-muted-foreground mt-1">
                                         by {h.performed_by || 'System'} · {new Date(h.performed_at).toLocaleString()}
                                     </p>
                                 </div>
@@ -406,11 +406,11 @@ export default function VouchersPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{vouchers.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{vouchers.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <FileText size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <FileText size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -458,7 +458,7 @@ export default function VouchersPage() {
 
             {/* Tabs + Search + Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-app-surface/50">
                     <div className="flex gap-1">
                         {tabs.map(tab => {
                             const Icon = tab.icon
@@ -467,8 +467,8 @@ export default function VouchersPage() {
                                     key={tab.key}
                                     onClick={() => setActiveTab(tab.key)}
                                     className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                        ? "bg-white shadow-sm font-semibold text-stone-900"
-                                        : "text-stone-400 hover:text-stone-600"
+                                        ? "bg-app-surface shadow-sm font-semibold text-app-foreground"
+                                        : "text-app-muted-foreground hover:text-app-muted-foreground"
                                         }`}
                                 >
                                     <Icon size={13} />
@@ -478,35 +478,35 @@ export default function VouchersPage() {
                         })}
                     </div>
                     <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input
                             placeholder="Search reference or description..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                            className="pl-9 rounded-xl text-sm h-9 bg-app-surface"
                         />
                     </div>
                 </div>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('date')}>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('date')}>
                                 Date <SortIcon col="date" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('voucher_type')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('voucher_type')}>
                                 Type <SortIcon col="voucher_type" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('reference')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('reference')}>
                                 Reference <SortIcon col="reference" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Description</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Description</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
                                 Amount <SortIcon col="amount" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('lifecycle_status')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center cursor-pointer select-none" onClick={() => toggleSort('lifecycle_status')}>
                                 Status <SortIcon col="lifecycle_status" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -520,16 +520,16 @@ export default function VouchersPage() {
                             const isVerified = v.lifecycle_status === 'VERIFIED'
                             const isConfirmed = v.lifecycle_status === 'CONFIRMED'
                             return (
-                                <TableRow key={v.id} className="hover:bg-stone-50/50 transition-colors group">
-                                    <TableCell className="text-sm text-stone-600">{v.date}</TableCell>
+                                <TableRow key={v.id} className="hover:bg-app-surface/50 transition-colors group">
+                                    <TableCell className="text-sm text-app-muted-foreground">{v.date}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className={`gap-1 rounded-lg border ${tc.bg} ${tc.color} font-semibold text-[11px]`}>
                                             <TypeIcon size={12} /> {v.voucher_type}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="font-mono text-sm text-stone-500">{v.reference || "—"}</TableCell>
-                                    <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{v.description || "—"}</TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(v.amount).toLocaleString()}</TableCell>
+                                    <TableCell className="font-mono text-sm text-app-muted-foreground">{v.reference || "—"}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">{v.description || "—"}</TableCell>
+                                    <TableCell className="text-right font-semibold text-app-foreground">{Number(v.amount).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
                                         <div className="flex items-center justify-center gap-1.5">
                                             <Badge variant="outline" className={`gap-1 rounded-lg border ${lc.bg} ${lc.color} font-semibold text-[11px]`}>
@@ -548,7 +548,7 @@ export default function VouchersPage() {
                                             {isOpen && !v.is_posted && (
                                                 <>
                                                     <Button size="sm" variant="ghost" onClick={() => openEdit(v)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
+                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
                                                         <Pencil size={14} />
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => handleLock(v.id)} disabled={isPending}
@@ -556,7 +556,7 @@ export default function VouchersPage() {
                                                         <Lock size={12} /> Lock
                                                     </Button>
                                                     <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(v.id)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
+                                                        className="h-8 w-8 p-0 text-app-muted-foreground hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
                                                         <Trash2 size={14} />
                                                     </Button>
                                                 </>
@@ -565,7 +565,7 @@ export default function VouchersPage() {
                                             {isLocked && (
                                                 <>
                                                     <Button size="sm" variant="outline" onClick={() => setCommentDialog({ id: v.id, action: 'unlock' })} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-stone-600 border-stone-200 hover:bg-stone-50 h-8 text-xs font-semibold">
+                                                        className="rounded-xl gap-1 text-app-muted-foreground border-app-border hover:bg-app-surface h-8 text-xs font-semibold">
                                                         <Unlock size={12} /> Unlock
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => handleVerify(v.id)} disabled={isPending}
@@ -593,7 +593,7 @@ export default function VouchersPage() {
                                             )}
                                             {/* History — always visible */}
                                             <Button size="sm" variant="ghost" onClick={() => showHistory(v.id)}
-                                                className="h-8 w-8 p-0 text-stone-400 hover:text-stone-600 opacity-0 group-hover:opacity-100 transition-opacity" title="History">
+                                                className="h-8 w-8 p-0 text-app-muted-foreground hover:text-app-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" title="History">
                                                 <History size={14} />
                                             </Button>
                                         </div>
@@ -605,12 +605,12 @@ export default function VouchersPage() {
                             <TableRow>
                                 <TableCell colSpan={7} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <FileText size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <FileText size={28} className="text-app-faint" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-stone-600">No vouchers found</p>
-                                            <p className="text-sm text-stone-400 mt-1">Create your first voucher to get started</p>
+                                            <p className="font-semibold text-app-muted-foreground">No vouchers found</p>
+                                            <p className="text-sm text-app-muted-foreground mt-1">Create your first voucher to get started</p>
                                         </div>
                                         <Button variant="outline" onClick={openCreate} className="rounded-xl gap-2 mt-2">
                                             <Plus size={14} /> New Voucher
@@ -624,9 +624,9 @@ export default function VouchersPage() {
 
                 {/* Table Footer */}
                 {filteredVouchers.length > 0 && (
-                    <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
+                    <div className="px-5 py-3 border-t bg-app-surface/30 flex items-center justify-between text-sm text-app-muted-foreground">
                         <span>{filteredVouchers.length} voucher{filteredVouchers.length !== 1 ? 's' : ''} shown</span>
-                        <span className="font-semibold text-stone-700">
+                        <span className="font-semibold text-app-foreground">
                             Total: {filteredVouchers.reduce((s, v) => s + Number(v.amount || 0), 0).toLocaleString()}
                         </span>
                     </div>

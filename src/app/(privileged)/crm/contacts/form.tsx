@@ -20,21 +20,21 @@ export default function ContactModal({
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-500 border border-gray-100 max-h-[90vh] overflow-y-auto">
+            <div className="bg-app-surface rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-500 border border-app-border max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 sticky top-0 z-10">
+                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-app-surface/50 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200' : 'bg-amber-600 shadow-amber-200'} text-white`}>
                             {type === 'CUSTOMER' ? <User size={24} /> : <Briefcase size={24} />}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-gray-900 leading-tight">
+                            <h2 className="text-2xl font-black text-app-foreground leading-tight">
                                 Establish {type === 'CUSTOMER' ? 'Client' : 'Supplier'}
                             </h2>
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Master Data Initialization</p>
+                            <p className="text-xs text-app-muted-foreground font-bold uppercase tracking-widest">Master Data Initialization</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-white rounded-2xl transition-all text-gray-400 hover:text-gray-900 shadow-sm">
+                    <button onClick={onClose} className="p-3 hover:bg-app-surface rounded-2xl transition-all text-app-muted-foreground hover:text-app-foreground shadow-sm">
                         <X size={20} />
                     </button>
                 </div>
@@ -45,12 +45,12 @@ export default function ContactModal({
                     <div className="grid grid-cols-2 gap-6">
                         {/* Name */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Entity / Individual Name</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Entity / Individual Name</label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <input
                                     name="name"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground"
                                     placeholder="Full Name or Company"
                                     required
                                 />
@@ -59,12 +59,12 @@ export default function ContactModal({
 
                         {/* Company Name */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Company Name</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Company Name</label>
                             <div className="relative">
-                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <input
                                     name="companyName"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground"
                                     placeholder="Company / Organization"
                                 />
                             </div>
@@ -72,12 +72,12 @@ export default function ContactModal({
 
                         {/* Home Site */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Home / Origin Site</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Home / Origin Site</label>
                             <div className="relative">
-                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <select
                                     name="homeSiteId"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground appearance-none"
                                     required
                                 >
                                     <option value="">Select Home Site...</option>
@@ -91,12 +91,12 @@ export default function ContactModal({
                         {/* Supplier Category — only for suppliers */}
                         {type === 'SUPPLIER' && (
                             <div className="col-span-2 md:col-span-1">
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Supplier Category</label>
+                                <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Supplier Category</label>
                                 <div className="relative">
-                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                     <select
                                         name="supplierCategory"
-                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-amber-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-amber-100 outline-none transition-all font-bold text-app-foreground appearance-none"
                                     >
                                         <option value="REGULAR">Regular Supplier</option>
                                         <option value="DEPOT_VENTE">Depot Vente (Consignment)</option>
@@ -109,12 +109,12 @@ export default function ContactModal({
                         {/* Customer Tier — only for customers */}
                         {type === 'CUSTOMER' && (
                             <div className="col-span-2 md:col-span-1">
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Client Tier</label>
+                                <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Client Tier</label>
                                 <div className="relative">
-                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                     <select
                                         name="customerTier"
-                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-app-foreground appearance-none"
                                     >
                                         <option value="STANDARD">Standard</option>
                                         <option value="VIP">VIP</option>
@@ -127,13 +127,13 @@ export default function ContactModal({
 
                         {/* Email */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Work Email</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Work Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <input
                                     name="email"
                                     type="email"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground"
                                     placeholder="contact@example.com"
                                 />
                             </div>
@@ -141,12 +141,12 @@ export default function ContactModal({
 
                         {/* Phone */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Primary Phone</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Primary Phone</label>
                             <div className="relative">
-                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <input
                                     name="phone"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground"
                                     placeholder="+225 XX XXX XXX"
                                 />
                             </div>
@@ -154,15 +154,15 @@ export default function ContactModal({
 
                         {/* Payment Terms */}
                         <div className="col-span-2 md:col-span-1">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Payment Terms (Days)</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Payment Terms (Days)</label>
                             <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-app-faint" size={18} />
                                 <input
                                     name="paymentTermsDays"
                                     type="number"
                                     min="0"
                                     defaultValue="0"
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground"
                                     placeholder="0 = Immediate"
                                 />
                             </div>
@@ -170,13 +170,13 @@ export default function ContactModal({
 
                         {/* Notes */}
                         <div className="col-span-2">
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Notes</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-2 ml-1">Notes</label>
                             <div className="relative">
-                                <FileText className="absolute left-4 top-4 text-gray-300" size={18} />
+                                <FileText className="absolute left-4 top-4 text-app-faint" size={18} />
                                 <textarea
                                     name="notes"
                                     rows={2}
-                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800 resize-none"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-app-surface border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-app-foreground resize-none"
                                     placeholder="Internal notes about this contact..."
                                 />
                             </div>
@@ -204,7 +204,7 @@ export default function ContactModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-6 py-4 rounded-2xl font-black text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all text-sm uppercase tracking-widest"
+                            className="flex-1 px-6 py-4 rounded-2xl font-black text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-surface transition-all text-sm uppercase tracking-widest"
                         >
                             Abort
                         </button>

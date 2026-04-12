@@ -50,20 +50,20 @@ export default async function WiseAdjustmentsPage() {
                 <aside className="space-y-6">
                     {/* Recent High-Impact Events */}
                     <div className="bg-app-surface border border-app-border rounded-[2rem] overflow-hidden shadow-xl">
-                        <div className="px-6 py-4 border-b border-app-border bg-white/5 flex items-center gap-3">
+                        <div className="px-6 py-4 border-b border-app-border bg-app-surface/5 flex items-center gap-3">
                             <History size={16} className="text-violet-400 opacity-50" />
                             <span className="text-xs font-black uppercase tracking-widest">Recent Negative Events</span>
                         </div>
                         <div className="divide-y divide-app-border">
                             {history.slice(0, 8).map((ev: any) => (
-                                <div key={ev.id} className="p-4 space-y-2 hover:bg-white/[0.02] transition-colors">
+                                <div key={ev.id} className="p-4 space-y-2 hover:bg-app-surface/[0.02] transition-colors">
                                     <div className="flex justify-between items-start">
                                         <div className="font-bold text-xs">{ev.employee_name}</div>
                                         <div className="text-[10px] font-black text-rose-400 tabular-nums">-{parseFloat(ev.final_points).toFixed(0)} pts</div>
                                     </div>
                                     <div className="text-[10px] opacity-40 italic line-clamp-1">{ev.event_type}</div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-white/5 opacity-50">{ev.module}</span>
+                                        <span className="text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-app-surface/5 opacity-50">{ev.module}</span>
                                         <span className="text-[8px] opacity-20">{new Date(ev.event_at).toLocaleDateString()}</span>
                                     </div>
                                 </div>

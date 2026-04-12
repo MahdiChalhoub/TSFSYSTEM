@@ -19,12 +19,12 @@ function fmt(n: number) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<string, any> }> = {
-    PENDING: { label: 'Pending', bg: 'bg-gray-100 text-gray-700', icon: Clock },
+    PENDING: { label: 'Pending', bg: 'bg-app-surface-2 text-app-foreground', icon: Clock },
     PREPARING: { label: 'Preparing', bg: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-100 text-amber-700', icon: Truck },
     DELIVERED: { label: 'Delivered', bg: 'bg-green-100 text-green-700', icon: CheckCircle2 },
     FAILED: { label: 'Failed', bg: 'bg-red-100 text-red-700', icon: XCircle },
-    CANCELLED: { label: 'Cancelled', bg: 'bg-gray-200 text-gray-500', icon: Ban },
+    CANCELLED: { label: 'Cancelled', bg: 'bg-app-surface-2 text-app-muted-foreground', icon: Ban },
 }
 
 export default function DeliveryOrdersPage() {
@@ -99,16 +99,16 @@ export default function DeliveryOrdersPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Delivery Management
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Track and manage order deliveries & shipments</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Track and manage order deliveries & shipments</p>
                 </div>
                 <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search deliveries..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -120,7 +120,7 @@ export default function DeliveryOrdersPage() {
                         <div className="flex items-center gap-3">
                             <Truck size={24} className="text-indigo-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Deliveries</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Deliveries</p>
                                 <p className="text-2xl font-bold">{deliveries.length}</p>
                             </div>
                         </div>
@@ -131,7 +131,7 @@ export default function DeliveryOrdersPage() {
                         <div className="flex items-center gap-3">
                             <Clock size={24} className="text-amber-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Pending / Preparing</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Pending / Preparing</p>
                                 <p className="text-2xl font-bold text-amber-700">{pending}</p>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export default function DeliveryOrdersPage() {
                         <div className="flex items-center gap-3">
                             <Navigation size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">In Transit</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">In Transit</p>
                                 <p className="text-2xl font-bold text-blue-700">{inTransit}</p>
                             </div>
                         </div>
@@ -153,7 +153,7 @@ export default function DeliveryOrdersPage() {
                         <div className="flex items-center gap-3">
                             <CheckCircle2 size={24} className="text-green-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Delivered</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Delivered</p>
                                 <p className="text-2xl font-bold text-green-700">{delivered}</p>
                             </div>
                         </div>
@@ -165,7 +165,7 @@ export default function DeliveryOrdersPage() {
             <div className="flex items-center gap-2 flex-wrap">
                 <button
                     onClick={() => setStatusFilter(null)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!statusFilter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!statusFilter ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                         }`}
                 >
                     All ({deliveries.length})
@@ -177,15 +177,15 @@ export default function DeliveryOrdersPage() {
                         <button
                             key={key}
                             onClick={() => setStatusFilter(statusFilter === key ? null : key)}
-                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${statusFilter === key ? 'bg-gray-900 text-white' : `${cfg.bg} hover:opacity-80`
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${statusFilter === key ? 'bg-app-bg text-white' : `${cfg.bg} hover:opacity-80`
                                 }`}
                         >
                             {cfg.label} ({count})
                         </button>
                     )
                 })}
-                <div className="ml-auto text-xs text-gray-400">
-                    Total fees: <span className="font-bold text-gray-700">{fmt(totalFees)}</span>
+                <div className="ml-auto text-xs text-app-muted-foreground">
+                    Total fees: <span className="font-bold text-app-foreground">{fmt(totalFees)}</span>
                 </div>
             </div>
 
@@ -193,14 +193,14 @@ export default function DeliveryOrdersPage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Truck size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No deliveries found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>ID</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Order</TableHead>
@@ -219,7 +219,7 @@ export default function DeliveryOrdersPage() {
                                     const Icon = cfg.icon
                                     const isLoading = actionLoading === d.id
                                     return (
-                                        <TableRow key={d.id} className="hover:bg-gray-50/50">
+                                        <TableRow key={d.id} className="hover:bg-app-surface/50">
                                             <TableCell className="font-mono text-xs font-bold">DEL-{d.id}</TableCell>
                                             <TableCell>
                                                 <Badge className={`${cfg.bg} gap-1`}>
@@ -231,15 +231,15 @@ export default function DeliveryOrdersPage() {
                                             <TableCell>
                                                 <div>
                                                     <p className="text-sm font-medium">{d.recipient_name || d.contact_name || '\u2014'}</p>
-                                                    {d.city && <p className="text-[10px] text-gray-400 flex items-center gap-1"><MapPin size={8} />{d.city}</p>}
-                                                    {d.phone && <p className="text-[10px] text-gray-400 flex items-center gap-1"><Phone size={8} />{d.phone}</p>}
+                                                    {d.city && <p className="text-[10px] text-app-muted-foreground flex items-center gap-1"><MapPin size={8} />{d.city}</p>}
+                                                    {d.phone && <p className="text-[10px] text-app-muted-foreground flex items-center gap-1"><Phone size={8} />{d.phone}</p>}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-xs">{d.zone_name || '\u2014'}</TableCell>
                                             <TableCell className="text-xs">{d.driver_name || '\u2014'}</TableCell>
                                             <TableCell className="font-mono text-xs">{d.tracking_code || '\u2014'}</TableCell>
                                             <TableCell className="text-right font-bold">{fmt(parseFloat(d.delivery_fee || 0))}</TableCell>
-                                            <TableCell className="text-xs text-gray-500">
+                                            <TableCell className="text-xs text-app-muted-foreground">
                                                 {d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR') : '\u2014'}
                                             </TableCell>
                                             <TableCell>
@@ -274,14 +274,14 @@ export default function DeliveryOrdersPage() {
                                                             <button
                                                                 onClick={() => doAction(d.id, 'cancel')}
                                                                 disabled={isLoading}
-                                                                className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] font-bold hover:bg-gray-200 transition-all disabled:opacity-50"
+                                                                className="px-2 py-1 bg-app-surface-2 text-app-muted-foreground rounded text-[10px] font-bold hover:bg-app-surface-2 transition-all disabled:opacity-50"
                                                             >
                                                                 Cancel
                                                             </button>
                                                         </>
                                                     )}
                                                     {(d.status === 'DELIVERED' || d.status === 'CANCELLED' || d.status === 'FAILED') && (
-                                                        <span className="text-[10px] text-gray-400 italic">Final</span>
+                                                        <span className="text-[10px] text-app-muted-foreground italic">Final</span>
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -309,11 +309,11 @@ export default function DeliveryOrdersPage() {
                                 .map(d => (
                                     <div key={`timeline-${d.id}`} className="flex items-center gap-3 text-sm">
                                         <div className={`w-2 h-2 rounded-full ${d.status === 'DELIVERED' ? 'bg-green-500' : d.status === 'IN_TRANSIT' ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                                        <span className="font-mono text-xs text-gray-400 w-14">DEL-{d.id}</span>
+                                        <span className="font-mono text-xs text-app-muted-foreground w-14">DEL-{d.id}</span>
                                         <span className="font-medium">{d.recipient_name || d.contact_name || 'Unknown'}</span>
-                                        <span className="text-gray-400">{'\u2192'}</span>
-                                        <Badge className={STATUS_CONFIG[d.status ?? '']?.bg || 'bg-gray-100'}>{STATUS_CONFIG[d.status ?? '']?.label || d.status}</Badge>
-                                        <span className="ml-auto text-xs text-gray-400">
+                                        <span className="text-app-muted-foreground">{'\u2192'}</span>
+                                        <Badge className={STATUS_CONFIG[d.status ?? '']?.bg || 'bg-app-surface-2'}>{STATUS_CONFIG[d.status ?? '']?.label || d.status}</Badge>
+                                        <span className="ml-auto text-xs text-app-muted-foreground">
                                             {new Date(d.delivered_at || d.dispatched_at || '').toLocaleString('fr-FR')}
                                         </span>
                                     </div>

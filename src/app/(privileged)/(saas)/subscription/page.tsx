@@ -59,8 +59,8 @@ export default function SubscriptionPage() {
 
     if (!org) return (
         <div className="p-12 text-center">
-            <h2 className="text-xl font-bold text-gray-800">No Organization Found</h2>
-            <p className="text-gray-500">You do not appear to be managing any active organization instance.</p>
+            <h2 className="text-xl font-bold text-app-foreground">No Organization Found</h2>
+            <p className="text-app-muted-foreground">You do not appear to be managing any active organization instance.</p>
         </div>
     )
 
@@ -73,10 +73,10 @@ export default function SubscriptionPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Subscription & Billing</h2>
-                    <p className="text-gray-500 mt-2">Manage your plan, payment methods, and billing history.</p>
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Subscription & Billing</h2>
+                    <p className="text-app-muted-foreground mt-2">Manage your plan, payment methods, and billing history.</p>
                 </div>
-                <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-gray-200 text-gray-500">
+                <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-app-border text-app-muted-foreground">
                     {org.name}
                 </Badge>
             </div>
@@ -95,14 +95,14 @@ export default function SubscriptionPage() {
                                     {plan.name || "Custom Plan"}
                                 </Badge>
                             ) : (
-                                <Badge variant="secondary" className="bg-gray-200 text-gray-600">Free Tier</Badge>
+                                <Badge variant="secondary" className="bg-app-surface-2 text-app-muted-foreground">Free Tier</Badge>
                             )}
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="p-6 bg-white rounded-2xl border border-emerald-100/50 flex items-center justify-between">
+                        <div className="p-6 bg-app-surface rounded-2xl border border-emerald-100/50 flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
+                                <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Status</p>
                                 {isExpired ? (
                                     <div className="flex items-center gap-2 text-red-600 font-black text-xl">
                                         <AlertTriangle size={24} />
@@ -116,8 +116,8 @@ export default function SubscriptionPage() {
                                 )}
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Renewal Date</p>
-                                <p className="text-xl font-bold text-gray-900">
+                                <p className="text-sm font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Renewal Date</p>
+                                <p className="text-xl font-bold text-app-foreground">
                                     {expiryDate ? expiryDate.toLocaleDateString() : 'N/A'}
                                 </p>
                                 {!isExpired && daysLeft < 30 && (
@@ -133,7 +133,7 @@ export default function SubscriptionPage() {
                                         Change Plan
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-4xl bg-gray-50 border-gray-200">
+                                <DialogContent className="max-w-4xl bg-app-surface border-app-border">
                                     <DialogHeader>
                                         <DialogTitle className="text-2xl font-black">Select Subscription Plan</DialogTitle>
                                         <CardDescription>Upgrade to unlock more features and capacity.</CardDescription>
@@ -145,7 +145,7 @@ export default function SubscriptionPage() {
                                                     <CardTitle className="text-lg">{p.name}</CardTitle>
                                                     <div className="mt-2">
                                                         <span className="text-2xl font-black">${parseFloat(p.monthly_price).toFixed(0)}</span>
-                                                        <span className="text-xs text-gray-500 font-bold uppercase ml-1">/mo</span>
+                                                        <span className="text-xs text-app-muted-foreground font-bold uppercase ml-1">/mo</span>
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent>
@@ -163,7 +163,7 @@ export default function SubscriptionPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
-                            <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-12 rounded-xl font-bold bg-white" onClick={() => toast.info("Payment integration coming soon. Please contact support.")}>
+                            <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-12 rounded-xl font-bold bg-app-surface" onClick={() => toast.info("Payment integration coming soon. Please contact support.")}>
                                 Manage Billing
                             </Button>
                         </div>
@@ -178,20 +178,20 @@ export default function SubscriptionPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div>
-                            <div className="flex justify-between text-sm mb-2 font-bold text-gray-700">
+                            <div className="flex justify-between text-sm mb-2 font-bold text-app-foreground">
                                 <span>Storage</span>
                                 <span>{Math.round((org.data_usage_bytes || 0) / 1024 / 1024)} MB</span>
                             </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 w-[5%]" />
                             </div>
                         </div>
                         <div>
-                            <div className="flex justify-between text-sm mb-2 font-bold text-gray-700">
+                            <div className="flex justify-between text-sm mb-2 font-bold text-app-foreground">
                                 <span>Users</span>
                                 <span>{org._count?.users || 1} / 5</span>
                             </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 w-[20%]" />
                             </div>
                         </div>
@@ -205,7 +205,7 @@ export default function SubscriptionPage() {
                     <CardTitle className="font-bold">Billing History</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-center py-8 text-gray-400 text-sm italic">
+                    <div className="text-center py-8 text-app-muted-foreground text-sm italic">
                         No recent transactions found.
                     </div>
                 </CardContent>

@@ -25,7 +25,7 @@ type SortKey = 'payment_date' | 'type' | 'amount' | 'status'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
-    DRAFT: { label: 'Draft', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200', icon: Clock },
+    DRAFT: { label: 'Draft', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Clock },
     POSTED: { label: 'Posted', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
 }
@@ -132,7 +132,7 @@ export default function PaymentsPage() {
         else { setSortKey(key); setSortDir('asc') }
     }
     function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
             ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
             : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
@@ -187,8 +187,8 @@ export default function PaymentsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Payments & Collections</h1>
-                    <p className="text-stone-500 font-medium mt-1">Supplier payments, customer receipts, and aged reports</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Payments & Collections</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Supplier payments, customer receipts, and aged reports</p>
                 </div>
                 <Button onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
                     <Plus size={16} /> Record Payment
@@ -209,7 +209,7 @@ export default function PaymentsPage() {
                             return (
                                 <button key={t} type="button" onClick={() => setPaymentType(t)}
                                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${paymentType === t
-                                        ? `${cfg.bg} ${cfg.color} shadow-sm` : "bg-stone-50 text-stone-400 border-stone-100 hover:bg-stone-100"}`}>
+                                        ? `${cfg.bg} ${cfg.color} shadow-sm` : "bg-app-surface text-app-muted-foreground border-app-border hover:bg-app-surface-2"}`}>
                                     <Icon size={14} /> {cfg.label}
                                 </button>
                             )
@@ -217,19 +217,19 @@ export default function PaymentsPage() {
                     </div>
                     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Contact ID *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Contact ID *</label>
                             <Input name="contact_id" type="number" required placeholder="Contact ID" className="rounded-xl" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Amount *</label>
                             <Input name="amount" type="number" step="0.01" min="0.01" required placeholder="1,000.00" className="rounded-xl" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Date *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Date *</label>
                             <Input name="payment_date" type="date" required className="rounded-xl" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Method *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Method *</label>
                             <select name="method" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="CASH">Cash</option>
                                 <option value="BANK_TRANSFER">Bank Transfer</option>
@@ -238,11 +238,11 @@ export default function PaymentsPage() {
                             </select>
                         </div>
                         <div className="col-span-2 space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Reference</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Reference</label>
                             <Input name="reference" placeholder="Optional reference..." className="rounded-xl" />
                         </div>
                         <div className="col-span-2 space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Payment Account</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Payment Account</label>
                             <select name="payment_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="">Select account...</option>
                                 {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -264,11 +264,11 @@ export default function PaymentsPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{payments.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{payments.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <Wallet size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <Wallet size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -318,14 +318,14 @@ export default function PaymentsPage() {
 
             {/* Tabs + Content */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-app-surface/50">
                     <div className="flex gap-1 flex-wrap">
                         {tabs.map(tab => {
                             const Icon = tab.icon
                             return (
                                 <button key={tab.key} onClick={() => setActiveView(tab.key)}
                                     className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeView === tab.key
-                                        ? "bg-white shadow-sm font-semibold text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
+                                        ? "bg-app-surface shadow-sm font-semibold text-app-foreground" : "text-app-muted-foreground hover:text-app-muted-foreground"}`}>
                                     <Icon size={13} /> {tab.label}
                                 </button>
                             )
@@ -333,9 +333,9 @@ export default function PaymentsPage() {
                     </div>
                     {(activeView === 'ALL' || activeView === 'SUPPLIER_PAYMENT' || activeView === 'CUSTOMER_RECEIPT') && (
                         <div className="relative w-full sm:w-64">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <Input placeholder="Search reference or contact..." value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
+                                onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-app-surface" />
                         </div>
                     )}
                 </div>
@@ -345,20 +345,20 @@ export default function PaymentsPage() {
                     <>
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-stone-50/30">
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('payment_date')}>
+                                <TableRow className="bg-app-surface/30">
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('payment_date')}>
                                         Date <SortIcon col="payment_date" />
                                     </TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('type')}>
                                         Type <SortIcon col="type" />
                                     </TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400">Contact</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400">Method</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400">Reference</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Contact</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Method</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Reference</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
                                         Amount <SortIcon col="amount" />
                                     </TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
                                         Status <SortIcon col="status" />
                                     </TableHead>
                                 </TableRow>
@@ -371,21 +371,21 @@ export default function PaymentsPage() {
                                     const StatusIcon = sc.icon
                                     const MethodIcon = METHOD_ICONS[p.method] || Banknote
                                     return (
-                                        <TableRow key={p.id} className="hover:bg-stone-50/50 transition-colors">
-                                            <TableCell className="text-sm text-stone-600">{p.payment_date}</TableCell>
+                                        <TableRow key={p.id} className="hover:bg-app-surface/50 transition-colors">
+                                            <TableCell className="text-sm text-app-muted-foreground">{p.payment_date}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className={`gap-1 rounded-lg border ${tc.bg} ${tc.color} font-semibold text-[11px]`}>
                                                     <TypeIcon size={12} /> {tc.label}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-sm font-medium text-stone-700">{p.contact_name || `#${p.contact}`}</TableCell>
+                                            <TableCell className="text-sm font-medium text-app-foreground">{p.contact_name || `#${p.contact}`}</TableCell>
                                             <TableCell>
-                                                <div className="flex items-center gap-1.5 text-sm text-stone-500">
+                                                <div className="flex items-center gap-1.5 text-sm text-app-muted-foreground">
                                                     <MethodIcon size={14} /> {(p.method || '').replace(/_/g, ' ')}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="font-mono text-sm text-stone-500">{p.reference || "—"}</TableCell>
-                                            <TableCell className="text-right font-semibold text-stone-800">{Number(p.amount).toLocaleString()}</TableCell>
+                                            <TableCell className="font-mono text-sm text-app-muted-foreground">{p.reference || "—"}</TableCell>
+                                            <TableCell className="text-right font-semibold text-app-foreground">{Number(p.amount).toLocaleString()}</TableCell>
                                             <TableCell className="text-center">
                                                 <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
                                                     <StatusIcon size={12} /> {sc.label}
@@ -398,11 +398,11 @@ export default function PaymentsPage() {
                                     <TableRow>
                                         <TableCell colSpan={7} className="py-16 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                                    <Wallet size={28} className="text-stone-300" />
+                                                <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                                    <Wallet size={28} className="text-app-faint" />
                                                 </div>
-                                                <p className="font-semibold text-stone-600">No payments found</p>
-                                                <p className="text-sm text-stone-400 mt-1">Record your first payment to get started</p>
+                                                <p className="font-semibold text-app-muted-foreground">No payments found</p>
+                                                <p className="text-sm text-app-muted-foreground mt-1">Record your first payment to get started</p>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -410,9 +410,9 @@ export default function PaymentsPage() {
                             </TableBody>
                         </Table>
                         {filteredPayments.length > 0 && (
-                            <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
+                            <div className="px-5 py-3 border-t bg-app-surface/30 flex items-center justify-between text-sm text-app-muted-foreground">
                                 <span>{filteredPayments.length} payment{filteredPayments.length !== 1 ? 's' : ''} shown</span>
-                                <span className="font-semibold text-stone-700">
+                                <span className="font-semibold text-app-foreground">
                                     Total: {filteredPayments.reduce((s: number, p: Record<string, any>) => s + Number(p.amount || 0), 0).toLocaleString()}
                                 </span>
                             </div>
@@ -423,25 +423,25 @@ export default function PaymentsPage() {
                 {/* ─── Aged Receivables ────────────────────────────── */}
                 {activeView === 'AGED_AR' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Aged Receivables</h3>
+                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Aged Receivables</h3>
                         {agedAR.length === 0 ? (
-                            <p className="text-center text-stone-400 py-12">No outstanding receivables</p>
+                            <p className="text-center text-app-muted-foreground py-12">No outstanding receivables</p>
                         ) : (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400">Customer</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Current</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">30 Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">60 Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">90+ Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Total</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Customer</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Current</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">30 Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">60 Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">90+ Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Total</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {agedAR.map((r: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
-                                            <TableCell className="font-medium text-stone-700">{r.customer_name || r.customer}</TableCell>
+                                            <TableCell className="font-medium text-app-foreground">{r.customer_name || r.customer}</TableCell>
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_30 || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_60 || 0).toLocaleString()}</TableCell>
@@ -458,25 +458,25 @@ export default function PaymentsPage() {
                 {/* ─── Aged Payables ───────────────────────────────── */}
                 {activeView === 'AGED_AP' && (
                     <div className="p-6">
-                        <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Aged Payables</h3>
+                        <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Aged Payables</h3>
                         {agedAP.length === 0 ? (
-                            <p className="text-center text-stone-400 py-12">No outstanding payables</p>
+                            <p className="text-center text-app-muted-foreground py-12">No outstanding payables</p>
                         ) : (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400">Supplier</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Current</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">30 Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">60 Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">90+ Days</TableHead>
-                                        <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Total</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Supplier</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Current</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">30 Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">60 Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">90+ Days</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Total</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {agedAP.map((r: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
-                                            <TableCell className="font-medium text-stone-700">{r.supplier_name || r.supplier}</TableCell>
+                                            <TableCell className="font-medium text-app-foreground">{r.supplier_name || r.supplier}</TableCell>
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_30 || 0).toLocaleString()}</TableCell>
                                             <TableCell className="text-right">{Number(r.days_60 || 0).toLocaleString()}</TableCell>
@@ -494,26 +494,26 @@ export default function PaymentsPage() {
                 {activeView === 'BALANCES' && (
                     <div className="p-6 space-y-8">
                         <div>
-                            <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Customer Balances (AR)</h3>
+                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" /> Customer Balances (AR)</h3>
                             {customerBalances.length === 0 ? (
-                                <p className="text-center text-stone-400 py-6">No customer balances</p>
+                                <p className="text-center text-app-muted-foreground py-6">No customer balances</p>
                             ) : (
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="text-xs font-bold uppercase text-stone-400">Customer</TableHead>
-                                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Balance</TableHead>
-                                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Credit Limit</TableHead>
+                                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Customer</TableHead>
+                                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Balance</TableHead>
+                                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Credit Limit</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {customerBalances.map((cb: Record<string, any>) => (
                                             <TableRow key={cb.id}>
-                                                <TableCell className="font-medium text-stone-700">{cb.contact_name || `#${cb.contact}`}</TableCell>
-                                                <TableCell className={`text-right font-semibold ${Number(cb.current_balance) > 0 ? 'text-emerald-700' : 'text-stone-600'}`}>
+                                                <TableCell className="font-medium text-app-foreground">{cb.contact_name || `#${cb.contact}`}</TableCell>
+                                                <TableCell className={`text-right font-semibold ${Number(cb.current_balance) > 0 ? 'text-emerald-700' : 'text-app-muted-foreground'}`}>
                                                     {Number(cb.current_balance).toLocaleString()}
                                                 </TableCell>
-                                                <TableCell className="text-right text-stone-500">{cb.credit_limit ? Number(cb.credit_limit).toLocaleString() : '—'}</TableCell>
+                                                <TableCell className="text-right text-app-muted-foreground">{cb.credit_limit ? Number(cb.credit_limit).toLocaleString() : '—'}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -521,22 +521,22 @@ export default function PaymentsPage() {
                             )}
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Supplier Balances (AP)</h3>
+                            <h3 className="text-lg font-bold text-app-foreground mb-4 flex items-center gap-2"><TrendingDown size={20} className="text-rose-600" /> Supplier Balances (AP)</h3>
                             {supplierBalances.length === 0 ? (
-                                <p className="text-center text-stone-400 py-6">No supplier balances</p>
+                                <p className="text-center text-app-muted-foreground py-6">No supplier balances</p>
                             ) : (
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="text-xs font-bold uppercase text-stone-400">Supplier</TableHead>
-                                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Balance</TableHead>
+                                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Supplier</TableHead>
+                                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Balance</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {supplierBalances.map((sb: Record<string, any>) => (
                                             <TableRow key={sb.id}>
-                                                <TableCell className="font-medium text-stone-700">{sb.contact_name || `#${sb.contact}`}</TableCell>
-                                                <TableCell className={`text-right font-semibold ${Number(sb.current_balance) > 0 ? 'text-rose-700' : 'text-stone-600'}`}>
+                                                <TableCell className="font-medium text-app-foreground">{sb.contact_name || `#${sb.contact}`}</TableCell>
+                                                <TableCell className={`text-right font-semibold ${Number(sb.current_balance) > 0 ? 'text-rose-700' : 'text-app-muted-foreground'}`}>
                                                     {Number(sb.current_balance).toLocaleString()}
                                                 </TableCell>
                                             </TableRow>

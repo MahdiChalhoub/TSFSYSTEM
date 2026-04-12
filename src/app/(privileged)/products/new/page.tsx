@@ -73,10 +73,10 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-app-foreground">
                     {cloneId ? 'Clone Product' : 'Add New Product'}
                 </h1>
-                <p className="text-gray-500">
+                <p className="text-app-muted-foreground">
                     {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Create a new item in the TSF Catalog.'}
                 </p>
             </div>

@@ -32,10 +32,10 @@ export default async function NewFormalOrderPage() {
                         </div>
                         <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em]">Procurement Lifecycle</span>
                     </div>
-                    <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-3xl lg:text-4xl font-black text-app-foreground tracking-tighter">
                         Request for <span className="text-indigo-500">Quotation</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Create a draft order to negotiate prices with suppliers.</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Create a draft order to negotiate prices with suppliers.</p>
                 </div>
             </div>
 

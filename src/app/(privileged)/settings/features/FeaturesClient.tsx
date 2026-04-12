@@ -161,7 +161,7 @@ export function FeaturesClient({ features: initialFeatures }: { features: Featur
                                 title={!canToggle ? 'Plan upgrade required' : (isEnabled ? 'Disable' : 'Enable')}
                             >
                                 <span
-                                    className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 flex items-center justify-center"
+                                    className="absolute top-0.5 w-5 h-5 rounded-full bg-app-surface shadow-sm transition-all duration-200 flex items-center justify-center"
                                     style={{ left: isEnabled ? '22px' : '2px' }}
                                 >
                                     {isToggling ? (

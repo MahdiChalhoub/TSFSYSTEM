@@ -58,23 +58,23 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
     return (
         <div className="space-y-8 print:space-y-4">
             {/* Controls */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex flex-wrap items-end justify-between gap-4 print:hidden">
+            <div className="bg-app-surface p-6 rounded-2xl shadow-sm border border-app-border flex flex-wrap items-end justify-between gap-4 print:hidden">
                 <div className="flex gap-4 items-end">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase text-stone-500 flex items-center gap-1">
+                        <label className="text-[10px] font-bold uppercase text-app-muted-foreground flex items-center gap-1">
                             <Calendar size={12} /> Balance As Of Date
                         </label>
                         <input
                             type="date"
                             value={asOfDate}
                             onChange={e => setAsOfDate(e.target.value)}
-                            className="border border-stone-200 rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
+                            className="border border-app-border rounded-lg p-2.5 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all"
                         />
                     </div>
                     <button
                         onClick={handleRefresh}
                         disabled={isPending}
-                        className="bg-stone-900 text-white px-6 py-2.5 rounded-lg hover:bg-black font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                        className="bg-app-bg text-white px-6 py-2.5 rounded-lg hover:bg-app-foreground font-bold text-sm shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
                     >
                         {isPending ? 'Updating...' : 'Generate Report'}
                     </button>
@@ -83,7 +83,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
                 <div className="flex gap-2">
                     <button
                         onClick={() => window.print()}
-                        className="bg-white text-stone-600 border border-stone-200 px-4 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm flex items-center gap-2"
+                        className="bg-app-surface text-app-muted-foreground border border-app-border px-4 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm flex items-center gap-2"
                     >
                         <Printer size={18} /> Print PDF
                     </button>
@@ -112,28 +112,28 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
             )}
 
             {/* Trial Balance Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden print:border-none print:shadow-none">
+            <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden print:border-none print:shadow-none">
                 <table className="w-full text-sm border-collapse">
                     <thead>
-                        <tr className="bg-stone-900 text-white uppercase text-[10px] tracking-[0.2em] font-bold">
+                        <tr className="bg-app-bg text-white uppercase text-[10px] tracking-[0.2em] font-bold">
                             <th className="p-4 text-left w-24">Code</th>
                             <th className="p-4 text-left">Description</th>
                             <th className="p-4 text-right w-36">Debit</th>
                             <th className="p-4 text-right w-36">Credit</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-app-border">
                         {grouped.map(group => (
                             <GroupRows key={group.type} group={group} allAccounts={accounts} level={0} formatAmount={formatAmount} />
                         ))}
                     </tbody>
                     <tfoot>
-                        <tr className="bg-stone-50 font-bold border-t-2 border-stone-900">
-                            <td colSpan={2} className="p-4 text-right uppercase tracking-widest text-xs text-stone-500">Statement Totals</td>
+                        <tr className="bg-app-surface font-bold border-t-2 border-stone-900">
+                            <td colSpan={2} className="p-4 text-right uppercase tracking-widest text-xs text-app-muted-foreground">Statement Totals</td>
                             <td className="p-4 text-right font-mono text-lg border-double border-b-4 border-stone-900">
                                 {formatAmount(totals.debit)}
                             </td>
-                            <td className="p-4 text-right font-mono text-lg border-double border-b-4 border-stone-900 text-stone-400">
+                            <td className="p-4 text-right font-mono text-lg border-double border-b-4 border-stone-900 text-app-muted-foreground">
                                 {formatAmount(totals.credit)}
                             </td>
                         </tr>
@@ -141,7 +141,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
                 </table>
             </div>
 
-            <div className="text-[10px] text-stone-400 text-center font-medium uppercase tracking-widest py-8">
+            <div className="text-[10px] text-app-muted-foreground text-center font-medium uppercase tracking-widest py-8">
                 Generated by TSF-ERP Financial Engine • {mounted ? new Date().toLocaleString() : ''}
             </div>
         </div>
@@ -153,8 +153,8 @@ function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: Rec
 
     return (
         <>
-            <tr className="bg-stone-50/50">
-                <td colSpan={4} className="p-3 text-[11px] font-black text-stone-400 uppercase tracking-widest border-l-4 border-stone-900">
+            <tr className="bg-app-surface/50">
+                <td colSpan={4} className="p-3 text-[11px] font-black text-app-muted-foreground uppercase tracking-widest border-l-4 border-stone-900">
                     {group.type}s
                 </td>
             </tr>
@@ -174,24 +174,24 @@ function AccountRow({ account, level, allAccounts, formatAmount }: { account: Re
 
     return (
         <>
-            <tr className={`hover:bg-stone-50/50 transition-colors group ${isParent ? 'font-bold' : ''}`}>
-                <td className="p-3 font-mono text-stone-400 text-xs pl-4">
+            <tr className={`hover:bg-app-surface/50 transition-colors group ${isParent ? 'font-bold' : ''}`}>
+                <td className="p-3 font-mono text-app-muted-foreground text-xs pl-4">
                     {account.code}
                 </td>
                 <td className="p-3" style={{ paddingLeft: `${level * 24 + 12}px` }}>
                     <div className="flex items-center gap-2">
                         {isParent && (
-                            <button onClick={() => setExpanded(!expanded)} className="text-stone-300 hover:text-stone-900">
+                            <button onClick={() => setExpanded(!expanded)} className="text-app-faint hover:text-app-foreground">
                                 {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                             </button>
                         )}
-                        <span className={isParent ? 'text-stone-900' : 'text-stone-600'}>{account.name}</span>
+                        <span className={isParent ? 'text-app-foreground' : 'text-app-muted-foreground'}>{account.name}</span>
                     </div>
                 </td>
                 <td className="p-3 text-right font-mono font-medium">
                     {account.balance > 0 ? formatAmount(account.balance) : '-'}
                 </td>
-                <td className="p-3 text-right font-mono font-medium text-stone-500">
+                <td className="p-3 text-right font-mono font-medium text-app-muted-foreground">
                     {account.balance < 0 ? formatAmount(Math.abs(account.balance)) : '-'}
                 </td>
             </tr>

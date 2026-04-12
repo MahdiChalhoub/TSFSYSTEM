@@ -81,7 +81,7 @@ export default function DailySummaryPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-[var(--layout-element-gap)]">
         <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 layout-card-radius border-0 shadow-xl relative overflow-hidden">
           <CardContent className="layout-card-padding">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-app-surface/5 rounded-full -translate-y-10 translate-x-10" />
             <div className="relative text-white">
               <DollarSign size={24} className="mb-3 opacity-80" />
               <div className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Today's Revenue</div>

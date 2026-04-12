@@ -60,7 +60,7 @@ export default function BarcodeSettingsPage() {
     const seq = watch('nextSequence');
     const exampleBarcode = `${prefix || '200'}${String(seq || 1000).padStart(12 - (prefix?.length || 3), '0')}X`;
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading settings...</div>;
+    if (loading) return <div className="p-8 text-center text-app-muted-foreground">Loading settings...</div>;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -69,56 +69,56 @@ export default function BarcodeSettingsPage() {
                     <Barcode size={32} />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Barcode Configuration</h1>
-                    <p className="text-gray-500">Manage automatic EAN-13 barcode generation rules.</p>
+                    <h1 className="text-2xl font-bold text-app-foreground">Barcode Configuration</h1>
+                    <p className="text-app-muted-foreground">Manage automatic EAN-13 barcode generation rules.</p>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
                 {/* Preview Box */}
-                <div className="bg-gray-900 text-white p-6 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-xl">
-                    <span className="text-xs font-mono uppercase text-gray-400 tracking-widest">Next Barcode Preview</span>
+                <div className="bg-app-bg text-white p-6 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-xl">
+                    <span className="text-xs font-mono uppercase text-app-muted-foreground tracking-widest">Next Barcode Preview</span>
                     <div className="text-4xl font-mono font-bold tracking-widest">{exampleBarcode}</div>
-                    <div className="text-xs text-gray-500 mt-2 flex gap-4">
+                    <div className="text-xs text-app-muted-foreground mt-2 flex gap-4">
                         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Prefix: {prefix}</span>
                         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span> Sequence: {seq}</span>
                         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Check Digit: X</span>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+                <div className="bg-app-surface p-6 rounded-2xl border border-app-border shadow-sm space-y-6">
                     <div className="flex items-center justify-between">
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
                                 {...register('isEnabled')}
-                                className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                                className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-app-border"
                             />
-                            <span className="font-medium text-gray-700">Enable Automatic Generation</span>
+                            <span className="font-medium text-app-foreground">Enable Automatic Generation</span>
                         </label>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Barcode Prefix (2-3 chars)</label>
+                            <label className="block text-sm font-medium text-app-foreground mb-2">Barcode Prefix (2-3 chars)</label>
                             <input
                                 type="text"
                                 {...register('prefix', { required: true, minLength: 2, maxLength: 3 })}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="w-full px-4 py-2 border border-app-border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                                 placeholder="200"
                             />
-                            <p className="mt-1 text-xs text-gray-400">Usually '020' - '299' for in-store items.</p>
+                            <p className="mt-1 text-xs text-app-muted-foreground">Usually '020' - '299' for in-store items.</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Next Sequence Number</label>
+                            <label className="block text-sm font-medium text-app-foreground mb-2">Next Sequence Number</label>
                             <input
                                 type="number"
                                 {...register('nextSequence', { required: true, min: 1 })}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="w-full px-4 py-2 border border-app-border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                             />
-                            <p className="mt-1 text-xs text-gray-400">Will increment automatically.</p>
+                            <p className="mt-1 text-xs text-app-muted-foreground">Will increment automatically.</p>
                         </div>
                     </div>
                 </div>

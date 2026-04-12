@@ -114,13 +114,13 @@ export default function DeliveryZonesPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
                             <MapPin size={20} className="text-white" />
                         </div>
                         Delivery Zones
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Configure delivery zones with fees and estimated transit times</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Configure delivery zones with fees and estimated transit times</p>
                 </div>
                 <button onClick={startCreate}
                     className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-all flex items-center gap-2">
@@ -134,9 +134,9 @@ export default function DeliveryZonesPage() {
                         <div className="flex items-center gap-3">
                             <Layers size={24} className="text-teal-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Zones</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Zones</p>
                                 <p className="text-2xl font-bold">{zones.length}</p>
-                                <p className="text-[10px] text-gray-400">{activeZones} active</p>
+                                <p className="text-[10px] text-app-muted-foreground">{activeZones} active</p>
                             </div>
                         </div>
                     </CardContent>
@@ -146,7 +146,7 @@ export default function DeliveryZonesPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Base Fee</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Avg Base Fee</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(avgFee)}</p>
                             </div>
                         </div>
@@ -157,7 +157,7 @@ export default function DeliveryZonesPage() {
                         <div className="flex items-center gap-3">
                             <Clock size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Transit</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Avg Transit</p>
                                 <p className="text-2xl font-bold text-blue-700">
                                     {zones.length > 0 ? (zones.reduce((s, z) => s + (z.estimated_days || 0), 0) / zones.length).toFixed(1) : '0'} days
                                 </p>
@@ -172,24 +172,24 @@ export default function DeliveryZonesPage() {
                 <Card className="border-2 border-teal-200">
                     <CardHeader className="py-3 flex flex-row items-center justify-between">
                         <CardTitle className="text-base">{editId ? 'Edit Zone' : 'New Zone'}</CardTitle>
-                        <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                        <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground"><X size={18} /></button>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Zone Name *</label>
+                                <label className="text-xs font-medium text-app-muted-foreground block mb-1">Zone Name *</label>
                                 <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Abidjan Nord" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Description</label>
+                                <label className="text-xs font-medium text-app-muted-foreground block mb-1">Description</label>
                                 <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Zone description" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Base Fee (XOF)</label>
+                                <label className="text-xs font-medium text-app-muted-foreground block mb-1">Base Fee (XOF)</label>
                                 <Input type="number" value={form.base_fee} onChange={e => setForm({ ...form, base_fee: e.target.value })} />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Estimated Days</label>
+                                <label className="text-xs font-medium text-app-muted-foreground block mb-1">Estimated Days</label>
                                 <Input type="number" value={form.estimated_days} onChange={e => setForm({ ...form, estimated_days: e.target.value })} />
                             </div>
                         </div>
@@ -200,7 +200,7 @@ export default function DeliveryZonesPage() {
                             </label>
                             <div className="ml-auto flex gap-2">
                                 <button onClick={() => setShowForm(false)}
-                                    className="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200">
+                                    className="px-4 py-1.5 bg-app-surface-2 text-app-muted-foreground rounded-lg text-xs font-medium hover:bg-app-surface-2">
                                     Cancel
                                 </button>
                                 <button onClick={handleSave}
@@ -216,7 +216,7 @@ export default function DeliveryZonesPage() {
             {/* Zone Cards */}
             {zones.length === 0 ? (
                 <Card>
-                    <CardContent className="text-center py-16 text-gray-400">
+                    <CardContent className="text-center py-16 text-app-muted-foreground">
                         <MapPin size={48} className="mx-auto mb-3 opacity-30" />
                         <p>No delivery zones configured</p>
                         <button onClick={startCreate} className="mt-3 text-teal-600 text-sm font-medium hover:underline">Create your first zone</button>
@@ -234,32 +234,32 @@ export default function DeliveryZonesPage() {
                                         </div>
                                         <div>
                                             <p className="font-bold text-sm">{z.name}</p>
-                                            {z.description && <p className="text-[10px] text-gray-400">{z.description}</p>}
+                                            {z.description && <p className="text-[10px] text-app-muted-foreground">{z.description}</p>}
                                         </div>
                                     </div>
                                     <div className="flex gap-1">
                                         <button onClick={() => startEdit(z)}
-                                            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                            className="p-1 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-app-muted-foreground">
                                             <Edit2 size={14} />
                                         </button>
                                         <button onClick={() => setDeleteTarget(z.id)}
-                                            className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+                                            className="p-1 rounded hover:bg-red-50 text-app-muted-foreground hover:text-red-500">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-gray-50 rounded-lg p-2 text-center">
-                                        <p className="text-xs text-gray-400">Base Fee</p>
+                                    <div className="bg-app-surface rounded-lg p-2 text-center">
+                                        <p className="text-xs text-app-muted-foreground">Base Fee</p>
                                         <p className="font-bold text-sm text-emerald-600">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
                                     </div>
-                                    <div className="bg-gray-50 rounded-lg p-2 text-center">
-                                        <p className="text-xs text-gray-400">Est. Transit</p>
+                                    <div className="bg-app-surface rounded-lg p-2 text-center">
+                                        <p className="text-xs text-app-muted-foreground">Est. Transit</p>
                                         <p className="font-bold text-sm text-blue-600">{z.estimated_days || 1} day(s)</p>
                                     </div>
                                 </div>
                                 <div className="mt-2 flex items-center justify-between">
-                                    <Badge className={z.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}>
+                                    <Badge className={z.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-app-surface-2 text-app-muted-foreground'}>
                                         {z.is_active !== false ? 'Active' : 'Inactive'}
                                     </Badge>
                                 </div>

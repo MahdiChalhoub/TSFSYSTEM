@@ -95,14 +95,14 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
     return (
         <div className="space-y-8 pb-20">
             {/* Step 1: Upload */}
-            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+            <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm">
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
                         <Upload size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Step 1: Upload Source</h2>
-                        <p className="text-xs text-gray-400 font-medium tracking-tight">Select your CSV data file</p>
+                        <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Step 1: Upload Source</h2>
+                        <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Select your CSV data file</p>
                     </div>
                 </div>
 
@@ -113,14 +113,14 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                         onChange={onFileChange}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
-                    <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200 bg-gray-50/50 group-hover:border-blue-300 group-hover:bg-blue-50/30'}`}>
+                    <div className={`p-12 border-2 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center gap-4 ${file ? 'border-emerald-200 bg-emerald-50/30' : 'border-app-border bg-app-surface/50 group-hover:border-blue-300 group-hover:bg-blue-50/30'}`}>
                         {file ? (
                             <>
                                 <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20">
                                     <FileText size={40} />
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-lg font-black text-gray-900 tracking-tight">{file.name}</p>
+                                    <p className="text-lg font-black text-app-foreground tracking-tight">{file.name}</p>
                                     <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">File Loaded Successfully</p>
                                 </div>
                             </>
@@ -130,8 +130,8 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                     <TableIcon size={40} />
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-lg font-black text-gray-900 tracking-tight">Drop your CSV here</p>
-                                    <p className="text-xs text-gray-400 font-medium">Click to browse or drag and drop</p>
+                                    <p className="text-lg font-black text-app-foreground tracking-tight">Drop your CSV here</p>
+                                    <p className="text-xs text-app-muted-foreground font-medium">Click to browse or drag and drop</p>
                                 </div>
                             </>
                         )}
@@ -141,38 +141,38 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
             {/* Step 2: Mapping & Config */}
             {file && (
-                <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm animate-in slide-in-from-bottom-8 duration-500">
+                <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm animate-in slide-in-from-bottom-8 duration-500">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
                             <Settings2 size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Step 2: Engine Configuration</h2>
-                            <p className="text-xs text-gray-400 font-medium tracking-tight">Bridge columns and set destination parameters</p>
+                            <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Step 2: Engine Configuration</h2>
+                            <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Bridge columns and set destination parameters</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         {/* Column Mapping */}
                         <div className="space-y-6">
-                            <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                            <h3 className="text-xs font-black uppercase text-app-muted-foreground tracking-widest flex items-center gap-2">
                                 <Database size={14} /> Column Mapping
                             </h3>
                             <div className="grid grid-cols-1 gap-4">
                                 {Object.entries(mapping).map(([key, value]) => (
                                     key !== 'payment_account_id' && (
                                         <div key={key} className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase text-gray-500 tracking-tighter pl-1">
+                                            <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-tighter pl-1">
                                                 {key.replace('_', ' ')}
                                             </Label>
                                             <Select
                                                 value={mapping[key as keyof typeof mapping]}
                                                 onValueChange={(val) => setMapping(prev => ({ ...prev, [key]: val }))}
                                             >
-                                                <SelectTrigger className="h-12 rounded-xl border-gray-100 bg-gray-50/50">
+                                                <SelectTrigger className="h-12 rounded-xl border-app-border bg-app-surface/50">
                                                     <SelectValue placeholder={`Select ${key} column`} />
                                                 </SelectTrigger>
-                                                <SelectContent className="rounded-xl border-gray-100">
+                                                <SelectContent className="rounded-xl border-app-border">
                                                     {headers.map(h => (
                                                         <SelectItem key={h} value={h}>{h}</SelectItem>
                                                     ))}
@@ -186,20 +186,20 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
                         {/* Destination Config */}
                         <div className="space-y-6">
-                            <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                            <h3 className="text-xs font-black uppercase text-app-muted-foreground tracking-widest flex items-center gap-2">
                                 <ArrowRight size={14} /> Destination Parameters
                             </h3>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-gray-500 tracking-tighter pl-1 flex items-center gap-2">
+                                    <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-tighter pl-1 flex items-center gap-2">
                                         <WarehouseIcon size={12} /> Target Warehouse
                                     </Label>
                                     <Select value={warehouseId} onValueChange={setWarehouseId}>
-                                        <SelectTrigger className="h-12 rounded-xl border-gray-100 bg-gray-50/50">
+                                        <SelectTrigger className="h-12 rounded-xl border-app-border bg-app-surface/50">
                                             <SelectValue placeholder="Select Warehouse" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-gray-100">
+                                        <SelectContent className="rounded-xl border-app-border">
                                             {warehouses.map(w => (
                                                 <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
                                             ))}
@@ -208,22 +208,22 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-gray-500 tracking-tighter pl-1 flex items-center gap-2">
+                                    <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-tighter pl-1 flex items-center gap-2">
                                         <CreditCard size={12} /> Payment Account (Ledger)
                                     </Label>
                                     <Select
                                         value={mapping.payment_account_id}
                                         onValueChange={(val) => setMapping(prev => ({ ...prev, payment_account_id: val }))}
                                     >
-                                        <SelectTrigger className="h-12 rounded-xl border-gray-100 bg-gray-50/50">
+                                        <SelectTrigger className="h-12 rounded-xl border-app-border bg-app-surface/50">
                                             <SelectValue placeholder="Select Account" />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-xl border-gray-100 max-h-[300px]">
+                                        <SelectContent className="rounded-xl border-app-border max-h-[300px]">
                                             {accounts.map((a: Record<string, any>) => (
                                                 <SelectItem key={a.id} value={a.id.toString()}>
                                                     <div className="flex flex-col items-start leading-none py-1">
-                                                        <span className="font-bold text-gray-900">{a.name}</span>
-                                                        <span className="text-[9px] font-mono text-gray-400">{a.code}</span>
+                                                        <span className="font-bold text-app-foreground">{a.name}</span>
+                                                        <span className="text-[9px] font-mono text-app-muted-foreground">{a.code}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))}
@@ -232,14 +232,14 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-gray-500 tracking-tighter pl-1">Accounting Scope</Label>
+                                    <Label className="text-[10px] font-black uppercase text-app-muted-foreground tracking-tighter pl-1">Accounting Scope</Label>
                                     <div className="flex gap-2">
                                         {['INTERNAL', 'OFFICIAL'].map(s => (
                                             <button
                                                 key={s}
                                                 type="button"
                                                 onClick={() => setScope(s)}
-                                                className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${scope === s ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}
+                                                className={`flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${scope === s ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-app-surface border-app-border text-app-muted-foreground'}`}
                                             >
                                                 {s}
                                             </button>
@@ -252,7 +252,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                 <Button
                                     onClick={handleImport}
                                     disabled={loading}
-                                    className="w-full h-16 bg-slate-900 hover:bg-black text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/40 transition-all flex items-center gap-3"
+                                    className="w-full h-16 bg-slate-900 hover:bg-app-foreground text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/40 transition-all flex items-center gap-3"
                                 >
                                     {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
                                     {loading ? "Processing Engine..." : "Initialize Batch Import"}
@@ -265,15 +265,15 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
 
             {/* Step 3: Results */}
             {results && (
-                <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm animate-in zoom-in-95 duration-500">
+                <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm animate-in zoom-in-95 duration-500">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
                                 <CheckCircle2 size={24} />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Sync Results</h2>
-                                <p className="text-xs text-gray-400 font-medium tracking-tight">Execution report for batch sync</p>
+                                <h2 className="text-xl font-black text-app-foreground uppercase tracking-tighter">Sync Results</h2>
+                                <p className="text-xs text-app-muted-foreground font-medium tracking-tight">Execution report for batch sync</p>
                             </div>
                         </div>
 

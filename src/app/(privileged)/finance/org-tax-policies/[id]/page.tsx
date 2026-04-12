@@ -116,7 +116,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="sr-only peer" />
         <div className="w-9 h-5 rounded-full transition-all peer-checked:bg-app-primary"
           style={{ background: checked ? undefined : 'color-mix(in srgb, var(--app-border) 60%, transparent)' }}>
-          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-app-surface shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0.5'}`} />
         </div>
       </div>
       <span className="text-[12px] font-bold text-app-foreground">{label}</span>

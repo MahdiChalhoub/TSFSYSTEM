@@ -32,14 +32,14 @@ const EVENT_CONFIG: Record<string, { icon: string, color: string, bg: string, la
     DEFERRED_EXPENSE_CREATION: { icon: '📋', color: 'text-amber-700', bg: 'bg-amber-50', label: 'Deferred Create' },
     DEFERRED_EXPENSE_RECOGNITION: { icon: '📊', color: 'text-amber-600', bg: 'bg-amber-50', label: 'Deferred Recog' },
     ASSET_ACQUISITION: { icon: '🏗️', color: 'text-indigo-700', bg: 'bg-indigo-50', label: 'Asset Purchase' },
-    ASSET_DEPRECIATION: { icon: '📉', color: 'text-gray-700', bg: 'bg-gray-100', label: 'Depreciation' },
-    ASSET_DISPOSAL: { icon: '🗑️', color: 'text-gray-500', bg: 'bg-gray-50', label: 'Disposal' },
+    ASSET_DEPRECIATION: { icon: '📉', color: 'text-app-foreground', bg: 'bg-app-surface-2', label: 'Depreciation' },
+    ASSET_DISPOSAL: { icon: '🗑️', color: 'text-app-muted-foreground', bg: 'bg-app-surface', label: 'Disposal' },
 }
 
 const STATUS_COLOR: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-700',
     POSTED: 'bg-green-100 text-green-700',
-    REVERSED: 'bg-gray-100 text-gray-500',
+    REVERSED: 'bg-app-surface-2 text-app-muted-foreground',
     FAILED: 'bg-red-100 text-red-700',
 }
 
@@ -103,17 +103,17 @@ export default function FinancialEventsPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center">
                             <Zap size={20} className="text-white" />
                         </div>
                         Financial Events
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Capital movements, loans, salaries & expenses</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Capital movements, loans, salaries & expenses</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="relative w-56">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                     </div>
                     <Link href="/finance/events/new">
@@ -128,7 +128,7 @@ export default function FinancialEventsPage() {
                         <div className="flex items-center gap-3">
                             <ArrowDownCircle size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Inflows</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Inflows</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(totalInflows)}</p>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export default function FinancialEventsPage() {
                         <div className="flex items-center gap-3">
                             <ArrowUpCircle size={24} className="text-red-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Outflows</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Outflows</p>
                                 <p className="text-xl font-bold text-red-700">{fmt(totalOutflows)}</p>
                             </div>
                         </div>
@@ -150,7 +150,7 @@ export default function FinancialEventsPage() {
                         <div className="flex items-center gap-3">
                             <Wallet size={24} className="text-yellow-600" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Pending</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Pending</p>
                                 <p className="text-xl font-bold text-yellow-700">{pendingCount}</p>
                             </div>
                         </div>
@@ -161,7 +161,7 @@ export default function FinancialEventsPage() {
                         <div className="flex items-center gap-3">
                             <Briefcase size={24} className="text-green-600" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Posted</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Posted</p>
                                 <p className="text-xl font-bold text-green-700">{postedCount}</p>
                             </div>
                         </div>
@@ -172,18 +172,18 @@ export default function FinancialEventsPage() {
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setTypeFilter(null)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                         }`}
                 >
                     All ({events.length})
                 </button>
                 {Object.entries(typeCounts).sort(([, a], [, b]) => b - a).map(([type, count]) => {
-                    const cfg = EVENT_CONFIG[type] || { icon: '📋', color: 'text-gray-700', bg: 'bg-gray-50', label: type }
+                    const cfg = EVENT_CONFIG[type] || { icon: '📋', color: 'text-app-foreground', bg: 'bg-app-surface', label: type }
                     return (
                         <button
                             key={type}
                             onClick={() => setTypeFilter(typeFilter === type ? null : type)}
-                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${typeFilter === type ? 'bg-gray-900 text-white' : `${cfg.bg} ${cfg.color} hover:opacity-80`
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${typeFilter === type ? 'bg-app-bg text-white' : `${cfg.bg} ${cfg.color} hover:opacity-80`
                                 }`}
                         >
                             <span>{cfg.icon}</span> {cfg.label} ({count})
@@ -195,14 +195,14 @@ export default function FinancialEventsPage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Zap size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No financial events found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Type</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Reference</TableHead>
@@ -213,9 +213,9 @@ export default function FinancialEventsPage() {
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((e: Record<string, any>) => {
-                                    const cfg = EVENT_CONFIG[e.event_type] || { icon: '📋', color: 'text-gray-700', bg: 'bg-gray-50', label: e.event_type }
+                                    const cfg = EVENT_CONFIG[e.event_type] || { icon: '📋', color: 'text-app-foreground', bg: 'bg-app-surface', label: e.event_type }
                                     return (
-                                        <TableRow key={e.id} className="hover:bg-gray-50/50">
+                                        <TableRow key={e.id} className="hover:bg-app-surface/50">
                                             <TableCell>
                                                 <Badge className={`${cfg.bg} ${cfg.color}`}>
                                                     {cfg.icon} {cfg.label}
@@ -225,9 +225,9 @@ export default function FinancialEventsPage() {
                                                 {e.date ? new Date(e.date).toLocaleDateString('fr-FR') : '—'}
                                             </TableCell>
                                             <TableCell className="font-mono text-xs text-blue-600">{e.reference || '—'}</TableCell>
-                                            <TableCell className="text-sm text-gray-500 max-w-xs truncate">{e.notes || '—'}</TableCell>
+                                            <TableCell className="text-sm text-app-muted-foreground max-w-xs truncate">{e.notes || '—'}</TableCell>
                                             <TableCell>
-                                                <Badge className={STATUS_COLOR[e.status] || 'bg-gray-100'}>
+                                                <Badge className={STATUS_COLOR[e.status] || 'bg-app-surface-2'}>
                                                     {e.status}
                                                 </Badge>
                                             </TableCell>

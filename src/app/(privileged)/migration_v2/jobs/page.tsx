@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 type Jobs = Record<string, any>
 
 const STATUS_COLORS: Record<string, string> = {
-  DRAFT: 'bg-gray-100 text-gray-700',
+  DRAFT: 'bg-app-surface-2 text-app-foreground',
   VALIDATING: 'bg-yellow-100 text-yellow-700',
   MAPPING: 'bg-blue-100 text-blue-700',
   READY: 'bg-emerald-100 text-emerald-700',
@@ -30,7 +30,7 @@ const ALL_COLUMNS: ColumnDef<Jobs>[] = [
     label: 'Status',
     sortable: true,
     render: (row) => {
-      const cls = STATUS_COLORS[row.status] || 'bg-gray-100 text-gray-600'
+      const cls = STATUS_COLORS[row.status] || 'bg-app-surface-2 text-app-muted-foreground'
       return (
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${cls}`}>
           {row.status}

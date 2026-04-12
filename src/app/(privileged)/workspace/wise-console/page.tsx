@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 const BADGE_COLORS: Record<string, string> = {
     PLATINUM: 'text-violet-400',
     GOLD: 'text-amber-400',
-    SILVER: 'text-slate-400',
+    SILVER: 'text-app-muted-foreground',
     BRONZE: 'text-orange-500',
     WATCHLIST: 'text-rose-400',
 };
@@ -133,7 +133,7 @@ export default async function WiseConsolePage() {
                                     const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
                                     return (
                                         <div key={label} className="flex flex-col items-center gap-1.5">
-                                            <div className="relative w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                            <div className="relative w-full h-1.5 rounded-full bg-app-surface/5 overflow-hidden">
                                                 <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
                                             </div>
                                             <span className="text-[10px] font-black" style={{ color }}>{score.toFixed(0)}</span>

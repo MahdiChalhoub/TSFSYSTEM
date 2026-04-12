@@ -98,7 +98,7 @@ export function CustomizeSidebar({ customizeOpen, setCustomizeOpen, poProfiles, 
                             {col.sub && <span className="text-[9px] font-normal text-app-muted-foreground ml-1.5">({col.sub})</span>}
                         </span>
                         <div className={`w-8 h-[18px] rounded-full transition-all relative ${visibleColumns[col.key] ? 'bg-app-primary' : 'bg-app-border'}`}>
-                            <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-all ${visibleColumns[col.key] ? 'left-[18px]' : 'left-[2px]'}`} />
+                            <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-app-surface shadow-sm transition-all ${visibleColumns[col.key] ? 'left-[18px]' : 'left-[2px]'}`} />
                         </div>
                     </button>
                 ))}

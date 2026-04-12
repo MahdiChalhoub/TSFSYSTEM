@@ -31,8 +31,8 @@ export default function SitesPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Sites & Branches</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Manage physical locations and branch offices</p>
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Sites & Branches</h2>
+                    <p className="text-app-muted-foreground mt-2 font-medium">Manage physical locations and branch offices</p>
                 </div>
                 <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
                     <Plus size={18} />
@@ -45,9 +45,9 @@ export default function SitesPage() {
             ) : sites.length === 0 ? (
                 <Card className="py-16 text-center border-dashed">
                     <CardContent>
-                        <MapPin className="mx-auto text-gray-300 mb-4" size={48} />
-                        <h3 className="text-lg font-bold text-gray-700">No Sites Configured</h3>
-                        <p className="text-gray-500 text-sm mt-2">Sites represent physical locations like stores, warehouses, or offices.</p>
+                        <MapPin className="mx-auto text-app-faint mb-4" size={48} />
+                        <h3 className="text-lg font-bold text-app-foreground">No Sites Configured</h3>
+                        <p className="text-app-muted-foreground text-sm mt-2">Sites represent physical locations like stores, warehouses, or offices.</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -59,7 +59,7 @@ export default function SitesPage() {
                                     <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
                                         <Building size={20} />
                                     </div>
-                                    <Badge className={site.is_active ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"}>
+                                    <Badge className={site.is_active ? "bg-emerald-50 text-emerald-600" : "bg-app-surface-2 text-app-muted-foreground"}>
                                         {site.is_active ? 'Active' : 'Inactive'}
                                     </Badge>
                                 </div>

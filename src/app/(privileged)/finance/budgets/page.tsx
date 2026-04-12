@@ -355,7 +355,7 @@ export default function BudgetsPage() {
                 .map((alert, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 bg-white rounded-xl border border-app-error/20"
+                    className="flex items-center justify-between p-3 bg-app-surface rounded-xl border border-app-error/20"
                   >
                     <div>
                       <p className="font-bold text-sm text-app-foreground">

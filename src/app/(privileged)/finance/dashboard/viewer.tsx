@@ -48,11 +48,11 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             <div className="flex items-center gap-3">
                 <div className={clsx(
                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                    viewScope === 'OFFICIAL' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-stone-50 border-stone-200 text-stone-500"
+                    viewScope === 'OFFICIAL' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-app-surface border-app-border text-app-muted-foreground"
                 )}>
                     {viewScope === 'OFFICIAL' ? 'Official View (Tax)' : 'Total View (Management)'}
                 </div>
-                {isLoading && <RefreshCw size={14} className="animate-spin text-stone-400" />}
+                {isLoading && <RefreshCw size={14} className="animate-spin text-app-muted-foreground" />}
             </div>
             {/* Primary Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -90,9 +90,9 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 {/* 6-Month Profit Trend (CSS Bars) */}
-                <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-stone-200 p-8">
+                <div className="lg:col-span-2 bg-app-surface rounded-3xl shadow-sm border border-app-border p-8">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-lg font-bold text-stone-900 font-serif lowercase italic">Profit trends (Last 6 Months)</h3>
+                        <h3 className="text-lg font-bold text-app-foreground font-serif lowercase italic">Profit trends (Last 6 Months)</h3>
                         <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest">
                             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Income</div>
                             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-stone-300"></div> Expense</div>
@@ -114,12 +114,12 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                             title={`Income: ${t.income.toFixed(0)}`}
                                         ></div>
                                         <div
-                                            className="w-1/3 bg-stone-100 rounded-t-lg transition-all duration-500 group-hover:bg-stone-200"
+                                            className="w-1/3 bg-app-surface-2 rounded-t-lg transition-all duration-500 group-hover:bg-app-surface-2"
                                             style={{ height: `${expHeight}%` }}
                                             title={`Expense: ${t.expense.toFixed(0)}`}
                                         ></div>
                                     </div>
-                                    <span className="text-[10px] font-bold text-stone-400 uppercase">{t.month}</span>
+                                    <span className="text-[10px] font-bold text-app-muted-foreground uppercase">{t.month}</span>
                                 </div>
                             )
                         })}
@@ -127,16 +127,16 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 </div>
 
                 {/* Monthly Breakdown */}
-                <div className="bg-stone-900 rounded-3xl p-8 text-white flex flex-col justify-between shadow-2xl">
+                <div className="bg-app-bg rounded-3xl p-8 text-white flex flex-col justify-between shadow-2xl">
                     <div>
                         <h3 className="text-lg font-bold italic font-serif mb-6 opacity-80">Current Month P&L</h3>
                         <div className="space-y-6">
                             <div className="flex justify-between items-center">
-                                <span className="text-stone-400 text-sm">Monthly Revenue</span>
+                                <span className="text-app-muted-foreground text-sm">Monthly Revenue</span>
                                 <span className="font-mono text-emerald-400 font-bold">+{stats.monthlyIncome.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-stone-400 text-sm">Monthly Expenses</span>
+                                <span className="text-app-muted-foreground text-sm">Monthly Expenses</span>
                                 <span className="font-mono text-rose-400 font-bold">-{stats.monthlyExpense.toLocaleString()}</span>
                             </div>
                             <div className="border-t border-stone-800 pt-6 flex justify-between items-center">
@@ -148,7 +148,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
 
                     <Link
                         href="/finance/reports/pnl"
-                        className="mt-8 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all border border-white/10"
+                        className="mt-8 bg-app-surface/5 hover:bg-app-surface/10 text-white py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all border border-white/10"
                     >
                         View Full P&L Report <ArrowRight size={16} />
                     </Link>
@@ -156,14 +156,14 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
             </div>
 
             {/* Bottom Section: Recent Entries */}
-            <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
-                <div className="p-8 border-b border-stone-100 flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-stone-900 font-serif">Recent Ledger Activity</h3>
+            <div className="bg-app-surface rounded-3xl shadow-sm border border-app-border overflow-hidden">
+                <div className="p-8 border-b border-app-border flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-app-foreground font-serif">Recent Ledger Activity</h3>
                     <Link href="/finance/ledger" className="text-xs font-bold uppercase tracking-widest text-emerald-600 hover:text-emerald-700">All Transactions</Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead className="bg-stone-50 text-stone-400 uppercase text-[10px] tracking-widest font-bold">
+                        <thead className="bg-app-surface text-app-muted-foreground uppercase text-[10px] tracking-widest font-bold">
                             <tr>
                                 <th className="p-6 text-left">Date</th>
                                 <th className="p-6 text-left">Description / Voucher</th>
@@ -173,27 +173,27 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                         </thead>
                         <tbody className="divide-y divide-stone-50">
                             {stats.recentEntries.map((entry: Record<string, any>) => (
-                                <tr key={entry.id} className="hover:bg-stone-50/50 transition-colors group">
-                                    <td className="p-6 text-stone-500 font-mono text-xs">
+                                <tr key={entry.id} className="hover:bg-app-surface/50 transition-colors group">
+                                    <td className="p-6 text-app-muted-foreground font-mono text-xs">
                                         {new Date(entry.transactionDate).toLocaleDateString()}
                                     </td>
                                     <td className="p-6">
-                                        <div className="font-bold text-stone-900">{entry.description}</div>
-                                        <div className="text-[10px] text-stone-400 uppercase font-black">J-#{entry.id} {entry.reference ? `• ${entry.reference}` : ''}</div>
+                                        <div className="font-bold text-app-foreground">{entry.description}</div>
+                                        <div className="text-[10px] text-app-muted-foreground uppercase font-black">J-#{entry.id} {entry.reference ? `• ${entry.reference}` : ''}</div>
                                     </td>
                                     <td className="p-6">
                                         <div className="flex gap-1 flex-wrap">
                                             {entry.lines.map((l: Record<string, any>, i: number) => (
-                                                <span key={i} className="px-2 py-0.5 bg-stone-100 text-stone-500 text-[10px] rounded font-bold">
+                                                <span key={i} className="px-2 py-0.5 bg-app-surface-2 text-app-muted-foreground text-[10px] rounded font-bold">
                                                     {l.account.name}
                                                 </span>
                                             ))}
-                                            {entry.lines.length > 2 && <span className="text-[10px] text-stone-400">...</span>}
+                                            {entry.lines.length > 2 && <span className="text-[10px] text-app-muted-foreground">...</span>}
                                         </div>
                                     </td>
                                     <td className="p-6 text-right">
                                         <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${entry.status === 'POSTED' ? 'bg-emerald-50 text-emerald-700' :
-                                            entry.status === 'REVERSED' ? 'bg-rose-50 text-rose-700' : 'bg-stone-100 text-stone-500'
+                                            entry.status === 'REVERSED' ? 'bg-rose-50 text-rose-700' : 'bg-app-surface-2 text-app-muted-foreground'
                                             }`}>
                                             {entry.status}
                                         </span>
@@ -232,18 +232,18 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
 function MetricCard({ title, value, icon, description, isProfit, color = 'stone' }: Record<string, any>) {
     const isNeg = isProfit && value < 0
     return (
-        <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
             <div className={`absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 opacity-5 group-hover:scale-110 transition-transform bg-${color}-500 rounded-full`}></div>
             <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="p-3 bg-white shadow-sm border border-stone-100 rounded-xl">
+                <div className="p-3 bg-app-surface shadow-sm border border-app-border rounded-xl">
                     {icon}
                 </div>
             </div>
-            <p className="text-[10px] font-bold uppercase text-stone-400 tracking-[0.1em] mb-1">{title}</p>
-            <h4 className={`text-2xl font-mono font-bold ${isNeg ? 'text-rose-600' : 'text-stone-900'}`}>
+            <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-[0.1em] mb-1">{title}</p>
+            <h4 className={`text-2xl font-mono font-bold ${isNeg ? 'text-rose-600' : 'text-app-foreground'}`}>
                 {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h4>
-            <p className="text-xs text-stone-500 font-medium mt-1">{description}</p>
+            <p className="text-xs text-app-muted-foreground font-medium mt-1">{description}</p>
         </div>
     )
 }
@@ -273,9 +273,9 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
     }
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden group">
+        <div className="bg-app-surface p-6 rounded-3xl border border-app-border shadow-sm relative overflow-hidden group">
             <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                <div className="p-3 bg-app-surface border border-app-border rounded-xl">
                     <Package className={isOutOfSync ? 'text-amber-500' : 'text-emerald-500'} />
                 </div>
                 {isOutOfSync && (
@@ -290,9 +290,9 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
                 )}
             </div>
 
-            <p className="text-[10px] font-bold uppercase text-stone-400 tracking-[0.1em] mb-1">Inventory Value</p>
+            <p className="text-[10px] font-bold uppercase text-app-muted-foreground tracking-[0.1em] mb-1">Inventory Value</p>
             <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-mono font-bold text-stone-900">
+                <h4 className="text-2xl font-mono font-bold text-app-foreground">
                     {status.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </h4>
                 {isOutOfSync && (
@@ -304,11 +304,11 @@ function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
 
             <div className="mt-3 space-y-1">
                 <div className="flex justify-between text-[10px] font-medium">
-                    <span className="text-stone-400">Ledger Balance:</span>
-                    <span className="text-stone-600 font-mono">{status.ledgerBalance.toLocaleString()}</span>
+                    <span className="text-app-muted-foreground">Ledger Balance:</span>
+                    <span className="text-app-muted-foreground font-mono">{status.ledgerBalance.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[10px] font-bold">
-                    <span className="text-stone-400">Discrepancy:</span>
+                    <span className="text-app-muted-foreground">Discrepancy:</span>
                     <span className={isOutOfSync ? 'text-amber-600' : 'text-emerald-600 font-mono'}>
                         {isOutOfSync ? (status.discrepancy > 0 ? '+' : '') + status.discrepancy.toLocaleString() : 'Match'}
                     </span>
@@ -332,14 +332,14 @@ function QuickLink({ href, icon, title, desc }: Record<string, any>) {
     return (
         <Link
             href={href}
-            className="flex items-center gap-4 bg-white p-6 rounded-2xl border border-stone-200 hover:border-stone-900 transition-all group"
+            className="flex items-center gap-4 bg-app-surface p-6 rounded-2xl border border-app-border hover:border-stone-900 transition-all group"
         >
-            <div className="w-12 h-12 rounded-xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:bg-stone-900 group-hover:text-white transition-all">
+            <div className="w-12 h-12 rounded-xl bg-app-surface flex items-center justify-center text-app-muted-foreground group-hover:bg-app-bg group-hover:text-white transition-all">
                 {icon}
             </div>
             <div>
-                <h5 className="font-bold text-stone-900">{title}</h5>
-                <p className="text-xs text-stone-500 font-medium">{desc}</p>
+                <h5 className="font-bold text-app-foreground">{title}</h5>
+                <p className="text-xs text-app-muted-foreground font-medium">{desc}</p>
             </div>
         </Link>
     )

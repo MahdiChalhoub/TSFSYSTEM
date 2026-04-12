@@ -657,7 +657,7 @@ export default function PurchaseAnalyticsSettingsPage() {
                                 <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
                                     config._user_role === 'admin' ? 'bg-emerald-500/10 text-emerald-600' :
                                     config._user_role === 'editor' ? 'bg-blue-500/10 text-blue-600' :
-                                    'bg-gray-500/10 text-gray-500'
+                                    'bg-app-surface-2/10 text-app-muted-foreground'
                                 }`}>{config._user_role}</span>
                             )}
                             {/* Presence - active editors */}

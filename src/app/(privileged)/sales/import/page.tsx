@@ -22,7 +22,7 @@ export default async function SalesImportPage() {
                         </div>
                         <h1 className="text-3xl font-black uppercase tracking-tight">Sales Import Engine</h1>
                     </div>
-                    <p className="text-slate-400 text-sm max-w-xl font-medium leading-relaxed">
+                    <p className="text-app-muted-foreground text-sm max-w-xl font-medium leading-relaxed">
                         Batch process historical sales or external marketplace data. Map your CSV columns to the Blanc Engine core and generate stock-deducted ledger entries in seconds.
                     </p>
                 </div>
@@ -30,15 +30,15 @@ export default async function SalesImportPage() {
                 <div className="flex gap-4 relative z-10 font-bold uppercase tracking-tighter">
                     <div className="bg-slate-800/50 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50 flex flex-col items-center justify-center min-w-[100px]">
                         <span className="text-2xl text-emerald-400">01</span>
-                        <span className="text-[10px] text-slate-500">Upload</span>
+                        <span className="text-[10px] text-app-muted-foreground">Upload</span>
                     </div>
                     <div className="bg-slate-800/50 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50 flex flex-col items-center justify-center min-w-[100px]">
                         <span className="text-2xl text-blue-400">02</span>
-                        <span className="text-[10px] text-slate-500">Map</span>
+                        <span className="text-[10px] text-app-muted-foreground">Map</span>
                     </div>
                     <div className="bg-slate-800/50 backdrop-blur-md p-4 rounded-2xl border border-slate-700/50 flex flex-col items-center justify-center min-w-[100px]">
                         <span className="text-2xl text-purple-400">03</span>
-                        <span className="text-[10px] text-slate-500">Sync</span>
+                        <span className="text-[10px] text-app-muted-foreground">Sync</span>
                     </div>
                 </div>
             </div>
@@ -51,10 +51,10 @@ export default async function SalesImportPage() {
 
                 {/* Sidebar Tips & Stats */}
                 <div className="space-y-8">
-                    <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div className="bg-app-surface p-8 rounded-[2rem] border border-app-border shadow-sm relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-6">
                             <HelpCircle className="text-emerald-500" size={20} />
-                            <h3 className="text-sm font-black uppercase tracking-tight text-gray-900">Format Guide</h3>
+                            <h3 className="text-sm font-black uppercase tracking-tight text-app-foreground">Format Guide</h3>
                         </div>
                         <ul className="space-y-4">
                             {[
@@ -64,8 +64,8 @@ export default async function SalesImportPage() {
                                 { label: "Unit Price", desc: "Selling price excluding tax" },
                             ].map((tip, i) => (
                                 <li key={i} className="flex flex-col gap-1 border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                                    <span className="text-[10px] font-black uppercase text-slate-400">{tip.label}</span>
-                                    <span className="text-xs font-medium text-gray-600 tracking-tight">{tip.desc}</span>
+                                    <span className="text-[10px] font-black uppercase text-app-muted-foreground">{tip.label}</span>
+                                    <span className="text-xs font-medium text-app-muted-foreground tracking-tight">{tip.desc}</span>
                                 </li>
                             ))}
                         </ul>

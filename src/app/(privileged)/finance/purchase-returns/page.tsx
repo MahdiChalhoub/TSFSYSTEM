@@ -65,7 +65,7 @@ export default function PurchaseReturnsPage() {
         else { setSortKey(key); setSortDir('asc') }
     }
     function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
             ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
             : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
@@ -102,8 +102,8 @@ export default function PurchaseReturnsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div>
-                <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Purchase Returns</h1>
-                <p className="text-stone-500 font-medium mt-1">Manage returns to suppliers and reversing entries</p>
+                <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Purchase Returns</h1>
+                <p className="text-app-muted-foreground font-medium mt-1">Manage returns to suppliers and reversing entries</p>
             </div>
 
             {/* Confirm Dialog */}
@@ -128,11 +128,11 @@ export default function PurchaseReturnsPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{returns.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{returns.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <RotateCcw size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <RotateCcw size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -167,29 +167,29 @@ export default function PurchaseReturnsPage() {
 
             {/* Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex items-center justify-between bg-app-surface/50">
                     <div className="flex items-center gap-2">
-                        <Package size={16} className="text-stone-500" />
-                        <span className="font-semibold text-stone-700 text-sm">Purchase Returns</span>
+                        <Package size={16} className="text-app-muted-foreground" />
+                        <span className="font-semibold text-app-foreground text-sm">Purchase Returns</span>
                     </div>
                     <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input placeholder="Search supplier..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <Input placeholder="Search supplier..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-app-surface" />
                     </div>
                 </div>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('return_date')}>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('return_date')}>
                                 Date <SortIcon col="return_date" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Order</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Supplier</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Reason</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Order</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Supplier</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Reason</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
                                 Status <SortIcon col="status" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -197,11 +197,11 @@ export default function PurchaseReturnsPage() {
                             const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
                             const StatusIcon = sc.icon
                             return (
-                                <TableRow key={r.id} className="hover:bg-stone-50/50 transition-colors group">
-                                    <TableCell className="text-sm text-stone-600">{r.return_date}</TableCell>
-                                    <TableCell className="text-sm text-stone-600">{r.original_order_ref || `#${r.original_order}`}</TableCell>
-                                    <TableCell className="text-sm font-medium text-stone-700">{r.supplier_name || `#${r.supplier}`}</TableCell>
-                                    <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{r.reason || "—"}</TableCell>
+                                <TableRow key={r.id} className="hover:bg-app-surface/50 transition-colors group">
+                                    <TableCell className="text-sm text-app-muted-foreground">{r.return_date}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground">{r.original_order_ref || `#${r.original_order}`}</TableCell>
+                                    <TableCell className="text-sm font-medium text-app-foreground">{r.supplier_name || `#${r.supplier}`}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">{r.reason || "—"}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
                                             <StatusIcon size={12} /> {sc.label}
@@ -222,10 +222,10 @@ export default function PurchaseReturnsPage() {
                             <TableRow>
                                 <TableCell colSpan={6} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <RotateCcw size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <RotateCcw size={28} className="text-app-faint" />
                                         </div>
-                                        <p className="font-semibold text-stone-600">No purchase returns found</p>
+                                        <p className="font-semibold text-app-muted-foreground">No purchase returns found</p>
                                     </div>
                                 </TableCell>
                             </TableRow>

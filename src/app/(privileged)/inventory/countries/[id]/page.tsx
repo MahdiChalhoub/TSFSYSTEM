@@ -24,23 +24,23 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-gray-100 pb-6">
-                <Link href="/inventory/countries" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900">
+            <div className="flex items-center gap-4 border-b border-app-border pb-6">
+                <Link href="/inventory/countries" className="p-2 hover:bg-app-surface-2 rounded-full transition-colors text-app-muted-foreground hover:text-app-foreground">
                     <ChevronLeft size={24} />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-app-foreground flex items-center gap-3">
                         <span className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-lg font-bold text-indigo-700">{country.code}</span>
                         {country.name}
                     </h1>
-                    <p className="text-gray-500 mt-1">Inventory breakdown by Brand.</p>
+                    <p className="text-app-muted-foreground mt-1">Inventory breakdown by Brand.</p>
                 </div>
             </div>
 
             {/* Brands List */}
             <div className="space-y-6">
                 {brands.length === 0 ? (
-                    <div className="p-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
+                    <div className="p-12 text-center text-app-muted-foreground bg-app-surface rounded-xl border border-dashed border-app-border">
                         <Globe size={48} className="mx-auto mb-4 opacity-20" />
                         <p>No brands associated with this country.</p>
                     </div>
@@ -53,48 +53,48 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                         if (!hasProducts) return null;
 
                         return (
-                            <div key={brand.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:border-emerald-200 transition-colors">
+                            <div key={brand.id} className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-sm hover:border-emerald-200 transition-colors">
                                 {/* Brand Header */}
-                                <div className="px-5 py-3 bg-gradient-to-r from-gray-50 via-white to-white border-b border-gray-100 flex justify-between items-center">
+                                <div className="px-5 py-3 bg-gradient-to-r from-gray-50 via-white to-white border-b border-app-border flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg border border-purple-100 shadow-sm">
                                             <Factory size={16} />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-bold text-gray-900 text-lg">{brand.name}</span>
-                                                <span className="text-xs font-bold text-gray-400 border border-gray-200 px-2 py-0.5 rounded-full bg-white">{products.length} Products</span>
+                                                <span className="font-bold text-app-foreground text-lg">{brand.name}</span>
+                                                <span className="text-xs font-bold text-app-muted-foreground border border-app-border px-2 py-0.5 rounded-full bg-app-surface">{products.length} Products</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="block text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Stock</span>
+                                        <span className="block text-[10px] text-app-muted-foreground uppercase font-bold tracking-wider">Total Stock</span>
                                         <span className="font-mono font-bold text-emerald-700 text-lg">{totalStock}</span>
                                     </div>
                                 </div>
 
                                 {/* Products List */}
-                                <div className="bg-white">
+                                <div className="bg-app-surface">
                                     {products.map((p: Record<string, any>, idx: number) => {
                                         const isLast = idx === products.length - 1;
                                         const stock = p.stock;
 
                                         return (
-                                            <div key={p.id} className="relative pl-6 hover:bg-slate-50 transition-colors group/item">
+                                            <div key={p.id} className="relative pl-6 hover:bg-app-surface transition-colors group/item">
                                                 {/* Tree Connector Line */}
-                                                <div className={`absolute left-0 top-0 bottom-0 w-px bg-gray-100 ${isLast ? 'h-1/2' : ''}`}></div>
+                                                <div className={`absolute left-0 top-0 bottom-0 w-px bg-app-surface-2 ${isLast ? 'h-1/2' : ''}`}></div>
 
                                                 <div className="py-3 pr-4 pl-4 flex justify-between items-center border-b border-gray-50 last:border-0">
                                                     <div className="flex items-center gap-3">
                                                         {/* Horizontal Connector */}
-                                                        <div className="absolute left-0 top-1/2 w-4 h-px bg-gray-200"></div>
+                                                        <div className="absolute left-0 top-1/2 w-4 h-px bg-app-surface-2"></div>
 
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-semibold text-gray-900">{p.name}</span>
-                                                                <span className="text-sm text-gray-500">{Number(p.size)} {p.unitShortName}</span>
+                                                                <span className="text-sm font-semibold text-app-foreground">{p.name}</span>
+                                                                <span className="text-sm text-app-muted-foreground">{Number(p.size)} {p.unitShortName}</span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 text-[10px] text-gray-400 font-mono">
+                                                            <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground font-mono">
                                                                 {p.sku && <span>SKU: {p.sku}</span>}
                                                                 {p.categoryName && <span>ΓÇó {p.categoryName}</span>}
                                                             </div>

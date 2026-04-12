@@ -115,11 +115,11 @@ export default function PostingRulesForm({
         description?: string
     }) => (
         <div className="space-y-1.5">
-            <label className="text-xs font-bold text-stone-500 uppercase tracking-widest block">{label}</label>
+            <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-widest block">{label}</label>
             <select
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full bg-white border border-stone-200 rounded-xl p-3 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all shadow-sm"
+                className="w-full bg-app-surface border border-app-border rounded-xl p-3 text-sm font-medium focus:ring-2 focus:ring-stone-900 outline-none transition-all shadow-sm"
             >
                 <option value="">(Not Mapped - Manual Selection Required)</option>
                 {accounts.map(acc => (
@@ -128,21 +128,21 @@ export default function PostingRulesForm({
                     </option>
                 ))}
             </select>
-            {description && <p className="text-[10px] text-stone-400 font-medium italic">{description}</p>}
+            {description && <p className="text-[10px] text-app-muted-foreground font-medium italic">{description}</p>}
         </div>
     )
 
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
             {/* Header */}
-            <div className="bg-stone-900 rounded-3xl p-8 text-white flex justify-between items-center shadow-2xl">
+            <div className="bg-app-bg rounded-3xl p-8 text-white flex justify-between items-center shadow-2xl">
                 <div className="flex items-center gap-4">
                     <div className="bg-emerald-500/20 p-3 rounded-2xl">
                         <Target className="text-emerald-400" size={32} />
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold font-serif italic">Transaction Auto-Mapping</h2>
-                        <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mt-1">Configure your financial automation engine</p>
+                        <p className="text-app-muted-foreground text-xs font-bold uppercase tracking-widest mt-1">Configure your financial automation engine</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -164,10 +164,10 @@ export default function PostingRulesForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Sales Section */}
-                <section className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
-                    <div className="p-6 bg-stone-50 border-b border-stone-100 flex items-center gap-3">
-                        <ShoppingCart className="text-stone-400" size={20} />
-                        <h3 className="font-bold text-stone-900 uppercase text-xs tracking-widest">Sales & Revenue</h3>
+                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
+                    <div className="p-6 bg-app-surface border-b border-app-border flex items-center gap-3">
+                        <ShoppingCart className="text-app-muted-foreground" size={20} />
+                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Sales & Revenue</h3>
                     </div>
                     <div className="p-8 space-y-6">
                         <AccountSelect
@@ -195,10 +195,10 @@ export default function PostingRulesForm({
                 </section>
 
                 {/* Purchase Section */}
-                <section className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
-                    <div className="p-6 bg-stone-50 border-b border-stone-100 flex items-center gap-3">
-                        <CreditCard className="text-stone-400" size={20} />
-                        <h3 className="font-bold text-stone-900 uppercase text-xs tracking-widest">Purchases & Suppliers</h3>
+                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
+                    <div className="p-6 bg-app-surface border-b border-app-border flex items-center gap-3">
+                        <CreditCard className="text-app-muted-foreground" size={20} />
+                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Purchases & Suppliers</h3>
                     </div>
                     <div className="p-8 space-y-6">
                         <AccountSelect
@@ -220,7 +220,7 @@ export default function PostingRulesForm({
                 </section>
 
                 {/* Automation & Partner Sub-Accounts */}
-                <section className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden border-2 border-emerald-100/50">
+                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden border-2 border-emerald-100/50">
                     <div className="p-6 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3 font-bold text-emerald-900">
                         <Users className="text-emerald-500" size={20} />
                         <h3 className="uppercase text-xs tracking-widest">Partner Automation</h3>
@@ -249,10 +249,10 @@ export default function PostingRulesForm({
                 </section>
 
                 {/* Inventory & Adjustments */}
-                <section className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
-                    <div className="p-6 bg-stone-50 border-b border-stone-100 flex items-center gap-3">
-                        <Package className="text-stone-400" size={20} />
-                        <h3 className="font-bold text-stone-900 uppercase text-xs tracking-widest">Inventory Operations</h3>
+                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden">
+                    <div className="p-6 bg-app-surface border-b border-app-border flex items-center gap-3">
+                        <Package className="text-app-muted-foreground" size={20} />
+                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Inventory Operations</h3>
                     </div>
                     <div className="p-8 space-y-6">
                         <AccountSelect
@@ -270,10 +270,10 @@ export default function PostingRulesForm({
                 </section>
 
                 {/* Fixed Assets */}
-                <section className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden md:col-span-2">
-                    <div className="p-6 bg-stone-50 border-b border-stone-100 flex items-center gap-3">
-                        <BarChart3 className="text-stone-400" size={20} />
-                        <h3 className="font-bold text-stone-900 uppercase text-xs tracking-widest">Fixed Assets & Depreciation</h3>
+                <section className="bg-app-surface rounded-3xl border border-app-border shadow-sm overflow-hidden md:col-span-2">
+                    <div className="p-6 bg-app-surface border-b border-app-border flex items-center gap-3">
+                        <BarChart3 className="text-app-muted-foreground" size={20} />
+                        <h3 className="font-bold text-app-foreground uppercase text-xs tracking-widest">Fixed Assets & Depreciation</h3>
                     </div>
                     <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <AccountSelect
@@ -291,11 +291,11 @@ export default function PostingRulesForm({
             </div>
 
             {/* Info Message */}
-            <div className="bg-stone-50 p-6 rounded-3xl border border-stone-200 flex items-start gap-4">
-                <Info size={24} className="text-stone-400 flex-shrink-0" />
+            <div className="bg-app-surface p-6 rounded-3xl border border-app-border flex items-start gap-4">
+                <Info size={24} className="text-app-muted-foreground flex-shrink-0" />
                 <div>
-                    <h4 className="font-bold text-sm text-stone-900">How this works</h4>
-                    <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+                    <h4 className="font-bold text-sm text-app-foreground">How this works</h4>
+                    <p className="text-xs text-app-muted-foreground mt-1 leading-relaxed">
                         These mappings are used by the <strong>TSF Financial Engine</strong> to automatically generate double-entry journal records.
                         For example, when you complete a Purchase Order, the system will automatically Credit the <em>Accounts Payable</em>
                         and Debit the <em>Inventory Purchase</em> account selected here.

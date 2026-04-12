@@ -33,12 +33,12 @@ export default async function PerformancePage() {
                         <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-2xl">
                             <Trophy size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Workspace</span>
+                        <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Workspace</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
                         Perfor<span className="text-amber-600">mance</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
+                    <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Employee KPIs, leaderboard, and performance tracking. Monitor task completion, checklists, and evaluation scores.
                     </p>
                 </div>

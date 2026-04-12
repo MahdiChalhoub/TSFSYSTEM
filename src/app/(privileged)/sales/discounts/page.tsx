@@ -195,13 +195,13 @@ export default function DiscountRulesPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
                             <Percent size={20} className="text-white" />
                         </div>
                         Discount & Promotions
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage promotional rules, coupon codes, and automatic discounts</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Manage promotional rules, coupon codes, and automatic discounts</p>
                 </div>
                 <button onClick={startCreate}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
@@ -213,25 +213,25 @@ export default function DiscountRulesPage() {
             <div className="grid grid-cols-4 gap-4">
                 <Card className="border-l-4 border-l-indigo-500">
                     <CardContent className="py-4">
-                        <p className="text-xs text-gray-500 uppercase">Active Rules</p>
+                        <p className="text-xs text-app-muted-foreground uppercase">Active Rules</p>
                         <p className="text-2xl font-bold">{rules.filter(r => r.is_active).length}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-green-500">
                     <CardContent className="py-4">
-                        <p className="text-xs text-gray-500 uppercase">Total Redemptions</p>
+                        <p className="text-xs text-app-muted-foreground uppercase">Total Redemptions</p>
                         <p className="text-2xl font-bold">{rules.reduce((s, r) => s + (Number(r.times_used) || 0), 0)}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-blue-500">
                     <CardContent className="py-4">
-                        <p className="text-xs text-gray-500 uppercase">Auto-Apply Rules</p>
+                        <p className="text-xs text-app-muted-foreground uppercase">Auto-Apply Rules</p>
                         <p className="text-2xl font-bold">{rules.filter(r => r.auto_apply).length}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-amber-500">
                     <CardContent className="py-4">
-                        <p className="text-xs text-gray-500 uppercase">Scheduled rules</p>
+                        <p className="text-xs text-app-muted-foreground uppercase">Scheduled rules</p>
                         <p className="text-2xl font-bold">{rules.filter(r => r.start_date || r.end_date).length}</p>
                     </CardContent>
                 </Card>
@@ -242,23 +242,23 @@ export default function DiscountRulesPage() {
                 <Card className="border-2 border-indigo-200">
                     <CardHeader className="py-3 flex flex-row items-center justify-between border-b">
                         <CardTitle className="text-base">{editId ? 'Edit Discount Rule' : 'New Discount Rule'}</CardTitle>
-                        <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                        <button onClick={() => setShowForm(false)} className="text-app-muted-foreground hover:text-app-muted-foreground"><X size={18} /></button>
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="grid grid-cols-3 gap-6">
                             {/* Basic Info */}
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Rule Name *</label>
+                                    <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Rule Name *</label>
                                     <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Summer Sale 20% Off" />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Promo Code</label>
+                                    <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Promo Code</label>
                                     <Input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder="SUMMER20" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Type</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Type</label>
                                         <Select value={form.discount_type} onValueChange={v => setForm({ ...form, discount_type: v })}>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
@@ -269,7 +269,7 @@ export default function DiscountRulesPage() {
                                         </Select>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Value</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Value</label>
                                         <Input type="number" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} />
                                     </div>
                                 </div>
@@ -279,7 +279,7 @@ export default function DiscountRulesPage() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Scope</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Scope</label>
                                         <Select value={form.scope} onValueChange={v => setForm({ ...form, scope: v })}>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
@@ -290,14 +290,14 @@ export default function DiscountRulesPage() {
                                         </Select>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Priority</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Priority</label>
                                         <Input type="number" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} />
                                     </div>
                                 </div>
 
                                 {form.scope === 'PRODUCT' && (
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Target Product</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Target Product</label>
                                         <Select value={form.product} onValueChange={v => setForm({ ...form, product: v })}>
                                             <SelectTrigger><SelectValue placeholder="Select product..." /></SelectTrigger>
                                             <SelectContent>
@@ -308,7 +308,7 @@ export default function DiscountRulesPage() {
                                 )}
                                 {form.scope === 'CATEGORY' && (
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Target Category</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Target Category</label>
                                         <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
                                             <SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger>
                                             <SelectContent>
@@ -319,7 +319,7 @@ export default function DiscountRulesPage() {
                                 )}
                                 {form.scope === 'BRAND' && (
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Target Brand</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Target Brand</label>
                                         <Select value={form.brand} onValueChange={v => setForm({ ...form, brand: v })}>
                                             <SelectTrigger><SelectValue placeholder="Select brand..." /></SelectTrigger>
                                             <SelectContent>
@@ -331,11 +331,11 @@ export default function DiscountRulesPage() {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Min Amount</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Min Amount</label>
                                         <Input type="number" value={form.min_order_amount} onChange={e => setForm({ ...form, min_order_amount: e.target.value })} placeholder="Any" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Min Quantity</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Min Quantity</label>
                                         <Input type="number" value={form.min_quantity} onChange={e => setForm({ ...form, min_quantity: e.target.value })} placeholder="Any" />
                                     </div>
                                 </div>
@@ -345,33 +345,33 @@ export default function DiscountRulesPage() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Start Date</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Start Date</label>
                                         <Input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">End Date</label>
+                                        <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">End Date</label>
                                         <Input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold uppercase text-gray-400 mb-1 block">Usage Limit</label>
+                                    <label className="text-xs font-bold uppercase text-app-muted-foreground mb-1 block">Usage Limit</label>
                                     <Input type="number" value={form.usage_limit} onChange={e => setForm({ ...form, usage_limit: e.target.value })} placeholder="Infinite" />
                                 </div>
                                 <div className="flex items-center gap-6 pt-2">
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" id="is_active" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} />
-                                        <label htmlFor="is_active" className="text-xs font-bold uppercase text-gray-700">Active</label>
+                                        <label htmlFor="is_active" className="text-xs font-bold uppercase text-app-foreground">Active</label>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" id="auto_apply" checked={form.auto_apply} onChange={e => setForm({ ...form, auto_apply: e.target.checked })} />
-                                        <label htmlFor="auto_apply" className="text-xs font-bold uppercase text-gray-700">Auto Apply</label>
+                                        <label htmlFor="auto_apply" className="text-xs font-bold uppercase text-app-foreground">Auto Apply</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex justify-end gap-3 mt-8 border-t pt-6">
-                            <button onClick={() => setShowForm(false)} className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200">Cancel</button>
+                            <button onClick={() => setShowForm(false)} className="px-6 py-2 bg-app-surface-2 text-app-muted-foreground rounded-lg text-sm font-bold hover:bg-app-surface-2">Cancel</button>
                             <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 flex items-center gap-2">
                                 <Check size={16} /> {editId ? 'Update Rule' : 'Save Rule'}
                             </button>
@@ -398,18 +398,18 @@ export default function DiscountRulesPage() {
                                             <Icon size={18} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-sm text-gray-900 leading-tight">{rule.name}</h3>
+                                            <h3 className="font-bold text-sm text-app-foreground leading-tight">{rule.name}</h3>
                                             <p className="font-mono text-[10px] text-indigo-500 font-bold uppercase">{rule.code || 'NO CODE'}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-1">
-                                        <button onClick={() => toggleRule(rule.id)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-indigo-600">
+                                        <button onClick={() => toggleRule(rule.id)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-indigo-600">
                                             <Power size={14} />
                                         </button>
-                                        <button onClick={() => startEdit(rule)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
+                                        <button onClick={() => startEdit(rule)} className="p-1.5 rounded hover:bg-app-surface-2 text-app-muted-foreground hover:text-blue-600">
                                             <Edit2 size={14} />
                                         </button>
-                                        <button onClick={() => setDeleteTarget(rule.id)} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+                                        <button onClick={() => setDeleteTarget(rule.id)} className="p-1.5 rounded hover:bg-red-50 text-app-muted-foreground hover:text-red-500">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -417,7 +417,7 @@ export default function DiscountRulesPage() {
 
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-gray-400">Value</span>
+                                        <span className="text-app-muted-foreground">Value</span>
                                         <span className="font-bold">
                                             {rule.discount_type === 'PERCENTAGE' ? `${rule.value}%` :
                                                 rule.discount_type === 'FIXED' ? fmt(parseFloat(String(rule.value ?? 0))) :
@@ -425,16 +425,16 @@ export default function DiscountRulesPage() {
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-gray-400">Scope</span>
+                                        <span className="text-app-muted-foreground">Scope</span>
                                         <span className="flex items-center gap-1 font-medium">
-                                            <ScopeIcon size={10} className="text-gray-400" />
+                                            <ScopeIcon size={10} className="text-app-muted-foreground" />
                                             {scope.label}
                                             {rule.scope === 'PRODUCT' && `: ${rule.product_name}`}
                                             {rule.scope === 'CATEGORY' && `: ${rule.category_name}`}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-gray-400">Usage</span>
+                                        <span className="text-app-muted-foreground">Usage</span>
                                         <span className="font-medium text-indigo-600">{String(rule.times_used ?? 0)} / {rule.usage_limit ? String(rule.usage_limit) : '\u221E'}</span>
                                     </div>
                                 </div>
@@ -447,12 +447,12 @@ export default function DiscountRulesPage() {
                                         {rule.is_active ? (
                                             <Badge className="bg-green-100 text-green-700 text-[9px]">Active</Badge>
                                         ) : (
-                                            <Badge className="bg-gray-100 text-gray-500 text-[9px]">Paused</Badge>
+                                            <Badge className="bg-app-surface-2 text-app-muted-foreground text-[9px]">Paused</Badge>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => viewUsage(rule.id)}
-                                        className="text-[10px] text-gray-400 hover:text-indigo-600 flex items-center gap-1 font-bold">
+                                        className="text-[10px] text-app-muted-foreground hover:text-indigo-600 flex items-center gap-1 font-bold">
                                         <History size={10} /> View Logs
                                     </button>
                                 </div>
@@ -465,12 +465,12 @@ export default function DiscountRulesPage() {
             {/* Usage Sidebar/Modal */}
             {usageRuleId && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-                    <div className="w-[500px] bg-white h-full shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right">
+                    <div className="w-[500px] bg-app-surface h-full shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg font-bold flex items-center gap-2">
                                 <History className="text-indigo-600" /> Redemption Logs
                             </h2>
-                            <button onClick={() => setUsageRuleId(null)} className="p-2 hover:bg-gray-100 rounded-full"><X size={20} /></button>
+                            <button onClick={() => setUsageRuleId(null)} className="p-2 hover:bg-app-surface-2 rounded-full"><X size={20} /></button>
                         </div>
 
                         {loadingLogs ? (
@@ -478,18 +478,18 @@ export default function DiscountRulesPage() {
                                 {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
                             </div>
                         ) : usageLogs.length === 0 ? (
-                            <div className="text-center py-20 text-gray-400 italic">No redemptions yet</div>
+                            <div className="text-center py-20 text-app-muted-foreground italic">No redemptions yet</div>
                         ) : (
                             <div className="space-y-3">
                                 {usageLogs.map(log => (
-                                    <div key={log.id} className="p-3 border rounded-lg hover:bg-gray-50 flex items-center justify-between group">
+                                    <div key={log.id} className="p-3 border rounded-lg hover:bg-app-surface flex items-center justify-between group">
                                         <div className="space-y-1">
                                             <p className="text-sm font-bold">Order #{String(log.order_ref || log.order)}</p>
-                                            <p className="text-[10px] text-gray-400">{new Date(String(log.applied_at || '')).toLocaleString('fr-FR')}</p>
+                                            <p className="text-[10px] text-app-muted-foreground">{new Date(String(log.applied_at || '')).toLocaleString('fr-FR')}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm font-bold text-red-600">-{fmt(parseFloat(String(log.discount_amount ?? 0)))}</p>
-                                            <p className="text-[9px] text-gray-400">Applied by: {String(log.applied_by_name || 'System')}</p>
+                                            <p className="text-[9px] text-app-muted-foreground">Applied by: {String(log.applied_by_name || 'System')}</p>
                                         </div>
                                     </div>
                                 ))}

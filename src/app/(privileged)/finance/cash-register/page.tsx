@@ -83,21 +83,21 @@ export default function CashRegisterPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center">
                             <Banknote size={20} className="text-white" />
                         </div>
                         Cash Register
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Daily transaction & revenue summary</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Daily transaction & revenue summary</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+                    <div className="flex items-center bg-app-surface-2 rounded-lg p-0.5">
                         {(['today', 'week', 'month'] as const).map(p => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`px-3 py-1.5 text-sm rounded-md transition-all ${period === p ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
+                                className={`px-3 py-1.5 text-sm rounded-md transition-all ${period === p ? 'bg-app-surface shadow text-app-foreground font-medium' : 'text-app-muted-foreground hover:text-app-foreground'
                                     }`}
                             >
                                 {p === 'today' ? 'Today' : p === 'week' ? '7 Days' : '30 Days'}
@@ -109,7 +109,7 @@ export default function CashRegisterPage() {
                             type="date"
                             value={selectedDate}
                             onChange={e => setSelectedDate(e.target.value)}
-                            className="border rounded-lg px-3 py-2 text-sm bg-white"
+                            className="border rounded-lg px-3 py-2 text-sm bg-app-surface"
                         />
                     )}
                 </div>
@@ -124,9 +124,9 @@ export default function CashRegisterPage() {
                                 <ShoppingCart size={20} className="text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Sales Revenue</p>
-                                <p className="text-2xl font-bold text-gray-900">{fmt(sales.total)}</p>
-                                <p className="text-xs text-gray-400">{sales.count} transaction{sales.count !== 1 ? 's' : ''}</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Sales Revenue</p>
+                                <p className="text-2xl font-bold text-app-foreground">{fmt(sales.total)}</p>
+                                <p className="text-xs text-app-muted-foreground">{sales.count} transaction{sales.count !== 1 ? 's' : ''}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -138,9 +138,9 @@ export default function CashRegisterPage() {
                                 <TrendingUp size={20} className="text-green-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Net Revenue</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Net Revenue</p>
                                 <p className="text-2xl font-bold text-green-700">{fmt(data?.net_revenue || 0)}</p>
-                                <p className="text-xs text-gray-400">After returns</p>
+                                <p className="text-xs text-app-muted-foreground">After returns</p>
                             </div>
                         </div>
                     </CardContent>
@@ -152,9 +152,9 @@ export default function CashRegisterPage() {
                                 <RotateCcw size={20} className="text-orange-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Returns</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Returns</p>
                                 <p className="text-2xl font-bold text-orange-700">{fmt(returns.total)}</p>
-                                <p className="text-xs text-gray-400">{returns.count} return{returns.count !== 1 ? 's' : ''}</p>
+                                <p className="text-xs text-app-muted-foreground">{returns.count} return{returns.count !== 1 ? 's' : ''}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -166,9 +166,9 @@ export default function CashRegisterPage() {
                                 <DollarSign size={20} className="text-purple-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Tax Collected</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Tax Collected</p>
                                 <p className="text-2xl font-bold text-purple-700">{fmt(sales.tax)}</p>
-                                <p className="text-xs text-gray-400">Discount: {fmt(sales.discount)}</p>
+                                <p className="text-xs text-app-muted-foreground">Discount: {fmt(sales.discount)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -181,12 +181,12 @@ export default function CashRegisterPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <CreditCard size={16} className="text-gray-400" /> Payment Methods
+                            <CreditCard size={16} className="text-app-muted-foreground" /> Payment Methods
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-4 space-y-2">
                         {Object.keys(paymentMethods).length === 0 ? (
-                            <p className="text-sm text-gray-400">No transactions</p>
+                            <p className="text-sm text-app-muted-foreground">No transactions</p>
                         ) : Object.entries(paymentMethods).map(([method, stats]: [string, any]) => (
                             <div key={method} className="flex items-center justify-between py-1 border-b last:border-0">
                                 <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export default function CashRegisterPage() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm font-bold">{fmt(stats.total)}</p>
-                                    <p className="text-[10px] text-gray-400">{stats.count} txn</p>
+                                    <p className="text-[10px] text-app-muted-foreground">{stats.count} txn</p>
                                 </div>
                             </div>
                         ))}
@@ -206,12 +206,12 @@ export default function CashRegisterPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Users size={16} className="text-gray-400" /> Cashier Performance
+                            <Users size={16} className="text-app-muted-foreground" /> Cashier Performance
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-4 space-y-2">
                         {Object.keys(userStats).length === 0 ? (
-                            <p className="text-sm text-gray-400">No transactions</p>
+                            <p className="text-sm text-app-muted-foreground">No transactions</p>
                         ) : Object.entries(userStats)
                             .sort(([, a]: [string, any], [, b]: [string, any]) => b.total - a.total)
                             .map(([name, stats]: [string, any]) => (
@@ -226,7 +226,7 @@ export default function CashRegisterPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-bold">{fmt(stats.total)}</p>
-                                        <p className="text-[10px] text-gray-400">{stats.count} sales</p>
+                                        <p className="text-[10px] text-app-muted-foreground">{stats.count} sales</p>
                                     </div>
                                 </div>
                             ))}
@@ -237,7 +237,7 @@ export default function CashRegisterPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Clock size={16} className="text-gray-400" /> Hourly Activity
+                            <Clock size={16} className="text-app-muted-foreground" /> Hourly Activity
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-4">
@@ -252,7 +252,7 @@ export default function CashRegisterPage() {
                                         title={`${i}:00 — ${fmt(val)}`}
                                     >
                                         <div
-                                            className={`w-full rounded-t transition-all ${isActive ? 'bg-emerald-400 hover:bg-emerald-500' : 'bg-gray-100'
+                                            className={`w-full rounded-t transition-all ${isActive ? 'bg-emerald-400 hover:bg-emerald-500' : 'bg-app-surface-2'
                                                 }`}
                                             style={{ height: `${Math.max(pct, 2)}%` }}
                                         />
@@ -260,7 +260,7 @@ export default function CashRegisterPage() {
                                 )
                             })}
                         </div>
-                        <div className="flex justify-between mt-1 text-[9px] text-gray-400">
+                        <div className="flex justify-between mt-1 text-[9px] text-app-muted-foreground">
                             <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
                         </div>
                     </CardContent>
@@ -271,19 +271,19 @@ export default function CashRegisterPage() {
             <Card>
                 <CardHeader className="py-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Receipt size={18} className="text-gray-400" /> Recent Transactions
+                        <Receipt size={18} className="text-app-muted-foreground" /> Recent Transactions
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     {recent.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
+                        <div className="text-center py-12 text-app-muted-foreground">
                             <Receipt size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No transactions for this period</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Ref</TableHead>
                                     <TableHead>Type</TableHead>
                                     <TableHead>Status</TableHead>
@@ -297,18 +297,18 @@ export default function CashRegisterPage() {
                                 {recent.map((t: Record<string, any>) => {
                                     const cfg = TYPE_CONFIG[t.type] || TYPE_CONFIG.SALE
                                     return (
-                                        <TableRow key={t.id} className="hover:bg-gray-50/50">
+                                        <TableRow key={t.id} className="hover:bg-app-surface/50">
                                             <TableCell className="font-mono text-xs">{t.ref_code || `#${t.id}`}</TableCell>
                                             <TableCell>
                                                 <Badge className={`${cfg.bg} ${cfg.color}`}>{t.type}</Badge>
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-500">{t.status}</TableCell>
+                                            <TableCell className="text-sm text-app-muted-foreground">{t.status}</TableCell>
                                             <TableCell className="text-right font-bold">{fmt(t.total)}</TableCell>
                                             <TableCell className="text-sm">
                                                 {PAYMENT_ICONS[t.payment_method] || '💰'} {t.payment_method}
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-500">{t.user}</TableCell>
-                                            <TableCell className="text-xs text-gray-400">
+                                            <TableCell className="text-sm text-app-muted-foreground">{t.user}</TableCell>
+                                            <TableCell className="text-xs text-app-muted-foreground">
                                                 {t.time ? new Date(t.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
                                             </TableCell>
                                         </TableRow>

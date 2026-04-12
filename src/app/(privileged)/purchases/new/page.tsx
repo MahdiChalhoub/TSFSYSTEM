@@ -42,7 +42,7 @@ export default async function NewPurchasePage() {
                         </div>
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Commercial Operations</span>
                     </div>
-                    <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-3xl lg:text-4xl font-black text-app-foreground tracking-tighter">
                         Inventory <span className="text-emerald-500">Replenishment</span>
                     </h1>
                 </div>

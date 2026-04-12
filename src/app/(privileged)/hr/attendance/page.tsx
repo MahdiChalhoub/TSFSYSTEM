@@ -32,28 +32,28 @@ export default async function AttendancePage() {
                         <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-2xl">
                             <Fingerprint size={24} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Tracking</span>
+                        <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-[0.4em]">Tracking</span>
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-6xl lg:text-7xl font-black text-app-foreground tracking-tighter">
                         Atten<span className="text-emerald-600">dance</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
+                    <p className="text-app-muted-foreground font-medium max-w-xl text-lg leading-relaxed">
                         Real-time employee check-in/check-out tracking. Monitor presence across shifts and calculate working hours automatically.
                     </p>
                 </div>
 
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{attendance.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Records</div>
+                <div className="flex gap-8 bg-app-surface p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
+                    <div className="text-center px-8 border-r border-app-border">
+                        <div className="text-5xl font-black text-app-foreground tracking-tighter mb-1">{attendance.length}</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Total Records</div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
+                    <div className="text-center px-8 border-r border-app-border">
                         <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{todayRecords.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Today</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Today</div>
                     </div>
                     <div className="text-center px-8">
                         <div className="text-5xl font-black text-amber-600 tracking-tighter mb-1">{checkedIn}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">On-site Now</div>
+                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">On-site Now</div>
                     </div>
                 </div>
             </div>

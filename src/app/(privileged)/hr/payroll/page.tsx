@@ -78,16 +78,16 @@ export default function PayrollSummaryPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center">
                             <Banknote size={20} className="text-white" />
                         </div>
                         Payroll Summary
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Monthly salary overview and employee compensation</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Monthly salary overview and employee compensation</p>
                 </div>
                 <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -98,9 +98,9 @@ export default function PayrollSummaryPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Monthly Payroll</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Monthly Payroll</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(totalPayroll)}</p>
-                                <p className="text-[10px] text-gray-400">{fmt(totalPayroll * 12)}/year</p>
+                                <p className="text-[10px] text-app-muted-foreground">{fmt(totalPayroll * 12)}/year</p>
                             </div>
                         </div>
                     </CardContent>
@@ -110,7 +110,7 @@ export default function PayrollSummaryPage() {
                         <div className="flex items-center gap-3">
                             <Users size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Headcount</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Headcount</p>
                                 <p className="text-2xl font-bold text-blue-700">{employees.length}</p>
                             </div>
                         </div>
@@ -121,7 +121,7 @@ export default function PayrollSummaryPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-amber-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Average Salary</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Average Salary</p>
                                 <p className="text-xl font-bold text-amber-700">{fmt(avgSalary)}</p>
                             </div>
                         </div>
@@ -132,7 +132,7 @@ export default function PayrollSummaryPage() {
                         <div className="flex items-center gap-3">
                             <Briefcase size={24} className="text-violet-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Highest Salary</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Highest Salary</p>
                                 <p className="text-xl font-bold text-violet-700">{fmt(maxSalary)}</p>
                             </div>
                         </div>
@@ -144,7 +144,7 @@ export default function PayrollSummaryPage() {
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setTypeFilter(null)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                         }`}
                 >
                     All ({employees.length})
@@ -153,7 +153,7 @@ export default function PayrollSummaryPage() {
                     <button
                         key={type}
                         onClick={() => setTypeFilter(typeFilter === type ? null : type)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${typeFilter === type ? 'bg-gray-900 text-white' : `${TYPE_BADGE[type]?.split(' ')[0] || 'bg-gray-100'} ${TYPE_BADGE[type]?.split(' ')[1] || 'text-gray-600'}`
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${typeFilter === type ? 'bg-app-bg text-white' : `${TYPE_BADGE[type]?.split(' ')[0] || 'bg-app-surface-2'} ${TYPE_BADGE[type]?.split(' ')[1] || 'text-app-muted-foreground'}`
                             }`}
                     >
                         {type} ({count})
@@ -174,7 +174,7 @@ export default function PayrollSummaryPage() {
                             return (
                                 <div key={e.id} className="flex items-center gap-3">
                                     <span className="w-32 text-xs font-medium truncate">{e.first_name} {e.last_name}</span>
-                                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-3 bg-app-surface-2 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-emerald-400 rounded-full transition-all"
                                             style={{ width: `${pct}%` }}
@@ -193,7 +193,7 @@ export default function PayrollSummaryPage() {
                 <CardContent className="p-0">
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-gray-50/50">
+                            <TableRow className="bg-app-surface/50">
                                 <TableHead>#</TableHead>
                                 <TableHead>Employee</TableHead>
                                 <TableHead>ID</TableHead>
@@ -209,8 +209,8 @@ export default function PayrollSummaryPage() {
                                 const salary = parseFloat(e.salary || 0)
                                 const pct = totalPayroll > 0 ? (salary / totalPayroll * 100) : 0
                                 return (
-                                    <TableRow key={e.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                    <TableRow key={e.id} className="hover:bg-app-surface/50">
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -221,16 +221,16 @@ export default function PayrollSummaryPage() {
                                                 <span className="font-medium text-sm">{e.first_name} {e.last_name}</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-gray-400">{e.employee_id}</TableCell>
+                                        <TableCell className="font-mono text-xs text-app-muted-foreground">{e.employee_id}</TableCell>
                                         <TableCell>
-                                            <Badge className={TYPE_BADGE[e.employee_type] || 'bg-gray-100'}>
+                                            <Badge className={TYPE_BADGE[e.employee_type] || 'bg-app-surface-2'}>
                                                 {e.employee_type}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-sm text-gray-500">{e.job_title || '—'}</TableCell>
+                                        <TableCell className="text-sm text-app-muted-foreground">{e.job_title || '—'}</TableCell>
                                         <TableCell className="text-right font-bold text-emerald-600">{fmt(salary)}</TableCell>
                                         <TableCell className="text-right text-sm">{fmt(salary * 12)}</TableCell>
-                                        <TableCell className="text-right text-sm text-gray-500">{pct.toFixed(1)}%</TableCell>
+                                        <TableCell className="text-right text-sm text-app-muted-foreground">{pct.toFixed(1)}%</TableCell>
                                     </TableRow>
                                 )
                             })}

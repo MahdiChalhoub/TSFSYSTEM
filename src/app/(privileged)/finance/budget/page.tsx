@@ -61,16 +61,16 @@ export default function BudgetPlanningPage() {
             <CardHeader className="py-3">
                 <CardTitle className="text-base flex items-center gap-2">
                     {icon} {title}
-                    <Badge className="ml-auto bg-gray-100 text-gray-600">{accts.length} accounts</Badge>
+                    <Badge className="ml-auto bg-app-surface-2 text-app-muted-foreground">{accts.length} accounts</Badge>
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
                 {accts.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400">No accounts</div>
+                    <div className="text-center py-8 text-app-muted-foreground">No accounts</div>
                 ) : (
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-gray-50/50">
+                            <TableRow className="bg-app-surface/50">
                                 <TableHead>Code</TableHead>
                                 <TableHead>Account Name</TableHead>
                                 <TableHead className="text-right">Current Balance</TableHead>
@@ -85,19 +85,19 @@ export default function BudgetPlanningPage() {
                                     const total = title.includes('Income') ? totalIncome : totalExpense
                                     const pct = total !== 0 ? (Math.abs(bal) / Math.abs(total) * 100) : 0
                                     return (
-                                        <TableRow key={a.id} className="hover:bg-gray-50/50">
-                                            <TableCell className="font-mono text-xs text-gray-500">{a.code}</TableCell>
+                                        <TableRow key={a.id} className="hover:bg-app-surface/50">
+                                            <TableCell className="font-mono text-xs text-app-muted-foreground">{a.code}</TableCell>
                                             <TableCell className="font-medium text-sm">{a.name}</TableCell>
                                             <TableCell className={`text-right font-bold ${color}`}>
                                                 {fmt(Math.abs(bal))}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center gap-2 justify-end">
-                                                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div className="w-16 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                         <div className={`h-full rounded-full ${color.includes('emerald') ? 'bg-emerald-400' : 'bg-rose-400'}`}
                                                             style={{ width: `${Math.min(pct, 100)}%` }} />
                                                     </div>
-                                                    <span className="text-xs text-gray-500 w-10 text-right">{pct.toFixed(1)}%</span>
+                                                    <span className="text-xs text-app-muted-foreground w-10 text-right">{pct.toFixed(1)}%</span>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -113,13 +113,13 @@ export default function BudgetPlanningPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-cyan-600 flex items-center justify-center">
                         <Calculator size={20} className="text-white" />
                     </div>
                     Budget Overview
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Income vs Expense breakdown by COA accounts</p>
+                <p className="text-sm text-app-muted-foreground mt-1">Income vs Expense breakdown by COA accounts</p>
             </header>
 
             <div className="grid grid-cols-4 gap-4">
@@ -128,7 +128,7 @@ export default function BudgetPlanningPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Income</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Income</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(Math.abs(totalIncome))}</p>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export default function BudgetPlanningPage() {
                         <div className="flex items-center gap-3">
                             <TrendingDown size={24} className="text-rose-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Expenses</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Expenses</p>
                                 <p className="text-xl font-bold text-rose-700">{fmt(Math.abs(totalExpense))}</p>
                             </div>
                         </div>
@@ -150,7 +150,7 @@ export default function BudgetPlanningPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className={netResult >= 0 ? 'text-green-500' : 'text-red-500'} />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Net Result</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Net Result</p>
                                 <p className={`text-xl font-bold ${netResult >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                                     {fmt(Math.abs(netResult))}
                                 </p>
@@ -163,7 +163,7 @@ export default function BudgetPlanningPage() {
                         <div className="flex items-center gap-3">
                             <Calculator size={24} className="text-cyan-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Margin</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Margin</p>
                                 <p className="text-xl font-bold text-cyan-700">
                                     {totalIncome !== 0 ? ((netResult / Math.abs(totalIncome)) * 100).toFixed(1) : 0}%
                                 </p>
@@ -178,7 +178,7 @@ export default function BudgetPlanningPage() {
                 <CardContent className="py-4">
                     <div className="flex items-center gap-3 mb-2">
                         <span className="text-xs font-medium text-emerald-600">Income</span>
-                        <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden flex">
+                        <div className="flex-1 h-4 bg-app-surface-2 rounded-full overflow-hidden flex">
                             {Math.abs(totalIncome) + Math.abs(totalExpense) > 0 && (
                                 <>
                                     <div

@@ -58,13 +58,13 @@ export default function TaxReportsPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center">
                         <Receipt size={20} className="text-white" />
                     </div>
                     Tax Reports
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Tax groups, rates & collection summary (last 30 days)</p>
+                <p className="text-sm text-app-muted-foreground mt-1">Tax groups, rates & collection summary (last 30 days)</p>
             </header>
 
             {/* KPI Cards */}
@@ -74,9 +74,9 @@ export default function TaxReportsPage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-rose-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Tax Collected</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Tax Collected</p>
                                 <p className="text-2xl font-bold text-rose-700">{fmt(totalTaxCollected)}</p>
-                                <p className="text-[10px] text-gray-400">Last 30 days</p>
+                                <p className="text-[10px] text-app-muted-foreground">Last 30 days</p>
                             </div>
                         </div>
                     </CardContent>
@@ -86,7 +86,7 @@ export default function TaxReportsPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Taxable Revenue</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Taxable Revenue</p>
                                 <p className="text-2xl font-bold text-blue-700">{fmt(totalSalesRevenue)}</p>
                             </div>
                         </div>
@@ -97,7 +97,7 @@ export default function TaxReportsPage() {
                         <div className="flex items-center gap-3">
                             <Percent size={24} className="text-amber-600" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Effective Rate</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Effective Rate</p>
                                 <p className="text-2xl font-bold text-amber-700">{effectiveRate.toFixed(2)}%</p>
                             </div>
                         </div>
@@ -108,9 +108,9 @@ export default function TaxReportsPage() {
                         <div className="flex items-center gap-3">
                             <BarChart3 size={24} className="text-green-600" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Tax Groups</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Tax Groups</p>
                                 <p className="text-2xl font-bold text-green-700">{activeGroups}</p>
-                                <p className="text-[10px] text-gray-400">{taxGroups.length} total</p>
+                                <p className="text-[10px] text-app-muted-foreground">{taxGroups.length} total</p>
                             </div>
                         </div>
                     </CardContent>
@@ -121,19 +121,19 @@ export default function TaxReportsPage() {
             <Card>
                 <CardHeader className="py-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Receipt size={18} className="text-gray-400" /> Tax Groups
+                        <Receipt size={18} className="text-app-muted-foreground" /> Tax Groups
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     {taxGroups.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Receipt size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No tax groups configured</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Name</TableHead>
                                     <TableHead className="text-right">Rate (%)</TableHead>
                                     <TableHead>Default</TableHead>
@@ -143,7 +143,7 @@ export default function TaxReportsPage() {
                             </TableHeader>
                             <TableBody>
                                 {taxGroups.map((g: Record<string, any>) => (
-                                    <TableRow key={g.id} className="hover:bg-gray-50/50">
+                                    <TableRow key={g.id} className="hover:bg-app-surface/50">
                                         <TableCell className="font-medium">{g.name}</TableCell>
                                         <TableCell className="text-right">
                                             <Badge variant="outline" className="font-mono">
@@ -154,15 +154,15 @@ export default function TaxReportsPage() {
                                             {g.is_default ? (
                                                 <CheckCircle size={16} className="text-green-500" />
                                             ) : (
-                                                <span className="text-gray-300">—</span>
+                                                <span className="text-app-faint">—</span>
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge className={g.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}>
+                                            <Badge className={g.is_active ? 'bg-green-100 text-green-700' : 'bg-app-surface-2 text-app-muted-foreground'}>
                                                 {g.is_active ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-sm text-gray-500 max-w-xs truncate">
+                                        <TableCell className="text-sm text-app-muted-foreground max-w-xs truncate">
                                             {g.description || '—'}
                                         </TableCell>
                                     </TableRow>
@@ -178,21 +178,21 @@ export default function TaxReportsPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <DollarSign size={18} className="text-gray-400" /> 30-Day Collection Summary
+                            <DollarSign size={18} className="text-app-muted-foreground" /> 30-Day Collection Summary
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 gap-6">
-                            <div className="text-center p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 uppercase mb-1">Sales Transactions</p>
+                            <div className="text-center p-4 bg-app-surface rounded-xl">
+                                <p className="text-xs text-app-muted-foreground uppercase mb-1">Sales Transactions</p>
                                 <p className="text-2xl font-bold">{summary.sales?.count || 0}</p>
                             </div>
-                            <div className="text-center p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 uppercase mb-1">Discounts Applied</p>
+                            <div className="text-center p-4 bg-app-surface rounded-xl">
+                                <p className="text-xs text-app-muted-foreground uppercase mb-1">Discounts Applied</p>
                                 <p className="text-2xl font-bold text-orange-600">{fmt(parseFloat(summary.sales?.discount || 0))}</p>
                             </div>
-                            <div className="text-center p-4 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500 uppercase mb-1">Net Revenue</p>
+                            <div className="text-center p-4 bg-app-surface rounded-xl">
+                                <p className="text-xs text-app-muted-foreground uppercase mb-1">Net Revenue</p>
                                 <p className="text-2xl font-bold text-emerald-600">{fmt(parseFloat(summary.net_revenue || 0))}</p>
                             </div>
                         </div>

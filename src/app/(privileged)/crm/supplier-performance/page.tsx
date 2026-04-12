@@ -94,16 +94,16 @@ export default function SupplierPerformancePage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Supplier Performance
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Vendor analysis, spend tracking & delivery rates</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Vendor analysis, spend tracking & delivery rates</p>
                 </div>
                 <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search suppliers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -114,7 +114,7 @@ export default function SupplierPerformancePage() {
                         <div className="flex items-center gap-3">
                             <Truck size={24} className="text-teal-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Suppliers</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Suppliers</p>
                                 <p className="text-2xl font-bold">{suppliers.length}</p>
                             </div>
                         </div>
@@ -125,7 +125,7 @@ export default function SupplierPerformancePage() {
                         <div className="flex items-center gap-3">
                             <Package size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Active Suppliers</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Active Suppliers</p>
                                 <p className="text-2xl font-bold text-blue-700">{activeSuppliers}</p>
                             </div>
                         </div>
@@ -136,7 +136,7 @@ export default function SupplierPerformancePage() {
                         <div className="flex items-center gap-3">
                             <DollarSign size={24} className="text-emerald-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Spend</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Spend</p>
                                 <p className="text-xl font-bold text-emerald-700">{fmt(totalPurchaseValue)}</p>
                             </div>
                         </div>
@@ -147,7 +147,7 @@ export default function SupplierPerformancePage() {
                         <div className="flex items-center gap-3">
                             <Star size={24} className="text-amber-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Completion</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Avg Completion</p>
                                 <p className="text-2xl font-bold text-amber-700">{avgCompletionRate.toFixed(0)}%</p>
                             </div>
                         </div>
@@ -158,14 +158,14 @@ export default function SupplierPerformancePage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Truck size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No suppliers found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>#</TableHead>
                                     <TableHead>Supplier</TableHead>
                                     <TableHead className="text-right">Orders</TableHead>
@@ -177,8 +177,8 @@ export default function SupplierPerformancePage() {
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((s: Record<string, any>, i: number) => (
-                                    <TableRow key={s.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
+                                    <TableRow key={s.id} className="hover:bg-app-surface/50">
+                                        <TableCell className="font-bold text-app-muted-foreground">{i + 1}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center">
@@ -188,7 +188,7 @@ export default function SupplierPerformancePage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-sm">{s.name || 'Unknown'}</p>
-                                                    {s.phone && <p className="text-[10px] text-gray-400">{s.phone}</p>}
+                                                    {s.phone && <p className="text-[10px] text-app-muted-foreground">{s.phone}</p>}
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -197,16 +197,16 @@ export default function SupplierPerformancePage() {
                                         <TableCell className="text-right text-sm">{fmt(s.avgOrderValue)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="w-16 h-1.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full ${s.completionRate >= 80 ? 'bg-green-400' : s.completionRate >= 50 ? 'bg-yellow-400' : 'bg-red-400'}`}
                                                         style={{ width: `${s.completionRate}%` }}
                                                     />
                                                 </div>
-                                                <span className="text-xs text-gray-500">{s.completionRate.toFixed(0)}%</span>
+                                                <span className="text-xs text-app-muted-foreground">{s.completionRate.toFixed(0)}%</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-xs text-gray-500">
+                                        <TableCell className="text-xs text-app-muted-foreground">
                                             {s.lastOrderDate ? new Date(s.lastOrderDate).toLocaleDateString('fr-FR') : '—'}
                                         </TableCell>
                                     </TableRow>

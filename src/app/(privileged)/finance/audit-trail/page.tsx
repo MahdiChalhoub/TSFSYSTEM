@@ -74,13 +74,13 @@ export default function AuditTrailPage() {
         <div className="p-6 space-y-6">
             {/* Header */}
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-app-bg flex items-center justify-center">
                         <History size={20} className="text-white" />
                     </div>
                     Audit Trail
                 </h1>
-                <p className="text-sm text-gray-500 mt-2">Track all changes — who changed what, when</p>
+                <p className="text-sm text-app-muted-foreground mt-2">Track all changes — who changed what, when</p>
             </header>
 
             {/* Filters */}
@@ -88,7 +88,7 @@ export default function AuditTrailPage() {
                 <CardContent className="py-3">
                     <div className="flex items-center gap-3 flex-wrap">
                         <div className="relative flex-1 min-w-[200px]">
-                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                             <Input
                                 placeholder="Search logs..."
                                 value={search}
@@ -99,7 +99,7 @@ export default function AuditTrailPage() {
                         <select
                             value={filterAction}
                             onChange={e => { setFilterAction(e.target.value); setPage(1) }}
-                            className="border rounded-lg px-3 py-2 text-sm bg-white h-9"
+                            className="border rounded-lg px-3 py-2 text-sm bg-app-surface h-9"
                         >
                             <option value="">All Actions</option>
                             <option value="CREATE">Create</option>
@@ -111,14 +111,14 @@ export default function AuditTrailPage() {
                         <select
                             value={filterModel}
                             onChange={e => { setFilterModel(e.target.value); setPage(1) }}
-                            className="border rounded-lg px-3 py-2 text-sm bg-white h-9"
+                            className="border rounded-lg px-3 py-2 text-sm bg-app-surface h-9"
                         >
                             <option value="">All Models</option>
                             {modelNames.map(m => (
                                 <option key={m} value={m}>{m}</option>
                             ))}
                         </select>
-                        <div className="text-xs text-gray-400 font-medium">
+                        <div className="text-xs text-app-muted-foreground font-medium">
                             {data.count || 0} total records
                         </div>
                     </div>
@@ -133,14 +133,14 @@ export default function AuditTrailPage() {
                             {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12" />)}
                         </div>
                     ) : logs.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <History size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No audit records found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead className="w-12"></TableHead>
                                     <TableHead>Timestamp</TableHead>
                                     <TableHead>Action</TableHead>
@@ -159,7 +159,7 @@ export default function AuditTrailPage() {
                                         <>
                                             <TableRow
                                                 key={log.id}
-                                                className="hover:bg-gray-50/50 cursor-pointer"
+                                                className="hover:bg-app-surface/50 cursor-pointer"
                                                 onClick={() => setExpandedRow(isExpanded ? null : log.id)}
                                             >
                                                 <TableCell>
@@ -168,10 +168,10 @@ export default function AuditTrailPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-sm">
-                                                    <div className="font-medium text-gray-900">
+                                                    <div className="font-medium text-app-foreground">
                                                         {log.timestamp ? new Date(log.timestamp).toLocaleDateString('fr-FR') : '—'}
                                                     </div>
-                                                    <div className="text-xs text-gray-400">
+                                                    <div className="text-xs text-app-muted-foreground">
                                                         {log.timestamp ? new Date(log.timestamp).toLocaleTimeString('fr-FR') : ''}
                                                     </div>
                                                 </TableCell>
@@ -181,12 +181,12 @@ export default function AuditTrailPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="font-medium text-sm">{log.model_name}</TableCell>
-                                                <TableCell className="font-mono text-xs text-gray-500">
+                                                <TableCell className="font-mono text-xs text-app-muted-foreground">
                                                     {log.object_id}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-sm">
-                                                        <User size={14} className="text-gray-400" />
+                                                        <User size={14} className="text-app-muted-foreground" />
                                                         <span>{log.actor_name || log.actor || 'System'}</span>
                                                     </div>
                                                 </TableCell>
@@ -198,15 +198,15 @@ export default function AuditTrailPage() {
                                                             className="h-7 w-7 p-0"
                                                             onClick={(e) => { e.stopPropagation(); setExpandedRow(isExpanded ? null : log.id) }}
                                                         >
-                                                            <Eye size={14} className="text-gray-400" />
+                                                            <Eye size={14} className="text-app-muted-foreground" />
                                                         </Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
                                             {isExpanded && log.payload && (
                                                 <TableRow key={`${log.id}-detail`}>
-                                                    <TableCell colSpan={7} className="bg-gray-50 p-0">
-                                                        <div className="p-4 mx-4 my-2 bg-gray-900 rounded-lg">
+                                                    <TableCell colSpan={7} className="bg-app-surface p-0">
+                                                        <div className="p-4 mx-4 my-2 bg-app-bg rounded-lg">
                                                             <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-48">
                                                                 {JSON.stringify(log.payload, null, 2)}
                                                             </pre>
@@ -226,7 +226,7 @@ export default function AuditTrailPage() {
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-app-muted-foreground">
                         Page {page} of {totalPages}
                     </p>
                     <div className="flex items-center gap-2">

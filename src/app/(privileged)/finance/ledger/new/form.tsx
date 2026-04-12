@@ -170,40 +170,40 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+            <div className="bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
                     <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Transaction Date</label>
+                        <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Transaction Date</label>
                         <input
                             type="date"
                             required
                             value={header.transactionDate}
                             onChange={e => setHeader({ ...header, transactionDate: e.target.value })}
-                            className="w-full border border-stone-300 rounded p-2 text-sm"
+                            className="w-full border border-app-border rounded p-2 text-sm"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Description</label>
+                        <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Description</label>
                         <input
                             required
                             value={header.description}
                             onChange={e => setHeader({ ...header, description: e.target.value })}
-                            className="w-full border border-stone-300 rounded p-2 text-sm"
+                            className="w-full border border-app-border rounded p-2 text-sm"
                             placeholder="e.g. Monthly Rent Payment"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Reference</label>
+                        <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Reference</label>
                         <input
                             value={header.reference}
                             onChange={e => setHeader({ ...header, reference: e.target.value })}
-                            className="w-full border border-stone-300 rounded p-2 text-sm"
+                            className="w-full border border-app-border rounded p-2 text-sm"
                             placeholder="e.g. INV-001"
                         />
                     </div>
-                    <div className="bg-stone-50 p-2 rounded border border-dashed border-stone-200">
-                        <div className="text-[10px] font-bold text-stone-400 uppercase">Fiscal Context</div>
-                        <div className="text-xs font-medium text-stone-700 truncate">
+                    <div className="bg-app-surface p-2 rounded border border-dashed border-app-border">
+                        <div className="text-[10px] font-bold text-app-muted-foreground uppercase">Fiscal Context</div>
+                        <div className="text-xs font-medium text-app-foreground truncate">
                             {fiscalContext.yearId ? (
                                 <span className="flex items-center gap-1 text-green-700">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -218,20 +218,20 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+            <div className="bg-app-surface p-6 rounded-lg shadow-sm border border-app-border">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="bg-stone-50 border-b border-stone-200 text-left">
-                            <th className="p-2 font-bold text-stone-600">Account</th>
-                            <th className="p-2 font-bold text-stone-600 w-32 text-right">Debit</th>
-                            <th className="p-2 font-bold text-stone-600 w-32 text-right">Credit</th>
-                            <th className="p-2 font-bold text-stone-600">Line Description</th>
+                        <tr className="bg-app-surface border-b border-app-border text-left">
+                            <th className="p-2 font-bold text-app-muted-foreground">Account</th>
+                            <th className="p-2 font-bold text-app-muted-foreground w-32 text-right">Debit</th>
+                            <th className="p-2 font-bold text-app-muted-foreground w-32 text-right">Credit</th>
+                            <th className="p-2 font-bold text-app-muted-foreground">Line Description</th>
                             <th className="p-2 w-10"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {lines.map((line, idx) => (
-                            <tr key={idx} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/50">
+                            <tr key={idx} className="border-b border-app-border last:border-0 hover:bg-app-surface/50">
                                 <td className="p-2 relative">
                                     <div className="flex items-center gap-2">
                                         <input
@@ -239,13 +239,13 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                             placeholder="Type code or name..."
                                             value={line.searchString}
                                             onChange={e => updateLine(idx, 'searchString', e.target.value)}
-                                            className={`w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-black outline-none font-medium transition-all ${line.accountId ? 'border-emerald-200 bg-emerald-50/10 text-stone-900' : 'border-stone-300 text-stone-700'
+                                            className={`w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-black outline-none font-medium transition-all ${line.accountId ? 'border-emerald-200 bg-emerald-50/10 text-app-foreground' : 'border-app-border text-app-foreground'
                                                 }`}
                                         />
                                         {line.accountId && (
                                             <div className="flex items-center gap-1 shrink-0">
                                                 {!selectableAccounts.find(a => a.id.toString() === line.accountId)?.isActive && (
-                                                    <span className="text-[8px] bg-stone-100 text-stone-400 px-1 rounded border border-stone-200 font-bold">INACTIVE</span>
+                                                    <span className="text-[8px] bg-app-surface-2 text-app-muted-foreground px-1 rounded border border-app-border font-bold">INACTIVE</span>
                                                 )}
                                                 <CheckCircle2 size={12} className="text-emerald-500" />
                                             </div>
@@ -259,7 +259,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                         ))}
                                     </datalist>
                                     {!line.accountId && line.searchString && (
-                                        <div className="absolute left-2 top-full z-10 text-[9px] text-red-500 font-bold bg-white px-1 shadow-sm">
+                                        <div className="absolute left-2 top-full z-10 text-[9px] text-red-500 font-bold bg-app-surface px-1 shadow-sm">
                                             Account not found. Select from list.
                                         </div>
                                     )}
@@ -272,7 +272,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                         value={line.debit}
                                         onKeyDown={e => handleKeyDown(e, idx, 'debit')}
                                         onChange={e => updateLine(idx, 'debit', e.target.value)}
-                                        className="w-full p-1.5 border border-stone-300 rounded text-right font-mono focus:ring-1 focus:ring-black outline-none"
+                                        className="w-full p-1.5 border border-app-border rounded text-right font-mono focus:ring-1 focus:ring-black outline-none"
                                     />
                                 </td>
                                 <td className="p-2">
@@ -283,7 +283,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                         value={line.credit}
                                         onKeyDown={e => handleKeyDown(e, idx, 'credit')}
                                         onChange={e => updateLine(idx, 'credit', e.target.value)}
-                                        className="w-full p-1.5 border border-stone-300 rounded text-right font-mono focus:ring-1 focus:ring-black outline-none"
+                                        className="w-full p-1.5 border border-app-border rounded text-right font-mono focus:ring-1 focus:ring-black outline-none"
                                     />
                                 </td>
                                 <td className="p-2">
@@ -292,14 +292,14 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                             value={line.description}
                                             onChange={e => updateLine(idx, 'description', e.target.value)}
                                             onKeyDown={e => handleKeyDown(e, idx, 'description')}
-                                            className="w-full p-1.5 border border-stone-300 rounded text-xs focus:ring-1 focus:ring-black outline-none"
+                                            className="w-full p-1.5 border border-app-border rounded text-xs focus:ring-1 focus:ring-black outline-none"
                                             placeholder={header.description}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => handleAutoBalance(idx)}
                                             title="Plug Balance"
-                                            className="text-stone-300 hover:text-stone-600 transition-colors"
+                                            className="text-app-faint hover:text-app-muted-foreground transition-colors"
                                         >
                                             <Send size={14} />
                                         </button>
@@ -309,7 +309,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                     <button
                                         type="button"
                                         onClick={() => removeLine(idx)}
-                                        className="text-stone-300 hover:text-red-500 transition-colors"
+                                        className="text-app-faint hover:text-red-500 transition-colors"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -318,8 +318,8 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                         ))}
                     </tbody>
                     <tfoot>
-                        <tr className="font-bold text-stone-900 bg-stone-50">
-                            <td className="p-3 text-right text-stone-500 uppercase text-[10px] tracking-wider">Totals</td>
+                        <tr className="font-bold text-app-foreground bg-app-surface">
+                            <td className="p-3 text-right text-app-muted-foreground uppercase text-[10px] tracking-wider">Totals</td>
                             <td className="p-3 text-right font-mono border-t-2 border-stone-800">
                                 {totalDebit > 0 ? totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                             </td>
@@ -341,7 +341,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                         <button
                                             type="button"
                                             onClick={() => addLine()}
-                                            className="text-[10px] text-stone-400 hover:text-stone-900 underline uppercase font-bold"
+                                            className="text-[10px] text-app-muted-foreground hover:text-app-foreground underline uppercase font-bold"
                                         >
                                             Add Offset Line
                                         </button>
@@ -356,18 +356,18 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                     <button
                         type="button"
                         onClick={addLine}
-                        className="flex items-center gap-2 text-stone-500 hover:text-stone-900 text-sm font-medium"
+                        className="flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground text-sm font-medium"
                     >
                         <Plus size={16} /> Add Line
                     </button>
                 </div>
             </div>
 
-            <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+            <div className="flex justify-between items-center bg-app-surface p-4 rounded-xl shadow-sm border border-app-border">
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="px-6 py-2.5 text-stone-600 font-bold text-sm hover:bg-stone-50 rounded-lg transition-colors"
+                    className="px-6 py-2.5 text-app-muted-foreground font-bold text-sm hover:bg-app-surface rounded-lg transition-colors"
                 >
                     Cancel
                 </button>
@@ -376,7 +376,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                         type="button"
                         onClick={() => handleAction('DRAFT')}
                         disabled={isPending}
-                        className="flex items-center gap-2 bg-stone-100 text-stone-700 px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-stone-200 disabled:opacity-50 transition-all border border-stone-200"
+                        className="flex items-center gap-2 bg-app-surface-2 text-app-foreground px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-app-surface-2 disabled:opacity-50 transition-all border border-app-border"
                     >
                         <FileText size={18} />
                         {isPending ? '...' : 'Save as Draft'}
@@ -385,7 +385,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                         type="button"
                         onClick={() => handleAction('POSTED')}
                         disabled={isPending || !isBalanced}
-                        className="flex items-center gap-2 bg-black text-white px-8 py-2.5 rounded-lg font-bold text-sm hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
+                        className="flex items-center gap-2 bg-app-foreground text-white px-8 py-2.5 rounded-lg font-bold text-sm hover:bg-app-surface disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
                     >
                         {isPending ? (
                             <>Processing...</>

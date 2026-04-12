@@ -214,12 +214,12 @@ export default function CustomDashboard() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Package size={16} className="text-gray-400" /> Recent Stock Movements
+                            <Package size={16} className="text-app-muted-foreground" /> Recent Stock Movements
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         {recentMovements.length === 0 ? (
-                            <p className="text-center py-4 text-gray-400 text-sm">No movements</p>
+                            <p className="text-center py-4 text-app-muted-foreground text-sm">No movements</p>
                         ) : recentMovements.map((m: Record<string, any>, i: number) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                                 <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-green-400' : m.type === 'OUT' ? 'bg-red-400' : 'bg-amber-400'}`} />
@@ -227,7 +227,7 @@ export default function CustomDashboard() {
                                 <span className={`font-bold ${m.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
                                     {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity || 0).toFixed(0)}
                                 </span>
-                                <span className="text-gray-400 w-14 text-right">
+                                <span className="text-app-muted-foreground w-14 text-right">
                                     {m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : ''}
                                 </span>
                             </div>
@@ -239,19 +239,19 @@ export default function CustomDashboard() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <BarChart3 size={16} className="text-gray-400" /> Payment Methods (30d)
+                            <BarChart3 size={16} className="text-app-muted-foreground" /> Payment Methods (30d)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {Object.keys(paymentMethods).length === 0 ? (
-                            <p className="text-center py-4 text-gray-400 text-sm">No data</p>
+                            <p className="text-center py-4 text-app-muted-foreground text-sm">No data</p>
                         ) : Object.entries(paymentMethods).map(([method, stats]: [string, any]) => (
                             <div key={method} className="space-y-1">
                                 <div className="flex justify-between text-xs">
                                     <span className="font-medium">{method}</span>
-                                    <span className="text-gray-500">{stats.count} txns</span>
+                                    <span className="text-app-muted-foreground">{stats.count} txns</span>
                                 </div>
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-violet-400 rounded-full"
                                         style={{ width: `${totalRevenue > 0 ? (stats.total / totalRevenue * 100) : 0}%` }}
@@ -267,19 +267,19 @@ export default function CustomDashboard() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Users size={16} className="text-gray-400" /> Top Sellers (30d)
+                            <Users size={16} className="text-app-muted-foreground" /> Top Sellers (30d)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         {topSellers.length === 0 ? (
-                            <p className="text-center py-4 text-gray-400 text-sm">No data</p>
+                            <p className="text-center py-4 text-app-muted-foreground text-sm">No data</p>
                         ) : topSellers.map(([name, stats]: [string, any], i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                                 <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
                                     <span className="text-[10px] font-bold text-blue-600">{(name || '?').charAt(0)}</span>
                                 </div>
                                 <span className="flex-1 truncate font-medium">{name}</span>
-                                <span className="text-gray-400">{stats.count} orders</span>
+                                <span className="text-app-muted-foreground">{stats.count} orders</span>
                                 <span className="font-bold w-20 text-right">{fmt(stats.total, currency)}</span>
                             </div>
                         ))}
@@ -292,7 +292,7 @@ export default function CustomDashboard() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-sm flex items-center gap-2">
-                            <Clock size={16} className="text-gray-400" /> Hourly Sales Distribution (30d)
+                            <Clock size={16} className="text-app-muted-foreground" /> Hourly Sales Distribution (30d)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -302,7 +302,7 @@ export default function CustomDashboard() {
                                 const pct = max ? (val / max * 100) : 0
                                 return (
                                     <div key={h} className="flex-1 flex flex-col items-center group">
-                                        <div className="invisible group-hover:visible text-[8px] text-gray-500 whitespace-nowrap mb-0.5">
+                                        <div className="invisible group-hover:visible text-[8px] text-app-muted-foreground whitespace-nowrap mb-0.5">
                                             {fmt(val, currency)}
                                         </div>
                                         <div
@@ -310,7 +310,7 @@ export default function CustomDashboard() {
                                             style={{ height: `${Math.max(pct, 3)}%` }}
                                         />
                                         {h % 3 === 0 && (
-                                            <span className="text-[8px] text-gray-400 mt-1">{h}h</span>
+                                            <span className="text-[8px] text-app-muted-foreground mt-1">{h}h</span>
                                         )}
                                     </div>
                                 )

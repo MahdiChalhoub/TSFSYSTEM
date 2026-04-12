@@ -29,7 +29,7 @@ function StatusPulse({ active }: { active: boolean }) {
     return (
         <span className="relative flex h-3 w-3">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${active ? 'bg-emerald-400' : 'bg-gray-400'}`} />
-            <span className={`relative inline-flex rounded-full h-3 w-3 ${active ? 'bg-emerald-500' : 'bg-gray-500'}`} />
+            <span className={`relative inline-flex rounded-full h-3 w-3 ${active ? 'bg-emerald-500' : 'bg-app-surface-2'}`} />
         </span>
     )
 }
@@ -151,7 +151,7 @@ export default function EncryptionPage() {
             <div className="flex items-center justify-center h-[60vh]">
                 <div className="text-center">
                     <Shield className="animate-pulse text-cyan-500 mx-auto mb-4" size={48} />
-                    <p className="text-gray-500 text-sm">Loading encryption status...</p>
+                    <p className="text-app-muted-foreground text-sm">Loading encryption status...</p>
                 </div>
             </div>
         )
@@ -165,17 +165,17 @@ export default function EncryptionPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
                             <Shield className="text-white" size={22} />
                         </div>
                         AES-256 Encryption
                     </h2>
-                    <p className="text-gray-500 mt-2 font-medium">Field-level encryption for sensitive data · Per-organization key management</p>
+                    <p className="text-app-muted-foreground mt-2 font-medium">Field-level encryption for sensitive data · Per-organization key management</p>
                 </div>
                 <button
                     onClick={fetchStatus}
-                    className="p-2.5 rounded-xl bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all border border-gray-200 shadow-sm"
+                    className="p-2.5 rounded-xl bg-app-surface hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-all border border-app-border shadow-sm"
                 >
                     <RefreshCw size={16} />
                 </button>
@@ -198,39 +198,39 @@ export default function EncryptionPage() {
             )}
 
             {/* Main Status Card */}
-            <Card className={`bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 ${isActive ? 'border-l-emerald-500' : 'border-l-gray-300'}`}>
+            <Card className={`bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden border-l-4 ${isActive ? 'border-l-emerald-500' : 'border-l-gray-300'}`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-5 ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
                 <CardContent className="pt-8 pb-8 relative">
                     <div className="flex items-center gap-6">
-                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-emerald-50 to-cyan-50 border border-emerald-200' : 'bg-gray-50 border border-gray-200'}`}>
+                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isActive ? 'bg-gradient-to-br from-emerald-50 to-cyan-50 border border-emerald-200' : 'bg-app-surface border border-app-border'}`}>
                             {isActive ? (
                                 <Lock className="text-emerald-500" size={36} />
                             ) : (
-                                <Unlock className="text-gray-400" size={36} />
+                                <Unlock className="text-app-muted-foreground" size={36} />
                             )}
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <StatusPulse active={isActive} />
-                                <h3 className="text-xl font-bold text-gray-900">
+                                <h3 className="text-xl font-bold text-app-foreground">
                                     {isActive ? 'Encryption Active' : 'Encryption Inactive'}
                                 </h3>
                             </div>
-                            <p className="text-gray-500 text-sm">
+                            <p className="text-app-muted-foreground text-sm">
                                 {isActive
                                     ? 'All sensitive fields are encrypted at rest using AES-256-GCM authenticated encryption.'
                                     : 'Field-level encryption is not enabled. Sensitive data is stored as plaintext.'}
                             </p>
                             {status?.organization && (
                                 <div className="flex items-center gap-2 mt-3">
-                                    <Building2 className="text-gray-400" size={14} />
-                                    <span className="text-xs text-gray-400">Organization: <span className="text-gray-600 font-medium">{status.organization}</span></span>
+                                    <Building2 className="text-app-muted-foreground" size={14} />
+                                    <span className="text-xs text-app-muted-foreground">Organization: <span className="text-app-muted-foreground font-medium">{status.organization}</span></span>
                                 </div>
                             )}
                         </div>
                         <Badge className={`px-4 py-2 text-sm font-bold ${isActive
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                            : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                            : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                             {isActive ? 'PROTECTED' : 'UNPROTECTED'}
                         </Badge>
                     </div>
@@ -239,53 +239,53 @@ export default function EncryptionPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
                             <Shield className="text-cyan-500" size={22} />
-                            <Badge className={`${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                            <Badge className={`${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {isActive ? 'Active' : 'Inactive'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-gray-900">Algorithm</h3>
-                        <p className="text-xs text-gray-500 mt-1">AES-256-GCM · Authenticated</p>
+                        <h3 className="font-bold text-app-foreground">Algorithm</h3>
+                        <p className="text-xs text-app-muted-foreground mt-1">AES-256-GCM · Authenticated</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
                             <Key className="text-amber-500" size={22} />
-                            <Badge className={`${hasKey ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                            <Badge className={`${hasKey ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {hasKey ? 'Generated' : 'None'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-gray-900">Encryption Key</h3>
-                        <p className="text-xs text-gray-500 mt-1">256-bit · Per-organization</p>
+                        <h3 className="font-bold text-app-foreground">Encryption Key</h3>
+                        <p className="text-xs text-app-muted-foreground mt-1">256-bit · Per-organization</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
                             <Zap className="text-violet-500" size={22} />
-                            <Badge className={`${status?.addon_entitled ? 'bg-violet-50 text-violet-600 border-violet-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                            <Badge className={`${status?.addon_entitled ? 'bg-violet-50 text-violet-600 border-violet-200' : 'bg-app-surface text-app-muted-foreground border-app-border'}`}>
                                 {status?.addon_entitled ? 'Licensed' : 'Not Licensed'}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-gray-900">Add-on License</h3>
-                        <p className="text-xs text-gray-500 mt-1">{status?.plan || 'No plan'}</p>
+                        <h3 className="font-bold text-app-foreground">Add-on License</h3>
+                        <p className="text-xs text-app-muted-foreground mt-1">{status?.plan || 'No plan'}</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
                             <Building2 className="text-blue-500" size={22} />
-                            <span className="text-xl font-black text-gray-900 tabular-nums">{orgs.length}</span>
+                            <span className="text-xl font-black text-app-foreground tabular-nums">{orgs.length}</span>
                         </div>
-                        <h3 className="font-bold text-gray-900">Organizations</h3>
-                        <p className="text-xs text-gray-500 mt-1">Total registered instances</p>
+                        <h3 className="font-bold text-app-foreground">Organizations</h3>
+                        <p className="text-xs text-app-muted-foreground mt-1">Total registered instances</p>
                     </CardContent>
                 </Card>
             </div>
@@ -293,23 +293,23 @@ export default function EncryptionPage() {
             {/* Actions Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Controls */}
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
                             <ShieldCheck className="text-cyan-500" size={20} />
-                            <CardTitle className="text-gray-900 text-lg">Encryption Controls</CardTitle>
+                            <CardTitle className="text-app-foreground text-lg">Encryption Controls</CardTitle>
                         </div>
-                        <CardDescription className="text-gray-500">Manage encryption for your organization</CardDescription>
+                        <CardDescription className="text-app-muted-foreground">Manage encryption for your organization</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {/* Organization Selector */}
                         {orgs.length > 0 && (
                             <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Target Organization</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-2 block">Target Organization</label>
                                 <select
                                     value={selectedOrgId}
                                     onChange={(e) => setSelectedOrgId(e.target.value)}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                                    className="w-full bg-app-surface border border-app-border rounded-xl px-4 py-3 text-app-foreground text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                                 >
                                     {orgs.map(org => (
                                         <option key={org.id} value={org.id}>{org.name} ({org.slug})</option>
@@ -337,7 +337,7 @@ export default function EncryptionPage() {
                                 <button
                                     onClick={handleDeactivate}
                                     disabled={actionLoading !== null}
-                                    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-600 font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-app-surface-2 hover:bg-app-surface-2 border border-app-border text-app-muted-foreground font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {actionLoading === 'deactivate' ? (
                                         <RefreshCw className="animate-spin" size={18} />
@@ -367,13 +367,13 @@ export default function EncryptionPage() {
                 </Card>
 
                 {/* How It Works */}
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
                             <Info className="text-blue-500" size={20} />
-                            <CardTitle className="text-gray-900 text-lg">How It Works</CardTitle>
+                            <CardTitle className="text-app-foreground text-lg">How It Works</CardTitle>
                         </div>
-                        <CardDescription className="text-gray-500">AES-256-GCM authenticated encryption</CardDescription>
+                        <CardDescription className="text-app-muted-foreground">AES-256-GCM authenticated encryption</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-3">
@@ -389,8 +389,8 @@ export default function EncryptionPage() {
                                         <item.icon className={item.color} size={16} />
                                     </div>
                                     <div className="min-w-0">
-                                        <h4 className="text-sm font-bold text-gray-900">{item.title}</h4>
-                                        <p className="text-xs text-gray-500">{item.desc}</p>
+                                        <h4 className="text-sm font-bold text-app-foreground">{item.title}</h4>
+                                        <p className="text-xs text-app-muted-foreground">{item.desc}</p>
                                     </div>
                                 </div>
                             ))}
@@ -399,7 +399,7 @@ export default function EncryptionPage() {
                         {/* Demo Toggle */}
                         <button
                             onClick={toggleDemo}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-gray-700 text-sm font-medium transition-all"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-app-surface hover:bg-app-surface-2 border border-app-border text-app-muted-foreground hover:text-app-foreground text-sm font-medium transition-all"
                         >
                             {showDemo ? <EyeOff size={14} /> : <Eye size={14} />}
                             {showDemo ? 'Hide' : 'Show'} Encryption Demo
@@ -410,27 +410,27 @@ export default function EncryptionPage() {
 
             {/* Demo Panel */}
             {showDemo && demoData && (
-                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500 animate-in slide-in-from-top duration-300">
+                <Card className="bg-app-surface border-app-border rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500 animate-in slide-in-from-top duration-300">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
                             <Eye className="text-cyan-500" size={20} />
-                            <CardTitle className="text-gray-900 text-lg">Encryption Demo</CardTitle>
+                            <CardTitle className="text-app-foreground text-lg">Encryption Demo</CardTitle>
                         </div>
-                        <CardDescription className="text-gray-500">See how AES-256 encryption transforms your data</CardDescription>
+                        <CardDescription className="text-app-muted-foreground">See how AES-256 encryption transforms your data</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="rounded-xl bg-emerald-50 border border-emerald-200/60 p-4">
                                 <div className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold mb-2">Original Data</div>
-                                <div className="font-mono text-gray-900 text-sm bg-white rounded-lg p-3 border border-emerald-100">{demoData.original}</div>
+                                <div className="font-mono text-app-foreground text-sm bg-app-surface rounded-lg p-3 border border-emerald-100">{demoData.original}</div>
                             </div>
                             <div className="rounded-xl bg-red-50 border border-red-200/60 p-4">
                                 <div className="text-[10px] uppercase tracking-widest text-red-600 font-bold mb-2">Stored in DB (Encrypted)</div>
-                                <div className="font-mono text-red-600 text-xs bg-white rounded-lg p-3 border border-red-100 break-all">{demoData.encrypted}</div>
+                                <div className="font-mono text-red-600 text-xs bg-app-surface rounded-lg p-3 border border-red-100 break-all">{demoData.encrypted}</div>
                             </div>
                             <div className="rounded-xl bg-amber-50 border border-amber-200/60 p-4">
                                 <div className="text-[10px] uppercase tracking-widest text-amber-600 font-bold mb-2">Display (Masked)</div>
-                                <div className="font-mono text-amber-600 text-sm bg-white rounded-lg p-3 border border-amber-100">{demoData.masked}</div>
+                                <div className="font-mono text-amber-600 text-sm bg-app-surface rounded-lg p-3 border border-amber-100">{demoData.masked}</div>
                             </div>
                         </div>
                         <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200/60 rounded-xl">
@@ -456,10 +456,10 @@ export default function EncryptionPage() {
             />
 
             {/* Security Footer */}
-            <div className="flex items-center gap-3 py-4 px-5 rounded-xl bg-gray-50 border border-gray-200/60">
-                <Shield className="text-gray-400" size={16} />
-                <p className="text-xs text-gray-500">
-                    Encryption uses <span className="text-gray-600 font-medium">AES-256-GCM</span> with per-organization keys.
+            <div className="flex items-center gap-3 py-4 px-5 rounded-xl bg-app-surface border border-app-border/60">
+                <Shield className="text-app-muted-foreground" size={16} />
+                <p className="text-xs text-app-muted-foreground">
+                    Encryption uses <span className="text-app-muted-foreground font-medium">AES-256-GCM</span> with per-organization keys.
                     Data is encrypted at rest in the database. TLS 1.3 protects data in transit.
                 </p>
             </div>

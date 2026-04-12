@@ -25,12 +25,12 @@ interface Delivery {
 interface Zone { id: number; name: string; base_fee: number; estimated_days: number }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
-    PENDING: { label: 'Pending', color: 'bg-gray-100 text-gray-700', icon: Clock },
+    PENDING: { label: 'Pending', color: 'bg-app-surface-2 text-app-foreground', icon: Clock },
     PREPARING: { label: 'Preparing', color: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', color: 'bg-amber-100 text-amber-700', icon: Truck },
     DELIVERED: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', icon: Check },
     FAILED: { label: 'Failed', color: 'bg-red-100 text-red-700', icon: AlertTriangle },
-    CANCELLED: { label: 'Cancelled', color: 'bg-gray-200 text-gray-500', icon: X },
+    CANCELLED: { label: 'Cancelled', color: 'bg-app-surface-2 text-app-muted-foreground', icon: X },
 }
 
 export default function DeliveryDashboard({
@@ -78,12 +78,12 @@ export default function DeliveryDashboard({
                         <button
                             key={key}
                             onClick={() => setFilter(filter === key ? 'ALL' : key)}
-                            className={`p-3 rounded-xl border transition-all ${filter === key ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-gray-200 hover:border-gray-300'
+                            className={`p-3 rounded-xl border transition-all ${filter === key ? 'ring-2 ring-emerald-500 border-emerald-300' : 'border-app-border hover:border-app-border'
                                 }`}
                         >
                             <div className="flex items-center gap-2 mb-1">
-                                <Icon size={14} className="text-gray-400" />
-                                <span className="text-xs text-gray-500">{cfg.label}</span>
+                                <Icon size={14} className="text-app-muted-foreground" />
+                                <span className="text-xs text-app-muted-foreground">{cfg.label}</span>
                             </div>
                             <p className="text-lg font-bold">{statusCounts[key] || 0}</p>
                         </button>
@@ -96,28 +96,28 @@ export default function DeliveryDashboard({
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">
                         {filter === 'ALL' ? 'All Deliveries' : STATUS_CONFIG[filter]?.label || filter}
-                        <Badge className="ml-2 bg-gray-100 text-gray-600">{filtered.length}</Badge>
+                        <Badge className="ml-2 bg-app-surface-2 text-app-muted-foreground">{filtered.length}</Badge>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     {filtered.length === 0 ? (
-                        <p className="text-center text-gray-400 py-12">No deliveries</p>
+                        <p className="text-center text-app-muted-foreground py-12">No deliveries</p>
                     ) : (
                         <div className="space-y-2">
                             {filtered.map(d => {
                                 const cfg = STATUS_CONFIG[d.status] || STATUS_CONFIG.PENDING
                                 return (
-                                    <div key={d.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                                    <div key={d.id} className="flex items-center gap-4 p-4 bg-app-surface rounded-xl">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg.color}`}>
                                             <cfg.icon size={18} />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm font-medium">DEL-{d.id}</span>
-                                                {d.order_ref && <span className="text-xs text-gray-400">→ {d.order_ref}</span>}
+                                                {d.order_ref && <span className="text-xs text-app-muted-foreground">→ {d.order_ref}</span>}
                                                 <Badge className={`text-[10px] ${cfg.color}`}>{cfg.label}</Badge>
                                             </div>
-                                            <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                                            <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
                                                 {d.recipient_name && <span className="flex items-center gap-1"><MapPin size={10} />{d.recipient_name}</span>}
                                                 {d.city && <span>{d.city}</span>}
                                                 {d.zone_name && <span>Zone: {d.zone_name}</span>}
@@ -147,7 +147,7 @@ export default function DeliveryDashboard({
                                             )}
                                             {!['DELIVERED', 'CANCELLED'].includes(d.status) && (
                                                 <button onClick={() => handleAction(d.id, 'cancel')} disabled={loading}
-                                                    className="px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-200 disabled:opacity-40">
+                                                    className="px-3 py-1.5 bg-app-surface-2 text-app-muted-foreground text-xs font-bold rounded-lg hover:bg-app-surface-2 disabled:opacity-40">
                                                     <X size={12} className="inline mr-1" />Cancel
                                                 </button>
                                             )}
@@ -169,9 +169,9 @@ export default function DeliveryDashboard({
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {zones.map(z => (
-                                <div key={z.id} className="p-3 bg-gray-50 rounded-xl">
+                                <div key={z.id} className="p-3 bg-app-surface rounded-xl">
                                     <p className="text-sm font-medium">{z.name}</p>
-                                    <div className="flex gap-3 text-xs text-gray-400 mt-1">
+                                    <div className="flex gap-3 text-xs text-app-muted-foreground mt-1">
                                         <span>Fee: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(z.base_fee)}</span>
                                         <span>{z.estimated_days} day{z.estimated_days > 1 ? 's' : ''}</span>
                                     </div>

@@ -409,7 +409,7 @@ export default function SmartProductForm({
                                             <>
                                                 <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                                                 <button type="button" onClick={(e) => { e.preventDefault(); setImagePreview(null); }}
-                                                    className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors">
+                                                    className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 hover:bg-app-foreground/70 flex items-center justify-center transition-colors">
                                                     <X className="w-4 h-4 text-white" />
                                                 </button>
                                             </>
@@ -899,7 +899,7 @@ export default function SmartProductForm({
 
                                                 {/* Computed summary */}
                                                 {mfgShelfLife > 0 && (
-                                                    <div className="p-3 rounded-lg bg-white/60 border border-amber-200/50 space-y-1.5">
+                                                    <div className="p-3 rounded-lg bg-app-surface/60 border border-amber-200/50 space-y-1.5">
                                                         <p className="text-[9px] font-bold text-amber-800 uppercase tracking-wider">Shelf Life Summary</p>
                                                         <div className="flex items-center gap-2">
                                                             <div className="flex-1 h-5 bg-amber-100 rounded-full overflow-hidden relative">

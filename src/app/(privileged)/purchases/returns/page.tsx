@@ -60,19 +60,19 @@ export default function PurchaseReturnsPage() {
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center gap-3">
+                    <h1 className="text-3xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-100">
                             <Truck size={20} className="text-white" />
                         </div>
                         Supplier Returns
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage outbound returns to suppliers and track stock reductions</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Manage outbound returns to suppliers and track stock reductions</p>
                 </div>
             </header>
 
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
+            <Card className="shadow-sm border-app-border overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-gray-50/50">
+                    <TableHeader className="bg-app-surface/50">
                         <TableRow>
                             <TableHead className="font-bold text-[10px] uppercase tracking-widest">PRET ID</TableHead>
                             <TableHead className="font-bold text-[10px] uppercase tracking-widest">PO Link</TableHead>
@@ -84,18 +84,18 @@ export default function PurchaseReturnsPage() {
                     </TableHeader>
                     <TableBody>
                         {returns.length === 0 ? (
-                            <TableRow><TableCell colSpan={6} className="text-center py-20 text-gray-400 italic">No supplier returns found</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={6} className="text-center py-20 text-app-muted-foreground italic">No supplier returns found</TableCell></TableRow>
                         ) : (
                             returns.map(ret => (
-                                <TableRow key={ret.id} className="group hover:bg-gray-50/50 transition-colors">
+                                <TableRow key={ret.id} className="group hover:bg-app-surface/50 transition-colors">
                                     <TableCell className="font-bold font-mono">PRET-{ret.id}</TableCell>
                                     <TableCell className="font-medium text-indigo-600">
                                         <Link href={`/purchases/${ret.original_order}`} className="hover:underline">
                                             PO #{ret.original_order}
                                         </Link>
                                     </TableCell>
-                                    <TableCell className="text-sm font-semibold text-gray-700">{ret.supplier_name || 'N/A'}</TableCell>
-                                    <TableCell className="text-right font-black text-gray-900">{fmt(parseFloat(String(ret.total_amount || 0)))}</TableCell>
+                                    <TableCell className="text-sm font-semibold text-app-foreground">{ret.supplier_name || 'N/A'}</TableCell>
+                                    <TableCell className="text-right font-black text-app-foreground">{fmt(parseFloat(String(ret.total_amount || 0)))}</TableCell>
                                     <TableCell>
                                         <Badge className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[ret.status ?? '']?.color}`}>
                                             {STATUS_CONFIG[ret.status ?? '']?.label || ret.status}

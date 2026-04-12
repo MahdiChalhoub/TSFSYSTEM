@@ -134,8 +134,8 @@ export default function ConnectorDashboardPage() {
                             Core Infrastructure
                         </Badge>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Connector Control</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Module communication broker & state management</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Connector Control</h2>
+                    <p className="text-app-muted-foreground mt-2 font-medium">Module communication broker & state management</p>
                 </div>
                 <div className="flex gap-3">
                     <Button
@@ -192,7 +192,7 @@ export default function ConnectorDashboardPage() {
             </div>
 
             {/* Buffer Stats */}
-            <Card className="rounded-3xl shadow-xl border-gray-100">
+            <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                         <Database size={24} className="text-indigo-500" />
@@ -217,17 +217,17 @@ export default function ConnectorDashboardPage() {
                             <div className="text-3xl font-black text-red-600">{dashboard?.buffer_stats.failed || 0}</div>
                             <div className="text-sm text-red-500 font-medium">Failed</div>
                         </div>
-                        <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200">
-                            <AlertTriangle className="text-gray-400 mb-2" size={24} />
-                            <div className="text-3xl font-black text-gray-500">{dashboard?.buffer_stats.expired || 0}</div>
-                            <div className="text-sm text-gray-400 font-medium">Expired</div>
+                        <div className="bg-app-surface p-6 rounded-2xl border border-app-border">
+                            <AlertTriangle className="text-app-muted-foreground mb-2" size={24} />
+                            <div className="text-3xl font-black text-app-muted-foreground">{dashboard?.buffer_stats.expired || 0}</div>
+                            <div className="text-sm text-app-muted-foreground font-medium">Expired</div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Module States Grid */}
-            <Card className="rounded-3xl shadow-xl border-gray-100">
+            <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                         <Activity size={24} className="text-emerald-500" />
@@ -237,7 +237,7 @@ export default function ConnectorDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     {moduleStates.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
+                        <div className="text-center py-12 text-app-muted-foreground">
                             No module states available
                         </div>
                     ) : (
@@ -245,20 +245,20 @@ export default function ConnectorDashboardPage() {
                             {moduleStates.map((mod) => (
                                 <div
                                     key={mod.module_code}
-                                    className="p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all"
+                                    className="p-5 rounded-2xl bg-app-surface border border-app-border hover:border-app-border transition-all"
                                 >
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="font-bold text-gray-900">{mod.module_name}</span>
+                                        <span className="font-bold text-app-foreground">{mod.module_name}</span>
                                         <Badge
                                             className={`${stateColors[mod.state]} text-white border-0 text-[10px] font-bold`}
                                         >
                                             {mod.state.toUpperCase()}
                                         </Badge>
                                     </div>
-                                    <div className="text-xs text-gray-400 font-mono mb-2">{mod.module_code}</div>
+                                    <div className="text-xs text-app-muted-foreground font-mono mb-2">{mod.module_code}</div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-500">Pending buffers:</span>
-                                        <span className={`font-bold ${mod.pending_buffers > 0 ? 'text-amber-500' : 'text-gray-400'}`}>
+                                        <span className="text-app-muted-foreground">Pending buffers:</span>
+                                        <span className={`font-bold ${mod.pending_buffers > 0 ? 'text-amber-500' : 'text-app-muted-foreground'}`}>
                                             {mod.pending_buffers}
                                         </span>
                                     </div>
@@ -272,46 +272,46 @@ export default function ConnectorDashboardPage() {
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link href="/connector/policies">
-                    <Card className="rounded-3xl border-gray-100 hover:border-indigo-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-indigo-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all">
                                 <Settings size={28} />
                             </div>
                             <div className="flex-1">
-                                <div className="font-bold text-gray-900 text-lg">Configure Policies</div>
-                                <div className="text-sm text-gray-500">Set fallback behaviors</div>
+                                <div className="font-bold text-app-foreground text-lg">Configure Policies</div>
+                                <div className="text-sm text-app-muted-foreground">Set fallback behaviors</div>
                             </div>
-                            <ArrowRight className="text-gray-300 group-hover:text-indigo-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-indigo-500 transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
 
                 <Link href="/connector/buffer">
-                    <Card className="rounded-3xl border-gray-100 hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
                                 <Database size={28} />
                             </div>
                             <div className="flex-1">
-                                <div className="font-bold text-gray-900 text-lg">Manage Buffer</div>
-                                <div className="text-sm text-gray-500">View & replay requests</div>
+                                <div className="font-bold text-app-foreground text-lg">Manage Buffer</div>
+                                <div className="text-sm text-app-muted-foreground">View & replay requests</div>
                             </div>
-                            <ArrowRight className="text-gray-300 group-hover:text-amber-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-amber-500 transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
 
                 <Link href="/connector/logs">
-                    <Card className="rounded-3xl border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
+                    <Card className="rounded-3xl border-app-border hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all">
                                 <FileText size={28} />
                             </div>
                             <div className="flex-1">
-                                <div className="font-bold text-gray-900 text-lg">Routing Logs</div>
-                                <div className="text-sm text-gray-500">Audit trail & debugging</div>
+                                <div className="font-bold text-app-foreground text-lg">Routing Logs</div>
+                                <div className="text-sm text-app-muted-foreground">Audit trail & debugging</div>
                             </div>
-                            <ArrowRight className="text-gray-300 group-hover:text-emerald-500 transition-all" />
+                            <ArrowRight className="text-app-faint group-hover:text-emerald-500 transition-all" />
                         </CardContent>
                     </Card>
                 </Link>
@@ -319,10 +319,10 @@ export default function ConnectorDashboardPage() {
 
             {/* Recent Activity */}
             {dashboard?.recent_logs && dashboard.recent_logs.length > 0 && (
-                <Card className="rounded-3xl shadow-xl border-gray-100">
+                <Card className="rounded-3xl shadow-xl border-app-border">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3">
-                            <Shield size={24} className="text-gray-500" />
+                            <Shield size={24} className="text-app-muted-foreground" />
                             Recent Routing Decisions
                         </CardTitle>
                     </CardHeader>
@@ -331,12 +331,12 @@ export default function ConnectorDashboardPage() {
                             {dashboard.recent_logs.slice(0, 5).map((log) => (
                                 <div
                                     key={log.id}
-                                    className="flex items-center justify-between p-4 rounded-xl bg-gray-50 border border-gray-100"
+                                    className="flex items-center justify-between p-4 rounded-xl bg-app-surface border border-app-border"
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={`w-2 h-2 rounded-full ${log.success ? 'bg-emerald-500' : 'bg-red-500'}`} />
                                         <div>
-                                            <span className="font-mono text-sm text-gray-700">
+                                            <span className="font-mono text-sm text-app-foreground">
                                                 {log.source_module} → {log.target_module}
                                             </span>
                                         </div>
@@ -345,7 +345,7 @@ export default function ConnectorDashboardPage() {
                                         <Badge variant="outline" className="font-mono text-xs">
                                             {log.decision}
                                         </Badge>
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-app-muted-foreground">
                                             {new Date(log.created_at).toLocaleTimeString()}
                                         </span>
                                     </div>

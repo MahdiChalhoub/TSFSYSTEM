@@ -216,7 +216,7 @@ export default function LayoutTab({ initialTemplates }: Props) {
                                 </div>
                                 <div className="flex-1 overflow-auto p-4 bg-[#f0f0f0] flex items-start justify-center">
                                     {previewHtml ? (
-                                        <div className="bg-white shadow-lg border" style={{ width: `${Number(form.label_width_mm) * 3.78}px`, minHeight: `${Number(form.label_height_mm) * 3.78}px`, overflow: 'hidden' }}>
+                                        <div className="bg-app-surface shadow-lg border" style={{ width: `${Number(form.label_width_mm) * 3.78}px`, minHeight: `${Number(form.label_height_mm) * 3.78}px`, overflow: 'hidden' }}>
                                             <style dangerouslySetInnerHTML={{ __html: previewCss }} />
                                             <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
                                         </div>

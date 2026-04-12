@@ -40,14 +40,14 @@ const BADGE_CONFIG: Record<string, { label: string; color: string; icon: any }> 
 }
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-    PENDING: { label: 'Pending', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+    PENDING: { label: 'Pending', color: 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface dark:text-app-muted-foreground' },
     SCANNED: { label: 'Scanned', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     RECEIVED: { label: 'Received', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
     PARTIALLY_RECEIVED: { label: 'Partial', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
     REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
     UNDER_REVIEW: { label: 'Under Review', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
     APPROVAL_REQUIRED: { label: 'Needs Approval', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
-    CLOSED: { label: 'Closed', color: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
+    CLOSED: { label: 'Closed', color: 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface dark:text-app-muted-foreground' },
 }
 
 const REJECTION_REASONS = [
@@ -552,7 +552,7 @@ export default function ReceivingScreen() {
                 {/* ── KPI Strip ── */}
                 <section className="grid grid-cols-3 gap-3">
                     {[
-                        { label: 'Pending', value: pendingLines.length, color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-800', icon: Clock },
+                        { label: 'Pending', value: pendingLines.length, color: 'text-app-muted-foreground', bg: 'bg-app-surface-2 dark:bg-app-surface', icon: Clock },
                         { label: 'Received', value: receivedLines.length, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30', icon: PackageCheck },
                         { label: 'Rejected', value: rejectedLines.length, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/30', icon: PackageX },
                     ].map(kpi => (
@@ -626,7 +626,7 @@ export default function ReceivingScreen() {
                             >
                                 {tab}
                                 {count > 0 && (
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30' : 'bg-app-surface-2 text-app-muted-foreground dark:bg-app-surface'
                                         }`}>
                                         {count}
                                     </span>
@@ -874,7 +874,7 @@ function LineCard({
     sessionOpen?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
-    const statusCfg = STATUS_BADGE[line.line_status] || { label: line.line_status, color: 'bg-gray-100 text-gray-500' }
+    const statusCfg = STATUS_BADGE[line.line_status] || { label: line.line_status, color: 'bg-app-surface-2 text-app-muted-foreground' }
 
     const isPending = ['PENDING', 'SCANNED', 'UNDER_REVIEW', 'APPROVAL_REQUIRED'].includes(line.line_status)
     const isReceived = ['RECEIVED', 'PARTIALLY_RECEIVED', 'APPROVED_EXTRA', 'VERIFIED', 'CLOSED'].includes(line.line_status)
@@ -947,7 +947,7 @@ function LineCard({
                         {isReceived && onReset && (
                             <button
                                 onClick={() => onReset(line)}
-                                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg border border-app-border dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <RefreshCw size={12} /> Reset
                             </button>
@@ -965,7 +965,7 @@ function LineCard({
                         {isRejected && onReset && (
                             <button
                                 onClick={() => onReset(line)}
-                                className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
+                                className="px-3 py-2 rounded-lg border border-app-border dark:border-gray-600 text-app-muted-foreground text-xs font-bold hover:bg-app-background transition-colors min-h-[40px] flex items-center gap-1"
                             >
                                 <RefreshCw size={12} /> Reset
                             </button>

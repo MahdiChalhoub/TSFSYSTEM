@@ -23,7 +23,7 @@ const ALL_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Type',
         sortable: true,
         render: (r) => (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-app-surface-2 text-app-foreground">
                 {r.entity_type}
             </span>
         )
@@ -138,12 +138,12 @@ export default function MigrationMappingsPage() {
                             placeholder="Search in source data or IDs..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 h-10 border-app-border bg-white"
+                            className="pl-10 h-10 border-app-border bg-app-surface"
                         />
                     </div>
                     <div className="w-[250px]">
                         <Select value={entityFilter} onValueChange={setEntityFilter}>
-                            <SelectTrigger className="h-10 border-app-border bg-white">
+                            <SelectTrigger className="h-10 border-app-border bg-app-surface">
                                 <SelectValue placeholder="Filter Entity Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -164,7 +164,7 @@ export default function MigrationMappingsPage() {
                     columns={ALL_COLUMNS}
                     visibleColumns={settings.visibleColumns}
                     onToggleColumn={settings.toggleColumn}
-                    className="rounded-[32px] border border-app-border bg-white shadow-xl overflow-hidden"
+                    className="rounded-[32px] border border-app-border bg-app-surface shadow-xl overflow-hidden"
                     pageSize={settings.pageSize}
                     onPageSizeChange={settings.setPageSize}
                     sortKey={settings.sortKey}

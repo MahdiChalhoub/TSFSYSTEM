@@ -32,7 +32,7 @@ interface Quotation {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-700' },
+    DRAFT: { label: 'Draft', color: 'bg-app-surface-2 text-app-foreground' },
     SENT: { label: 'Sent', color: 'bg-blue-100 text-blue-700' },
     ACCEPTED: { label: 'Accepted', color: 'bg-emerald-100 text-emerald-700' },
     REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700' },
@@ -183,7 +183,7 @@ export default function QuotationManager({
                         </button>
                     </div>
                     <div className="relative mt-2">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
                             className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
                             placeholder="Search quotations..."
@@ -194,7 +194,7 @@ export default function QuotationManager({
                 </CardHeader>
                 <CardContent className="space-y-1 max-h-[500px] overflow-y-auto">
                     {filteredQuotations.length === 0 && (
-                        <p className="text-sm text-gray-400 text-center py-8">No quotations yet</p>
+                        <p className="text-sm text-app-muted-foreground text-center py-8">No quotations yet</p>
                     )}
                     {filteredQuotations.map(q => {
                         const cfg = STATUS_CONFIG[q.status] || STATUS_CONFIG.DRAFT
@@ -203,7 +203,7 @@ export default function QuotationManager({
                             <button
                                 key={q.id}
                                 onClick={() => setSelected(q)}
-                                className={`w-full text-left p-3 rounded-xl transition-all ${isActive ? 'bg-emerald-50 border border-emerald-200' : 'hover:bg-gray-50 border border-transparent'
+                                className={`w-full text-left p-3 rounded-xl transition-all ${isActive ? 'bg-emerald-50 border border-emerald-200' : 'hover:bg-app-surface border border-transparent'
                                     }`}
                             >
                                 <div className="flex items-center justify-between">
@@ -212,9 +212,9 @@ export default function QuotationManager({
                                     </span>
                                     <Badge className={`text-[10px] ${cfg.color}`}>{cfg.label}</Badge>
                                 </div>
-                                <div className="flex items-center justify-between mt-1 text-xs text-gray-400">
+                                <div className="flex items-center justify-between mt-1 text-xs text-app-muted-foreground">
                                     <span>{q.contact_name || 'No client'}</span>
-                                    <span className="font-semibold text-gray-600">{fmt(q.total_ttc)}</span>
+                                    <span className="font-semibold text-app-muted-foreground">{fmt(q.total_ttc)}</span>
                                 </div>
                             </button>
                         )
@@ -226,7 +226,7 @@ export default function QuotationManager({
             <div className="lg:col-span-2 space-y-6">
                 {!selected ? (
                     <Card>
-                        <CardContent className="py-16 text-center text-gray-400">
+                        <CardContent className="py-16 text-center text-app-muted-foreground">
                             <FileText size={48} className="mx-auto mb-3 opacity-30" />
                             <p>Select a quotation or create a new one</p>
                         </CardContent>
@@ -239,7 +239,7 @@ export default function QuotationManager({
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h2 className="text-lg font-bold">{selected.reference || `QUO-${selected.id}`}</h2>
-                                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                                        <div className="flex items-center gap-3 text-xs text-app-muted-foreground mt-1">
                                             {selected.contact_name && (
                                                 <span className="flex items-center gap-1"><User size={12} />{selected.contact_name}</span>
                                             )}
@@ -283,7 +283,7 @@ export default function QuotationManager({
                                     )}
                                     {selected.status === 'DRAFT' && (
                                         <button onClick={() => setDeleteTarget(selected.id)} disabled={loading}
-                                            className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 disabled:opacity-40 ml-auto">
+                                            className="flex items-center gap-1.5 px-4 py-2 bg-app-surface-2 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 disabled:opacity-40 ml-auto">
                                             <Trash2 size={14} /> Delete
                                         </button>
                                     )}
@@ -302,19 +302,19 @@ export default function QuotationManager({
                         <div className="grid grid-cols-3 gap-4">
                             <Card>
                                 <CardContent className="py-4 text-center">
-                                    <p className="text-xs text-gray-400 mb-1">Subtotal HT</p>
+                                    <p className="text-xs text-app-muted-foreground mb-1">Subtotal HT</p>
                                     <p className="text-lg font-bold">{fmt(selected.total_ht)}</p>
                                 </CardContent>
                             </Card>
                             <Card>
                                 <CardContent className="py-4 text-center">
-                                    <p className="text-xs text-gray-400 mb-1">Tax</p>
+                                    <p className="text-xs text-app-muted-foreground mb-1">Tax</p>
                                     <p className="text-lg font-bold">{fmt(selected.total_tax)}</p>
                                 </CardContent>
                             </Card>
                             <Card>
                                 <CardContent className="py-4 text-center">
-                                    <p className="text-xs text-gray-400 mb-1">Total TTC</p>
+                                    <p className="text-xs text-app-muted-foreground mb-1">Total TTC</p>
                                     <p className="text-lg font-bold text-emerald-600">{fmt(selected.total_ttc)}</p>
                                 </CardContent>
                             </Card>
@@ -337,14 +337,14 @@ export default function QuotationManager({
                             </CardHeader>
                             <CardContent>
                                 {(!selected.lines || selected.lines.length === 0) ? (
-                                    <p className="text-sm text-gray-400 text-center py-6">No items yet — add products to this quotation</p>
+                                    <p className="text-sm text-app-muted-foreground text-center py-6">No items yet — add products to this quotation</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {selected.lines.map(line => (
-                                            <div key={line.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                                            <div key={line.id} className="flex items-center gap-4 p-3 bg-app-surface rounded-xl">
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-medium truncate">{line.product_name}</p>
-                                                    <p className="text-xs text-gray-400">{line.product_sku} × {line.quantity}</p>
+                                                    <p className="text-xs text-app-muted-foreground">{line.product_sku} × {line.quantity}</p>
                                                 </div>
                                                 <span className="text-sm font-semibold">{fmt(line.total_ttc)}</span>
                                                 {['DRAFT', 'SENT'].includes(selected.status) && (
@@ -368,16 +368,16 @@ export default function QuotationManager({
             {/* Create Modal */}
             {showCreate && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setShowCreate(false)}>
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+                    <div className="bg-app-surface rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold mb-4">New Quotation</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Reference</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-1">Reference</label>
                                 <input className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                     placeholder="e.g. PRO-2026-001" value={newRef} onChange={e => setNewRef(e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Client</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-1">Client</label>
                                 <select className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                     value={newContact || ''} onChange={e => setNewContact(e.target.value ? Number(e.target.value) : null)}>
                                     <option value="">No client</option>
@@ -385,19 +385,19 @@ export default function QuotationManager({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Valid Until</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-1">Valid Until</label>
                                 <input type="date" className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                     value={newValidUntil} onChange={e => setNewValidUntil(e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Notes</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-1">Notes</label>
                                 <textarea className="w-full px-3 py-2 border rounded-lg text-sm resize-none h-20 focus:ring-2 focus:ring-emerald-500 outline-none"
                                     value={newNotes} onChange={e => setNewNotes(e.target.value)} />
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setShowCreate(false)}
-                                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                className="px-4 py-2 text-sm text-app-muted-foreground hover:bg-app-surface-2 rounded-lg">Cancel</button>
                             <button onClick={handleCreate} disabled={loading}
                                 className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
                                 Create
@@ -410,33 +410,33 @@ export default function QuotationManager({
             {/* Add Line Modal */}
             {showAddLine && selected && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center" onClick={() => setShowAddLine(false)}>
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+                    <div className="bg-app-surface rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold mb-4">Add Product Line</h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Product</label>
+                                <label className="block text-sm font-medium text-app-muted-foreground mb-1">Product</label>
                                 <input className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none mb-2"
                                     placeholder="Search products..." value={productSearch}
                                     onChange={e => setProductSearch(e.target.value)} />
                                 <div className="max-h-40 overflow-y-auto border rounded-lg">
                                     {filteredProducts.map(p => (
                                         <button key={p.id} onClick={() => { setLineProductId(p.id); setProductSearch(p.name) }}
-                                            className={`w-full text-left p-2 text-sm hover:bg-gray-50 border-b last:border-0 ${lineProductId === p.id ? 'bg-emerald-50' : ''}`}>
+                                            className={`w-full text-left p-2 text-sm hover:bg-app-surface border-b last:border-0 ${lineProductId === p.id ? 'bg-emerald-50' : ''}`}>
                                             <span className="font-medium">{p.name}</span>
-                                            <span className="text-gray-400 ml-2">{p.sku}</span>
-                                            <span className="float-right text-gray-500">{fmt(p.selling_price_ttc)}</span>
+                                            <span className="text-app-muted-foreground ml-2">{p.sku}</span>
+                                            <span className="float-right text-app-muted-foreground">{fmt(p.selling_price_ttc)}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Quantity</label>
+                                    <label className="block text-sm font-medium text-app-muted-foreground mb-1">Quantity</label>
                                     <input type="number" min={1} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                         value={lineQty} onChange={e => setLineQty(Number(e.target.value))} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Discount</label>
+                                    <label className="block text-sm font-medium text-app-muted-foreground mb-1">Discount</label>
                                     <input type="number" min={0} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                         value={lineDiscount} onChange={e => setLineDiscount(Number(e.target.value))} />
                                 </div>
@@ -444,7 +444,7 @@ export default function QuotationManager({
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setShowAddLine(false)}
-                                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                                className="px-4 py-2 text-sm text-app-muted-foreground hover:bg-app-surface-2 rounded-lg">Cancel</button>
                             <button onClick={handleAddLine} disabled={loading || !lineProductId}
                                 className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-40">
                                 Add to Quotation

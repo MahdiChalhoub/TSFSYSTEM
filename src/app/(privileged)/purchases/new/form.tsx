@@ -197,31 +197,31 @@ export default function PurchaseForm({
             {/* 1. Header Configuration */}
             <div className="grid lg:grid-cols-5 gap-4">
                 {/* 1.1 Mode Settings */}
-                <div className="card p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Invoice Mode</label>
-                    <div className="flex p-1 bg-gray-100 rounded-lg h-9">
-                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500'}`}>OFFICIAL</button>
-                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500'}`}>INTERNAL</button>
+                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
+                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Invoice Mode</label>
+                    <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
+                        <button type="button" onClick={() => setScope('OFFICIAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'OFFICIAL' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>OFFICIAL</button>
+                        <button type="button" onClick={() => setScope('INTERNAL')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${scope === 'INTERNAL' ? 'bg-emerald-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>INTERNAL</button>
                     </div>
                     <input type="hidden" name="scope" value={scope} />
                 </div>
 
                 {/* 1.2 Cost Engine Settings */}
-                <div className="card p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3">
+                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col gap-3">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
-                            <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Price Type</label>
-                            <div className="flex p-1 bg-gray-100 rounded-lg h-9">
-                                <button type="button" onClick={() => setInvoicePriceType('HT')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'HT' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>HT</button>
-                                <button type="button" onClick={() => setInvoicePriceType('TTC')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'TTC' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>TTC</button>
+                            <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Price Type</label>
+                            <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
+                                <button type="button" onClick={() => setInvoicePriceType('HT')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'HT' ? 'bg-app-surface text-blue-600 shadow-sm' : 'text-app-muted-foreground'}`}>HT</button>
+                                <button type="button" onClick={() => setInvoicePriceType('TTC')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${invoicePriceType === 'TTC' ? 'bg-app-surface text-blue-600 shadow-sm' : 'text-app-muted-foreground'}`}>TTC</button>
                             </div>
                             <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
                         </div>
                         <div>
-                            <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Recoverable?</label>
-                            <div className="flex p-1 bg-gray-100 rounded-lg h-9">
-                                <button type="button" onClick={() => setVatRecoverable(true)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${vatRecoverable ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500'}`}>YES</button>
-                                <button type="button" onClick={() => setVatRecoverable(false)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${!vatRecoverable ? 'bg-white text-rose-600 shadow-sm' : 'text-gray-500'}`}>NO</button>
+                            <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Recoverable?</label>
+                            <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
+                                <button type="button" onClick={() => setVatRecoverable(true)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${vatRecoverable ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>YES</button>
+                                <button type="button" onClick={() => setVatRecoverable(false)} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${!vatRecoverable ? 'bg-app-surface text-rose-600 shadow-sm' : 'text-app-muted-foreground'}`}>NO</button>
                             </div>
                             <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
                         </div>
@@ -229,19 +229,19 @@ export default function PurchaseForm({
                 </div>
 
                 {/* 1.3 Profit Metric */}
-                <div className="card p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Profit Metric</label>
-                    <div className="flex p-1 bg-gray-100 rounded-lg h-9">
-                        <button type="button" onClick={() => setProfitMode('MARGIN')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARGIN' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500'}`}>Margin %</button>
-                        <button type="button" onClick={() => setProfitMode('MARKUP')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARKUP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500'}`}>Markup %</button>
+                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
+                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Profit Metric</label>
+                    <div className="flex p-1 bg-app-surface-2 rounded-lg h-9">
+                        <button type="button" onClick={() => setProfitMode('MARGIN')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARGIN' ? 'bg-app-surface text-emerald-600 shadow-sm' : 'text-app-muted-foreground'}`}>Margin %</button>
+                        <button type="button" onClick={() => setProfitMode('MARKUP')} className={`flex-1 rounded-md text-[10px] font-bold transition-all ${profitMode === 'MARKUP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-app-muted-foreground'}`}>Markup %</button>
                     </div>
                 </div>
 
                 {/* 1.4 Site & Warehouse */}
-                <div className="card p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center">Site & Warehouse</label>
+                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
+                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1 text-center">Site & Warehouse</label>
                     <div className="flex gap-2">
-                        <select className="flex-1 bg-transparent text-[10px] font-bold text-gray-900 border-none p-0 focus:ring-0" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
+                        <select className="flex-1 bg-transparent text-[10px] font-bold text-app-foreground border-none p-0 focus:ring-0" value={selectedSiteId} onChange={(e) => setSelectedSiteId(Number(e.target.value))} name="siteId" required>
                             <option value="">Site...</option>
                             {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
@@ -253,9 +253,9 @@ export default function PurchaseForm({
                 </div>
 
                 {/* 1.5 Supplier Selection */}
-                <div className="card p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Supplier</label>
-                    <select className="w-full bg-transparent text-[10px] font-bold text-gray-900 border-none p-0 focus:ring-0" name="supplierId" required>
+                <div className="card p-4 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col justify-center">
+                    <label className="block text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider mb-1">Supplier</label>
+                    <select className="w-full bg-transparent text-[10px] font-bold text-app-foreground border-none p-0 focus:ring-0" name="supplierId" required>
                         <option value="">Choose Supplier...</option>
                         {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
@@ -263,10 +263,10 @@ export default function PurchaseForm({
             </div>
 
             {/* 2. Product Search & Intelligent Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-4 bg-gray-50 border-b flex items-center gap-4">
+            <div className="bg-app-surface rounded-2xl shadow-sm border border-app-border overflow-hidden">
+                <div className="p-4 bg-app-surface border-b flex items-center gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
                         <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
                     </div>
                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
@@ -276,7 +276,7 @@ export default function PurchaseForm({
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-xs text-left border-collapse">
-                        <thead className="bg-[#F8FAFC] text-gray-400 font-bold uppercase tracking-widest border-b border-gray-100">
+                        <thead className="bg-[#F8FAFC] text-app-muted-foreground font-bold uppercase tracking-widest border-b border-app-border">
                             <tr>
                                 <th className="p-4 min-w-[200px]">Product / Barcode</th>
                                 <th className="p-2 text-center">Stock</th>
@@ -295,7 +295,7 @@ export default function PurchaseForm({
                             {lines.length === 0 && (
                                 <tr>
                                     <td colSpan={12} className="p-12 text-center">
-                                        <div className="flex flex-col items-center gap-3 text-gray-400">
+                                        <div className="flex flex-col items-center gap-3 text-app-muted-foreground">
                                             <ShoppingCartSkeleton />
                                             <p className="font-medium">No products selected. Search above to begin.</p>
                                         </div>
@@ -303,14 +303,14 @@ export default function PurchaseForm({
                                 </tr>
                             )}
                             {lines.map((line, idx) => (
-                                <tr key={line.productId} className="group hover:bg-gray-50/80 transition-colors">
+                                <tr key={line.productId} className="group hover:bg-app-surface/80 transition-colors">
                                     <td className="p-4">
-                                        <div className="font-bold text-gray-900 mb-1">{line.productName}</div>
-                                        <div className="text-[10px] text-gray-400 font-mono tracking-tighter">{line.barcode || 'NO_BARCODE'}</div>
+                                        <div className="font-bold text-app-foreground mb-1">{line.productName}</div>
+                                        <div className="text-[10px] text-app-muted-foreground font-mono tracking-tighter">{line.barcode || 'NO_BARCODE'}</div>
                                         <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
                                         <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
                                     </td>
-                                    <td className="p-2 text-center font-bold text-gray-600">
+                                    <td className="p-2 text-center font-bold text-app-muted-foreground">
                                         {line.stockLevel}
                                     </td>
                                     <td className="p-2 text-center font-black text-emerald-600 bg-emerald-50/20">
@@ -319,7 +319,7 @@ export default function PurchaseForm({
                                     <td className="p-2">
                                         <input
                                             type="number"
-                                            className="w-full bg-white border border-gray-200 rounded-lg p-2 text-center font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                            className="w-full bg-app-surface border border-app-border rounded-lg p-2 text-center font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
                                             value={line.quantity}
                                             onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
                                             name={`lines[${idx}][quantity]`}
@@ -328,20 +328,20 @@ export default function PurchaseForm({
                                     <td className="p-2 bg-blue-50/10">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-gray-400 font-bold w-6">HT</span>
+                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">HT</span>
                                                 <input
                                                     type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'HT' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-gray-100'}`}
+                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'HT' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-app-border'}`}
                                                     value={line.unitCostHT}
                                                     onChange={(e) => updateLine(idx, { unitCostHT: Number(e.target.value) })}
                                                     name={`lines[${idx}][unitCostHT]`}
                                                 />
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-gray-400 font-bold w-6">TTC</span>
+                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">TTC</span>
                                                 <input
                                                     type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'TTC' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-gray-100'}`}
+                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${invoicePriceType === 'TTC' ? 'border-blue-200 bg-blue-50 font-bold' : 'border-app-border'}`}
                                                     value={line.unitCostTTC}
                                                     onChange={(e) => updateLine(idx, { unitCostTTC: Number(e.target.value) })}
                                                     name={`lines[${idx}][unitCostTTC]`}
@@ -356,20 +356,20 @@ export default function PurchaseForm({
                                     <td className="p-2 bg-purple-50/10">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-gray-400 font-bold w-6">HT</span>
+                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">HT</span>
                                                 <input
                                                     type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${!worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-gray-100'}`}
+                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${!worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-app-border'}`}
                                                     value={line.sellingPriceHT}
                                                     onChange={(e) => updateLine(idx, { sellingPriceHT: Number(e.target.value) })}
                                                     name={`lines[${idx}][sellingPriceHT]`}
                                                 />
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className="text-[9px] text-gray-400 font-bold w-6">TTC</span>
+                                                <span className="text-[9px] text-app-muted-foreground font-bold w-6">TTC</span>
                                                 <input
                                                     type="number" step="0.01"
-                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-gray-100'}`}
+                                                    className={`flex-1 bg-transparent p-1 text-[10px] border rounded ${worksInTTC ? 'border-purple-200 bg-purple-50 font-bold' : 'border-app-border'}`}
                                                     value={line.sellingPriceTTC}
                                                     onChange={(e) => updateLine(idx, { sellingPriceTTC: Number(e.target.value) })}
                                                     name={`lines[${idx}][sellingPriceTTC]`}
@@ -385,7 +385,7 @@ export default function PurchaseForm({
                                                     <div className={`text-[11px] font-black ${margin < 15 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                                         {margin.toFixed(1)}% <span className="text-[8px] opacity-60 font-bold ml-0.5">MARG</span>
                                                     </div>
-                                                    <div className="text-[10px] font-bold text-gray-400">
+                                                    <div className="text-[10px] font-bold text-app-muted-foreground">
                                                         {markup.toFixed(1)}% <span className="text-[8px] opacity-50 font-normal ml-0.5">MARK</span>
                                                     </div>
                                                 </div>
@@ -393,26 +393,26 @@ export default function PurchaseForm({
                                         })()}
                                     </td>
                                     <td className="p-2 text-center text-[10px] space-y-1">
-                                        <div className="text-gray-400">Target: <span className="text-gray-900 font-bold">$0.00</span></div>
-                                        <div className="text-gray-400">Last: <span className="text-gray-900 font-bold">${line.lastPrice || 'N/A'}</span></div>
+                                        <div className="text-app-muted-foreground">Target: <span className="text-app-foreground font-bold">$0.00</span></div>
+                                        <div className="text-app-muted-foreground">Last: <span className="text-app-foreground font-bold">${line.lastPrice || 'N/A'}</span></div>
                                     </td>
                                     <td className="p-2">
                                         <input
                                             type="date"
-                                            className="w-full text-[10px] bg-transparent border border-gray-100 p-1.5 rounded focus:border-rose-300 outline-none"
+                                            className="w-full text-[10px] bg-transparent border border-app-border p-1.5 rounded focus:border-rose-300 outline-none"
                                             value={line.expiryDate}
                                             onChange={(e) => updateLine(idx, { expiryDate: e.target.value })}
                                             name={`lines[${idx}][expiryDate]`}
                                         />
                                     </td>
-                                    <td className="p-2 text-right font-black text-gray-900">
+                                    <td className="p-2 text-right font-black text-app-foreground">
                                         ${(line.quantity * (invoicePriceType === 'TTC' ? line.unitCostTTC : line.unitCostHT)).toFixed(2)}
                                     </td>
                                     <td className="p-2 text-center">
                                         <button
                                             type="button"
                                             onClick={() => removeLine(idx)}
-                                            className="p-1.5 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                            className="p-1.5 text-app-faint hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -427,30 +427,30 @@ export default function PurchaseForm({
             {/* 3. Totals & Submission */}
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="flex-1 space-y-2 max-w-md">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Internal Notes / Observations</label>
+                    <label className="block text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Internal Notes / Observations</label>
                     <textarea
                         name="notes"
                         rows={3}
-                        className="w-full border border-gray-100 rounded-xl p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all resize-none"
+                        className="w-full border border-app-border rounded-xl p-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition-all resize-none"
                         placeholder="Add specific instructions for this replenishment..."
                     />
                 </div>
 
-                <div className="w-full md:w-96 bg-gray-900 text-white rounded-3xl p-6 shadow-2xl shadow-gray-200">
+                <div className="w-full md:w-96 bg-app-bg text-white rounded-3xl p-6 shadow-2xl shadow-gray-200">
                     <div className="space-y-4 mb-6">
-                        <div className="flex justify-between items-center text-gray-400 text-sm">
+                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
                             <span>Total Items</span>
                             <span className="font-bold text-white">{lines.length}</span>
                         </div>
-                        <div className="flex justify-between items-center text-gray-400 text-sm">
+                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
                             <span>Subtotal (Net)</span>
                             <span className="font-bold text-white">${totals.subtotal.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-gray-400 text-sm">
+                        <div className="flex justify-between items-center text-app-muted-foreground text-sm">
                             <span>Tax Breakdown</span>
                             <span className="font-bold text-white">${totals.tax.toFixed(2)}</span>
                         </div>
-                        <div className="h-px bg-gray-800 my-2" />
+                        <div className="h-px bg-app-surface my-2" />
                         <div className="flex justify-between items-center">
                             <span className="text-xl font-bold">Total Amount</span>
                             <span className="text-3xl font-black text-emerald-400">${totals.total.toFixed(2)}</span>
@@ -460,11 +460,11 @@ export default function PurchaseForm({
                     <button
                         type="submit"
                         disabled={isPending || lines.length === 0}
-                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-gray-900 font-extrabold py-4 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
+                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-app-foreground font-extrabold py-4 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed group"
                     >
                         <div className="flex items-center justify-center gap-3">
                             {isPending ? 'VALIDATING ACCOUNTING...' : 'CONFIRM & POST REPLENISHMENT'}
-                            <div className="p-1 bg-white/20 rounded group-hover:bg-white/40 transition-colors">
+                            <div className="p-1 bg-app-surface/20 rounded group-hover:bg-app-surface/40 transition-colors">
                                 <Plus size={16} />
                             </div>
                         </div>
@@ -517,14 +517,14 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
         <div className="relative">
             <input
                 type="text"
-                className="w-full bg-transparent p-1 pl-1 text-sm font-bold text-gray-900 placeholder:text-gray-400 outline-none"
+                className="w-full bg-transparent p-1 pl-1 text-sm font-bold text-app-foreground placeholder:text-app-muted-foreground outline-none"
                 placeholder="Type name, SKU or scan barcode..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => query.length > 1 && setOpen(true)}
             />
             {open && results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-app-surface rounded-xl shadow-2xl border border-app-border z-50 overflow-hidden">
                     {results.map(r => (
                         <button
                             key={r.id}
@@ -537,11 +537,11 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                             className="w-full p-3 text-left hover:bg-emerald-50 flex items-center justify-between group transition-all"
                         >
                             <div>
-                                <div className="font-bold text-sm text-gray-900 group-hover:text-emerald-700">{r.name}</div>
-                                <div className="text-[10px] text-gray-400">{r.sku} ΓÇó Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm text-app-foreground group-hover:text-emerald-700">{r.name}</div>
+                                <div className="text-[10px] text-app-muted-foreground">{r.sku} ΓÇó Stock: {r.stockLevel}</div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs font-bold text-gray-700">${r.costPriceHT} HT</div>
+                                <div className="text-xs font-bold text-app-foreground">${r.costPriceHT} HT</div>
                                 <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{r.proposedQty}</div>
                             </div>
                         </button>
@@ -554,9 +554,9 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
 
 function ShoppingCartSkeleton() {
     return (
-        <div className="relative w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center">
+        <div className="relative w-16 h-16 bg-app-surface rounded-2xl flex items-center justify-center">
             <LayoutGrid className="text-gray-200" size={32} />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-100 rounded-full animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-app-surface-2 rounded-full animate-pulse" />
         </div>
     );
 }

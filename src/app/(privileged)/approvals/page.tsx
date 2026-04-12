@@ -137,7 +137,7 @@ const TYPE_CONFIG = {
 const PRIORITY_CONFIG = {
   HIGH: { label: 'High', color: 'bg-red-100 text-red-700 border-red-200' },
   MEDIUM: { label: 'Medium', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  LOW: { label: 'Low', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+  LOW: { label: 'Low', color: 'bg-app-surface-2 text-app-foreground border-app-border' },
 }
 
 // ─── Component ──────────────────────────────────────────────────────

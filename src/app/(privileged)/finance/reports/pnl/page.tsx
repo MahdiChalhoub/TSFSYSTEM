@@ -19,8 +19,8 @@ export default async function ProfitAndLossPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold text-stone-900 font-serif mb-2">Profit & Loss Statement</h1>
-                <p className="text-stone-500 text-sm uppercase tracking-widest font-bold">Income & Expenditure Report</p>
+                <h1 className="text-4xl font-bold text-app-foreground font-serif mb-2">Profit & Loss Statement</h1>
+                <p className="text-app-muted-foreground text-sm uppercase tracking-widest font-bold">Income & Expenditure Report</p>
             </div>
 
             <PnlViewer initialData={JSON.parse(JSON.stringify(initialData))} fiscalYears={JSON.parse(JSON.stringify(fiscalYears))} />

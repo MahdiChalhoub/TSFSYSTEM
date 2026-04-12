@@ -35,7 +35,7 @@ export default async function AccountStatementPage({
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
-            <Link href="/finance/chart-of-accounts" className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-900 mb-6 font-medium text-sm">
+            <Link href="/finance/chart-of-accounts" className="inline-flex items-center gap-2 text-app-muted-foreground hover:text-app-foreground mb-6 font-medium text-sm">
                 <ArrowLeft size={16} /> Back to Chart of Accounts
             </Link>
 

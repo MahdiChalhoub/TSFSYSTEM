@@ -142,8 +142,8 @@ export default function ProfitDistributionPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Profit Distribution</h1>
-                    <p className="text-stone-500 font-medium mt-1">Year-end profit allocation across equity wallets</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Profit Distribution</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Year-end profit allocation across equity wallets</p>
                 </div>
                 <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>
                     <DialogTrigger asChild>
@@ -159,13 +159,13 @@ export default function ProfitDistributionPage() {
 
                         {/* Step Indicator */}
                         <div className="flex items-center gap-2 py-2">
-                            <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-stone-900" : "text-stone-300"}`}>
-                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-stone-100 text-stone-400"}`}>1</span>
+                            <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-app-foreground" : "text-app-faint"}`}>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>1</span>
                                 <span className="text-sm font-semibold">Configure</span>
                             </div>
-                            <ChevronRight size={16} className="text-stone-300" />
-                            <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-stone-900" : "text-stone-300"}`}>
-                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-stone-100 text-stone-400"}`}>2</span>
+                            <ChevronRight size={16} className="text-app-faint" />
+                            <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-app-foreground" : "text-app-faint"}`}>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-app-surface-2 text-app-muted-foreground"}`}>2</span>
                                 <span className="text-sm font-semibold">Preview</span>
                             </div>
                         </div>
@@ -174,7 +174,7 @@ export default function ProfitDistributionPage() {
                         {wizardStep === 1 && (
                             <div className="space-y-5 pt-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-stone-500 uppercase">Fiscal Year *</label>
+                                    <label className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year *</label>
                                     <select
                                         value={selectedFY || ""}
                                         onChange={e => setSelectedFY(Number(e.target.value))}
@@ -192,7 +192,7 @@ export default function ProfitDistributionPage() {
 
                                 <div>
                                     <div className="flex justify-between items-center mb-3">
-                                        <label className="text-xs font-bold text-stone-500 uppercase">Allocation Wallets</label>
+                                        <label className="text-xs font-bold text-app-muted-foreground uppercase">Allocation Wallets</label>
                                         <button type="button" onClick={addWallet} className="text-xs text-primary hover:underline font-semibold flex items-center gap-1">
                                             <Plus size={12} /> Add Wallet
                                         </button>
@@ -201,7 +201,7 @@ export default function ProfitDistributionPage() {
                                         {Object.entries(allocations).map(([key, pct], idx) => (
                                             <div key={key} className="flex items-center gap-3">
                                                 <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
-                                                <span className="text-sm font-bold text-stone-700 w-32">{key}</span>
+                                                <span className="text-sm font-bold text-app-foreground w-32">{key}</span>
                                                 <Input
                                                     type="number"
                                                     min="0"
@@ -211,12 +211,12 @@ export default function ProfitDistributionPage() {
                                                     onChange={e => updateAllocation(key, Number(e.target.value))}
                                                     className="w-20 rounded-xl text-right text-sm h-9"
                                                 />
-                                                <span className="text-sm text-stone-400">%</span>
-                                                <div className="flex-1 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                                <span className="text-sm text-app-muted-foreground">%</span>
+                                                <div className="flex-1 h-2.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                     <div className={`h-full rounded-full bg-gradient-to-r ${walletColors[idx % walletColors.length]} transition-all`} style={{ width: `${pct}%` }} />
                                                 </div>
                                                 {Object.keys(allocations).length > 1 && (
-                                                    <button type="button" onClick={() => removeWallet(key)} className="text-stone-300 hover:text-rose-500 transition-colors">
+                                                    <button type="button" onClick={() => removeWallet(key)} className="text-app-faint hover:text-rose-500 transition-colors">
                                                         <Trash2 size={14} />
                                                     </button>
                                                 )}
@@ -245,21 +245,21 @@ export default function ProfitDistributionPage() {
                         {wizardStep === 2 && preview && (
                             <div className="space-y-5 pt-2">
                                 <div className="bg-gradient-to-br from-stone-50 to-emerald-50/30 rounded-2xl p-5 border">
-                                    <p className="text-xs font-bold text-stone-400 uppercase">Fiscal Year</p>
-                                    <p className="text-lg font-bold text-stone-800">{preview.fiscal_year}</p>
-                                    <p className="text-xs font-bold text-stone-400 uppercase mt-3">Net Profit</p>
+                                    <p className="text-xs font-bold text-app-muted-foreground uppercase">Fiscal Year</p>
+                                    <p className="text-lg font-bold text-app-foreground">{preview.fiscal_year}</p>
+                                    <p className="text-xs font-bold text-app-muted-foreground uppercase mt-3">Net Profit</p>
                                     <p className="text-4xl font-bold text-emerald-600">{Number(preview.net_profit).toLocaleString()}</p>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-stone-500 uppercase">Allocation Breakdown</label>
+                                    <label className="text-xs font-bold text-app-muted-foreground uppercase">Allocation Breakdown</label>
                                     {Object.entries(preview.allocations).map(([wallet, amount]: Record<string, any>, idx: number) => (
-                                        <div key={wallet} className="flex justify-between items-center p-3 bg-white border rounded-xl">
+                                        <div key={wallet} className="flex justify-between items-center p-3 bg-app-surface border rounded-xl">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
-                                                <span className="font-semibold text-stone-700">{wallet}</span>
+                                                <span className="font-semibold text-app-foreground">{wallet}</span>
                                             </div>
-                                            <span className="font-bold text-stone-900">{Number(amount).toLocaleString()}</span>
+                                            <span className="font-bold text-app-foreground">{Number(amount).toLocaleString()}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -282,11 +282,11 @@ export default function ProfitDistributionPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Distributions</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{distributions.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total Distributions</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{distributions.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <PieChart size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <PieChart size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -321,18 +321,18 @@ export default function ProfitDistributionPage() {
 
             {/* Distribution History Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b bg-stone-50/50">
-                    <h2 className="font-semibold text-stone-800 flex items-center gap-2"><Calendar size={16} /> Distribution History</h2>
+                <div className="px-5 py-3 border-b bg-app-surface/50">
+                    <h2 className="font-semibold text-app-foreground flex items-center gap-2"><Calendar size={16} /> Distribution History</h2>
                 </div>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Fiscal Year</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Date</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Net Profit</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Allocations</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Fiscal Year</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Date</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Net Profit</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Allocations</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -340,14 +340,14 @@ export default function ProfitDistributionPage() {
                             const sc = statusConfig[d.status] || statusConfig.DRAFT
                             const StatusIcon = sc.icon
                             return (
-                                <TableRow key={d.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-semibold text-stone-800">{d.fiscal_year_name || `FY #${d.fiscal_year}`}</TableCell>
-                                    <TableCell className="text-sm text-stone-500">{d.distribution_date}</TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(d.net_profit).toLocaleString()}</TableCell>
+                                <TableRow key={d.id} className="hover:bg-app-surface/50 transition-colors">
+                                    <TableCell className="font-semibold text-app-foreground">{d.fiscal_year_name || `FY #${d.fiscal_year}`}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground">{d.distribution_date}</TableCell>
+                                    <TableCell className="text-right font-semibold text-app-foreground">{Number(d.net_profit).toLocaleString()}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1.5">
                                             {d.allocations && Object.entries(d.allocations).map(([k, v]: Record<string, any>, idx: number) => (
-                                                <Badge key={k} variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600 gap-1">
+                                                <Badge key={k} variant="outline" className="rounded-lg text-[11px] border-app-border text-app-muted-foreground gap-1">
                                                     <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
                                                     {k}: {Number(v).toLocaleString()}
                                                 </Badge>
@@ -379,12 +379,12 @@ export default function ProfitDistributionPage() {
                             <TableRow>
                                 <TableCell colSpan={6} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <PieChart size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <PieChart size={28} className="text-app-faint" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-stone-600">No distributions yet</p>
-                                            <p className="text-sm text-stone-400 mt-1">Close a fiscal year and create your first distribution</p>
+                                            <p className="font-semibold text-app-muted-foreground">No distributions yet</p>
+                                            <p className="text-sm text-app-muted-foreground mt-1">Close a fiscal year and create your first distribution</p>
                                         </div>
                                         <Button variant="outline" onClick={() => setWizardOpen(true)} className="rounded-xl gap-2 mt-2">
                                             <Plus size={14} /> New Distribution

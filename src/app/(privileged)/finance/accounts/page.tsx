@@ -167,7 +167,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                         )}
                     </div>
                     {isConfigured && (
-                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-600 border-emerald-200 shrink-0">System Managed</Badge>
+                        <Badge variant="outline" className="text-[10px] bg-app-surface text-emerald-600 border-emerald-200 shrink-0">System Managed</Badge>
                     )}
                 </div>
 
@@ -189,9 +189,9 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                     </div>
                 )}
                 {/* POS Access Toggle */}
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-app-surface border">
                     <div className="flex items-center gap-2">
-                        <Monitor className="h-4 w-4 text-slate-500" />
+                        <Monitor className="h-4 w-4 text-app-muted-foreground" />
                         <span className="text-xs font-medium">POS Access</span>
                     </div>
                     <button
@@ -205,7 +205,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${account.is_pos_enabled ? 'bg-emerald-500' : 'bg-slate-300'
                             }`}
                     >
-                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${account.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'
+                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-app-surface transition-transform ${account.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'
                             }`} />
                     </button>
                 </div>
@@ -231,7 +231,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                                 </Badge>
                             ))
                         ) : (
-                            <span className="text-sm text-gray-400 italic">No active users</span>
+                            <span className="text-sm text-app-muted-foreground italic">No active users</span>
                         )}
                     </div>
                 </div>

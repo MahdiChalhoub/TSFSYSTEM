@@ -99,12 +99,12 @@ export default function SaasHomeClient({ stats }: Props) {
                 <div className="flex items-center gap-6">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center shadow-2xl relative group overflow-hidden" style={grad('--app-success')}>
                         <ShieldCheck size={36} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-app-surface/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white" style={grad('--app-success')}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Platform Active
+                                <div className="w-1.5 h-1.5 rounded-full bg-app-surface animate-pulse" /> Platform Active
                             </span>
                             <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest flex items-center gap-2">
                                 <Monitor size={14} className="text-app-primary" /> v{PLATFORM_CONFIG.version.split('-')[0]} Stable

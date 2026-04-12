@@ -48,7 +48,7 @@ export default async function WiseRulesPage() {
 
                 <div className="flex gap-3">
                     <form action={handleRecalculate}>
-                        <button type="submit" className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 border border-app-border text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">
+                        <button type="submit" className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-app-surface/5 border border-app-border text-xs font-black uppercase tracking-widest hover:bg-app-surface/10 transition-all active:scale-95">
                             <RefreshCw size={14} className="text-app-primary" />
                             Bulk Recalculate
                         </button>
@@ -92,7 +92,7 @@ export default async function WiseRulesPage() {
                                     }, {})
                                 ).map(([mod, count]: [string, any]) => (
                                     <div key={mod} className="flex justify-between items-center group cursor-default">
-                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${MODULE_COLORS[mod] || 'bg-white/5 text-white/40'}`}>
+                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${MODULE_COLORS[mod] || 'bg-app-surface/5 text-white/40'}`}>
                                             {mod}
                                         </span>
                                         <span className="text-[10px] font-bold opacity-30 group-hover:opacity-100 transition-opacity italic">{count}</span>
@@ -106,14 +106,14 @@ export default async function WiseRulesPage() {
                 {/* Main Rule List */}
                 <div className="lg:col-span-3 space-y-4">
                     <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <div className="p-8 border-b border-app-border bg-white/5 flex items-center justify-between">
+                        <div className="p-8 border-b border-app-border bg-app-surface/5 flex items-center justify-between">
                             <h2 className="text-xl font-black italic flex items-center gap-3">
                                 <Layers size={20} className="text-app-primary" /> Active Rule Registry
                             </h2>
                         </div>
                         <div className="divide-y divide-app-border">
                             {ruleList.map((rule: any) => (
-                                <div key={rule.id} className={`p-6 flex items-center gap-6 hover:bg-white/[0.02] transition-colors ${!rule.is_active && 'opacity-30'}`}>
+                                <div key={rule.id} className={`p-6 flex items-center gap-6 hover:bg-app-surface/[0.02] transition-colors ${!rule.is_active && 'opacity-30'}`}>
                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 ${rule.direction === 'POSITIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
                                         }`}>
                                         {rule.direction === 'POSITIVE' ? '+' : '−'}
@@ -122,14 +122,14 @@ export default async function WiseRulesPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3">
                                             <span className="font-bold text-lg">{rule.name}</span>
-                                            <span className="text-[9px] font-black opacity-20 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-tighter tabular-nums">ID:{rule.id}</span>
+                                            <span className="text-[9px] font-black opacity-20 bg-app-surface/5 px-1.5 py-0.5 rounded uppercase tracking-tighter tabular-nums">ID:{rule.id}</span>
                                         </div>
                                         <div className="flex gap-2 mt-1.5 flex-wrap">
-                                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${MODULE_COLORS[rule.module] || 'bg-white/5 text-white/40'}`}>
+                                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${MODULE_COLORS[rule.module] || 'bg-app-surface/5 text-white/40'}`}>
                                                 {rule.module}
                                             </span>
                                             <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest">{rule.dimension?.replace(/_/g, ' ')}</span>
-                                            {rule.daily_cap && <span className="text-[9px] font-bold opacity-30 uppercase bg-white/5 px-2 py-0.5 rounded">Cap: {rule.daily_cap}/day</span>}
+                                            {rule.daily_cap && <span className="text-[9px] font-bold opacity-30 uppercase bg-app-surface/5 px-2 py-0.5 rounded">Cap: {rule.daily_cap}/day</span>}
                                             {rule.is_critical_rule && <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500 text-white animate-pulse">Critical</span>}
                                         </div>
                                     </div>

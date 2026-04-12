@@ -36,7 +36,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record
 }
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-    LOW: { label: 'Low', color: 'text-slate-500' },
+    LOW: { label: 'Low', color: 'text-app-muted-foreground' },
     NORMAL: { label: 'Normal', color: 'text-blue-600' },
     HIGH: { label: 'High', color: 'text-orange-600' },
     URGENT: { label: 'Urgent', color: 'text-red-600' },
@@ -211,14 +211,14 @@ export default function OperationalRequestsPage() {
 
             {/* ─── Summary Cards ──────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100/50 border-slate-200/60">
+                <Card className="bg-gradient-to-br from-slate-50 to-slate-100/50 border-app-border/60">
                     <CardContent className="pt-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-medium text-slate-600/80 uppercase tracking-wider">Total Requests</p>
-                                <p className="text-2xl font-bold text-slate-900 mt-1">{totalRequests}</p>
+                                <p className="text-xs font-medium text-app-muted-foreground/80 uppercase tracking-wider">Total Requests</p>
+                                <p className="text-2xl font-bold text-app-foreground mt-1">{totalRequests}</p>
                             </div>
-                            <div className="bg-slate-200/60 rounded-lg p-2.5"><Inbox className="h-5 w-5 text-slate-700" /></div>
+                            <div className="bg-slate-200/60 rounded-lg p-2.5"><Inbox className="h-5 w-5 text-app-foreground" /></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -300,7 +300,7 @@ export default function OperationalRequestsPage() {
                             <TableBody>
                                 {filtered.map(req => {
                                     const isExpanded = expandedRequest === req.id
-                                    const typeCfg = TYPE_CONFIG[req.request_type] || { label: req.request_type, icon: FileQuestion, color: 'bg-gray-100 text-gray-700' }
+                                    const typeCfg = TYPE_CONFIG[req.request_type] || { label: req.request_type, icon: FileQuestion, color: 'bg-app-surface-2 text-app-foreground' }
                                     const statusCfg = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING
                                     const StatusIcon = statusCfg.icon
                                     const TypeIcon = typeCfg.icon

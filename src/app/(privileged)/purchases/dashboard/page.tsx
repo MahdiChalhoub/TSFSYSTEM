@@ -22,7 +22,7 @@ const STATUS_COLOR: Record<string, string> = {
     CONFIRMED: 'bg-blue-100 text-blue-700',
     COMPLETED: 'bg-green-100 text-green-700',
     CANCELLED: 'bg-red-100 text-red-700',
-    DRAFT: 'bg-gray-100 text-gray-500',
+    DRAFT: 'bg-app-surface-2 text-app-muted-foreground',
 }
 
 export default function PurchaseDashboardPage() {
@@ -82,16 +82,16 @@ export default function PurchaseDashboardPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center">
                             <Truck size={20} className="text-white" />
                         </div>
                         Purchase Orders
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Track and monitor supplier purchase orders</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Track and monitor supplier purchase orders</p>
                 </div>
                 <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search orders..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -103,9 +103,9 @@ export default function PurchaseDashboardPage() {
                         <div className="flex items-center gap-3">
                             <Package size={24} className="text-orange-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Orders</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Orders</p>
                                 <p className="text-2xl font-bold">{orders.length}</p>
-                                <p className="text-xs text-gray-400">{fmt(totalValue)}</p>
+                                <p className="text-xs text-app-muted-foreground">{fmt(totalValue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -115,9 +115,9 @@ export default function PurchaseDashboardPage() {
                         <div className="flex items-center gap-3">
                             <CheckCircle size={24} className="text-green-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Completed</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Completed</p>
                                 <p className="text-2xl font-bold text-green-700">{completedOrders.length}</p>
-                                <p className="text-xs text-gray-400">{fmt(completedValue)}</p>
+                                <p className="text-xs text-app-muted-foreground">{fmt(completedValue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -127,9 +127,9 @@ export default function PurchaseDashboardPage() {
                         <div className="flex items-center gap-3">
                             <Clock size={24} className="text-yellow-600" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">In Progress</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">In Progress</p>
                                 <p className="text-2xl font-bold text-yellow-700">{pendingOrders.length}</p>
-                                <p className="text-xs text-gray-400">{fmt(pendingValue)}</p>
+                                <p className="text-xs text-app-muted-foreground">{fmt(pendingValue)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -139,7 +139,7 @@ export default function PurchaseDashboardPage() {
                         <div className="flex items-center gap-3">
                             <TrendingUp size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Order</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Avg Order</p>
                                 <p className="text-xl font-bold text-blue-700">
                                     {orders.length > 0 ? fmt(totalValue / orders.length) : fmt(0)}
                                 </p>
@@ -153,7 +153,7 @@ export default function PurchaseDashboardPage() {
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => setStatusFilter(null)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!statusFilter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${!statusFilter ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                         }`}
                 >
                     All ({orders.length})
@@ -162,7 +162,7 @@ export default function PurchaseDashboardPage() {
                     <button
                         key={status}
                         onClick={() => setStatusFilter(statusFilter === status ? null : status)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${statusFilter === status ? 'bg-gray-900 text-white' : `${STATUS_COLOR[status]?.split(' ')[0] || 'bg-gray-100'} ${STATUS_COLOR[status]?.split(' ')[1] || 'text-gray-600'} hover:opacity-80`
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${statusFilter === status ? 'bg-app-bg text-white' : `${STATUS_COLOR[status]?.split(' ')[0] || 'bg-app-surface-2'} ${STATUS_COLOR[status]?.split(' ')[1] || 'text-app-muted-foreground'} hover:opacity-80`
                             }`}
                     >
                         {status} ({count})
@@ -174,14 +174,14 @@ export default function PurchaseDashboardPage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Truck size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No purchase orders found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Reference</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Supplier</TableHead>
@@ -192,7 +192,7 @@ export default function PurchaseDashboardPage() {
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((o: Record<string, any>) => (
-                                    <TableRow key={o.id} className="hover:bg-gray-50/50">
+                                    <TableRow key={o.id} className="hover:bg-app-surface/50">
                                         <TableCell className="font-mono text-xs text-blue-600">
                                             {o.ref_code || `PO-${o.id}`}
                                         </TableCell>
@@ -201,11 +201,11 @@ export default function PurchaseDashboardPage() {
                                         </TableCell>
                                         <TableCell className="text-sm">{o.supplier_name || o.contact_name || '—'}</TableCell>
                                         <TableCell>
-                                            <Badge className={STATUS_COLOR[o.status] || 'bg-gray-100'}>
+                                            <Badge className={STATUS_COLOR[o.status] || 'bg-app-surface-2'}>
                                                 {o.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-sm text-gray-500">{o.payment_method || '—'}</TableCell>
+                                        <TableCell className="text-sm text-app-muted-foreground">{o.payment_method || '—'}</TableCell>
                                         <TableCell className="text-right font-bold">
                                             {fmt(parseFloat(o.total_amount || 0))}
                                         </TableCell>

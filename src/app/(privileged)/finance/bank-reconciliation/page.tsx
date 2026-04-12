@@ -92,10 +92,10 @@ export default function BankReconciliationPage() {
                         <ArrowLeft size={16} className="mr-1" /> Back
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">
+                        <h1 className="text-xl font-bold text-app-foreground">
                             {detail.account?.code} — {detail.account?.name}
                         </h1>
-                        <p className="text-sm text-gray-500">Bank reconciliation detail</p>
+                        <p className="text-sm text-app-muted-foreground">Bank reconciliation detail</p>
                     </div>
                 </header>
 
@@ -105,28 +105,28 @@ export default function BankReconciliationPage() {
                         <CardContent className="py-4 text-center">
                             <ArrowDownRight size={20} className="mx-auto mb-1 text-emerald-500" />
                             <p className="text-xl font-bold text-emerald-700">{fmt(detail.summary?.total_debit || 0)}</p>
-                            <p className="text-[10px] text-gray-400 uppercase">Total Debits</p>
+                            <p className="text-[10px] text-app-muted-foreground uppercase">Total Debits</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-red-50 to-white border-l-4 border-l-red-500">
                         <CardContent className="py-4 text-center">
                             <ArrowUpRight size={20} className="mx-auto mb-1 text-red-500" />
                             <p className="text-xl font-bold text-red-700">{fmt(detail.summary?.total_credit || 0)}</p>
-                            <p className="text-[10px] text-gray-400 uppercase">Total Credits</p>
+                            <p className="text-[10px] text-app-muted-foreground uppercase">Total Credits</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
                         <CardContent className="py-4 text-center">
                             <DollarSign size={20} className="mx-auto mb-1 text-blue-500" />
                             <p className="text-xl font-bold text-blue-700">{fmt(detail.summary?.book_balance || 0)}</p>
-                            <p className="text-[10px] text-gray-400 uppercase">Book Balance</p>
+                            <p className="text-[10px] text-app-muted-foreground uppercase">Book Balance</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-gradient-to-br from-gray-50 to-white border-l-4 border-l-gray-500">
                         <CardContent className="py-4 text-center">
-                            <Hash size={20} className="mx-auto mb-1 text-gray-500" />
+                            <Hash size={20} className="mx-auto mb-1 text-app-muted-foreground" />
                             <p className="text-xl font-bold">{detail.summary?.entry_count || 0}</p>
-                            <p className="text-[10px] text-gray-400 uppercase">Entries</p>
+                            <p className="text-[10px] text-app-muted-foreground uppercase">Entries</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -136,14 +136,14 @@ export default function BankReconciliationPage() {
                     <CardContent className="py-3">
                         <div className="flex items-center gap-3 flex-wrap">
                             <div className="flex items-center gap-2 text-sm">
-                                <Calendar size={14} className="text-gray-400" />
+                                <Calendar size={14} className="text-app-muted-foreground" />
                                 <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-8 w-40" />
-                                <span className="text-gray-400">to</span>
+                                <span className="text-app-muted-foreground">to</span>
                                 <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-8 w-40" />
                                 <Button size="sm" variant="outline" onClick={() => drillIn(selectedAccountId)}>Apply</Button>
                             </div>
                             <div className="relative flex-1 min-w-[200px]">
-                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                                 <Input placeholder="Search entries..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-8" />
                             </div>
                         </div>
@@ -155,7 +155,7 @@ export default function BankReconciliationPage() {
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Date</TableHead>
                                     <TableHead>Reference</TableHead>
                                     <TableHead>Description</TableHead>
@@ -166,10 +166,10 @@ export default function BankReconciliationPage() {
                             </TableHeader>
                             <TableBody>
                                 {filteredEntries.map((e: Record<string, any>) => (
-                                    <TableRow key={e.id} className="hover:bg-gray-50/50">
+                                    <TableRow key={e.id} className="hover:bg-app-surface/50">
                                         <TableCell className="text-sm">{e.date || '—'}</TableCell>
                                         <TableCell className="font-mono text-xs text-blue-600">{e.reference || '—'}</TableCell>
-                                        <TableCell className="text-sm text-gray-600 max-w-xs truncate">{e.description}</TableCell>
+                                        <TableCell className="text-sm text-app-muted-foreground max-w-xs truncate">{e.description}</TableCell>
                                         <TableCell className="text-right text-sm font-medium text-emerald-700">
                                             {e.debit > 0 ? fmt(e.debit) : ''}
                                         </TableCell>
@@ -195,13 +195,13 @@ export default function BankReconciliationPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
                         <Landmark size={20} className="text-white" />
                     </div>
                     Bank Reconciliation
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Review bank & cash accounts, drill into entries</p>
+                <p className="text-sm text-app-muted-foreground mt-1">Review bank & cash accounts, drill into entries</p>
             </header>
 
             {/* Total Balance */}
@@ -230,23 +230,23 @@ export default function BankReconciliationPage() {
                         <CardContent className="py-4">
                             <div className="flex items-center justify-between mb-3">
                                 <Badge variant="outline" className="font-mono text-xs">{acc.code}</Badge>
-                                <FileText size={14} className="text-gray-300" />
+                                <FileText size={14} className="text-app-faint" />
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">{acc.name}</h3>
+                            <h3 className="font-semibold text-app-foreground mb-2">{acc.name}</h3>
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-lg font-bold text-blue-700">{fmt(acc.book_balance)}</p>
-                                    <p className="text-[10px] text-gray-400">Book Balance</p>
+                                    <p className="text-[10px] text-app-muted-foreground">Book Balance</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-gray-500">{acc.entry_count} entries</p>
+                                    <p className="text-sm text-app-muted-foreground">{acc.entry_count} entries</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
                 {accounts.length === 0 && (
-                    <div className="col-span-3 text-center py-16 text-gray-400">
+                    <div className="col-span-3 text-center py-16 text-app-muted-foreground">
                         <Landmark size={48} className="mx-auto mb-3 opacity-30" />
                         <p>No bank or cash accounts found</p>
                         <p className="text-sm">Set up accounts with type ASSET and sub_type bank/cash</p>

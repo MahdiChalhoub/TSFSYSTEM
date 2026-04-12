@@ -105,16 +105,16 @@ function CreatePurchaseReturnForm() {
     }
 
     if (loading) return <div className="p-10 space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-96" /></div>
-    if (!order) return <div className="p-20 text-center"><AlertCircle className="mx-auto mb-4 text-gray-300" size={48} /><p>Purchase Order not found</p></div>
+    if (!order) return <div className="p-20 text-center"><AlertCircle className="mx-auto mb-4 text-app-faint" size={48} /><p>Purchase Order not found</p></div>
 
     return (
         <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header className="flex items-center justify-between">
                 <div>
-                    <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-500 mb-4 transition-all">
+                    <Link href={`/purchases/${orderId}`} className="flex items-center gap-2 text-xs font-bold text-app-muted-foreground hover:text-blue-500 mb-4 transition-all">
                         <ArrowLeft size={14} /> Back to Purchase Detail
                     </Link>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-3">
+                    <h1 className="text-4xl font-black text-app-foreground tracking-tighter flex items-center gap-3">
                         <Truck size={32} className="text-blue-500" />
                         Supplier Return for <span className="text-blue-500">{order.ref_code || `#${orderId}`}</span>
                     </h1>
@@ -124,7 +124,7 @@ function CreatePurchaseReturnForm() {
             <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                     <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden">
-                        <div className="p-6 bg-gray-50 border-b border-gray-100 font-bold text-[10px] uppercase tracking-widest text-gray-400">
+                        <div className="p-6 bg-app-surface border-b border-app-border font-bold text-[10px] uppercase tracking-widest text-app-muted-foreground">
                             Select Items to Ship Back
                         </div>
                         <Table>
@@ -140,21 +140,21 @@ function CreatePurchaseReturnForm() {
                                 {order?.lines?.map((line: Record<string, any>) => (
                                     <TableRow key={line.id}>
                                         <TableCell>
-                                            <div className="font-bold text-gray-900">{line.product_name}</div>
-                                            <div className="text-[10px] text-gray-400 uppercase font-mono">Line ID: {line.id}</div>
+                                            <div className="font-bold text-app-foreground">{line.product_name}</div>
+                                            <div className="text-[10px] text-app-muted-foreground uppercase font-mono">Line ID: {line.id}</div>
                                         </TableCell>
-                                        <TableCell className="text-center font-bold text-gray-500">{line.qty_received}</TableCell>
+                                        <TableCell className="text-center font-bold text-app-muted-foreground">{line.qty_received}</TableCell>
                                         <TableCell>
                                             <Input
                                                 type="number"
                                                 min={0}
                                                 max={parseFloat(line.qty_received)}
-                                                className="text-center font-black rounded-xl border-gray-200"
+                                                className="text-center font-black rounded-xl border-app-border"
                                                 value={returnItems[line.id] || 0}
                                                 onChange={(e) => handleQtyChange(line.id, parseFloat(e.target.value), parseFloat(line.qty_received))}
                                             />
                                         </TableCell>
-                                        <TableCell className="text-right font-medium text-gray-900">{fmt(parseFloat(line.unit_price))}</TableCell>
+                                        <TableCell className="text-right font-medium text-app-foreground">{fmt(parseFloat(line.unit_price))}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -162,9 +162,9 @@ function CreatePurchaseReturnForm() {
                     </Card>
 
                     <Card className="border-none shadow-xl rounded-[2rem] p-6 space-y-4">
-                        <h3 className="font-bold text-xs uppercase tracking-widest text-gray-400">Return Instructions / Reason</h3>
+                        <h3 className="font-bold text-xs uppercase tracking-widest text-app-muted-foreground">Return Instructions / Reason</h3>
                         <textarea
-                            className="w-full h-32 p-4 rounded-2xl border border-gray-100 bg-gray-50/50 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all outline-none text-sm"
+                            className="w-full h-32 p-4 rounded-2xl border border-app-border bg-app-surface/50 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all outline-none text-sm"
                             placeholder="Reason for return, RMN number, or special instructions for the supplier..."
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -173,16 +173,16 @@ function CreatePurchaseReturnForm() {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="bg-gray-900 text-white p-8 rounded-[2.5rem] shadow-2xl border-none">
+                    <Card className="bg-app-bg text-white p-8 rounded-[2.5rem] shadow-2xl border-none">
                         <div className="space-y-6">
                             <div>
-                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Debit Summary</div>
+                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest mb-4">Debit Summary</div>
                                 <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                                    <span className="text-sm text-gray-400">Items to Return</span>
+                                    <span className="text-sm text-app-muted-foreground">Items to Return</span>
                                     <span className="font-bold">{Object.values(returnItems).filter(q => q > 0).length} Lines</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                                    <span className="text-sm text-gray-400">Debit Value</span>
+                                    <span className="text-sm text-app-muted-foreground">Debit Value</span>
                                     <span className="font-mono text-xs">{fmt(calculateTotals())}</span>
                                 </div>
                             </div>

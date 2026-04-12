@@ -17,7 +17,7 @@ const VERIFICATION_COLUMNS: ColumnDef<MappingRecord>[] = [
         label: 'Type',
         sortable: true,
         render: (r) => (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-app-surface-2 text-app-foreground">
                 {r.entity_type}
             </span>
         )
@@ -168,14 +168,14 @@ export default function VerificationPage() {
                             </div>
                         </div>
                     </AppCard>
-                    <AppCard className="p-6 bg-slate-50 border-slate-200 shadow-sm">
+                    <AppCard className="p-6 bg-app-surface border-app-border shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Awaiting Verification</p>
-                                <p className="text-3xl font-black text-slate-700">{pendingCount}</p>
+                                <p className="text-[10px] font-black uppercase text-app-muted-foreground tracking-widest mb-1">Awaiting Verification</p>
+                                <p className="text-3xl font-black text-app-foreground">{pendingCount}</p>
                             </div>
                             <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
-                                <ShieldCheck className="w-6 h-6 text-slate-500" />
+                                <ShieldCheck className="w-6 h-6 text-app-muted-foreground" />
                             </div>
                         </div>
                     </AppCard>
@@ -189,7 +189,7 @@ export default function VerificationPage() {
                     columns={VERIFICATION_COLUMNS}
                     visibleColumns={settings.visibleColumns}
                     onToggleColumn={settings.toggleColumn}
-                    className="rounded-[32px] border border-app-border bg-white shadow-xl overflow-hidden"
+                    className="rounded-[32px] border border-app-border bg-app-surface shadow-xl overflow-hidden"
                     pageSize={settings.pageSize}
                     onPageSizeChange={settings.setPageSize}
                     sortKey={settings.sortKey}

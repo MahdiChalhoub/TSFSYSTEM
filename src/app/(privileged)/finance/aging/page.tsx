@@ -99,15 +99,15 @@ export default function AgingReportPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Aging Report</h1>
-                    <p className="text-sm text-gray-500 mt-1">Receivables & Payables breakdown by age</p>
+                    <h1 className="text-2xl font-bold text-app-foreground">Aging Report</h1>
+                    <p className="text-sm text-app-muted-foreground mt-1">Receivables & Payables breakdown by age</p>
                 </div>
                 <div className="flex rounded-lg border overflow-hidden">
                     <button
                         onClick={() => { setTab('receivables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'receivables'
                                 ? 'bg-emerald-600 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                : 'bg-app-surface text-app-muted-foreground hover:bg-app-surface'
                             }`}
                     >
                         <ArrowDownLeft size={16} />
@@ -117,7 +117,7 @@ export default function AgingReportPage() {
                         onClick={() => { setTab('payables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'payables'
                                 ? 'bg-rose-600 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                : 'bg-app-surface text-app-muted-foreground hover:bg-app-surface'
                             }`}
                     >
                         <ArrowUpRight size={16} />
@@ -134,13 +134,13 @@ export default function AgingReportPage() {
                             <DollarSign size={20} className="text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-app-muted-foreground">
                                 Total Outstanding {tab === 'receivables' ? 'Receivables' : 'Payables'}
                             </p>
-                            <p className="text-2xl font-bold text-gray-900">{formatCurrency(grandTotal)}</p>
+                            <p className="text-2xl font-bold text-app-foreground">{formatCurrency(grandTotal)}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-app-muted-foreground">
                         <Users size={16} />
                         {allItems.length} open {tab === 'receivables' ? 'invoices' : 'bills'}
                     </div>
@@ -164,19 +164,19 @@ export default function AgingReportPage() {
                             <CardContent className="py-4">
                                 <div className="flex items-center justify-between mb-2">
                                     <Badge className={badgeClass}>{label}</Badge>
-                                    <Icon size={16} className="text-gray-400" />
+                                    <Icon size={16} className="text-app-muted-foreground" />
                                 </div>
-                                <p className="text-xl font-bold text-gray-900">
+                                <p className="text-xl font-bold text-app-foreground">
                                     {formatCurrency(bucket?.total || 0)}
                                 </p>
                                 <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs text-app-muted-foreground">
                                         {bucket?.items?.length || 0} items
                                     </span>
-                                    <span className="text-xs text-gray-400">{pct.toFixed(0)}%</span>
+                                    <span className="text-xs text-app-muted-foreground">{pct.toFixed(0)}%</span>
                                 </div>
                                 {/* Progress bar */}
-                                <div className="w-full h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
+                                <div className="w-full h-1.5 bg-app-surface-2 rounded-full mt-2 overflow-hidden">
                                     <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
                                 </div>
                             </CardContent>
@@ -187,7 +187,7 @@ export default function AgingReportPage() {
 
             {/* Stacked Bar Summary */}
             {grandTotal > 0 && (
-                <div className="flex h-4 rounded-full overflow-hidden bg-gray-100">
+                <div className="flex h-4 rounded-full overflow-hidden bg-app-surface-2">
                     {BUCKET_CONFIG.map(({ key, color }) => {
                         const pct = (data?.[key as keyof AgingData]?.total || 0) / grandTotal * 100
                         return pct > 0 ? (
@@ -201,7 +201,7 @@ export default function AgingReportPage() {
             <Card>
                 <CardHeader className="py-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <TrendingUp size={18} className="text-gray-400" />
+                        <TrendingUp size={18} className="text-app-muted-foreground" />
                         {activeBucket
                             ? `${BUCKET_CONFIG.find(b => b.key === activeBucket)?.label} — Details`
                             : 'All Outstanding Items'}
@@ -209,14 +209,14 @@ export default function AgingReportPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                     {allItems.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
+                        <div className="text-center py-12 text-app-muted-foreground">
                             <DollarSign size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No outstanding {tab === 'receivables' ? 'receivables' : 'payables'}</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Order</TableHead>
                                     <TableHead>{tab === 'receivables' ? 'Customer' : 'Supplier'}</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
@@ -229,7 +229,7 @@ export default function AgingReportPage() {
                                 {allItems.map((item: Record<string, any>, idx: number) => {
                                     const bucketCfg = BUCKET_CONFIG.find(b => b.key === item.bucket)
                                     return (
-                                        <TableRow key={idx} className="hover:bg-gray-50/50">
+                                        <TableRow key={idx} className="hover:bg-app-surface/50">
                                             <TableCell className="font-mono text-sm">
                                                 ORD-{item.order_id}
                                             </TableCell>
@@ -244,7 +244,7 @@ export default function AgingReportPage() {
                                                     {item.days}d
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-500">
+                                            <TableCell className="text-sm text-app-muted-foreground">
                                                 {item.date}
                                             </TableCell>
                                             <TableCell>

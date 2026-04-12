@@ -34,8 +34,8 @@ export default function FiscalYearsPage() {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center space-y-4">
-                    <Loader2 size={40} className="animate-spin text-stone-400 mx-auto" />
-                    <p className="text-stone-400 font-medium text-sm">Loading fiscal years...</p>
+                    <Loader2 size={40} className="animate-spin text-app-muted-foreground mx-auto" />
+                    <p className="text-app-muted-foreground font-medium text-sm">Loading fiscal years...</p>
                 </div>
             </div>
         )
@@ -45,8 +45,8 @@ export default function FiscalYearsPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-900 font-serif">Fiscal Years</h1>
-                    <p className="text-sm text-stone-500">Manage your accounting periods and closing cycles.</p>
+                    <h1 className="text-2xl font-bold text-app-foreground font-serif">Fiscal Years</h1>
+                    <p className="text-sm text-app-muted-foreground">Manage your accounting periods and closing cycles.</p>
                 </div>
                 <FiscalYearWizard lastCreatedYear={years[0]} />
             </div>
@@ -61,7 +61,7 @@ export default function FiscalYearsPage() {
                         <p className="text-xs text-amber-700 mb-2">Transactions occurring during these dates cannot be recorded in any period.</p>
                         <div className="space-y-1">
                             {gaps.map((g, i) => (
-                                <div key={i} className="text-xs text-amber-800 bg-white/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
+                                <div key={i} className="text-xs text-amber-800 bg-app-surface/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
                                     <strong>{g.days} Day Gap</strong> after {g.after}:
                                     <span className="ml-1 opacity-70">
                                         {new Date(g.startDate).toLocaleDateString()} — {new Date(g.endDate).toLocaleDateString()}
@@ -83,9 +83,9 @@ export default function FiscalYearsPage() {
                 ))}
 
                 {years.length === 0 && (
-                    <div className="text-center py-12 bg-stone-50 rounded-lg border-2 border-dashed border-stone-200">
-                        <p className="text-stone-500">No fiscal years configured.</p>
-                        <p className="text-sm text-stone-400 mt-1">Create a year to start recording transactions.</p>
+                    <div className="text-center py-12 bg-app-surface rounded-lg border-2 border-dashed border-app-border">
+                        <p className="text-app-muted-foreground">No fiscal years configured.</p>
+                        <p className="text-sm text-app-muted-foreground mt-1">Create a year to start recording transactions.</p>
                     </div>
                 )}
             </div>

@@ -352,7 +352,7 @@ export default function POSSettingsPage() {
             <div className="flex items-center gap-2 py-1">
               <button onClick={() => setCreateForm(f => ({ ...f, enableAccountBook: !f.enableAccountBook }))}
                 className={`w-9 h-5 rounded-full relative transition-all shrink-0 ${createForm.enableAccountBook ? 'bg-app-primary' : 'bg-app-surface'}`}>
-                <span className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-[3px] transition-all ${createForm.enableAccountBook ? 'left-[18px]' : 'left-[3px]'}`} />
+                <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${createForm.enableAccountBook ? 'left-[18px]' : 'left-[3px]'}`} />
               </button>
               <span className="text-[10px] text-app-text-muted font-bold">Book</span>
             </div>

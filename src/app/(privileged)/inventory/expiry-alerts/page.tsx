@@ -95,8 +95,8 @@ export default function ExpiryAlertsPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Expiry Alerts</h1>
-                    <p className="text-sm text-gray-500 mt-1">Monitor product batches nearing or past expiration</p>
+                    <h1 className="text-2xl font-bold text-app-foreground">Expiry Alerts</h1>
+                    <p className="text-sm text-app-muted-foreground mt-1">Monitor product batches nearing or past expiration</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 text-sm">
@@ -128,9 +128,9 @@ export default function ExpiryAlertsPage() {
                     onClick={() => handleFilter(null)}
                 >
                     <CardContent className="py-4 text-center">
-                        <Shield size={24} className="mx-auto mb-2 text-gray-400" />
-                        <p className="text-3xl font-bold text-gray-900">{totalAlerts}</p>
-                        <p className="text-xs text-gray-500 uppercase font-medium">Total Active</p>
+                        <Shield size={24} className="mx-auto mb-2 text-app-muted-foreground" />
+                        <p className="text-3xl font-bold text-app-foreground">{totalAlerts}</p>
+                        <p className="text-xs text-app-muted-foreground uppercase font-medium">Total Active</p>
                     </CardContent>
                 </Card>
 
@@ -185,14 +185,14 @@ export default function ExpiryAlertsPage() {
             <Card>
                 <CardHeader className="py-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <AlertTriangle size={18} className="text-gray-400" />
+                        <AlertTriangle size={18} className="text-app-muted-foreground" />
                         Alert Details
-                        {loading && <RefreshCw size={14} className="animate-spin text-gray-300" />}
+                        {loading && <RefreshCw size={14} className="animate-spin text-app-faint" />}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     {alerts.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <CheckCircle2 size={48} className="mx-auto mb-3 text-emerald-300" />
                             <p className="text-lg font-medium text-emerald-500">All Clear!</p>
                             <p className="text-sm">No expiry alerts found. Click "Scan Now" to check for new alerts.</p>
@@ -200,7 +200,7 @@ export default function ExpiryAlertsPage() {
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Severity</TableHead>
                                     <TableHead>Product</TableHead>
                                     <TableHead>Batch</TableHead>
@@ -217,7 +217,7 @@ export default function ExpiryAlertsPage() {
                                     const cfg = SEVERITY_CONFIG[a.severity] || SEVERITY_CONFIG.WARNING
                                     const Icon = cfg.icon
                                     return (
-                                        <TableRow key={a.id} className={`hover:bg-gray-50/50 ${a.is_acknowledged ? 'opacity-50' : ''}`}>
+                                        <TableRow key={a.id} className={`hover:bg-app-surface/50 ${a.is_acknowledged ? 'opacity-50' : ''}`}>
                                             <TableCell>
                                                 <Badge className={`${cfg.bg} ${cfg.color} gap-1`}>
                                                     <Icon size={12} />
@@ -226,7 +226,7 @@ export default function ExpiryAlertsPage() {
                                             </TableCell>
                                             <TableCell className="font-medium">{a.product_name}</TableCell>
                                             <TableCell className="font-mono text-sm">{a.batch_number}</TableCell>
-                                            <TableCell className="text-sm text-gray-500">
+                                            <TableCell className="text-sm text-app-muted-foreground">
                                                 {a.expiry_date || '—'}
                                             </TableCell>
                                             <TableCell className={`text-right font-bold ${a.days_until_expiry <= 0 ? 'text-red-600' :
@@ -240,7 +240,7 @@ export default function ExpiryAlertsPage() {
                                             <TableCell className="text-right font-bold text-red-600">
                                                 {fmt(a.value_at_risk)}
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-500">{a.warehouse || '—'}</TableCell>
+                                            <TableCell className="text-sm text-app-muted-foreground">{a.warehouse || '—'}</TableCell>
                                             <TableCell className="text-center">
                                                 {!a.is_acknowledged ? (
                                                     <Button

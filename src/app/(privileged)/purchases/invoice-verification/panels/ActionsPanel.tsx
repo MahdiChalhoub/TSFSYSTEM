@@ -92,7 +92,7 @@ export function ActionsPanel({
                 {verificationScore}%
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-app-surface-2 rounded-full h-2 overflow-hidden">
               <div
                 className={`h-full transition-all ${verificationScore === 100 ? 'bg-emerald-600' : 'bg-blue-600'}`}
                 style={{ width: `${verificationScore}%` }}

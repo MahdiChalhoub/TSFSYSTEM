@@ -59,38 +59,38 @@ export default async function ContactsPage() {
                             </div>
                             <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Master Entity Management</span>
                         </div>
-                        <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-none">
+                        <h1 className="text-5xl lg:text-7xl font-black text-app-foreground tracking-tighter leading-none">
                             Contact <span className="text-indigo-600">Center</span>
                         </h1>
-                        <p className="mt-6 text-gray-500 font-medium max-w-2xl text-lg leading-relaxed">
+                        <p className="mt-6 text-app-muted-foreground font-medium max-w-2xl text-lg leading-relaxed">
                             A unified registry for all Clients and Suppliers. Every contact is cryptographically linked to a
                             <span className="text-indigo-600 font-bold ml-1">unique sub-ledger account</span> for precision accounting and multi-site attribution.
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6 bg-white p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
-                        <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</div>
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Clients</div>
+                    <div className="flex flex-col sm:flex-row gap-6 bg-app-surface p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
+                        <div className="text-center px-6 border-r border-app-border last:border-0">
+                            <div className="text-4xl font-black text-app-foreground tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</div>
+                            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Active Clients</div>
                         </div>
-                        <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</div>
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suppliers</div>
+                        <div className="text-center px-6 border-r border-app-border last:border-0">
+                            <div className="text-4xl font-black text-app-foreground tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</div>
+                            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Suppliers</div>
                         </div>
-                        <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</div>
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Leads</div>
+                        <div className="text-center px-6 border-r border-app-border last:border-0">
+                            <div className="text-4xl font-black text-app-foreground tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</div>
+                            <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">Leads</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-indigo-600 rounded-[50px] p-10 lg:p-16 relative overflow-hidden shadow-2xl shadow-indigo-200">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-app-surface opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-app-foreground opacity-5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12">
                         <div className="space-y-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <Building2 size={24} />
                             </div>
                             <h4 className="text-xl font-black text-white">Site Attribution</h4>
@@ -99,7 +99,7 @@ export default async function ContactsPage() {
                             </p>
                         </div>
                         <div className="space-y-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <CreditCard size={24} />
                             </div>
                             <h4 className="text-xl font-black text-white">Ledger Precision</h4>
@@ -108,7 +108,7 @@ export default async function ContactsPage() {
                             </p>
                         </div>
                         <div className="space-y-4">
-                            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface/10 flex items-center justify-center text-white">
                                 <ShieldCheck size={24} />
                             </div>
                             <h4 className="text-xl font-black text-white">Safe Transitions</h4>

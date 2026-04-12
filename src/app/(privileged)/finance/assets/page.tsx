@@ -108,7 +108,7 @@ export default function AssetsPage() {
 
     const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-stone-600", bg: "bg-stone-100 border-stone-200" },
+        FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-app-muted-foreground", bg: "bg-app-surface-2 border-app-border" },
         DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
     }
 
@@ -132,8 +132,8 @@ export default function AssetsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
-                    <p className="text-stone-500 font-medium mt-1">Track assets, depreciation schedules, and book values</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Fixed Assets</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Track assets, depreciation schedules, and book values</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
@@ -148,47 +148,47 @@ export default function AssetsPage() {
                         </DialogHeader>
                         <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Name *</label>
                                 <Input name="name" required placeholder="Delivery Truck" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Category *</label>
                                 <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Depreciation Method</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Depreciation Method</label>
                                 <select name="depreciation_method" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="LINEAR">Linear (Straight-Line)</option>
                                     <option value="DECLINING">Declining Balance</option>
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Value *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Purchase Value *</label>
                                 <Input name="purchase_value" type="number" step="0.01" min="0.01" required placeholder="50,000.00" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Date *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Purchase Date *</label>
                                 <Input name="purchase_date" type="date" required className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Useful Life (Years) *</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Useful Life (Years) *</label>
                                 <Input name="useful_life_years" type="number" min="1" max="50" required placeholder="5" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Residual Value</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Residual Value</label>
                                 <Input name="residual_value" type="number" step="0.01" min="0" defaultValue="0" placeholder="5,000.00" className="rounded-xl" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Source Account</label>
                                 <select name="source_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="">Select account...</option>
                                     {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Description</label>
                                 <Input name="description" placeholder="Optional description..." className="rounded-xl" />
                             </div>
                             <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
@@ -208,11 +208,11 @@ export default function AssetsPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Assets</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{assets.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total Assets</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{assets.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <Package size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <Package size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -260,29 +260,29 @@ export default function AssetsPage() {
 
             {/* Assets Table */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex items-center justify-between bg-stone-50/50">
-                    <h2 className="font-semibold text-stone-800 flex items-center gap-2"><Package size={16} /> Asset Register</h2>
+                <div className="px-5 py-3 border-b flex items-center justify-between bg-app-surface/50">
+                    <h2 className="font-semibold text-app-foreground flex items-center gap-2"><Package size={16} /> Asset Register</h2>
                     <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input
                             placeholder="Search name or category..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                            className="pl-9 rounded-xl text-sm h-9 bg-app-surface"
                         />
                     </div>
                 </div>
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Name</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Category</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Method</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Purchase</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Book Value</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Depreciation</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Name</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Category</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Method</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Purchase</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Book Value</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Depreciation</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -292,25 +292,25 @@ export default function AssetsPage() {
                             const sc = statusConfig[asset.status] || statusConfig.ACTIVE
                             const StatusIcon = sc.icon
                             return (
-                                <TableRow key={asset.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-semibold text-stone-800">{asset.name}</TableCell>
+                                <TableRow key={asset.id} className="hover:bg-app-surface/50 transition-colors">
+                                    <TableCell className="font-semibold text-app-foreground">{asset.name}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600">
+                                        <Badge variant="outline" className="rounded-lg text-[11px] border-app-border text-app-muted-foreground">
                                             {(asset.category || "").replace(/_/g, " ")}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-sm text-stone-500">{asset.depreciation_method}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground">{asset.depreciation_method}</TableCell>
                                     <TableCell className="text-right text-sm">{Number(asset.purchase_value).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(asset.book_value).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-semibold text-app-foreground">{Number(asset.book_value).toLocaleString()}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2 justify-center">
-                                            <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                            <div className="w-20 h-2.5 bg-app-surface-2 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full transition-all ${depPct >= 100 ? "bg-stone-400" : depPct >= 70 ? "bg-amber-400" : "bg-emerald-400"}`}
                                                     style={{ width: `${Math.min(depPct, 100)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-xs font-semibold text-stone-400 w-9">{depPct}%</span>
+                                            <span className="text-xs font-semibold text-app-muted-foreground w-9">{depPct}%</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-center">
@@ -335,12 +335,12 @@ export default function AssetsPage() {
                             <TableRow>
                                 <TableCell colSpan={8} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <Landmark size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <Landmark size={28} className="text-app-faint" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-stone-600">No assets found</p>
-                                            <p className="text-sm text-stone-400 mt-1">Acquire your first fixed asset to get started</p>
+                                            <p className="font-semibold text-app-muted-foreground">No assets found</p>
+                                            <p className="text-sm text-app-muted-foreground mt-1">Acquire your first fixed asset to get started</p>
                                         </div>
                                         <Button variant="outline" onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 mt-2">
                                             <Plus size={14} /> Acquire Asset
@@ -358,10 +358,10 @@ export default function AssetsPage() {
                 <Card className="rounded-2xl shadow-sm overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                     <div className="px-5 py-4 border-b flex justify-between items-center bg-gradient-to-r from-stone-50 to-amber-50/30">
                         <div>
-                            <h2 className="font-semibold text-stone-800 flex items-center gap-2">
+                            <h2 className="font-semibold text-app-foreground flex items-center gap-2">
                                 <Calendar size={16} /> Depreciation Schedule: {selectedAsset.name}
                             </h2>
-                            <p className="text-sm text-stone-400 mt-0.5">
+                            <p className="text-sm text-app-muted-foreground mt-0.5">
                                 Life: {selectedAsset.useful_life_years} years • Method: {selectedAsset.depreciation_method}
                             </p>
                         </div>
@@ -372,17 +372,17 @@ export default function AssetsPage() {
                     <div className="overflow-x-auto max-h-96">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-stone-50/30 sticky top-0">
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400">Period</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Amount</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
-                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Action</TableHead>
+                                <TableRow className="bg-app-surface/30 sticky top-0">
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Period</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Amount</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Status</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {schedule.map((line: Record<string, any>) => (
-                                    <TableRow key={line.id} className="hover:bg-stone-50/50 transition-colors">
-                                        <TableCell className="text-sm text-stone-600">{line.period_date}</TableCell>
+                                    <TableRow key={line.id} className="hover:bg-app-surface/50 transition-colors">
+                                        <TableCell className="text-sm text-app-muted-foreground">{line.period_date}</TableCell>
                                         <TableCell className="text-right text-sm font-semibold">{Number(line.amount).toLocaleString()}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant="outline" className={`gap-1 rounded-lg border font-semibold text-[11px] ${line.is_posted ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
@@ -406,7 +406,7 @@ export default function AssetsPage() {
                                 ))}
                                 {schedule.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="py-8 text-center text-stone-400">
+                                        <TableCell colSpan={4} className="py-8 text-center text-app-muted-foreground">
                                             No depreciation schedule available.
                                         </TableCell>
                                     </TableRow>

@@ -23,9 +23,9 @@ const TYPE_OPTIONS = [
 function getStatusStyle(status: string) {
     switch (status) {
         case 'POSTED': return 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-        case 'DRAFT': return 'bg-stone-100 text-stone-600 border border-stone-200'
+        case 'DRAFT': return 'bg-app-surface-2 text-app-muted-foreground border border-app-border'
         case 'REVERSED': return 'bg-rose-100 text-rose-700 border border-rose-200'
-        default: return 'bg-stone-100 text-stone-500'
+        default: return 'bg-app-surface-2 text-app-muted-foreground'
     }
 }
 
@@ -77,47 +77,47 @@ export default function GeneralLedgerPage() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <h1 className="text-2xl font-bold text-stone-900 font-serif">General Ledger</h1>
+                        <h1 className="text-2xl font-bold text-app-foreground font-serif">General Ledger</h1>
                         <span className="bg-emerald-50 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full border border-emerald-100 font-bold uppercase tracking-wider flex items-center gap-1">
                             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                             Trial Balance Guard Active
                         </span>
                     </div>
-                    <p className="text-sm text-stone-500">Review and manage your financial transactions with strict double-entry validation.</p>
+                    <p className="text-sm text-app-muted-foreground">Review and manage your financial transactions with strict double-entry validation.</p>
                 </div>
                 <div className="flex gap-3">
-                    <Link href="/finance/ledger/opening/list" className="bg-white text-stone-600 border border-stone-200 px-5 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                    <Link href="/finance/ledger/opening/list" className="bg-app-surface text-app-muted-foreground border border-app-border px-5 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         📋 Opening Balances
                     </Link>
-                    <Link href="/finance/ledger/import" className="bg-white text-stone-600 border border-stone-200 px-5 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                    <Link href="/finance/ledger/import" className="bg-app-surface text-app-muted-foreground border border-app-border px-5 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         <Upload className="h-4 w-4" />
                         Import CSV
                     </Link>
-                    <Link href="/finance/ledger/new" className="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                    <Link href="/finance/ledger/new" className="bg-app-foreground text-white px-5 py-2.5 rounded-lg hover:bg-app-surface font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         + New Journal Entry
                     </Link>
                 </div>
             </div>
 
             {/* Filter Bar */}
-            <div className="mb-6 bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-3 p-3 border-b border-stone-100">
+            <div className="mb-6 bg-app-surface border border-app-border rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 p-3 border-b border-app-border">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-app-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search ledger entries..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                            className="w-full pl-9 pr-3 py-2 text-sm border border-app-border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                         />
                     </div>
-                    <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                    <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
                         {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-colors ${showFilters || activeFilterCount > 1 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'border-stone-200 text-stone-600 hover:bg-stone-50'}`}
+                        className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-colors ${showFilters || activeFilterCount > 1 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'border-app-border text-app-muted-foreground hover:bg-app-surface'}`}
                     >
                         <Filter className="h-4 w-4" />
                         Filters
@@ -129,10 +129,10 @@ export default function GeneralLedgerPage() {
                 </div>
 
                 {showFilters && (
-                    <div className="p-3 grid grid-cols-4 gap-3 bg-stone-50/50 animate-in slide-in-from-top-2 duration-200">
+                    <div className="p-3 grid grid-cols-4 gap-3 bg-app-surface/50 animate-in slide-in-from-top-2 duration-200">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Fiscal Year</label>
-                            <select value={fiscalYear} onChange={e => setFiscalYear(e.target.value)} className="w-full px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                            <label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Fiscal Year</label>
+                            <select value={fiscalYear} onChange={e => setFiscalYear(e.target.value)} className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
                                 <option value="">All Years</option>
                                 {fiscalYears.map((fy: Record<string, any>) => (
                                     <option key={fy.id} value={fy.id}>{fy.name}</option>
@@ -140,22 +140,22 @@ export default function GeneralLedgerPage() {
                             </select>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">From Date</label>
-                            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                            <label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">From Date</label>
+                            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">To Date</label>
-                            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                            <label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">To Date</label>
+                            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Entry Type</label>
-                            <select value={entryType} onChange={e => setEntryType(e.target.value)} className="w-full px-3 py-2 text-sm border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                            <label className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Entry Type</label>
+                            <select value={entryType} onChange={e => setEntryType(e.target.value)} className="w-full px-3 py-2 text-sm border border-app-border rounded-lg bg-app-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
                                 {TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                             </select>
                         </div>
                         {activeFilterCount > 0 && (
                             <div className="col-span-4 flex justify-end">
-                                <button onClick={() => { setStatus(''); setFiscalYear(''); setDateFrom(''); setDateTo(''); setEntryType(''); setSearch('') }} className="text-xs text-stone-500 hover:text-stone-900 font-bold uppercase tracking-wider">
+                                <button onClick={() => { setStatus(''); setFiscalYear(''); setDateFrom(''); setDateTo(''); setEntryType(''); setSearch('') }} className="text-xs text-app-muted-foreground hover:text-app-foreground font-bold uppercase tracking-wider">
                                     Clear All Filters
                                 </button>
                             </div>
@@ -167,8 +167,8 @@ export default function GeneralLedgerPage() {
             {/* Results */}
             {loading ? (
                 <div className="text-center py-16">
-                    <div className="w-8 h-8 border-2 border-stone-300 border-t-stone-900 rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-sm text-stone-500">Loading ledger entries...</p>
+                    <div className="w-8 h-8 border-2 border-app-border border-t-stone-900 rounded-full animate-spin mx-auto mb-3" />
+                    <p className="text-sm text-app-muted-foreground">Loading ledger entries...</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -177,9 +177,9 @@ export default function GeneralLedgerPage() {
                         const isOpening = entry.reference?.startsWith('OPEN-')
 
                         return (
-                            <div key={entry.id} className={`bg-white border rounded-xl overflow-hidden shadow-sm transition-all border-stone-200 ${entry.status === 'REVERSED' ? 'opacity-75 grayscale-[0.5]' : ''}`}>
+                            <div key={entry.id} className={`bg-app-surface border rounded-xl overflow-hidden shadow-sm transition-all border-app-border ${entry.status === 'REVERSED' ? 'opacity-75 grayscale-[0.5]' : ''}`}>
                                 {/* Header */}
-                                <div className="p-4 bg-stone-50 border-b border-stone-100 flex justify-between items-center">
+                                <div className="p-4 bg-app-surface border-b border-app-border flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${getStatusStyle(entry.status)}`}>
                                             {entry.status}
@@ -190,7 +190,7 @@ export default function GeneralLedgerPage() {
                                                 {entry.createdBy ? 'Manual Opening' : 'Auto Opening'}
                                             </div>
                                         )}
-                                        <h3 className="font-bold text-stone-900 text-sm">JV #{entry.id} — {entry.description}</h3>
+                                        <h3 className="font-bold text-app-foreground text-sm">JV #{entry.id} — {entry.description}</h3>
                                     </div>
                                     <LedgerEntryActions
                                         entryId={entry.id}
@@ -200,19 +200,19 @@ export default function GeneralLedgerPage() {
                                 </div>
 
                                 {/* Info Bar */}
-                                <div className="px-4 py-2 bg-white flex items-center gap-6 text-[11px] text-stone-500 border-b border-stone-50 font-medium">
+                                <div className="px-4 py-2 bg-app-surface flex items-center gap-6 text-[11px] text-app-muted-foreground border-b border-stone-50 font-medium">
                                     <div className="flex items-center gap-1.5">
-                                        <Calendar className="h-3 w-3 text-stone-300" />
+                                        <Calendar className="h-3 w-3 text-app-faint" />
                                         <span>{new Date(entry.transactionDate).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     {entry.reference && (
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-stone-300">Ref:</span> <span className="font-mono text-stone-800">{entry.reference}</span>
+                                            <span className="text-app-faint">Ref:</span> <span className="font-mono text-app-foreground">{entry.reference}</span>
                                         </div>
                                     )}
                                     {entry.fiscalYear && (
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-stone-300">FY:</span> <span className="text-stone-700">{entry.fiscalYear.name || `FY ${entry.fiscalYear.id}`}</span>
+                                            <span className="text-app-faint">FY:</span> <span className="text-app-foreground">{entry.fiscalYear.name || `FY ${entry.fiscalYear.id}`}</span>
                                         </div>
                                     )}
                                     {entry.reversalOf && (
@@ -232,16 +232,16 @@ export default function GeneralLedgerPage() {
                                     <div className="space-y-1">
                                         {entry.lines?.map((line: Record<string, any>) => (
                                             <div key={line.id} className="grid grid-cols-12 gap-3 py-1 items-center border-b border-stone-50 last:border-0 group">
-                                                <div className="col-span-1 font-mono text-[10px] text-stone-400">
+                                                <div className="col-span-1 font-mono text-[10px] text-app-muted-foreground">
                                                     {line.account?.code}
                                                 </div>
-                                                <div className="col-span-5 text-xs font-medium text-stone-700">
+                                                <div className="col-span-5 text-xs font-medium text-app-foreground">
                                                     {line.account?.name}
                                                 </div>
-                                                <div className="col-span-3 text-right text-xs font-mono text-stone-900">
+                                                <div className="col-span-3 text-right text-xs font-mono text-app-foreground">
                                                     {Number(line.debit) > 0 ? Number(line.debit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
                                                 </div>
-                                                <div className="col-span-3 text-right text-xs font-mono text-stone-900">
+                                                <div className="col-span-3 text-right text-xs font-mono text-app-foreground">
                                                     {Number(line.credit) > 0 ? Number(line.credit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
                                                 </div>
                                             </div>
@@ -253,14 +253,14 @@ export default function GeneralLedgerPage() {
                     })}
 
                     {entries.length === 0 && (
-                        <div className="text-center py-16 bg-stone-50 rounded-2xl border-2 border-dashed border-stone-200">
-                            <div className="w-12 h-12 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-stone-300 text-2xl">?</span>
+                        <div className="text-center py-16 bg-app-surface rounded-2xl border-2 border-dashed border-app-border">
+                            <div className="w-12 h-12 bg-app-surface-2 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-app-faint text-2xl">?</span>
                             </div>
-                            <h3 className="text-stone-900 font-bold mb-1">
+                            <h3 className="text-app-foreground font-bold mb-1">
                                 {activeFilterCount > 0 ? 'No Entries Match Filters' : 'No Ledger Entries'}
                             </h3>
-                            <p className="text-stone-500 text-sm">
+                            <p className="text-app-muted-foreground text-sm">
                                 {activeFilterCount > 0 ? 'Try adjusting your filters to see more results.' : 'Get started by creating your first journal voucher.'}
                             </p>
                         </div>

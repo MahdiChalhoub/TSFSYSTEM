@@ -110,7 +110,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Search rules, event codes…"
-                        className="w-full bg-white/5 border border-app-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-app-primary/50"
+                        className="w-full bg-app-surface/5 border border-app-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-app-primary/50"
                     />
                 </div>
 
@@ -118,13 +118,13 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                 <div className="flex gap-2 flex-wrap">
                     <button onClick={() => setModuleFilter('')}
                         className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                            !moduleFilter ? "bg-app-primary text-white border-app-primary" : "bg-white/5 text-white/40 border-app-border hover:text-white"
+                            !moduleFilter ? "bg-app-primary text-white border-app-primary" : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                         )}>All</button>
                     {modules.map(mod => (
                         <button key={mod} onClick={() => setModuleFilter(mod === moduleFilter ? '' : mod)}
                             className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                 moduleFilter === mod ? "bg-app-primary text-white border-app-primary" :
-                                    `${MODULE_COLORS[mod] || 'bg-white/5 text-white/40 border-app-border'} hover:opacity-100`
+                                    `${MODULE_COLORS[mod] || 'bg-app-surface/5 text-white/40 border-app-border'} hover:opacity-100`
                             )}>{mod}</button>
                     ))}
                 </div>
@@ -136,14 +136,14 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                             className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
                                 dirFilter === dir
                                     ? dir === 'POSITIVE' ? "bg-emerald-500 text-white border-emerald-500" : "bg-rose-500 text-white border-rose-500"
-                                    : "bg-white/5 text-white/40 border-app-border hover:text-white"
+                                    : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                             )}>
                             {dir === 'POSITIVE' ? '+' : '−'} {dir}
                         </button>
                     ))}
                     <button onClick={() => setShowCapped(p => !p)}
                         className={clsx("px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
-                            showCapped ? "bg-amber-500 text-white border-amber-500" : "bg-white/5 text-white/40 border-app-border hover:text-white"
+                            showCapped ? "bg-amber-500 text-white border-amber-500" : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                         )}>Capped only</button>
                 </div>
 
@@ -153,7 +153,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                         onClick={handleSnapshot}
                         disabled={isPending}
                         title="Save a period snapshot of all current scores"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-app-border bg-white/5 text-white/40 hover:text-sky-400 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all disabled:opacity-40"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-app-border bg-app-surface/5 text-white/40 hover:text-sky-400 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all disabled:opacity-40"
                     >
                         <Camera size={11} /> Snapshot
                     </button>
@@ -174,7 +174,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                 <div key={module} className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-xl">
                     {/* Group Header */}
                     <div className={clsx("px-8 py-4 flex items-center justify-between border-b border-app-border",
-                        MODULE_COLORS[module]?.split(' ')[0] || 'bg-white/5'
+                        MODULE_COLORS[module]?.split(' ')[0] || 'bg-app-surface/5'
                     )}>
                         <span className={clsx("font-black uppercase tracking-widest text-sm", MODULE_COLORS[module]?.split(' ')[1])}>
                             {module.toUpperCase()} MODULE
@@ -185,7 +185,7 @@ export default function WiseRulesClient({ rules, modules }: Props) {
                     <div className="divide-y divide-app-border">
                         {moduleRules.map(rule => (
                             <div key={rule.id} className={clsx(
-                                "px-8 py-5 flex items-center gap-6 hover:bg-white/[0.02] transition-colors",
+                                "px-8 py-5 flex items-center gap-6 hover:bg-app-surface/[0.02] transition-colors",
                                 !rule.is_active && "opacity-40"
                             )}>
                                 {/* Direction */}

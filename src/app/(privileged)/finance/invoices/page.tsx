@@ -22,13 +22,13 @@ type SortKey = 'issue_date' | 'due_date' | 'total_amount' | 'status'
 type SortDir = 'asc' | 'desc'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-    DRAFT: { label: 'Draft', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200', icon: Clock },
+    DRAFT: { label: 'Draft', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Clock },
     SENT: { label: 'Sent', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Send },
     PARTIAL_PAID: { label: 'Partial', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Percent },
     PAID: { label: 'Paid', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     OVERDUE: { label: 'Overdue', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: AlertTriangle },
-    CANCELLED: { label: 'Cancelled', color: 'text-stone-400', bg: 'bg-stone-50 border-stone-200', icon: XCircle },
-    WRITTEN_OFF: { label: 'Written Off', color: 'text-stone-400', bg: 'bg-stone-50 border-stone-200', icon: Ban },
+    CANCELLED: { label: 'Cancelled', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: XCircle },
+    WRITTEN_OFF: { label: 'Written Off', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border', icon: Ban },
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -37,10 +37,10 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    RETAIL: { label: 'Retail', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200' },
+    RETAIL: { label: 'Retail', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
     WHOLESALE: { label: 'Wholesale', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
     CONSIGNEE: { label: 'Consignee', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-    STANDARD: { label: 'Standard', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200' },
+    STANDARD: { label: 'Standard', color: 'text-app-muted-foreground', bg: 'bg-app-surface border-app-border' },
 }
 
 export default function InvoicesPage() {
@@ -78,7 +78,7 @@ export default function InvoicesPage() {
         else { setSortKey(key); setSortDir('asc') }
     }
     function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
             ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
             : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
@@ -187,8 +187,8 @@ export default function InvoicesPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Invoices</h1>
-                    <p className="text-stone-500 font-medium mt-1">Create, manage, and track sales &amp; purchase invoices</p>
+                    <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Invoices</h1>
+                    <p className="text-app-muted-foreground font-medium mt-1">Create, manage, and track sales &amp; purchase invoices</p>
                 </div>
                 <Button onClick={() => setCreateOpen(true)} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
                     <Plus size={16} /> New Invoice
@@ -246,11 +246,11 @@ export default function InvoicesPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{dashboard?.total_invoices || 0}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{dashboard?.total_invoices || 0}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <Receipt size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <Receipt size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -266,7 +266,7 @@ export default function InvoicesPage() {
                     </DialogHeader>
                     <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Type *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Type *</label>
                             <select name="type" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="SALES">Sales Invoice</option>
                                 <option value="PURCHASE">Purchase Invoice</option>
@@ -277,7 +277,7 @@ export default function InvoicesPage() {
                         </div>
                         {tradeSubTypesEnabled && (
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Sub-Type</label>
+                                <label className="text-xs font-bold text-app-muted-foreground uppercase">Sub-Type</label>
                                 <select name="sub_type" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="RETAIL">Retail</option>
                                     <option value="WHOLESALE">Wholesale</option>
@@ -287,15 +287,15 @@ export default function InvoicesPage() {
                             </div>
                         )}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Contact ID *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Contact ID *</label>
                             <Input name="contact" type="number" required placeholder="Customer/Supplier ID" className="rounded-xl" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Issue Date *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Issue Date *</label>
                             <Input name="issue_date" type="date" required className="rounded-xl" defaultValue={new Date().toISOString().split('T')[0]} />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Payment Terms *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Payment Terms *</label>
                             <select name="payment_terms" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="NET_30">Net 30 Days</option>
                                 <option value="NET_15">Net 15 Days</option>
@@ -307,14 +307,14 @@ export default function InvoicesPage() {
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Display Mode</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Display Mode</label>
                             <select name="display_mode" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="TTC">TTC (Incl. Tax)</option>
                                 <option value="HT">HT (Excl. Tax)</option>
                             </select>
                         </div>
                         <div className="col-span-2 space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Notes</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Notes</label>
                             <Input name="notes" placeholder="Optional notes..." className="rounded-xl" />
                         </div>
                         <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
@@ -340,7 +340,7 @@ export default function InvoicesPage() {
                     </DialogHeader>
                     <form onSubmit={handleRecordPayment} className="space-y-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
+                            <label className="text-xs font-bold text-app-muted-foreground uppercase">Amount *</label>
                             <Input name="amount" type="number" step="0.01" min="0.01"
                                 max={selectedInvoice?.balance_due}
                                 defaultValue={selectedInvoice?.balance_due}
@@ -358,15 +358,15 @@ export default function InvoicesPage() {
 
             {/* ─── Tabs + Table ────────────────────────────────── */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-app-surface/50">
                     <div className="flex gap-1 flex-wrap">
                         {tabs.map(tab => (
                             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                                 className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                    ? "bg-white shadow-sm font-semibold text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
+                                    ? "bg-app-surface shadow-sm font-semibold text-app-foreground" : "text-app-muted-foreground hover:text-app-muted-foreground"}`}>
                                 {tab.label}
                                 {tab.count > 0 && (
-                                    <span className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-stone-900 text-white' : 'bg-stone-200 text-stone-500'}`}>
+                                    <span className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground'}`}>
                                         {tab.count}
                                     </span>
                                 )}
@@ -378,40 +378,40 @@ export default function InvoicesPage() {
                             {[{ key: '', label: 'All Types' }, { key: 'RETAIL', label: 'Retail' }, { key: 'WHOLESALE', label: 'Wholesale' }, { key: 'CONSIGNEE', label: 'Consignee' }, { key: 'STANDARD', label: 'Standard' }].map(st => (
                                 <button key={st.key} onClick={() => setSubTypeFilter(st.key)}
                                     className={`px-3 py-1.5 text-xs rounded-lg transition-all font-medium ${subTypeFilter === st.key
-                                        ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}>
+                                        ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-app-muted-foreground hover:text-app-muted-foreground'}`}>
                                     {st.label}
                                 </button>
                             ))}
                         </div>
                     )}
                     <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input placeholder="Search invoices..." value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
+                            onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-app-surface" />
                     </div>
                 </div>
 
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Invoice #</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Type</TableHead>
-                            {tradeSubTypesEnabled && <TableHead className="text-xs font-bold uppercase text-stone-400">Sub-Type</TableHead>}
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Contact</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('issue_date')}>
+                        <TableRow className="bg-app-surface/30">
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Invoice #</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Type</TableHead>
+                            {tradeSubTypesEnabled && <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Sub-Type</TableHead>}
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Contact</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('issue_date')}>
                                 Issue Date <SortIcon col="issue_date" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
                                 Due Date <SortIcon col="due_date" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('total_amount')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right cursor-pointer select-none" onClick={() => toggleSort('total_amount')}>
                                 Total <SortIcon col="total_amount" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Balance</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Balance</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
                                 Status <SortIcon col="status" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Actions</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -419,12 +419,12 @@ export default function InvoicesPage() {
                             const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
                             const StatusIcon = sc.icon
                             return (
-                                <TableRow key={inv.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-mono text-sm font-semibold text-stone-700">
+                                <TableRow key={inv.id} className="hover:bg-app-surface/50 transition-colors">
+                                    <TableCell className="font-mono text-sm font-semibold text-app-foreground">
                                         {inv.invoice_number || `DRAFT-${inv.id}`}
                                     </TableCell>
                                     <TableCell>
-                                        <span className="text-xs font-medium text-stone-500">{TYPE_LABELS[inv.type] || inv.type}</span>
+                                        <span className="text-xs font-medium text-app-muted-foreground">{TYPE_LABELS[inv.type] || inv.type}</span>
                                     </TableCell>
                                     {tradeSubTypesEnabled && (
                                         <TableCell>
@@ -433,18 +433,18 @@ export default function InvoicesPage() {
                                                     {SUB_TYPE_CONFIG[inv.sub_type].label}
                                                 </Badge>
                                             ) : (
-                                                <span className="text-xs text-stone-300">—</span>
+                                                <span className="text-xs text-app-faint">—</span>
                                             )}
                                         </TableCell>
                                     )}
-                                    <TableCell className="text-sm font-medium text-stone-700">
+                                    <TableCell className="text-sm font-medium text-app-foreground">
                                         {inv.contact_display || inv.contact_name || `#${inv.contact}`}
                                     </TableCell>
-                                    <TableCell className="text-sm text-stone-600">{inv.issue_date || '—'}</TableCell>
-                                    <TableCell className={`text-sm ${inv.is_overdue ? 'text-red-600 font-semibold' : 'text-stone-600'}`}>
+                                    <TableCell className="text-sm text-app-muted-foreground">{inv.issue_date || '—'}</TableCell>
+                                    <TableCell className={`text-sm ${inv.is_overdue ? 'text-red-600 font-semibold' : 'text-app-muted-foreground'}`}>
                                         {inv.due_date || '—'}
                                     </TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">
+                                    <TableCell className="text-right font-semibold text-app-foreground">
                                         {Number(inv.total_amount || 0).toLocaleString()}
                                     </TableCell>
                                     <TableCell className={`text-right font-semibold ${Number(inv.balance_due) > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
@@ -463,7 +463,7 @@ export default function InvoicesPage() {
                                                         onClick={() => handleSend(inv)} disabled={isPending}>
                                                         <Send size={13} />
                                                     </Button>
-                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-stone-400 hover:bg-stone-50"
+                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-app-muted-foreground hover:bg-app-surface"
                                                         onClick={() => handleCancel(inv)} disabled={isPending}>
                                                         <XCircle size={13} />
                                                     </Button>
@@ -484,11 +484,11 @@ export default function InvoicesPage() {
                             <TableRow>
                                 <TableCell colSpan={9} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <FileText size={28} className="text-stone-300" />
+                                        <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                            <FileText size={28} className="text-app-faint" />
                                         </div>
-                                        <p className="font-semibold text-stone-600">No invoices found</p>
-                                        <p className="text-sm text-stone-400 mt-1">Create your first invoice to get started</p>
+                                        <p className="font-semibold text-app-muted-foreground">No invoices found</p>
+                                        <p className="text-sm text-app-muted-foreground mt-1">Create your first invoice to get started</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -496,9 +496,9 @@ export default function InvoicesPage() {
                     </TableBody>
                 </Table>
                 {filtered.length > 0 && (
-                    <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
+                    <div className="px-5 py-3 border-t bg-app-surface/30 flex items-center justify-between text-sm text-app-muted-foreground">
                         <span>{filtered.length} invoice{filtered.length !== 1 ? 's' : ''} shown</span>
-                        <span className="font-semibold text-stone-700">
+                        <span className="font-semibold text-app-foreground">
                             Total: {filtered.reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0).toLocaleString()}
                         </span>
                     </div>

@@ -33,19 +33,19 @@ export default async function CategoryMaintenancePage(props: {
     const safeProducts = JSON.parse(JSON.stringify(products));
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)] bg-gray-50 -m-6">
+        <div className="flex flex-col h-[calc(100vh-6rem)] bg-app-surface -m-6">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shrink-0">
+            <header className="bg-app-surface border-b border-app-border px-6 py-4 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <Link
                         href="/inventory/categories"
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+                        className="p-2 rounded-lg hover:bg-app-surface-2 text-app-muted-foreground transition-colors"
                     >
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Category Maintenance</h1>
-                        <p className="text-sm text-gray-500">Reorganize products by moving them between categories.</p>
+                        <h1 className="text-xl font-bold text-app-foreground">Category Maintenance</h1>
+                        <p className="text-sm text-app-muted-foreground">Reorganize products by moving them between categories.</p>
                     </div>
                 </div>
             </header>
@@ -59,19 +59,19 @@ export default async function CategoryMaintenancePage(props: {
                 />
 
                 {/* Main Area */}
-                <main className="flex-1 overflow-hidden bg-gray-50 relative">
+                <main className="flex-1 overflow-hidden bg-app-surface relative">
                     {activeCategoryId ? (
                         <div className="h-full flex flex-col">
                             <div className="p-4 pb-0">
-                                <h2 className="text-lg font-bold text-gray-800">
+                                <h2 className="text-lg font-bold text-app-foreground">
                                     {currentCategoryName}
-                                    <span className="ml-2 text-sm font-normal text-gray-500">
+                                    <span className="ml-2 text-sm font-normal text-app-muted-foreground">
                                         ({products.length} products)
                                     </span>
                                 </h2>
                             </div>
                             <div className="flex-1 p-4 min-h-0">
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-full overflow-hidden">
+                                <div className="bg-app-surface rounded-xl shadow-sm border border-app-border h-full overflow-hidden">
                                     <ProductReassignmentTable
                                         products={safeProducts}
                                         categories={safeCategories}
@@ -81,8 +81,8 @@ export default async function CategoryMaintenancePage(props: {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <div className="h-full flex flex-col items-center justify-center text-app-muted-foreground">
+                            <div className="w-16 h-16 bg-app-surface-2 rounded-full flex items-center justify-center mb-4">
                                 <ArrowLeft size={32} />
                             </div>
                             <p className="font-medium">Select a category from the sidebar to manage its products.</p>

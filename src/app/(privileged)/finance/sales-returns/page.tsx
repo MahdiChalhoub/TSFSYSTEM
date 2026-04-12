@@ -76,7 +76,7 @@ export default function SalesReturnsPage() {
         else { setSortKey(key); setSortDir('asc') }
     }
     function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-app-faint ml-1 inline" />
         return sortDir === 'asc'
             ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
             : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
@@ -116,8 +116,8 @@ export default function SalesReturnsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             <div>
-                <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Sales Returns</h1>
-                <p className="text-stone-500 font-medium mt-1">Manage customer returns, approvals, and credit notes</p>
+                <h1 className="text-4xl font-bold text-app-foreground font-serif tracking-tight">Sales Returns</h1>
+                <p className="text-app-muted-foreground font-medium mt-1">Manage customer returns, approvals, and credit notes</p>
             </div>
 
             {/* Confirm Dialog */}
@@ -150,11 +150,11 @@ export default function SalesReturnsPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Returns</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{returns.length}</p>
+                                <p className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider">Total Returns</p>
+                                <p className="text-3xl font-bold text-app-foreground mt-1">{returns.length}</p>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <RotateCcw size={22} className="text-stone-500" />
+                            <div className="w-12 h-12 rounded-2xl bg-app-surface-2/60 flex items-center justify-center">
+                                <RotateCcw size={22} className="text-app-muted-foreground" />
                             </div>
                         </div>
                     </CardContent>
@@ -202,40 +202,40 @@ export default function SalesReturnsPage() {
 
             {/* Tabs + Content */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-app-surface/50">
                     <div className="flex gap-1">
                         <button onClick={() => setActiveTab('RETURNS')}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === 'RETURNS' ? "bg-white shadow-sm font-semibold text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
+                            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === 'RETURNS' ? "bg-app-surface shadow-sm font-semibold text-app-foreground" : "text-app-muted-foreground hover:text-app-muted-foreground"}`}>
                             <Package size={13} /> Returns
                         </button>
                         <button onClick={() => setActiveTab('CREDIT_NOTES')}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === 'CREDIT_NOTES' ? "bg-white shadow-sm font-semibold text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
+                            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === 'CREDIT_NOTES' ? "bg-app-surface shadow-sm font-semibold text-app-foreground" : "text-app-muted-foreground hover:text-app-muted-foreground"}`}>
                             <CreditCard size={13} /> Credit Notes
                         </button>
                     </div>
                     <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-app-surface" />
                     </div>
                 </div>
 
                 {activeTab === 'RETURNS' && (
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-stone-50/30">
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('return_date')}>
+                            <TableRow className="bg-app-surface/30">
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('return_date')}>
                                     Date <SortIcon col="return_date" />
                                 </TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Reference</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Order</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Customer</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('reason')}>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Reference</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Order</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Customer</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground cursor-pointer select-none" onClick={() => toggleSort('reason')}>
                                     Reason <SortIcon col="reason" />
                                 </TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
                                     Status <SortIcon col="status" />
                                 </TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -243,12 +243,12 @@ export default function SalesReturnsPage() {
                                 const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
                                 const StatusIcon = sc.icon
                                 return (
-                                    <TableRow key={r.id} className="hover:bg-stone-50/50 transition-colors group">
-                                        <TableCell className="text-sm text-stone-600">{r.return_date}</TableCell>
-                                        <TableCell className="font-mono text-sm text-stone-500">{r.reference || "—"}</TableCell>
-                                        <TableCell className="text-sm text-stone-600">{r.original_order_ref || `#${r.original_order}`}</TableCell>
-                                        <TableCell className="text-sm font-medium text-stone-700">{r.customer_name || "—"}</TableCell>
-                                        <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{r.reason || "—"}</TableCell>
+                                    <TableRow key={r.id} className="hover:bg-app-surface/50 transition-colors group">
+                                        <TableCell className="text-sm text-app-muted-foreground">{r.return_date}</TableCell>
+                                        <TableCell className="font-mono text-sm text-app-muted-foreground">{r.reference || "—"}</TableCell>
+                                        <TableCell className="text-sm text-app-muted-foreground">{r.original_order_ref || `#${r.original_order}`}</TableCell>
+                                        <TableCell className="text-sm font-medium text-app-foreground">{r.customer_name || "—"}</TableCell>
+                                        <TableCell className="text-sm text-app-muted-foreground max-w-[200px] truncate">{r.reason || "—"}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
                                                 <StatusIcon size={12} /> {sc.label}
@@ -275,10 +275,10 @@ export default function SalesReturnsPage() {
                                 <TableRow>
                                     <TableCell colSpan={7} className="py-16 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                                <RotateCcw size={28} className="text-stone-300" />
+                                            <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                                <RotateCcw size={28} className="text-app-faint" />
                                             </div>
-                                            <p className="font-semibold text-stone-600">No sales returns found</p>
+                                            <p className="font-semibold text-app-muted-foreground">No sales returns found</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -290,21 +290,21 @@ export default function SalesReturnsPage() {
                 {activeTab === 'CREDIT_NOTES' && (
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-stone-50/30">
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Credit #</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Date</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400">Customer</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Amount</TableHead>
-                                <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
+                            <TableRow className="bg-app-surface/30">
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Credit #</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Date</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground">Customer</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-right">Amount</TableHead>
+                                <TableHead className="text-xs font-bold uppercase text-app-muted-foreground text-center">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {creditNotes.filter(cn => !searchQuery || (cn.credit_number || "").toLowerCase().includes(searchQuery.toLowerCase())).map((cn: Record<string, any>) => (
-                                <TableRow key={cn.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-mono text-sm font-semibold text-stone-700">{cn.credit_number}</TableCell>
-                                    <TableCell className="text-sm text-stone-600">{cn.date}</TableCell>
-                                    <TableCell className="text-sm font-medium text-stone-700">{cn.customer_name || `#${cn.customer}`}</TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(cn.amount).toLocaleString()}</TableCell>
+                                <TableRow key={cn.id} className="hover:bg-app-surface/50 transition-colors">
+                                    <TableCell className="font-mono text-sm font-semibold text-app-foreground">{cn.credit_number}</TableCell>
+                                    <TableCell className="text-sm text-app-muted-foreground">{cn.date}</TableCell>
+                                    <TableCell className="text-sm font-medium text-app-foreground">{cn.customer_name || `#${cn.customer}`}</TableCell>
+                                    <TableCell className="text-right font-semibold text-app-foreground">{Number(cn.amount).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant="outline" className="gap-1 rounded-lg border bg-blue-50 border-blue-200 text-blue-700 font-semibold text-[11px]">
                                             <FileText size={12} /> {cn.status}
@@ -316,11 +316,11 @@ export default function SalesReturnsPage() {
                                 <TableRow>
                                     <TableCell colSpan={5} className="py-16 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                                <CreditCard size={28} className="text-stone-300" />
+                                            <div className="w-16 h-16 rounded-full bg-app-surface-2 flex items-center justify-center">
+                                                <CreditCard size={28} className="text-app-faint" />
                                             </div>
-                                            <p className="font-semibold text-stone-600">No credit notes yet</p>
-                                            <p className="text-sm text-stone-400">Credit notes are auto-created when returns are approved</p>
+                                            <p className="font-semibold text-app-muted-foreground">No credit notes yet</p>
+                                            <p className="text-sm text-app-muted-foreground">Credit notes are auto-created when returns are approved</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>

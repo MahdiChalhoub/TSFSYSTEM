@@ -235,7 +235,7 @@ function ToggleRow({ label, description, checked, onChange, color }: {
                 <span className="text-[8px] text-app-muted-foreground block leading-tight">{description}</span>
             </div>
             <div onClick={() => onChange(!checked)} className={`w-8 h-4 rounded-full transition-all relative shrink-0 ${checked ? color : 'bg-app-border'}`}>
-                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${checked ? 'left-4.5' : 'left-0.5'}`} />
+                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-app-surface transition-all ${checked ? 'left-4.5' : 'left-0.5'}`} />
             </div>
         </label>
     )

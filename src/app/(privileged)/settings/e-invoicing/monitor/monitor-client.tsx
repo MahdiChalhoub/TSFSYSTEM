@@ -134,14 +134,14 @@ export default function FNEMonitorClient() {
  if (s === 'CERTIFIED') return <CheckCircle2 size={14} className="text-emerald-500" />
  if (s === 'FAILED') return <XCircle size={14} className="text-rose-500" />
  if (s === 'PENDING') return <Clock size={14} className="text-amber-500" />
- return <AlertTriangle size={14} className="text-gray-400" />
+ return <AlertTriangle size={14} className="text-app-muted-foreground" />
  }
 
  const statusBadge = (s: string | null) => {
  if (s === 'CERTIFIED') return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-black">CERTIFIÉ</Badge>
  if (s === 'FAILED') return <Badge className="bg-rose-100 text-rose-700 border-rose-200 text-[10px] font-black">ÉCHOUÉ</Badge>
  if (s === 'PENDING') return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px] font-black">EN ATTENTE</Badge>
- return <Badge className="bg-gray-100 text-gray-500 border-gray-200 text-[10px] font-black">NON SOUMIS</Badge>
+ return <Badge className="bg-app-surface-2 text-app-muted-foreground border-app-border text-[10px] font-black">NON SOUMIS</Badge>
  }
 
  return (

@@ -268,7 +268,7 @@ export default function ConnectorPoliciesPage() {
     const getActionColor = (action: string) => {
         const colors: Record<string, string> = {
             'forward': 'bg-green-100 text-green-700 border-green-200',
-            'empty': 'bg-gray-100 text-gray-700 border-gray-200',
+            'empty': 'bg-app-surface-2 text-app-foreground border-app-border',
             'buffer': 'bg-blue-100 text-blue-700 border-blue-200',
             'cached': 'bg-purple-100 text-purple-700 border-purple-200',
             'drop': 'bg-orange-100 text-orange-700 border-orange-200',
@@ -276,7 +276,7 @@ export default function ConnectorPoliciesPage() {
             'wait': 'bg-yellow-100 text-yellow-700 border-yellow-200',
             'mock': 'bg-pink-100 text-pink-700 border-pink-200',
         }
-        return colors[action] || 'bg-gray-100 text-gray-700 border-gray-200'
+        return colors[action] || 'bg-app-surface-2 text-app-foreground border-app-border'
     }
 
     const hasActiveFilters = filterSource || filterTarget || filterAction
@@ -286,7 +286,7 @@ export default function ConnectorPoliciesPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/connector" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
+                    <Link href="/connector" className="text-app-muted-foreground hover:text-app-muted-foreground flex items-center gap-2 mb-4 text-sm font-medium">
                         <ArrowLeft size={16} />
                         Back to Connector Dashboard
                     </Link>
@@ -295,8 +295,8 @@ export default function ConnectorPoliciesPage() {
                             <Settings size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Routing Policies</h2>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Routing Policies</h2>
+                    <p className="text-app-muted-foreground mt-2 font-medium">
                         {filteredPolicies.length} policies {hasActiveFilters ? '(filtered)' : ''}
                     </p>
                 </div>
@@ -430,7 +430,7 @@ export default function ConnectorPoliciesPage() {
                                 </Select>
                             </div>
                             <div className="flex items-center justify-center">
-                                <ArrowRight size={24} className="text-gray-300" />
+                                <ArrowRight size={24} className="text-app-faint" />
                             </div>
                             <div className="col-span-2 space-y-2">
                                 <Label>Target Module (Destination)</Label>
@@ -460,7 +460,7 @@ export default function ConnectorPoliciesPage() {
                                 onChange={(e) => setFormData({ ...formData, target_endpoint: e.target.value })}
                                 placeholder="* (all), products/, categories/*"
                             />
-                            <p className="text-xs text-gray-400">Use * for all endpoints, or specify a path pattern</p>
+                            <p className="text-xs text-app-muted-foreground">Use * for all endpoints, or specify a path pattern</p>
                         </div>
 
                         {/* MISSING State */}
@@ -640,12 +640,12 @@ export default function ConnectorPoliciesPage() {
             <div className="grid gap-4">
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
-                        <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                        <RefreshCw className="w-8 h-8 animate-spin text-app-muted-foreground" />
                     </div>
                 ) : filteredPolicies.length === 0 ? (
-                    <Card className="rounded-3xl shadow-xl border-gray-100">
+                    <Card className="rounded-3xl shadow-xl border-app-border">
                         <CardContent className="p-0">
-                            <div className="text-center py-20 text-gray-400">
+                            <div className="text-center py-20 text-app-muted-foreground">
                                 <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                 <p className="font-medium">{hasActiveFilters ? 'No policies match filters' : 'No policies configured'}</p>
                                 <p className="text-sm mt-1">
@@ -668,21 +668,21 @@ export default function ConnectorPoliciesPage() {
                     </Card>
                 ) : (
                     filteredPolicies.map((policy) => (
-                        <Card key={policy.id} className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow">
+                        <Card key={policy.id} className="rounded-2xl shadow-lg border-app-border hover:shadow-xl transition-shadow">
                             <CardContent className="p-4">
                                 <div className="flex items-start justify-between gap-4">
                                     {/* Route Display */}
                                     <div className="flex-1">
                                         {/* Source → Target */}
                                         <div className="flex items-center gap-3 mb-3">
-                                            <Badge variant="outline" className="px-3 py-1 text-sm font-bold bg-gray-50">
+                                            <Badge variant="outline" className="px-3 py-1 text-sm font-bold bg-app-surface">
                                                 {getModuleName(policy.source_module || '*')}
                                             </Badge>
                                             <ArrowRight size={20} className="text-indigo-400" />
                                             <Badge variant="outline" className="px-3 py-1 text-sm font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
                                                 {getModuleName(policy.target_module)}
                                             </Badge>
-                                            <span className="text-xs text-gray-400 font-mono">{policy.target_endpoint}</span>
+                                            <span className="text-xs text-app-muted-foreground font-mono">{policy.target_endpoint}</span>
                                         </div>
 
                                         {/* State Actions Grid */}
@@ -739,7 +739,7 @@ export default function ConnectorPoliciesPage() {
 
                                     {/* Actions */}
                                     <div className="flex flex-col gap-2">
-                                        <Badge variant="outline" className="text-xs text-gray-500">
+                                        <Badge variant="outline" className="text-xs text-app-muted-foreground">
                                             Priority: {policy.priority}
                                         </Badge>
                                         <div className="flex gap-1">
@@ -747,7 +747,7 @@ export default function ConnectorPoliciesPage() {
                                                 size="sm"
                                                 variant="ghost"
                                                 onClick={() => handleEdit(policy)}
-                                                className="text-gray-500 hover:text-indigo-600"
+                                                className="text-app-muted-foreground hover:text-indigo-600"
                                             >
                                                 <Edit2 size={16} />
                                             </Button>
@@ -755,7 +755,7 @@ export default function ConnectorPoliciesPage() {
                                                 size="sm"
                                                 variant="ghost"
                                                 onClick={() => setPendingDeleteId(policy.id)}
-                                                className="text-gray-500 hover:text-red-600"
+                                                className="text-app-muted-foreground hover:text-red-600"
                                             >
                                                 <Trash2 size={16} />
                                             </Button>
@@ -795,8 +795,8 @@ export default function ConnectorPoliciesPage() {
             />
 
             {/* Legend */}
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                <h4 className="font-bold text-gray-700 mb-3">Action Legend</h4>
+            <div className="p-4 bg-app-surface rounded-2xl border border-app-border">
+                <h4 className="font-bold text-app-foreground mb-3">Action Legend</h4>
                 <div className="flex flex-wrap gap-2">
                     <Badge variant="outline" className={getActionColor('forward')}>forward</Badge>
                     <Badge variant="outline" className={getActionColor('empty')}>empty</Badge>

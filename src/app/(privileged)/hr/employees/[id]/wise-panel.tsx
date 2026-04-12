@@ -65,7 +65,7 @@ const SEVERITY_DOT: Record<string, string> = {
     CRITICAL: 'bg-rose-500',
     MAJOR: 'bg-orange-400',
     MEDIUM: 'bg-amber-400',
-    MINOR: 'bg-white/20',
+    MINOR: 'bg-app-surface/20',
 };
 
 function CustomTooltip({ active, payload, label }: any) {
@@ -137,7 +137,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
     return (
         <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
             {/* Panel header */}
-            <div className="p-6 border-b border-app-border bg-white/[0.02] flex items-center justify-between">
+            <div className="p-6 border-b border-app-border bg-app-surface/[0.02] flex items-center justify-between">
                 <h3 className="font-black italic flex items-center gap-2 text-lg">
                     <TrendingUp size={20} style={{ color: 'var(--app-primary)' }} />
                     WISE Intelligence
@@ -182,11 +182,11 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                         const isRev = ev.status === 'REVERSED';
                         return (
                             <div key={ev.id} className={clsx(
-                                "px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors",
+                                "px-6 py-4 flex items-center gap-4 hover:bg-app-surface/[0.02] transition-colors",
                                 isRev && "opacity-30 line-through"
                             )}>
                                 {/* Severity dot */}
-                                <div className={clsx("w-2 h-2 rounded-full shrink-0", SEVERITY_DOT[ev.severity_level] || 'bg-white/20')} />
+                                <div className={clsx("w-2 h-2 rounded-full shrink-0", SEVERITY_DOT[ev.severity_level] || 'bg-app-surface/20')} />
 
                                 {/* Direction pill */}
                                 <div className={clsx(
@@ -273,7 +273,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                     const prev = timelineData[i - 1];
                                     const delta = prev ? p.score - prev.score : 0;
                                     return (
-                                        <div key={p.period} className="shrink-0 bg-white/5 rounded-2xl p-4 text-center border border-white/5 min-w-[90px]">
+                                        <div key={p.period} className="shrink-0 bg-app-surface/5 rounded-2xl p-4 text-center border border-white/5 min-w-[90px]">
                                             <div className="text-[9px] uppercase opacity-30 mb-1">{p.period}</div>
                                             <div className="text-lg font-black">{p.score.toFixed(0)}</div>
                                             {delta !== 0 && (
@@ -316,7 +316,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                                     ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500"
                                                         : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500"
                                                             : "bg-amber-500 text-white border-amber-500"
-                                                    : "bg-white/5 text-white/40 border-app-border hover:text-white"
+                                                    : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                                             )}>{t}</button>
                                     ))}
                                 </div>
@@ -328,7 +328,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                 <select
                                     value={adjustForm.dimension}
                                     onChange={e => setAdjustForm(f => ({ ...f, dimension: e.target.value }))}
-                                    className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50"
+                                    className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50"
                                 >
                                     {['PRODUCTIVITY', 'ACCURACY', 'TIMELINESS', 'ATTENDANCE', 'COMPLIANCE', 'LEADERSHIP', 'TEAMWORK', 'CUSTOMER_IMPACT'].map(d => (
                                         <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>
@@ -349,7 +349,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                     onChange={e => setAdjustForm(f => ({ ...f, points: e.target.value }))}
                                     placeholder="e.g. 50"
                                     required
-                                    className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50"
+                                    className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50"
                                 />
                             </div>
 
@@ -362,7 +362,7 @@ export default function EmployeeWisePanel({ summary, events, periods, employeeId
                                     rows={3}
                                     placeholder="Describe why this adjustment is being made…"
                                     required
-                                    className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50 resize-none"
+                                    className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-app-primary/50 resize-none"
                                 />
                             </div>
 

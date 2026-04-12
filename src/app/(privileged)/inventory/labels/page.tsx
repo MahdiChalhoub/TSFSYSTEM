@@ -141,16 +141,16 @@ export default function LabelPrintingPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center">
                             <Tag size={20} className="text-white" />
                         </div>
                         Label Printing
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Select products and print barcode labels</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Select products and print barcode labels</p>
                 </div>
                 <div className="relative w-56">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                     <Input placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
@@ -162,7 +162,7 @@ export default function LabelPrintingPage() {
                         <div className="flex items-center gap-3">
                             <Package size={24} className="text-orange-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Products</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Products</p>
                                 <p className="text-2xl font-bold">{products.length}</p>
                             </div>
                         </div>
@@ -173,7 +173,7 @@ export default function LabelPrintingPage() {
                         <div className="flex items-center gap-3">
                             <Barcode size={24} className="text-green-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">With Barcode</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">With Barcode</p>
                                 <p className="text-2xl font-bold text-green-700">{withBarcode}</p>
                             </div>
                         </div>
@@ -184,7 +184,7 @@ export default function LabelPrintingPage() {
                         <div className="flex items-center gap-3">
                             <Tag size={24} className="text-amber-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Without Barcode</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Without Barcode</p>
                                 <p className="text-2xl font-bold text-amber-700">{withoutBarcode}</p>
                             </div>
                         </div>
@@ -195,7 +195,7 @@ export default function LabelPrintingPage() {
                         <div className="flex items-center gap-3">
                             <CheckSquare size={24} className="text-blue-500" />
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Selected</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Selected</p>
                                 <p className="text-2xl font-bold text-blue-700">{selected.size}</p>
                             </div>
                         </div>
@@ -207,12 +207,12 @@ export default function LabelPrintingPage() {
             <Card>
                 <CardContent className="py-3 flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500">Label Size:</span>
+                        <span className="text-xs font-medium text-app-muted-foreground">Label Size:</span>
                         {(['small', 'medium', 'large'] as const).map(size => (
                             <button
                                 key={size}
                                 onClick={() => setLabelSize(size)}
-                                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${labelSize === size ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${labelSize === size ? 'bg-app-bg text-white' : 'bg-app-surface-2 text-app-muted-foreground hover:bg-app-surface-2'
                                     }`}
                             >
                                 {size.charAt(0).toUpperCase() + size.slice(1)}
@@ -221,7 +221,7 @@ export default function LabelPrintingPage() {
                     </div>
                     <div className="ml-auto flex items-center gap-2">
                         <button onClick={selectAll}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-all">
+                            className="px-3 py-1.5 bg-app-surface-2 text-app-muted-foreground rounded-lg text-xs font-medium hover:bg-app-surface-2 transition-all">
                             {selected.size === filtered.length ? 'Deselect All' : 'Select All'}
                         </button>
                         <button onClick={handlePrint}
@@ -238,14 +238,14 @@ export default function LabelPrintingPage() {
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Package size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No products found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead className="w-10">
                                         <input type="checkbox"
                                             checked={selected.size > 0 && selected.size === filtered.length}
@@ -263,7 +263,7 @@ export default function LabelPrintingPage() {
                                 {filtered.slice(0, 100).map((p: Record<string, any>) => (
                                     <TableRow
                                         key={p.id}
-                                        className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-orange-50' : 'hover:bg-gray-50/50'}`}
+                                        className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-orange-50' : 'hover:bg-app-surface/50'}`}
                                         onClick={() => toggleSelect(p.id)}
                                     >
                                         <TableCell>
@@ -283,7 +283,7 @@ export default function LabelPrintingPage() {
                                                 <span className="font-medium text-sm">{p.name}</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="font-mono text-xs text-gray-500">{p.sku}</TableCell>
+                                        <TableCell className="font-mono text-xs text-app-muted-foreground">{p.sku}</TableCell>
                                         <TableCell>
                                             {p.barcode ? (
                                                 <span className="font-mono text-xs">{p.barcode}</span>
@@ -291,7 +291,7 @@ export default function LabelPrintingPage() {
                                                 <Badge className="bg-amber-100 text-amber-600 text-[10px]">No barcode</Badge>
                                             )}
                                         </TableCell>
-                                        <TableCell className="text-xs text-gray-500">{p.category_name || '\u2014'}</TableCell>
+                                        <TableCell className="text-xs text-app-muted-foreground">{p.category_name || '\u2014'}</TableCell>
                                         <TableCell className="text-right font-bold">{fmt(parseFloat(p.selling_price_ttc || 0))}</TableCell>
                                     </TableRow>
                                 ))}
@@ -311,22 +311,22 @@ export default function LabelPrintingPage() {
                         <div className="flex flex-wrap gap-3" ref={printRef}>
                             {products.filter(p => selected.has(p.id)).slice(0, 8).map(p => (
                                 <div key={p.id}
-                                    className="border border-dashed border-gray-300 rounded-lg p-3 flex flex-col gap-1"
+                                    className="border border-dashed border-app-border rounded-lg p-3 flex flex-col gap-1"
                                     style={{ width: labelSize === 'small' ? '150px' : labelSize === 'medium' ? '200px' : '260px' }}
                                 >
                                     <p className="font-bold text-xs truncate">{p.name}</p>
-                                    <p className="text-[10px] text-gray-400">SKU: {p.sku}</p>
-                                    <p className="text-center font-mono text-lg tracking-widest my-1 text-gray-700">
+                                    <p className="text-[10px] text-app-muted-foreground">SKU: {p.sku}</p>
+                                    <p className="text-center font-mono text-lg tracking-widest my-1 text-app-foreground">
                                         {(p.barcode || p.sku || '000000').split('').join(' ')}
                                     </p>
                                     <div className="flex justify-between items-end">
-                                        <span className="text-[10px] text-gray-400">{p.barcode || '\u2014'}</span>
+                                        <span className="text-[10px] text-app-muted-foreground">{p.barcode || '\u2014'}</span>
                                         <span className="font-bold text-sm">{fmt(parseFloat(p.selling_price_ttc || 0))}</span>
                                     </div>
                                 </div>
                             ))}
                             {selected.size > 8 && (
-                                <div className="flex items-center justify-center border border-dashed border-gray-200 rounded-lg p-3 text-gray-400 text-xs" style={{ width: '200px' }}>
+                                <div className="flex items-center justify-center border border-dashed border-app-border rounded-lg p-3 text-app-muted-foreground text-xs" style={{ width: '200px' }}>
                                     +{selected.size - 8} more
                                 </div>
                             )}

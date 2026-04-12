@@ -89,8 +89,8 @@ export default function StockAdjustmentManager({
             <div className="space-y-6">
 
                 {/* 1. Warehouse Selection */}
-                <div className="bg-white p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-gray-100">
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="bg-app-surface p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-app-border">
+                    <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                         <BuildingIcon className="w-4 h-4" />
                         Target Warehouse
                     </h3>
@@ -103,7 +103,7 @@ export default function StockAdjustmentManager({
                                     "px-4 py-3 rounded-xl border flex-shrink-0 transition-all",
                                     selectedWarehouseId === w.id
                                         ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                        : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100"
+                                        : "bg-app-surface border-app-border text-app-muted-foreground hover:bg-app-surface-2"
                                 )}
                             >
                                 <div className="text-sm font-bold">{w.name}</div>
@@ -114,8 +114,8 @@ export default function StockAdjustmentManager({
                 </div>
 
                 {/* 2. Product Search */}
-                <div className="bg-white p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-gray-100 min-h-[300px]">
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="bg-app-surface p-6 rounded-[32px] shadow-lg shadow-indigo-900/5 border border-app-border min-h-[300px]">
+                    <h3 className="text-xs font-black text-app-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Search className="w-4 h-4" />
                         Select Product
                     </h3>
@@ -126,7 +126,7 @@ export default function StockAdjustmentManager({
                             placeholder="Type to search product..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-4 focus:ring-indigo-50 font-medium text-gray-700 outline-none transition-all"
+                            className="w-full px-5 py-4 bg-app-surface rounded-2xl border-none focus:ring-4 focus:ring-indigo-50 font-medium text-app-foreground outline-none transition-all"
                         />
                         {loadingProducts && (
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-500 text-xs font-bold animate-pulse">
@@ -145,37 +145,37 @@ export default function StockAdjustmentManager({
                                         "w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group",
                                         selectedProduct?.id === product.id
                                             ? "bg-indigo-50 border-indigo-200 ring-2 ring-indigo-100"
-                                            : "bg-white border-gray-50 hover:border-gray-200 hover:bg-gray-50/50"
+                                            : "bg-app-surface border-gray-50 hover:border-app-border hover:bg-app-surface/50"
                                     )}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 group-hover:text-indigo-500 transition-colors">
+                                        <div className="w-10 h-10 rounded-xl bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:text-indigo-500 transition-colors">
                                             <Package size={18} />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-bold text-gray-900">{product.name}</div>
-                                            <div className="text-[10px] text-gray-400 font-mono">
+                                            <div className="text-sm font-bold text-app-foreground">{product.name}</div>
+                                            <div className="text-[10px] text-app-muted-foreground font-mono">
                                                 {product.sku} {product.barcode ? `ΓÇó ${product.barcode}` : ''}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-[10px] uppercase font-bold text-gray-400">Curr. Stock</div>
-                                        <div className="text-xs font-black text-gray-700">
+                                        <div className="text-[10px] uppercase font-bold text-app-muted-foreground">Curr. Stock</div>
+                                        <div className="text-xs font-black text-app-foreground">
                                             {product.siteStock?.[currentWarehouse?.siteId ?? 0] || '0'}
                                         </div>
                                     </div>
                                 </button>
                             ))
                         ) : search.length > 1 && !loadingProducts ? (
-                            <div className="text-center py-8 text-gray-400 text-sm">No products found</div>
+                            <div className="text-center py-8 text-app-muted-foreground text-sm">No products found</div>
                         ) : selectedProduct ? (
                             <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-white text-indigo-600 flex items-center justify-center shadow-sm">
+                                <div className="w-12 h-12 rounded-xl bg-app-surface text-indigo-600 flex items-center justify-center shadow-sm">
                                     <Package size={24} />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-black text-gray-900">{selectedProduct.name}</div>
+                                    <div className="text-sm font-black text-app-foreground">{selectedProduct.name}</div>
                                     <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-wide">Selected Product</div>
                                 </div>
                                 <button
@@ -186,7 +186,7 @@ export default function StockAdjustmentManager({
                                 </button>
                             </div>
                         ) : (
-                            <div className="text-center py-12 text-gray-300 text-sm italic">
+                            <div className="text-center py-12 text-app-faint text-sm italic">
                                 Start typing to search...
                             </div>
                         )}
@@ -197,19 +197,19 @@ export default function StockAdjustmentManager({
 
             {/* Right Panel: Adjustment Details */}
             <div className="space-y-6">
-                <div className="bg-white p-8 rounded-[40px] shadow-xl shadow-indigo-900/10 border border-gray-100 relative overflow-hidden">
+                <div className="bg-app-surface p-8 rounded-[40px] shadow-xl shadow-indigo-900/10 border border-app-border relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                         <ArrowRightLeft size={120} />
                     </div>
 
-                    <h2 className="text-2xl font-black text-gray-900 mb-8">Adjustment Details</h2>
+                    <h2 className="text-2xl font-black text-app-foreground mb-8">Adjustment Details</h2>
 
                     <div className="space-y-6">
                         {/* Type & Quantity */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2">
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Adjustment Type</label>
-                                <div className="flex gap-2 p-1.5 bg-gray-50 rounded-2xl">
+                                <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-widest mb-2">Adjustment Type</label>
+                                <div className="flex gap-2 p-1.5 bg-app-surface rounded-2xl">
                                     {['Addition (+)', 'Deduction (-)'].map((mode, idx) => {
                                         const isAddition = idx === 0;
                                         const isSelected = (quantity > 0 && isAddition) || (quantity < 0 && !isAddition) || (quantity === 0 && isAddition);
@@ -222,7 +222,7 @@ export default function StockAdjustmentManager({
                                                     "flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wide transition-all",
                                                     isSelected
                                                         ? (isAddition ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-rose-500 text-white shadow-lg shadow-rose-200")
-                                                        : "text-gray-400 hover:text-gray-600 hover:bg-white"
+                                                        : "text-app-muted-foreground hover:text-app-muted-foreground hover:bg-app-surface"
                                                 )}
                                             >
                                                 {mode}
@@ -233,7 +233,7 @@ export default function StockAdjustmentManager({
                             </div>
 
                             <div className="col-span-2">
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Quantity ({selectedProduct?.unit || 'Units'})</label>
+                                <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-widest mb-2">Quantity ({selectedProduct?.unit || 'Units'})</label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -243,10 +243,10 @@ export default function StockAdjustmentManager({
                                             setQuantity(quantity < 0 ? -val : val);
                                         }}
                                         min="0"
-                                        className="w-full px-6 py-5 bg-gray-50 rounded-2xl text-3xl font-black text-gray-900 focus:ring-4 outline-none transition-all focus:ring-indigo-100 border-none"
+                                        className="w-full px-6 py-5 bg-app-surface rounded-2xl text-3xl font-black text-app-foreground focus:ring-4 outline-none transition-all focus:ring-indigo-100 border-none"
                                         placeholder="0.00"
                                     />
-                                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">
+                                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-app-muted-foreground font-bold text-sm">
                                         {selectedProduct?.unit || 'PCS'}
                                     </div>
                                 </div>
@@ -255,11 +255,11 @@ export default function StockAdjustmentManager({
 
                         {/* Reason */}
                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Reason Code</label>
+                            <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-widest mb-2">Reason Code</label>
                             <select
                                 value={reason}
                                 onChange={e => setReason(e.target.value)}
-                                className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border-none outline-none focus:ring-4 focus:ring-indigo-100 appearance-none"
+                                className="w-full px-5 py-4 bg-app-surface rounded-2xl font-bold text-app-foreground border-none outline-none focus:ring-4 focus:ring-indigo-100 appearance-none"
                             >
                                 <option>Stock Count Correction</option>
                                 <option>Damaged Goods</option>
@@ -273,11 +273,11 @@ export default function StockAdjustmentManager({
 
                         {/* Notes */}
                         <div>
-                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Internal Notes</label>
+                            <label className="block text-xs font-bold text-app-muted-foreground uppercase tracking-widest mb-2">Internal Notes</label>
                             <textarea
                                 value={notes}
                                 onChange={e => setNotes(e.target.value)}
-                                className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-medium text-gray-700 border-none outline-none focus:ring-4 focus:ring-indigo-100 h-24 resize-none"
+                                className="w-full px-5 py-4 bg-app-surface rounded-2xl font-medium text-app-foreground border-none outline-none focus:ring-4 focus:ring-indigo-100 h-24 resize-none"
                                 placeholder="Optional details..."
                             />
                         </div>
@@ -289,7 +289,7 @@ export default function StockAdjustmentManager({
                             className={clsx(
                                 "w-full py-5 rounded-2xl font-black text-white uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3",
                                 !selectedProduct || quantity === 0
-                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    ? "bg-app-surface-2 text-app-muted-foreground cursor-not-allowed"
                                     : isPending
                                         ? "bg-indigo-400 cursor-wait"
                                         : quantity > 0

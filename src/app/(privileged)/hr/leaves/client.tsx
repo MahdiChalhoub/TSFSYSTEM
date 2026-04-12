@@ -24,7 +24,7 @@ const STATUS_STYLES: Record<string, string> = {
     'PENDING': 'bg-amber-50 text-amber-700 border-amber-200',
     'APPROVED': 'bg-emerald-50 text-emerald-700 border-emerald-200',
     'REJECTED': 'bg-rose-50 text-rose-700 border-rose-200',
-    'CANCELLED': 'bg-gray-50 text-gray-500 border-gray-200',
+    'CANCELLED': 'bg-app-surface text-app-muted-foreground border-app-border',
 }
 
 export default function LeavesClient({ leaves, employees }: Props) {
@@ -75,7 +75,7 @@ export default function LeavesClient({ leaves, employees }: Props) {
                         <button key={f} onClick={() => setFilter(f)}
                             className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === f
                                 ? 'bg-rose-600 text-white shadow-lg shadow-rose-200'
-                                : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'}`}>
+                                : 'bg-app-surface text-app-muted-foreground border border-app-border hover:bg-app-surface'}`}>
                             {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
                         </button>
                     ))}
@@ -87,11 +87,11 @@ export default function LeavesClient({ leaves, employees }: Props) {
             </div>
 
             {showForm && (
-                <form onSubmit={handleCreate} className="bg-white p-8 rounded-3xl border border-rose-100 shadow-xl space-y-4">
+                <form onSubmit={handleCreate} className="bg-app-surface p-8 rounded-3xl border border-rose-100 shadow-xl space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Employee</label>
-                            <select name="employee" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 outline-none">
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Employee</label>
+                            <select name="employee" required className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-rose-400 outline-none">
                                 <option value="">Select...</option>
                                 {employees.map((e: any) => (
                                     <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>
@@ -99,32 +99,32 @@ export default function LeavesClient({ leaves, employees }: Props) {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Leave Type</label>
-                            <select name="leave_type" required className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 outline-none">
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Leave Type</label>
+                            <select name="leave_type" required className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-rose-400 outline-none">
                                 {LEAVE_TYPES.map(t => (
                                     <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Start Date</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Start Date</label>
                             <input name="start_date" type="date" required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 outline-none" />
+                                className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-rose-400 outline-none" />
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">End Date</label>
+                            <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">End Date</label>
                             <input name="end_date" type="date" required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 outline-none" />
+                                className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-rose-400 outline-none" />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Reason</label>
+                        <label className="block text-xs font-black text-app-muted-foreground uppercase tracking-wider mb-2">Reason</label>
                         <textarea name="reason" rows={2}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-rose-400 outline-none resize-none" />
+                            className="w-full px-4 py-3 rounded-xl border border-app-border focus:border-rose-400 outline-none resize-none" />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                         <button type="button" onClick={() => setShowForm(false)}
-                            className="px-6 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+                            className="px-6 py-3 rounded-xl border border-app-border font-bold text-app-muted-foreground hover:bg-app-surface">Cancel</button>
                         <button type="submit" disabled={isPending}
                             className="px-8 py-3 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 disabled:opacity-50">
                             {isPending ? 'Submitting...' : 'Submit Request'}
@@ -135,20 +135,20 @@ export default function LeavesClient({ leaves, employees }: Props) {
 
             <div className="space-y-3">
                 {displayed.length === 0 && (
-                    <div className="text-center py-20 text-gray-400">
+                    <div className="text-center py-20 text-app-muted-foreground">
                         <CalendarOff size={48} className="mx-auto mb-4 opacity-30" />
                         <p className="text-lg font-semibold">No leave requests</p>
                     </div>
                 )}
                 {displayed.map((l: any) => (
-                    <div key={l.id} className="bg-white p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-all group flex items-center justify-between gap-6">
+                    <div key={l.id} className="bg-app-surface p-6 rounded-2xl border border-app-border hover:shadow-lg transition-all group flex items-center justify-between gap-6">
                         <div className="flex items-center gap-5 flex-1">
                             <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
                                 <CalendarOff size={20} className="text-rose-600" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <span className="font-bold text-gray-900">{l.employee_name || getEmpName(l.employee)}</span>
+                                    <span className="font-bold text-app-foreground">{l.employee_name || getEmpName(l.employee)}</span>
                                     <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${STATUS_STYLES[l.status] || STATUS_STYLES['PENDING']}`}>
                                         {l.status}
                                     </span>
@@ -156,7 +156,7 @@ export default function LeavesClient({ leaves, employees }: Props) {
                                         {LEAVE_TYPES.find(t => t.value === l.leave_type)?.label || l.leave_type}
                                     </span>
                                 </div>
-                                <div className="text-sm text-gray-400 flex items-center gap-4">
+                                <div className="text-sm text-app-muted-foreground flex items-center gap-4">
                                     <span className="font-mono">{l.start_date} → {l.end_date}</span>
                                     {l.reason && <span className="truncate max-w-xs">· {l.reason}</span>}
                                 </div>

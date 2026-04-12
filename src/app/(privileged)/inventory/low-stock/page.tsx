@@ -91,8 +91,8 @@ export default function LowStockPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900">Low Stock Alerts</h1>
-                <p className="text-sm text-gray-500 mt-1">Products at or below minimum stock levels</p>
+                <h1 className="text-2xl font-bold text-app-foreground">Low Stock Alerts</h1>
+                <p className="text-sm text-app-muted-foreground mt-1">Products at or below minimum stock levels</p>
             </header>
 
             {/* KPI Cards */}
@@ -102,9 +102,9 @@ export default function LowStockPage() {
                     onClick={() => setActiveFilter(null)}
                 >
                     <CardContent className="py-4 text-center">
-                        <TrendingDown size={24} className="mx-auto mb-2 text-gray-400" />
+                        <TrendingDown size={24} className="mx-auto mb-2 text-app-muted-foreground" />
                         <p className="text-3xl font-bold">{stats.total_alerts}</p>
-                        <p className="text-xs text-gray-500 uppercase font-medium">Total Alerts</p>
+                        <p className="text-xs text-app-muted-foreground uppercase font-medium">Total Alerts</p>
                     </CardContent>
                 </Card>
                 <Card
@@ -150,17 +150,17 @@ export default function LowStockPage() {
             <Card>
                 <CardHeader className="py-3 flex flex-row items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Package size={18} className="text-gray-400" />
+                        <Package size={18} className="text-app-muted-foreground" />
                         Product Details
                     </CardTitle>
                     <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-8 text-sm" />
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     {products.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
+                        <div className="text-center py-16 text-app-muted-foreground">
                             <Package size={48} className="mx-auto mb-3 opacity-30" />
                             <p className="text-lg font-medium text-emerald-500">All stocked up!</p>
                             <p className="text-sm">No products below minimum stock level.</p>
@@ -168,7 +168,7 @@ export default function LowStockPage() {
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead>Severity</TableHead>
                                     <TableHead className="cursor-pointer" onClick={() => handleSort('product_name')}>
                                         Product {sortKey === 'product_name' && <ArrowUpDown size={12} className="inline ml-1" />}
@@ -192,17 +192,17 @@ export default function LowStockPage() {
                                     const cfg = SEVERITY_CONFIG[p.severity] || SEVERITY_CONFIG.LOW
                                     const stockPct = p.min_stock_level > 0 ? (p.current_stock / p.min_stock_level) * 100 : 0
                                     return (
-                                        <TableRow key={p.product_id} className="hover:bg-gray-50/50">
+                                        <TableRow key={p.product_id} className="hover:bg-app-surface/50">
                                             <TableCell>
                                                 <Badge className={`${cfg.bg} ${cfg.color} border`}>
                                                     {cfg.label}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="font-medium">{p.product_name}</TableCell>
-                                            <TableCell className="font-mono text-xs text-gray-500">{p.barcode || '—'}</TableCell>
+                                            <TableCell className="font-mono text-xs text-app-muted-foreground">{p.barcode || '—'}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div className="w-16 h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                         <div
                                                             className={`h-full rounded-full ${p.severity === 'OUT' ? 'bg-red-500' : p.severity === 'CRITICAL' ? 'bg-orange-500' : 'bg-yellow-500'}`}
                                                             style={{ width: `${Math.min(stockPct, 100)}%` }}
@@ -211,7 +211,7 @@ export default function LowStockPage() {
                                                     <span className="font-semibold tabular-nums">{p.current_stock}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right text-gray-500">{p.min_stock_level}</TableCell>
+                                            <TableCell className="text-right text-app-muted-foreground">{p.min_stock_level}</TableCell>
                                             <TableCell className="text-right font-bold text-red-600">-{p.shortage}</TableCell>
                                             <TableCell className="text-right text-sm">{fmt(p.cost_price)}</TableCell>
                                             <TableCell className="text-right font-bold text-indigo-700">{fmt(p.restock_value)}</TableCell>

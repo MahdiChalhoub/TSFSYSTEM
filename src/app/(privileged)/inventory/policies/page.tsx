@@ -233,7 +233,7 @@ export default function InventoryPoliciesPage() {
                 }}>
                 <div className="relative w-10 h-5 rounded-full transition-colors"
                     style={{ background: checked ? 'var(--app-primary)' : 'color-mix(in srgb, var(--app-muted-foreground) 25%, transparent)' }}>
-                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all"
+                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-app-surface shadow transition-all"
                         style={{ left: checked ? '22px' : '2px' }} />
                 </div>
                 <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="sr-only" />

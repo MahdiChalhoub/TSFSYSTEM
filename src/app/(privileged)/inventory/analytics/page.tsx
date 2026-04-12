@@ -37,15 +37,15 @@ function healthBg(score: number) {
 }
 
 function statusBadge(status: string | null) {
-    if (!status) return { label: 'Available', cls: 'bg-slate-100 text-slate-600 ring-slate-200', icon: CheckCircle2 }
+    if (!status) return { label: 'Available', cls: 'bg-app-surface-2 text-app-muted-foreground ring-slate-200', icon: CheckCircle2 }
     const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
         PENDING: { label: 'Requested', cls: 'bg-blue-50 text-blue-700 ring-blue-200', icon: Clock },
         APPROVED: { label: 'Approved', cls: 'bg-indigo-50 text-indigo-700 ring-indigo-200', icon: CheckCircle2 },
         CONVERTED: { label: 'Order Created', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: FileText },
         REJECTED: { label: 'Failed', cls: 'bg-red-50 text-red-700 ring-red-200', icon: XCircle },
-        CANCELLED: { label: 'Cancelled', cls: 'bg-gray-100 text-gray-500 ring-gray-200', icon: XCircle },
+        CANCELLED: { label: 'Cancelled', cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: XCircle },
     }
-    return map[status] || { label: status, cls: 'bg-gray-100 text-gray-600 ring-gray-200', icon: Box }
+    return map[status] || { label: status, cls: 'bg-app-surface-2 text-app-muted-foreground ring-app-border', icon: Box }
 }
 
 function orderTypeBadge(type: string | null) {
@@ -55,7 +55,7 @@ function orderTypeBadge(type: string | null) {
         stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
         purchase_order: { label: 'Purchase', cls: 'bg-amber-50 text-amber-700', icon: ShoppingCart },
     }
-    return map[type] || { label: type, cls: 'bg-gray-50 text-gray-600', icon: FileText }
+    return map[type] || { label: type, cls: 'bg-app-surface text-app-muted-foreground', icon: FileText }
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────
@@ -230,20 +230,20 @@ export default function ProductAnalyticsPage() {
             {/* ── Header ── */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-black text-app-foreground tracking-tight flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
                             <Activity size={22} className="text-white" />
                         </div>
                         Product Analytics
                     </h1>
-                    <p className="text-gray-500 mt-2 text-sm font-medium">
+                    <p className="text-app-muted-foreground mt-2 text-sm font-medium">
                         Live analytics with request lifecycle tracking — {total.toLocaleString()} products
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={() => loadData()}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm font-medium shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-app-surface border border-app-border text-app-muted-foreground hover:bg-app-surface hover:border-app-border transition-all text-sm font-medium shadow-sm"
                     >
                         <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                         Refresh
@@ -261,34 +261,34 @@ export default function ProductAnalyticsPage() {
                     { label: 'Failed', value: kpis.failed, icon: XCircle, gradient: 'from-orange-500 to-amber-500', ring: 'ring-orange-200' },
                     { label: 'Avg Health', value: `${kpis.avgHealth}%`, icon: Heart, gradient: healthColor(kpis.avgHealth), ring: 'ring-violet-200' },
                 ].map((kpi, i) => (
-                    <div key={i} className={`bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow ring-1 ${kpi.ring}`}>
+                    <div key={i} className={`bg-app-surface rounded-2xl border border-app-border p-5 shadow-sm hover:shadow-md transition-shadow ring-1 ${kpi.ring}`}>
                         <div className="flex items-center justify-between mb-3">
                             <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${kpi.gradient} flex items-center justify-center shadow-md`}>
                                 <kpi.icon size={18} className="text-white" />
                             </div>
                         </div>
-                        <p className="text-2xl font-black text-gray-900 tracking-tight">{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</p>
-                        <p className="text-xs text-gray-500 font-medium mt-1">{kpi.label}</p>
+                        <p className="text-2xl font-black text-app-foreground tracking-tight">{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</p>
+                        <p className="text-xs text-app-muted-foreground font-medium mt-1">{kpi.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* ── Filters ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-app-surface rounded-2xl border border-app-border shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-4">
-                    <Filter size={16} className="text-gray-400" />
-                    <span className="text-sm font-bold text-gray-700">Filters</span>
+                    <Filter size={16} className="text-app-muted-foreground" />
+                    <span className="text-sm font-bold text-app-foreground">Filters</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
                     {/* Search */}
                     <div className="lg:col-span-2 relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Search by name, SKU, or barcode..."
                             value={searchDebounced}
                             onChange={e => { setSearchDebounced(e.target.value); setPage(0) }}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-app-border text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none"
                         />
                     </div>
 
@@ -296,7 +296,7 @@ export default function ProductAnalyticsPage() {
                     <select
                         value={selectedCategory}
                         onChange={e => { setSelectedCategory(e.target.value); setPage(0) }}
-                        className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-white"
+                        className="px-3 py-2.5 rounded-xl border border-app-border text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-app-surface"
                     >
                         <option value="">All Categories</option>
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -306,7 +306,7 @@ export default function ProductAnalyticsPage() {
                     <select
                         value={selectedBrand}
                         onChange={e => { setSelectedBrand(e.target.value); setPage(0) }}
-                        className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-white"
+                        className="px-3 py-2.5 rounded-xl border border-app-border text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-app-surface"
                     >
                         <option value="">All Brands</option>
                         {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -316,7 +316,7 @@ export default function ProductAnalyticsPage() {
                     <select
                         value={selectedStatus}
                         onChange={e => { setSelectedStatus(e.target.value); setPage(0) }}
-                        className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-white"
+                        className="px-3 py-2.5 rounded-xl border border-app-border text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none bg-app-surface"
                     >
                         <option value="">All Statuses</option>
                         <option value="AVAILABLE">Available</option>
@@ -330,7 +330,7 @@ export default function ProductAnalyticsPage() {
                         onClick={() => { setHideCompleted(!hideCompleted); setPage(0) }}
                         className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${hideCompleted
                             ? 'bg-violet-50 border-violet-200 text-violet-700'
-                            : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                            : 'bg-app-surface border-app-border text-app-muted-foreground hover:bg-app-surface'
                             }`}
                     >
                         {hideCompleted ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -369,17 +369,17 @@ export default function ProductAnalyticsPage() {
             )}
 
             {/* ── Table ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-app-surface rounded-2xl border border-app-border shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="bg-gray-50/80 border-b border-gray-100">
+                            <tr className="bg-app-surface/80 border-b border-app-border">
                                 <th className="p-4 text-left">
                                     <input
                                         type="checkbox"
                                         checked={selectedIds.size === products.length && products.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                                        className="rounded border-app-border text-violet-600 focus:ring-violet-500"
                                     />
                                 </th>
                                 {[
@@ -394,7 +394,7 @@ export default function ProductAnalyticsPage() {
                                     <th
                                         key={col.key}
                                         onClick={() => col.key !== 'actions' && toggleSort(col.key)}
-                                        className={`p-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider ${col.key !== 'actions' ? 'cursor-pointer hover:text-gray-700 select-none' : ''}`}
+                                        className={`p-4 text-left text-xs font-bold text-app-muted-foreground uppercase tracking-wider ${col.key !== 'actions' ? 'cursor-pointer hover:text-app-foreground select-none' : ''}`}
                                     >
                                         <div className="flex items-center gap-1">
                                             {col.label}
@@ -412,14 +412,14 @@ export default function ProductAnalyticsPage() {
                                     <td colSpan={8} className="p-16 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin" />
-                                            <span className="text-sm text-gray-400 font-medium">Loading analytics...</span>
+                                            <span className="text-sm text-app-muted-foreground font-medium">Loading analytics...</span>
                                         </div>
                                     </td>
                                 </tr>
                             ) : sorted.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="p-16 text-center">
-                                        <div className="flex flex-col items-center gap-2 text-gray-400">
+                                        <div className="flex flex-col items-center gap-2 text-app-muted-foreground">
                                             <Package size={40} strokeWidth={1.5} />
                                             <p className="font-semibold text-base">No products found</p>
                                             <p className="text-sm">Try adjusting your filters</p>
@@ -433,7 +433,7 @@ export default function ProductAnalyticsPage() {
                                 return (
                                     <tr
                                         key={p.id}
-                                        className="hover:bg-gray-50/50 transition-colors group"
+                                        className="hover:bg-app-surface/50 transition-colors group"
                                     >
                                         {/* Select */}
                                         <td className="p-4">
@@ -441,18 +441,18 @@ export default function ProductAnalyticsPage() {
                                                 type="checkbox"
                                                 checked={selectedIds.has(p.id)}
                                                 onChange={() => toggleSelect(p.id)}
-                                                className="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                                                className="rounded border-app-border text-violet-600 focus:ring-violet-500"
                                             />
                                         </td>
 
                                         {/* Product */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900">{p.name}</span>
+                                                <span className="font-semibold text-app-foreground">{p.name}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs font-mono text-gray-400">{p.sku}</span>
+                                                    <span className="text-xs font-mono text-app-muted-foreground">{p.sku}</span>
                                                     {p.category_name && (
-                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-app-surface-2 text-app-muted-foreground font-medium">
                                                             {p.category_name}
                                                         </span>
                                                     )}
@@ -470,11 +470,11 @@ export default function ProductAnalyticsPage() {
                                             <div className="flex flex-col">
                                                 <span className={`font-bold tabular-nums ${p.total_stock <= 0 ? 'text-red-600' :
                                                     p.total_stock < p.min_stock_level ? 'text-orange-600' :
-                                                        'text-gray-900'
+                                                        'text-app-foreground'
                                                     }`}>
                                                     {p.total_stock.toLocaleString()}
                                                 </span>
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-app-muted-foreground">
                                                     min: {p.min_stock_level}
                                                     {p.stock_days_remaining !== null && (
                                                         <> · {p.stock_days_remaining}d left</>
@@ -486,8 +486,8 @@ export default function ProductAnalyticsPage() {
                                         {/* Daily Sales */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900 tabular-nums">{p.avg_daily_sales}/d</span>
-                                                <span className="text-xs text-gray-400 tabular-nums">{p.avg_monthly_sales} / 30d</span>
+                                                <span className="font-semibold text-app-foreground tabular-nums">{p.avg_daily_sales}/d</span>
+                                                <span className="text-xs text-app-muted-foreground tabular-nums">{p.avg_monthly_sales} / 30d</span>
                                             </div>
                                         </td>
 
@@ -515,18 +515,18 @@ export default function ProductAnalyticsPage() {
                                                         {ob.label}
                                                     </span>
                                                     {p.order_id && (
-                                                        <span className="text-xs text-gray-400 font-mono">#{p.order_id}</span>
+                                                        <span className="text-xs text-app-muted-foreground font-mono">#{p.order_id}</span>
                                                     )}
                                                 </div>
                                             ) : (
-                                                <span className="text-xs text-gray-300">—</span>
+                                                <span className="text-xs text-app-faint">—</span>
                                             )}
                                         </td>
 
                                         {/* Health */}
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="w-16 h-2 bg-app-surface-2 rounded-full overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full bg-gradient-to-r ${healthColor(p.health_score)} transition-all`}
                                                         style={{ width: `${p.health_score}%` }}
@@ -544,14 +544,14 @@ export default function ProductAnalyticsPage() {
                                                 <button
                                                     onClick={() => openRequest('purchase_request', [p.id])}
                                                     title="Create Purchase Request"
-                                                    className="p-2 rounded-lg hover:bg-violet-50 text-gray-400 hover:text-violet-600 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-violet-50 text-app-muted-foreground hover:text-violet-600 transition-colors"
                                                 >
                                                     <ShoppingCart size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => openRequest('transfer_request', [p.id])}
                                                     title="Create Transfer Request"
-                                                    className="p-2 rounded-lg hover:bg-cyan-50 text-gray-400 hover:text-cyan-600 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-cyan-50 text-app-muted-foreground hover:text-cyan-600 transition-colors"
                                                 >
                                                     <Truck size={16} />
                                                 </button>
@@ -566,22 +566,22 @@ export default function ProductAnalyticsPage() {
 
                 {/* ── Pagination ── */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-                        <span className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-app-border bg-app-surface/50">
+                        <span className="text-sm text-app-muted-foreground">
                             Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} of {total.toLocaleString()}
                         </span>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setPage(Math.max(0, page - 1))}
                                 disabled={page === 0}
-                                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                                 Previous
                             </button>
                             <button
                                 onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                                 disabled={page >= totalPages - 1}
-                                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                className="px-3 py-1.5 rounded-lg text-sm font-medium border border-app-border bg-app-surface hover:bg-app-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                                 Next
                             </button>
@@ -595,25 +595,25 @@ export default function ProductAnalyticsPage() {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     onClick={() => !requestLoading && setShowRequestDialog(false)}>
                     <div
-                        className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95"
+                        className="bg-app-surface rounded-3xl shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95"
                         onClick={e => e.stopPropagation()}
                     >
-                        <h2 className="text-xl font-black text-gray-900 tracking-tight mb-2">
+                        <h2 className="text-xl font-black text-app-foreground tracking-tight mb-2">
                             Create {requestType === 'purchase_request' ? 'Purchase' : 'Transfer'} Request
                         </h2>
-                        <p className="text-sm text-gray-500 mb-6">
+                        <p className="text-sm text-app-muted-foreground mb-6">
                             This will create an operational request for <strong>{requestProductIds.length}</strong> product{requestProductIds.length > 1 ? 's' : ''}.
                         </p>
 
-                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Products</div>
+                        <div className="bg-app-surface rounded-xl p-4 mb-6">
+                            <div className="text-xs font-bold text-app-muted-foreground uppercase tracking-wider mb-2">Products</div>
                             <div className="space-y-1 max-h-40 overflow-y-auto">
                                 {requestProductIds.map(id => {
                                     const prod = products.find(p => p.id === id)
                                     return prod ? (
                                         <div key={id} className="flex items-center gap-2 text-sm">
-                                            <span className="font-medium text-gray-800">{prod.name}</span>
-                                            <span className="text-xs text-gray-400 font-mono">{prod.sku}</span>
+                                            <span className="font-medium text-app-foreground">{prod.name}</span>
+                                            <span className="text-xs text-app-muted-foreground font-mono">{prod.sku}</span>
                                         </div>
                                     ) : null
                                 })}
@@ -624,7 +624,7 @@ export default function ProductAnalyticsPage() {
                             <button
                                 onClick={() => setShowRequestDialog(false)}
                                 disabled={requestLoading}
-                                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                className="flex-1 px-4 py-3 rounded-xl border border-app-border text-sm font-semibold text-app-muted-foreground hover:bg-app-surface transition-colors disabled:opacity-50"
                             >
                                 Cancel
                             </button>

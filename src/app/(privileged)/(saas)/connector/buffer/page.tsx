@@ -133,7 +133,7 @@ export default function ConnectorBufferPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/connector" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
+                    <Link href="/connector" className="text-app-muted-foreground hover:text-app-muted-foreground flex items-center gap-2 mb-4 text-sm font-medium">
                         <ArrowLeft size={16} />
                         Back to Connector Dashboard
                     </Link>
@@ -142,8 +142,8 @@ export default function ConnectorBufferPage() {
                             <Database size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Buffer Queue</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Buffered write requests awaiting module availability</p>
+                    <h2 className="text-3xl font-black text-app-foreground tracking-tight">Buffer Queue</h2>
+                    <p className="text-app-muted-foreground mt-2 font-medium">Buffered write requests awaiting module availability</p>
                 </div>
                 <div className="flex gap-3">
                     <Button
@@ -195,23 +195,23 @@ export default function ConnectorBufferPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-gray-200 bg-gray-50">
+                <Card className="rounded-2xl border-app-border bg-app-surface">
                     <CardContent className="p-4 flex items-center gap-4">
-                        <AlertTriangle className="text-gray-400" size={24} />
+                        <AlertTriangle className="text-app-muted-foreground" size={24} />
                         <div>
-                            <div className="text-2xl font-black text-gray-500">{expiredCount}</div>
-                            <div className="text-xs text-gray-400 font-medium">Expired</div>
+                            <div className="text-2xl font-black text-app-muted-foreground">{expiredCount}</div>
+                            <div className="text-xs text-app-muted-foreground font-medium">Expired</div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Filters */}
-            <Card className="rounded-2xl border-gray-100">
+            <Card className="rounded-2xl border-app-border">
                 <CardContent className="p-4 flex flex-wrap gap-4 items-center">
                     <div className="flex items-center gap-2">
-                        <Search size={18} className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-600">Filters:</span>
+                        <Search size={18} className="text-app-muted-foreground" />
+                        <span className="text-sm font-medium text-app-muted-foreground">Filters:</span>
                     </div>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                         <SelectTrigger className="w-[150px]">
@@ -235,14 +235,14 @@ export default function ConnectorBufferPage() {
             </Card>
 
             {/* Buffer List */}
-            <Card className="rounded-3xl shadow-xl border-gray-100">
+            <Card className="rounded-3xl shadow-xl border-app-border">
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                            <RefreshCw className="w-8 h-8 animate-spin text-app-muted-foreground" />
                         </div>
                     ) : buffers.length === 0 ? (
-                        <div className="text-center py-20 text-gray-400">
+                        <div className="text-center py-20 text-app-muted-foreground">
                             <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="font-medium">No buffered requests</p>
                             <p className="text-sm mt-1">Requests are buffered when target modules are unavailable</p>
@@ -252,12 +252,12 @@ export default function ConnectorBufferPage() {
                             {buffers.map((buffer) => {
                                 const StatusIcon = statusIcons[buffer.status]
                                 return (
-                                    <div key={buffer.id} className="p-6 hover:bg-gray-50/50 transition-colors">
+                                    <div key={buffer.id} className="p-6 hover:bg-app-surface/50 transition-colors">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className={`w-2 h-2 rounded-full ${statusColors[buffer.status]}`} />
-                                                    <span className="font-bold text-gray-900">
+                                                    <span className="font-bold text-app-foreground">
                                                         {buffer.source_module} → {buffer.target_module}
                                                     </span>
                                                     <Badge variant="outline" className="font-mono text-xs">
@@ -269,10 +269,10 @@ export default function ConnectorBufferPage() {
                                                         {buffer.status.toUpperCase()}
                                                     </Badge>
                                                 </div>
-                                                <div className="text-sm text-gray-500 font-mono mb-2">
+                                                <div className="text-sm text-app-muted-foreground font-mono mb-2">
                                                     {buffer.target_endpoint}
                                                 </div>
-                                                <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                                                <div className="flex flex-wrap gap-4 text-xs text-app-muted-foreground">
                                                     <span>Org: {buffer.organization_name || buffer.organization}</span>
                                                     <span>Created: {new Date(buffer.created_at).toLocaleString()}</span>
                                                     <span>Expires: {new Date(buffer.expires_at).toLocaleString()}</span>
@@ -300,10 +300,10 @@ export default function ConnectorBufferPage() {
                                         </div>
                                         {/* Payload Preview */}
                                         <details className="mt-3">
-                                            <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+                                            <summary className="text-xs text-app-muted-foreground cursor-pointer hover:text-app-muted-foreground">
                                                 View Payload
                                             </summary>
-                                            <pre className="mt-2 p-3 rounded-xl bg-gray-100 text-xs font-mono text-gray-600 overflow-x-auto">
+                                            <pre className="mt-2 p-3 rounded-xl bg-app-surface-2 text-xs font-mono text-app-muted-foreground overflow-x-auto">
                                                 {JSON.stringify(buffer.payload, null, 2)}
                                             </pre>
                                         </details>

@@ -81,7 +81,7 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 transition-all flex items-center gap-2"
+                className="bg-app-foreground text-white px-4 py-2 rounded-md hover:bg-app-surface transition-all flex items-center gap-2"
             >
                 <span>+ Create Fiscal Year</span>
             </button>
@@ -90,15 +90,15 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+            <div className="bg-app-surface rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-app-border flex justify-between items-center bg-app-surface">
                     <div>
-                        <h2 className="text-xl font-bold text-stone-900">Fiscal Year Setup</h2>
-                        <p className="text-sm text-stone-500">Configure your financial periods</p>
+                        <h2 className="text-xl font-bold text-app-foreground">Fiscal Year Setup</h2>
+                        <p className="text-sm text-app-muted-foreground">Configure your financial periods</p>
                     </div>
                     <button
                         onClick={() => setIsOpen(false)}
-                        className="text-stone-400 hover:text-stone-600 font-bold text-xl"
+                        className="text-app-muted-foreground hover:text-app-muted-foreground font-bold text-xl"
                     >
                         ├ù
                     </button>
@@ -108,11 +108,11 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
 
                     {/* 1. Identity */}
                     <div>
-                        <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Year Name</label>
+                        <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Year Name</label>
                         <input
                             value={formData.name}
                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full border border-stone-300 rounded-md p-2 font-medium"
+                            className="w-full border border-app-border rounded-md p-2 font-medium"
                             required
                         />
                     </div>
@@ -120,22 +120,22 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
                     {/* 2. Timeline */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Start Date</label>
+                            <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">Start Date</label>
                             <input
                                 type="date"
                                 value={formData.startDate}
                                 onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                                className="w-full border border-stone-300 rounded-md p-2"
+                                className="w-full border border-app-border rounded-md p-2"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold uppercase text-stone-500 mb-1">End Date</label>
+                            <label className="block text-xs font-bold uppercase text-app-muted-foreground mb-1">End Date</label>
                             <input
                                 type="date"
                                 value={formData.endDate}
                                 onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                                className="w-full border border-stone-300 rounded-md p-2"
+                                className="w-full border border-app-border rounded-md p-2"
                                 required
                             />
                         </div>
@@ -208,14 +208,14 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="flex-1 bg-stone-100 text-stone-700 py-3 rounded-lg font-medium hover:bg-stone-200"
+                            className="flex-1 bg-app-surface-2 text-app-foreground py-3 rounded-lg font-medium hover:bg-app-surface-2"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="flex-1 bg-black text-white py-3 rounded-lg font-medium hover:bg-stone-800 disabled:opacity-50"
+                            className="flex-1 bg-app-foreground text-white py-3 rounded-lg font-medium hover:bg-app-surface disabled:opacity-50"
                         >
                             {isPending ? 'Generating...' : 'Generate Periods'}
                         </button>

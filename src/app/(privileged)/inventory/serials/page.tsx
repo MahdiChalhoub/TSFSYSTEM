@@ -12,18 +12,18 @@ export default function SerialsPage() {
     return (
         <div className="flex flex-col min-h-screen bg-[#fafafa]">
             {/* Header Section */}
-            <div className="bg-white border-b border-gray-100 flex-none px-8 py-8">
+            <div className="bg-app-surface border-b border-app-border flex-none px-8 py-8">
                 <div className="max-w-[1600px] mx-auto">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">
-                        <Link href="/" className="hover:text-slate-900 transition-colors flex items-center gap-1">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-app-muted-foreground mb-4">
+                        <Link href="/" className="hover:text-app-foreground transition-colors flex items-center gap-1">
                             <Home size={10} /> HOME
                         </Link>
                         <ChevronRight size={10} />
-                        <Link href="/inventory" className="hover:text-slate-900 transition-colors">
+                        <Link href="/inventory" className="hover:text-app-foreground transition-colors">
                             INVENTORY
                         </Link>
                         <ChevronRight size={10} />
-                        <span className="text-slate-900">SERIAL TRACKING</span>
+                        <span className="text-app-foreground">SERIAL TRACKING</span>
                     </div>
 
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -33,10 +33,10 @@ export default function SerialsPage() {
                                     <Barcode size={28} />
                                 </div>
                                 <div>
-                                    <h1 className="text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none">
+                                    <h1 className="text-4xl font-black text-app-foreground uppercase tracking-tighter leading-none">
                                         Serial Tracking
                                     </h1>
-                                    <p className="text-sm text-gray-400 font-medium tracking-tight mt-1">
+                                    <p className="text-sm text-app-muted-foreground font-medium tracking-tight mt-1">
                                         Unit-level visibility of high-value inventory and IMEI devices.
                                     </p>
                                 </div>

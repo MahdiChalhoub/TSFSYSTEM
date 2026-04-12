@@ -21,7 +21,7 @@ function fmt(n: number) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
+    DRAFT: { label: 'Draft', color: 'bg-app-surface-2 text-app-muted-foreground' },
     PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700' },
     COMPLETED: { label: 'Completed', color: 'bg-green-100 text-green-700' },
     INVOICED: { label: 'Invoiced', color: 'bg-blue-100 text-blue-700' },
@@ -105,31 +105,31 @@ export default function OrderHistoryPage() {
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-app-foreground flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
                             <HistoryIcon size={20} className="text-white" />
                         </div>
                         Transaction History
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Review historical sales, purchases, and download official invoices</p>
+                    <p className="text-sm text-app-muted-foreground mt-1">Review historical sales, purchases, and download official invoices</p>
                 </div>
             </header>
 
             {/* Filter Bar */}
-            <Card className="shadow-sm border-gray-200">
+            <Card className="shadow-sm border-app-border">
                 <CardContent className="p-4 flex flex-wrap gap-4 items-center">
                     <div className="relative flex-1 min-w-[300px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" size={18} />
                         <Input
                             placeholder="Search Ref, Invoice #..."
-                            className="pl-10 h-11 bg-gray-50/50 border-gray-200"
+                            className="pl-10 h-11 bg-app-surface/50 border-app-border"
                             value={filters.search}
                             onChange={e => setFilters({ ...filters, search: e.target.value })}
                         />
                     </div>
 
                     <Select value={filters.type} onValueChange={v => setFilters({ ...filters, type: v })}>
-                        <SelectTrigger className="w-40 h-11 bg-gray-50/50 border-gray-200">
+                        <SelectTrigger className="w-40 h-11 bg-app-surface/50 border-app-border">
                             <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -141,7 +141,7 @@ export default function OrderHistoryPage() {
                     </Select>
 
                     <Select value={filters.status} onValueChange={v => setFilters({ ...filters, status: v })}>
-                        <SelectTrigger className="w-40 h-11 bg-gray-50/50 border-gray-200">
+                        <SelectTrigger className="w-40 h-11 bg-app-surface/50 border-app-border">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -159,38 +159,38 @@ export default function OrderHistoryPage() {
             </Card>
 
             {/* Table */}
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
+            <Card className="shadow-sm border-app-border overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-gray-50/50">
+                    <TableHeader className="bg-app-surface/50">
                         <TableRow>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider">Order Reference</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider">Date & Time</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider">Type</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider">Contact</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider">Status</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider text-right">Amount</TableHead>
-                            <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider text-right">Actions</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider">Order Reference</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider">Date & Time</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider">Type</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider">Contact</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider">Status</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider text-right">Amount</TableHead>
+                            <TableHead className="font-bold text-app-muted-foreground uppercase text-[10px] tracking-wider text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filtered.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-20 text-gray-400 italic">No transactions found matching filters</TableCell>
+                                <TableCell colSpan={7} className="text-center py-20 text-app-muted-foreground italic">No transactions found matching filters</TableCell>
                             </TableRow>
                         ) : (
                             filtered.map(order => (
-                                <TableRow key={order.id} className="group hover:bg-gray-50/50 transition-colors">
+                                <TableRow key={order.id} className="group hover:bg-app-surface/50 transition-colors">
                                     <TableCell>
-                                        <div className="font-bold text-gray-900">#{order.ref_code || order.id}</div>
+                                        <div className="font-bold text-app-foreground">#{order.ref_code || order.id}</div>
                                         <div className="text-[10px] font-mono text-indigo-500 uppercase font-bold tracking-tighter">
                                             {order.invoice_number || 'No Invoice #'}
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="text-sm font-medium text-gray-600">
+                                        <div className="text-sm font-medium text-app-muted-foreground">
                                             {order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                                         </div>
-                                        <div className="text-[10px] text-gray-400">
+                                        <div className="text-[10px] text-app-muted-foreground">
                                             {order.created_at ? new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
                                         </div>
                                     </TableCell>
@@ -201,10 +201,10 @@ export default function OrderHistoryPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-app-surface-2 flex items-center justify-center text-app-muted-foreground group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
                                                 <User size={14} />
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">{order.contact_name || 'Walking Customer'}</span>
+                                            <span className="text-sm font-medium text-app-foreground">{order.contact_name || 'Walking Customer'}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -213,7 +213,7 @@ export default function OrderHistoryPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="font-black text-gray-900">{fmt(parseFloat(String(order.total_amount ?? 0)))}</div>
+                                        <div className="font-black text-app-foreground">{fmt(parseFloat(String(order.total_amount ?? 0)))}</div>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -229,7 +229,7 @@ export default function OrderHistoryPage() {
                                             </button>
                                             <Link
                                                 href={`/sales/${order.id}`}
-                                                className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
+                                                className="p-2 bg-app-surface text-app-muted-foreground rounded-lg hover:bg-app-surface-2 transition-all"
                                             >
                                                 <ChevronRight size={18} />
                                             </Link>

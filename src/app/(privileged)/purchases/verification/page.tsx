@@ -278,7 +278,7 @@ function OldPurchaseVerificationPage() {
             <Badge className="bg-purple-100 text-purple-700 border-purple-200 font-black text-[10px] uppercase tracking-widest px-3 py-1">
               Procurement Verification
             </Badge>
-            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+            <span className="text-[10px] font-bold text-app-faint uppercase tracking-widest flex items-center gap-1">
               <FileText size={12} /> 3-Way Match Engine
             </span>
           </div>

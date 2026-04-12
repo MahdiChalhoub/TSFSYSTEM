@@ -182,8 +182,8 @@ export default function SaaSModulesPage() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Global Registry</h2>
-                    <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-app-foreground tracking-tight">Global Registry</h2>
+                    <p className="text-app-muted-foreground mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
                     {lastSynced && <p className="text-emerald-600/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
@@ -198,7 +198,7 @@ export default function SaaSModulesPage() {
                     <Button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="flex-1 sm:flex-none bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-sm text-xs md:text-sm"
+                        className="flex-1 sm:flex-none bg-app-surface border border-app-border hover:bg-app-surface text-app-foreground px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-sm text-xs md:text-sm"
                     >
                         <RefreshCw size={18} className={syncing ? "animate-spin" : ""} />
                         {syncing ? "..." : "Sync"}
@@ -208,9 +208,9 @@ export default function SaaSModulesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Scanning core modules...</div>
+                    <div className="col-span-full py-20 text-center text-app-muted-foreground font-medium italic">Scanning core modules...</div>
                 ) : modules.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
+                    <div className="col-span-full py-20 text-center text-app-muted-foreground font-medium font-mono">No modules detected in filesystem.</div>
                 ) : modules.map((m) => {
                     const isCore = m.code === 'core' || m.code === 'coreplatform' || m.code === 'packages';
                     const coreDetails = m.code === 'core' ? {
@@ -237,7 +237,7 @@ export default function SaaSModulesPage() {
                     } : null;
 
                     return (
-                        <Card key={m.code} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
+                        <Card key={m.code} className="bg-app-surface border-app-border hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
                             <CardHeader className="pb-4 relative">
                                 <div className="flex justify-between items-start">
                                     <div className={`p-4 rounded-2xl shadow-sm border ${m.is_core ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
@@ -252,68 +252,68 @@ export default function SaaSModulesPage() {
                                             )}
                                             <Popover>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-app-muted-foreground hover:text-indigo-600 hover:bg-indigo-50">
                                                         <Info size={16} />
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-80 bg-white p-6 rounded-3xl shadow-2xl border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+                                                <PopoverContent className="w-80 bg-app-surface p-6 rounded-3xl shadow-2xl border-app-border animate-in fade-in zoom-in-95 duration-200">
                                                     <div className="space-y-4">
                                                         <div className="flex items-center gap-2">
                                                             <div className={`p-2 rounded-lg ${m.is_core ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'}`}>
                                                                 <Info size={14} />
                                                             </div>
-                                                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Module Responsibility</span>
+                                                            <span className="text-[10px] font-black text-app-foreground uppercase tracking-widest">Module Responsibility</span>
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <h4 className="text-sm font-black text-gray-900">{m.name}</h4>
-                                                            <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
+                                                            <h4 className="text-sm font-black text-app-foreground">{m.name}</h4>
+                                                            <p className="text-[11px] text-app-muted-foreground font-medium leading-relaxed">
                                                                 {coreDetails?.description || m.description || "No detailed description available."}
                                                             </p>
                                                         </div>
                                                         {coreDetails?.workflows && (
-                                                            <div className="pt-4 border-t border-gray-100 space-y-2">
-                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Key Workflows</span>
+                                                            <div className="pt-4 border-t border-app-border space-y-2">
+                                                                <span className="text-[9px] font-black text-app-muted-foreground uppercase tracking-wider">Key Workflows</span>
                                                                 <div className="space-y-1">
                                                                     {coreDetails.workflows.map((wf, idx) => (
                                                                         <div key={idx} className="flex items-center gap-2">
                                                                             <ShieldCheck size={10} className="text-emerald-500" />
-                                                                            <span className="text-[10px] font-bold text-gray-600">{wf}</span>
+                                                                            <span className="text-[10px] font-bold text-app-muted-foreground">{wf}</span>
                                                                         </div>
                                                                     ))}
                                                                 </div>
                                                             </div>
                                                         )}
-                                                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                                                            <span className="text-[9px] font-black text-gray-400 uppercase">Version</span>
+                                                        <div className="pt-4 border-t border-app-border flex justify-between items-center">
+                                                            <span className="text-[9px] font-black text-app-muted-foreground uppercase">Version</span>
                                                             <span className="text-[9px] font-mono font-bold text-indigo-600">v{m.version}</span>
                                                         </div>
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
-                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{m.version}</div>
+                                        <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">{m.version}</div>
                                     </div>
                                 </div>
-                                <CardTitle className="text-2xl font-black text-gray-900 mt-6 tracking-tight">{m.name}</CardTitle>
-                                <CardDescription className="text-gray-400 text-xs font-mono">
+                                <CardTitle className="text-2xl font-black text-app-foreground mt-6 tracking-tight">{m.name}</CardTitle>
+                                <CardDescription className="text-app-muted-foreground text-xs font-mono">
                                     ID: {m.code}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6 flex-grow flex flex-col justify-between p-8 pt-2">
-                                <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                <p className="text-sm text-app-muted-foreground leading-relaxed font-medium">
                                     {m.description || "No description provided for this module."}
                                 </p>
 
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
-                                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
+                                <div className="space-y-6 pt-6 border-t border-app-border">
+                                    <div className="flex justify-between items-center bg-app-surface p-4 rounded-2xl border border-app-border shadow-inner">
+                                        <span className="text-[10px] text-app-muted-foreground uppercase font-black tracking-widest leading-none">Global Coverage</span>
                                         <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
                                     </div>
 
                                     {m.dependencies && m.dependencies.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
                                             {m.dependencies.map((dep: string) => (
-                                                <span key={dep} className="px-3 py-1 bg-white border border-gray-200 text-[10px] text-gray-400 rounded-xl font-mono shadow-sm">
+                                                <span key={dep} className="px-3 py-1 bg-app-surface border border-app-border text-[10px] text-app-muted-foreground rounded-xl font-mono shadow-sm">
                                                     +{dep}
                                                 </span>
                                             ))}
@@ -333,7 +333,7 @@ export default function SaaSModulesPage() {
                                             onClick={() => setPendingUninstall(m.code)}
                                             disabled={processing === m.code || m.is_core}
                                             variant="outline"
-                                            className="border-gray-100 bg-gray-50 hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
+                                            className="border-app-border bg-app-surface hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-app-muted-foreground rounded-2xl py-6 font-black transition-all flex gap-2"
                                         >
                                             <XCircle size={16} />
                                             Revoke
@@ -345,7 +345,7 @@ export default function SaaSModulesPage() {
                                                 <Button
                                                     disabled={processing === m.code}
                                                     variant="outline"
-                                                    className="col-span-2 border-gray-800 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/50 text-gray-400 rounded-2xl py-4 font-bold transition-all flex gap-2"
+                                                    className="col-span-2 border-gray-800 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/50 text-app-muted-foreground rounded-2xl py-4 font-bold transition-all flex gap-2"
                                                 >
                                                     <HistoryIcon size={16} />
                                                     History & Rollback
@@ -366,7 +366,7 @@ export default function SaaSModulesPage() {
                                             onClick={() => setPendingDelete(m.code)}
                                             disabled={processing === m.code || m.is_core}
                                             variant="ghost"
-                                            className="col-span-2 text-gray-600 hover:text-red-600 hover:bg-red-950/20 font-bold rounded-2xl py-4 text-xs flex gap-2"
+                                            className="col-span-2 text-app-muted-foreground hover:text-red-600 hover:bg-red-950/20 font-bold rounded-2xl py-4 text-xs flex gap-2"
                                         >
                                             <Trash2 size={14} />
                                             Delete from System
@@ -447,17 +447,17 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
         }).catch(() => setLoading(false))
     }, [moduleCode])
 
-    if (loading) return <div className="text-center py-8 text-gray-500 text-sm">Loading history...</div>
-    if (backups.length === 0) return <div className="text-center py-8 text-gray-500 text-sm">No backup checkpoints found.</div>
+    if (loading) return <div className="text-center py-8 text-app-muted-foreground text-sm">Loading history...</div>
+    if (backups.length === 0) return <div className="text-center py-8 text-app-muted-foreground text-sm">No backup checkpoints found.</div>
 
     return (
         <div className="max-h-[300px] mt-2 overflow-y-auto pr-2 custom-scrollbar">
             <div className="space-y-2">
                 {backups.map((b, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-900 border border-gray-800">
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-app-bg border border-gray-800">
                         <div>
                             <div className="font-bold text-white text-sm">v{b.version}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{b.date}</div>
+                            <div className="text-xs text-app-muted-foreground mt-0.5">{b.date}</div>
                         </div>
                         {b.version !== currentVersion && (
                             <Button

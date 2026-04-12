@@ -38,10 +38,10 @@ export default async function AdjustmentPage() {
                         </div>
                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Stock Operations</span>
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-4xl lg:text-5xl font-black text-app-foreground tracking-tighter">
                         Stock <span className="text-rose-500">Adjustment</span>
                     </h1>
-                    <p className="mt-4 text-gray-500 font-medium max-w-xl">
+                    <p className="mt-4 text-app-muted-foreground font-medium max-w-xl">
                         Correct inventory discrepancies, report damages, or log found items manually.
                         Use this for non-commercial movements only.
                     </p>

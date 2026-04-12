@@ -44,26 +44,26 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
     }
 
     return (
-        <div className="min-h-screen bg-stone-50 pb-20">
+        <div className="min-h-screen bg-app-surface pb-20">
             {/* Header */}
-            <div className="bg-white border-b border-stone-200 sticky top-0 z-30">
+            <div className="bg-app-surface border-b border-app-border sticky top-0 z-30">
                 <div className="max-w-[1600px] mx-auto px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="p-2 hover:bg-stone-100 rounded-full transition-colors">
-                            <Undo2 size={20} className="text-stone-500" />
+                        <button onClick={() => router.back()} className="p-2 hover:bg-app-surface-2 rounded-full transition-colors">
+                            <Undo2 size={20} className="text-app-muted-foreground" />
                         </button>
                         <div>
-                            <h1 className="text-xl font-bold text-stone-900 font-serif">Accounting Standards Library</h1>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Compare and select your operational layout</p>
+                            <h1 className="text-xl font-bold text-app-foreground font-serif">Accounting Standards Library</h1>
+                            <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Compare and select your operational layout</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="bg-stone-100 p-1 rounded-lg flex gap-1">
-                            <button className="p-2 bg-white shadow-sm rounded-md text-stone-900">
+                        <div className="bg-app-surface-2 p-1 rounded-lg flex gap-1">
+                            <button className="p-2 bg-app-surface shadow-sm rounded-md text-app-foreground">
                                 <Columns size={18} />
                             </button>
-                            <button disabled className="p-2 text-stone-400 hover:text-stone-600">
+                            <button disabled className="p-2 text-app-muted-foreground hover:text-app-muted-foreground">
                                 <LayoutGrid size={18} />
                             </button>
                         </div>
@@ -122,8 +122,8 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             key={key}
                             onClick={() => toggleTemplate(key)}
                             className={`flex-shrink-0 px-6 py-3 rounded-2xl border transition-all flex items-center gap-3 ${selectedTemplates.includes(key)
-                                ? 'bg-stone-900 border-stone-900 text-white shadow-xl shadow-stone-200'
-                                : 'bg-white border-stone-200 text-stone-600 hover:border-stone-400'
+                                ? 'bg-app-bg border-stone-900 text-white shadow-xl shadow-stone-200'
+                                : 'bg-app-surface border-app-border text-app-muted-foreground hover:border-stone-400'
                                 }`}
                         >
                             {selectedTemplates.includes(key) ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Library size={16} />}
@@ -133,7 +133,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                 </div>
 
                 {selectedTemplates.length === 0 ? (
-                    <div className="h-[60vh] flex flex-col items-center justify-center text-stone-300">
+                    <div className="h-[60vh] flex flex-col items-center justify-center text-app-faint">
                         <Library size={64} className="mb-4 opacity-20" />
                         <h2 className="text-xl font-medium">Select standards to compare</h2>
                         <p className="text-sm">Choose one or more templates from the library above.</p>
@@ -141,11 +141,11 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4 duration-500">
                         {selectedTemplates.map(key => (
-                            <div key={key} className="bg-white rounded-3xl border border-stone-200 shadow-sm flex flex-col overflow-hidden">
-                                <div className="p-6 border-b border-stone-100 flex justify-between items-start bg-stone-50/50">
+                            <div key={key} className="bg-app-surface rounded-3xl border border-app-border shadow-sm flex flex-col overflow-hidden">
+                                <div className="p-6 border-b border-app-border flex justify-between items-start bg-app-surface/50">
                                     <div>
-                                        <h3 className="font-bold text-stone-900 text-lg">{key.replace('_', ' ')}</h3>
-                                        <p className="text-[10px] font-bold text-stone-400 uppercase mt-1 tracking-tight">Official Standard Structure</p>
+                                        <h3 className="font-bold text-app-foreground text-lg">{key.replace('_', ' ')}</h3>
+                                        <p className="text-[10px] font-bold text-app-muted-foreground uppercase mt-1 tracking-tight">Official Standard Structure</p>
                                     </div>
                                     <button
                                         disabled={isPending}
@@ -162,8 +162,8 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                         ))}
                                     </div>
                                 </div>
-                                <div className="p-4 bg-stone-50 border-t border-stone-100 text-center">
-                                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
+                                <div className="p-4 bg-app-surface border-t border-app-border text-center">
+                                    <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                         Total Root Classes: {templates[key].length}
                                     </span>
                                 </div>
@@ -206,18 +206,18 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
         <div className="flex flex-col">
             <button
                 onClick={() => setOpen(!open)}
-                className={`flex items-center gap-2 py-1.5 hover:bg-stone-50 rounded px-2 transition-colors group ${level === 0 ? 'bg-stone-50/80 mb-1' : ''}`}
+                className={`flex items-center gap-2 py-1.5 hover:bg-app-surface rounded px-2 transition-colors group ${level === 0 ? 'bg-app-surface/80 mb-1' : ''}`}
                 style={{ paddingLeft: `${level === 0 ? 8 : level * 16 + 8}px` }}
             >
                 <div className="w-4 flex justify-center">
                     {hasChildren && (
-                        open ? <ChevronDown size={12} className="text-stone-400" /> : <ChevronRight size={12} className="text-stone-300" />
+                        open ? <ChevronDown size={12} className="text-app-muted-foreground" /> : <ChevronRight size={12} className="text-app-faint" />
                     )}
                 </div>
-                <span className={`text-[10px] font-mono font-bold w-12 text-left ${level === 0 ? 'text-stone-900' : 'text-stone-400'}`}>
+                <span className={`text-[10px] font-mono font-bold w-12 text-left ${level === 0 ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
                     {item.code}
                 </span>
-                <span className={`text-xs text-left flex-1 truncate ${level === 0 ? 'font-bold text-stone-900' : 'font-medium text-stone-600'}`}>
+                <span className={`text-xs text-left flex-1 truncate ${level === 0 ? 'font-bold text-app-foreground' : 'font-medium text-app-muted-foreground'}`}>
                     {item.name}
                 </span>
 
@@ -232,7 +232,7 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
 
                         <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                             item.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border border-red-100' :
-                                item.type === 'EQUITY' ? 'bg-stone-100 text-stone-600' :
+                                item.type === 'EQUITY' ? 'bg-app-surface-2 text-app-muted-foreground' :
                                     item.type === 'INCOME' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                                         'bg-amber-50 text-amber-600 border border-amber-100'
                             }`}>

@@ -26,7 +26,7 @@ const METHOD_BADGES: Record<string, string> = {
     WEIGHTED_AVG: 'bg-blue-100 text-blue-700',
     FIFO: 'bg-emerald-100 text-emerald-700',
     LIFO: 'bg-purple-100 text-purple-700',
-    COST_PRICE: 'bg-gray-100 text-gray-700',
+    COST_PRICE: 'bg-app-surface-2 text-app-foreground',
 }
 
 type SortKey = 'product_name' | 'quantity' | 'total_value' | 'avg_cost'
@@ -114,16 +114,16 @@ export default function InventoryValuationPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Inventory Valuation</h1>
-                    <p className="text-sm text-gray-500 mt-1">Stock value breakdown by product</p>
+                    <h1 className="text-2xl font-bold text-app-foreground">Inventory Valuation</h1>
+                    <p className="text-sm text-app-muted-foreground mt-1">Stock value breakdown by product</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
-                        <Warehouse size={16} className="text-gray-400" />
+                        <Warehouse size={16} className="text-app-muted-foreground" />
                         <select
                             value={warehouseFilter}
                             onChange={e => handleWarehouseChange(e.target.value)}
-                            className="border rounded-lg px-3 py-2 text-sm bg-white"
+                            className="border rounded-lg px-3 py-2 text-sm bg-app-surface"
                         >
                             <option value="all">All Warehouses</option>
                             {warehouses.map((wh: Record<string, any>) => (
@@ -143,8 +143,8 @@ export default function InventoryValuationPage() {
                                 <DollarSign size={20} className="text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Stock Value</p>
-                                <p className="text-2xl font-bold text-gray-900">{fmt(data?.summary?.total_value || 0)}</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Stock Value</p>
+                                <p className="text-2xl font-bold text-app-foreground">{fmt(data?.summary?.total_value || 0)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -156,8 +156,8 @@ export default function InventoryValuationPage() {
                                 <Package size={20} className="text-blue-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Products with Stock</p>
-                                <p className="text-2xl font-bold text-gray-900">{data?.summary?.total_products || 0}</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Products with Stock</p>
+                                <p className="text-2xl font-bold text-app-foreground">{data?.summary?.total_products || 0}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -169,8 +169,8 @@ export default function InventoryValuationPage() {
                                 <Boxes size={20} className="text-purple-600" />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Units</p>
-                                <p className="text-2xl font-bold text-gray-900">{fmtQty(data?.summary?.total_quantity || 0)}</p>
+                                <p className="text-xs text-app-muted-foreground uppercase">Total Units</p>
+                                <p className="text-2xl font-bold text-app-foreground">{fmtQty(data?.summary?.total_quantity || 0)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -182,7 +182,7 @@ export default function InventoryValuationPage() {
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                            <BarChart3 size={18} className="text-gray-400" />
+                            <BarChart3 size={18} className="text-app-muted-foreground" />
                             Top Products by Value
                         </CardTitle>
                     </CardHeader>
@@ -192,8 +192,8 @@ export default function InventoryValuationPage() {
                                 const pct = (p.total_value / maxValue * 100)
                                 return (
                                     <div key={p.product_id} className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-500 w-48 truncate font-medium">{p.product_name}</span>
-                                        <div className="flex-1 h-6 bg-gray-50 rounded overflow-hidden">
+                                        <span className="text-xs text-app-muted-foreground w-48 truncate font-medium">{p.product_name}</span>
+                                        <div className="flex-1 h-6 bg-app-surface rounded overflow-hidden">
                                             <div
                                                 className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded flex items-center justify-end pr-2 transition-all"
                                                 style={{ width: `${Math.max(pct, 2)}%` }}
@@ -204,7 +204,7 @@ export default function InventoryValuationPage() {
                                             </div>
                                         </div>
                                         {pct <= 20 && (
-                                            <span className="text-xs text-gray-500 font-mono">{fmt(p.total_value)}</span>
+                                            <span className="text-xs text-app-muted-foreground font-mono">{fmt(p.total_value)}</span>
                                         )}
                                     </div>
                                 )
@@ -218,11 +218,11 @@ export default function InventoryValuationPage() {
             <Card>
                 <CardHeader className="py-3 flex flex-row items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <TrendingUp size={18} className="text-gray-400" />
+                        <TrendingUp size={18} className="text-app-muted-foreground" />
                         Product Valuation Details
                     </CardTitle>
                     <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <Input
                             placeholder="Search products..."
                             value={search}
@@ -233,14 +233,14 @@ export default function InventoryValuationPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                     {products.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
+                        <div className="text-center py-12 text-app-muted-foreground">
                             <Package size={48} className="mx-auto mb-3 opacity-30" />
                             <p>No inventory found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-gray-50/50">
+                                <TableRow className="bg-app-surface/50">
                                     <TableHead className="cursor-pointer" onClick={() => handleSort('product_name')}>
                                         Product {sortKey === 'product_name' && <ArrowUpDown size={12} className="inline ml-1" />}
                                     </TableHead>
@@ -260,21 +260,21 @@ export default function InventoryValuationPage() {
                             </TableHeader>
                             <TableBody>
                                 {products.map((p: Record<string, any>) => (
-                                    <TableRow key={`${p.product_id}-${p.warehouse || ''}`} className="hover:bg-gray-50/50">
+                                    <TableRow key={`${p.product_id}-${p.warehouse || ''}`} className="hover:bg-app-surface/50">
                                         <TableCell className="font-medium">{p.product_name}</TableCell>
-                                        <TableCell className="text-sm text-gray-500 font-mono">
+                                        <TableCell className="text-sm text-app-muted-foreground font-mono">
                                             {p.product_sku || '—'}
                                         </TableCell>
                                         <TableCell className="text-right font-semibold">{fmtQty(p.quantity)}</TableCell>
                                         <TableCell className="text-right text-sm">{fmt(p.avg_cost)}</TableCell>
                                         <TableCell className="text-right font-bold text-emerald-700">{fmt(p.total_value)}</TableCell>
                                         <TableCell>
-                                            <Badge className={METHOD_BADGES[p.method] || 'bg-gray-100'}>
+                                            <Badge className={METHOD_BADGES[p.method] || 'bg-app-surface-2'}>
                                                 {p.method?.replace('_', ' ')}
                                             </Badge>
                                         </TableCell>
                                         {products.some((pr: Record<string, any>) => pr.warehouse) && (
-                                            <TableCell className="text-sm text-gray-500">{p.warehouse || '—'}</TableCell>
+                                            <TableCell className="text-sm text-app-muted-foreground">{p.warehouse || '—'}</TableCell>
                                         )}
                                     </TableRow>
                                 ))}

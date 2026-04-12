@@ -42,10 +42,58 @@
 
   /* Shadows */
   --shadow-glow: 0 0 20px -5px rgba(16, 185, 129, 0.3);
+
+  /* ── App Theme Tokens (V2 Dajingo Pro) ──────────────────────
+     These map to CSS variables set by the theme engine.
+     Defining them here makes bg-app-*, text-app-*, border-app-*
+     valid Tailwind utilities that respond to active theme.
+  ──────────────────────────────────────────────────────────── */
+  --color-app-bg:                 var(--app-bg, #020617);
+  --color-app-surface:            var(--app-surface, #0F172A);
+  --color-app-surface-2:          var(--app-surface-2, rgba(255,255,255,0.04));
+  --color-app-surface-hover:      var(--app-surface-hover, rgba(255,255,255,0.07));
+  --color-app-foreground:         var(--app-text, #F1F5F9);
+  --color-app-muted-foreground:   var(--app-text-muted, #94A3B8);
+  --color-app-faint:              var(--app-text-faint, #475569);
+  --color-app-border:             var(--app-border, rgba(255,255,255,0.08));
+  --color-app-border-strong:      var(--app-border-strong, rgba(16,185,129,0.5));
+  --color-app-primary:            var(--app-primary, #10B981);
+  --color-app-primary-dark:       var(--app-primary-dark, #059669);
+  --color-app-primary-light:      var(--app-primary-light, rgba(16,185,129,0.12));
+  --color-app-success:            var(--app-success, #10B981);
+  --color-app-success-bg:         var(--app-success-bg, rgba(16,185,129,0.12));
+  --color-app-warning:            var(--app-warning, #F59E0B);
+  --color-app-warning-bg:         var(--app-warning-bg, rgba(245,158,11,0.12));
+  --color-app-error:              var(--app-error, #EF4444);
+  --color-app-error-bg:           var(--app-error-bg, rgba(239,68,68,0.12));
+  --color-app-info:               var(--app-info, #3B82F6);
+  --color-app-info-bg:            var(--app-info-bg, rgba(59,130,246,0.12));
 }
 
 /* Custom Utilities layer */
 @layer utilities {
+  /* V2 Dajingo Pro — Page header icon box */
+  .page-header-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* V2 — custom scrollbar using app tokens */
+  .app-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+  .app-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .app-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--app-border, rgba(255,255,255,0.1));
+    border-radius: 99px;
+  }
+  .app-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--app-border-strong, rgba(255,255,255,0.2));
+  }
+
   .glass {
     @apply bg-white/70 backdrop-blur-md border border-white/50;
   }

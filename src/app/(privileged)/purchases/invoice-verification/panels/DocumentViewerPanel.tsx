@@ -182,17 +182,17 @@ export function DocumentViewerPanel({
             }}
           >
             {/* Mock PDF viewer - replace with real implementation */}
-            <div className="bg-white rounded-lg shadow-lg p-8 w-[600px] relative">
-              <div className="border-b-2 border-gray-200 pb-4 mb-4">
+            <div className="bg-app-surface rounded-lg shadow-lg p-8 w-[600px] relative">
+              <div className="border-b-2 border-app-border pb-4 mb-4">
                 <h2 className="text-2xl font-bold">INVOICE</h2>
-                <p className="text-sm text-gray-600">{invoice.supplier_name}</p>
+                <p className="text-sm text-app-muted-foreground">{invoice.supplier_name}</p>
               </div>
               <div className="space-y-2 text-sm">
                 <p><strong>Invoice #:</strong> {invoice.invoice_number}</p>
                 <p><strong>Date:</strong> {new Date(invoice.invoice_date).toLocaleDateString()}</p>
                 <p><strong>PO #:</strong> {invoice.po_number}</p>
               </div>
-              <div className="mt-8 border-t-2 border-gray-200 pt-4">
+              <div className="mt-8 border-t-2 border-app-border pt-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">

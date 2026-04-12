@@ -36,7 +36,7 @@ function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void;
     return (
         <button onClick={onChange} disabled={disabled}
             className={`w-9 h-5 rounded-full relative transition-all shrink-0 ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${on ? 'bg-app-primary' : 'bg-app-surface border border-app-border/50'}`}>
-            <span className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-[3px] transition-all ${on ? 'left-[18px]' : 'left-[3px]'}`} />
+            <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${on ? 'left-[18px]' : 'left-[3px]'}`} />
         </button>
     )
 }
@@ -487,7 +487,7 @@ export function RegisterConfigPanel({ reg, accounts, warehouses, users, onRefres
                                                         className="text-[8px] text-app-text-muted hover:text-red-400 font-bold px-1.5 py-0.5 rounded hover:bg-red-400/10 transition-all">reset</button>}
                                                     <button onClick={() => set('rulesOverride', { ...form.rulesOverride, [rule.key]: !val })}
                                                         className={`w-9 h-5 rounded-full relative transition-all ${isSet ? (val ? 'bg-amber-500' : 'bg-app-surface border border-app-border/50') : 'bg-app-surface border border-app-border/50 opacity-30'}`}>
-                                                        <span className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-[3px] transition-all ${val && isSet ? 'left-[18px]' : 'left-[3px]'}`} />
+                                                        <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${val && isSet ? 'left-[18px]' : 'left-[3px]'}`} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -542,7 +542,7 @@ export function GlobalSettingsPanel({ onClose, onReturn }: { onClose: () => void
             <div className="flex items-center justify-between py-2 border-b border-app-border/20 last:border-0">
                 <div><p className="text-[11px] font-bold text-app-text">{label}</p><p className="text-[9px] text-app-text-faint">{desc}</p></div>
                 <button onClick={() => set(k, !rules[k])} className={`w-9 h-5 rounded-full relative transition-all ml-3 shrink-0 ${rules[k] ? 'bg-app-primary' : 'bg-app-surface'}`}>
-                    <span className={`w-3.5 h-3.5 rounded-full bg-white shadow absolute top-[3px] transition-all ${rules[k] ? 'left-[18px]' : 'left-[3px]'}`} />
+                    <span className={`w-3.5 h-3.5 rounded-full bg-app-surface shadow absolute top-[3px] transition-all ${rules[k] ? 'left-[18px]' : 'left-[3px]'}`} />
                 </button>
             </div>
         )

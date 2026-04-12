@@ -304,7 +304,7 @@ export default function RegistersPage() {
                   onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
                   className={`w-10 h-6 rounded-full relative transition-all ${form.is_active ? 'bg-app-primary' : 'bg-app-text/20'}`}
                 >
-                  <span className={`w-4 h-4 rounded-full bg-white shadow absolute top-1 transition-all ${form.is_active ? 'left-5' : 'left-1'}`} />
+                  <span className={`w-4 h-4 rounded-full bg-app-surface shadow absolute top-1 transition-all ${form.is_active ? 'left-5' : 'left-1'}`} />
                 </button>
               </div>
             </div>

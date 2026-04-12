@@ -147,7 +147,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                     >
                         {label}
                         {count > 0 && (
-                            <span className={clsx("text-[9px] font-black px-1.5 py-0.5 rounded-full", tab === key ? "bg-white/20" : "bg-white/5")}>
+                            <span className={clsx("text-[9px] font-black px-1.5 py-0.5 rounded-full", tab === key ? "bg-app-surface/20" : "bg-app-surface/5")}>
                                 {count}
                             </span>
                         )}
@@ -173,13 +173,13 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                         <div className={clsx("px-8 py-4 flex items-center gap-3 border-b border-app-border", RISK_COLORS[level])}>
                                             {level === 'CRITICAL' ? <ShieldAlert size={18} /> : <AlertTriangle size={18} />}
                                             <span className="font-black uppercase tracking-widest text-sm">{level.replace('_', ' ')}</span>
-                                            <span className="ml-auto bg-white/10 px-3 py-1 rounded-full text-xs font-black">{group.length} employees</span>
+                                            <span className="ml-auto bg-app-surface/10 px-3 py-1 rounded-full text-xs font-black">{group.length} employees</span>
                                         </div>
                                         <div className="divide-y divide-app-border">
                                             {group.map(emp => (
-                                                <div key={emp.id} className="p-6 flex items-center gap-6 hover:bg-white/[0.02] transition-colors">
+                                                <div key={emp.id} className="p-6 flex items-center gap-6 hover:bg-app-surface/[0.02] transition-colors">
                                                     {/* Score ring */}
-                                                    <div className="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0">
+                                                    <div className="w-14 h-14 rounded-2xl bg-app-surface/5 flex flex-col items-center justify-center shrink-0">
                                                         <div className="text-xl font-black">{Math.round(parseFloat(emp.global_score))}</div>
                                                         <div className="text-[7px] uppercase opacity-30">Score</div>
                                                     </div>
@@ -190,7 +190,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400">
                                                                 {emp.critical_negative_count} criticals
                                                             </span>
-                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-white/5 text-white/40">
+                                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-app-surface/5 text-white/40">
                                                                 Rank #{emp.current_rank_company || '?'}
                                                             </span>
                                                             {emp.trend_indicator === 'DOWN' && (
@@ -236,7 +236,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
             {/* ── Leaderboard ───────────────────────────────────────────────── */}
             {tab === 'leaders' && (
                 <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-400">
-                    <div className="p-8 border-b border-app-border bg-white/5 flex justify-between items-center">
+                    <div className="p-8 border-b border-app-border bg-app-surface/5 flex justify-between items-center">
                         <h2 className="text-xl font-black italic flex items-center gap-3">
                             <Trophy className="text-amber-400" /> Full Organization Leaderboard
                         </h2>
@@ -245,15 +245,15 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                     <div className="divide-y divide-app-border">
                         {leaderboard.map((emp, idx) => (
                             <div key={emp.id} className={clsx(
-                                "p-5 flex items-center gap-5 hover:bg-white/[0.01] transition-colors",
+                                "p-5 flex items-center gap-5 hover:bg-app-surface/[0.01] transition-colors",
                                 idx === 0 && "bg-amber-500/5"
                             )}>
                                 <div className={clsx(
                                     "w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0",
                                     idx === 0 ? "bg-amber-400/20 text-amber-400" :
-                                        idx === 1 ? "bg-slate-400/20 text-slate-400" :
+                                        idx === 1 ? "bg-slate-400/20 text-app-muted-foreground" :
                                             idx === 2 ? "bg-orange-600/20 text-orange-500" :
-                                                "bg-white/5 text-white/30"
+                                                "bg-app-surface/5 text-white/30"
                                 )}>#{idx + 1}</div>
 
                                 <div className="flex-1 min-w-0">
@@ -308,7 +308,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                     </div>
 
                     <div className="bg-app-surface border border-app-border rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <div className="p-8 border-b border-app-border bg-white/5 flex items-center justify-between">
+                        <div className="p-8 border-b border-app-border bg-app-surface/5 flex items-center justify-between">
                             <h2 className="text-xl font-black italic flex items-center gap-3">
                                 <BookOpen className="text-app-primary" /> Active Scoring Rules
                             </h2>
@@ -316,7 +316,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                         </div>
                         <div className="divide-y divide-app-border">
                             {filteredRules.map(rule => (
-                                <div key={rule.id} className={clsx("p-5 flex items-center gap-5 hover:bg-white/[0.02] transition-colors", !rule.is_active && "opacity-30")}>
+                                <div key={rule.id} className={clsx("p-5 flex items-center gap-5 hover:bg-app-surface/[0.02] transition-colors", !rule.is_active && "opacity-30")}>
                                     <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black shrink-0",
                                         rule.direction === 'POSITIVE' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
                                     )}>
@@ -326,7 +326,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold text-sm">{rule.name}</div>
                                         <div className="flex gap-2 mt-1 flex-wrap">
-                                            <span className={clsx("text-[9px] font-black uppercase px-2 py-0.5 rounded", MODULE_COLORS[rule.module] || 'bg-white/5 text-white/40')}>
+                                            <span className={clsx("text-[9px] font-black uppercase px-2 py-0.5 rounded", MODULE_COLORS[rule.module] || 'bg-app-surface/5 text-white/40')}>
                                                 {rule.module}
                                             </span>
                                             <span className="text-[9px] font-bold opacity-30 uppercase">{rule.dimension?.replace(/_/g, ' ')}</span>
@@ -373,7 +373,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                 )}
                             </div>
                             {adjustTarget && (
-                                <button onClick={() => setAdjustTarget(null)} className="p-2 rounded-xl hover:bg-white/5 transition-colors opacity-40 hover:opacity-100">
+                                <button onClick={() => setAdjustTarget(null)} className="p-2 rounded-xl hover:bg-app-surface/5 transition-colors opacity-40 hover:opacity-100">
                                     <X size={16} />
                                 </button>
                             )}
@@ -389,8 +389,8 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                     <div className="space-y-2 max-h-[400px] overflow-y-auto">
                                         {[...atRisk, ...leaderboard.filter(l => !atRisk.find(r => r.id === l.id))].map(emp => (
                                             <button key={emp.id} onClick={() => openAdjust(emp)}
-                                                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/3 border border-app-border hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-left">
-                                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-black shrink-0">
+                                                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-app-surface/3 border border-app-border hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-left">
+                                                <div className="w-10 h-10 rounded-xl bg-app-surface/5 flex items-center justify-center font-black shrink-0">
                                                     {Math.round(parseFloat(emp.global_score))}
                                                 </div>
                                                 <div className="flex-1">
@@ -419,7 +419,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                                             ? t === 'BONUS' ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
                                                                 : t === 'PENALTY' ? "bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/30"
                                                                     : "bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/30"
-                                                            : "bg-white/5 text-white/40 border-app-border hover:text-white"
+                                                            : "bg-app-surface/5 text-white/40 border-app-border hover:text-white"
                                                     )}>{t}</button>
                                             ))}
                                         </div>
@@ -429,7 +429,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                     <div>
                                         <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">Dimension</label>
                                         <select value={form.dimension} onChange={e => setForm(f => ({ ...f, dimension: e.target.value }))}
-                                            className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors">
+                                            className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors">
                                             {['PRODUCTIVITY', 'ACCURACY', 'TIMELINESS', 'ATTENDANCE', 'COMPLIANCE', 'LEADERSHIP', 'TEAMWORK', 'CUSTOMER_IMPACT', 'FINANCIAL_DISCIPLINE', 'INVENTORY_DISCIPLINE'].map(d => (
                                                 <option key={d} value={d}>{d.replace(/_/g, ' ')}</option>
                                             ))}
@@ -446,7 +446,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                             onChange={e => setForm(f => ({ ...f, points: e.target.value }))}
                                             placeholder="e.g. 50"
                                             required
-                                            className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors"
+                                            className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors"
                                         />
                                     </div>
 
@@ -460,7 +460,7 @@ export default function WiseConsoleClient({ leaderboard, atRisk, rules }: Props)
                                             rows={3}
                                             placeholder="Describe the reason for this adjustment…"
                                             required
-                                            className="w-full bg-white/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors resize-none"
+                                            className="w-full bg-app-surface/5 border border-app-border rounded-2xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition-colors resize-none"
                                         />
                                     </div>
 

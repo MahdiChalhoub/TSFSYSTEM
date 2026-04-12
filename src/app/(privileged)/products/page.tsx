@@ -56,13 +56,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Product Registry</h1>
-                    <p className="text-gray-500 text-base">Manage your product catalog.</p>
+                    <h1 className="text-4xl font-bold text-app-foreground tracking-tight mb-2">Product Registry</h1>
+                    <p className="text-app-muted-foreground text-base">Manage your product catalog.</p>
                 </div>
                 <div className="flex gap-4">
                     <Link
                         href="/products/new"
-                        className="bg-white border text-gray-700 px-6 py-3.5 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2"
+                        className="bg-app-surface border text-app-foreground px-6 py-3.5 rounded-2xl font-semibold shadow-sm hover:bg-app-surface transition-all flex items-center gap-2"
                     >
                         <Plus size={18} />
                         <span>Single Product</span>
@@ -79,16 +79,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
             {/* View Toggle & Filters */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex p-1 bg-gray-100 rounded-xl">
+                <div className="flex p-1 bg-app-surface-2 rounded-xl">
                     <Link
                         href="/products?view=flat"
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${!isGrouped ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${!isGrouped ? 'bg-app-surface shadow text-app-foreground' : 'text-app-muted-foreground hover:text-app-foreground'}`}
                     >
                         Detailed (SKUs)
                     </Link>
                     <Link
                         href="/products?view=grouped"
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isGrouped ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isGrouped ? 'bg-app-surface shadow text-app-foreground' : 'text-app-muted-foreground hover:text-app-foreground'}`}
                     >
                         Grouped (Master)
                     </Link>
@@ -96,11 +96,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
                 <div className="flex gap-4 w-full max-w-xl">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-app-muted-foreground pointer-events-none" size={20} />
                         <input
                             type="text"
                             placeholder="Search..."
-                            className="w-full pl-12 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                            className="w-full pl-12 pr-4 py-3 bg-app-surface rounded-xl border border-app-border focus:border-emerald-500 outline-none transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -111,7 +111,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold text-left">
+                            <tr className="bg-app-surface/50 border-b border-app-border text-xs uppercase tracking-wider text-app-muted-foreground font-semibold text-left">
                                 <th className="py-5 px-8">Product / Master</th>
                                 <th className="py-5 px-8">Origin / Variants</th>
                                 <th className="py-5 px-8">Code / SKU</th>
@@ -119,10 +119,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                                 <th className="py-5 px-8 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-app-border">
                             {data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="py-12 text-center text-gray-500">No products found.</td>
+                                    <td colSpan={5} className="py-12 text-center text-app-muted-foreground">No products found.</td>
                                 </tr>
                             ) : (
                                 data.map((item: Record<string, any>) => isGrouped ? <GroupRow key={item.id} group={item} /> : <ProductRow key={item.id} product={item} />)
@@ -132,23 +132,23 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="bg-white border-t border-gray-100 px-8 py-6 flex items-center justify-between text-sm text-gray-600">
+                <div className="bg-app-surface border-t border-app-border px-8 py-6 flex items-center justify-between text-sm text-app-muted-foreground">
                     <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-900 text-base">{total}</span>
-                        <span className="text-gray-500 text-base">items total</span>
+                        <span className="font-semibold text-app-foreground text-base">{total}</span>
+                        <span className="text-app-muted-foreground text-base">items total</span>
                     </div>
                     {totalPages > 1 && (
                         <div className="flex items-center gap-3">
                             <Link
                                 href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page > 1 ? page - 1 : 1}`}
-                                className={`px-4 py-2 flex items-center gap-2 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all ${page <= 1 ? 'opacity-50 pointer-events-none' : ''}`}
+                                className={`px-4 py-2 flex items-center gap-2 border border-app-border rounded-xl font-semibold hover:bg-app-surface transition-all ${page <= 1 ? 'opacity-50 pointer-events-none' : ''}`}
                             >
                                 <ChevronLeft size={16} /> Previous
                             </Link>
-                            <span className="font-mono bg-gray-100 px-3 py-2 rounded-lg">Page {page} of {totalPages}</span>
+                            <span className="font-mono bg-app-surface-2 px-3 py-2 rounded-lg">Page {page} of {totalPages}</span>
                             <Link
                                 href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page < totalPages ? page + 1 : totalPages}`}
-                                className={`px-4 py-2 flex items-center gap-2 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all ${page >= totalPages ? 'opacity-50 pointer-events-none' : ''}`}
+                                className={`px-4 py-2 flex items-center gap-2 border border-app-border rounded-xl font-semibold hover:bg-app-surface transition-all ${page >= totalPages ? 'opacity-50 pointer-events-none' : ''}`}
                             >
                                 Next <ChevronRight size={16} />
                             </Link>
@@ -164,31 +164,31 @@ function ProductRow({ product }: { product: Record<string, any> }) {
     const totalStock = product.inventory?.reduce((acc: number, inv: Record<string, any>) => acc + Number(inv.quantity), 0) || 0;
 
     return (
-        <tr className="hover:bg-gray-50/60 transition-colors">
+        <tr className="hover:bg-app-surface/60 transition-colors">
             <td className="py-6 px-8">
                 <div className="flex flex-col gap-1">
-                    <span className="font-bold text-gray-900">{product.name}</span>
-                    <span className="text-xs text-gray-500">{product.brand?.name} ΓÇó {product.category?.name}</span>
+                    <span className="font-bold text-app-foreground">{product.name}</span>
+                    <span className="text-xs text-app-muted-foreground">{product.brand?.name} ΓÇó {product.category?.name}</span>
                     {product.productGroupId && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 rounded w-fit">Part of Group</span>}
                 </div>
             </td>
             <td className="py-6 px-8">
                 {product.country ? (
                     <div className="flex items-center gap-1.5">
-                        <Globe size={14} className="text-gray-400" />
+                        <Globe size={14} className="text-app-muted-foreground" />
                         <span className="text-sm font-medium">{product.country.name}</span>
-                        <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">{product.country.code}</span>
+                        <span className="text-xs bg-app-surface-2 px-1 rounded text-app-muted-foreground">{product.country.code}</span>
                     </div>
-                ) : <span className="text-gray-400">ΓÇö</span>}
+                ) : <span className="text-app-muted-foreground">ΓÇö</span>}
 
                 {Number(product.size) > 0 && (
-                    <div className="text-xs text-gray-500 mt-1">{Number(product.size)} {product.sizeUnit?.shortName}</div>
+                    <div className="text-xs text-app-muted-foreground mt-1">{Number(product.size)} {product.sizeUnit?.shortName}</div>
                 )}
             </td>
             <td className="py-6 px-8">
                 <div className="flex flex-col gap-1">
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit">{product.sku}</span>
-                    {product.barcode && <span className="text-xs text-gray-400 flex items-center gap-1"><Barcode size={10} /> {product.barcode}</span>}
+                    <span className="font-mono text-xs bg-app-surface-2 px-2 py-1 rounded w-fit">{product.sku}</span>
+                    {product.barcode && <span className="text-xs text-app-muted-foreground flex items-center gap-1"><Barcode size={10} /> {product.barcode}</span>}
                 </div>
             </td>
             <td className="py-6 px-8">
@@ -200,14 +200,14 @@ function ProductRow({ product }: { product: Record<string, any> }) {
                 <div className="flex items-center justify-end gap-2">
                     <Link
                         href={`/products/new?cloneId=${product.id}`}
-                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                        className="p-2 text-app-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
                         title="Clone Product"
                     >
                         <Copy size={18} />
                     </Link>
                     <Link
                         href={`/products/${product.id}/edit`}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-2 text-app-muted-foreground hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                         title="Edit Product"
                     >
                         <Edit2 size={18} />
@@ -230,30 +230,30 @@ function GroupRow({ group }: { group: Record<string, any> }) {
     const uniqueCountries = Array.from(new Set(group.products?.map((p: Record<string, any>) => p.country?.code).filter(Boolean)));
 
     return (
-        <tr className="hover:bg-gray-50/60 transition-colors bg-gray-50/30">
+        <tr className="hover:bg-app-surface/60 transition-colors bg-app-surface/30">
             <td className="py-6 px-8">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                         <Layers size={16} className="text-emerald-600" />
-                        <span className="font-bold text-gray-900 text-lg">{group.name}</span>
+                        <span className="font-bold text-app-foreground text-lg">{group.name}</span>
                     </div>
-                    <span className="text-xs text-gray-500 pl-6">{group.brand?.name} ΓÇó {group.category?.name}</span>
+                    <span className="text-xs text-app-muted-foreground pl-6">{group.brand?.name} ΓÇó {group.category?.name}</span>
                 </div>
             </td>
             <td className="py-6 px-8">
                 <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-gray-900">{variantCount} Variants</span>
+                    <span className="text-sm font-medium text-app-foreground">{variantCount} Variants</span>
                     <div className="flex gap-1 flex-wrap">
                         {uniqueCountries.map((c: Record<string, any>) => (
-                            <span key={c} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
-                                <Globe size={8} className="text-gray-400" /> {c}
+                            <span key={c} className="text-[10px] bg-app-surface border border-app-border px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                                <Globe size={8} className="text-app-muted-foreground" /> {c}
                             </span>
                         ))}
                     </div>
                 </div>
             </td>
             <td className="py-6 px-8">
-                <span className="text-xs text-gray-400 italic">Var. SKUs</span>
+                <span className="text-xs text-app-muted-foreground italic">Var. SKUs</span>
             </td>
             <td className="py-6 px-8">
                 <div className="flex flex-col">

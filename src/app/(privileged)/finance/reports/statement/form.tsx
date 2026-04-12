@@ -51,24 +51,24 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
     }
 
     return (
-        <div className="max-w-xl mx-auto bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
-            <div className="p-6 border-b border-stone-100 bg-stone-50">
-                <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-                    <FileText className="text-stone-400" size={20} />
+        <div className="max-w-xl mx-auto bg-app-surface rounded-lg shadow-sm border border-app-border overflow-hidden">
+            <div className="p-6 border-b border-app-border bg-app-surface">
+                <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
+                    <FileText className="text-app-muted-foreground" size={20} />
                     Account Statement
                 </h2>
-                <p className="text-sm text-stone-500 mt-1">Select an account and period to generate a detailed ledger.</p>
+                <p className="text-sm text-app-muted-foreground mt-1">Select an account and period to generate a detailed ledger.</p>
             </div>
 
             <form onSubmit={handleGenerate} className="p-6 space-y-6">
 
                 {/* 1. Account Selection */}
                 <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-2">Select Account</label>
+                    <label className="block text-sm font-bold text-app-foreground mb-2">Select Account</label>
                     <select
                         value={selectedAccountId}
                         onChange={e => setSelectedAccountId(e.target.value)}
-                        className="w-full p-2.5 border border-stone-300 rounded-md focus:ring-2 focus:ring-black focus:border-black outline-none bg-white"
+                        className="w-full p-2.5 border border-app-border rounded-md focus:ring-2 focus:ring-black focus:border-black outline-none bg-app-surface"
                         size={10} // Show list
                     >
                         {accounts.map(acc => (
@@ -80,8 +80,8 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
                 </div>
 
                 {/* 2. Period Selection */}
-                <div className="bg-stone-50 p-4 rounded-lg border border-stone-200">
-                    <label className="block text-sm font-bold text-stone-700 mb-2">Time Period</label>
+                <div className="bg-app-surface p-4 rounded-lg border border-app-border">
+                    <label className="block text-sm font-bold text-app-foreground mb-2">Time Period</label>
 
                     <div className="flex gap-4 mb-4 text-sm">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -110,7 +110,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
                         <select
                             value={selectedYearId}
                             onChange={e => setSelectedYearId(e.target.value)}
-                            className="w-full p-2 border border-stone-300 rounded"
+                            className="w-full p-2 border border-app-border rounded"
                         >
                             {fiscalYears.map(y => (
                                 <option key={y.id} value={y.id}>
@@ -121,21 +121,21 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
                     ) : (
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className="block text-xs uppercase text-stone-500 font-bold mb-1">Start Date</label>
+                                <label className="block text-xs uppercase text-app-muted-foreground font-bold mb-1">Start Date</label>
                                 <input
                                     type="date"
                                     value={customStart}
                                     onChange={e => setCustomStart(e.target.value)}
-                                    className="w-full p-2 border border-stone-300 rounded"
+                                    className="w-full p-2 border border-app-border rounded"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs uppercase text-stone-500 font-bold mb-1">End Date</label>
+                                <label className="block text-xs uppercase text-app-muted-foreground font-bold mb-1">End Date</label>
                                 <input
                                     type="date"
                                     value={customEnd}
                                     onChange={e => setCustomEnd(e.target.value)}
-                                    className="w-full p-2 border border-stone-300 rounded"
+                                    className="w-full p-2 border border-app-border rounded"
                                 />
                             </div>
                         </div>
@@ -144,7 +144,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
 
                 <button
                     type="submit"
-                    className="w-full bg-black text-white font-bold py-3 rounded-md hover:bg-stone-800 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                    className="w-full bg-app-foreground text-white font-bold py-3 rounded-md hover:bg-app-surface flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
                 >
                     <Search size={18} />
                     Generate Statement

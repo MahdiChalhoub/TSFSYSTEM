@@ -9,7 +9,7 @@ export default async function SettingsPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold text-stone-900 mb-6 font-serif">Financial Settings</h1>
+            <h1 className="text-2xl font-bold text-app-foreground mb-6 font-serif">Financial Settings</h1>
             <FinancialSettingsForm settings={settings} lock={lock} currencies={currencies} />
         </div>
     )

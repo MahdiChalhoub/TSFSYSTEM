@@ -21,7 +21,7 @@ const TYPE_ICONS: Record<string, { icon: any; color: string }> = {
     po_approved: { icon: FileText, color: 'text-blue-500' },
     po_received: { icon: TrendingUp, color: 'text-indigo-500' },
     payment_received: { icon: CreditCard, color: 'text-emerald-600' },
-    system_update: { icon: Settings, color: 'text-gray-500' },
+    system_update: { icon: Settings, color: 'text-app-muted-foreground' },
     daily_digest: { icon: Clock, color: 'text-purple-500' },
 }
 
@@ -77,8 +77,8 @@ export default function NotificationPreferencesPage() {
     if (loading) {
         return (
             <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-                <div className="h-10 w-64 bg-gray-200 rounded-xl animate-pulse" />
-                <div className="h-96 bg-gray-100 rounded-3xl animate-pulse" />
+                <div className="h-10 w-64 bg-app-surface-2 rounded-xl animate-pulse" />
+                <div className="h-96 bg-app-surface-2 rounded-3xl animate-pulse" />
             </div>
         )
     }
@@ -87,22 +87,22 @@ export default function NotificationPreferencesPage() {
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter">
+                <h1 className="text-4xl font-black text-app-foreground tracking-tighter">
                     Notification <span className="text-violet-500">Preferences</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-app-muted-foreground mt-1">
                     Control how and when you receive notifications across channels
                 </p>
             </div>
 
             {/* Preferences Grid */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-[#F8FAFC]">
+            <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
+                <div className="p-6 border-b border-app-border bg-[#F8FAFC]">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-black text-gray-600 uppercase tracking-widest">Channel Settings</h2>
+                        <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Channel Settings</h2>
                         <div className="flex gap-6">
                             {Object.entries(CHANNEL_ICONS).map(([channel, { icon: Icon, label }]) => (
-                                <div key={channel} className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <div key={channel} className="flex items-center gap-1.5 text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                     <Icon size={14} />
                                     {label}
                                 </div>
@@ -113,17 +113,17 @@ export default function NotificationPreferencesPage() {
 
                 <div className="divide-y divide-gray-50">
                     {Object.entries(prefs).map(([ntype, data]: [string, any]) => {
-                        const typeIcon = TYPE_ICONS[ntype] || { icon: Bell, color: 'text-gray-400' }
+                        const typeIcon = TYPE_ICONS[ntype] || { icon: Bell, color: 'text-app-muted-foreground' }
                         const TypeIcon = typeIcon.icon
                         return (
-                            <div key={ntype} className="p-6 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                            <div key={ntype} className="p-6 flex items-center justify-between hover:bg-app-surface/50 transition-colors">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-2.5 rounded-xl bg-gray-50 ${typeIcon.color}`}>
+                                    <div className={`p-2.5 rounded-xl bg-app-surface ${typeIcon.color}`}>
                                         <TypeIcon size={18} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-900 text-sm">{data.label || ntype}</h3>
-                                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">
+                                        <h3 className="font-bold text-app-foreground text-sm">{data.label || ntype}</h3>
+                                        <p className="text-[10px] text-app-muted-foreground font-medium uppercase tracking-wider mt-0.5">
                                             {ntype.replace(/_/g, ' ')}
                                         </p>
                                     </div>
@@ -138,10 +138,10 @@ export default function NotificationPreferencesPage() {
                                                 disabled={isPending}
                                                 className={`w-12 h-7 rounded-full transition-all relative ${isEnabled
                                                         ? 'bg-violet-500 shadow-inner shadow-violet-600'
-                                                        : 'bg-gray-200'
+                                                        : 'bg-app-surface-2'
                                                     }`}
                                             >
-                                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${isEnabled ? 'left-6' : 'left-1'
+                                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-app-surface shadow transition-all ${isEnabled ? 'left-6' : 'left-1'
                                                     }`} />
                                             </button>
                                         )
@@ -151,7 +151,7 @@ export default function NotificationPreferencesPage() {
                         )
                     })}
                     {Object.keys(prefs).length === 0 && (
-                        <div className="p-16 text-center text-gray-400 italic">
+                        <div className="p-16 text-center text-app-muted-foreground italic">
                             No notification types configured yet.
                         </div>
                     )}
@@ -159,32 +159,32 @@ export default function NotificationPreferencesPage() {
             </div>
 
             {/* Delivery Log */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-[#F8FAFC] flex items-center justify-between">
-                    <h2 className="text-sm font-black text-gray-600 uppercase tracking-widest">Recent Deliveries</h2>
-                    <button onClick={loadData} className="text-gray-400 hover:text-violet-500 transition-colors">
+            <div className="bg-app-surface rounded-3xl shadow-xl border border-app-border overflow-hidden">
+                <div className="p-6 border-b border-app-border bg-[#F8FAFC] flex items-center justify-between">
+                    <h2 className="text-sm font-black text-app-muted-foreground uppercase tracking-widest">Recent Deliveries</h2>
+                    <button onClick={loadData} className="text-app-muted-foreground hover:text-violet-500 transition-colors">
                         <RefreshCw size={16} />
                     </button>
                 </div>
                 <div className="divide-y divide-gray-50">
                     {log.length === 0 ? (
-                        <div className="p-12 text-center text-gray-400 italic text-sm">
+                        <div className="p-12 text-center text-app-muted-foreground italic text-sm">
                             No delivery history yet.
                         </div>
                     ) : (
                         log.map((entry: any) => (
-                            <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                            <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-app-surface/50 transition-colors">
                                 <div className={`p-2 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
                                         ? 'bg-emerald-50 text-emerald-500'
                                         : entry.status === 'FAILED'
                                             ? 'bg-red-50 text-red-500'
-                                            : 'bg-gray-50 text-gray-400'
+                                            : 'bg-app-surface text-app-muted-foreground'
                                     }`}>
                                     {entry.channel === 'EMAIL' ? <Mail size={14} /> : <Bell size={14} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-700 truncate">{entry.subject}</p>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">
+                                    <p className="text-sm font-medium text-app-foreground truncate">{entry.subject}</p>
+                                    <p className="text-[10px] text-app-muted-foreground mt-0.5">
                                         {entry.channel} • {entry.created_at ? new Date(entry.created_at).toLocaleString('fr-FR') : '—'}
                                     </p>
                                 </div>
@@ -192,7 +192,7 @@ export default function NotificationPreferencesPage() {
                                         ? 'bg-emerald-100 text-emerald-700'
                                         : entry.status === 'FAILED'
                                             ? 'bg-red-100 text-red-700'
-                                            : 'bg-gray-100 text-gray-500'
+                                            : 'bg-app-surface-2 text-app-muted-foreground'
                                     }`}>
                                     {entry.status}
                                 </span>

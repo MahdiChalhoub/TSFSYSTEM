@@ -64,19 +64,19 @@ export default async function MaintenancePage(props: {
     const safeProducts = JSON.parse(JSON.stringify(products));
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)] bg-gray-50 -m-6">
+        <div className="flex flex-col h-[calc(100vh-6rem)] bg-app-surface -m-6">
             {/* Header with Tabs */}
-            <header className="bg-white border-b border-gray-200 shadow-sm z-20">
+            <header className="bg-app-surface border-b border-app-border shadow-sm z-20">
                 <div className="px-6 py-4 flex items-center gap-4">
                     <Link
                         href="/inventory"
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+                        className="p-2 rounded-lg hover:bg-app-surface-2 text-app-muted-foreground transition-colors"
                     >
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Inventory Maintenance</h1>
-                        <p className="text-sm text-gray-500">Reorganize your inventory structure.</p>
+                        <h1 className="text-xl font-bold text-app-foreground">Inventory Maintenance</h1>
+                        <p className="text-sm text-app-muted-foreground">Reorganize your inventory structure.</p>
                     </div>
                 </div>
 
@@ -104,13 +104,13 @@ export default async function MaintenancePage(props: {
                 />
 
                 {/* Main Area */}
-                <main className="flex-1 overflow-hidden bg-gray-50 p-4 flex flex-col min-w-0">
+                <main className="flex-1 overflow-hidden bg-app-surface p-4 flex flex-col min-w-0">
                     {activeId ? (
-                        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
-                            <div className="p-4 border-b border-gray-100 bg-gray-50/30">
-                                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <div className="flex-1 bg-app-surface rounded-xl shadow-sm border border-app-border flex flex-col overflow-hidden">
+                            <div className="p-4 border-b border-app-border bg-app-surface/30">
+                                <h2 className="text-lg font-bold text-app-foreground flex items-center gap-2">
                                     {currentEntityName}
-                                    <span className="text-sm font-normal text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+                                    <span className="text-sm font-normal text-app-muted-foreground bg-app-surface px-2 py-0.5 rounded border border-app-border">
                                         {products.length} products
                                     </span>
                                 </h2>
@@ -126,8 +126,8 @@ export default async function MaintenancePage(props: {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <div className="h-full flex flex-col items-center justify-center text-app-muted-foreground">
+                            <div className="w-16 h-16 bg-app-surface-2 rounded-full flex items-center justify-center mb-4">
                                 <Layers size={32} />
                             </div>
                             <p className="font-medium">Select an item from the sidebar to manage.</p>
@@ -146,7 +146,7 @@ function TabLink({ currentTab, targetTab, icon: Icon, label }: Record<string, an
             href={`/inventory/maintenance?tab=${targetTab}`}
             className={`
                 flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap
-                ${isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+                ${isActive ? 'border-emerald-500 text-emerald-700 bg-emerald-50/50' : 'border-transparent text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'}
             `}
         >
             <Icon size={16} />
