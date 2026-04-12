@@ -44,6 +44,7 @@ from apps.pos.models.import_declaration_models import ImportDeclaration
 GiftSampleVAT = GiftSampleEvent
 SelfSupplyVATEvent = InternalConsumptionEvent
 from .balance_snapshot import AccountBalanceSnapshot
+from .dynamic_form import FormDefinition, FormResponse
 from .reconciliation_models import ReconciliationMatch, ReconciliationLine
 from .bank_reconciliation_models import BankStatement, BankStatementLine, ReconciliationSession
 # ── Phase 3: Enterprise Models ─────────────────────────────────

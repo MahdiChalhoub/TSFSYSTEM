@@ -377,6 +377,271 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'total': len(rows),
         }, status=status.HTTP_207_MULTI_STATUS if errors else status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['post'], url_path='import-opening-balances')
+    def import_opening_balances(self, request):
+        """
+        Bulk import opening balances from CSV.
+
+        CSV columns (case-insensitive):
+          account_code  — COA account code (required)
+          balance       — Positive number (required)
+                          ASSET/EXPENSE accounts become Debit lines.
+                          All others (LIABILITY/EQUITY/INCOME) become Credit lines.
+          date          — YYYY-MM-DD (optional; overrides query param)
+
+        Query / body params:
+          date          — YYYY-MM-DD for the opening balance entry (required if not in CSV)
+          status        — 'DRAFT' | 'POSTED' (default 'DRAFT')
+          auto_balance  — 'true' | 'false' (default 'true')
+                          If true, an adjusting line is added to the
+                          OPENING_BALANCE-role equity account to balance any difference.
+
+        Returns { created_entry_id, lines_ok, auto_balance_amount, errors }
+        """
+        import csv, io
+        from decimal import Decimal, InvalidOperation
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        target_status = request.data.get('status', 'DRAFT')
+        if target_status not in ('DRAFT', 'POSTED'):
+            target_status = 'DRAFT'
+
+        auto_balance = str(request.data.get('auto_balance', 'true')).lower() != 'false'
+        global_date = request.data.get('date') or request.query_params.get('date')
+
+        # ── Parse rows ────────────────────────────────────────────
+        rows = []
+        if 'file' in request.FILES:
+            f = request.FILES['file']
+            text = f.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(text))
+            for row in reader:
+                rows.append({k.strip().lower().replace(' ', '_'): v.strip() for k, v in row.items()})
+        elif isinstance(request.data.get('rows'), list):
+            rows = request.data['rows']
+        else:
+            return Response({"error": "Provide either a CSV file or a 'rows' list"}, status=400)
+
+        if not rows:
+            return Response({"error": "No rows found in input"}, status=400)
+
+        # ── Resolve accounts ──────────────────────────────────────
+        codes = set(str(r.get('account_code', '') or '').strip() for r in rows if r.get('account_code'))
+        account_map = {
+            acc.code: acc
+            for acc in ChartOfAccount.objects.filter(organization=organization, code__in=codes)
+        }
+
+        DEBIT_TYPES = {'ASSET', 'EXPENSE'}
+        errors = []
+        lines = []
+        entry_date = global_date
+
+        for i, row in enumerate(rows, start=1):
+            code = str(row.get('account_code', '') or '').strip()
+            balance_raw = str(row.get('balance', '0') or '0').strip().replace(',', '')
+            row_date = str(row.get('date', '') or '').strip()
+
+            if not code:
+                errors.append({'row': i, 'message': 'account_code is required'})
+                continue
+            if code not in account_map:
+                errors.append({'row': i, 'message': f'Account code {code!r} not found'})
+                continue
+
+            try:
+                amount = Decimal(balance_raw)
+            except InvalidOperation:
+                errors.append({'row': i, 'message': f'Invalid balance: {balance_raw!r}'})
+                continue
+
+            if amount == 0:
+                continue  # Skip zero balances silently
+
+            # Use first non-empty row date as the entry date if not set globally
+            if not entry_date and row_date:
+                entry_date = row_date
+
+            acc = account_map[code]
+            is_debit_type = acc.type in DEBIT_TYPES
+
+            if amount > 0:
+                debit = amount if is_debit_type else Decimal('0')
+                credit = Decimal('0') if is_debit_type else amount
+            else:
+                # Negative balance → reverse side
+                abs_amount = abs(amount)
+                debit = Decimal('0') if is_debit_type else abs_amount
+                credit = abs_amount if is_debit_type else Decimal('0')
+
+            lines.append({'account_id': acc.id, 'debit': str(debit), 'credit': str(credit)})
+
+        if not entry_date:
+            return Response({"error": "date is required (as query param, body field, or CSV column)"}, status=400)
+
+        if not lines:
+            return Response({"error": "No valid balance rows found", "errors": errors}, status=400)
+
+        # ── Auto-balance ───────────────────────────────────────────
+        total_debit = sum(Decimal(l['debit']) for l in lines)
+        total_credit = sum(Decimal(l['credit']) for l in lines)
+        diff = total_debit - total_credit
+        auto_balance_amount = Decimal('0')
+
+        if auto_balance and abs(diff) > Decimal('0.001'):
+            # Find or create the Opening Balance Equity account
+            equity_acc = ChartOfAccount.objects.filter(
+                organization=organization,
+                system_role='OPENING_BALANCE',
+                is_active=True
+            ).first()
+
+            if not equity_acc:
+                # Create it under Equity
+                equity_acc = ChartOfAccount.objects.create(
+                    organization=organization,
+                    code='3999',
+                    name='Opening Balance Equity',
+                    type='EQUITY',
+                    system_role='OPENING_BALANCE',
+                    is_active=True,
+                )
+
+            # diff > 0 means more debit than credit → add credit to equity
+            if diff > 0:
+                lines.append({'account_id': equity_acc.id, 'debit': '0', 'credit': str(diff)})
+            else:
+                lines.append({'account_id': equity_acc.id, 'debit': str(abs(diff)), 'credit': '0'})
+
+            auto_balance_amount = abs(diff)
+
+        # ── Create the entry ──────────────────────────────────────
+        try:
+            entry = LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=entry_date,
+                description='Opening Balance Import',
+                lines=lines,
+                reference=None,
+                status=target_status,
+                scope='OFFICIAL',
+                user=request.user,
+            )
+        except Exception as e:
+            return Response({"error": str(e), "errors": errors}, status=400)
+
+        return Response({
+            'created_entry_id': entry.id,
+            'lines_ok': len(lines),
+            'auto_balance_amount': str(auto_balance_amount),
+            'errors': errors,
+            'skipped': len(errors),
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='preview-opening-balances')
+    def preview_opening_balances(self, request):
+        """Preview opening balance import without writing anything."""
+        import csv, io
+        from decimal import Decimal, InvalidOperation
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        rows = []
+        if 'file' in request.FILES:
+            f = request.FILES['file']
+            text = f.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(text))
+            for row in reader:
+                rows.append({k.strip().lower().replace(' ', '_'): v.strip() for k, v in row.items()})
+        elif isinstance(request.data.get('rows'), list):
+            rows = request.data['rows']
+        else:
+            return Response({"error": "Provide either a CSV file or a 'rows' list"}, status=400)
+
+        codes = set(str(r.get('account_code', '') or '').strip() for r in rows if r.get('account_code'))
+        account_map = {
+            acc.code: {'id': acc.id, 'name': acc.name, 'type': acc.type, 'code': acc.code}
+            for acc in ChartOfAccount.objects.filter(organization=organization, code__in=codes)
+        }
+
+        DEBIT_TYPES = {'ASSET', 'EXPENSE'}
+        preview_rows = []
+        total_debit = Decimal('0')
+        total_credit = Decimal('0')
+
+        for i, row in enumerate(rows, start=1):
+            code = str(row.get('account_code', '') or '').strip()
+            balance_raw = str(row.get('balance', '0') or '0').strip().replace(',', '')
+            errs = []
+
+            if not code:
+                errs.append('account_code required')
+            elif code not in account_map:
+                errs.append(f'account {code!r} not found')
+
+            try:
+                amount = float(Decimal(balance_raw)) if balance_raw else 0
+            except InvalidOperation:
+                amount = 0
+                errs.append(f'invalid balance: {balance_raw!r}')
+
+            acc = account_map.get(code)
+            side = None
+            debit_val = 0
+            credit_val = 0
+
+            if acc and amount != 0:
+                is_debit = acc['type'] in DEBIT_TYPES
+                if amount > 0:
+                    side = 'Dr' if is_debit else 'Cr'
+                    if is_debit:
+                        debit_val = amount
+                        total_debit += Decimal(str(amount))
+                    else:
+                        credit_val = amount
+                        total_credit += Decimal(str(amount))
+                else:
+                    side = 'Cr' if is_debit else 'Dr'
+                    abs_amount = abs(amount)
+                    if is_debit:
+                        credit_val = abs_amount
+                        total_credit += Decimal(str(abs_amount))
+                    else:
+                        debit_val = abs_amount
+                        total_debit += Decimal(str(abs_amount))
+
+            preview_rows.append({
+                'row': i,
+                'account_code': code,
+                'account': acc,
+                'balance': amount,
+                'side': side,
+                'debit': debit_val,
+                'credit': credit_val,
+                'errors': errs,
+                'valid': len(errs) == 0 and amount != 0,
+            })
+
+        diff = float(total_debit - total_credit)
+        valid = sum(1 for r in preview_rows if r['valid'])
+
+        return Response({
+            'total': len(preview_rows),
+            'valid': valid,
+            'invalid': len(preview_rows) - valid,
+            'total_debit': float(total_debit),
+            'total_credit': float(total_credit),
+            'difference': diff,
+            'rows': preview_rows,
+        })
+
     @action(detail=False, methods=['post'], url_path='preview-import')
     def preview_import(self, request):
         """

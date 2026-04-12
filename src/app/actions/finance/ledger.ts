@@ -251,6 +251,70 @@ export type ImportResult = {
     total: number
 }
 
+// ── Opening Balance Import ────────────────────────────────────────────────────
+
+export type OpeningBalancePreviewRow = {
+    row: number
+    account_code: string
+    account: { id: number; name: string; type: string; code: string } | null
+    balance: number
+    side: 'Dr' | 'Cr' | null
+    debit: number
+    credit: number
+    errors: string[]
+    valid: boolean
+}
+
+export type OpeningBalancePreviewResult = {
+    total: number
+    valid: number
+    invalid: number
+    total_debit: number
+    total_credit: number
+    difference: number
+    rows: OpeningBalancePreviewRow[]
+}
+
+export type OpeningBalanceImportResult = {
+    created_entry_id: number
+    lines_ok: number
+    auto_balance_amount: string
+    errors: { row: number; message: string }[]
+    skipped: number
+}
+
+export async function previewOpeningBalances(
+    formData: FormData
+): Promise<OpeningBalancePreviewResult> {
+    try {
+        const result = await erpFetch('journal/preview-opening-balances/', {
+            method: 'POST',
+            body: formData,
+        })
+        return result as OpeningBalancePreviewResult
+    } catch (error) {
+        console.error('Failed to preview opening balances:', error)
+        throw error
+    }
+}
+
+export async function importOpeningBalances(
+    formData: FormData
+): Promise<OpeningBalanceImportResult> {
+    try {
+        const result = await erpFetch('journal/import-opening-balances/', {
+            method: 'POST',
+            body: formData,
+        })
+        revalidatePath('/finance/ledger')
+        revalidatePath('/finance/chart-of-accounts')
+        return result as OpeningBalanceImportResult
+    } catch (error) {
+        console.error('Failed to import opening balances:', error)
+        throw error
+    }
+}
+
 export async function previewImport(formData: FormData): Promise<ImportPreviewResult> {
     try {
         const result = await erpFetch('journal/preview-import/', {
