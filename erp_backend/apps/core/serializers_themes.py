@@ -95,7 +95,7 @@ class ThemeExportSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     description = serializers.CharField(allow_blank=True)
     category = serializers.ChoiceField(
-        choices=['professional', 'creative', 'efficiency', 'specialized', 'custom']
+        choices=['professional', 'creative', 'efficiency', 'specialized', 'design-system', 'custom']
     )
     preset_data = serializers.JSONField()
     tags = serializers.ListField(

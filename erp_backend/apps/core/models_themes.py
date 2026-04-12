@@ -13,7 +13,6 @@ from django.db import models
 from django.utils.text import slugify
 from kernel.tenancy.models import TenantOwnedModel
 from kernel.audit.mixins import AuditLogMixin
-from kernel.config import get_config
 
 
 class OrganizationTheme(AuditLogMixin, TenantOwnedModel):
@@ -83,6 +82,7 @@ class OrganizationTheme(AuditLogMixin, TenantOwnedModel):
             ('creative', 'Creative'),
             ('efficiency', 'Efficiency'),
             ('specialized', 'Specialized'),
+            ('design-system', 'Design System'),
             ('custom', 'Custom'),
         ],
         default='custom',
