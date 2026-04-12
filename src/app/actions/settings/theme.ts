@@ -15,24 +15,8 @@
 
 import { cookies } from 'next/headers';
 
-export type AppThemeName =
-    | 'midnight-pro'
-    | 'ivory-market'
-    | 'neon-rush'
-    | 'savane-earth'
-    | 'arctic-glass'
-    | 'lumina-sky'
-    | 'warm-enterprise';
-
-const VALID_THEMES: AppThemeName[] = [
-    'midnight-pro',
-    'ivory-market',
-    'neon-rush',
-    'savane-earth',
-    'arctic-glass',
-    'lumina-sky',
-    'warm-enterprise',
-];
+// Dynamic slugs come from the backend — no hardcoded whitelist needed.
+export type AppThemeName = string;
 
 const THEME_COOKIE = 'tsfsystem-app-theme';
 
@@ -40,8 +24,8 @@ const THEME_COOKIE = 'tsfsystem-app-theme';
  * Persist the selected theme in a server-readable cookie.
  * Called in the background from AppThemeProvider.setTheme().
  */
-export async function setOrgTheme(theme: AppThemeName): Promise<{ ok: boolean }> {
-    if (!VALID_THEMES.includes(theme)) {
+export async function setOrgTheme(theme: string): Promise<{ ok: boolean }> {
+    if (!theme || typeof theme !== 'string' || theme.length > 100) {
         return { ok: false };
     }
 
@@ -68,10 +52,10 @@ export async function setOrgTheme(theme: AppThemeName): Promise<{ ok: boolean }>
  * Read the persisted theme from server cookie (user-level).
  * Used in the root layout to avoid flash of default theme.
  */
-export async function getPersistedTheme(): Promise<AppThemeName | null> {
+export async function getPersistedTheme(): Promise<string | null> {
     const cookieStore = await cookies();
-    const val = cookieStore.get(THEME_COOKIE)?.value as AppThemeName | undefined;
-    return val && VALID_THEMES.includes(val) ? val : null;
+    const val = cookieStore.get(THEME_COOKIE)?.value;
+    return val && typeof val === 'string' && val.length <= 100 ? val : null;
 }
 
 /**
