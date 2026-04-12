@@ -18,11 +18,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER = ['professional', 'efficiency', 'creative', 'specialized', 'design-system', 'custom']
 
 // ── Design system meta ────────────────────────────────────────────
-const DS_META: Record<string, { icon: string; desc: string }> = {
-  'ant-design':       { icon: '🐜', desc: 'Enterprise-grade React UI by Ant Group' },
-  'material-design':  { icon: '◉',  desc: 'Google Material Design 3' },
-  'apple-hig':        { icon: '',  desc: 'Apple Human Interface Guidelines' },
-  'tailwind':         { icon: '🌊', desc: 'Utility-first by Tailwind Labs' },
+const DS_META: Record<string, { icon: string; desc: string; btnRadius: string; cardRadius: string; badge: string }> = {
+  'ant-design':      { icon: '🐜', desc: 'Sharp, rectangular enterprise UI', btnRadius: '2px',  cardRadius: '4px',  badge: 'Corporate' },
+  'material-design': { icon: '◉',  desc: 'Expressive pill-shaped components',  btnRadius: '20px', cardRadius: '12px', badge: 'Expressive' },
+  'apple-hig':       { icon: '',  desc: 'Clean, softly-rounded Apple style',   btnRadius: '8px',  cardRadius: '12px', badge: 'Refined' },
+  'tailwind':        { icon: '🌊', desc: 'Utility-first, flexible defaults',   btnRadius: '6px',  cardRadius: '8px',  badge: 'Modern' },
 }
 
 // DesignSystemProvider lives in the privileged layout — no need to wrap here
@@ -233,35 +233,60 @@ function AppearancePageInner() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {availableSystems.map(system => {
                 const isActive = currentSystem === system.id
-                const meta = DS_META[system.id] || { icon: '◆', desc: system.description }
+                const meta = DS_META[system.id] || { icon: '◆', desc: system.description, btnRadius: '6px', cardRadius: '8px', badge: '' }
                 return (
                   <button
                     key={system.id}
                     onClick={() => switchSystem(system.id as any)}
-                    className="flex items-start gap-4 p-5 rounded-2xl text-left transition-all hover:scale-[1.01]"
+                    className="flex flex-col p-5 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                     style={isActive ? {
                       background: 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))',
                       border: '2px solid var(--app-primary)',
+                      boxShadow: '0 0 0 4px color-mix(in srgb, var(--app-primary) 10%, transparent)',
                     } : {
                       background: 'var(--app-surface)',
                       border: '2px solid var(--app-border)',
                     }}
                   >
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: 'var(--app-surface-2)' }}>
-                      {meta.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold">{system.name}</span>
-                        {isActive && (
-                          <span className="text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
-                            Active
-                          </span>
-                        )}
+                    {/* Header row */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'var(--app-surface-2)' }}>
+                        {meta.icon}
                       </div>
-                      <p className="text-sm mt-1" style={{ color: 'var(--app-text-muted)' }}>{meta.desc}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm">{system.name}</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'var(--app-surface-2)', color: 'var(--app-text-muted)' }}>
+                            {meta.badge}
+                          </span>
+                          {isActive && (
+                            <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
+                              ✓ Active
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--app-text-muted)' }}>{meta.desc}</p>
+                      </div>
                     </div>
-                    {isActive && <Check size={18} style={{ color: 'var(--app-primary)', flexShrink: 0 }} />}
+
+                    {/* Shape preview */}
+                    <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--app-surface-2)' }}>
+                      {/* Simulated button */}
+                      <div className="px-3 py-1.5 text-[11px] font-semibold text-white shrink-0"
+                        style={{ background: 'var(--app-primary)', borderRadius: meta.btnRadius }}>
+                        Button
+                      </div>
+                      {/* Simulated input */}
+                      <div className="flex-1 h-7 border px-2 flex items-center text-[10px]"
+                        style={{ borderRadius: meta.btnRadius, borderColor: 'var(--app-border)', color: 'var(--app-text-muted)', background: 'var(--app-surface)' }}>
+                        Input field
+                      </div>
+                      {/* Simulated badge */}
+                      <div className="px-2 py-0.5 text-[10px] font-semibold shrink-0"
+                        style={{ borderRadius: meta.cardRadius, background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                        Tag
+                      </div>
+                    </div>
                   </button>
                 )
               })}
