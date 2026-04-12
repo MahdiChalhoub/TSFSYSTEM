@@ -75,10 +75,6 @@ urlpatterns = [
 
     # Kernel Router
     path('', include(router.urls)),
-
-    # List Preferences
-    path('list-preferences/<str:list_key>/', user_list_preference, name='user_list_preference'),
-    path('list-preferences/org/<str:list_key>/', org_list_default, name='org_list_default'),
 ]
 
 # ── Dynamic Module URL Registration ─────────────────────────────────────────
