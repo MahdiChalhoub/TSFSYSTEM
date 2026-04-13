@@ -7,6 +7,7 @@ import {
     Search, Clock, Star, ArrowRight, ChevronRight, X,
     LayoutDashboard, Sparkles, Command, Zap
 } from 'lucide-react';
+import { getFavorites, saveFavorites } from '@/app/actions/favorites';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -43,15 +44,34 @@ export default function QuickAccessPage() {
     const [search, setSearch] = useState('');
     const [mounted, setMounted] = useState(false);
 
+    // Persist to localStorage and notify other components (Sidebar)
+    const persistLocally = useCallback((favs: PinnedEntry[]) => {
+        localStorage.setItem(PINNED_KEY, JSON.stringify(favs));
+        window.dispatchEvent(new StorageEvent('storage', { key: PINNED_KEY }));
+    }, []);
+
     useEffect(() => {
         setMounted(true);
+        // 1. Load recent from localStorage
         try {
             const r = localStorage.getItem(RECENT_KEY);
             if (r) setRecent(JSON.parse(r));
+        } catch { /* ignore */ }
+
+        // 2. Show favorites from localStorage immediately (fast)
+        try {
             const p = localStorage.getItem(PINNED_KEY);
             if (p) setPinned(JSON.parse(p));
         } catch { /* ignore */ }
-    }, []);
+
+        // 3. Fetch favorites from backend (cross-device source of truth)
+        getFavorites().then(serverFavs => {
+            if (serverFavs.length > 0) {
+                setPinned(serverFavs);
+                persistLocally(serverFavs);
+            }
+        }).catch(() => { /* stay on localStorage */ });
+    }, [persistLocally]);
 
     useEffect(() => {
         if (!mounted) return;
@@ -74,10 +94,11 @@ export default function QuickAccessPage() {
         setPinned((prev) => {
             const exists = prev.find((p) => p.path === path);
             const next = exists ? prev.filter((p) => p.path !== path) : [...prev, { title, path }];
-            localStorage.setItem(PINNED_KEY, JSON.stringify(next));
+            persistLocally(next);
+            saveFavorites(next).catch(() => {}); // backend sync, fire-and-forget
             return next;
         });
-    }, []);
+    }, [persistLocally]);
 
     const allPages = useMemo(() => {
         const pages: { title: string; path: string; parent: string }[] = [];
