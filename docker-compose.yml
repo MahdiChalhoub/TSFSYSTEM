@@ -48,6 +48,11 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@host.docker.internal:5432/${DB_NAME:-tsfdb}
       - DB_HOST=host.docker.internal
       - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-tsfdb}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       - CELERY_BROKER_URL=redis://host.docker.internal:6379/0
       - CELERY_RESULT_BACKEND=redis://host.docker.internal:6379/0
     networks:
@@ -72,6 +77,11 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@host.docker.internal:5432/${DB_NAME:-tsfdb}
       - DB_HOST=host.docker.internal
       - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-tsfdb}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       - CELERY_BROKER_URL=redis://host.docker.internal:6379/0
       - CELERY_RESULT_BACKEND=redis://host.docker.internal:6379/0
     networks:

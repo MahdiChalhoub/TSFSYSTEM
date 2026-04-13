@@ -87,11 +87,20 @@ export default async function AdminLayout({
     }
 
     // 2. Fetch data in parallel ONLY if authenticated
-    const [sites, organizations, financialSettings] = await Promise.all([
-        getSites(),
-        getOrganizations(),
-        getGlobalFinancialSettings()
-    ]);
+    // Wrapped in try/catch to prevent layout crash on 429 (rate limit) or transient errors
+    let sites: any[] = [];
+    let organizations: any[] = [];
+    let financialSettings: any = null;
+    try {
+        [sites, organizations, financialSettings] = await Promise.all([
+            getSites().catch(() => []),
+            getOrganizations().catch(() => []),
+            getGlobalFinancialSettings().catch(() => null)
+        ]);
+    } catch {
+        // Graceful degradation — layout renders with empty data
+        console.error('[Layout] Failed to fetch layout data, rendering with defaults');
+    }
 
 
 
