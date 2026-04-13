@@ -119,8 +119,8 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     ]
 
     return (
-        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300"
-            style={{ height: 'calc(100vh - 4rem)' }}>
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ── Page Header (hidden in focus mode) ── */}
             {!focusMode && (
