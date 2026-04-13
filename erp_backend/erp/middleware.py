@@ -1,12 +1,21 @@
 from contextvars import ContextVar
 
 _tenant_id: ContextVar[str | None] = ContextVar('_tenant_id', default=None)
+_authorized_scope: ContextVar[str | None] = ContextVar('_authorized_scope', default=None)
 
 def set_current_tenant_id(tenant_id):
     _tenant_id.set(tenant_id)
 
 def get_current_tenant_id():
     return _tenant_id.get(None)
+
+def set_authorized_scope(scope):
+    """Set accounting scope for current request: 'official' or 'internal'."""
+    _authorized_scope.set(scope)
+
+def get_authorized_scope():
+    """Get the authorized accounting scope for the current request. Defaults to 'official'."""
+    return _authorized_scope.get(None) or 'official'
 
 class TenantMiddleware:
     def __init__(self, get_response):

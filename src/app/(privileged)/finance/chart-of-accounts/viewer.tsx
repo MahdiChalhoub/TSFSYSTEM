@@ -379,7 +379,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <Zap size={13} /> Migration
                     </button>
                     <button
-                        onClick={() => router.push('/finance/chart-of-accounts/templates')}
+                        onClick={() => router.push('/finance/chart-of-accounts/templates?from=coa')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{
                             color: 'var(--app-muted-foreground)',

@@ -9,7 +9,7 @@ import {
     MapPin, Flag, BarChart3, GitBranch, ArrowRightLeft,
     BookMarked, Scale, Building2, Workflow,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -46,13 +46,15 @@ interface Props {
 
 export default function TemplatesPageClient({ templates, templatesMap, migrationMaps }: Props) {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const cameFromCOA = searchParams.get('from') === 'coa'
     const [activeView, setActiveView] = useState<'gallery' | 'compare' | 'migration'>('gallery')
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
     const [compareTemplates, setCompareTemplates] = useState<string[]>([])
     const [focusMode, setFocusMode] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isPending, setIsPending] = useState(false)
-    const [importTarget, setImportTarget] = useState<{ key: string; step: 'confirm' | 'reset' } | null>(null)
+    const [importTarget, setImportTarget] = useState<string | null>(null)
     const searchRef = useRef<HTMLInputElement>(null)
 
     // Keyboard shortcuts
@@ -78,14 +80,14 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     const totalAccounts = templates.reduce((sum, t) => sum + (t.account_count || 0), 0)
     const totalRules = templates.reduce((sum, t) => sum + (t.posting_rule_count || 0), 0)
 
-    const handleImport = async (key: string) => setImportTarget({ key, step: 'confirm' })
-    const handleConfirmImport = async (reset: boolean) => {
+    const handleImport = async (key: string) => setImportTarget(key)
+    const handleConfirmImport = async () => {
         if (!importTarget) return
-        const key = importTarget.key
+        const key = importTarget
         setImportTarget(null)
         setIsPending(true)
         try {
-            await importChartOfAccountsTemplate(key as any, { reset })
+            await importChartOfAccountsTemplate(key as any, { reset: true })
             toast.success(`Successfully imported ${key.replace(/_/g, ' ')}`)
             router.push('/finance/chart-of-accounts')
         } catch (e: unknown) {
@@ -123,6 +125,20 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
             {!focusMode ? (
                 <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
                     <div className="flex items-center gap-3">
+                        {cameFromCOA && (
+                            <button
+                                onClick={() => router.push('/finance/chart-of-accounts')}
+                                className="flex items-center gap-1 text-[11px] font-bold px-2 py-1.5 rounded-xl border transition-all mr-1"
+                                style={{
+                                    color: 'var(--app-muted-foreground)',
+                                    borderColor: 'var(--app-border)',
+                                }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-foreground)' }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--app-muted-foreground)' }}
+                            >
+                                <ChevronLeft size={14} /> Back
+                            </button>
+                        )}
                         <div className="page-header-icon bg-app-primary"
                             style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
                             <Library size={20} className="text-white" />
@@ -234,17 +250,12 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
             </div>
 
             {/* ── Import Dialogs ── */}
-            <ConfirmDialog open={importTarget?.step === 'confirm'}
+            <ConfirmDialog open={importTarget !== null}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
-                onConfirm={() => { if (importTarget) setImportTarget({ ...importTarget, step: 'reset' }) }}
-                title={`Import ${importTarget?.key?.replace(/_/g, ' ') ?? ''}?`}
-                description="This will add accounts from this template to your Chart of Accounts."
-                confirmText="Continue" variant="warning" />
-            <ConfirmDialog open={importTarget?.step === 'reset'}
-                onOpenChange={(open) => { if (!open) { handleConfirmImport(false) } }}
-                onConfirm={() => handleConfirmImport(true)}
-                title="Clean Reset?" description="Delete ALL existing accounts first? Only works if zero transactions exist."
-                confirmText="Clean Reset" cancelText="Keep Existing" variant="danger" />
+                onConfirm={handleConfirmImport}
+                title={`Import ${importTarget?.replace(/_/g, ' ') ?? ''}?`}
+                description="This will replace your current Chart of Accounts with this template. Existing accounts will be removed (or deactivated if journal entries exist). Posting rules will be auto-synced."
+                confirmText="Replace & Import" variant="danger" />
         </div>
     )
 }
@@ -1095,128 +1106,250 @@ function MigrationView({
                             <div className="w-10 flex-shrink-0 text-center hidden sm:block">%</div>
                         </div>
 
-                        {/* Rows */}
+                        {/* Rows — grouped rendering */}
                         <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                            {filteredEntries.map((entry, i) => {
-                                const levelColor = LEVEL_COLORS[entry.matchLevel] || 'var(--app-muted-foreground)'
+                            {(() => {
+                                // Build display items: group MERGE entries by target, keep others as-is
+                                type DisplayItem =
+                                    | { kind: '1:1'; entry: MappingEntry }
+                                    | { kind: 'split'; entry: MappingEntry }
+                                    | { kind: 'merge-group'; targetCode: string; targetName: string; sources: MappingEntry[] }
 
-                                if (entry.isSplit && entry.targets.length > 1) {
-                                    // ── SPLIT row: show source once, then indented target sub-rows ──
-                                    return (
-                                        <div key={i}>
-                                            {/* Source row */}
-                                            <div className="flex items-center gap-2 px-4 py-1.5 transition-all"
-                                                style={{
-                                                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
-                                                    background: 'color-mix(in srgb, #ec4899 3%, var(--app-surface))',
-                                                }}>
-                                                <div className="w-16 flex-shrink-0">
-                                                    <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
-                                                        style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
-                                                        {entry.srcCode}
-                                                    </span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-[11px] font-bold text-app-foreground truncate block">{entry.srcName}</span>
-                                                </div>
-                                                <div className="w-16 flex-shrink-0 text-center">
-                                                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                                                        style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899',
-                                                            border: '1px solid color-mix(in srgb, #ec4899 20%, transparent)' }}>
-                                                        SPLIT 1→{entry.targets.length}
-                                                    </span>
-                                                </div>
-                                                <div className="w-16 flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <span className="text-[10px] font-bold text-app-muted-foreground italic">
-                                                        Split across {entry.targets.length} accounts ↓
-                                                    </span>
-                                                </div>
-                                                <div className="w-10 flex-shrink-0 hidden sm:block" />
-                                            </div>
-                                            {/* Target sub-rows */}
-                                            {entry.targets.map((tgt, j) => (
-                                                <div key={`${i}-${j}`}
-                                                    className="flex items-center gap-2 pl-8 pr-4 py-1 transition-all hover:bg-app-surface/40"
+                                const items: DisplayItem[] = []
+                                const mergeGroups = new Map<string, MappingEntry[]>()
+                                const mergeGroupOrder: string[] = []
+
+                                for (const entry of filteredEntries) {
+                                    if (entry.isSplit && entry.targets.length > 1) {
+                                        items.push({ kind: 'split', entry })
+                                    } else if (entry.isMerge) {
+                                        const tgtCode = entry.targets[0]?.code || ''
+                                        if (!mergeGroups.has(tgtCode)) {
+                                            mergeGroups.set(tgtCode, [])
+                                            mergeGroupOrder.push(tgtCode)
+                                        }
+                                        mergeGroups.get(tgtCode)!.push(entry)
+                                    } else {
+                                        items.push({ kind: '1:1', entry })
+                                    }
+                                }
+
+                                // Insert merge groups in order of first appearance
+                                const allItems: DisplayItem[] = []
+                                let mergeInserted = new Set<string>()
+                                let entryIdx = 0
+
+                                for (const entry of filteredEntries) {
+                                    if (entry.isSplit && entry.targets.length > 1) {
+                                        allItems.push({ kind: 'split', entry })
+                                    } else if (entry.isMerge) {
+                                        const tgtCode = entry.targets[0]?.code || ''
+                                        if (!mergeInserted.has(tgtCode)) {
+                                            mergeInserted.add(tgtCode)
+                                            const sources = mergeGroups.get(tgtCode) || []
+                                            const tgt = sources[0]?.targets[0]
+                                            allItems.push({ kind: 'merge-group', targetCode: tgt?.code || '', targetName: tgt?.name || '', sources })
+                                        }
+                                    } else {
+                                        allItems.push({ kind: '1:1', entry })
+                                    }
+                                }
+
+                                const mergeColor = LEVEL_COLORS['MERGE'] || 'var(--app-warning, #f59e0b)'
+
+                                return allItems.map((item, i) => {
+                                    // ── MERGE GROUP: Target header → indented source sub-rows ──
+                                    if (item.kind === 'merge-group') {
+                                        const { targetCode, targetName, sources } = item
+                                        return (
+                                            <div key={`mg-${targetCode}-${i}`}>
+                                                {/* Target header row */}
+                                                <div className="flex items-center gap-2 px-4 py-2 transition-all"
                                                     style={{
-                                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
-                                                        borderLeft: '3px solid #ec4899',
-                                                        marginLeft: '16px',
+                                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
+                                                        background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 5%, var(--app-surface))',
                                                     }}>
                                                     <div className="w-16 flex-shrink-0" />
-                                                    <div className="flex-1 min-w-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider"
+                                                            style={{ color: mergeColor }}>
+                                                            {sources.length} accounts merge into ↓
+                                                        </span>
+                                                    </div>
                                                     <div className="w-16 flex-shrink-0 text-center">
-                                                        <span className="text-[9px] font-bold" style={{ color: '#ec4899' }}>├─</span>
+                                                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                            style={{ background: `color-mix(in srgb, ${mergeColor} 12%, transparent)`, color: mergeColor,
+                                                                border: `1px solid color-mix(in srgb, ${mergeColor} 25%, transparent)` }}>
+                                                            MERGE {sources.length}→1
+                                                        </span>
                                                     </div>
                                                     <div className="w-16 flex-shrink-0">
-                                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
-                                                            style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
-                                                            {tgt.code}
+                                                        <span className="text-[11px] font-mono font-black tabular-nums px-1 py-0.5 rounded"
+                                                            style={{ background: `color-mix(in srgb, ${targetAccent} 12%, transparent)`, color: targetAccent }}>
+                                                            {targetCode}
                                                         </span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <span className="text-[11px] font-medium text-app-foreground truncate block">{tgt.name}</span>
+                                                        <span className="text-[11px] font-black text-app-foreground truncate block">{targetName}</span>
                                                     </div>
                                                     <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                                        <span className="text-[10px] font-black tabular-nums px-1 py-0.5 rounded"
-                                                            style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
-                                                            {tgt.pct}%
-                                                        </span>
+                                                        <span className="text-[10px] font-black tabular-nums"
+                                                            style={{ color: mergeColor }}>100%</span>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                {/* Source sub-rows */}
+                                                {sources.map((src, j) => (
+                                                    <div key={`mg-${targetCode}-${j}`}
+                                                        className="flex items-center gap-2 pl-6 pr-4 py-1 transition-all hover:bg-app-surface/40"
+                                                        style={{
+                                                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
+                                                            borderLeft: `3px solid ${mergeColor}`,
+                                                            marginLeft: '8px',
+                                                            background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 2%, transparent)',
+                                                        }}>
+                                                        <div className="w-16 flex-shrink-0">
+                                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                                style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
+                                                                {src.srcCode}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{src.srcName}</span>
+                                                        </div>
+                                                        <div className="w-16 flex-shrink-0 text-center">
+                                                            <span className="text-[9px] font-bold" style={{ color: mergeColor }}>├─</span>
+                                                        </div>
+                                                        <div className="w-16 flex-shrink-0">
+                                                            <span className="text-[10px] font-mono font-bold tabular-nums text-app-muted-foreground">{targetCode}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[10px] text-app-muted-foreground truncate block italic">{targetName}</span>
+                                                        </div>
+                                                        <div className="w-10 flex-shrink-0 text-center hidden sm:block">
+                                                            <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )
+                                    }
+
+                                    // ── SPLIT row ──
+                                    if (item.kind === 'split') {
+                                        const entry = item.entry
+                                        return (
+                                            <div key={`sp-${i}`}>
+                                                <div className="flex items-center gap-2 px-4 py-1.5 transition-all"
+                                                    style={{
+                                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
+                                                        background: 'color-mix(in srgb, #ec4899 3%, var(--app-surface))',
+                                                    }}>
+                                                    <div className="w-16 flex-shrink-0">
+                                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                            style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
+                                                            {entry.srcCode}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className="text-[11px] font-bold text-app-foreground truncate block">{entry.srcName}</span>
+                                                    </div>
+                                                    <div className="w-16 flex-shrink-0 text-center">
+                                                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                            style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899',
+                                                                border: '1px solid color-mix(in srgb, #ec4899 20%, transparent)' }}>
+                                                            SPLIT 1→{entry.targets.length}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-16 flex-shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className="text-[10px] font-bold text-app-muted-foreground italic">
+                                                            Split across {entry.targets.length} accounts ↓
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-10 flex-shrink-0 hidden sm:block" />
+                                                </div>
+                                                {entry.targets.map((tgt, j) => (
+                                                    <div key={`sp-${i}-${j}`}
+                                                        className="flex items-center gap-2 pl-6 pr-4 py-1 transition-all hover:bg-app-surface/40"
+                                                        style={{
+                                                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                                            borderLeft: '3px solid #ec4899',
+                                                            marginLeft: '8px',
+                                                        }}>
+                                                        <div className="w-16 flex-shrink-0" />
+                                                        <div className="flex-1 min-w-0" />
+                                                        <div className="w-16 flex-shrink-0 text-center">
+                                                            <span className="text-[9px] font-bold" style={{ color: '#ec4899' }}>├─</span>
+                                                        </div>
+                                                        <div className="w-16 flex-shrink-0">
+                                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                                style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
+                                                                {tgt.code}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{tgt.name}</span>
+                                                        </div>
+                                                        <div className="w-10 flex-shrink-0 text-center hidden sm:block">
+                                                            <span className="text-[10px] font-black tabular-nums px-1 py-0.5 rounded"
+                                                                style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
+                                                                {tgt.pct}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )
+                                    }
+
+                                    // ── Standard 1:1 row ──
+                                    const entry = item.entry
+                                    const levelColor = LEVEL_COLORS[entry.matchLevel] || 'var(--app-muted-foreground)'
+                                    const tgt = entry.targets[0]
+                                    return (
+                                        <div key={`s-${i}`} className="flex items-center gap-2 px-4 py-1.5 transition-all hover:bg-app-surface/40"
+                                            style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                            <div className="w-16 flex-shrink-0">
+                                                <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                    style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
+                                                    {entry.srcCode}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
+                                            </div>
+                                            <div className="w-16 flex-shrink-0 text-center">
+                                                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                    style={{
+                                                        background: `color-mix(in srgb, ${levelColor} 10%, transparent)`,
+                                                        color: levelColor,
+                                                        border: `1px solid color-mix(in srgb, ${levelColor} 20%, transparent)`,
+                                                    }}>
+                                                    {entry.matchLevel}
+                                                </span>
+                                            </div>
+                                            <div className="w-16 flex-shrink-0">
+                                                {tgt ? (
+                                                    <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                        style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
+                                                        {tgt.code}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-app-muted-foreground">—</span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-[11px] font-medium text-app-foreground truncate block">
+                                                    {tgt?.name || '—'}
+                                                </span>
+                                            </div>
+                                            <div className="w-10 flex-shrink-0 text-center hidden sm:block">
+                                                <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
+                                            </div>
                                         </div>
                                     )
-                                }
-
-                                // ── Standard 1:1 or MERGE row ──
-                                const tgt = entry.targets[0]
-                                return (
-                                    <div key={i} className="flex items-center gap-2 px-4 py-1.5 transition-all hover:bg-app-surface/40"
-                                        style={{
-                                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                                            background: entry.isMerge ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 2%, transparent)' : undefined,
-                                        }}>
-                                        <div className="w-16 flex-shrink-0">
-                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
-                                                style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
-                                                {entry.srcCode}
-                                            </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
-                                        </div>
-                                        <div className="w-16 flex-shrink-0 text-center">
-                                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                                                style={{
-                                                    background: `color-mix(in srgb, ${levelColor} 10%, transparent)`,
-                                                    color: levelColor,
-                                                    border: `1px solid color-mix(in srgb, ${levelColor} 20%, transparent)`,
-                                                }}>
-                                                {entry.isMerge ? 'MERGE' : entry.matchLevel}
-                                            </span>
-                                        </div>
-                                        <div className="w-16 flex-shrink-0">
-                                            {tgt ? (
-                                                <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
-                                                    style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
-                                                    {tgt.code}
-                                                </span>
-                                            ) : (
-                                                <span className="text-[10px] font-bold text-app-muted-foreground">—</span>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <span className="text-[11px] font-medium text-app-foreground truncate block">
-                                                {tgt?.name || '—'}
-                                            </span>
-                                        </div>
-                                        <div className="w-10 flex-shrink-0 text-center hidden sm:block">
-                                            <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
+                                })
+                            })()}
                         </div>
 
                         {/* Footer */}
