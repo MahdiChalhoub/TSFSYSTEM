@@ -37,7 +37,7 @@ function timeAgo(ts: number): string {
 // ── Quick Access Page ─────────────────────────────────────────────────────────
 
 export default function QuickAccessPage() {
-    const { openTab, openTabs } = useAdmin();
+    const { replaceTab, openTabs } = useAdmin();
     const [recent, setRecent] = useState<RecentEntry[]>([]);
     const [pinned, setPinned] = useState<PinnedEntry[]>([]);
     const [search, setSearch] = useState('');
@@ -104,8 +104,8 @@ export default function QuickAccessPage() {
     }, [search, allPages]);
 
     const modules = MENU_ITEMS.filter((m) => m.title !== 'Dashboard');
-    // openTab handles dedup: if path already open, just navigates; otherwise adds tab
-    const navigate = (title: string, path: string) => { openTab(title, path); setSearch(''); };
+    // replaceTab swaps the Home tab in-place → same position in tab bar, no new tab
+    const navigate = (title: string, path: string) => { replaceTab(title, path); setSearch(''); };
 
     return (
         <div

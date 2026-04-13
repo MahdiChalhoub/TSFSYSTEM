@@ -23,6 +23,7 @@ type AdminContextType = {
     openTabs: Tab[];
     activeTab: string;
     openTab: (title: string, path: string) => void;
+    replaceTab: (title: string, path: string) => void;
     closeTab: (id: string) => void;
     clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
@@ -194,6 +195,25 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         router.push('/home');
     };
 
+    /** Replace the currently active tab with a new page (same position, no new tab) */
+    const replaceTab = (title: string, path: string) => {
+        const id = path;
+        setOpenTabs(prev => {
+            // If destination tab already exists, just navigate
+            if (prev.find(t => t.id === id)) return prev;
+            // Find the current active tab and replace it in-place
+            const activeIdx = prev.findIndex(t => t.path === pathname);
+            if (activeIdx !== -1) {
+                const updated = [...prev];
+                updated[activeIdx] = { id, title, path };
+                return updated;
+            }
+            // Fallback: just add it
+            return [...prev, { id, title, path }];
+        });
+        router.push(path);
+    };
+
     return (
         <AdminContext.Provider value={{
             sidebarOpen,
@@ -201,6 +221,7 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             openTabs,
             activeTab: pathname,
             openTab,
+            replaceTab,
             closeTab,
             clearTabs,
             viewScope,
