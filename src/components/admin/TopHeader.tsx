@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, memo } from 'react';
 import {
     Search, Menu, Settings, LogOut, HelpCircle,
     Palette, Sun, Moon, ChevronDown, PanelLeft, Rows3,
-    Globe, X, ChevronRight, Eye, EyeOff, Zap, Bell,
+    Globe, X, ChevronRight, Eye, EyeOff, Zap,
 } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
@@ -111,14 +111,23 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
     const { currentTheme, allThemes, isLoading, setTheme } = useAppTheme();
     const themeSlug = currentTheme?.slug || '';
     return (
-        <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}>
-            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>UI Theme</p>
-                {isLoading && <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--app-primary)', borderTopColor: 'transparent' }} />}
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <div className="flex items-center gap-2">
+                    <Palette size={13} style={{ color: 'var(--app-primary)' }} />
+                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--app-text)' }}>Appearance</span>
+                </div>
+                {isLoading && <div className="w-3.5 h-3.5 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--app-primary)', borderTopColor: 'transparent' }} />}
             </div>
-            <div className="p-2 grid gap-0.5 max-h-80 overflow-y-auto custom-scrollbar">
-                {allThemes.length === 0 && !isLoading && <p className="text-xs text-center py-6" style={{ color: 'var(--app-text-faint)' }}>No themes available.</p>}
+
+            {/* Theme list */}
+            <div className="p-2 max-h-72 overflow-y-auto custom-scrollbar">
+                {allThemes.length === 0 && !isLoading && (
+                    <p className="text-xs text-center py-8" style={{ color: 'var(--app-text-faint)' }}>No themes available.</p>
+                )}
                 {allThemes.map((t) => {
                     const isActive = themeSlug === t.slug;
                     const primary = t.presetData?.colors?.dark?.primary || 'var(--app-primary)';
@@ -126,24 +135,49 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
                     const surface = t.presetData?.colors?.dark?.surface || 'var(--app-surface)';
                     return (
                         <button key={t.slug || t.id} onClick={() => { setTheme(t.slug); onClose(); }}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 w-full"
-                            style={{ background: isActive ? 'var(--app-primary-light)' : 'transparent', border: `1px solid ${isActive ? 'var(--app-primary)' : 'transparent'}` }}>
-                            <div className="w-8 h-8 rounded-xl flex-shrink-0 overflow-hidden" style={{ background: bg, border: '1px solid var(--app-border)' }}>
-                                <div className="w-full h-1/2" style={{ background: surface }} />
-                                <div className="w-2/3 h-1/2 ml-auto" style={{ background: primary }} />
+                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left transition-colors duration-150"
+                            style={{
+                                background: isActive ? 'var(--app-primary-light)' : 'transparent',
+                                border: `1px solid ${isActive ? 'var(--app-primary)' : 'transparent'}`,
+                            }}
+                            onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
+                            onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                            {/* Mini preview swatch */}
+                            <div className="w-9 h-9 rounded-xl flex-shrink-0 overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
+                                <div className="w-full h-[55%]" style={{ background: bg }} />
+                                <div className="flex h-[45%]">
+                                    <div className="flex-1" style={{ background: surface }} />
+                                    <div className="w-[45%]" style={{ background: primary }} />
+                                </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold truncate" style={{ color: 'var(--app-text)' }}>{t.name}</p>
-                                <p className="text-[9px] truncate" style={{ color: 'var(--app-text-faint)' }}>{t.description || t.category || 'Theme'}</p>
+                                <p className="text-xs font-semibold truncate" style={{ color: 'var(--app-text)' }}>{t.name}</p>
+                                <p className="text-[9px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>{t.description || t.category || 'Theme'}</p>
                             </div>
-                            {isActive && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--app-primary)' }} />}
-                            {!t.isSystem && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0" style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>Custom</span>}
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {!t.isSystem && (
+                                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded"
+                                        style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
+                                        Custom
+                                    </span>
+                                )}
+                                {isActive && (
+                                    <div className="w-5 h-5 rounded-full flex items-center justify-center"
+                                        style={{ background: 'var(--app-primary)' }}>
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                            <path d="M2 5l2 2 4-4" stroke="var(--app-bg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </div>
                         </button>
                     );
                 })}
             </div>
-            <div className="px-4 py-2.5 text-center" style={{ borderTop: '1px solid var(--app-border)' }}>
-                <p className="text-[9px]" style={{ color: 'var(--app-text-faint)' }}>{allThemes.length} themes · Auto-saved</p>
+
+            <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: '1px solid var(--app-border)' }}>
+                <p className="text-[9px] font-medium" style={{ color: 'var(--app-text-faint)' }}>{allThemes.length} themes available</p>
+                <p className="text-[9px] font-medium" style={{ color: 'var(--app-primary)', opacity: 0.8 }}>Auto-saved</p>
             </div>
         </div>
     );
@@ -154,54 +188,87 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
 function UserPanel({ user, viewScope, canToggleScope, onClose }: {
     user?: Record<string, any>; viewScope: 'OFFICIAL' | 'INTERNAL'; canToggleScope: boolean; onClose: () => void;
 }) {
-    const initials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || (user?.username?.[0] || 'U').toUpperCase();
+    const initials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase()
+        || (user?.username?.[0] || 'U').toUpperCase();
+    const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'User';
+
     return (
-        <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+        <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
             style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}>
-            <div className="p-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
+
+            {/* Identity hero */}
+            <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
+                    {/* Large avatar */}
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-base font-black"
                         style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
                         {initials}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold truncate" style={{ color: 'var(--app-text)' }}>
-                            {[user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'User'}
+                        <p className="text-sm font-bold leading-tight truncate" style={{ color: 'var(--app-text)' }}>
+                            {fullName}
                         </p>
-                        <p className="text-[10px] truncate" style={{ color: 'var(--app-text-faint)' }}>{user?.email || user?.username}</p>
+                        <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--app-text-faint)' }}>
+                            {user?.email || user?.username}
+                        </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider"
+
+                {/* Badges row */}
+                <div className="flex items-center gap-1.5 mt-3">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
                         style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
-                        <Zap size={8} />{user?.is_superuser ? 'Admin' : 'Member'}
+                        <Zap size={8} />
+                        {user?.is_superuser ? 'Admin' : 'Member'}
                     </span>
                     {canToggleScope && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider"
-                            style={{ background: viewScope === 'OFFICIAL' ? 'var(--app-success-bg)' : 'var(--app-surface-2)', color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-text-faint)' }}>
-                            {viewScope === 'OFFICIAL' ? <Eye size={8} /> : <EyeOff size={8} />}{viewScope}
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
+                            style={{
+                                background: viewScope === 'OFFICIAL' ? 'var(--app-success-bg)' : 'var(--app-surface-2)',
+                                color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-text-faint)',
+                                border: `1px solid ${viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-border)'}`,
+                            }}>
+                            {viewScope === 'OFFICIAL' ? <Eye size={8} /> : <EyeOff size={8} />}
+                            {viewScope === 'OFFICIAL' ? 'Official' : 'Internal'}
                         </span>
                     )}
                 </div>
             </div>
+
+            {/* Menu items */}
             <div className="p-1.5">
-                {[{ icon: Settings, label: 'Settings', href: '/settings' }, { icon: HelpCircle, label: 'Help & Support', href: '/help' }].map(({ icon: Icon, label, href }) => (
-                    <button key={href} onClick={() => { onClose(); window.location.href = href; }}
+                {([
+                    { icon: Settings, label: 'Account Settings', href: '/settings' },
+                    { icon: HelpCircle, label: 'Help & Support', href: '/help' },
+                ] as const).map(({ icon: Icon, label, href }) => (
+                    <button key={href}
+                        onClick={() => { onClose(); window.location.href = href; }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
                         style={{ color: 'var(--app-text-muted)' }}
                         onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
                         onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
-                        <Icon size={14} />{label}
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'var(--app-surface-2)' }}>
+                            <Icon size={13} />
+                        </div>
+                        {label}
                     </button>
                 ))}
             </div>
+
+            {/* Sign out */}
             <div className="p-1.5" style={{ borderTop: '1px solid var(--app-border)' }}>
                 <form action="/api/auth/logout" method="POST">
-                    <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
+                    <button type="submit"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
                         style={{ color: 'var(--app-error)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-error-bg)'; }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-error-bg)'; }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                        <LogOut size={14} />Sign Out
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'var(--app-error-bg)' }}>
+                            <LogOut size={13} />
+                        </div>
+                        Sign Out
                     </button>
                 </form>
             </div>
