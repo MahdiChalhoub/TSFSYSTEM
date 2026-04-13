@@ -6,22 +6,16 @@ import { useState, useEffect, useRef, memo } from 'react';
 import {
     Search, Menu, Settings, LogOut, HelpCircle,
     Palette, Sun, Moon, ChevronDown, PanelLeft, Rows3,
-    Globe, X, ChevronRight, Eye, EyeOff, Zap,
+    Globe, X, ChevronRight, Eye, EyeOff, Zap, Bell,
 } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
 import { NotificationBell } from './NotificationBell';
 import { useAppTheme } from '@/components/app/AppThemeProvider';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface MenuItem {
-    title: string;
-    icon?: any;
-    path?: string;
-    children?: MenuItem[];
+    title: string; icon?: any; path?: string; children?: MenuItem[];
 }
-
 interface TopHeaderProps {
     sites: Record<string, any>[];
     organizations?: Record<string, any>[];
@@ -29,60 +23,16 @@ interface TopHeaderProps {
     user?: Record<string, any>;
 }
 
-// ── Shared hover helpers (inline style swap — avoids class-based bg leaks) ────
-
-function onHover(enter: boolean, el: HTMLElement, bg = 'var(--app-surface-hover)', color = 'var(--app-text)') {
-    el.style.background = enter ? bg : 'transparent';
-    el.style.color = enter ? color : 'var(--app-text-muted)';
-}
-
-// ── Vertical divider ──────────────────────────────────────────────────────────
-
-function VDivider() {
-    return <div className="h-5 w-px mx-1 flex-shrink-0" style={{ background: 'var(--app-border)' }} />;
-}
-
-// ── Compact icon button ───────────────────────────────────────────────────────
-
-function IconBtn({ onClick, title, children, active }: {
-    onClick?: () => void; title?: string; children: React.ReactNode; active?: boolean;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            title={title}
-            className="flex items-center justify-center w-8 h-8 rounded-xl transition-colors duration-150 flex-shrink-0"
-            style={{
-                background: active ? 'var(--app-primary-light)' : 'transparent',
-                color: active ? 'var(--app-primary)' : 'var(--app-text-muted)',
-            }}
-            onMouseEnter={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; } }}
-            onMouseLeave={(e) => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; } }}
-        >
-            {children}
-        </button>
-    );
-}
-
-// ── Mega-menu dropdown ────────────────────────────────────────────────────────
+// ── Mega-menu ─────────────────────────────────────────────────────────────────
 
 function MegaMenuDropdown({ item, onClose }: { item: MenuItem; onClose: () => void }) {
     const { openTab } = useAdmin();
     const cols = item.children ?? [];
     const colCount = Math.min(cols.length, 4);
     if (!cols.length) return null;
-
     return (
-        <div
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
-            style={{
-                background: 'var(--app-surface)',
-                border: '1px solid var(--app-border)',
-                boxShadow: 'var(--app-shadow-lg)',
-                width: `${colCount * 210}px`,
-                maxWidth: '92vw',
-            }}
-        >
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)', width: `${colCount * 210}px`, maxWidth: '92vw' }}>
             <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
                 {item.icon && <item.icon size={13} style={{ color: 'var(--app-primary)' }} />}
                 <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>{item.title}</span>
@@ -95,26 +45,20 @@ function MegaMenuDropdown({ item, onClose }: { item: MenuItem; onClose: () => vo
                             <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-text-faint)' }}>{group.title}</span>
                         </div>
                         {group.children?.map((page) => (
-                            <button
-                                key={page.path}
-                                onClick={() => { openTab(page.title, page.path!); onClose(); }}
+                            <button key={page.path} onClick={() => { openTab(page.title, page.path!); onClose(); }}
                                 className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors duration-100 text-xs font-medium"
                                 style={{ color: 'var(--app-text-muted)' }}
                                 onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-primary-light)'; el.style.color = 'var(--app-primary)'; }}
-                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}
-                            >
-                                <ChevronRight size={9} className="flex-shrink-0 opacity-40" />
-                                <span className="truncate">{page.title}</span>
+                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                                <ChevronRight size={9} className="flex-shrink-0 opacity-40" /><span className="truncate">{page.title}</span>
                             </button>
                         ))}
                         {!group.children && group.path && (
-                            <button
-                                onClick={() => { openTab(group.title, group.path!); onClose(); }}
+                            <button onClick={() => { openTab(group.title, group.path!); onClose(); }}
                                 className="w-full text-left px-2.5 py-1.5 rounded-lg transition-colors duration-100 text-xs font-medium truncate"
                                 style={{ color: 'var(--app-text-muted)' }}
                                 onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-primary-light)'; el.style.color = 'var(--app-primary)'; }}
-                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}
-                            >
+                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
                                 {group.title}
                             </button>
                         )}
@@ -131,43 +75,29 @@ const TopNavItem = memo(function TopNavItem({ item }: { item: MenuItem }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const { openTab } = useAdmin();
-
     useEffect(() => {
         const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
     }, []);
-
     const hasChildren = !!item.children?.length;
-
     if (!hasChildren && item.path) {
         return (
-            <button
-                onClick={() => openTab(item.title, item.path!)}
+            <button onClick={() => openTab(item.title, item.path!)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
                 style={{ color: 'var(--app-text-muted)' }}
                 onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
-                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}
-            >
-                {item.icon && <item.icon size={13} />}
-                {item.title}
+                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
+                {item.icon && <item.icon size={13} />}{item.title}
             </button>
         );
     }
-
     return (
         <div ref={ref} className="relative">
-            <button
-                onClick={() => setOpen(v => !v)}
-                onMouseEnter={() => setOpen(true)}
+            <button onClick={() => setOpen(v => !v)} onMouseEnter={() => setOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
-                style={{
-                    background: open ? 'var(--app-surface-2)' : 'transparent',
-                    color: open ? 'var(--app-text)' : 'var(--app-text-muted)',
-                }}
-            >
-                {item.icon && <item.icon size={13} />}
-                {item.title}
+                style={{ background: open ? 'var(--app-surface-2)' : 'transparent', color: open ? 'var(--app-text)' : 'var(--app-text-muted)' }}>
+                {item.icon && <item.icon size={13} />}{item.title}
                 {hasChildren && <ChevronDown size={10} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform var(--app-transition-fast)' }} />}
             </button>
             {open && hasChildren && <MegaMenuDropdown item={item} onClose={() => setOpen(false)} />}
@@ -180,36 +110,24 @@ const TopNavItem = memo(function TopNavItem({ item }: { item: MenuItem }) {
 function ThemePanel({ onClose }: { onClose: () => void }) {
     const { currentTheme, allThemes, isLoading, setTheme } = useAppTheme();
     const themeSlug = currentTheme?.slug || '';
-
     return (
-        <div
-            className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}
-        >
+        <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}>
             <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>UI Theme</p>
                 {isLoading && <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--app-primary)', borderTopColor: 'transparent' }} />}
             </div>
             <div className="p-2 grid gap-0.5 max-h-80 overflow-y-auto custom-scrollbar">
-                {allThemes.length === 0 && !isLoading && (
-                    <p className="text-xs text-center py-6" style={{ color: 'var(--app-text-faint)' }}>No themes available.</p>
-                )}
+                {allThemes.length === 0 && !isLoading && <p className="text-xs text-center py-6" style={{ color: 'var(--app-text-faint)' }}>No themes available.</p>}
                 {allThemes.map((t) => {
                     const isActive = themeSlug === t.slug;
                     const primary = t.presetData?.colors?.dark?.primary || 'var(--app-primary)';
                     const bg = t.presetData?.colors?.dark?.bg || 'var(--app-bg)';
                     const surface = t.presetData?.colors?.dark?.surface || 'var(--app-surface)';
                     return (
-                        <button
-                            key={t.slug || t.id}
-                            onClick={() => { setTheme(t.slug); onClose(); }}
+                        <button key={t.slug || t.id} onClick={() => { setTheme(t.slug); onClose(); }}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors duration-150 w-full"
-                            style={{
-                                background: isActive ? 'var(--app-primary-light)' : 'transparent',
-                                border: `1px solid ${isActive ? 'var(--app-primary)' : 'transparent'}`,
-                            }}
-                        >
-                            {/* Swatch */}
+                            style={{ background: isActive ? 'var(--app-primary-light)' : 'transparent', border: `1px solid ${isActive ? 'var(--app-primary)' : 'transparent'}` }}>
                             <div className="w-8 h-8 rounded-xl flex-shrink-0 overflow-hidden" style={{ background: bg, border: '1px solid var(--app-border)' }}>
                                 <div className="w-full h-1/2" style={{ background: surface }} />
                                 <div className="w-2/3 h-1/2 ml-auto" style={{ background: primary }} />
@@ -219,11 +137,7 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
                                 <p className="text-[9px] truncate" style={{ color: 'var(--app-text-faint)' }}>{t.description || t.category || 'Theme'}</p>
                             </div>
                             {isActive && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'var(--app-primary)' }} />}
-                            {!t.isSystem && (
-                                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0" style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
-                                    Custom
-                                </span>
-                            )}
+                            {!t.isSystem && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0" style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>Custom</span>}
                         </button>
                     );
                 })}
@@ -238,83 +152,55 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
 // ── User panel ────────────────────────────────────────────────────────────────
 
 function UserPanel({ user, viewScope, canToggleScope, onClose }: {
-    user?: Record<string, any>;
-    viewScope: 'OFFICIAL' | 'INTERNAL';
-    canToggleScope: boolean;
-    onClose: () => void;
+    user?: Record<string, any>; viewScope: 'OFFICIAL' | 'INTERNAL'; canToggleScope: boolean; onClose: () => void;
 }) {
-    const initials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase()
-        || (user?.username?.[0] || 'U').toUpperCase();
-
-    const menuItems = [
-        { icon: Settings, label: 'Settings', href: '/settings' },
-        { icon: HelpCircle, label: 'Help & Support', href: '/help' },
-    ];
-
+    const initials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || (user?.username?.[0] || 'U').toUpperCase();
     return (
-        <div
-            className="absolute right-0 top-full mt-2 w-60 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}
-        >
-            {/* Identity */}
+        <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+            style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: 'var(--app-shadow-lg)' }}>
             <div className="p-4" style={{ borderBottom: '1px solid var(--app-border)' }}>
                 <div className="flex items-center gap-3">
-                    <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
-                        style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}
-                    >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black"
+                        style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
                         {initials}
                     </div>
                     <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold truncate" style={{ color: 'var(--app-text)' }}>
                             {[user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'User'}
                         </p>
-                        <p className="text-[10px] truncate" style={{ color: 'var(--app-text-faint)' }}>
-                            {user?.email || user?.username}
-                        </p>
+                        <p className="text-[10px] truncate" style={{ color: 'var(--app-text-faint)' }}>{user?.email || user?.username}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5 mt-3 flex-wrap">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider"
                         style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
-                        <Zap size={8} />
-                        {user?.is_superuser ? 'Admin' : 'Member'}
+                        <Zap size={8} />{user?.is_superuser ? 'Admin' : 'Member'}
                     </span>
                     {canToggleScope && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider"
-                            style={{
-                                background: viewScope === 'OFFICIAL' ? 'var(--app-success-bg)' : 'var(--app-surface-2)',
-                                color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-text-faint)',
-                            }}>
-                            {viewScope === 'OFFICIAL' ? <Eye size={8} /> : <EyeOff size={8} />}
-                            {viewScope}
+                            style={{ background: viewScope === 'OFFICIAL' ? 'var(--app-success-bg)' : 'var(--app-surface-2)', color: viewScope === 'OFFICIAL' ? 'var(--app-success)' : 'var(--app-text-faint)' }}>
+                            {viewScope === 'OFFICIAL' ? <Eye size={8} /> : <EyeOff size={8} />}{viewScope}
                         </span>
                     )}
                 </div>
             </div>
-
-            {/* Nav items */}
             <div className="p-1.5">
-                {menuItems.map(({ icon: Icon, label, href }) => (
-                    <button key={href}
-                        onClick={() => { onClose(); window.location.href = href; }}
+                {[{ icon: Settings, label: 'Settings', href: '/settings' }, { icon: HelpCircle, label: 'Help & Support', href: '/help' }].map(({ icon: Icon, label, href }) => (
+                    <button key={href} onClick={() => { onClose(); window.location.href = href; }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
                         style={{ color: 'var(--app-text-muted)' }}
                         onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}
-                    >
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
                         <Icon size={14} />{label}
                     </button>
                 ))}
             </div>
             <div className="p-1.5" style={{ borderTop: '1px solid var(--app-border)' }}>
                 <form action="/api/auth/logout" method="POST">
-                    <button type="submit"
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
+                    <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors duration-150"
                         style={{ color: 'var(--app-error)' }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-error-bg)'; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                         <LogOut size={14} />Sign Out
                     </button>
                 </form>
@@ -326,12 +212,7 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
 // ── Main TopHeader ─────────────────────────────────────────────────────────────
 
 export function TopHeader({ sites, organizations = [], currentSlug, user }: TopHeaderProps) {
-    const {
-        toggleSidebar, sidebarOpen,
-        viewScope, setViewScope, canToggleScope,
-        navLayout, setNavLayout,
-    } = useAdmin();
-
+    const { toggleSidebar, sidebarOpen, viewScope, setViewScope, canToggleScope, navLayout, setNavLayout } = useAdmin();
     const [profileOpen, setProfileOpen] = useState(false);
     const [themeOpen, setThemeOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -339,7 +220,6 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
     const themeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { setMounted(true); }, []);
-
     useEffect(() => {
         const h = (e: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
@@ -354,185 +234,172 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
     const activeOrg = organizations.find((o) => o.slug === currentSlug);
     const userInitials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase()
         || (user?.username?.[0] || 'U').toUpperCase();
+    const userName = user?.first_name || user?.username || 'User';
 
     return (
-        <header
-            className="sticky top-0 z-40 shrink-0 flex flex-col"
+        <header className="sticky top-0 z-40 shrink-0 flex flex-col"
             style={{
-                background: 'var(--app-surface)',
+                background: 'var(--app-bg)',
+                backdropFilter: 'var(--app-backdrop)',
+                WebkitBackdropFilter: 'var(--app-backdrop)',
                 borderBottom: '1px solid var(--app-border)',
-                boxShadow: 'var(--app-shadow-sm)',
-            }}
-        >
-            {/* ── Main bar (48px) ────────────────────────────────────────── */}
-            <div className="flex items-center h-12 px-3 gap-1.5">
+            }}>
 
-                {/* LEFT ─────────────────────────────────────────────── */}
-                <div className="flex items-center gap-1 flex-shrink-0">
+            {/* ════════════════════════════════════════════════════════
+                MAIN BAR  ·  52px
+            ════════════════════════════════════════════════════════ */}
+            <div className="flex items-center h-[52px] px-4 gap-3">
 
-                    {/* Layout toggle */}
+                {/* ── BRAND + CONTROLS ─────────────────────────────── */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+
+                    {/* Logo mark */}
+                    <div className="flex items-center gap-2 mr-1">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
+                            style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
+                            T
+                        </div>
+                        <span className="hidden md:block text-sm font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                            TSF
+                        </span>
+                    </div>
+
+                    {/* Thin separator */}
+                    <div className="h-5 w-px mx-0.5" style={{ background: 'var(--app-border)' }} />
+
+                    {/* Layout mode toggle */}
                     <button
                         onClick={() => setNavLayout(isTopnav ? 'sidebar' : 'topnav')}
                         title={isTopnav ? 'Switch to Sidebar' : 'Switch to Top Navigation'}
-                        className="flex items-center justify-center w-8 h-8 rounded-xl transition-colors duration-150 flex-shrink-0"
-                        style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-primary)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-bg)'; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-primary-light)'; (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)'; }}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                        style={{ color: 'var(--app-text-faint)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-primary)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
                     >
-                        {isTopnav ? <PanelLeft size={14} /> : <Rows3 size={14} />}
+                        {isTopnav ? <PanelLeft size={15} /> : <Rows3 size={15} />}
                     </button>
 
-                    {/* Hamburger (sidebar mode) */}
+                    {/* Hamburger — sidebar mode */}
                     {!isTopnav && (
-                        <IconBtn onClick={toggleSidebar} title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}>
+                        <button onClick={toggleSidebar}
+                            title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                            style={{ color: 'var(--app-text-faint)' }}
+                            onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
+                            onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}>
                             {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
-                        </IconBtn>
-                    )}
-
-                    {/* Brand chip (topnav mode) */}
-                    {isTopnav && (
-                        <div className="hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-xl flex-shrink-0"
-                            style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
-                            <div className="w-3 h-3 rounded-md" style={{ background: 'var(--app-bg)', opacity: 0.4 }} />
-                            <span className="text-[11px] font-black tracking-tight">TSF</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* CENTER ───────────────────────────────────────────── */}
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-
-                    {/* Top-nav items (topnav mode) */}
-                    {isTopnav && (
-                        <nav className="hidden lg:flex items-center gap-0.5 flex-1 overflow-hidden">
-                            {MENU_ITEMS.map((item) => (
-                                <TopNavItem key={item.title} item={item as MenuItem} />
-                            ))}
-                        </nav>
-                    )}
-
-                    {/* Context row (sidebar mode) */}
-                    {!isTopnav && (
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
-                            <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
-
-                            {currentSlug !== 'saas' && activeOrg?.currency_code && (
-                                <div className="hidden xl:flex items-center gap-1.5 px-2 h-7 rounded-lg flex-shrink-0 text-[10px] font-bold"
-                                    style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}>
-                                    <Globe size={10} />
-                                    {activeOrg.currency_code}
-                                    {activeOrg.business_type_name && (
-                                        <span className="hidden 2xl:inline pl-1.5 font-medium opacity-70"
-                                            style={{ borderLeft: '1px solid var(--app-border)' }}>
-                                            {activeOrg.business_type_name}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="hidden md:block flex-shrink-0">
-                                <SiteSwitcher sites={sites} />
-                            </div>
-
-                            {/* Search */}
-                            <button
-                                onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                                className="hidden lg:flex flex-1 max-w-xs items-center gap-2 h-8 px-3 rounded-xl transition-colors duration-150 cursor-text"
-                                style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}
-                                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-text-muted)'; }}
-                                onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-text-faint)'; }}
-                            >
-                                <Search size={12} />
-                                <span className="flex-1 text-left text-[11px]">Search...</span>
-                                <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold rounded"
-                                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}>
-                                    ⌃K
-                                </kbd>
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Search (topnav mode) */}
-                    {isTopnav && (
-                        <button
-                            onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                            className="hidden xl:flex items-center gap-2 h-8 px-3 rounded-xl transition-colors duration-150 cursor-text flex-shrink-0"
-                            style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)', minWidth: '160px' }}
-                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-primary)'; }}
-                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)'; }}
-                        >
-                            <Search size={12} />
-                            <span className="flex-1 text-left text-[11px]">Search...</span>
-                            <kbd className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold rounded"
-                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}>
-                                ⌃K
-                            </kbd>
                         </button>
                     )}
                 </div>
 
-                {/* RIGHT ────────────────────────────────────────────── */}
-                <div className="flex items-center gap-0.5 flex-shrink-0 ml-auto">
+                {/* ── TOP-NAV ITEMS  (topnav mode only) ────────────── */}
+                {isTopnav && (
+                    <nav className="hidden lg:flex items-center gap-0.5 flex-shrink-0">
+                        {MENU_ITEMS.map((item) => (
+                            <TopNavItem key={item.title} item={item as MenuItem} />
+                        ))}
+                    </nav>
+                )}
 
-                    {/* Mobile search */}
-                    <IconBtn onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))} title="Search">
-                        <Search size={15} className="lg:hidden" />
-                    </IconBtn>
+                {/* ── CONTEXT  (sidebar mode: org / site / currency) ── */}
+                {!isTopnav && (
+                    <div className="hidden md:flex items-center gap-1.5 flex-shrink-0">
+                        <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
+                        <SiteSwitcher sites={sites} />
+                        {currentSlug !== 'saas' && activeOrg?.currency_code && (
+                            <div className="hidden xl:flex items-center gap-1 px-2.5 h-7 rounded-lg text-[10px] font-bold flex-shrink-0"
+                                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-text-muted)' }}>
+                                <Globe size={10} style={{ color: 'var(--app-primary)', opacity: 0.8 }} />
+                                {activeOrg.currency_code}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                    {/* Scope toggle */}
-                    {canToggleScope && mounted && (
-                        <div className="hidden sm:flex items-center h-8 rounded-xl overflow-hidden flex-shrink-0"
-                            style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', padding: '2px', gap: '2px' }}>
-                            <button
-                                onClick={() => setViewScope('OFFICIAL')}
-                                className="flex items-center gap-1.5 px-2.5 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors duration-150"
-                                style={viewScope === 'OFFICIAL'
-                                    ? { background: 'var(--app-success)', color: 'var(--app-bg)', boxShadow: '0 1px 6px var(--app-primary-glow)' }
-                                    : { color: 'var(--app-text-faint)' }}
-                            >
-                                <Eye size={9} />
-                                <span className="hidden md:inline">Official</span>
-                            </button>
-                            <button
-                                onClick={() => setViewScope('INTERNAL')}
-                                className="flex items-center gap-1.5 px-2.5 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors duration-150"
-                                style={viewScope === 'INTERNAL'
-                                    ? { background: 'var(--app-surface)', color: 'var(--app-text)', boxShadow: 'var(--app-shadow-sm)' }
-                                    : { color: 'var(--app-text-faint)' }}
-                            >
-                                <EyeOff size={9} />
-                                <span className="hidden md:inline">Internal</span>
-                            </button>
-                        </div>
-                    )}
+                {/* ── SEARCH  (flex-1, grows to fill available space) ─ */}
+                <button
+                    onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                    className="hidden lg:flex flex-1 items-center gap-2.5 h-9 px-4 rounded-xl transition-all duration-150 cursor-text min-w-0"
+                    style={{
+                        background: 'var(--app-surface)',
+                        border: '1px solid var(--app-border)',
+                        color: 'var(--app-text-faint)',
+                        maxWidth: '480px',
+                    }}
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-text-muted)'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-text-faint)'; }}
+                >
+                    <Search size={13} className="flex-shrink-0" />
+                    <span className="flex-1 text-left text-xs">Search anything...</span>
+                    <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-mono font-bold rounded flex-shrink-0"
+                        style={{ background: 'var(--app-surface-2)', border: '1px solid var(--app-border)', color: 'var(--app-text-faint)' }}>
+                        ⌃K
+                    </kbd>
+                </button>
 
-                    <VDivider />
+                {/* Push right zone to the end */}
+                <div className="flex-1" />
+
+                {/* ── SCOPE TOGGLE ────────────────────────────────────── */}
+                {canToggleScope && mounted && (
+                    <div className="hidden sm:flex items-center rounded-lg overflow-hidden flex-shrink-0"
+                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', padding: '3px', gap: '2px' }}>
+                        <button onClick={() => setViewScope('OFFICIAL')}
+                            className="flex items-center gap-1.5 px-3 h-[26px] rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-150 whitespace-nowrap"
+                            style={viewScope === 'OFFICIAL'
+                                ? { background: 'var(--app-success)', color: 'var(--app-bg)' }
+                                : { color: 'var(--app-text-faint)' }}
+                            onMouseEnter={(e) => { if (viewScope !== 'OFFICIAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)'; }}
+                            onMouseLeave={(e) => { if (viewScope !== 'OFFICIAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}>
+                            <Eye size={10} />
+                            <span className="hidden lg:inline">Official</span>
+                        </button>
+                        <button onClick={() => setViewScope('INTERNAL')}
+                            className="flex items-center gap-1.5 px-3 h-[26px] rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-150 whitespace-nowrap"
+                            style={viewScope === 'INTERNAL'
+                                ? { background: 'var(--app-primary)', color: 'var(--app-bg)' }
+                                : { color: 'var(--app-text-faint)' }}
+                            onMouseEnter={(e) => { if (viewScope !== 'INTERNAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)'; }}
+                            onMouseLeave={(e) => { if (viewScope !== 'INTERNAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}>
+                            <EyeOff size={10} />
+                            <span className="hidden lg:inline">Internal</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* ── ACTION GROUP  [bell · sun/moon · theme●] ──────── */}
+                <div className="flex items-center flex-shrink-0 rounded-xl overflow-hidden"
+                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
 
                     {/* Notifications */}
-                    <NotificationBell />
+                    <div className="flex items-center justify-center w-9 h-9" style={{ borderRight: '1px solid var(--app-border)' }}>
+                        <NotificationBell />
+                    </div>
 
                     {/* Dark / Light */}
-                    <IconBtn onClick={toggleColorMode} title={mounted ? (isDark ? 'Light mode' : 'Dark mode') : 'Toggle'}>
+                    <button onClick={toggleColorMode}
+                        title={mounted ? (isDark ? 'Light mode' : 'Dark mode') : 'Toggle'}
+                        className="flex items-center justify-center w-9 h-9 transition-colors duration-150"
+                        style={{ color: 'var(--app-text-faint)', borderRight: '1px solid var(--app-border)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                        suppressHydrationWarning>
                         {mounted ? (isDark ? <Sun size={15} /> : <Moon size={15} />) : <Moon size={15} />}
-                    </IconBtn>
+                    </button>
 
-                    {/* Theme picker */}
+                    {/* Theme */}
                     <div className="relative flex-shrink-0" ref={themeRef}>
-                        <button
-                            onClick={() => setThemeOpen(!themeOpen)}
+                        <button onClick={() => setThemeOpen(!themeOpen)}
                             title={mounted ? `Theme: ${currentTheme?.name}` : 'Theme'}
-                            className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl transition-colors duration-150 flex-shrink-0"
-                            style={{
-                                background: themeOpen ? 'var(--app-primary-light)' : 'var(--app-surface-2)',
-                                border: '1px solid var(--app-border)',
-                                color: themeOpen ? 'var(--app-primary)' : 'var(--app-text-muted)',
-                            }}
-                            suppressHydrationWarning
-                        >
+                            className="flex items-center gap-1.5 h-9 px-3 transition-colors duration-150"
+                            style={{ color: themeOpen ? 'var(--app-primary)' : 'var(--app-text-faint)', background: themeOpen ? 'var(--app-primary-light)' : 'transparent' }}
+                            onMouseEnter={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; } }}
+                            onMouseLeave={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; } }}
+                            suppressHydrationWarning>
                             <div className="w-3 h-3 rounded-full flex-shrink-0"
                                 style={{ background: mounted ? activeColors.primary : 'var(--app-primary)' }}
                                 suppressHydrationWarning />
-                            <Palette size={12} />
+                            <Palette size={13} />
                         </button>
                         {themeOpen && (
                             <>
@@ -541,53 +408,58 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                             </>
                         )}
                     </div>
-
-                    <VDivider />
-
-                    {/* User profile */}
-                    <div className="relative flex-shrink-0" ref={profileRef}>
-                        <button
-                            onClick={() => setProfileOpen(!profileOpen)}
-                            className="flex items-center gap-2 h-8 pl-1.5 pr-2.5 rounded-xl transition-colors duration-150"
-                            style={{
-                                background: profileOpen ? 'var(--app-surface-2)' : 'transparent',
-                                border: `1px solid ${profileOpen ? 'var(--app-border)' : 'transparent'}`,
-                            }}
-                            onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.borderColor = 'var(--app-border)'; }}
-                            onMouseLeave={(e) => { if (!profileOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'transparent'; } }}
-                        >
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black flex-shrink-0"
-                                style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
-                                {userInitials}
-                            </div>
-                            <span className="hidden sm:block text-xs font-semibold truncate max-w-[72px]" style={{ color: 'var(--app-text)' }}>
-                                {user?.first_name || user?.username || 'User'}
-                            </span>
-                            <ChevronDown size={11} style={{
-                                color: 'var(--app-text-faint)',
-                                transform: profileOpen ? 'rotate(180deg)' : 'none',
-                                transition: 'transform var(--app-transition-fast)',
-                            }} />
-                        </button>
-                        {profileOpen && (
-                            <>
-                                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                                <UserPanel
-                                    user={user}
-                                    viewScope={viewScope}
-                                    canToggleScope={canToggleScope}
-                                    onClose={() => setProfileOpen(false)}
-                                />
-                            </>
-                        )}
-                    </div>
                 </div>
+
+                {/* ── USER BUTTON ─────────────────────────────────────── */}
+                <div className="relative flex-shrink-0" ref={profileRef}>
+                    <button onClick={() => setProfileOpen(!profileOpen)}
+                        className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-xl transition-all duration-150"
+                        style={{
+                            background: profileOpen ? 'var(--app-surface)' : 'transparent',
+                            border: `1px solid ${profileOpen ? 'var(--app-border)' : 'transparent'}`,
+                        }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.borderColor = 'var(--app-border)'; }}
+                        onMouseLeave={(e) => { if (!profileOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.borderColor = 'transparent'; } }}>
+                        {/* Avatar */}
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black flex-shrink-0"
+                            style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
+                            {userInitials}
+                        </div>
+                        <span className="hidden sm:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--app-text)' }}>
+                            {userName}
+                        </span>
+                        <ChevronDown size={12} style={{
+                            color: 'var(--app-text-faint)',
+                            transform: profileOpen ? 'rotate(180deg)' : 'none',
+                            transition: 'transform var(--app-transition-fast)',
+                            flexShrink: 0,
+                        }} />
+                    </button>
+
+                    {profileOpen && (
+                        <>
+                            <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                            <UserPanel user={user} viewScope={viewScope} canToggleScope={canToggleScope} onClose={() => setProfileOpen(false)} />
+                        </>
+                    )}
+                </div>
+
+                {/* Mobile search icon */}
+                <button className="lg:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors duration-150"
+                    style={{ color: 'var(--app-text-faint)' }}
+                    onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
+                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}>
+                    <Search size={16} />
+                </button>
             </div>
 
-            {/* ── Topnav context row ──────────────────────────────────────── */}
+            {/* ════════════════════════════════════════════════════════
+                TOPNAV CONTEXT ROW  (topnav mode only)
+            ════════════════════════════════════════════════════════ */}
             {isTopnav && (
-                <div className="flex items-center gap-2 h-9 px-4 overflow-x-auto flex-shrink-0"
-                    style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
+                <div className="flex items-center gap-2 h-9 px-4 overflow-x-auto"
+                    style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                     <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
                     {currentSlug !== 'saas' && activeOrg?.currency_code && (
                         <div className="flex items-center gap-1.5 px-2 h-6 rounded-lg flex-shrink-0 text-[10px] font-bold"
@@ -596,9 +468,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         </div>
                     )}
                     {currentSlug !== 'saas' && activeOrg?.business_type_name && (
-                        <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>
-                            {activeOrg.business_type_name}
-                        </span>
+                        <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>{activeOrg.business_type_name}</span>
                     )}
                     <div className="flex-shrink-0"><SiteSwitcher sites={sites} /></div>
                 </div>
