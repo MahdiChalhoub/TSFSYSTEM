@@ -139,7 +139,7 @@ fi
 echo ""
 echo "🔍 Final health check..."
 
-SERVICES=("tsf_prod_postgres" "tsf_prod_redis" "tsf_prod_backend" "tsf_prod_frontend" "tsf_prod_gateway" "tsf_prod_celery" "tsf_prod_celery_beat")
+SERVICES=("tsf_prod_postgres" "tsf_prod_redis" "tsf_prod_backend" "tsf_prod_frontend" "tsf_prod_celery" "tsf_prod_celery_beat")
 FAILED=0
 
 for svc in "${SERVICES[@]}"; do

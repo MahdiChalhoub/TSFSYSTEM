@@ -85,6 +85,8 @@ services:
     volumes:
       - prod_mediafiles:/app/media
       - prod_staticfiles:/app/staticfiles
+    ports:
+      - "8000:8000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -194,6 +196,8 @@ services:
       - NEXT_PUBLIC_ROOT_DOMAIN=tsf.ci
       - ROOT_DOMAIN=tsf.ci
       - NODE_ENV=production
+    ports:
+      - "3000:3000"
     networks:
       - tsf_prod
     deploy:
@@ -203,28 +207,9 @@ services:
         reservations:
           memory: 256M
 
-  # ─── Nginx Gateway ─────────────────────────────────────────────────────────
-  gateway:
-    image: nginx:alpine
-    container_name: tsf_prod_gateway
-    restart: unless-stopped
-    depends_on:
-      - frontend
-      - backend
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - prod_staticfiles:/app/staticfiles:ro
-      - prod_mediafiles:/app/media:ro
-    networks:
-      - tsf_prod
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 32M
+  # NOTE: The containerized Nginx gateway is NOT used in production.
+  # The HOST nginx (/etc/nginx/sites-enabled/tsf_ci.conf) handles
+  # SSL termination, rate limiting, and proxying to ports 3000/8000.
 
 # ─── Named Volumes ────────────────────────────────────────────────────────────
 volumes:
