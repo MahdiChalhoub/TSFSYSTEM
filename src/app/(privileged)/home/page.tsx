@@ -5,7 +5,7 @@ import { MENU_ITEMS } from '@/components/admin/Sidebar';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Search, Clock, Star, ArrowRight, ChevronRight, X,
-    LayoutDashboard, Sparkles, Command, Zap, Pin
+    LayoutDashboard, Sparkles, Command, Zap
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ export default function QuickAccessPage() {
                 <div className="hidden lg:flex items-center gap-4 shrink-0">
                     <div className="text-center px-3">
                         <p className="text-xl font-black" style={{ color: 'var(--app-text)' }}>{pinned.length}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>Pinned</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-text-muted)' }}>Favorites</p>
                     </div>
                     <div style={{ width: 1, height: 28, background: 'var(--app-border)' }} />
                     <div className="text-center px-3">
@@ -240,12 +240,12 @@ export default function QuickAccessPage() {
                         <div className="flex items-center gap-1.5 mb-2.5">
                             <Star size={11} style={{ color: 'var(--app-primary)' }} />
                             <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
-                                Pinned
+                                Favorites
                             </span>
                         </div>
                         {pinned.length === 0 ? (
                             <p className="text-[10px] italic px-2 py-3" style={{ color: 'var(--app-text-faint)' }}>
-                                Pin frequent pages from modules
+                                Star pages from modules to add favorites
                             </p>
                         ) : (
                             <div className="space-y-0.5">
@@ -308,12 +308,12 @@ export default function QuickAccessPage() {
                                                 <p className="text-[9px]" style={{ color: 'var(--app-text-faint)' }}>{timeAgo(r.visitedAt)}</p>
                                             </div>
                                             <button
-                                                title={isPinned ? 'Unpin' : 'Pin'}
+                                                title={isPinned ? 'Remove from favorites' : 'Add to favorites'}
                                                 onClick={(e) => { e.stopPropagation(); togglePin(r.title, r.path); }}
                                                 className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
                                                 style={{ color: isPinned ? 'var(--app-primary)' : 'var(--app-text-faint)' }}
                                             >
-                                                <Pin size={10} fill={isPinned ? 'currentColor' : 'none'} />
+                                                <Star size={10} fill={isPinned ? 'currentColor' : 'none'} />
                                             </button>
                                         </div>
                                     );
@@ -419,25 +419,38 @@ export default function QuickAccessPage() {
                                     {/* Quick links */}
                                     {quickLinks.length > 0 && (
                                         <div className="space-y-px">
-                                            {quickLinks.map((link) => (
-                                                <button
-                                                    key={link.path}
-                                                    onClick={(e) => { e.stopPropagation(); navigate(link.title, link.path); }}
-                                                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left transition-colors"
-                                                    style={{ color: 'var(--app-text-muted)' }}
-                                                    onMouseEnter={(e) => {
-                                                        (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)';
-                                                        (e.currentTarget as HTMLElement).style.color = 'var(--app-primary)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        (e.currentTarget as HTMLElement).style.background = 'transparent';
-                                                        (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)';
-                                                    }}
-                                                >
-                                                    <ChevronRight size={9} className="shrink-0" />
-                                                    <span className="text-[11px] font-medium truncate">{link.title}</span>
-                                                </button>
-                                            ))}
+                                            {quickLinks.map((link) => {
+                                                const isFav = pinned.some((p) => p.path === link.path);
+                                                return (
+                                                    <div
+                                                        key={link.path}
+                                                        className="group flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-colors"
+                                                        onMouseEnter={(e) => {
+                                                            (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--app-primary) 8%, transparent)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                                        }}
+                                                    >
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); navigate(link.title, link.path); }}
+                                                            className="flex-1 flex items-center gap-1.5 text-left min-w-0"
+                                                            style={{ color: 'var(--app-text-muted)' }}
+                                                        >
+                                                            <ChevronRight size={9} className="shrink-0" />
+                                                            <span className="text-[11px] font-medium truncate">{link.title}</span>
+                                                        </button>
+                                                        <button
+                                                            title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                                                            onClick={(e) => { e.stopPropagation(); togglePin(link.title, link.path); }}
+                                                            className="opacity-0 group-hover:opacity-100 p-0.5 rounded shrink-0 transition-opacity"
+                                                            style={{ color: isFav ? 'var(--app-primary)' : 'var(--app-text-faint)' }}
+                                                        >
+                                                            <Star size={9} fill={isFav ? 'currentColor' : 'none'} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

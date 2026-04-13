@@ -48,13 +48,14 @@ import {
     MessageSquare,
     Database,
     Store,
+    Star,
     Archive,
     Target,
     Map,
     Receipt,
     Percent
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 
 import { logoutAction } from "@/app/actions/auth";
@@ -820,6 +821,34 @@ export function Sidebar({
     const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
     const [devSectionOpen, setDevSectionOpen] = useState(true);
+    const [favorites, setFavorites] = useState<{ title: string; path: string }[]>([]);
+    const [favOpen, setFavOpen] = useState(true);
+
+    const FAVS_KEY = 'tsf_quick_access_pinned';
+
+    const loadFavorites = useCallback(() => {
+        try {
+            const raw = localStorage.getItem(FAVS_KEY);
+            setFavorites(raw ? JSON.parse(raw) : []);
+        } catch { /* ignore */ }
+    }, []);
+
+    useEffect(() => {
+        loadFavorites();
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === FAVS_KEY) loadFavorites();
+        };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
+    }, [loadFavorites]);
+
+    const removeFavorite = useCallback((path: string) => {
+        setFavorites(prev => {
+            const next = prev.filter(f => f.path !== path);
+            localStorage.setItem(FAVS_KEY, JSON.stringify(next));
+            return next;
+        });
+    }, []);
 
     useEffect(() => {
         async function fetchData() {
@@ -989,6 +1018,60 @@ export function Sidebar({
 
                 {/* ── Menu ── */}
                 <div className="overflow-y-auto custom-scrollbar px-3 py-3 space-y-0.5" style={{ flex: '1 1 0', minHeight: 0 }}>
+
+                    {/* ── FAVORITES SECTION ── */}
+                    {favorites.length > 0 && (
+                        <>
+                            <div
+                                className="mb-1 mx-1 flex items-center gap-1.5 cursor-pointer select-none"
+                                onClick={() => setFavOpen(v => !v)}
+                            >
+                                <Star size={10} fill="currentColor" style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
+                                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.85 }}>
+                                    Favorites
+                                </span>
+                                <span className="text-[8px] font-bold px-1 rounded ml-0.5" style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)', color: 'var(--app-primary)' }}>
+                                    {favorites.length}
+                                </span>
+                                <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-primary) 20%, transparent)' }} />
+                                <ChevronRight
+                                    size={11}
+                                    className={clsx('transition-transform duration-200', favOpen ? 'rotate-90' : '')}
+                                    style={{ color: 'var(--app-primary)', opacity: 0.5 }}
+                                />
+                            </div>
+                            {favOpen && (
+                                <div className="space-y-0.5 mb-3">
+                                    {favorites.map((fav) => (
+                                        <div
+                                            key={fav.path}
+                                            className="group flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
+                                            onClick={() => openTab(fav.title, fav.path)}
+                                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-sidebar-active)'; }}
+                                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                        >
+                                            <Star size={10} fill="currentColor" style={{ color: 'var(--app-primary)', flexShrink: 0 }} />
+                                            <span className="flex-1 text-xs font-medium truncate" style={{ color: 'var(--app-sidebar-text)' }}>
+                                                {fav.title}
+                                            </span>
+                                            <button
+                                                title="Remove from favorites"
+                                                onClick={(e) => { e.stopPropagation(); removeFavorite(fav.path); }}
+                                                className="opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
+                                                style={{ color: 'var(--app-sidebar-muted)' }}
+                                                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--app-error, #ef4444)'; }}
+                                                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--app-sidebar-muted)'; }}
+                                            >
+                                                <Star size={9} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="my-2 mx-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-sidebar-border) 60%, transparent)' }} />
+                        </>
+                    )}
+
                     {/* ═══════════════════════════════════════════════════════ */}
                     {/* ── PRODUCTION SECTION ── Finished, polished pages    */}
                     {/* ═══════════════════════════════════════════════════════ */}
