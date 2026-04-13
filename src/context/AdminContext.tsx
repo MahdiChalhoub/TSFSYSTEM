@@ -97,6 +97,21 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             setViewScope('OFFICIAL');
         }
 
+        // [LAYOUT MIGRATION] One-time promotion of localStorage → cookie.
+        // Users who had preferences saved before cookies were introduced will have
+        // the server send defaults (no cookie). On mount we detect this and apply
+        // their saved localStorage value immediately — no reload needed.
+        const lsNav = localStorage.getItem('tsf_nav_layout') as 'sidebar' | 'topnav' | null;
+        if (lsNav && lsNav !== initialNavLayout) {
+            setNavLayoutState(lsNav);
+            document.cookie = `tsf_nav_layout=${lsNav}; path=/; max-age=31536000; SameSite=Lax`;
+        }
+        const lsTab = localStorage.getItem('tsf_tab_layout') as 'horizontal' | 'vertical' | null;
+        if (lsTab && lsTab !== initialTabLayout) {
+            setTabLayoutState(lsTab);
+            document.cookie = `tsf_tab_layout=${lsTab}; path=/; max-age=31536000; SameSite=Lax`;
+        }
+
         setIsLoaded(true);
     }, [contextKey, TABS_KEY, SCOPE_KEY]);
 
