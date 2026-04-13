@@ -87,24 +87,22 @@ export function TabNavigator() {
     if (tabLayout === 'vertical') {
         return (
             <div
-                className="flex flex-col items-center py-2 gap-1 flex-shrink-0 overflow-y-auto overflow-x-hidden"
+                className="flex flex-col py-1 gap-0.5 flex-shrink-0 overflow-y-auto overflow-x-hidden"
                 style={{
-                    width: 52,
+                    width: 44,
                     background: 'var(--app-surface-2)',
                     borderLeft: '1px solid var(--app-border)',
                 }}
             >
                 {/* Switch back to horizontal */}
-                <IconBtn
-                    title="Switch to horizontal tabs"
-                    onClick={() => setTabLayout('horizontal')}
-                    style={{ color: 'var(--app-primary)', marginBottom: 4 }}
-                >
-                    <Rows3 size={14} />
-                </IconBtn>
+                <div className="w-full px-1">
+                    <IconBtn title="Switch to horizontal tabs" onClick={() => setTabLayout('horizontal')} style={{ color: 'var(--app-primary)' }}>
+                        <Rows3 size={13} />
+                    </IconBtn>
+                </div>
 
                 {/* Divider */}
-                <div className="w-7 h-px mb-1" style={{ background: 'var(--app-border)' }} />
+                <div className="mx-1 h-px" style={{ background: 'var(--app-border)' }} />
 
                 {/* Tab badges */}
                 {openTabs.map((tab) => {
@@ -127,18 +125,22 @@ export function TabNavigator() {
                 })}
 
                 {/* Divider */}
-                <div className="w-7 h-px mt-1 mb-1" style={{ background: 'var(--app-border)' }} />
+                <div className="mx-1 h-px mt-0.5" style={{ background: 'var(--app-border)' }} />
 
                 {/* New tab */}
-                <IconBtn title="New tab" onClick={openHome} style={{ color: 'var(--app-text-faint)' }}>
-                    <Plus size={13} strokeWidth={2.5} />
-                </IconBtn>
+                <div className="w-full px-1">
+                    <IconBtn title="New tab" onClick={openHome} style={{ color: 'var(--app-text-faint)' }}>
+                        <Plus size={13} strokeWidth={2.5} />
+                    </IconBtn>
+                </div>
 
                 {/* Clear all */}
                 {openTabs.length > 1 && (
-                    <IconBtn title="Clear all tabs" onClick={clearTabs} style={{ color: 'var(--app-text-faint)' }}>
-                        <Trash2 size={13} />
-                    </IconBtn>
+                    <div className="w-full px-1">
+                        <IconBtn title="Clear all tabs" onClick={clearTabs} style={{ color: 'var(--app-text-faint)' }}>
+                            <Trash2 size={13} />
+                        </IconBtn>
+                    </div>
                 )}
             </div>
         );
@@ -333,13 +335,13 @@ const VerticalTab = React.memo(({ tab, active, color, icon: Icon, label, onOpen,
     const [hovered, setHovered] = useState(false);
 
     return (
-        <div className="relative group flex-shrink-0" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+        <div className="relative group w-full px-1" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
             <button
                 onClick={() => onOpen(tab.title, tab.path)}
-                className="flex items-center justify-center rounded-xl transition-all duration-150"
+                className="flex items-center justify-center rounded-lg transition-all duration-150"
                 style={{
-                    width: 36,
-                    height: 36,
+                    width: '100%',
+                    height: 34,
                     background: active ? color : 'transparent',
                     border: active ? `1.5px solid ${color}` : '1.5px solid transparent',
                     color: active ? '#fff' : color,
@@ -409,8 +411,8 @@ function IconBtn({ children, title, onClick, style }: {
         <button
             title={title}
             onClick={onClick}
-            className="flex items-center justify-center rounded-xl transition-all flex-shrink-0"
-            style={{ width: 32, height: 32, ...style }}
+            className="flex items-center justify-center rounded-lg transition-all w-full"
+            style={{ height: 30, ...style }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--app-surface)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
