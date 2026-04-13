@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 // ── Builds a :root{} CSS block from theme colors — injected in <head> so
 // colors are present on the very first byte, before any JavaScript runs.
-function buildRootThemeCSS(colors: Record<string, string>, layout: any, components: any): string {
+function buildRootThemeCSS(colors: any, layout: any, components: any): string {
     const p  = colors.primary      || '#10B981';
     const pd = colors.primaryDark  || '#059669';
     const bg = colors.bg           || '#020617';
@@ -54,7 +54,6 @@ export default async function RootLayout({
     // ── Resolve tenant slug from request host ──
     const headersList = await headers();
     const host = (headersList.get('host') || '').split(':')[0].toLowerCase();
-    const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain).toLowerCase();
     const parts = host.split('.');
     const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(host);
     let tenantSlug: string | undefined;
@@ -80,11 +79,12 @@ export default async function RootLayout({
                 const colors = theme.presetData.colors[colorMode] || theme.presetData.colors.dark || {};
                 ssrThemeCSS = buildRootThemeCSS(colors, theme.presetData.layout, theme.presetData.components);
                 // Compact JSON for ThemeScript to read on first paint when localStorage is empty
+                // Replace </script> to prevent tag injection when embedded in <script> tag
                 ssrThemeJSON = JSON.stringify({
                     slug: theme.slug,
                     colorMode,
                     presetData: theme.presetData,
-                });
+                }).replace(/<\/script>/gi, '<\\/script>');
             }
         }
     } catch {

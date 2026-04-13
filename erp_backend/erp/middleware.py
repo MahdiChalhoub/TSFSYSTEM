@@ -55,14 +55,22 @@ class TenantMiddleware:
             auth_safe_paths = ['/api/auth/login/', '/api/auth/logout/', '/api/auth/password-reset/']
             if any(request.path.startswith(p) for p in auth_safe_paths):
                 return None
-            
+
             from .models import Organization
+            import uuid
             try:
-                org = Organization.objects.get(id=tenant_id)
-                if org.is_read_only:
+                # X-Tenant-Id may be a slug string (sent by the proxy) or a UUID string
+                # (resolved from the auth token). Try UUID lookup first, fall back to slug.
+                try:
+                    uuid.UUID(str(tenant_id))
+                    org = Organization.objects.get(id=tenant_id)
+                except ValueError:
+                    org = Organization.objects.filter(slug=tenant_id).first()
+
+                if org and org.is_read_only:
                     from django.http import JsonResponse
                     return JsonResponse(
-                        {"error": "Subscription expired. Organization is in read-only mode."}, 
+                        {"error": "Subscription expired. Organization is in read-only mode."},
                         status=403
                     )
             except Organization.DoesNotExist:
