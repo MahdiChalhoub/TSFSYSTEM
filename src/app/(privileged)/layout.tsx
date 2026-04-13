@@ -19,7 +19,11 @@ import { getGlobalFinancialSettings } from '@/app/actions/settings';
 
 import { headers, cookies } from 'next/headers';
 
-export const dynamic = 'force-dynamic';
+// Do NOT set force-dynamic here — it overrides all next:{ revalidate } hints in
+// child fetches, turning every data call into a no-store request.
+// The layout is already dynamic because it calls cookies() and headers().
+// Individual fetches (sites, orgs, settings) use revalidate:30 in erpFetch.
+// Only getUser() uses cache:'no-store' (auth must always be fresh).
 
 
 

@@ -1,3 +1,5 @@
+import { cache } from 'react';
+
 // Detect if running in browser or server
 const isClient = typeof window !== 'undefined';
 
@@ -23,7 +25,10 @@ export class ErpApiError extends Error {
     }
 }
 
-export async function getTenantContext() {
+// React.cache() deduplicates calls within a single server render — all erpFetch
+// calls in the same request reuse the same resolved tenant, eliminating N redundant
+// backend fetches (one per erpFetch call in layout + page data loaders).
+export const getTenantContext = cache(async function getTenantContext() {
     let host = '';
 
     if (typeof window !== 'undefined') {
@@ -84,28 +89,36 @@ export async function getTenantContext() {
         console.error("Failed to resolve tenant:", e);
         return null;
     }
-}
+});
 
 export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
 
-    // [AUTH RESTORATION]
-    // Crucial: Inject auth token from cookies if not already present
-    // EXCEPT for login endpoint - sending stale token causes "Invalid token" error
+    // [AUTH + SCOPE HEADERS]
+    // Server-side only: read cookies once, inject Authorization + X-Scope together.
+    // Client-side: the /api/proxy/ route handles both (reads httpOnly cookies server-side).
     const isLoginEndpoint = path.includes('auth/login');
 
-    if (!headersRaw.has('Authorization') && !isLoginEndpoint) {
+    if (!isClient) {
         try {
             const { cookies } = await import('next/headers');
-            const cookieStore = await cookies();
-            const token = cookieStore.get('auth_token')?.value;
-            if (token) {
-                headersRaw.set('Authorization', `Token ${token}`);
-                debug(`[ERP_API] Token injected for ${path}`);
+            const cookieStore = await cookies(); // single read — reused for both headers
+
+            if (!headersRaw.has('Authorization') && !isLoginEndpoint) {
+                const token = cookieStore.get('auth_token')?.value;
+                if (token) {
+                    headersRaw.set('Authorization', `Token ${token}`);
+                    debug(`[ERP_API] Token injected for ${path}`);
+                }
+            }
+
+            if (!headersRaw.has('X-Scope')) {
+                const scope = cookieStore.get('tsf_view_scope')?.value;
+                if (scope) headersRaw.set('X-Scope', scope.toUpperCase());
             }
         } catch (e) {
-            // Cookies not available (client context or static generation)
+            // Cookies not available in static generation context
         }
     }
 
@@ -115,20 +128,6 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: ${context.slug}`);
     } else {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
-    }
-
-    // [SCOPE HEADER]
-    // Forward X-Scope so Django filters data by Official/Internal view.
-    // Server-side: read from cookie. Client-side: proxy already handles this.
-    if (!isClient && !headersRaw.has('X-Scope')) {
-        try {
-            const { cookies } = await import('next/headers');
-            const cookieStore = await cookies();
-            const scope = cookieStore.get('tsf_view_scope')?.value;
-            if (scope) headersRaw.set('X-Scope', scope.toUpperCase());
-        } catch (e) {
-            // Not available in static context
-        }
     }
 
     // Client: proxy route handles auth injection (reads httpOnly cookie server-side)
