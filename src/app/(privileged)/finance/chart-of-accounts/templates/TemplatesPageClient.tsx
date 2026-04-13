@@ -119,11 +119,12 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     ]
 
     return (
-        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+        <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'fixed inset-0 z-40 p-2' : 'h-full p-4 md:p-6'}`}
+            style={focusMode ? { background: 'var(--app-bg, #020617)' } : undefined}>
 
             {/* ── Page Header ── */}
             {!focusMode ? (
-                <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
+                <div className="flex items-start justify-between gap-4 mb-4 flex-wrap flex-shrink-0">
                     <div className="flex items-center gap-3">
                         {cameFromCOA && (
                             <button
@@ -176,7 +177,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2 flex-shrink-0">
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
                             <Library size={14} className="text-white" />
@@ -184,11 +185,27 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Standards Library</span>
                         <span className="text-[10px] font-bold text-app-muted-foreground">{filteredTemplates.length}/{templates.length}</span>
                     </div>
+                    <div className="flex items-center gap-1 p-0.5 rounded-lg flex-shrink-0"
+                        style={{ background: 'var(--app-surface)' }}>
+                        {TABS.map(tab => {
+                            const Icon = tab.icon
+                            return (
+                                <button key={tab.id} onClick={() => setActiveView(tab.id)}
+                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all"
+                                    style={{
+                                        background: activeView === tab.id ? 'var(--app-primary)' : 'transparent',
+                                        color: activeView === tab.id ? '#fff' : 'var(--app-muted-foreground)',
+                                    }}>
+                                    <Icon size={11} /> {tab.label}
+                                </button>
+                            )
+                        })}
+                    </div>
                     <div className="flex-1 relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                             placeholder="Search templates... (Ctrl+K)"
-                            className="w-full pl-9 pr-3 py-2 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
+                            className="w-full pl-9 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
                     </div>
                     <button onClick={() => setFocusMode(false)}
                         className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
@@ -199,7 +216,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
 
             {/* ── KPI Strip ── */}
             {!focusMode && (
-                <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                <div className="mb-4 flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                     {kpis.map(s => (
                         <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
                             style={{
@@ -221,7 +238,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
 
             {/* ── Search ── */}
             {!focusMode && (
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
                     <div className="flex-1 relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
                         <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -249,7 +266,28 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 )}
             </div>
 
-            {/* ── Import Dialogs ── */}
+            {/* ── Footer Bar ── */}
+            <div className="flex-shrink-0 flex items-center justify-between gap-4 px-4 py-2 mt-2 rounded-xl"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
+                        {filteredTemplates.length} of {templates.length} templates
+                    </span>
+                    <span className="text-[10px] font-bold text-app-muted-foreground tabular-nums">
+                        {totalAccounts.toLocaleString()} accounts
+                    </span>
+                    <span className="text-[10px] font-bold text-app-muted-foreground tabular-nums">
+                        {totalRules.toLocaleString()} posting rules
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                        {activeView === 'gallery' ? 'Gallery' : activeView === 'compare' ? 'Compare' : 'Migration'} View
+                    </span>
+                </div>
+            </div>
+
+            {/* ── Import Dialog ── */}
             <ConfirmDialog open={importTarget !== null}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
                 onConfirm={handleConfirmImport}
