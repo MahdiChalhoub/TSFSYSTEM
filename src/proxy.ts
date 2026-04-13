@@ -182,10 +182,16 @@ export default async function middleware(req: NextRequest) {
 
     // ─── HOSTNAME DETECTION (needed for auth redirect logic) ───
     const rootDomain = process.env.ROOT_DOMAIN || process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
-    const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
+    // Support multiple root domains (e.g. tsf.ci + developos.shop on same server)
+    const additionalDomains = (process.env.ADDITIONAL_ROOT_DOMAINS || 'developos.shop').split(',').map(d => d.trim()).filter(Boolean);
+    const allRootDomains = [rootDomain, ...additionalDomains];
+    const matchesAnyRoot = allRootDomains.some(d => hostname === d || hostname === `www.${d}`);
+    const matchesAnySaaS = allRootDomains.some(d => hostname === `saas.${d}` || (hostname.startsWith('saas.') && hostname.endsWith(d)));
+    const matchesAnySubdomain = allRootDomains.some(d => hostname.endsWith(`.${d}`));
+    const isRootDomain = matchesAnyRoot;
     const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
-    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
+    const isSaaSSubdomain = matchesAnySaaS;
     const isOnRootOrSaaS = isLocalhost || isVercel || isRootDomain || isSaaSSubdomain;
     const isOnTenantSubdomain = !isOnRootOrSaaS;
 
@@ -263,7 +269,7 @@ export default async function middleware(req: NextRequest) {
     // If the hostname doesn't match any known pattern (not tsf.ci, not localhost,
     // not IP, not Vercel), it might be a custom domain (e.g., shop.acme.com).
     // Resolve it via the backend API.
-    const isPlatformHostname = isOnRootOrSaaS || hostname.endsWith(`.${rootDomain}`);
+    const isPlatformHostname = isOnRootOrSaaS || matchesAnySubdomain;
     if (!isPlatformHostname) {
         const resolved = await resolveCustomDomainCached(hostname);
         if (resolved) {
@@ -394,7 +400,13 @@ export default async function middleware(req: NextRequest) {
     if (parts.length > 2) {
         currentHost = parts[0];
     } else {
-        currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost'}`, "");
+        currentHost = hostname;
+        for (const d of allRootDomains) {
+            if (hostname.endsWith(`.${d}`)) {
+                currentHost = hostname.replace(`.${d}`, "");
+                break;
+            }
+        }
     }
 
     // Check for reserved subdomains
