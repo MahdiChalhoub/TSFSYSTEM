@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Building2, ChevronDown, Check, Globe } from 'lucide-react';
+import { MapPin, ChevronDown, Check, Globe } from 'lucide-react';
 import { setCurrentSite, getCurrentSiteId } from '@/app/actions/context';
-import clsx from 'clsx';
 
 export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -14,76 +13,148 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
         getCurrentSiteId().then(id => setCurrentId(id));
     }, []);
 
-    const selectedSite = sites.find(s => s.id === currentId) || sites[0];
+    const selectedSite = sites.find(s => s.id === currentId) || null;
+    const isGlobal = selectedSite === null;
 
     const handleSwitch = (id: number) => {
         startTransition(async () => {
             await setCurrentSite(id);
             setCurrentId(id);
             setIsOpen(false);
-            window.location.reload(); // Force full reload to update all server components
+            window.location.reload();
         });
     };
 
+    if (!sites || sites.length === 0) return null;
+
     return (
-        <div className="relative">
+        <div className="relative flex-shrink-0">
+            {/* ── Trigger ── */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gray-800/40 border border-gray-700 hover:bg-gray-800 transition-all group"
+                onClick={() => setIsOpen(v => !v)}
                 suppressHydrationWarning
+                className="flex items-center gap-2.5 h-9 pl-2 pr-3 rounded-xl transition-colors duration-150"
+                style={{
+                    background: 'var(--app-surface)',
+                    border: '1px solid var(--app-border)',
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-primary)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)'; }}
             >
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
-                    <Building2 size={16} />
+                {/* Icon */}
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: isGlobal ? 'var(--app-surface-2)' : 'var(--app-primary-light)',
+                        color: isGlobal ? 'var(--app-text-faint)' : 'var(--app-primary)',
+                        border: '1px solid var(--app-border)',
+                    }}>
+                    {isGlobal ? <Globe size={12} /> : <MapPin size={12} />}
                 </div>
-                <div className="text-left hidden lg:block">
-                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-0.5">Active Site</div>
-                    <div className="text-sm font-bold text-white leading-none truncate max-w-[120px]">
+
+                {/* Labels */}
+                <div className="hidden lg:flex flex-col items-start leading-none gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-widest"
+                        style={{ color: 'var(--app-text-faint)' }}>
+                        Active Site
+                    </span>
+                    <span className="text-xs font-bold truncate max-w-[120px]"
+                        style={{ color: 'var(--app-text)' }}>
                         {selectedSite?.name || 'Global View'}
-                    </div>
+                    </span>
                 </div>
-                <ChevronDown size={16} className={clsx("text-gray-500 transition-transform duration-300", isOpen && "rotate-180")} />
+
+                <ChevronDown size={13} style={{
+                    color: 'var(--app-text-faint)',
+                    transform: isOpen ? 'rotate(180deg)' : 'none',
+                    transition: 'transform var(--app-transition-fast)',
+                    flexShrink: 0,
+                }} />
             </button>
 
+            {/* ── Dropdown ── */}
             {isOpen && (
                 <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-                    <div className="absolute top-full left-0 mt-3 w-72 bg-[#1E293B] border border-gray-700 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-4 border-b border-gray-700 bg-gray-800/50">
-                            <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Select Branch</h4>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                    <div className="absolute top-full left-0 mt-2 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: 'var(--app-shadow-lg)',
+                            minWidth: '240px',
+                        }}>
+
+                        {/* Header */}
+                        <div className="flex items-center gap-2 px-4 py-3"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
+                            <MapPin size={12} style={{ color: 'var(--app-primary)' }} />
+                            <span className="text-[10px] font-black uppercase tracking-widest"
+                                style={{ color: 'var(--app-text-muted)' }}>
+                                Select Site
+                            </span>
                         </div>
-                        <div className="p-2 max-h-80 overflow-y-auto">
-                            {sites.map(site => (
-                                <button
-                                    key={site.id}
-                                    onClick={() => handleSwitch(site.id)}
-                                    disabled={isPending}
-                                    className={clsx(
-                                        "w-full flex items-center justify-between p-4 rounded-2xl transition-all group mb-1",
-                                        site.id === currentId ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40" : "hover:bg-gray-700/50 text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3 text-left">
-                                        <div className={clsx("w-2 h-2 rounded-full", site.isActive ? "bg-emerald-500" : "bg-gray-500")}></div>
-                                        <div>
-                                            <div className="text-sm font-bold">{site.name}</div>
-                                            <div className={clsx("text-[10px] font-mono", site.id === currentId ? "text-indigo-200" : "text-gray-500")}>
-                                                {site.code || `SITE-${site.id}`}
+
+                        {/* Site list */}
+                        <div className="p-2 max-h-64 overflow-y-auto custom-scrollbar">
+                            {sites.map(site => {
+                                const isActive = site.id === currentId;
+                                return (
+                                    <button key={site.id}
+                                        onClick={() => handleSwitch(site.id)}
+                                        disabled={isPending}
+                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-150 mb-0.5"
+                                        style={{
+                                            background: isActive ? 'var(--app-primary)' : 'transparent',
+                                            color: isActive ? 'var(--app-bg)' : 'var(--app-text-muted)',
+                                        }}
+                                        onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
+                                        onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                    >
+                                        <div className="flex items-center gap-3 text-left min-w-0">
+                                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                style={{ background: site.isActive ? 'var(--app-success)' : 'var(--app-text-faint)' }} />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold truncate">{site.name}</p>
+                                                <p className="text-[9px] font-mono opacity-60 truncate">
+                                                    {site.code || `SITE-${site.id}`}
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
-                                    {site.id === currentId && <Check size={18} className="text-white" />}
-                                </button>
-                            ))}
+                                        {isActive && <Check size={14} className="flex-shrink-0" />}
+                                    </button>
+                                );
+                            })}
                         </div>
-                        <div className="p-3 bg-gray-900/50 border-t border-gray-700">
+
+                        {/* Global view option */}
+                        <div className="p-2" style={{ borderTop: '1px solid var(--app-border)' }}>
                             <button
                                 onClick={() => handleSwitch(-1)}
-                                className={clsx(
-                                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-700 text-gray-500 hover:text-indigo-400 hover:border-indigo-400 transition-all text-[10px] font-black uppercase tracking-widest",
-                                    currentId === null && "border-indigo-500 text-indigo-400 bg-indigo-500/10"
-                                )}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-colors duration-150 text-[10px] font-black uppercase tracking-widest"
+                                style={{
+                                    border: `1px dashed ${isGlobal ? 'var(--app-primary)' : 'var(--app-border)'}`,
+                                    color: isGlobal ? 'var(--app-primary)' : 'var(--app-text-faint)',
+                                    background: isGlobal ? 'var(--app-primary-light)' : 'transparent',
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isGlobal) {
+                                        const el = e.currentTarget as HTMLElement;
+                                        el.style.borderColor = 'var(--app-primary)';
+                                        el.style.color = 'var(--app-primary)';
+                                        el.style.background = 'var(--app-primary-light)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isGlobal) {
+                                        const el = e.currentTarget as HTMLElement;
+                                        el.style.borderColor = 'var(--app-border)';
+                                        el.style.color = 'var(--app-text-faint)';
+                                        el.style.background = 'transparent';
+                                    }
+                                }}
                             >
-                                <Globe size={14} /> Global Enterprise View
+                                <Globe size={13} />
+                                Global Enterprise View
+                                {isGlobal && <Check size={12} />}
                             </button>
                         </div>
                     </div>

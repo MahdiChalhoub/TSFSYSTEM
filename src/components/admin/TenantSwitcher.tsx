@@ -1,117 +1,173 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-react';
-import clsx from 'clsx';
+import { Building2, ChevronDown, Check, ExternalLink, DoorOpen, Layers } from 'lucide-react';
 import { PLATFORM_CONFIG, useDynamicBranding } from '@/lib/saas_config';
 
-export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: Record<string, any>[], forcedSlug?: string, user?: Record<string, any> }) {
+export function TenantSwitcher({
+    organizations,
+    forcedSlug,
+    user,
+}: {
+    organizations: Record<string, any>[];
+    forcedSlug?: string;
+    user?: Record<string, any>;
+}) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
-    // Helper to get current subdomain/slug
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
     const branding = useDynamicBranding();
-
-    // Only show Master Panel to authorized SaaS Staff (Superusers)
-    // We allow Superusers to access the Master Panel even if they are currently inside a specific tenant context.
     const showMasterPanel = user?.is_superuser || user?.is_staff;
+    const isLocked = organizations.length <= 1 && !showMasterPanel;
+    const isSaas = currentSlug === 'saas';
+
+    const label = isSaas ? 'Control Plane' : 'Workspace';
+    const name = isSaas ? PLATFORM_CONFIG.name : (activeOrg?.name || 'Platform Root');
 
     const handleSwitch = (slug: string) => {
         startTransition(() => {
-            // Redirect to the subdomain version
             const protocol = window.location.protocol;
             const port = window.location.port;
             const hostname = window.location.hostname.replace(/^(saas\.|[a-z0-9-]+\.)/i, '');
-            const newUrl = `${protocol}//${slug}.${hostname}${port ? `:${port}` : ''}`;
-            window.location.href = newUrl;
+            window.location.href = `${protocol}//${slug}.${hostname}${port ? `:${port}` : ''}`;
         });
     };
 
-    // Locked mode: Single Org and No Master Access
-    const isLocked = organizations.length <= 1 && !showMasterPanel;
-
     return (
-        <div className="relative">
+        <div className="relative flex-shrink-0">
+            {/* ── Trigger ── */}
             <button
-                onClick={() => !isLocked && setIsOpen(!isOpen)}
-                suppressHydrationWarning={true}
-                className={clsx(
-                    "flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all group",
-                    isLocked
-                        ? "bg-transparent border-transparent cursor-default"
-                        : "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer"
-                )}
+                onClick={() => !isLocked && setIsOpen(v => !v)}
+                suppressHydrationWarning
+                className="flex items-center gap-2.5 h-9 pl-2 pr-3 rounded-xl transition-colors duration-150"
+                style={{
+                    background: 'var(--app-surface)',
+                    border: '1px solid var(--app-border)',
+                    cursor: isLocked ? 'default' : 'pointer',
+                }}
+                onMouseEnter={(e) => { if (!isLocked) (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-primary)'; }}
+                onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)'; }}
             >
-                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
-                    <Building size={16} />
+                {/* Icon */}
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
+                    <Layers size={12} />
                 </div>
-                <div className="text-left hidden lg:block">
-                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">
-                        {currentSlug === 'saas' ? 'Control Plane' : 'Workspace'}
-                    </div>
-                    <div className="text-sm font-bold text-gray-800 leading-none truncate max-w-[140px]">
-                        {currentSlug === 'saas' ? PLATFORM_CONFIG.name : (activeOrg?.name || 'Platform Root')}
-                    </div>
+
+                {/* Labels */}
+                <div className="hidden lg:flex flex-col items-start leading-none gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-widest"
+                        style={{ color: 'var(--app-primary)' }}>
+                        {label}
+                    </span>
+                    <span className="text-xs font-bold truncate max-w-[130px]"
+                        style={{ color: 'var(--app-text)' }}>
+                        {name}
+                    </span>
                 </div>
-                {/* 
-                   HIDE DROPDOWN IN SAAS PANEL 
-                   User Requirement: "I should not see valid business in saas panel"
-                   The switcher is disabled when on the SaaS Control Plane to prevent 'spying'.
-                */}
-                {!isLocked && currentSlug !== 'saas' && (
-                    <ChevronDown size={16} className={clsx("text-gray-400 transition-transform duration-300", isOpen && "rotate-180")} />
+
+                {/* Chevron */}
+                {!isLocked && !isSaas && (
+                    <ChevronDown size={13} style={{
+                        color: 'var(--app-text-faint)',
+                        transform: isOpen ? 'rotate(180deg)' : 'none',
+                        transition: 'transform var(--app-transition-fast)',
+                        flexShrink: 0,
+                    }} />
                 )}
             </button>
 
-            {isOpen && currentSlug !== 'saas' && (
+            {/* ── Dropdown ── */}
+            {isOpen && !isSaas && (
                 <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-                    <div className="absolute top-full left-0 mt-3 w-80 bg-white border border-gray-200 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                            <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest text-[10px]">Select Managed Version</h4>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                    <div className="absolute top-full left-0 mt-2 w-76 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                        style={{
+                            background: 'var(--app-surface)',
+                            border: '1px solid var(--app-border)',
+                            boxShadow: 'var(--app-shadow-lg)',
+                            minWidth: '280px',
+                        }}>
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
+                            <div className="flex items-center gap-2">
+                                <Building2 size={12} style={{ color: 'var(--app-primary)' }} />
+                                <span className="text-[10px] font-black uppercase tracking-widest"
+                                    style={{ color: 'var(--app-text-muted)' }}>
+                                    Switch Workspace
+                                </span>
+                            </div>
                             {showMasterPanel && (
-                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded-full uppercase tracking-tighter shadow-sm">Super Admin</span>
+                                <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider"
+                                    style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
+                                    Super Admin
+                                </span>
                             )}
                         </div>
-                        <div className="p-2 max-h-80 overflow-y-auto">
+
+                        {/* Org list */}
+                        <div className="p-2 max-h-72 overflow-y-auto custom-scrollbar">
                             {organizations.filter(o => o.slug !== 'saas').length === 0 && (
-                                <div className="p-6 text-center text-gray-400 text-sm italic font-medium">No organizations found</div>
+                                <p className="text-xs text-center py-8 italic"
+                                    style={{ color: 'var(--app-text-faint)' }}>
+                                    No organizations found
+                                </p>
                             )}
-                            {organizations.filter(o => o.slug !== 'saas').map(org => (
-                                <button
-                                    key={org.id}
-                                    onClick={() => handleSwitch(org.slug)}
-                                    disabled={isPending}
-                                    className={clsx(
-                                        "w-full flex items-center justify-between p-4 rounded-2xl transition-all group mb-1",
-                                        org.slug === currentSlug ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20" : "hover:bg-gray-50 text-gray-500 hover:text-gray-900"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3 text-left">
-                                        <div className={clsx("w-2 h-2 rounded-full", org.isActive ? "bg-emerald-400" : "bg-gray-300")}></div>
-                                        <div>
-                                            <div className="text-sm font-bold">{org.name}</div>
-                                            <div className={clsx("text-[10px] font-mono opacity-60")}>
-                                                {org.slug}{branding.suffix}
+                            {organizations.filter(o => o.slug !== 'saas').map(org => {
+                                const isActive = org.slug === currentSlug;
+                                return (
+                                    <button key={org.id}
+                                        onClick={() => handleSwitch(org.slug)}
+                                        disabled={isPending}
+                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-150 mb-0.5"
+                                        style={{
+                                            background: isActive ? 'var(--app-primary)' : 'transparent',
+                                            color: isActive ? 'var(--app-bg)' : 'var(--app-text-muted)',
+                                        }}
+                                        onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
+                                        onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                    >
+                                        <div className="flex items-center gap-3 text-left min-w-0">
+                                            {/* Active indicator dot */}
+                                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                style={{ background: org.isActive ? 'var(--app-success)' : 'var(--app-text-faint)' }} />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold truncate">{org.name}</p>
+                                                <p className="text-[9px] font-mono opacity-60 truncate">
+                                                    {org.slug}{branding.suffix}
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {org.slug === currentSlug && <Check size={18} />}
-                                        <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
-                                </button>
-                            ))}
+                                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                                            {isActive
+                                                ? <Check size={14} />
+                                                : <ExternalLink size={12} style={{ opacity: 0.4 }} />
+                                            }
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
+
+                        {/* Master panel link */}
                         {showMasterPanel && (
-                            <div className="p-3 bg-gray-50/80 border-t border-gray-100">
+                            <div className="p-2" style={{ borderTop: '1px solid var(--app-border)' }}>
                                 <button
                                     onClick={() => window.location.href = `http://saas.${branding.domain}/dashboard`}
-                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-colors duration-150 text-[10px] font-black uppercase tracking-widest"
+                                    style={{
+                                        border: '1px dashed var(--app-border)',
+                                        color: 'var(--app-text-faint)',
+                                    }}
+                                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-primary)'; el.style.background = 'var(--app-primary-light)'; }}
+                                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-text-faint)'; el.style.background = 'transparent'; }}
                                 >
-                                    <DoorOpen size={14} /> Master Panel
+                                    <DoorOpen size={13} />
+                                    Master Panel
                                 </button>
                             </div>
                         )}
