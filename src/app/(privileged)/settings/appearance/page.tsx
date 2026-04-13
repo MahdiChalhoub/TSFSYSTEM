@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Palette, Sun, Moon, Monitor, Check, Layers, Type, Layout, Sparkles, RotateCcw } from 'lucide-react'
+import { Palette, Sun, Moon, Monitor, Check, Layers, Type, Layout, Sparkles, RotateCcw, Building2 } from 'lucide-react'
 import { useAppTheme } from '@/components/app/AppThemeProvider'
 import { useDesignSystem } from '@/contexts/DesignSystemContext'
+import { getOrgDefaultTheme } from '@/app/actions/settings/theme'
+import { OrgThemeSettings } from './OrgThemeSettings'
 
 // ── Category label map ────────────────────────────────────────────
 const CATEGORY_LABELS: Record<string, string> = {
@@ -51,10 +53,15 @@ function AppearancePageInner() {
     toggleColorMode: dsToggle,
   } = useDesignSystem()
 
-  const [activeTab, setActiveTab] = useState<'color' | 'design-system' | 'typography'>('color')
+  const [activeTab, setActiveTab] = useState<'color' | 'design-system' | 'typography' | 'org-default'>('color')
   const [search, setSearch] = useState('')
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [orgDefault, setOrgDefault] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+    getOrgDefaultTheme().then(setOrgDefault).catch(() => {})
+  }, [])
 
   // Group themes by category
   const allGrouped = CATEGORY_ORDER.reduce<Record<string, typeof allThemes>>((acc, cat) => {
@@ -103,9 +110,10 @@ function AppearancePageInner() {
         {/* ── Tabs ── */}
         <div className="flex gap-1">
           {[
-            { id: 'color',         icon: Palette,  label: 'Color Themes' },
-            { id: 'design-system', icon: Layers,   label: 'Design System' },
-            { id: 'typography',    icon: Type,     label: 'Mode' },
+            { id: 'color',         icon: Palette,    label: 'Color Themes' },
+            { id: 'design-system', icon: Layers,     label: 'Design System' },
+            { id: 'typography',    icon: Type,       label: 'Mode' },
+            { id: 'org-default',   icon: Building2,  label: 'Tenant Default' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -345,6 +353,11 @@ function AppearancePageInner() {
             </div>
           </div>
         )}
+        {/* ══ TAB: TENANT DEFAULT ══ */}
+        {activeTab === 'org-default' && (
+          <OrgThemeSettings currentOrgDefault={orgDefault} />
+        )}
+
       </div>
     </div>
   )

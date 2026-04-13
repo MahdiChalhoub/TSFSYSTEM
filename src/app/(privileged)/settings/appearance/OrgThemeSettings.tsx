@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 /**
  * OrgThemeSettings — /settings/appearance client component
@@ -12,6 +11,9 @@ import type { ThemePreset, ColorMode } from '@/types/theme';
 import { setOrgDefaultTheme } from '@/app/actions/settings/theme';
 import { useHasPermission, PERMISSIONS } from '@/hooks/use-permissions';
 import { Check, Building2, Palette, RotateCcw, Loader2, AlertCircle, Layout, Maximize2, Type, CloudSide, Box, Layers, MousePointer2 } from 'lucide-react';
+import clsx from 'clsx';
+
+const cn = (...args: Parameters<typeof clsx>) => clsx(...args);
 
 // ── Mini theme card ──────────────────────────────────────────────────────────
 function OrgThemeCard({
@@ -112,7 +114,7 @@ function OrgThemeCard({
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: string | null }) {
-  const { currentTheme, colorMode, systemThemes, setTheme } = useAppTheme();
+  const { currentTheme, colorMode, systemThemes, setTheme, patchActiveTheme } = useAppTheme();
   const canManage = useHasPermission(PERMISSIONS.APP.CHANGE_THEME);
   const [orgDefault, setOrgDefault] = useState<string | null>(currentOrgDefault);
   const [isPending, startTransition] = useTransition();
@@ -290,7 +292,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
               ].map((d) => (
                 <button
                   key={d.id}
-                  onClick={() => patchActiveTheme({ layout: { density: d.id as any } })}
+                  onClick={() => patchActiveTheme({ layout: { density: d.id as any } } as any)}
                   className={cn(
                     "flex flex-col p-3 rounded-xl border text-left transition-all",
                     currentTheme?.presetData?.layout?.density === d.id
@@ -319,7 +321,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
               ].map((r) => (
                 <button
                   key={r.id}
-                  onClick={() => patchActiveTheme({ components: { cards: { borderRadius: r.id }, buttons: { borderRadius: r.id }, inputs: { borderRadius: r.id }, badges: { borderRadius: r.id } } })}
+                  onClick={() => patchActiveTheme({ components: { cards: { borderRadius: r.id }, buttons: { borderRadius: r.id }, inputs: { borderRadius: r.id }, badges: { borderRadius: r.id } } } as any)}
                   className={cn(
                     "flex flex-col p-3 rounded-xl border text-left transition-all",
                     currentTheme?.presetData?.components?.cards?.borderRadius === r.id
@@ -351,7 +353,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
               ].map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => patchActiveTheme({ components: { typography: { headingFont: f.id, bodyFont: f.id } } })}
+                  onClick={() => patchActiveTheme({ components: { typography: { headingFont: f.id, bodyFont: f.id } } } as any)}
                   className={cn(
                     "flex flex-col p-3 rounded-xl border text-left transition-all",
                     currentTheme?.presetData?.components?.typography?.headingFont === f.id
@@ -381,7 +383,7 @@ export function OrgThemeSettings({ currentOrgDefault }: { currentOrgDefault: str
               ].map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => patchActiveTheme({ components: { cards: { shadow: s.shadow } } })}
+                  onClick={() => patchActiveTheme({ components: { cards: { shadow: s.shadow } } } as any)}
                   className={cn(
                     "flex flex-col p-3 rounded-xl border text-left transition-all",
                     currentTheme?.presetData?.components?.cards?.shadow === s.shadow

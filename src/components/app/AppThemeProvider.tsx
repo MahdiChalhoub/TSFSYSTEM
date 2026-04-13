@@ -342,16 +342,15 @@ export function AppThemeProvider({
                 setSystemThemes(system);
                 setCustomThemes(custom);
 
-                // Only override localStorage if no cached theme
-                if (!initial.theme) {
-                    const slug = data.current?.theme_slug || DEFAULT_SLUG;
-                    const all = [...system, ...custom];
-                    const found = all.find(t => t.slug === slug) || system[0];
-                    if (found) setCurrentTheme(found);
+                // Always sync from backend — database is the source of truth.
+                // localStorage is only used for FOUC prevention on first paint.
+                const slug = data.current?.theme_slug || DEFAULT_SLUG;
+                const all = [...system, ...custom];
+                const found = all.find(t => t.slug === slug) || system[0];
+                if (found) setCurrentTheme(found);
 
-                    const mode = data.current?.color_mode || 'dark';
-                    setColorModeState(mode as ColorMode);
-                }
+                const mode = data.current?.color_mode || 'dark';
+                setColorModeState(mode as ColorMode);
             } else {
                 console.warn('[ThemeEngine] Backend fetch failed:', response.status);
             }

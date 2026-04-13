@@ -100,14 +100,7 @@ export default function QuickAccessPage() {
 
     return (
         <div
-            className="h-full flex flex-col"
-            style={{
-                /* Remove AdminShell padding so we fill the viewport exactly */
-                margin: '-1.5rem',
-                marginTop: '-1.5rem',
-                width: 'calc(100% + 3rem)',
-                height: 'calc(100% + 3rem)',
-            }}
+            className="h-full flex flex-col overflow-hidden"
         >
             {/* ── Compact Header Bar ── */}
             <div
