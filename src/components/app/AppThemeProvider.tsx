@@ -342,15 +342,29 @@ export function AppThemeProvider({
                 setSystemThemes(system);
                 setCustomThemes(custom);
 
-                // Always sync from backend — database is the source of truth.
-                // localStorage is only used for FOUC prevention on first paint.
-                const slug = data.current?.theme_slug || DEFAULT_SLUG;
+                const dbSlug = data.current?.theme_slug || DEFAULT_SLUG;
+                const dbMode = (data.current?.color_mode || 'dark') as ColorMode;
                 const all = [...system, ...custom];
-                const found = all.find(t => t.slug === slug) || system[0];
+
+                // Priority: if this browser already has a valid cached theme (from
+                // localStorage or SSR), keep it — don't let a stale DB value flash
+                // the UI back to a different theme mid-session.
+                // The DB wins only when there is NO local cache (fresh device/session).
+                const persistedSlug = (() => {
+                    try { return (JSON.parse(localStorage.getItem(LOCAL_STORAGE_FULL) || '{}')).currentTheme?.slug || localStorage.getItem(LOCAL_STORAGE_KEY); } catch { return null; }
+                })();
+                const cookieSlug = document.cookie.split('; ').find(r => r.startsWith('tsfsystem-app-theme='))?.split('=')[1];
+                const localSlug = persistedSlug || cookieSlug;
+
+                // If a local preference exists, use it; otherwise trust DB.
+                const resolvedSlug = localSlug || dbSlug;
+                const found = all.find(t => t.slug === resolvedSlug)
+                    || all.find(t => t.slug === dbSlug)
+                    || system[0];
                 if (found) setCurrentTheme(found);
 
-                const mode = data.current?.color_mode || 'dark';
-                setColorModeState(mode as ColorMode);
+                // Color mode: use DB value (it's lightweight and always reliable)
+                setColorModeState(dbMode);
             } else {
                 console.warn('[ThemeEngine] Backend fetch failed:', response.status);
             }
