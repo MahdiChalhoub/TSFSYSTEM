@@ -555,9 +555,22 @@ export function ThemeScript() {
   var root = document.documentElement;
   var s = root.style;
 
-  // ── Read cached full theme ──
+  // ── Read cached full theme (localStorage first, SSR JSON fallback) ──
   var full = {};
   try { full = JSON.parse(localStorage.getItem(kFull) || '{}'); } catch(e){}
+
+  // If localStorage is empty (first visit / cleared cookies), read from SSR injection
+  if (!full.currentTheme) {
+    try {
+      var ssrEl = document.getElementById('__tsf_ssr_theme__');
+      if (ssrEl) {
+        var ssr = JSON.parse(ssrEl.textContent || ssrEl.innerText || '{}');
+        if (ssr && ssr.presetData) {
+          full = { currentTheme: { slug: ssr.slug, presetData: ssr.presetData }, colorMode: ssr.colorMode || 'dark' };
+        }
+      }
+    } catch(e){}
+  }
 
   var slug = (full.currentTheme && full.currentTheme.slug) || localStorage.getItem(kSlug) || '${DEFAULT_SLUG}';
   var colorMode = full.colorMode || 'dark';

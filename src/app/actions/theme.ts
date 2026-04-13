@@ -117,10 +117,16 @@ function transformThemeFromAPI(apiTheme: any): ThemePreset {
 // Helper for authenticated API calls
 async function apiCall<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  tenantSlug?: string,
 ): Promise<T> {
   const token = await getAuthToken()
   const url = `${API_BASE}/api/${endpoint}`
+  const tenantHeaders: Record<string, string> = {}
+  if (tenantSlug) {
+    tenantHeaders['X-Tenant-Slug'] = tenantSlug
+    tenantHeaders['X-Tenant-Id'] = tenantSlug
+  }
 
   console.log('[API Call]', {
     endpoint,
@@ -134,6 +140,7 @@ async function apiCall<T>(
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Token ${token}` }),
+      ...tenantHeaders,
       ...options.headers,
     },
   })
@@ -164,10 +171,10 @@ async function apiCall<T>(
 /**
  * Get all available themes (system + custom)
  */
-export async function getThemes(): Promise<ThemesListResponse> {
+export async function getThemes(tenantSlug?: string): Promise<ThemesListResponse> {
   try {
     console.log('[Theme Action] Fetching themes from:', `${API_BASE}/api/ui-themes/`)
-    const result = await apiCall<any>('ui-themes/')
+    const result = await apiCall<any>('ui-themes/', {}, tenantSlug)
     console.log('[Theme Action] Successfully loaded themes:', {
       systemCount: result.system?.length || 0,
       customCount: result.custom?.length || 0

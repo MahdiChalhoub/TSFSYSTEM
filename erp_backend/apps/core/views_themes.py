@@ -98,6 +98,12 @@ def list_themes(request):
         if user_pref.active_theme:
             current_theme_slug = user_pref.active_theme.slug
         current_color_mode = user_pref.color_mode
+    elif org:
+        # Unauthenticated request — return the org's configured default theme
+        # so the login page shows the tenant's branding before the user signs in.
+        org_default = (org.settings or {}).get('default_theme')
+        if org_default:
+            current_theme_slug = org_default
 
     return Response({
         'system': OrganizationThemeListSerializer(system_themes, many=True).data,
