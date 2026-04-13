@@ -816,9 +816,7 @@ export function Sidebar({
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout } = useAdmin();
 
-    // In topnav mode the sidebar is hidden — navigation lives in the header
-    if (navLayout === 'topnav') return null;
-    // null = not yet fetched (show all); Set = fetched (filter by installed)
+    // ── All hooks MUST be declared before any conditional returns (React rules-of-hooks) ──
     const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
     const [devSectionOpen, setDevSectionOpen] = useState(true);
@@ -861,6 +859,10 @@ export function Sidebar({
         }
         fetchData();
     }, []);
+
+    // In topnav mode the sidebar is hidden — navigation lives in the header
+    // (placed AFTER hooks to comply with React rules-of-hooks)
+    if (navLayout === 'topnav') return null;
 
     // Merge hardcoded core with dynamic
     const allItems = [...MENU_ITEMS, ...dynamicItems];

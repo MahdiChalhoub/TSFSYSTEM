@@ -1,4 +1,4 @@
-import { getCategoryWithCounts } from "@/app/actions/categories";
+import { erpFetch } from "@/lib/erp-api";
 import { CategoryTree } from "@/components/admin/categories/CategoryTree";
 import { CreateCategoryButton } from "@/components/admin/categories/CreateCategoryButton";
 import { Wrench, FolderTree } from 'lucide-react';
@@ -7,7 +7,7 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 async function getCategoriesData() {
-    const categories = await getCategoryWithCounts();
+    const categories = await erpFetch('categories/');
 
     const categoryMap = new Map();
     const roots: Record<string, any>[] = [];
