@@ -18,6 +18,7 @@ import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/action
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
 import { getSaaSModules, getDynamicSidebar } from '@/app/actions/saas/modules';
+import { getThemes } from '@/app/actions/theme';
 
 import { headers, cookies } from 'next/headers';
 
@@ -26,6 +27,60 @@ import { headers, cookies } from 'next/headers';
 // The layout is already dynamic because it calls cookies() and headers().
 // Individual fetches (sites, orgs, settings) use revalidate:30 in erpFetch.
 // Only getUser() uses cache:'no-store' (auth must always be fresh).
+
+// ── Server-side theme CSS injection helper ──────────────────────────────────
+// Generates a :root { ... } CSS block from the theme colors so the correct
+// colors are baked into the HTML on the very first byte — no JS, no flash.
+function buildThemeCSS(
+    colors: {
+        primary?: string; primaryDark?: string; bg?: string; surface?: string;
+        surfaceHover?: string; text?: string; textMuted?: string; border?: string;
+        success?: string; warning?: string; error?: string;
+    },
+    layout: { spacing?: { container?: string; section?: string; card?: string; element?: string }; density?: string } | null,
+    components: { cards?: { borderRadius?: string }; buttons?: { borderRadius?: string } } | null,
+): string {
+    const p = colors.primary || '#10B981';
+    const pd = colors.primaryDark || '#059669';
+    const bg = colors.bg || '#020617';
+    const surface = colors.surface || '#0F172A';
+    const surfaceHover = colors.surfaceHover || 'rgba(255,255,255,0.07)';
+    const text = colors.text || '#F1F5F9';
+    const muted = colors.textMuted || '#94A3B8';
+    const border = colors.border || 'rgba(255,255,255,0.08)';
+
+    return `:root{` +
+        `--app-primary:${p};` +
+        `--app-primary-dark:${pd};` +
+        `--app-primary-light:${p}1f;` +
+        `--app-primary-glow:${p}59;` +
+        `--app-bg:${bg};` +
+        `--app-surface:${surface};` +
+        `--app-surface-2:${surfaceHover};` +
+        `--app-surface-hover:${surfaceHover};` +
+        `--app-text:${text};` +
+        `--app-text-muted:${muted};` +
+        `--app-text-faint:${muted};` +
+        `--app-border:${border};` +
+        `--app-border-strong:${border};` +
+        `--app-sidebar-bg:${bg};` +
+        `--app-sidebar-surface:color-mix(in srgb,${p} 5%,${surface});` +
+        `--app-sidebar-text:${text};` +
+        `--app-sidebar-muted:${muted};` +
+        `--app-sidebar-active:color-mix(in srgb,${p} 8%,transparent);` +
+        `--app-sidebar-border:${border};` +
+        `--app-success:${colors.success || '#10B981'};` +
+        `--app-warning:${colors.warning || '#F59E0B'};` +
+        `--app-error:${colors.error || '#EF4444'};` +
+        `--app-info:#3B82F6;` +
+        `--layout-container-padding:${layout?.spacing?.container || '1.5rem'};` +
+        `--layout-section-spacing:${layout?.spacing?.section || '1.75rem'};` +
+        `--layout-card-padding:${layout?.spacing?.card || '1.25rem'};` +
+        `--layout-element-gap:${layout?.spacing?.element || '0.875rem'};` +
+        `--card-radius:${components?.cards?.borderRadius || '0.75rem'};` +
+        `--button-radius:${components?.buttons?.borderRadius || '0.5rem'};` +
+        `}`;
+}
 
 
 
@@ -95,13 +150,15 @@ export default async function AdminLayout({
     let financialSettings: any = null;
     let installedModuleCodes: string[] = [];
     let dynamicSidebarItems: any[] = [];
+    let themesData: any = null;
     try {
-        const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes] = await Promise.all([
+        const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes, themesRes] = await Promise.all([
             getSites().catch(() => []),
             getOrganizations().catch(() => []),
             getGlobalFinancialSettings().catch(() => null),
             getSaaSModules().catch(() => []),
             getDynamicSidebar().catch(() => []),
+            getThemes().catch(() => null),
         ]);
         sites = sitesRes;
         organizations = orgsRes;
@@ -110,9 +167,31 @@ export default async function AdminLayout({
             ? modulesRes.map((m: Record<string, any>) => m.code as string)
             : [];
         dynamicSidebarItems = Array.isArray(dynamicRes) ? dynamicRes : [];
+        themesData = themesRes;
     } catch {
         // Graceful degradation — layout renders with empty data
         console.error('[Layout] Failed to fetch layout data, rendering with defaults');
+    }
+
+    // Build server-side theme CSS — baked into HTML so colors appear before JS loads
+    let ssrThemeCSS = '';
+    try {
+        if (themesData) {
+            const currentSlugForTheme = themesData.current?.theme_slug || 'midnight-pro';
+            const colorMode: 'dark' | 'light' = (themesData.current?.color_mode === 'light') ? 'light' : 'dark';
+            const allThemes = [...(themesData.system || []), ...(themesData.custom || [])];
+            const activeTheme = allThemes.find((t: any) => t.slug === currentSlugForTheme) || allThemes[0];
+            if (activeTheme?.presetData?.colors) {
+                const colors = activeTheme.presetData.colors[colorMode] || activeTheme.presetData.colors.dark;
+                ssrThemeCSS = buildThemeCSS(
+                    colors,
+                    activeTheme.presetData.layout || null,
+                    activeTheme.presetData.components || null,
+                );
+            }
+        }
+    } catch {
+        // Non-fatal — client-side theme provider will handle it
     }
 
 
@@ -123,6 +202,8 @@ export default async function AdminLayout({
     const tabLayout = cookieStore.get('tsf_tab_layout')?.value as 'horizontal' | 'vertical' | undefined;
 
     return (
+        <>
+        {ssrThemeCSS && <style dangerouslySetInnerHTML={{ __html: ssrThemeCSS }} />}
         <DesignSystemProvider>
         <AdminProvider
             contextKey={currentSlug}
@@ -157,5 +238,6 @@ export default async function AdminLayout({
         </FavoritesProvider>
         </AdminProvider>
         </DesignSystemProvider>
+        </>
     );
 }

@@ -522,7 +522,38 @@ export function LoginContent({ initialSubdomain = '' }: { initialSubdomain?: str
                     </form>
 
                     {/* Footer */}
-                    <div className="pt-6 text-center">
+                    <div className="pt-6 text-center space-y-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                // Delete all cookies
+                                document.cookie.split(';').forEach(c => {
+                                    const name = c.split('=')[0].trim();
+                                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+                                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+                                    // Also try parent domain
+                                    const parts = window.location.hostname.split('.');
+                                    if (parts.length > 2) {
+                                        const parent = '.' + parts.slice(-2).join('.');
+                                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${parent}`;
+                                    }
+                                });
+                                // Clear localStorage
+                                try { localStorage.clear(); } catch {}
+                                // Clear sessionStorage
+                                try { sessionStorage.clear(); } catch {}
+                                // Reload
+                                window.location.reload();
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-lg transition-all hover:opacity-80"
+                            style={{
+                                color: 'var(--app-text-muted, #64748b)',
+                                background: 'color-mix(in srgb, var(--app-text-muted, #64748b) 8%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-text-muted, #64748b) 15%, transparent)',
+                            }}
+                        >
+                            🗑️ Clear Session &amp; Cookies
+                        </button>
                         <p className="text-[9px] font-bold uppercase tracking-[0.15em]"
                             style={{ color: 'var(--app-text-muted, #475569)' }}
                         >
