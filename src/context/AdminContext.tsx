@@ -127,6 +127,11 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
         // If official-only access, cannot switch to internal
         if (scopeAccess === 'official' && scope === 'INTERNAL') return;
+        // Write cookie BEFORE router.refresh() — the proxy reads it server-side
+        // to set X-Scope header for Django. Writing it in useEffect is too late
+        // (refresh fires before the effect runs → wrong scope sent to backend).
+        document.cookie = `tsf_view_scope=${scope}; path=/; max-age=31536000; SameSite=Lax`;
+        localStorage.setItem(SCOPE_KEY, scope);
         setViewScope(scope);
         router.refresh();
     };
