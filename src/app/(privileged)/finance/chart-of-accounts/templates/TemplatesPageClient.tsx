@@ -747,8 +747,36 @@ function CompareView({
 }
 
 // ══════════════════════════════════════════════════════════════════
-// Migration View — Template-to-Template Mapping
+// Migration View — Full Auto-Mapper
 // ══════════════════════════════════════════════════════════════════
+
+// Flatten hierarchical accounts tree into a flat array
+function flattenAccounts(accounts: any[], parentType?: string): { code: string; name: string; type: string; subType?: string }[] {
+    const result: { code: string; name: string; type: string; subType?: string }[] = []
+    for (const acct of accounts) {
+        result.push({ code: acct.code, name: acct.name, type: acct.type || parentType || '', subType: acct.subType })
+        if (acct.children) {
+            result.push(...flattenAccounts(acct.children, acct.type || parentType))
+        }
+    }
+    return result
+}
+
+// Normalize name for fuzzy matching
+function normalizeName(name: string): string {
+    return name.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
+        .replace(/[^a-z0-9 ]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+type MappingEntry = {
+    srcCode: string; srcName: string; srcType: string
+    tgtCode: string; tgtName: string; tgtType: string
+    matchLevel: 'HINT' | 'CODE' | 'NAME' | 'TYPE' | 'UNMAPPED'
+}
+
 function MigrationView({
     templates, templatesMap, migrationMaps,
 }: {
@@ -758,27 +786,129 @@ function MigrationView({
     const [sourceKey, setSourceKey] = useState<string>('')
     const [targetKey, setTargetKey] = useState<string>('')
     const [migSearch, setMigSearch] = useState('')
+    const [filterLevel, setFilterLevel] = useState<string>('ALL')
 
-    const mapKey = sourceKey && targetKey ? `${sourceKey}→${targetKey}` : ''
-    const currentMap = mapKey ? migrationMaps[mapKey] || {} : {}
-    const hasMap = Object.keys(currentMap).length > 0
-
-    // Available targets for selected source
+    // Allow ALL templates as targets (not just ones with pre-built hints)
     const availableTargets = useMemo(() => {
         if (!sourceKey) return []
-        return templates.filter(t => t.key !== sourceKey && migrationMaps[`${sourceKey}→${t.key}`])
-    }, [sourceKey, templates, migrationMaps])
+        return templates.filter(t => t.key !== sourceKey)
+    }, [sourceKey, templates])
 
-    // Filter map entries
+    // Build full auto-mapping
+    const fullMapping = useMemo((): MappingEntry[] => {
+        if (!sourceKey || !targetKey) return []
+        const srcAccounts = flattenAccounts(templatesMap[sourceKey]?.accounts || [])
+        const tgtAccounts = flattenAccounts(templatesMap[targetKey]?.accounts || [])
+        const hints = migrationMaps[`${sourceKey}→${targetKey}`] || {}
+
+        // Build target indexes
+        const tgtByCode: Record<string, typeof tgtAccounts[0]> = {}
+        const tgtByNorm: Record<string, typeof tgtAccounts[0][]> = {}
+        const tgtByType: Record<string, typeof tgtAccounts[0][]> = {}
+        for (const t of tgtAccounts) {
+            tgtByCode[t.code] = t
+            const norm = normalizeName(t.name)
+            if (!tgtByNorm[norm]) tgtByNorm[norm] = []
+            tgtByNorm[norm].push(t)
+            if (!tgtByType[t.type]) tgtByType[t.type] = []
+            tgtByType[t.type].push(t)
+        }
+
+        const usedTargets = new Set<string>()
+        const result: MappingEntry[] = []
+
+        for (const src of srcAccounts) {
+            let match: typeof tgtAccounts[0] | null = null
+            let level: MappingEntry['matchLevel'] = 'UNMAPPED'
+
+            // Level 1: JSON hint override
+            if (hints[src.code]) {
+                const hintTarget = tgtByCode[hints[src.code]]
+                if (hintTarget) {
+                    match = hintTarget; level = 'HINT'
+                    usedTargets.add(match.code)
+                }
+            }
+
+            // Level 2: Exact code match (same code + same type)
+            if (!match && tgtByCode[src.code] && !usedTargets.has(src.code)) {
+                const candidate = tgtByCode[src.code]
+                if (candidate.type === src.type || !candidate.type || !src.type) {
+                    match = candidate; level = 'CODE'
+                    usedTargets.add(match.code)
+                }
+            }
+
+            // Level 3: Normalized name match (same type preferred)
+            if (!match) {
+                const srcNorm = normalizeName(src.name)
+                const candidates = tgtByNorm[srcNorm] || []
+                // Prefer same type + unused
+                const sameType = candidates.find(c => c.type === src.type && !usedTargets.has(c.code))
+                const anyType = candidates.find(c => !usedTargets.has(c.code))
+                const chosen = sameType || anyType
+                if (chosen) {
+                    match = chosen; level = 'NAME'
+                    usedTargets.add(match.code)
+                }
+            }
+
+            // Level 4: Same type fallback (pick first unused of same type)
+            if (!match && src.type) {
+                const candidates = tgtByType[src.type] || []
+                const found = candidates.find(c => !usedTargets.has(c.code))
+                if (found) {
+                    match = found; level = 'TYPE'
+                    usedTargets.add(match.code)
+                }
+            }
+
+            result.push({
+                srcCode: src.code, srcName: src.name, srcType: src.type,
+                tgtCode: match?.code || '', tgtName: match?.name || '',
+                tgtType: match?.type || '',
+                matchLevel: level,
+            })
+        }
+
+        return result
+    }, [sourceKey, targetKey, templatesMap, migrationMaps])
+
+    // Filter entries
     const filteredEntries = useMemo(() => {
-        const entries = Object.entries(currentMap)
-        if (!migSearch) return entries
-        const q = migSearch.toLowerCase()
-        return entries.filter(([src, tgt]) => src.toLowerCase().includes(q) || tgt.toLowerCase().includes(q))
-    }, [currentMap, migSearch])
+        let entries = fullMapping
+        if (filterLevel !== 'ALL') {
+            entries = entries.filter(e => e.matchLevel === filterLevel)
+        }
+        if (migSearch) {
+            const q = migSearch.toLowerCase()
+            entries = entries.filter(e =>
+                e.srcCode.toLowerCase().includes(q) || e.srcName.toLowerCase().includes(q) ||
+                e.tgtCode.toLowerCase().includes(q) || e.tgtName.toLowerCase().includes(q)
+            )
+        }
+        return entries
+    }, [fullMapping, filterLevel, migSearch])
+
+    // Stats
+    const stats = useMemo(() => {
+        const byLevel: Record<string, number> = {}
+        for (const e of fullMapping) {
+            byLevel[e.matchLevel] = (byLevel[e.matchLevel] || 0) + 1
+        }
+        return byLevel
+    }, [fullMapping])
 
     const sourceAccent = ACCENT_MAP[sourceKey] || 'var(--app-primary)'
     const targetAccent = ACCENT_MAP[targetKey] || 'var(--app-info, #3b82f6)'
+
+    const LEVEL_COLORS: Record<string, string> = {
+        HINT: 'var(--app-success, #22c55e)',
+        CODE: 'var(--app-info, #3b82f6)',
+        NAME: '#8b5cf6',
+        TYPE: 'var(--app-warning, #f59e0b)',
+        UNMAPPED: 'var(--app-error, #ef4444)',
+    }
 
     return (
         <div>
@@ -794,11 +924,9 @@ function MigrationView({
                         {templates.map(t => <option key={t.key} value={t.key}>{t.name} ({t.region})</option>)}
                     </select>
                 </div>
-
                 <div className="flex items-center pt-4">
                     <ArrowRightLeft size={20} className="text-app-muted-foreground" />
                 </div>
-
                 <div className="flex-1 min-w-[200px]">
                     <label className="text-[9px] font-black text-app-muted-foreground uppercase tracking-widest mb-1 block">
                         Target Template
@@ -810,106 +938,136 @@ function MigrationView({
                         {availableTargets.map(t => <option key={t.key} value={t.key}>{t.name} ({t.region})</option>)}
                     </select>
                 </div>
-
-                {hasMap && (
-                    <div className="flex items-center gap-2 pt-4">
-                        <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider px-2.5 py-1.5 rounded-lg"
-                            style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                color: 'var(--app-success, #22c55e)' }}>
-                            {Object.keys(currentMap).length} mappings
-                        </span>
-                    </div>
-                )}
             </div>
 
             {!sourceKey || !targetKey ? (
                 <EmptyState icon={ArrowRightLeft} text="Select source and target templates"
-                    subtitle="See how accounts map between different accounting standards." />
-            ) : !hasMap ? (
-                <EmptyState icon={ArrowRightLeft} text="No migration map available"
-                    subtitle={`No pre-built mapping exists from ${sourceKey} to ${targetKey}.`} />
+                    subtitle="Full auto-mapping of all accounts between standards." />
             ) : (
-                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
-                    {/* Map header */}
-                    <div className="flex items-center justify-between px-4 py-3"
-                        style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))',
-                            borderBottom: '1px solid var(--app-border)' }}>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                    style={{ background: `color-mix(in srgb, ${sourceAccent} 15%, transparent)`, color: sourceAccent }}>
-                                    {(() => { const t = templates.find(t => t.key === sourceKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
+                <div>
+                    {/* Stats strip */}
+                    <div className="mb-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '6px' }}>
+                        <button onClick={() => setFilterLevel('ALL')}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                            style={{
+                                background: filterLevel === 'ALL' ? 'color-mix(in srgb, var(--app-primary) 8%, var(--app-surface))' : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                border: filterLevel === 'ALL' ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                            }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">All</div>
+                            <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{fullMapping.length}</div>
+                        </button>
+                        {(['HINT', 'CODE', 'NAME', 'TYPE', 'UNMAPPED'] as const).map(level => (
+                            <button key={level} onClick={() => setFilterLevel(filterLevel === level ? 'ALL' : level)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                                style={{
+                                    background: filterLevel === level ? `color-mix(in srgb, ${LEVEL_COLORS[level]} 8%, var(--app-surface))` : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                    border: filterLevel === level ? `1px solid color-mix(in srgb, ${LEVEL_COLORS[level]} 30%, transparent)` : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                }}>
+                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: LEVEL_COLORS[level] }} />
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{level}</div>
+                                <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{stats[level] || 0}</div>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Mapping table */}
+                    <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--app-border)' }}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))',
+                                borderBottom: '1px solid var(--app-border)' }}>
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                        style={{ background: `color-mix(in srgb, ${sourceAccent} 15%, transparent)`, color: sourceAccent }}>
+                                        {(() => { const t = templates.find(t => t.key === sourceKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
+                                    </div>
+                                    <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === sourceKey)?.name}</span>
                                 </div>
-                                <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === sourceKey)?.name}</span>
+                                <ArrowRight size={16} className="text-app-muted-foreground" />
+                                <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                        style={{ background: `color-mix(in srgb, ${targetAccent} 15%, transparent)`, color: targetAccent }}>
+                                        {(() => { const t = templates.find(t => t.key === targetKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
+                                    </div>
+                                    <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === targetKey)?.name}</span>
+                                </div>
                             </div>
-                            <ArrowRight size={16} className="text-app-muted-foreground" />
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                    style={{ background: `color-mix(in srgb, ${targetAccent} 15%, transparent)`, color: targetAccent }}>
-                                    {(() => { const t = templates.find(t => t.key === targetKey); const I = resolveIcon(t?.icon); return <I size={13} /> })()}
-                                </div>
-                                <span className="text-[12px] font-bold text-app-foreground">{templates.find(t => t.key === targetKey)?.name}</span>
+                            <div className="relative">
+                                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input type="text" value={migSearch} onChange={e => setMigSearch(e.target.value)}
+                                    placeholder="Filter mappings..."
+                                    className="pl-7 pr-2 py-1 text-[11px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-44" />
                             </div>
                         </div>
-                        <div className="relative">
-                            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                            <input type="text" value={migSearch} onChange={e => setMigSearch(e.target.value)}
-                                placeholder="Filter mappings..."
-                                className="pl-7 pr-2 py-1 text-[11px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground outline-none w-44" />
+
+                        {/* Column headers */}
+                        <div className="flex items-center gap-2 px-4 py-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-wider"
+                            style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
+                            <div className="w-16 flex-shrink-0">Source</div>
+                            <div className="flex-1 min-w-0">Source Account</div>
+                            <div className="w-14 flex-shrink-0 text-center">Match</div>
+                            <div className="w-16 flex-shrink-0">Target</div>
+                            <div className="flex-1 min-w-0">Target Account</div>
                         </div>
-                    </div>
 
-                    {/* Column headers */}
-                    <div className="flex items-center gap-2 px-4 py-1.5 text-[9px] font-black text-app-muted-foreground uppercase tracking-wider"
-                        style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
-                        <div className="w-20 flex-shrink-0">Source Code</div>
-                        <div className="flex-1 min-w-0">Source Account</div>
-                        <div className="w-8 flex-shrink-0 text-center">→</div>
-                        <div className="w-20 flex-shrink-0">Target Code</div>
-                        <div className="flex-1 min-w-0">Target Account</div>
-                    </div>
+                        {/* Rows */}
+                        <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                            {filteredEntries.map((entry, i) => {
+                                const levelColor = LEVEL_COLORS[entry.matchLevel] || 'var(--app-muted-foreground)'
+                                return (
+                                    <div key={i} className="flex items-center gap-2 px-4 py-1.5 transition-all hover:bg-app-surface/40"
+                                        style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                        <div className="w-16 flex-shrink-0">
+                                            <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
+                                                {entry.srcCode}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
+                                        </div>
+                                        <div className="w-14 flex-shrink-0 text-center">
+                                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                style={{
+                                                    background: `color-mix(in srgb, ${levelColor} 10%, transparent)`,
+                                                    color: levelColor,
+                                                    border: `1px solid color-mix(in srgb, ${levelColor} 20%, transparent)`,
+                                                }}>
+                                                {entry.matchLevel}
+                                            </span>
+                                        </div>
+                                        <div className="w-16 flex-shrink-0">
+                                            {entry.tgtCode ? (
+                                                <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                    style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
+                                                    {entry.tgtCode}
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-app-muted-foreground">—</span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <span className={`text-[11px] truncate block ${entry.tgtName ? 'font-medium text-app-foreground' : 'font-bold text-app-muted-foreground italic'}`}>
+                                                {entry.tgtName || 'No match'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
 
-                    {/* Mapping rows */}
-                    <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                        {filteredEntries.map(([srcCode, tgtCode], i) => {
-                            // Resolve account names from template accounts
-                            const srcName = findAccountName(templatesMap[sourceKey]?.accounts, srcCode)
-                            const tgtName = findAccountName(templatesMap[targetKey]?.accounts, tgtCode)
-
-                            return (
-                                <div key={i} className="flex items-center gap-2 px-4 py-2 transition-all hover:bg-app-surface/40"
-                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
-                                    <div className="w-20 flex-shrink-0">
-                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
-                                            style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
-                                            {srcCode}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-[11px] font-medium text-app-foreground truncate block">{srcName}</span>
-                                    </div>
-                                    <div className="w-8 flex-shrink-0 text-center">
-                                        <ArrowRight size={12} className="text-app-muted-foreground mx-auto" />
-                                    </div>
-                                    <div className="w-20 flex-shrink-0">
-                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded"
-                                            style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
-                                            {tgtCode}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-[11px] font-medium text-app-foreground truncate block">{tgtName}</span>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="px-4 py-2 text-center" style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
-                        <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                            {filteredEntries.length} of {Object.keys(currentMap).length} mappings shown
-                        </span>
+                        {/* Footer */}
+                        <div className="px-4 py-2 flex items-center justify-between"
+                            style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
+                            <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                {filteredEntries.length} of {fullMapping.length} mappings
+                            </span>
+                            <span className="text-[10px] font-bold tabular-nums"
+                                style={{ color: 'var(--app-success, #22c55e)' }}>
+                                {Math.round(((fullMapping.length - (stats['UNMAPPED'] || 0)) / Math.max(fullMapping.length, 1)) * 100)}% mapped
+                            </span>
+                        </div>
                     </div>
                 </div>
             )}
