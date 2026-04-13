@@ -34,16 +34,21 @@ from kernel.tenancy.context import set_current_tenant
 
 def _get_org_context(request):
     """Helper to resolve organization with fallback to 'saas' for theme operations"""
+    from erp.models import Organization
     # Try both .organization and .tenant (middleware uses .tenant)
     org = getattr(request, 'organization', None) or getattr(request, 'tenant', None)
+
+    # Handle case where middleware sets tenant to a slug string instead of an object
+    if isinstance(org, str):
+        org = Organization.objects.filter(slug=org).first()
+
     # For theme operations, always fallback to 'saas' organization if no tenant context
-    # This allows theme switching to work even without full authentication
     if not org:
-        from erp.models import Organization
         org = Organization.objects.filter(slug='saas').first()
-        if org:
-            # Sync thread-local context for TenantOwnedModel validation
-            set_current_tenant(org)
+
+    if org:
+        # Sync thread-local context for TenantOwnedModel validation
+        set_current_tenant(org)
     return org
 
 
