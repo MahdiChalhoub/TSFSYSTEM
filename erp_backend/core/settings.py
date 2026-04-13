@@ -102,11 +102,11 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/minute',       # Public endpoints
-        'user': '200/minute',      # Authenticated users
-        'login': '5/minute',       # Login attempts (custom)
+        'anon': '120/minute',       # Public endpoints
+        'user': '2000/minute',     # Authenticated users (SSR makes many parallel calls)
+        'login': '10/minute',       # Login attempts (custom)
         'register': '3/minute',    # Registration attempts
-        'tenant_resolve': '30/minute',  # Tenant resolution
+        'tenant_resolve': '60/minute',  # Tenant resolution
     }
 }
 

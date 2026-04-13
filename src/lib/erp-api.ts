@@ -76,8 +76,7 @@ export const getTenantContext = cache(async function getTenantContext() {
             : `${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`;
 
         const res = await fetch(tenantResolveUrl, {
-            cache: 'force-cache',
-            next: { revalidate: 60 } // Cache resolution for 60s
+            cache: 'no-store',  // Never cache — a cached 404 causes infinite crash loops
         });
 
         if (!res.ok) {

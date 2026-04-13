@@ -164,15 +164,29 @@ class PublicConfigView(APIView):
         business_types = BusinessType.objects.all()
         currencies = GlobalCurrency.objects.all()
         
-        # Optionally get tenant config if slug provided
+        # Resolve tenant from query param OR request headers (set by erpFetch/middleware)
         tenant_data = {}
-        slug = request.query_params.get('tenant')
+        slug = request.query_params.get('tenant') or request.META.get('HTTP_X_TENANT_SLUG', '')
+        tenant_id = request.META.get('HTTP_X_TENANT_ID', '')
+        
+        org = None
         if slug:
             try:
                 org = Organization.objects.get(slug=slug)
-                tenant_data = OrganizationSerializer(org).data
             except Organization.DoesNotExist:
                 pass
+        elif tenant_id:
+            try:
+                org = Organization.objects.get(pk=tenant_id)
+            except (Organization.DoesNotExist, ValueError):
+                pass
+
+        if org:
+            tenant_data = OrganizationSerializer(org).data
+            # Inject login branding from org.settings if available
+            org_settings = org.settings or {}
+            login_branding = org_settings.get('login_branding', {})
+            tenant_data['login_branding'] = login_branding
 
         return Response({
             "business_types": BusinessTypeSerializer(business_types, many=True).data,
