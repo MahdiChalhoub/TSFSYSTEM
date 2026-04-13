@@ -1,24 +1,36 @@
 'use client';
 
 /**
- * FavoritesContext — Single source of truth for user favorites
- * =============================================================
+ * FavoritesContext — Optimized, single source of truth
+ * =====================================================
  * Architecture:
- * 1. Mount: show localStorage instantly (zero flash), then fetch from backend
- *    (cross-device) and override.
- * 2. On change: update state immediately (optimistic), persist to localStorage
- *    for instant cross-tab sync, save to backend async (fire-and-forget).
- * 3. All consumers (Sidebar, Home page, etc.) read from one context —
- *    no duplicate fetches, no duplicate state.
+ * 1. Mount: hydrate from localStorage immediately (zero flash), then
+ *    reconcile with backend (cross-device source of truth).
+ * 2. Mutations: optimistic state update → localStorage → debounced backend save.
+ *    All saves use the latest state snapshot from a ref, not a closure —
+ *    eliminates stale-closure race conditions from rapid toggles.
+ * 3. Cross-tab sync: native `storage` event (fires only in OTHER tabs).
+ *    No manual dispatchEvent needed — we already hold the latest state in context.
+ * 4. Performance: Set-based O(1) isFavorite lookups, full context value memoization
+ *    so consumers only re-render when favorites actually change.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+    createContext, useCallback, useContext, useEffect,
+    useMemo, useRef, useState,
+} from 'react';
 import { getFavorites, saveFavorites, type FavoriteEntry } from '@/app/actions/favorites';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const LS_KEY = 'tsf_quick_access_pinned';
+const SAVE_DEBOUNCE_MS = 400; // Batch rapid add/remove into one backend call
+
+// ── Context type ──────────────────────────────────────────────────────────────
 
 interface FavoritesContextType {
     favorites: FavoriteEntry[];
+    /** O(1) — backed by a Set, not array.some() */
     isFavorite: (path: string) => boolean;
     toggleFavorite: (title: string, path: string) => void;
     removeFavorite: (path: string) => void;
@@ -26,32 +38,61 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
+// ── Provider ──────────────────────────────────────────────────────────────────
+
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
+    const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const persist = useCallback((next: FavoriteEntry[]) => {
-        // 1. Update localStorage so other tabs respond immediately
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
-        window.dispatchEvent(new StorageEvent('storage', { key: LS_KEY }));
-        // 2. Save to backend (cross-device) — fire-and-forget
-        saveFavorites(next).catch(() => {});
+    // Always-current snapshot for the debounced save — avoids stale closures
+    // when the user toggles rapidly before the timer fires.
+    const latestFavs = useRef<FavoriteEntry[]>(favorites);
+    useEffect(() => { latestFavs.current = favorites; }, [favorites]);
+
+    // O(1) path lookups — recomputed only when the favorites array identity changes
+    const favoriteSet = useMemo(
+        () => new Set(favorites.map(f => f.path)),
+        [favorites]
+    );
+
+    // Write to localStorage (triggers `storage` event in other tabs automatically)
+    // then schedule a debounced backend save using the ref snapshot.
+    const persist = useCallback((favs: FavoriteEntry[]) => {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify(favs));
+        } catch { /* quota exceeded — non-fatal */ }
+
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => {
+            saveFavorites(latestFavs.current).catch(() => {});
+        }, SAVE_DEBOUNCE_MS);
     }, []);
 
     useEffect(() => {
-        // Step 1: show localStorage immediately (no flash on revisit)
+        // 1. Hydrate from localStorage immediately — no loading flash
+        let localFavs: FavoriteEntry[] = [];
         try {
-            const cached = localStorage.getItem(LS_KEY);
-            if (cached) setFavorites(JSON.parse(cached));
-        } catch { /* ignore */ }
+            const raw = localStorage.getItem(LS_KEY);
+            if (raw) localFavs = JSON.parse(raw);
+        } catch { /* ignore parse errors */ }
 
-        // Step 2: fetch from backend (authoritative, cross-device)
+        if (localFavs.length > 0) setFavorites(localFavs);
+
+        // 2. Reconcile with backend — single call, no race condition
+        //    setFavorites called once after await, not twice
+        let cancelled = false;
         getFavorites().then(serverFavs => {
+            if (cancelled) return;
+            // Backend is source of truth — override regardless of local state
             setFavorites(serverFavs);
-            // Keep localStorage in sync with server truth
-            localStorage.setItem(LS_KEY, JSON.stringify(serverFavs));
-        }).catch(() => { /* keep localStorage version */ });
+            try {
+                localStorage.setItem(LS_KEY, JSON.stringify(serverFavs));
+            } catch { /* quota — non-fatal */ }
+        }).catch(() => {
+            // Network failure — keep localStorage version, no double setFavorites
+        });
 
-        // Step 3: listen for changes from other tabs
+        // 3. Cross-tab sync (storage event only fires in OTHER tabs — no self-notify issue)
         const onStorage = (e: StorageEvent) => {
             if (e.key !== LS_KEY) return;
             try {
@@ -60,19 +101,25 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
             } catch { /* ignore */ }
         };
         window.addEventListener('storage', onStorage);
-        return () => window.removeEventListener('storage', onStorage);
+
+        return () => {
+            cancelled = true;
+            window.removeEventListener('storage', onStorage);
+            if (saveTimer.current) clearTimeout(saveTimer.current);
+        };
     }, []);
+
+    // ── Mutations ────────────────────────────────────────────────────────────
 
     const toggleFavorite = useCallback((title: string, path: string) => {
         setFavorites(prev => {
-            const exists = prev.some(f => f.path === path);
-            const next = exists
+            const next = favoriteSet.has(path)
                 ? prev.filter(f => f.path !== path)
                 : [...prev, { title, path }];
             persist(next);
             return next;
         });
-    }, [persist]);
+    }, [favoriteSet, persist]);
 
     const removeFavorite = useCallback((path: string) => {
         setFavorites(prev => {
@@ -82,19 +129,31 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         });
     }, [persist]);
 
-    const isFavorite = useCallback((path: string) => {
-        return favorites.some(f => f.path === path);
-    }, [favorites]);
+    const isFavorite = useCallback(
+        (path: string) => favoriteSet.has(path),
+        [favoriteSet]
+    );
+
+    // Memoize the full context value so consumers only re-render when
+    // the favorites array (or derived functions) actually change.
+    const value = useMemo<FavoritesContextType>(() => ({
+        favorites,
+        isFavorite,
+        toggleFavorite,
+        removeFavorite,
+    }), [favorites, isFavorite, toggleFavorite, removeFavorite]);
 
     return (
-        <FavoritesContext.Provider value={{ favorites, isFavorite, toggleFavorite, removeFavorite }}>
+        <FavoritesContext.Provider value={value}>
             {children}
         </FavoritesContext.Provider>
     );
 }
 
-export function useFavorites() {
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export function useFavorites(): FavoritesContextType {
     const ctx = useContext(FavoritesContext);
-    if (!ctx) throw new Error('useFavorites must be used inside FavoritesProvider');
+    if (!ctx) throw new Error('useFavorites must be called inside <FavoritesProvider>');
     return ctx;
 }

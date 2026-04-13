@@ -45,19 +45,20 @@ export const getTenantContext = cache(async function getTenantContext() {
 
     debug(`[DEBUG] getTenantContext Host: ${host}`);
 
-    // Precise Hostname extraction (removes port)
+    // Extract hostname without port (host may be "sub.domain.com:3000")
     const hostname = host.split(':')[0].toLowerCase();
     const parts = hostname.split('.');
 
-    let subdomain = "";
-    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(hostname);
+    // IP detection: port is already stripped, so no (?::[0-9]+)? needed
+    const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
 
+    let subdomain = "";
     if (isIp) {
         subdomain = "";
     } else if (hostname.includes("localhost")) {
         if (parts.length > 1) subdomain = parts[0];
     } else {
-        // Production: expect xxx.domain.com (3 parts or more)
+        // Production: expect sub.domain.tld (≥3 parts)
         if (parts.length > 2) subdomain = parts[0];
     }
 
@@ -209,9 +210,9 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             }
 
             // [HTML DETECTION] Django returns HTML error pages when DEBUG=False and a 500 occurs.
-            // Detect HTML responses early and throw a clean, JSON-parseable error instead of crashing on JSON.parse().
+            // Match only real HTML documents (<!DOCTYPE or <html) — never bare JSON with < operators.
             const trimmed = errorText.trimStart();
-            if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
+            if (trimmed.startsWith('<!') || /^<html[\s>]/i.test(trimmed)) {
                 if (!isExpectedSaaS404) {
                     console.error(`[ERP_API] HTML error page received from ${path} (HTTP ${response.status})`);
                 }
