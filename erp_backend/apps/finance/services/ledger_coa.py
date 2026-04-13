@@ -213,11 +213,14 @@ class LedgerCOAMixin:
                     # Clear FK references first
                     try:
                         from apps.finance.models import PostingRule
-                        # Delete posting rule history entries
+                        from django.db.models import Q
+                        # Delete posting rule history entries (uses old_account_id / new_account_id)
                         try:
                             from django.apps import apps
                             PRHistory = apps.get_model('finance', 'PostingRuleHistory')
-                            PRHistory.objects.filter(account_id__in=orphan_ids).delete()
+                            PRHistory.objects.filter(
+                                Q(old_account_id__in=orphan_ids) | Q(new_account_id__in=orphan_ids)
+                            ).delete()
                         except Exception:
                             pass
                         PostingRule.objects.filter(account_id__in=orphan_ids).delete()

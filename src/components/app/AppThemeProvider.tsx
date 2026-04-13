@@ -350,9 +350,13 @@ export function AppThemeProvider({
                 // localStorage or SSR), keep it — don't let a stale DB value flash
                 // the UI back to a different theme mid-session.
                 // The DB wins only when there is NO local cache (fresh device/session).
-                const persistedSlug = (() => {
-                    try { return (JSON.parse(localStorage.getItem(LOCAL_STORAGE_FULL) || '{}')).currentTheme?.slug || localStorage.getItem(LOCAL_STORAGE_KEY); } catch { return null; }
+                // Read local preferences — these are set immediately on user action,
+                // so they are more up-to-date than the DB on the same device.
+                const localFull = (() => {
+                    try { return JSON.parse(localStorage.getItem(LOCAL_STORAGE_FULL) || '{}'); } catch { return {}; }
                 })();
+                const persistedSlug = localFull.currentTheme?.slug || localStorage.getItem(LOCAL_STORAGE_KEY);
+                const persistedMode = localFull.colorMode as ColorMode | undefined;
                 const cookieSlug = document.cookie.split('; ').find(r => r.startsWith('tsfsystem-app-theme='))?.split('=')[1];
                 const localSlug = persistedSlug || cookieSlug;
 
@@ -363,8 +367,8 @@ export function AppThemeProvider({
                     || system[0];
                 if (found) setCurrentTheme(found);
 
-                // Color mode: use DB value (it's lightweight and always reliable)
-                setColorModeState(dbMode);
+                // Color mode: prefer local (set instantly on toggle) over DB.
+                setColorModeState(persistedMode || dbMode);
             } else {
                 console.warn('[ThemeEngine] Backend fetch failed:', response.status);
             }
