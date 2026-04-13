@@ -46,6 +46,7 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     // Start open on desktop, closed on mobile — avoids the fixed-overlay blocking content
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
+    const [pendingActiveTab, setPendingActiveTab] = useState<string | null>(null);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
     // Initialize from server prop so SSR and first client render match — no pop-in flash
@@ -61,6 +62,13 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     }, []);
     const pathname = usePathname();
     const router = useRouter();
+
+    // Clear pending active tab when pathname catches up
+    useEffect(() => {
+        if (pendingActiveTab && pathname === pendingActiveTab) {
+            setPendingActiveTab(null);
+        }
+    }, [pathname, pendingActiveTab]);
 
     const TABS_KEY = `tsf_tabs_${contextKey}`;
     const SCOPE_KEY = `tsf_view_scope_${contextKey}`;
@@ -165,6 +173,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
 
     const openTab = (title: string, path: string) => {
         const id = path;
+        // Immediately mark this tab as active so UI updates before router.push finishes
+        setPendingActiveTab(id);
         setOpenTabs(prev => {
             // Already open with same path — just navigate
             if (prev.find(t => t.id === id)) return prev;
@@ -198,6 +208,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     /** Replace the currently active tab with a new page (same position, no new tab) */
     const replaceTab = (title: string, path: string) => {
         const id = path;
+        // Immediately mark this tab as active
+        setPendingActiveTab(id);
         setOpenTabs(prev => {
             // If destination tab already exists, just navigate
             if (prev.find(t => t.id === id)) return prev;
@@ -219,7 +231,7 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             sidebarOpen,
             toggleSidebar,
             openTabs,
-            activeTab: pathname,
+            activeTab: pendingActiveTab || pathname,
             openTab,
             replaceTab,
             closeTab,
