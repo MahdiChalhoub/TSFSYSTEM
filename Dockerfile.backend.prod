@@ -1,0 +1,42 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TSFSYSTEM — Backend Production Dockerfile
+# Gunicorn + Django behind Nginx
+# ═══════════════════════════════════════════════════════════════════════════════
+
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python deps (cached layer)
+COPY erp_backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend source
+COPY erp_backend/ /app/
+
+# Collect static files for Nginx to serve
+RUN mkdir -p /app/staticfiles /app/media /var/log/tsf
+
+# Make startup script executable
+RUN chmod +x /app/start.sh
+
+EXPOSE 8000
+
+# Healthcheck for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health/ || exit 1
+
+# Start with Gunicorn (start.sh detects DEBUG=0 → uses gunicorn)
+CMD ["/bin/bash", "/app/start.sh"]

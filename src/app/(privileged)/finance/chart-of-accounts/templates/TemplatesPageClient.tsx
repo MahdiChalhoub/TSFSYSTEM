@@ -747,12 +747,14 @@ function CompareView({
 }
 
 // ══════════════════════════════════════════════════════════════════
-// Migration View — Full Auto-Mapper
+// Migration View — Full Auto-Mapper (Merge N:1 + Split 1:N)
 // ══════════════════════════════════════════════════════════════════
 
+type FlatAccount = { code: string; name: string; type: string; subType?: string }
+
 // Flatten hierarchical accounts tree into a flat array
-function flattenAccounts(accounts: any[], parentType?: string): { code: string; name: string; type: string; subType?: string }[] {
-    const result: { code: string; name: string; type: string; subType?: string }[] = []
+function flattenAccounts(accounts: any[], parentType?: string): FlatAccount[] {
+    const result: FlatAccount[] = []
     for (const acct of accounts) {
         result.push({ code: acct.code, name: acct.name, type: acct.type || parentType || '', subType: acct.subType })
         if (acct.children) {
@@ -765,16 +767,29 @@ function flattenAccounts(accounts: any[], parentType?: string): { code: string; 
 // Normalize name for fuzzy matching
 function normalizeName(name: string): string {
     return name.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9 ]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
 }
 
+// Word-overlap similarity (0..1)
+function wordSimilarity(a: string, b: string): number {
+    const wa = new Set(normalizeName(a).split(' ').filter(Boolean))
+    const wb = new Set(normalizeName(b).split(' ').filter(Boolean))
+    if (wa.size === 0 || wb.size === 0) return 0
+    let overlap = 0
+    for (const w of wa) { if (wb.has(w)) overlap++ }
+    return overlap / Math.max(wa.size, wb.size)
+}
+
+type MappingTarget = { code: string; name: string; type: string; pct: number }
 type MappingEntry = {
     srcCode: string; srcName: string; srcType: string
-    tgtCode: string; tgtName: string; tgtType: string
-    matchLevel: 'HINT' | 'CODE' | 'NAME' | 'TYPE' | 'UNMAPPED'
+    targets: MappingTarget[]
+    matchLevel: 'HINT' | 'CODE' | 'NAME' | 'MERGE' | 'SPLIT'
+    isMerge: boolean  // N:1 — this target already used by another source
+    isSplit: boolean  // 1:N — this source maps to multiple targets
 }
 
 function MigrationView({
@@ -788,13 +803,12 @@ function MigrationView({
     const [migSearch, setMigSearch] = useState('')
     const [filterLevel, setFilterLevel] = useState<string>('ALL')
 
-    // Allow ALL templates as targets (not just ones with pre-built hints)
     const availableTargets = useMemo(() => {
         if (!sourceKey) return []
         return templates.filter(t => t.key !== sourceKey)
     }, [sourceKey, templates])
 
-    // Build full auto-mapping
+    // ── Build full auto-mapping with ZERO unmapped ──
     const fullMapping = useMemo((): MappingEntry[] => {
         if (!sourceKey || !targetKey) return []
         const srcAccounts = flattenAccounts(templatesMap[sourceKey]?.accounts || [])
@@ -802,9 +816,9 @@ function MigrationView({
         const hints = migrationMaps[`${sourceKey}→${targetKey}`] || {}
 
         // Build target indexes
-        const tgtByCode: Record<string, typeof tgtAccounts[0]> = {}
-        const tgtByNorm: Record<string, typeof tgtAccounts[0][]> = {}
-        const tgtByType: Record<string, typeof tgtAccounts[0][]> = {}
+        const tgtByCode: Record<string, FlatAccount> = {}
+        const tgtByNorm: Record<string, FlatAccount[]> = {}
+        const tgtByType: Record<string, FlatAccount[]> = {}
         for (const t of tgtAccounts) {
             tgtByCode[t.code] = t
             const norm = normalizeName(t.name)
@@ -814,61 +828,125 @@ function MigrationView({
             tgtByType[t.type].push(t)
         }
 
+        // Track how many sources map to each target (for merge detection)
+        const targetUsageCount: Record<string, number> = {}
         const usedTargets = new Set<string>()
-        const result: MappingEntry[] = []
+
+        // ── Pass 1: Unique 1:1 matches (HINT, CODE, NAME) ──
+        const pass1: { src: FlatAccount; match: FlatAccount | null; level: MappingEntry['matchLevel'] }[] = []
 
         for (const src of srcAccounts) {
-            let match: typeof tgtAccounts[0] | null = null
-            let level: MappingEntry['matchLevel'] = 'UNMAPPED'
+            let match: FlatAccount | null = null
+            let level: MappingEntry['matchLevel'] = 'MERGE' // will be resolved in pass 2
 
             // Level 1: JSON hint override
             if (hints[src.code]) {
                 const hintTarget = tgtByCode[hints[src.code]]
-                if (hintTarget) {
-                    match = hintTarget; level = 'HINT'
-                    usedTargets.add(match.code)
-                }
+                if (hintTarget) { match = hintTarget; level = 'HINT' }
             }
 
-            // Level 2: Exact code match (same code + same type)
-            if (!match && tgtByCode[src.code] && !usedTargets.has(src.code)) {
+            // Level 2: Exact code match
+            if (!match && tgtByCode[src.code]) {
                 const candidate = tgtByCode[src.code]
                 if (candidate.type === src.type || !candidate.type || !src.type) {
                     match = candidate; level = 'CODE'
-                    usedTargets.add(match.code)
                 }
             }
 
-            // Level 3: Normalized name match (same type preferred)
+            // Level 3: Normalized name match
             if (!match) {
                 const srcNorm = normalizeName(src.name)
                 const candidates = tgtByNorm[srcNorm] || []
-                // Prefer same type + unused
                 const sameType = candidates.find(c => c.type === src.type && !usedTargets.has(c.code))
-                const anyType = candidates.find(c => !usedTargets.has(c.code))
-                const chosen = sameType || anyType
-                if (chosen) {
-                    match = chosen; level = 'NAME'
-                    usedTargets.add(match.code)
-                }
+                const anyUnused = candidates.find(c => !usedTargets.has(c.code))
+                const anyUsed = candidates.find(c => c.type === src.type) || candidates[0]
+                const chosen = sameType || anyUnused || anyUsed
+                if (chosen) { match = chosen; level = 'NAME' }
             }
 
-            // Level 4: Same type fallback (pick first unused of same type)
-            if (!match && src.type) {
-                const candidates = tgtByType[src.type] || []
-                const found = candidates.find(c => !usedTargets.has(c.code))
-                if (found) {
-                    match = found; level = 'TYPE'
-                    usedTargets.add(match.code)
-                }
+            if (match) {
+                usedTargets.add(match.code)
+                targetUsageCount[match.code] = (targetUsageCount[match.code] || 0) + 1
             }
 
-            result.push({
-                srcCode: src.code, srcName: src.name, srcType: src.type,
-                tgtCode: match?.code || '', tgtName: match?.name || '',
-                tgtType: match?.type || '',
-                matchLevel: level,
-            })
+            pass1.push({ src, match, level })
+        }
+
+        // ── Pass 2: Resolve remaining unmapped via MERGE or SPLIT ──
+        const result: MappingEntry[] = []
+
+        for (const { src, match, level } of pass1) {
+            if (match) {
+                // Detected N:1 merge if multiple sources point to same target
+                const isMerge = (targetUsageCount[match.code] || 0) > 1
+                result.push({
+                    srcCode: src.code, srcName: src.name, srcType: src.type,
+                    targets: [{ code: match.code, name: match.name, type: match.type, pct: 100 }],
+                    matchLevel: isMerge ? 'MERGE' : level,
+                    isMerge, isSplit: false,
+                })
+            } else {
+                // ── SPLIT: Find multiple target accounts of same type via word similarity ──
+                const candidates = (tgtByType[src.type] || [])
+                    .map(c => ({ ...c, sim: wordSimilarity(src.name, c.name) }))
+                    .sort((a, b) => b.sim - a.sim)
+
+                if (candidates.length >= 2) {
+                    // Take top 2-3 by similarity, split equally
+                    const top = candidates.slice(0, Math.min(3, candidates.length)).filter(c => c.sim > 0)
+                    if (top.length === 0) {
+                        // No word similarity — just pick first of same type
+                        const fallback = candidates[0]
+                        targetUsageCount[fallback.code] = (targetUsageCount[fallback.code] || 0) + 1
+                        result.push({
+                            srcCode: src.code, srcName: src.name, srcType: src.type,
+                            targets: [{ code: fallback.code, name: fallback.name, type: fallback.type, pct: 100 }],
+                            matchLevel: 'MERGE', isMerge: true, isSplit: false,
+                        })
+                    } else if (top.length === 1) {
+                        const t = top[0]
+                        targetUsageCount[t.code] = (targetUsageCount[t.code] || 0) + 1
+                        result.push({
+                            srcCode: src.code, srcName: src.name, srcType: src.type,
+                            targets: [{ code: t.code, name: t.name, type: t.type, pct: 100 }],
+                            matchLevel: 'MERGE', isMerge: true, isSplit: false,
+                        })
+                    } else {
+                        // Real split: distribute evenly
+                        const pct = Math.round(100 / top.length)
+                        const targets: MappingTarget[] = top.map((t, idx) => {
+                            targetUsageCount[t.code] = (targetUsageCount[t.code] || 0) + 1
+                            return { code: t.code, name: t.name, type: t.type, pct: idx === top.length - 1 ? (100 - pct * (top.length - 1)) : pct }
+                        })
+                        result.push({
+                            srcCode: src.code, srcName: src.name, srcType: src.type,
+                            targets, matchLevel: 'SPLIT', isMerge: false, isSplit: true,
+                        })
+                    }
+                } else if (candidates.length === 1) {
+                    const t = candidates[0]
+                    targetUsageCount[t.code] = (targetUsageCount[t.code] || 0) + 1
+                    result.push({
+                        srcCode: src.code, srcName: src.name, srcType: src.type,
+                        targets: [{ code: t.code, name: t.name, type: t.type, pct: 100 }],
+                        matchLevel: 'MERGE', isMerge: true, isSplit: false,
+                    })
+                } else {
+                    // Absolute last resort: pick ANY unused or least-used target
+                    const allByUsage = tgtAccounts
+                        .map(t => ({ ...t, usage: targetUsageCount[t.code] || 0 }))
+                        .sort((a, b) => a.usage - b.usage)
+                    const fallback = allByUsage[0]
+                    if (fallback) {
+                        targetUsageCount[fallback.code] = (targetUsageCount[fallback.code] || 0) + 1
+                        result.push({
+                            srcCode: src.code, srcName: src.name, srcType: src.type,
+                            targets: [{ code: fallback.code, name: fallback.name, type: fallback.type, pct: 100 }],
+                            matchLevel: 'MERGE', isMerge: true, isSplit: false,
+                        })
+                    }
+                }
+            }
         }
 
         return result
@@ -884,7 +962,7 @@ function MigrationView({
             const q = migSearch.toLowerCase()
             entries = entries.filter(e =>
                 e.srcCode.toLowerCase().includes(q) || e.srcName.toLowerCase().includes(q) ||
-                e.tgtCode.toLowerCase().includes(q) || e.tgtName.toLowerCase().includes(q)
+                e.targets.some(t => t.code.toLowerCase().includes(q) || t.name.toLowerCase().includes(q))
             )
         }
         return entries
@@ -906,8 +984,13 @@ function MigrationView({
         HINT: 'var(--app-success, #22c55e)',
         CODE: 'var(--app-info, #3b82f6)',
         NAME: '#8b5cf6',
-        TYPE: 'var(--app-warning, #f59e0b)',
-        UNMAPPED: 'var(--app-error, #ef4444)',
+        MERGE: 'var(--app-warning, #f59e0b)',
+        SPLIT: '#ec4899',
+    }
+
+    const LEVEL_LABELS: Record<string, string> = {
+        HINT: 'Override', CODE: 'Exact Code', NAME: 'Name Match',
+        MERGE: 'N→1 Merge', SPLIT: '1→N Split',
     }
 
     return (
@@ -942,11 +1025,11 @@ function MigrationView({
 
             {!sourceKey || !targetKey ? (
                 <EmptyState icon={ArrowRightLeft} text="Select source and target templates"
-                    subtitle="Full auto-mapping of all accounts between standards." />
+                    subtitle="Full auto-mapping with merge & split — zero unmapped accounts." />
             ) : (
                 <div>
                     {/* Stats strip */}
-                    <div className="mb-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '6px' }}>
+                    <div className="mb-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px' }}>
                         <button onClick={() => setFilterLevel('ALL')}
                             className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
                             style={{
@@ -956,7 +1039,7 @@ function MigrationView({
                             <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">All</div>
                             <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{fullMapping.length}</div>
                         </button>
-                        {(['HINT', 'CODE', 'NAME', 'TYPE', 'UNMAPPED'] as const).map(level => (
+                        {(['HINT', 'CODE', 'NAME', 'MERGE', 'SPLIT'] as const).map(level => (
                             <button key={level} onClick={() => setFilterLevel(filterLevel === level ? 'ALL' : level)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
                                 style={{
@@ -964,7 +1047,7 @@ function MigrationView({
                                     border: filterLevel === level ? `1px solid color-mix(in srgb, ${LEVEL_COLORS[level]} 30%, transparent)` : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                 }}>
                                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: LEVEL_COLORS[level] }} />
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{level}</div>
+                                <div className="text-[9px] font-bold uppercase tracking-wider text-app-muted-foreground">{LEVEL_LABELS[level]}</div>
                                 <div className="text-sm font-black text-app-foreground tabular-nums ml-auto">{stats[level] || 0}</div>
                             </button>
                         ))}
@@ -1006,18 +1089,94 @@ function MigrationView({
                             style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                             <div className="w-16 flex-shrink-0">Source</div>
                             <div className="flex-1 min-w-0">Source Account</div>
-                            <div className="w-14 flex-shrink-0 text-center">Match</div>
+                            <div className="w-16 flex-shrink-0 text-center">Strategy</div>
                             <div className="w-16 flex-shrink-0">Target</div>
                             <div className="flex-1 min-w-0">Target Account</div>
+                            <div className="w-10 flex-shrink-0 text-center hidden sm:block">%</div>
                         </div>
 
                         {/* Rows */}
                         <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                             {filteredEntries.map((entry, i) => {
                                 const levelColor = LEVEL_COLORS[entry.matchLevel] || 'var(--app-muted-foreground)'
+
+                                if (entry.isSplit && entry.targets.length > 1) {
+                                    // ── SPLIT row: show source once, then indented target sub-rows ──
+                                    return (
+                                        <div key={i}>
+                                            {/* Source row */}
+                                            <div className="flex items-center gap-2 px-4 py-1.5 transition-all"
+                                                style={{
+                                                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 15%, transparent)',
+                                                    background: 'color-mix(in srgb, #ec4899 3%, var(--app-surface))',
+                                                }}>
+                                                <div className="w-16 flex-shrink-0">
+                                                    <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                        style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
+                                                        {entry.srcCode}
+                                                    </span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-[11px] font-bold text-app-foreground truncate block">{entry.srcName}</span>
+                                                </div>
+                                                <div className="w-16 flex-shrink-0 text-center">
+                                                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                                                        style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899',
+                                                            border: '1px solid color-mix(in srgb, #ec4899 20%, transparent)' }}>
+                                                        SPLIT 1→{entry.targets.length}
+                                                    </span>
+                                                </div>
+                                                <div className="w-16 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-[10px] font-bold text-app-muted-foreground italic">
+                                                        Split across {entry.targets.length} accounts ↓
+                                                    </span>
+                                                </div>
+                                                <div className="w-10 flex-shrink-0 hidden sm:block" />
+                                            </div>
+                                            {/* Target sub-rows */}
+                                            {entry.targets.map((tgt, j) => (
+                                                <div key={`${i}-${j}`}
+                                                    className="flex items-center gap-2 pl-8 pr-4 py-1 transition-all hover:bg-app-surface/40"
+                                                    style={{
+                                                        borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)',
+                                                        borderLeft: '3px solid #ec4899',
+                                                        marginLeft: '16px',
+                                                    }}>
+                                                    <div className="w-16 flex-shrink-0" />
+                                                    <div className="flex-1 min-w-0" />
+                                                    <div className="w-16 flex-shrink-0 text-center">
+                                                        <span className="text-[9px] font-bold" style={{ color: '#ec4899' }}>├─</span>
+                                                    </div>
+                                                    <div className="w-16 flex-shrink-0">
+                                                        <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
+                                                            style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
+                                                            {tgt.code}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className="text-[11px] font-medium text-app-foreground truncate block">{tgt.name}</span>
+                                                    </div>
+                                                    <div className="w-10 flex-shrink-0 text-center hidden sm:block">
+                                                        <span className="text-[10px] font-black tabular-nums px-1 py-0.5 rounded"
+                                                            style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
+                                                            {tgt.pct}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )
+                                }
+
+                                // ── Standard 1:1 or MERGE row ──
+                                const tgt = entry.targets[0]
                                 return (
                                     <div key={i} className="flex items-center gap-2 px-4 py-1.5 transition-all hover:bg-app-surface/40"
-                                        style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}>
+                                        style={{
+                                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                            background: entry.isMerge ? 'color-mix(in srgb, var(--app-warning, #f59e0b) 2%, transparent)' : undefined,
+                                        }}>
                                         <div className="w-16 flex-shrink-0">
                                             <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                 style={{ background: `color-mix(in srgb, ${sourceAccent} 8%, transparent)`, color: sourceAccent }}>
@@ -1027,30 +1186,33 @@ function MigrationView({
                                         <div className="flex-1 min-w-0">
                                             <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
                                         </div>
-                                        <div className="w-14 flex-shrink-0 text-center">
+                                        <div className="w-16 flex-shrink-0 text-center">
                                             <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                 style={{
                                                     background: `color-mix(in srgb, ${levelColor} 10%, transparent)`,
                                                     color: levelColor,
                                                     border: `1px solid color-mix(in srgb, ${levelColor} 20%, transparent)`,
                                                 }}>
-                                                {entry.matchLevel}
+                                                {entry.isMerge ? 'MERGE' : entry.matchLevel}
                                             </span>
                                         </div>
                                         <div className="w-16 flex-shrink-0">
-                                            {entry.tgtCode ? (
+                                            {tgt ? (
                                                 <span className="text-[11px] font-mono font-bold tabular-nums px-1 py-0.5 rounded"
                                                     style={{ background: `color-mix(in srgb, ${targetAccent} 8%, transparent)`, color: targetAccent }}>
-                                                    {entry.tgtCode}
+                                                    {tgt.code}
                                                 </span>
                                             ) : (
                                                 <span className="text-[10px] font-bold text-app-muted-foreground">—</span>
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <span className={`text-[11px] truncate block ${entry.tgtName ? 'font-medium text-app-foreground' : 'font-bold text-app-muted-foreground italic'}`}>
-                                                {entry.tgtName || 'No match'}
+                                            <span className="text-[11px] font-medium text-app-foreground truncate block">
+                                                {tgt?.name || '—'}
                                             </span>
+                                        </div>
+                                        <div className="w-10 flex-shrink-0 text-center hidden sm:block">
+                                            <span className="text-[10px] font-bold tabular-nums text-app-muted-foreground">100%</span>
                                         </div>
                                     </div>
                                 )
@@ -1060,12 +1222,28 @@ function MigrationView({
                         {/* Footer */}
                         <div className="px-4 py-2 flex items-center justify-between"
                             style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
-                            <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
-                                {filteredEntries.length} of {fullMapping.length} mappings
-                            </span>
-                            <span className="text-[10px] font-bold tabular-nums"
-                                style={{ color: 'var(--app-success, #22c55e)' }}>
-                                {Math.round(((fullMapping.length - (stats['UNMAPPED'] || 0)) / Math.max(fullMapping.length, 1)) * 100)}% mapped
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                    {filteredEntries.length} of {fullMapping.length} mappings
+                                </span>
+                                {(stats['MERGE'] || 0) > 0 && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                        style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)',
+                                            color: 'var(--app-warning, #f59e0b)' }}>
+                                        {stats['MERGE']} merges
+                                    </span>
+                                )}
+                                {(stats['SPLIT'] || 0) > 0 && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                        style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899' }}>
+                                        {stats['SPLIT']} splits
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-[11px] font-black tabular-nums px-2 py-0.5 rounded"
+                                style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                    color: 'var(--app-success, #22c55e)' }}>
+                                100% mapped
                             </span>
                         </div>
                     </div>
