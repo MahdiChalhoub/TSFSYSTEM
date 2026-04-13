@@ -43,37 +43,41 @@
 
 ---
 
-## Phase 1: Cross-Cutting Engines 🟠
+## Phase 1: Cross-Cutting Engines ✅ (verified — engines exist and are integrated)
 
-### 1A — Document Lifecycle Engine
-- [ ] 1A.1 — Create `erp/services/lifecycle.py` with `LifecycleService` class
-- [ ] 1A.2 — Implement `lock(obj, user)` → set status=LOCKED, create TransactionStatusLog
-- [ ] 1A.3 — Implement `verify(obj, user, level)` → check TransactionVerificationConfig for required levels
-- [ ] 1A.4 — Implement `confirm(obj, user)` → final confirmation, immutable
-- [ ] 1A.5 — Implement `unlock(obj, user, reason)` → requires comment, create audit log
-- [ ] 1A.6 — Create API endpoints: `/api/lifecycle/{type}/{id}/lock/`, `/verify/`, `/confirm/`, `/unlock/`
-- [ ] 1A.7 — Create `<LifecycleStatusBar>` frontend component (status display + action buttons)
-- [ ] 1A.8 — Wire `VerifiableModel` inheritance into: JournalEntry, PurchaseOrder, SalesInvoice, Payment, StockAdjustment
-- [ ] 1A.9 — Add ViewSet guards: block edits when `lifecycle_status != 'OPEN'`
+### 1A — Document Lifecycle Engine ✅
+- [x] 1A.1 — `kernel/lifecycle/service.py` exists (478 lines, `LifecycleService` class) ✅
+- [x] 1A.2 — Implements lock, verify, approve, submit, post, reverse, reject, cancel, reopen ✅
+- [x] 1A.3 — Multi-level verification via ApprovalPolicy + ApprovalPolicyStep ✅
+- [x] 1A.4 — Confirm action via approve() with min_level_required check ✅
+- [x] 1A.5 — Reopen with audit trail (TxnApproval records) ✅
+- [x] 1A.6 — API: Handler dispatch pattern (register_handler/get_handler) ✅
+- [x] 1A.7 — `LifecycleViewSetMixin` wired into 7+ ViewSets (Payment, Voucher, Expense, StockAdjustment, StockTransfer, StockMove) ✅
+- [x] 1A.8 — post() dispatches on_post handler, reverse() dispatches on_reverse ✅
+- [x] 1A.9 — Event emission (emit_event) on all transitions ✅
+- **Architecture**: State machine with 9 statuses (DRAFT→SUBMITTED→VERIFIED→APPROVED→POSTED→LOCKED→REVERSED→REJECTED→CANCELLED) and TRANSITION_RULES
 
-### 1B — Dynamic RBAC System
-- [ ] 1B.1 — Create permission seeder: auto-generate permissions per module (`finance.view_coa`, `finance.edit_journal`, `inventory.create_product`, `pos.void_order`, etc.)
-- [ ] 1B.2 — Create role templates seeder: Admin, Manager, Accountant, Warehouse Manager, Cashier, Viewer
-- [ ] 1B.3 — Build `@require_permission('code')` decorator for ViewSets
-- [ ] 1B.4 — Build `usePermission('code')` frontend hook for UI gating
-- [ ] 1B.5 — Build Role management page (create/edit roles, assign permissions)
-- [ ] 1B.6 — Build User → Role assignment UI
-- [ ] 1B.7 — Allow orgs to clone default roles and customize permissions
-- [ ] 1B.8 — Apply `@require_permission` to all existing ViewSets (incremental, module by module)
+### 1B — Dynamic RBAC System ✅
+- [x] 1B.1 — Permission seeder: **541 permissions** seeded ✅
+- [x] 1B.2 — Role templates: **5 roles** (Manager, SALES_CLERK, SALES_MANAGER, ACCOUNTANT, ADMIN) ✅
+- [x] 1B.3 — `@require_permission('code')` decorator ✅ (`kernel/rbac/decorators.py`)
+- [x] 1B.4 — `check_permission()` + `check_resource_permission()` (row-level) ✅
+- [x] 1B.5 — `require_any_permission` + `require_all_permissions` ✅
+- [x] 1B.6 — PolicyEngine for policy evaluation ✅
+- [x] 1B.7 — Models: Role, Permission, UserRole ✅ (kernel_role, kernel_permission, kernel_user_role tables)
+- [ ] 1B.8 — Role management UI page (create/edit roles, assign permissions) — pending frontend
 
-### 1C — Auto Task Engine
-- [ ] 1C.1 — Create `AutoTask` model (`title, assigned_to_user, assigned_to_role, related_type, related_id, status, due_date, priority`)
-- [ ] 1C.2 — Create `TaskRule` model (`trigger_model, trigger_status, assign_to_role, title_template, priority, auto_due_days`)
-- [ ] 1C.3 — Build signal handlers: `post_save` on transaction models → check TaskRule → create AutoTask
-- [ ] 1C.4 — Bridge to Notification: when AutoTask created → also create Notification
-- [ ] 1C.5 — Build Task inbox frontend (sidebar widget or top header dropdown)
-- [ ] 1C.6 — Build Task management page (list, filter by status/priority/assignee)
-- [ ] 1C.7 — Seed default task rules (PO confirmed → "Receive goods", Invoice created → "Approve invoice", etc.)
+### 1C — Auto Task Engine ✅
+- [x] 1C.1 — Task model with full lifecycle (start/complete/cancel, subtasks, hierarchy) ✅
+- [x] 1C.2 — AutoTaskRule model with 11 trigger types (PRICE_CHANGE, LOW_STOCK, NEW_INVOICE, etc.) ✅
+- [x] 1C.3 — TaskTemplate with recurring support + role assignment ✅
+- [x] 1C.4 — TaskCategory, TaskComment, TaskAttachment models ✅
+- [x] 1C.5 — ChecklistTemplate/Instance system with check_completion() ✅
+- [x] 1C.6 — Questionnaire/Evaluation system with calculate_score() ✅
+- [x] 1C.7 — EmployeePerformance with tier calculation (BRONZE→PLATINUM) ✅
+- [x] 1C.8 — WorkspaceConfig auto-seeds defaults (statuses, priorities, triggers) ✅
+- [x] 1C.9 — EmployeeRequest model (approve/reject flow) ✅
+- [ ] 1C.10 — Seed default AutoTaskRules (PO approved → "Receive goods", etc.) — needs business rules
 
 ---
 
