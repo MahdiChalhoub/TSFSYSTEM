@@ -188,13 +188,21 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             const errorText = await response.text().catch(() => "Unknown Error")
 
             // Only log errors for non-auth issues to prevent noise during redirects
-            // [SAAS RESILIENCE] Suppress "No organization context" errors in the logs if we are at SaaS root
-            const isContextError = errorText.includes("No organization context");
+            // [SAAS RESILIENCE] Suppress expected errors on SaaS root domain:
+            // - "No organization context" / "No tenant context" errors
+            // - 404s on tenant-scoped endpoints (organizations/me, inventory/warehouses, modules, etc.)
+            const isContextError = errorText.includes("No organization context") || errorText.includes("No tenant context");
             const isSaaS = !context;
+            const isExpectedSaaS404 = isSaaS && response.status === 404 && (
+                path.includes('organizations/me') ||
+                path.includes('inventory/warehouses') ||
+                path.includes('business-types') ||
+                path.includes('modules/')
+            );
 
             if (response.status !== 401 && response.status !== 403) {
-                if (isContextError && isSaaS) {
-                    debug(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
+                if ((isContextError && isSaaS) || isExpectedSaaS404) {
+                    debug(`[ERP_API] Root/SaaS context - Returning null for ${path} (no tenant)`);
                 } else {
                     console.error(`[ERP_API] Error response from ${path}:`, errorText.substring(0, 500));
                 }
@@ -204,7 +212,9 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             // Detect HTML responses early and throw a clean, JSON-parseable error instead of crashing on JSON.parse().
             const trimmed = errorText.trimStart();
             if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
-                console.error(`[ERP_API] HTML error page received from ${path} (HTTP ${response.status})`);
+                if (!isExpectedSaaS404) {
+                    console.error(`[ERP_API] HTML error page received from ${path} (HTTP ${response.status})`);
+                }
                 throw new Error(JSON.stringify({
                     error: `Server error (${response.status}). Please try again later.`
                 }));
@@ -258,11 +268,14 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             msg.includes('401') ||
             msg.includes('403');
 
-        // On SaaS root (no tenant context), "No organization context" is expected for
-        // tenant-scoped endpoints — don't spam the log for these.
-        const isExpectedContextError = !context && msg.includes('No organization context');
+        // On SaaS root (no tenant context), many tenant-scoped endpoints are expected to fail.
+        const isExpectedSaaSError = !context && (
+            msg.includes('No organization context') ||
+            msg.includes('No tenant context') ||
+            msg.includes('Not found')
+        );
 
-        if (!isAuthError && !isExpectedContextError) {
+        if (!isAuthError && !isExpectedSaaSError) {
             console.error(`[ERP_API] Request to ${path} failed:`, error);
         }
         throw error;

@@ -231,3 +231,13 @@ export async function toggleOrgEncryption(orgId: string, action: 'activate' | 'd
         headers: { 'Content-Type': 'application/json', 'X-Org-Id': orgId },
     })
 }
+
+// ─── Branding / Settings ────────────────────────────────────────
+
+export async function updateOrgSettings(orgId: string, settings: Record<string, any>) {
+    return await erpFetch(`organizations/${orgId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
+    })
+}

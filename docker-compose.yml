@@ -97,6 +97,11 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: tsf_frontend
     restart: unless-stopped
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./next.config.ts:/app/next.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
     ports:
       - "3000:3000"
     extra_hosts:

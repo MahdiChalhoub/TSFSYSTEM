@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption, updateOrgSettings } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,10 +14,11 @@ import { toast } from "sonner"
 import {
     ArrowLeft, Users, MapPin, FileText, HardDrive, Package, Settings, Shield,
     AlertTriangle, Loader2, ToggleLeft, ToggleRight, Crown, Layers, Activity,
-    CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
+    CreditCard, TrendingUp, ChevronRight, Plus, KeyRound, Paintbrush,
     UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail,
     Puzzle, ShoppingCart, XCircle, ShieldCheck, ShieldOff
 } from "lucide-react"
+import { BrandingTab } from "./_components/BrandingTab"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
@@ -150,7 +151,7 @@ export default function OrganizationDetailPage() {
     const [users, setUsers] = useState<SaasUser[]>([])
     const [sites, setSites] = useState<SaasSite[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites' | 'addons'>('overview')
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites' | 'addons' | 'branding'>('overview')
     const [addons, setAddons] = useState<SaasAddonData>({ purchased: [], available: [] })
     const [purchasingAddon, setPurchasingAddon] = useState<string | null>(null)
     const [cancellingAddon, setCancellingAddon] = useState<string | null>(null)
@@ -322,6 +323,7 @@ export default function OrganizationDetailPage() {
         { key: 'sites', label: `Sites (${sites.length})`, icon: Building2 },
         { key: 'usage', label: 'Usage', icon: TrendingUp },
         { key: 'billing', label: 'Billing', icon: CreditCard },
+        { key: 'branding', label: 'Branding', icon: Paintbrush },
     ]
 
     const coreModules = modules.filter(m => m.is_core)
@@ -1123,6 +1125,25 @@ export default function OrganizationDetailPage() {
                             )}
                         </CardContent>
                     </Card>
+                </div>
+            )}
+
+            {/* ─── Branding Tab ──────────────────────────────────────────── */}
+            {activeTab === 'branding' && (
+                <div className="space-y-6">
+                    <div>
+                        <h3 className="text-lg font-bold text-app-foreground">Login Page Branding</h3>
+                        <p className="text-sm text-app-muted-foreground">Customize how {org.name}'s login page appears to users.</p>
+                    </div>
+                    <BrandingTab
+                        orgId={orgId}
+                        orgSettings={org.settings || {}}
+                        onSave={async (updatedSettings) => {
+                            await updateOrgSettings(orgId, updatedSettings);
+                            const refreshed = await getOrganization(orgId);
+                            setOrg(refreshed);
+                        }}
+                    />
                 </div>
             )}
 
