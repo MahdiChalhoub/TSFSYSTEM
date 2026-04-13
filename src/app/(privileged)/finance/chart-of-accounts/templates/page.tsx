@@ -3,8 +3,7 @@ import {
     getTemplateKeys,
     getFullTemplate,
     getAllTemplateMetadata,
-    type COATemplateData,
-    type TemplateMetadata,
+    getMigrationHints,
 } from '@/data/coa-templates'
 
 // Count all accounts recursively
@@ -51,9 +50,29 @@ export default async function TemplatesLibraryPage() {
                 name: full.metadata.name,
                 accounts: full.accounts,
                 account_count: countAccounts(full.accounts),
+                posting_rules: full.posting_rules || [],
+                migration_hints: full.migration_hints || {},
             }
         }
     }
 
-    return <TemplatesPageClient templates={templates} templatesMap={templatesMap} />
+    // Pre-compute all migration maps between templates
+    const migrationMaps: Record<string, Record<string, string>> = {}
+    for (const sourceKey of keys) {
+        for (const targetKey of keys) {
+            if (sourceKey === targetKey) continue
+            const hints = getMigrationHints(sourceKey, targetKey)
+            if (Object.keys(hints).length > 0) {
+                migrationMaps[`${sourceKey}→${targetKey}`] = hints
+            }
+        }
+    }
+
+    return (
+        <TemplatesPageClient
+            templates={templates}
+            templatesMap={templatesMap}
+            migrationMaps={migrationMaps}
+        />
+    )
 }

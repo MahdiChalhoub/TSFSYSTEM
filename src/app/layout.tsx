@@ -72,14 +72,22 @@ export default async function RootLayout({
         if (themesData) {
             const cookieStore = await cookies();
             const colorMode = (cookieStore.get('tsf_color_mode')?.value === 'light') ? 'light' : 'dark';
-            const slug = themesData.current?.theme_slug || 'ant-design';
+
+            // Priority: user's persisted cookie slug > backend current > fallback
+            // The tsfsystem-app-theme cookie is set by setOrgTheme() on every theme activation.
+            // It's domain-wide, so it's available even on unauthenticated pages (login).
+            const persistedSlug = cookieStore.get('tsfsystem-app-theme')?.value;
+            const slug = persistedSlug || themesData.current?.theme_slug || 'ant-design';
+
             const all = [...(themesData.system || []), ...(themesData.custom || [])];
-            const theme = all.find((t: any) => t.slug === slug) || all[0];
+            const theme = all.find((t: any) => t.slug === slug)
+                || all.find((t: any) => t.slug === themesData.current?.theme_slug)
+                || all[0];
             if (theme?.presetData?.colors) {
                 const colors = theme.presetData.colors[colorMode] || theme.presetData.colors.dark || {};
                 ssrThemeCSS = buildRootThemeCSS(colors, theme.presetData.layout, theme.presetData.components);
-                // Compact JSON for ThemeScript to read on first paint when localStorage is empty
-                // Replace </script> to prevent tag injection when embedded in <script> tag
+                // Compact JSON for ThemeScript to read on first paint when localStorage is empty.
+                // Replace </script> to prevent tag injection when embedded in <script> tag.
                 ssrThemeJSON = JSON.stringify({
                     slug: theme.slug,
                     colorMode,
