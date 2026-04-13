@@ -197,38 +197,33 @@ export default function WarehouseModal({
                 </div>
 
                 {/* ── Body ─────────────────────────────────────────────── */}
-                <form onSubmit={handleSubmit} className="flex">
-                    {/* Left: Type Selector */}
-                    <div className="w-[260px] shrink-0 border-r border-app-border p-5 space-y-2.5 bg-app-surface-2/30">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-4 px-1">
+                <form onSubmit={handleSubmit}>
+                    {/* Type Selector — Horizontal Row */}
+                    <div className="px-6 py-4 border-b border-app-border bg-app-surface-2/20">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-3">
                             Location Type
                         </p>
-                        {LOCATION_TYPES.map(lt => {
-                            const Icon = lt.icon
-                            const selected = locationType === lt.value
-                            return (
-                                <button
-                                    key={lt.value}
-                                    type="button"
-                                    onClick={() => setLocationType(lt.value)}
-                                    className={`w-full text-left px-4 py-4 rounded-2xl border-2 transition-all duration-200 relative ${
-                                        selected
-                                            ? 'shadow-lg scale-[1.02]'
-                                            : 'border-transparent hover:border-app-border/50 hover:bg-app-surface'
-                                    }`}
-                                    style={selected ? {
-                                        borderColor: `color-mix(in srgb, ${lt.color} 50%, transparent)`,
-                                        background: `color-mix(in srgb, ${lt.color} 8%, var(--app-surface))`,
-                                    } : {}}
-                                >
-                                    {selected && (
-                                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: lt.color }}>
-                                            <Check size={12} className="text-white" />
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-3 mb-2">
+                        <div className="grid grid-cols-4 gap-2">
+                            {LOCATION_TYPES.map(lt => {
+                                const Icon = lt.icon
+                                const selected = locationType === lt.value
+                                return (
+                                    <button
+                                        key={lt.value}
+                                        type="button"
+                                        onClick={() => setLocationType(lt.value)}
+                                        className={`relative flex items-center gap-2.5 px-3.5 py-3 rounded-xl border-2 transition-all duration-200 ${
+                                            selected
+                                                ? 'shadow-md'
+                                                : 'border-transparent hover:bg-app-surface'
+                                        }`}
+                                        style={selected ? {
+                                            borderColor: `color-mix(in srgb, ${lt.color} 50%, transparent)`,
+                                            background: `color-mix(in srgb, ${lt.color} 8%, var(--app-surface))`,
+                                        } : {}}
+                                    >
                                         <div
-                                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                                            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
                                             style={{
                                                 background: selected
                                                     ? `linear-gradient(135deg, ${lt.color}, color-mix(in srgb, ${lt.color} 70%, transparent))`
@@ -236,24 +231,25 @@ export default function WarehouseModal({
                                                 color: selected ? 'white' : lt.color,
                                             }}
                                         >
-                                            <Icon size={20} />
+                                            <Icon size={18} />
                                         </div>
-                                        <span className={`text-[14px] font-black ${selected ? 'text-app-foreground' : 'text-app-foreground/70'}`}>{lt.label}</span>
-                                    </div>
-                                    <div className="pl-[52px] space-y-0.5">
-                                        {lt.bullets.map((b, i) => (
-                                            <p key={i} className="text-[10px] text-app-muted-foreground flex items-start gap-1.5">
-                                                <span className="mt-[3px] w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: lt.color }} /> {b}
-                                            </p>
-                                        ))}
-                                    </div>
-                                </button>
-                            )
-                        })}
+                                        <div className="min-w-0">
+                                            <p className={`text-[12px] font-black truncate ${selected ? 'text-app-foreground' : 'text-app-foreground/60'}`}>{lt.label}</p>
+                                            <p className="text-[9px] text-app-muted-foreground truncate">{lt.bullets[0]}</p>
+                                        </div>
+                                        {selected && (
+                                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: lt.color }}>
+                                                <Check size={10} className="text-white" />
+                                            </div>
+                                        )}
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
 
-                    {/* Right: Form Fields */}
-                    <div className="flex-1 p-5 space-y-4 overflow-y-auto max-h-[65vh]">
+                    {/* Form Fields */}
+                    <div className="p-6 space-y-4 overflow-y-auto max-h-[55vh]">
                         {/* Name + Code */}
                         <div className="grid grid-cols-[1fr_180px] gap-3">
                             <div>

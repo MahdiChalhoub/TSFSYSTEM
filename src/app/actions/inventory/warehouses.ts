@@ -7,6 +7,13 @@ export async function getWarehouses() {
     return await erpFetch('warehouses/')
 }
 
+export async function getAllWarehouseContextItems(): Promise<Record<string, any>[]> {
+    try {
+        const data = await erpFetch('warehouses/')
+        return Array.isArray(data) ? data : (data?.results ?? [])
+    } catch { return [] }
+}
+
 export type WarehouseState = {
     message?: string;
     errors?: Record<string, string[]>;

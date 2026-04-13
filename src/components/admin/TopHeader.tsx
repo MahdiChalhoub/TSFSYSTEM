@@ -6,10 +6,11 @@ import { useState, useEffect, useRef, memo } from 'react';
 import {
     Search, Menu, Settings, LogOut, HelpCircle,
     Palette, Sun, Moon, ChevronDown,
-    Globe, X, ChevronRight, Eye, EyeOff, Zap,
+    Globe, ChevronRight, Eye, EyeOff, Zap,
 } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
+import { BranchLocationSwitcher } from './BranchSwitcher';
 import { NotificationBell } from './NotificationBell';
 import { useAppTheme } from '@/components/app/AppThemeProvider';
 
@@ -317,7 +318,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
             ════════════════════════════════════════════════════════ */}
             <div className="flex items-center h-[52px] px-4 gap-3">
 
-                {/* ── BRAND + SIDEBAR TOGGLE ───────────────────────── */}
+                {/* ── SIDEBAR TOGGLE + LOGO (logo only when sidebar is hidden) ─── */}
                 <div className="flex items-center gap-2 flex-shrink-0">
 
                     {/* Sidebar show/hide — always visible */}
@@ -332,16 +333,18 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         <Menu size={16} />
                     </button>
 
-                    {/* Logo mark */}
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
-                            style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
-                            T
+                    {/* Logo — only shown when sidebar is collapsed (avoids duplication) */}
+                    {!sidebarOpen && (
+                        <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
+                                style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
+                                T
+                            </div>
+                            <span className="hidden md:block text-sm font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
+                                TSF
+                            </span>
                         </div>
-                        <span className="hidden md:block text-sm font-black tracking-tight" style={{ color: 'var(--app-text)' }}>
-                            TSF
-                        </span>
-                    </div>
+                    )}
 
                     <div className="h-5 w-px" style={{ background: 'var(--app-border)' }} />
                 </div>
@@ -355,11 +358,12 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     </nav>
                 )}
 
-                {/* ── CONTEXT  (sidebar mode: org / site / currency) ── */}
+                {/* ── CONTEXT  (sidebar mode: org / site / branch / location) ── */}
                 {!isTopnav && (
                     <div className="hidden md:flex items-center gap-1.5 flex-shrink-0">
                         <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
                         <SiteSwitcher sites={sites} />
+                        <BranchLocationSwitcher />
                         {currentSlug !== 'saas' && activeOrg?.currency_code && (
                             <div className="hidden xl:flex items-center gap-1 px-2.5 h-7 rounded-lg text-[10px] font-bold flex-shrink-0"
                                 style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', color: 'var(--app-text-muted)' }}>
@@ -489,6 +493,8 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                 <div className="flex items-center gap-2 h-9 px-4 overflow-x-auto"
                     style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                     <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
+                    <SiteSwitcher sites={sites} />
+                    <BranchLocationSwitcher />
                     {currentSlug !== 'saas' && activeOrg?.currency_code && (
                         <div className="flex items-center gap-1.5 px-2 h-6 rounded-lg flex-shrink-0 text-[10px] font-bold"
                             style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}>
@@ -498,7 +504,6 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     {currentSlug !== 'saas' && activeOrg?.business_type_name && (
                         <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>{activeOrg.business_type_name}</span>
                     )}
-                    <div className="flex-shrink-0"><SiteSwitcher sites={sites} /></div>
                 </div>
             )}
         </header>
