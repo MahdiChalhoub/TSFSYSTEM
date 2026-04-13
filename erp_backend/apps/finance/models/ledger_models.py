@@ -124,7 +124,7 @@ class JournalEntry(VerifiableModel):
             
             # ── Enterprise Finance Lock Trigger ──
             if original.status == 'DRAFT' and self.status == 'POSTED':
-                if not self.organization.finance_hard_locked_at:
+                if hasattr(self.organization, 'finance_hard_locked_at') and not self.organization.finance_hard_locked_at:
                     self.organization.finance_hard_locked_at = timezone.now()
                     self.organization.finance_hard_locked_by = self.posted_by
                     self.organization.save(update_fields=['finance_hard_locked_at', 'finance_hard_locked_by'])
