@@ -7,50 +7,102 @@
 #   docker compose -f docker-compose.dev.yml restart frontend # restart one
 #   docker compose -f docker-compose.dev.yml logs -f frontend # follow logs
 #   docker compose -f docker-compose.dev.yml down             # stop all
+#   docker compose -f docker-compose.dev.yml down -v          # stop + wipe volumes
 #
 # Hot Reload:
 #   Source code is volume-mounted. Save a file → auto-recompile.
 #   Next.js Turbopack + Django runserver both watch for changes.
 #
-# Crash Isolation:
-#   Each service has memory limits and auto-restart.
-#   If frontend OOMs → only frontend restarts. Backend stays alive.
-#
 # Database:
-#   Uses host PostgreSQL (your existing tsfdb with all data).
-#   No new DB container — no data migration needed.
+#   PostgreSQL runs in a container with a named volume (dev_pgdata).
+#   Data persists across restarts. To reset: down -v then up --build.
+#
+# First-time setup:
+#   docker compose -f docker-compose.dev.yml up -d --build
+#   docker compose -f docker-compose.dev.yml exec backend python manage.py migrate
+#
+# Migrate your existing data into the dev container (one-time):
+#   pg_dump -U postgres tsfdb | \
+#     docker compose -f docker-compose.dev.yml exec -T postgres psql -U postgres tsfdb
 #
 # ═══════════════════════════════════════════════════════════════════════════════
 
 services:
 
-  # ─── Django Backend ───────────────────────────────────────────────────────
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tsfdb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - dev_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # 5433 on host avoids conflict with any local Postgres
+    networks:
+      - tsf-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-tsfdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 256m
+
+  # ─── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - dev_redisdata:/data
+    ports:
+      - "6380:6379"   # 6380 on host avoids conflict with any local Redis
+    networks:
+      - tsf-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    mem_limit: 128m
+
+  # ─── Django Backend ───────────────────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend.dev
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./erp_backend:/app/erp_backend
       - ./.env:/app/.env:ro
     ports:
       - "8000:8000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
-      - DB_HOST=host.docker.internal
+      - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=tsfdb
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
+      - DB_NAME=${DB_NAME:-tsfdb}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-tsfdb}
       - DJANGO_DEBUG=True
       - DJANGO_ALLOWED_HOSTS=*
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     mem_limit: 1g
     memswap_limit: 1g
     networks:
       - tsf-dev
 
-  # ─── Next.js Frontend ────────────────────────────────────────────────────
+  # ─── Next.js Frontend ────────────────────────────────────────────────────────
   frontend:
     build:
       context: .
@@ -59,7 +111,6 @@ services:
     depends_on:
       - backend
     volumes:
-      # Mount source code for hot reload
       - ./src:/app/src
       - ./public:/app/public
       - ./.env:/app/.env:ro
@@ -69,29 +120,22 @@ services:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
       - DJANGO_URL=http://backend:8000
-      - NEXT_PUBLIC_ROOT_DOMAIN=developos.shop
+      - NEXT_PUBLIC_ROOT_DOMAIN=${NEXT_PUBLIC_ROOT_DOMAIN:-developos.shop}
       - NEXT_PUBLIC_API_URL=/api
-      - ROOT_DOMAIN=developos.shop
+      - ROOT_DOMAIN=${ROOT_DOMAIN:-developos.shop}
     mem_limit: 3g
     memswap_limit: 3g
     networks:
       - tsf-dev
 
-  # ─── Redis (for Celery, optional) ────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    ports:
-      - "6380:6379"
-    mem_limit: 256m
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - tsf-dev
+# ─── Named Volumes ────────────────────────────────────────────────────────────
+volumes:
+  dev_pgdata:
+    driver: local
+  dev_redisdata:
+    driver: local
 
+# ─── Network ──────────────────────────────────────────────────────────────────
 networks:
   tsf-dev:
     driver: bridge
