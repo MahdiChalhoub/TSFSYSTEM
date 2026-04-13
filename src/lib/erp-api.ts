@@ -117,6 +117,20 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
+    // [SCOPE HEADER]
+    // Forward X-Scope so Django filters data by Official/Internal view.
+    // Server-side: read from cookie. Client-side: proxy already handles this.
+    if (!isClient && !headersRaw.has('X-Scope')) {
+        try {
+            const { cookies } = await import('next/headers');
+            const cookieStore = await cookies();
+            const scope = cookieStore.get('tsf_view_scope')?.value;
+            if (scope) headersRaw.set('X-Scope', scope.toUpperCase());
+        } catch (e) {
+            // Not available in static context
+        }
+    }
+
     // Client: proxy route handles auth injection (reads httpOnly cookie server-side)
     // Server: call Django directly with token already injected above
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;

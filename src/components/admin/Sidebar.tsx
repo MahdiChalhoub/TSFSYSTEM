@@ -821,6 +821,7 @@ export function Sidebar({
     // null = not yet fetched (show all); Set = fetched (filter by installed)
     const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
+    const [devSectionOpen, setDevSectionOpen] = useState(true);
 
     useEffect(() => {
         async function fetchData() {
@@ -882,6 +883,11 @@ export function Sidebar({
             ...processedItems.filter(i => i.title !== 'SaaS Control')
         ]
         : processedItems;
+
+    // ── Split items by stage: production (finished) vs development (in progress) ──
+    // To promote an item to production, add  stage: 'production'  to it in MENU_ITEMS
+    const productionItems = filteredItems.filter((i: any) => i.stage === 'production');
+    const developmentItems = filteredItems.filter((i: any) => i.stage !== 'production');
 
     return (
         <React.Fragment>
@@ -981,19 +987,66 @@ export function Sidebar({
 
                 {/* ── Menu ── */}
                 <div className="overflow-y-auto custom-scrollbar px-3 py-3 space-y-0.5" style={{ flex: '1 1 0', minHeight: 0 }}>
-                    {filteredItems.map((item, idx) => (
-                        <React.Fragment key={idx}>
-                            {/* Section separator for major module boundaries */}
-                            {idx > 0 && item.visibility === 'saas' && (
-                                <div className="my-2 mx-2 flex items-center gap-2">
-                                    <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
-                                    <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
-                                    <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
-                                </div>
-                            )}
-                            <MenuItem item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
-                        </React.Fragment>
-                    ))}
+                    {/* ═══════════════════════════════════════════════════════ */}
+                    {/* ── PRODUCTION SECTION ── Finished, polished pages    */}
+                    {/* ═══════════════════════════════════════════════════════ */}
+                    {productionItems.length > 0 && (
+                        <>
+                            <div className="mb-2 mx-2 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--app-success, #22c55e)' }} />
+                                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.85 }}>Production</span>
+                                <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)' }} />
+                                <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--app-success, #22c55e)', opacity: 0.6 }}>{productionItems.length}</span>
+                            </div>
+                            {productionItems.map((item, idx) => (
+                                <React.Fragment key={`prod-${idx}`}>
+                                    {idx > 0 && item.visibility === 'saas' && (
+                                        <div className="my-2 mx-2 flex items-center gap-2">
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                        </div>
+                                    )}
+                                    <MenuItem item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                                </React.Fragment>
+                            ))}
+                        </>
+                    )}
+
+                    {/* ═══════════════════════════════════════════════════════ */}
+                    {/* ── DEVELOPMENT SECTION ── Work in progress pages     */}
+                    {/* ═══════════════════════════════════════════════════════ */}
+                    {developmentItems.length > 0 && (
+                        <>
+                            <div
+                                className="my-3 mx-2 flex items-center gap-2 cursor-pointer select-none group"
+                                onClick={() => setDevSectionOpen(!devSectionOpen)}
+                            >
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-warning, #f59e0b)' }} />
+                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors" style={{ color: 'var(--app-warning, #f59e0b)', opacity: 0.85 }}>
+                                    Development ({developmentItems.length})
+                                </span>
+                                <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }} />
+                                <ChevronRight
+                                    size={12}
+                                    className={clsx("transition-transform duration-200", devSectionOpen ? "rotate-90" : "")}
+                                    style={{ color: 'var(--app-warning, #f59e0b)', opacity: 0.6 }}
+                                />
+                            </div>
+                            {devSectionOpen && developmentItems.map((item, idx) => (
+                                <React.Fragment key={`dev-${idx}`}>
+                                    {idx > 0 && item.visibility === 'saas' && (
+                                        <div className="my-2 mx-2 flex items-center gap-2">
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'var(--app-primary)', opacity: 0.6 }}>Platform</span>
+                                            <div className="flex-1 h-px" style={{ background: 'var(--app-sidebar-border)' }} />
+                                        </div>
+                                    )}
+                                    <MenuItem item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                                </React.Fragment>
+                            ))}
+                        </>
+                    )}
                 </div>
 
                 {/* ── Footer ── */}
