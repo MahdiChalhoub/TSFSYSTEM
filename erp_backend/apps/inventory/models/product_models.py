@@ -570,6 +570,25 @@ class Product(AuditLogMixin, TenantOwnedModel):
         help_text='Last time compliance was checked for this product'
     )
 
+    # ── GL Account Links (for Auto-Posting) ────────────────────────
+    # Optional per-product COA overrides. When set, PostingResolver uses
+    # these instead of generic posting rules for this specific product.
+    revenue_account = models.ForeignKey(
+        'finance.ChartOfAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='products_revenue',
+        help_text='Revenue GL account override for this product (Sales postings)'
+    )
+    cogs_account = models.ForeignKey(
+        'finance.ChartOfAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='products_cogs',
+        help_text='Cost of Goods Sold GL account override (COGS postings)'
+    )
+    inventory_account = models.ForeignKey(
+        'finance.ChartOfAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='products_inventory',
+        help_text='Inventory GL account override (stock valuation)'
+    )
+
     # ── Computed Properties (not stored in DB) ───────────────────────
     @property
     def completeness_label(self):
