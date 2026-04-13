@@ -17,6 +17,7 @@ import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions';
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
+import { getSaaSModules, getDynamicSidebar } from '@/app/actions/saas/modules';
 
 import { headers, cookies } from 'next/headers';
 
@@ -92,12 +93,23 @@ export default async function AdminLayout({
     let sites: any[] = [];
     let organizations: any[] = [];
     let financialSettings: any = null;
+    let installedModuleCodes: string[] = [];
+    let dynamicSidebarItems: any[] = [];
     try {
-        [sites, organizations, financialSettings] = await Promise.all([
+        const [sitesRes, orgsRes, finRes, modulesRes, dynamicRes] = await Promise.all([
             getSites().catch(() => []),
             getOrganizations().catch(() => []),
-            getGlobalFinancialSettings().catch(() => null)
+            getGlobalFinancialSettings().catch(() => null),
+            getSaaSModules().catch(() => []),
+            getDynamicSidebar().catch(() => []),
         ]);
+        sites = sitesRes;
+        organizations = orgsRes;
+        financialSettings = finRes;
+        installedModuleCodes = Array.isArray(modulesRes)
+            ? modulesRes.map((m: Record<string, any>) => m.code as string)
+            : [];
+        dynamicSidebarItems = Array.isArray(dynamicRes) ? dynamicRes : [];
     } catch {
         // Graceful degradation — layout renders with empty data
         console.error('[Layout] Failed to fetch layout data, rendering with defaults');
@@ -126,6 +138,8 @@ export default async function AdminLayout({
                         isSaas={isSaas}
                         isSuperuser={user?.is_superuser || false}
                         dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
+                        initialModuleCodes={installedModuleCodes}
+                        initialDynamicItems={dynamicSidebarItems}
                     />
 
                     {/* Right Panel: Content */}

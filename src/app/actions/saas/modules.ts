@@ -5,8 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function getSaaSModules() {
     try {
-        // Force bypass any caching
-        return await erpFetch(`saas/modules/?_t=${Date.now()}`)
+        return await erpFetch('saas/modules/')
     } catch (e) {
         console.error("Failed to fetch SaaS modules:", e)
         return []

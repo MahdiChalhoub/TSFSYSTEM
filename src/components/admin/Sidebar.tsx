@@ -807,61 +807,77 @@ export const MENU_ITEMS = [
     { title: 'Setup Wizard', icon: Wrench, path: '/setup-wizard', module: 'core' },
 ];
 
+// Converts raw dynamic sidebar items from server into renderable format
+function parseDynamicItems(raw: SidebarDynamicItem[]): SidebarDynamicItem[] {
+    return raw.map(item => {
+        const moduleCode = item.module || 'core';
+        const prefix = moduleCode !== 'core' ? `/m/${moduleCode}` : '';
+        return {
+            ...item,
+            icon: getIcon(item.icon as string),
+            path: item.path && !item.path.startsWith('/saas') ? `/saas${prefix}${item.path}` : item.path,
+            children: item.children?.map((c: SidebarDynamicItem) => ({
+                ...c,
+                icon: c.icon ? getIcon(c.icon as string) : undefined,
+                path: c.path && !c.path.startsWith('/saas') ? `/saas${prefix}${c.path}` : c.path,
+            }))
+        };
+    });
+}
+
 export function Sidebar({
     isSaas = false,
     isSuperuser = false,
-    dualViewEnabled = false
+    dualViewEnabled = false,
+    initialModuleCodes = [],
+    initialDynamicItems = [],
 }: {
     isSaas?: boolean;
     isSuperuser?: boolean;
     dualViewEnabled?: boolean;
+    /** Pre-fetched by the server layout — sidebar renders fully on first paint */
+    initialModuleCodes?: string[];
+    initialDynamicItems?: SidebarDynamicItem[];
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout } = useAdmin();
 
     // ── All hooks MUST be declared before any conditional returns (React rules-of-hooks) ──
-    const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
-    const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
+    // Initialise from server-passed props so the sidebar is fully populated on first paint
+    // with no useEffect flicker. Falls back to null (show everything) when not provided.
+    const [installedModules, setInstalledModules] = useState<Set<string> | null>(
+        initialModuleCodes.length > 0 ? new Set(initialModuleCodes) : null
+    );
+    const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>(
+        () => parseDynamicItems(initialDynamicItems)
+    );
     const [devSectionOpen, setDevSectionOpen] = useState(true);
     const { favorites, removeFavorite } = useFavorites();
     const [favOpen, setFavOpen] = useState(true);
 
+    // Only fetch client-side if the layout didn't provide data (e.g. direct navigation
+    // to a page that bypasses the privileged layout, or empty initial props)
     useEffect(() => {
+        if (initialModuleCodes.length > 0 && initialDynamicItems.length === 0) return;
+        if (installedModules !== null && dynamicItems.length > 0) return; // already hydrated
+
         async function fetchData() {
             try {
                 const [modules, sidebarData] = await Promise.all([
                     getSaaSModules(),
                     getDynamicSidebar()
                 ]);
-
                 if (Array.isArray(modules) && modules.length > 0) {
                     setInstalledModules(new Set(modules.map((m: Record<string, unknown>) => m.code as string)));
                 }
-                // If modules list is empty (not seeded), leave null → show everything
-
                 if (Array.isArray(sidebarData)) {
-                    // Convert icon strings to Components and prefix paths for isolation
-                    const parsed = sidebarData.map(item => {
-                        const moduleCode = item.module || 'core';
-                        const prefix = moduleCode !== 'core' ? `/m/${moduleCode}` : '';
-
-                        return {
-                            ...item,
-                            icon: getIcon(item.icon),
-                            path: item.path && !item.path.startsWith('/saas') ? `/saas${prefix}${item.path}` : item.path,
-                            children: item.children?.map((c: SidebarDynamicItem) => ({
-                                ...c,
-                                icon: c.icon ? getIcon(c.icon) : undefined,
-                                path: c.path && !c.path.startsWith('/saas') ? `/saas${prefix}${c.path}` : c.path,
-                            }))
-                        };
-                    });
-                    setDynamicItems(parsed);
+                    setDynamicItems(parseDynamicItems(sidebarData));
                 }
             } catch (e) {
                 console.error("Failed to fetch sidebar data", e);
             }
         }
         fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // In topnav mode the sidebar is hidden — navigation lives in the header
