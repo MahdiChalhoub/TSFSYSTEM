@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Building2, ChevronDown, Check, ExternalLink, DoorOpen, Layers } from 'lucide-react';
+import { ChevronDown, Check, ExternalLink, DoorOpen, LayoutGrid } from 'lucide-react';
 import { PLATFORM_CONFIG, useDynamicBranding } from '@/lib/saas_config';
 
 export function TenantSwitcher({
@@ -22,9 +22,7 @@ export function TenantSwitcher({
     const showMasterPanel = user?.is_superuser || user?.is_staff;
     const isLocked = organizations.length <= 1 && !showMasterPanel;
     const isSaas = currentSlug === 'saas';
-
-    const label = isSaas ? 'Control Plane' : 'Workspace';
-    const name = isSaas ? PLATFORM_CONFIG.name : (activeOrg?.name || 'Platform Root');
+    const name = isSaas ? PLATFORM_CONFIG.name : (activeOrg?.name || 'Workspace');
 
     const handleSwitch = (slug: string) => {
         startTransition(() => {
@@ -37,137 +35,155 @@ export function TenantSwitcher({
 
     return (
         <div className="relative flex-shrink-0">
-            {/* ── Trigger ── */}
+
+            {/* ── Trigger ─────────────────────────────────────────── */}
             <button
                 onClick={() => !isLocked && setIsOpen(v => !v)}
                 suppressHydrationWarning
-                className="flex items-center gap-2.5 h-9 pl-2 pr-3 rounded-xl transition-colors duration-150"
+                disabled={isLocked}
+                className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg transition-colors duration-150"
                 style={{
-                    background: 'var(--app-surface)',
-                    border: '1px solid var(--app-border)',
+                    background: isOpen ? 'var(--app-surface-2)' : 'transparent',
+                    border: '1px solid transparent',
+                    color: 'var(--app-text)',
                     cursor: isLocked ? 'default' : 'pointer',
                 }}
-                onMouseEnter={(e) => { if (!isLocked) (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-primary)'; }}
-                onMouseLeave={(e) => { if (!isLocked) (e.currentTarget as HTMLElement).style.borderColor = 'var(--app-border)'; }}
+                onMouseEnter={(e) => {
+                    if (!isLocked) {
+                        const el = e.currentTarget as HTMLElement;
+                        el.style.background = 'var(--app-surface-2)';
+                        el.style.borderColor = 'var(--app-border)';
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (!isLocked && !isOpen) {
+                        const el = e.currentTarget as HTMLElement;
+                        el.style.background = 'transparent';
+                        el.style.borderColor = 'transparent';
+                    }
+                }}
             >
-                {/* Icon */}
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
-                    <Layers size={12} />
+                {/* Workspace colour dot */}
+                <div
+                    className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 text-[9px] font-black"
+                    style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}
+                >
+                    {name.charAt(0).toUpperCase()}
                 </div>
 
-                {/* Labels */}
-                <div className="hidden lg:flex flex-col items-start leading-none gap-0.5">
-                    <span className="text-[9px] font-black uppercase tracking-widest"
-                        style={{ color: 'var(--app-primary)' }}>
-                        {label}
-                    </span>
-                    <span className="text-xs font-bold truncate max-w-[130px]"
-                        style={{ color: 'var(--app-text)' }}>
-                        {name}
-                    </span>
-                </div>
+                <span className="hidden sm:block text-sm font-semibold truncate max-w-[120px]">
+                    {name}
+                </span>
 
-                {/* Chevron */}
                 {!isLocked && !isSaas && (
-                    <ChevronDown size={13} style={{
-                        color: 'var(--app-text-faint)',
-                        transform: isOpen ? 'rotate(180deg)' : 'none',
-                        transition: 'transform var(--app-transition-fast)',
-                        flexShrink: 0,
-                    }} />
+                    <ChevronDown
+                        size={13}
+                        className="flex-shrink-0"
+                        style={{
+                            color: 'var(--app-text-faint)',
+                            transform: isOpen ? 'rotate(180deg)' : 'none',
+                            transition: 'transform var(--app-transition-fast)',
+                        }}
+                    />
                 )}
             </button>
 
-            {/* ── Dropdown ── */}
+            {/* ── Dropdown ────────────────────────────────────────── */}
             {isOpen && !isSaas && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full left-0 mt-2 w-76 rounded-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                    <div
+                        className="absolute top-full left-0 mt-1.5 rounded-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
                         style={{
                             background: 'var(--app-surface)',
                             border: '1px solid var(--app-border)',
                             boxShadow: 'var(--app-shadow-lg)',
-                            minWidth: '280px',
-                        }}>
-
+                            minWidth: '260px',
+                        }}
+                    >
                         {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-3"
-                            style={{ borderBottom: '1px solid var(--app-border)', background: 'var(--app-surface-2)' }}>
+                        <div
+                            className="flex items-center justify-between px-3 py-2.5"
+                            style={{ borderBottom: '1px solid var(--app-border)' }}
+                        >
                             <div className="flex items-center gap-2">
-                                <Building2 size={12} style={{ color: 'var(--app-primary)' }} />
-                                <span className="text-[10px] font-black uppercase tracking-widest"
-                                    style={{ color: 'var(--app-text-muted)' }}>
-                                    Switch Workspace
+                                <LayoutGrid size={11} style={{ color: 'var(--app-primary)' }} />
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--app-text-muted)' }}>
+                                    Workspaces
                                 </span>
                             </div>
                             {showMasterPanel && (
-                                <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider"
-                                    style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}>
+                                <span
+                                    className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider"
+                                    style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)' }}
+                                >
                                     Super Admin
                                 </span>
                             )}
                         </div>
 
-                        {/* Org list */}
-                        <div className="p-2 max-h-72 overflow-y-auto custom-scrollbar">
+                        {/* List */}
+                        <div className="p-1.5 max-h-64 overflow-y-auto custom-scrollbar">
                             {organizations.filter(o => o.slug !== 'saas').length === 0 && (
-                                <p className="text-xs text-center py-8 italic"
-                                    style={{ color: 'var(--app-text-faint)' }}>
-                                    No organizations found
+                                <p className="text-xs text-center py-6 italic" style={{ color: 'var(--app-text-faint)' }}>
+                                    No workspaces found
                                 </p>
                             )}
                             {organizations.filter(o => o.slug !== 'saas').map(org => {
                                 const isActive = org.slug === currentSlug;
                                 return (
-                                    <button key={org.id}
+                                    <button
+                                        key={org.id}
                                         onClick={() => handleSwitch(org.slug)}
                                         disabled={isPending}
-                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-150 mb-0.5"
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150"
                                         style={{
-                                            background: isActive ? 'var(--app-primary)' : 'transparent',
-                                            color: isActive ? 'var(--app-bg)' : 'var(--app-text-muted)',
+                                            background: isActive ? 'var(--app-primary-light)' : 'transparent',
+                                            color: isActive ? 'var(--app-primary)' : 'var(--app-text-muted)',
                                         }}
                                         onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--app-surface-2)'; }}
                                         onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                                     >
-                                        <div className="flex items-center gap-3 text-left min-w-0">
-                                            {/* Active indicator dot */}
-                                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                style={{ background: org.isActive ? 'var(--app-success)' : 'var(--app-text-faint)' }} />
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-bold truncate">{org.name}</p>
-                                                <p className="text-[9px] font-mono opacity-60 truncate">
-                                                    {org.slug}{branding.suffix}
-                                                </p>
-                                            </div>
+                                        {/* Avatar */}
+                                        <div
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
+                                            style={{
+                                                background: isActive ? 'var(--app-primary)' : 'var(--app-surface-2)',
+                                                color: isActive ? 'var(--app-bg)' : 'var(--app-text-muted)',
+                                                border: '1px solid var(--app-border)',
+                                            }}
+                                        >
+                                            {org.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                                            {isActive
-                                                ? <Check size={14} />
-                                                : <ExternalLink size={12} style={{ opacity: 0.4 }} />
-                                            }
+
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <p className="text-xs font-semibold truncate">{org.name}</p>
+                                            <p className="text-[9px] font-mono opacity-50 truncate">
+                                                {org.slug}{branding.suffix}
+                                            </p>
                                         </div>
+
+                                        {isActive
+                                            ? <Check size={13} className="flex-shrink-0" />
+                                            : <ExternalLink size={11} className="flex-shrink-0 opacity-30" />
+                                        }
                                     </button>
                                 );
                             })}
                         </div>
 
-                        {/* Master panel link */}
+                        {/* Master panel */}
                         {showMasterPanel && (
-                            <div className="p-2" style={{ borderTop: '1px solid var(--app-border)' }}>
+                            <div className="p-1.5" style={{ borderTop: '1px solid var(--app-border)' }}>
                                 <button
                                     onClick={() => window.location.href = `http://saas.${branding.domain}/dashboard`}
-                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl transition-colors duration-150 text-[10px] font-black uppercase tracking-widest"
-                                    style={{
-                                        border: '1px dashed var(--app-border)',
-                                        color: 'var(--app-text-faint)',
-                                    }}
-                                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-primary)'; el.style.color = 'var(--app-primary)'; el.style.background = 'var(--app-primary-light)'; }}
-                                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--app-border)'; el.style.color = 'var(--app-text-faint)'; el.style.background = 'transparent'; }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-150 text-xs font-medium"
+                                    style={{ color: 'var(--app-text-faint)' }}
+                                    onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
+                                    onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
                                 >
                                     <DoorOpen size={13} />
-                                    Master Panel
+                                    Go to Master Panel
                                 </button>
                             </div>
                         )}
