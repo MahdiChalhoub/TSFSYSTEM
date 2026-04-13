@@ -196,6 +196,39 @@ class LedgerCOAMixin:
             
             rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
+            # ── Cleanup: Delete orphan inactive accounts ──
+            # After a reset+import, remove any deactivated accounts that have
+            # zero journal entry line references (safe to delete).
+            if reset:
+                orphan_qs = ChartOfAccount.objects.filter(
+                    organization=organization,
+                    is_active=False,
+                ).exclude(
+                    id__in=JournalEntryLine.objects.filter(
+                        organization=organization
+                    ).values_list('account_id', flat=True).distinct()
+                )
+                orphan_ids = list(orphan_qs.values_list('id', flat=True))
+                if orphan_ids:
+                    # Clear FK references first
+                    try:
+                        from apps.finance.models import PostingRule
+                        # Delete posting rule history entries
+                        try:
+                            from django.apps import apps
+                            PRHistory = apps.get_model('finance', 'PostingRuleHistory')
+                            PRHistory.objects.filter(account_id__in=orphan_ids).delete()
+                        except Exception:
+                            pass
+                        PostingRule.objects.filter(account_id__in=orphan_ids).delete()
+                    except Exception:
+                        pass
+                    orphan_count = ChartOfAccount.objects.filter(id__in=orphan_ids).delete()[0]
+                    import logging
+                    logging.getLogger(__name__).info(
+                        f"Cleaned up {orphan_count} orphan inactive accounts after template reset"
+                    )
+
             # Apply Smart Posting Rules
             try:
                 ConfigurationService.apply_smart_posting_rules(organization)
