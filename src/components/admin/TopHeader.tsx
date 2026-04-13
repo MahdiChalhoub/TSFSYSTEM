@@ -5,7 +5,7 @@ import { MENU_ITEMS } from '@/components/admin/Sidebar';
 import { useState, useEffect, useRef, memo } from 'react';
 import {
     Search, Menu, Settings, LogOut, HelpCircle,
-    Palette, Sun, Moon, ChevronDown, PanelLeft, Rows3,
+    Palette, Sun, Moon, ChevronDown,
     Globe, X, ChevronRight, Eye, EyeOff, Zap,
 } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
@@ -279,7 +279,7 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
 // ── Main TopHeader ─────────────────────────────────────────────────────────────
 
 export function TopHeader({ sites, organizations = [], currentSlug, user }: TopHeaderProps) {
-    const { toggleSidebar, sidebarOpen, viewScope, setViewScope, canToggleScope, navLayout, setNavLayout } = useAdmin();
+    const { toggleSidebar, sidebarOpen, viewScope, canToggleScope, navLayout } = useAdmin();
     const [profileOpen, setProfileOpen] = useState(false);
     const [themeOpen, setThemeOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -317,11 +317,23 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
             ════════════════════════════════════════════════════════ */}
             <div className="flex items-center h-[52px] px-4 gap-3">
 
-                {/* ── BRAND + CONTROLS ─────────────────────────────── */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                {/* ── BRAND + SIDEBAR TOGGLE ───────────────────────── */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+
+                    {/* Sidebar show/hide — always visible */}
+                    <button
+                        onClick={toggleSidebar}
+                        title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                        style={{ color: 'var(--app-text-faint)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                    >
+                        <Menu size={16} />
+                    </button>
 
                     {/* Logo mark */}
-                    <div className="flex items-center gap-2 mr-1">
+                    <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-black"
                             style={{ background: 'var(--app-primary)', color: 'var(--app-bg)' }}>
                             T
@@ -331,32 +343,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         </span>
                     </div>
 
-                    {/* Thin separator */}
-                    <div className="h-5 w-px mx-0.5" style={{ background: 'var(--app-border)' }} />
-
-                    {/* Layout mode toggle */}
-                    <button
-                        onClick={() => setNavLayout(isTopnav ? 'sidebar' : 'topnav')}
-                        title={isTopnav ? 'Switch to Sidebar' : 'Switch to Top Navigation'}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                        style={{ color: 'var(--app-text-faint)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-primary)'; }}
-                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
-                    >
-                        {isTopnav ? <PanelLeft size={15} /> : <Rows3 size={15} />}
-                    </button>
-
-                    {/* Hamburger — sidebar mode */}
-                    {!isTopnav && (
-                        <button onClick={toggleSidebar}
-                            title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
-                            style={{ color: 'var(--app-text-faint)' }}
-                            onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
-                            onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}>
-                            {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
-                        </button>
-                    )}
+                    <div className="h-5 w-px" style={{ background: 'var(--app-border)' }} />
                 </div>
 
                 {/* ── TOP-NAV ITEMS  (topnav mode only) ────────────── */}
@@ -407,48 +394,20 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                 {/* Push right zone to the end */}
                 <div className="flex-1" />
 
-                {/* ── SCOPE TOGGLE ────────────────────────────────────── */}
-                {canToggleScope && mounted && (
-                    <div className="hidden sm:flex items-center rounded-lg overflow-hidden flex-shrink-0"
-                        style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', padding: '3px', gap: '2px' }}>
-                        <button onClick={() => setViewScope('OFFICIAL')}
-                            className="flex items-center gap-1.5 px-3 h-[26px] rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-150 whitespace-nowrap"
-                            style={viewScope === 'OFFICIAL'
-                                ? { background: 'var(--app-success)', color: 'var(--app-bg)' }
-                                : { color: 'var(--app-text-faint)' }}
-                            onMouseEnter={(e) => { if (viewScope !== 'OFFICIAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)'; }}
-                            onMouseLeave={(e) => { if (viewScope !== 'OFFICIAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}>
-                            <Eye size={10} />
-                            <span className="hidden lg:inline">Official</span>
-                        </button>
-                        <button onClick={() => setViewScope('INTERNAL')}
-                            className="flex items-center gap-1.5 px-3 h-[26px] rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-150 whitespace-nowrap"
-                            style={viewScope === 'INTERNAL'
-                                ? { background: 'var(--app-primary)', color: 'var(--app-bg)' }
-                                : { color: 'var(--app-text-faint)' }}
-                            onMouseEnter={(e) => { if (viewScope !== 'INTERNAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-muted)'; }}
-                            onMouseLeave={(e) => { if (viewScope !== 'INTERNAL') (e.currentTarget as HTMLElement).style.color = 'var(--app-text-faint)'; }}>
-                            <EyeOff size={10} />
-                            <span className="hidden lg:inline">Internal</span>
-                        </button>
-                    </div>
-                )}
-
-                {/* ── ACTION GROUP  [bell · sun/moon · theme●] ──────── */}
-                <div className="flex items-center flex-shrink-0 rounded-xl overflow-hidden"
-                    style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+                {/* ── ACTION BUTTONS  [bell · sun/moon · theme] ─────── */}
+                <div className="flex items-center gap-0.5 flex-shrink-0">
 
                     {/* Notifications */}
-                    <div className="flex items-center justify-center w-9 h-9" style={{ borderRight: '1px solid var(--app-border)' }}>
+                    <div className="flex items-center justify-center w-8 h-8">
                         <NotificationBell />
                     </div>
 
                     {/* Dark / Light */}
                     <button onClick={toggleColorMode}
                         title={mounted ? (isDark ? 'Light mode' : 'Dark mode') : 'Toggle'}
-                        className="flex items-center justify-center w-9 h-9 transition-colors duration-150"
-                        style={{ color: 'var(--app-text-faint)', borderRight: '1px solid var(--app-border)' }}
-                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                        style={{ color: 'var(--app-text-faint)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
                         onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
                         suppressHydrationWarning>
                         {mounted ? (isDark ? <Sun size={15} /> : <Moon size={15} />) : <Moon size={15} />}
@@ -458,15 +417,14 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     <div className="relative flex-shrink-0" ref={themeRef}>
                         <button onClick={() => setThemeOpen(!themeOpen)}
                             title={mounted ? `Theme: ${currentTheme?.name}` : 'Theme'}
-                            className="flex items-center gap-1.5 h-9 px-3 transition-colors duration-150"
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
                             style={{ color: themeOpen ? 'var(--app-primary)' : 'var(--app-text-faint)', background: themeOpen ? 'var(--app-primary-light)' : 'transparent' }}
-                            onMouseEnter={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; } }}
+                            onMouseEnter={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; } }}
                             onMouseLeave={(e) => { if (!themeOpen) { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; } }}
                             suppressHydrationWarning>
                             <div className="w-3 h-3 rounded-full flex-shrink-0"
                                 style={{ background: mounted ? activeColors.primary : 'var(--app-primary)' }}
                                 suppressHydrationWarning />
-                            <Palette size={13} />
                         </button>
                         {themeOpen && (
                             <>
@@ -476,6 +434,9 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                         )}
                     </div>
                 </div>
+
+                {/* thin separator before user */}
+                <div className="h-5 w-px flex-shrink-0" style={{ background: 'var(--app-border)' }} />
 
                 {/* ── USER BUTTON ─────────────────────────────────────── */}
                 <div className="relative flex-shrink-0" ref={profileRef}>

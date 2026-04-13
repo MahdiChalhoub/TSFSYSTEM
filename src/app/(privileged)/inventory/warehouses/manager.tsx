@@ -128,7 +128,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                                 <h3 className="text-xl font-black text-app-foreground mb-2 truncate">{wh.name}</h3>
                                 <div className="flex items-center gap-1.5 text-xs text-app-muted-foreground font-medium capitalize">
                                     <MapPin size={14} className="text-emerald-500" />
-                                    {wh.site_name ? `${wh.site_name} · ${wh.type.toLowerCase()}` : `${wh.type.toLowerCase()} site`}
+                                    {wh.site_name ? `${wh.site_name} · ${(wh.type || 'warehouse').toLowerCase()}` : `${(wh.type || 'warehouse').toLowerCase()} site`}
                                 </div>
                             </div>
 

@@ -16,6 +16,21 @@ import { z } from 'zod'
 import { PLATFORM_CONFIG } from '@/lib/saas_config'
 import { ErpApiError } from '@/lib/erp-api'
 
+// ── Cookie Domain Helper ────────────────────────────────────────────────────
+// Extracts the root domain from the Host header so cookies work on ANY domain
+// (developos.shop, tsf.ci, localhost, IP addresses, etc.)
+function getCookieDomainFromHost(host: string): string | undefined {
+    if (!host) return undefined;
+    // Strip port
+    const hostname = host.split(':')[0];
+    // Localhost or IP → no domain (browser default)
+    if (hostname === 'localhost' || /^[\d.]+$/.test(hostname)) return undefined;
+    // Extract root domain: "saas.developos.shop" → ".developos.shop"
+    const parts = hostname.split('.');
+    if (parts.length <= 2) return `.${hostname}`;  // "developos.shop" → ".developos.shop"
+    return `.${parts.slice(-2).join('.')}`;          // "saas.foo.bar" → ".foo.bar"
+}
+
 // Original schema
 const LoginSchema = z.object({
     username: z.string().min(1, 'Username is required'),
@@ -126,8 +141,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             const hList = await hStore.headers();
             const isSecure = hList.get('x-forwarded-proto') === 'https';
             const host2 = hList.get('host') || '';
-            const isLocal = host2.includes('localhost');
-            const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+            const cookieDomain = getCookieDomainFromHost(host2);
 
             const cookieStore = await cookies()
             cookieStore.set('auth_token', token, {
@@ -208,10 +222,7 @@ export async function loginAction(prevState: any, formData: FormData) {
         const hList = await hStore.headers();
         const isSecure = hList.get('x-forwarded-proto') === 'https';
         const host = hList.get('host') || '';
-
-        // Shared cookie domain: .tsf.ci allows auth across all subdomains
-        const isLocalhost = host.includes('localhost');
-        const cookieDomain = isLocalhost ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+        const cookieDomain = getCookieDomainFromHost(host);
 
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
@@ -277,13 +288,12 @@ export async function logoutAction() {
     cookieStore.delete('auth_token')
     cookieStore.delete('scope_access')
 
-    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them to expire
-    // with the same domain they were created with.
+    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them
+    // to expire with the same domain they were created with.
     const headerStore = await import('next/headers');
     const hList = await headerStore.headers();
     const host = hList.get('host') || '';
-    const isLocal = host.includes('localhost');
-    const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+    const cookieDomain = getCookieDomainFromHost(host);
 
     if (cookieDomain) {
         cookieStore.set('auth_token', '', { domain: cookieDomain, path: '/', maxAge: 0 })

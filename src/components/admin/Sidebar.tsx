@@ -53,7 +53,9 @@ import {
     Target,
     Map,
     Receipt,
-    Percent
+    Percent,
+    PanelLeft,
+    Rows3,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -839,7 +841,7 @@ export function Sidebar({
     initialModuleCodes?: string[];
     initialDynamicItems?: SidebarDynamicItem[];
 }) {
-    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout } = useAdmin();
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, navLayout, setNavLayout, tabLayout, setTabLayout } = useAdmin();
 
     // ── All hooks MUST be declared before any conditional returns (React rules-of-hooks) ──
     // Initialise from server-passed props so the sidebar is fully populated on first paint
@@ -1126,9 +1128,37 @@ export function Sidebar({
                 </div>
 
                 {/* ── Footer ── */}
-                <div className="px-3 py-3 shrink-0" style={{
+                <div className="px-3 py-3 shrink-0 space-y-1" style={{
                     borderTop: '1px solid color-mix(in srgb, var(--app-sidebar-border) 50%, transparent)',
                 }}>
+                    {/* Layout toggles row */}
+                    <div className="flex items-center gap-1 px-1 pb-1">
+                        {/* Nav layout toggle: sidebar ↔ topnav */}
+                        <button
+                            onClick={() => setNavLayout(navLayout === 'sidebar' ? 'topnav' : 'sidebar')}
+                            title={navLayout === 'sidebar' ? 'Switch to top navigation' : 'Switch to sidebar navigation'}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                            style={{ color: 'var(--app-sidebar-muted)' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-sidebar-active)'; e.currentTarget.style.color = 'var(--app-sidebar-text)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--app-sidebar-muted)'; }}
+                        >
+                            <PanelLeft size={15} />
+                        </button>
+
+                        {/* Tab layout toggle: horizontal ↔ vertical */}
+                        <button
+                            onClick={() => setTabLayout(tabLayout === 'horizontal' ? 'vertical' : 'horizontal')}
+                            title={tabLayout === 'horizontal' ? 'Switch to vertical tabs' : 'Switch to horizontal tabs'}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                            style={{ color: 'var(--app-sidebar-muted)' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--app-sidebar-active)'; e.currentTarget.style.color = 'var(--app-sidebar-text)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--app-sidebar-muted)'; }}
+                        >
+                            <Rows3 size={15} />
+                        </button>
+                    </div>
+
+                    {/* Sign out */}
                     <button
                         onClick={() => logoutAction()}
                         suppressHydrationWarning={true}
