@@ -119,11 +119,11 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     ]
 
     return (
-        <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'fixed inset-0 z-40 p-2' : 'h-full p-4 md:p-6'}`}
-            style={focusMode ? { background: 'var(--app-bg, #020617)' } : undefined}>
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300"
+            style={{ height: 'calc(100vh - 4rem)' }}>
 
-            {/* ── Page Header ── */}
-            {!focusMode ? (
+            {/* ── Page Header (hidden in focus mode) ── */}
+            {!focusMode && (
                 <div className="flex items-start justify-between gap-4 mb-4 flex-wrap flex-shrink-0">
                     <div className="flex items-center gap-3">
                         {cameFromCOA && (
@@ -176,45 +176,9 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         </button>
                     </div>
                 </div>
-            ) : (
-                <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
-                            <Library size={14} className="text-white" />
-                        </div>
-                        <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Standards Library</span>
-                        <span className="text-[10px] font-bold text-app-muted-foreground">{filteredTemplates.length}/{templates.length}</span>
-                    </div>
-                    <div className="flex items-center gap-1 p-0.5 rounded-lg flex-shrink-0"
-                        style={{ background: 'var(--app-surface)' }}>
-                        {TABS.map(tab => {
-                            const Icon = tab.icon
-                            return (
-                                <button key={tab.id} onClick={() => setActiveView(tab.id)}
-                                    className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all"
-                                    style={{
-                                        background: activeView === tab.id ? 'var(--app-primary)' : 'transparent',
-                                        color: activeView === tab.id ? '#fff' : 'var(--app-muted-foreground)',
-                                    }}>
-                                    <Icon size={11} /> {tab.label}
-                                </button>
-                            )
-                        })}
-                    </div>
-                    <div className="flex-1 relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search templates... (Ctrl+K)"
-                            className="w-full pl-9 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-                    </div>
-                    <button onClick={() => setFocusMode(false)}
-                        className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-                        <Minimize2 size={13} />
-                    </button>
-                </div>
             )}
 
-            {/* ── KPI Strip ── */}
+            {/* ── KPI Strip (hidden in focus mode) ── */}
             {!focusMode && (
                 <div className="mb-4 flex-shrink-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                     {kpis.map(s => (
@@ -236,20 +200,51 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 </div>
             )}
 
-            {/* ── Search ── */}
-            {!focusMode && (
-                <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                    <div className="flex-1 relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search by name, region, key... (Ctrl+K)"
-                            className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all" />
-                    </div>
+            {/* ── Toolbar (search + tabs in focus, just search in normal) ── */}
+            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                {focusMode && (
+                    <>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
+                                <Library size={14} className="text-white" />
+                            </div>
+                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Standards Library</span>
+                        </div>
+                        <div className="flex items-center gap-1 p-0.5 rounded-lg flex-shrink-0"
+                            style={{ background: 'var(--app-surface)' }}>
+                            {TABS.map(tab => {
+                                const Icon = tab.icon
+                                return (
+                                    <button key={tab.id} onClick={() => setActiveView(tab.id)}
+                                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all"
+                                        style={{
+                                            background: activeView === tab.id ? 'var(--app-primary)' : 'transparent',
+                                            color: activeView === tab.id ? '#fff' : 'var(--app-muted-foreground)',
+                                        }}>
+                                        <Icon size={11} /> {tab.label}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </>
+                )}
+                <div className="flex-1 relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                    <input ref={searchRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Search by name, region, key... (Ctrl+K)"
+                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all" />
                 </div>
-            )}
+                {focusMode && (
+                    <button onClick={() => setFocusMode(false)}
+                        className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                        <Minimize2 size={13} />
+                    </button>
+                )}
+            </div>
 
-            {/* ── Content ── */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            {/* ── Content (stretches to fill all space between toolbar and footer) ── */}
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl"
+                style={{ border: '1px solid var(--app-border)' }}>
                 {activeView === 'gallery' && (
                     <GalleryView templates={filteredTemplates} templatesMap={templatesMap}
                         selectedTemplate={selectedTemplate} onSelect={setSelectedTemplate}
@@ -266,22 +261,38 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 )}
             </div>
 
-            {/* ── Footer Bar ── */}
-            <div className="flex-shrink-0 flex items-center justify-between gap-4 px-4 py-2 mt-2 rounded-xl"
-                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+            {/* ── Footer ── */}
+            <div className="flex-shrink-0 flex items-center justify-between gap-4 px-4 py-2.5 mt-0 rounded-b-2xl"
+                style={{
+                    background: 'var(--app-surface)',
+                    borderTop: '1px solid var(--app-border)',
+                    borderLeft: '1px solid var(--app-border)',
+                    borderRight: '1px solid var(--app-border)',
+                    borderBottom: '1px solid var(--app-border)',
+                    marginTop: '-1px',
+                    borderBottomLeftRadius: '1rem',
+                    borderBottomRightRadius: '1rem',
+                }}>
                 <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">
+                    <span className="text-[10px] font-black uppercase tracking-widest"
+                        style={{ color: 'var(--app-foreground)' }}>
                         {filteredTemplates.length} of {templates.length} templates
                     </span>
-                    <span className="text-[10px] font-bold text-app-muted-foreground tabular-nums">
+                    <span className="text-[10px] font-bold tabular-nums"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
                         {totalAccounts.toLocaleString()} accounts
                     </span>
-                    <span className="text-[10px] font-bold text-app-muted-foreground tabular-nums">
+                    <span className="text-[10px] font-bold tabular-nums"
+                        style={{ color: 'var(--app-muted-foreground)' }}>
                         {totalRules.toLocaleString()} posting rules
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                        style={{
+                            color: 'var(--app-primary)',
+                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                        }}>
                         {activeView === 'gallery' ? 'Gallery' : activeView === 'compare' ? 'Compare' : 'Migration'} View
                     </span>
                 </div>
@@ -363,7 +374,7 @@ function GalleryView({
 
     // Default card grid
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+        <div className="p-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {templates.map(t => {
                 const accent = ACCENT_MAP[t.key] || t.accent_color || 'var(--app-primary)'
                 return (
