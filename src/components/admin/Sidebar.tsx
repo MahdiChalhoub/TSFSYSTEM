@@ -55,12 +55,12 @@ import {
     Receipt,
     Percent
 } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
 import { logoutAction } from "@/app/actions/auth";
 import { PLATFORM_CONFIG } from '@/lib/saas_config';
-import { getFavorites, saveFavorites, type FavoriteEntry } from '@/app/actions/favorites';
+import { useFavorites } from '@/context/FavoritesContext';
 
 import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
 
@@ -822,53 +822,8 @@ export function Sidebar({
     const [installedModules, setInstalledModules] = useState<Set<string> | null>(null);
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
     const [devSectionOpen, setDevSectionOpen] = useState(true);
-    const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
+    const { favorites, removeFavorite } = useFavorites();
     const [favOpen, setFavOpen] = useState(true);
-
-    const FAVS_KEY = 'tsf_quick_access_pinned';
-
-    // Write to localStorage + dispatch storage event so other tabs update instantly
-    const persistLocally = useCallback((favs: FavoriteEntry[]) => {
-        localStorage.setItem(FAVS_KEY, JSON.stringify(favs));
-        window.dispatchEvent(new StorageEvent('storage', { key: FAVS_KEY }));
-    }, []);
-
-    useEffect(() => {
-        // 1. Show localStorage immediately (instant, no flash)
-        try {
-            const raw = localStorage.getItem(FAVS_KEY);
-            if (raw) setFavorites(JSON.parse(raw));
-        } catch { /* ignore */ }
-
-        // 2. Fetch from backend (cross-device source of truth) and override
-        getFavorites().then(serverFavs => {
-            if (serverFavs.length > 0) {
-                setFavorites(serverFavs);
-                persistLocally(serverFavs);
-            }
-        }).catch(() => { /* stay on localStorage */ });
-
-        // 3. Listen for changes from other tabs/components
-        const onStorage = (e: StorageEvent) => {
-            if (e.key === FAVS_KEY) {
-                try {
-                    const raw = localStorage.getItem(FAVS_KEY);
-                    setFavorites(raw ? JSON.parse(raw) : []);
-                } catch { /* ignore */ }
-            }
-        };
-        window.addEventListener('storage', onStorage);
-        return () => window.removeEventListener('storage', onStorage);
-    }, [persistLocally]);
-
-    const removeFavorite = useCallback((path: string) => {
-        setFavorites(prev => {
-            const next = prev.filter(f => f.path !== path);
-            persistLocally(next);
-            saveFavorites(next).catch(() => {}); // backend sync, fire-and-forget
-            return next;
-        });
-    }, [persistLocally]);
 
     useEffect(() => {
         async function fetchData() {

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '../globals.css';
 import { AdminProvider } from '@/context/AdminContext';
+import { FavoritesProvider } from '@/context/FavoritesContext';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { TopHeader } from '@/components/admin/TopHeader';
 import { AdminShell } from '@/components/admin/AdminShell';
@@ -117,6 +118,7 @@ export default async function AdminLayout({
             initialNavLayout={navLayout || 'sidebar'}
             initialTabLayout={tabLayout || 'horizontal'}
         >
+        <FavoritesProvider>
             <DevProvider>
                 <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
                     {/* Left Panel: Sidebar Tree */}
@@ -138,6 +140,7 @@ export default async function AdminLayout({
                     <CommandPalette />
                 </div>
             </DevProvider>
+        </FavoritesProvider>
         </AdminProvider>
         </DesignSystemProvider>
     );
