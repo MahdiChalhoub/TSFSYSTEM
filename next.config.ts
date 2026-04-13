@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  // Server action configuration for Hostinger
+  // Server action configuration
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
-      allowedOrigins: ['tsf.ci', '*.tsf.ci', 'localhost:3000'],
+      allowedOrigins: ['tsf.ci', '*.tsf.ci', 'developos.shop', '*.developos.shop', 'localhost:3000'],
     },
   },
 
@@ -56,9 +56,9 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
+              "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.tsf.ci https://tsf.ci",
+              "connect-src 'self' https://*.tsf.ci https://tsf.ci https://*.developos.shop https://developos.shop wss://*.developos.shop wss://*.tsf.ci",
               "frame-ancestors 'self'",
             ].join('; '),
           },
