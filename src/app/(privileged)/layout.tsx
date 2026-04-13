@@ -93,10 +93,17 @@ export default async function AdminLayout({
 
     const cookieStore = await cookies();
     const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
+    const navLayout = cookieStore.get('tsf_nav_layout')?.value as 'sidebar' | 'topnav' | undefined;
+    const tabLayout = cookieStore.get('tsf_tab_layout')?.value as 'horizontal' | 'vertical' | undefined;
 
     return (
         <DesignSystemProvider>
-        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
+        <AdminProvider
+            contextKey={currentSlug}
+            initialScopeAccess={scopeAccess || 'internal'}
+            initialNavLayout={navLayout || 'sidebar'}
+            initialTabLayout={tabLayout || 'horizontal'}
+        >
             <DevProvider>
                 <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--app-bg)', color: 'var(--app-text)' }}>
                     {/* Left Panel: Sidebar Tree */}

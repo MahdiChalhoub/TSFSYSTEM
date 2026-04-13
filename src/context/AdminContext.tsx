@@ -41,7 +41,7 @@ type AdminContextType = {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export function AdminProvider({ children, contextKey = 'default', initialScopeAccess }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null }) {
+export function AdminProvider({ children, contextKey = 'default', initialScopeAccess, initialNavLayout, initialTabLayout }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null, initialNavLayout?: 'sidebar' | 'topnav', initialTabLayout?: 'horizontal' | 'vertical' }) {
     // Start open on desktop, closed on mobile — avoids the fixed-overlay blocking content
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
@@ -49,14 +49,10 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const [isLoaded, setIsLoaded] = useState(false);
     // Initialize from server prop so SSR and first client render match — no pop-in flash
     const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(initialScopeAccess ?? null);
-    const [navLayout, setNavLayoutState] = useState<'sidebar' | 'topnav'>(() => {
-        if (typeof window === 'undefined') return 'sidebar';
-        return (localStorage.getItem('tsf_nav_layout') as 'sidebar' | 'topnav') || 'sidebar';
-    });
-    const [tabLayout, setTabLayoutState] = useState<'horizontal' | 'vertical'>(() => {
-        if (typeof window === 'undefined') return 'horizontal';
-        return (localStorage.getItem('tsf_tab_layout') as 'horizontal' | 'vertical') || 'horizontal';
-    });
+    // Initialize from server-passed props (read from cookies in layout.tsx) so SSR
+    // and first client render are identical — no hydration mismatch, no flash.
+    const [navLayout, setNavLayoutState] = useState<'sidebar' | 'topnav'>(initialNavLayout ?? 'sidebar');
+    const [tabLayout, setTabLayoutState] = useState<'horizontal' | 'vertical'>(initialTabLayout ?? 'horizontal');
 
     // After hydration: close sidebar on small viewports so it doesn't block content
     useEffect(() => {
@@ -114,11 +110,13 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     const setTabLayout = (layout: 'horizontal' | 'vertical') => {
         setTabLayoutState(layout);
         localStorage.setItem('tsf_tab_layout', layout);
+        document.cookie = `tsf_tab_layout=${layout}; path=/; max-age=31536000; SameSite=Lax`;
     };
 
     const setNavLayout = (layout: 'sidebar' | 'topnav') => {
         setNavLayoutState(layout);
         localStorage.setItem('tsf_nav_layout', layout);
+        document.cookie = `tsf_nav_layout=${layout}; path=/; max-age=31536000; SameSite=Lax`;
         // Close sidebar when switching to topnav
         if (layout === 'topnav') setSidebarOpen(false);
         else setSidebarOpen(true);
