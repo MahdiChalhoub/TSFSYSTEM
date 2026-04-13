@@ -1,4 +1,4 @@
-import { erpFetch } from "@/lib/erp-api";
+import { getCategoryWithCounts } from "@/app/actions/categories";
 import { CategoryTree } from "@/components/admin/categories/CategoryTree";
 import { CreateCategoryButton } from "@/components/admin/categories/CreateCategoryButton";
 import { Wrench, FolderTree } from 'lucide-react';
@@ -7,7 +7,7 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 async function getCategoriesData() {
-    const categories = await erpFetch('categories/with_counts/');
+    const categories = await getCategoryWithCounts();
 
     const categoryMap = new Map();
     const roots: Record<string, any>[] = [];
@@ -43,21 +43,8 @@ async function getCategoriesData() {
     };
 }
 
-async function getOrgContext() {
-    try {
-        const orgs = await erpFetch('organizations/');
-        if (Array.isArray(orgs)) return orgs[0];
-        return null;
-    } catch {
-        return null;
-    }
-}
-
 export default async function CategoriesPage() {
-    const [{ hierarchicalCategories, flatCategories }, orgContext] = await Promise.all([
-        getCategoriesData(),
-        getOrgContext()
-    ]);
+    const { hierarchicalCategories, flatCategories } = await getCategoriesData();
 
     const totalCategories = flatCategories?.length || 0;
     const rootCount = hierarchicalCategories?.length || 0;
@@ -91,15 +78,7 @@ export default async function CategoriesPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {orgContext?.business_type_name && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest" style={{
-                            background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
-                            color: 'var(--app-primary)',
-                            border: '1px solid color-mix(in srgb, var(--app-primary) 12%, transparent)',
-                        }}>
-                            Industry: {orgContext.business_type_name}
-                        </div>
-                    )}
+
                     <Link
                         href="/inventory/maintenance?tab=category"
                         className="px-4 py-2.5 rounded-xl font-bold text-[12px] flex items-center gap-2 transition-all"
