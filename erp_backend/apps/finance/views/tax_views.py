@@ -20,10 +20,11 @@ class TaxGroupViewSet(TenantModelViewSet):
         if not tax_group_id:
             return Response({"error": "tax_group_id required"}, status=400)
         try:
-            TaxGroup.objects.filter(organization_id=organization_id).update(is_default=False)
             tg = TaxGroup.objects.get(id=tax_group_id, organization_id=organization_id)
-            tg.is_default = True
-            tg.save()
+            # Use update() to avoid model-level validation issues with legacy data
+            TaxGroup.objects.filter(organization_id=organization_id).update(is_default=False)
+            TaxGroup.objects.filter(pk=tg.pk).update(is_default=True)
+            tg.refresh_from_db()
             return Response(TaxGroupSerializer(tg).data)
         except TaxGroup.DoesNotExist:
             return Response({"error": "Tax group not found"}, status=404)
@@ -79,17 +80,23 @@ class TaxGroupViewSet(TenantModelViewSet):
             presets = [p for p in presets if p.get('name') in preset_names]
 
         existing_names = set(TaxGroup.objects.filter(organization=org).values_list('name', flat=True))
+        existing_rates = set(
+            TaxGroup.objects.filter(organization=org).values_list('rate', flat=True)
+        )
 
         created, skipped = [], []
         for preset in presets:
             pname = preset.get('name', 'Unnamed Tax Group')
+            prate = Decimal(str(preset.get('rate', '0.00')))
             if pname in existing_names:
-                skipped.append(pname); continue
+                skipped.append(f'{pname} (name exists)'); continue
+            if prate in existing_rates:
+                skipped.append(f'{pname} (rate {prate}% exists)'); continue
 
             TaxGroup.objects.create(
                 organization=org,
                 name=pname,
-                rate=Decimal(str(preset.get('rate', '0.00'))),
+                rate=prate,
                 tax_type=preset.get('tax_type', 'STANDARD'),
                 is_default=preset.get('is_default', False) and not TaxGroup.objects.filter(organization=org, is_default=True).exists(),
                 description=preset.get('description', ''),

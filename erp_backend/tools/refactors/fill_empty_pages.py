@@ -375,19 +375,26 @@ print("  PHASE 3: FINANCE MODULE")
 print("═" * 60)
 
 # ── Tax Groups ──
-if not TaxGroup.objects.filter(organization=org).exists():
-    tax_groups = [
-        ('TVA Standard 11%', Decimal('11.00'), True),
-        ('TVA Réduite 5.5%', Decimal('5.50'), False),
-        ('Exonéré 0%', Decimal('0.00'), False),
-        ('TVA Luxe 18%', Decimal('18.00'), False),
-        ('AIRSI 7.5%', Decimal('7.50'), False),
-    ]
-    for name, rate, is_default in tax_groups:
-        TaxGroup.objects.create(organization=org, name=name, rate=rate, is_default=is_default)
-    print(f"  ✅ {len(tax_groups)} Tax Groups")
+existing_count = TaxGroup.objects.filter(organization=org).count()
+tax_groups = [
+    ('TVA Standard 11%', Decimal('11.00'), True),
+    ('TVA Réduite 5.5%', Decimal('5.50'), False),
+    ('Exonéré 0%', Decimal('0.00'), False),
+    ('TVA Luxe 18%', Decimal('18.00'), False),
+    ('AIRSI 7.5%', Decimal('7.50'), False),
+]
+created_count = 0
+for name, rate, is_default in tax_groups:
+    _, created = TaxGroup.objects.get_or_create(
+        organization=org, name=name,
+        defaults={'rate': rate, 'is_default': is_default and not TaxGroup.objects.filter(organization=org, is_default=True).exists()}
+    )
+    if created:
+        created_count += 1
+if created_count:
+    print(f"  ✅ {created_count} Tax Groups created ({existing_count} pre-existing)")
 else:
-    print("  ⏭ Tax Groups exist")
+    print(f"  ⏭ Tax Groups exist ({existing_count})")
 
 # ── Loans ──
 if not Loan.objects.filter(organization=org).exists():

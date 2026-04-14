@@ -272,11 +272,25 @@ export default function TaxGroupsPage() {
 
     async function handleSave() {
         if (!form.name || !form.rate) return
+
+        // Client-side duplicate rate pre-check
+        const parsedRate = parseFloat(form.rate)
+        const duplicate = groups.find(g =>
+            Number(g.rate).toFixed(2) === parsedRate.toFixed(2) &&
+            g.id !== editing?.id
+        )
+        if (duplicate) {
+            toast.error(
+                `Rate ${parsedRate.toFixed(2)}% already exists: "${duplicate.name}". Each rate must be unique.`
+            )
+            return
+        }
+
         setSaving(true)
         try {
             const body = {
                 name: form.name,
-                rate: parseFloat(form.rate),
+                rate: parsedRate,
                 description: form.description,
                 tax_type: form.tax_type,
             }
@@ -289,8 +303,11 @@ export default function TaxGroupsPage() {
             }
             cancelForm()
             load()
-        } catch {
-            toast.error('Save failed')
+        } catch (err: any) {
+            // Extract server validation message
+            const msg = err?.rate?.[0] || err?.detail || err?.non_field_errors?.[0]
+                || (typeof err === 'string' ? err : 'Save failed — duplicate rate or name')
+            toast.error(msg)
         } finally {
             setSaving(false)
         }
@@ -323,7 +340,7 @@ export default function TaxGroupsPage() {
     }
 
     // ── Computed Data ──
-    const { filtered, stats } = useMemo(() => {
+    const { filtered, stats, duplicateRates } = useMemo(() => {
         let f = groups
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase()
@@ -337,7 +354,21 @@ export default function TaxGroupsPage() {
         const avg = total ? groups.reduce((s, g) => s + Number(g.rate || 0), 0) / total : 0
         const def = groups.find(g => g.is_default)?.name || 'None'
         const types = new Set(groups.map(g => g.tax_type || 'STANDARD')).size
-        return { filtered: f, stats: { total, avg, def, filtered: f.length, types } }
+
+        // Detect duplicate rates
+        const rateMap = new Map<string, TaxGroup[]>()
+        for (const g of groups) {
+            const key = Number(g.rate).toFixed(2)
+            const arr = rateMap.get(key) || []
+            arr.push(g)
+            rateMap.set(key, arr)
+        }
+        const duplicateRates: { rate: string; groups: TaxGroup[] }[] = []
+        for (const [rate, grps] of rateMap) {
+            if (grps.length > 1) duplicateRates.push({ rate, groups: grps })
+        }
+
+        return { filtered: f, stats: { total, avg, def, filtered: f.length, types }, duplicateRates }
     }, [groups, searchQuery])
 
     const canImport = templateData && templateData.presets?.some((p: any) => !p.already_imported)
@@ -502,6 +533,55 @@ export default function TaxGroupsPage() {
                             </button>
                         )}
                     </div>
+
+                    {/* ── Duplicate Rate Warning ── */}
+                    {duplicateRates.length > 0 && (
+                        <div
+                            className="px-3 py-2.5 rounded-xl animate-in slide-in-from-top-2 duration-300"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 6%, var(--app-surface))',
+                                border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 20%, transparent)',
+                            }}
+                        >
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <div
+                                    className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 12%, transparent)',
+                                        color: 'var(--app-warning, #f59e0b)',
+                                    }}
+                                >
+                                    <AlertTriangle size={12} />
+                                </div>
+                                <span className="text-[11px] font-bold text-app-foreground">
+                                    Duplicate rates detected — {duplicateRates.length} rate{duplicateRates.length > 1 ? 's' : ''} shared by multiple groups
+                                </span>
+                            </div>
+                            <div className="ml-8 space-y-1">
+                                {duplicateRates.map(d => (
+                                    <div key={d.rate} className="flex items-center gap-2 text-[10px]">
+                                        <span className="font-mono font-black tabular-nums" style={{ color: 'var(--app-warning, #f59e0b)' }}>{d.rate}%</span>
+                                        <span className="text-app-muted-foreground">→</span>
+                                        {d.groups.map((g, i) => (
+                                            <span key={g.id} className="inline-flex items-center gap-1">
+                                                <span className="font-bold text-app-foreground">{g.name}</span>
+                                                {!g.is_default && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(g.id) }}
+                                                        className="text-app-muted-foreground hover:text-app-error transition-colors p-0.5 rounded"
+                                                        title={`Delete ${g.name}`}
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                )}
+                                                {i < d.groups.length - 1 && <span className="text-app-muted-foreground mx-0.5">·</span>}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* ── Template Import Banner ── */}
                     {canImport && (

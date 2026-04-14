@@ -1,7 +1,15 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from erp.models import TenantModel
 
 class TaxGroup(TenantModel):
+    """
+    Named tax rate groups that can be linked to products.
+
+    Security: Both name AND rate must be unique per organization.
+    - name uniqueness: enforced by unique_together ('name', 'organization')
+    - rate uniqueness: enforced by clean() validation
+    """
     TAX_TYPE_CHOICES = [
         ('STANDARD', 'Standard'),
         ('REDUCED', 'Reduced'),
@@ -22,6 +30,23 @@ class TaxGroup(TenantModel):
         db_table = 'taxgroup'
         unique_together = ('name', 'organization')
         ordering = ['-is_default', 'name']
+
+    def clean(self):
+        """Block duplicate rates within the same organization (used by admin/forms)."""
+        if self.organization_id and self.rate is not None:
+            qs = TaxGroup.objects.filter(
+                organization_id=self.organization_id,
+                rate=self.rate,
+            )
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                existing = qs.first()
+                raise ValidationError(
+                    f'A tax group with rate {self.rate}% already exists: '
+                    f'"{existing.name}". Each rate must be unique per organization.'
+                )
+
     def __str__(self):
         return f"{self.name} ({self.rate}%)"
 
