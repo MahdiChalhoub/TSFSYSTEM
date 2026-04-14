@@ -93,7 +93,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
          *   UNTOUCHED      — COA exists but no txns/balances/custom accounts
          *                    → safe to delete & replace (confirm dialog)
          *   NEEDS_MIGRATION — COA has txns/balances/custom accounts
-         *                    → full migration flow required
+         *                    → full migration flow required (always)
          */
         try {
             const { getCOAStatus, getMigrationPreview } = await import('@/app/actions/finance/coa-templates')
@@ -120,15 +120,10 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 return
             }
 
-            // Case 3: NEEDS_MIGRATION
-            if (status.current_template === key) {
-                // Re-importing same template with data → simple reset
-                setImportTarget(key)
-                return
-            }
-
-            // Different template with real data → open migration execution screen
-            setMigrationTarget({ from: status.current_template!, to: key })
+            // Case 3: NEEDS_MIGRATION — always go through migration flow
+            // Even for same-template re-import: custom sub-accounts (employees,
+            // contacts, bank accounts) would be deactivated by a blind reset.
+            setMigrationTarget({ from: status.current_template || key, to: key })
             setIsPending(true)
             toast.info(`Loading migration data...`)
             const preview = await getMigrationPreview(key)
@@ -140,9 +135,16 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                     description: `${status.journal_entry_count} journal entries need remapping`,
                 })
             }
-        } catch {
-            setImportTarget(key)
+        } catch (e) {
+            console.error('[COA] Status check failed:', e)
+            toast.error('Failed to check COA status. Please try again.')
         }
+    }
+
+    /** Navigate to COA page with full cache bust */
+    const goToCOA = () => {
+        router.push('/finance/chart-of-accounts')
+        router.refresh()
     }
 
     /** Case 1 & same-template re-import: direct import with reset */
@@ -154,7 +156,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         try {
             await importChartOfAccountsTemplate(key as any, { reset: true })
             toast.success(`Successfully imported ${key.replace(/_/g, ' ')}`)
-            router.push('/finance/chart-of-accounts')
+            goToCOA()
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
@@ -171,7 +173,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         try {
             await importChartOfAccountsTemplate(key as any, { reset: true })
             toast.success(`Replaced chart of accounts with ${key.replace(/_/g, ' ')}`)
-            router.push('/finance/chart-of-accounts')
+            goToCOA()
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
@@ -342,12 +344,15 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         migrationMaps={migrationMaps}
                         autoMigration={migrationTarget}
                         accountBalances={coaStatus?.accounts || []}
-                        onApplyImport={async (key) => {
+                        onApplyImport={async (key, accountMapping) => {
                             setIsPending(true)
                             try {
-                                await importChartOfAccountsTemplate(key as any, { reset: true })
+                                await importChartOfAccountsTemplate(key as any, {
+                                    reset: true,
+                                    account_mapping: accountMapping,
+                                })
                                 toast.success(`Migration complete → ${key.replace(/_/g, ' ')}`)
-                                router.push('/finance/chart-of-accounts')
+                                goToCOA()
                             } catch (e: unknown) {
                                 toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                             } finally {
@@ -362,12 +367,15 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                         preview={migrationPreview}
                         targetTemplateKey={migrationTarget.to}
                         sourceTemplateKey={migrationTarget.from}
-                        onApply={async () => {
+                        onApply={async (accountMapping) => {
                             setIsPending(true)
                             try {
-                                await importChartOfAccountsTemplate(migrationTarget.to as any, { reset: true })
+                                await importChartOfAccountsTemplate(migrationTarget.to as any, {
+                                    reset: true,
+                                    account_mapping: accountMapping,
+                                })
                                 toast.success(`Migration complete → ${migrationTarget.to.replace(/_/g, ' ')}`)
-                                router.push('/finance/chart-of-accounts')
+                                goToCOA()
                             } catch (e: unknown) {
                                 toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                             } finally {
@@ -417,12 +425,16 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 </div>
             </div>
 
-            {/* ── Import Dialog (Case 1: empty COA or same-template re-import) ── */}
+            {/* ── Import Dialog (Case 1: empty COA, or Case 2: same-template refresh) ── */}
             <ConfirmDialog open={importTarget !== null}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
                 onConfirm={handleConfirmImport}
                 title={`Import ${importTarget?.replace(/_/g, ' ') ?? ''}?`}
-                description="This will set up your Chart of Accounts using this template. Posting rules will be auto-synced."
+                description={
+                    coaStatus?.account_count
+                        ? `This will refresh your current chart of accounts from the ${importTarget?.replace(/_/g, ' ') ?? ''} template. Existing template accounts will be updated. Posting rules will be auto-synced.`
+                        : 'This will set up your Chart of Accounts using this template. Posting rules will be auto-synced.'
+                }
                 confirmText="Import" variant="info" />
 
             {/* ── Replace Dialog (Case 2: untouched COA, safe to replace) ── */}
@@ -985,7 +997,7 @@ function MigrationView({
     templates: TemplateInfo[]; templatesMap: Record<string, any>
     migrationMaps: Record<string, Record<string, string>>
     autoMigration?: { from: string; to: string } | null
-    onApplyImport?: (targetKey: string) => Promise<void>
+    onApplyImport?: (targetKey: string, accountMapping: Record<string, string>) => Promise<void>
     isPending?: boolean
     accountBalances?: { code: string; name: string; type: string; balance: number }[]
 }) {
@@ -1601,7 +1613,17 @@ function MigrationView({
                             </div>
                             {onApplyImport && targetKey && (
                                 <button
-                                    onClick={() => onApplyImport(targetKey)}
+                                    onClick={() => {
+                                        // Build source_code → target_code mapping from fullMapping
+                                        const mapping: Record<string, string> = {}
+                                        for (const entry of fullMapping) {
+                                            if (entry.targets.length > 0) {
+                                                // Use the first (primary) target for the mapping
+                                                mapping[entry.srcCode] = entry.targets[0].code
+                                            }
+                                        }
+                                        onApplyImport(targetKey, mapping)
+                                    }}
                                     disabled={isPending || fullMapping.length === 0}
                                     className="flex items-center gap-2 px-5 py-2 rounded-xl text-[12px] font-black uppercase tracking-wider transition-all"
                                     style={{
@@ -1641,7 +1663,7 @@ function MigrationExecutionView({
     preview: import('@/app/actions/finance/coa-templates').MigrationPreview
     targetTemplateKey: string
     sourceTemplateKey: string
-    onApply: () => void
+    onApply: (accountMapping: Record<string, string>) => void
     onCancel: () => void
     isPending: boolean
 }) {
@@ -1722,7 +1744,17 @@ function MigrationExecutionView({
                             style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
                             <X size={13} /> Cancel
                         </button>
-                        <button onClick={onApply} disabled={isPending}
+                        <button onClick={() => {
+                                // Build account mapping: source_code → target_code
+                                const mapping: Record<string, string> = {}
+                                for (const acc of preview.accounts) {
+                                    const targetCode = getTargetCode(acc.code, acc.suggested_target)
+                                    if (targetCode) {
+                                        mapping[acc.code] = targetCode
+                                    }
+                                }
+                                onApply(mapping)
+                            }} disabled={isPending}
                             className="flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-bold rounded-xl transition-all"
                             style={{
                                 background: isPending ? 'var(--app-muted)' : 'var(--app-primary)',

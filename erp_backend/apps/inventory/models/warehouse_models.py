@@ -41,6 +41,38 @@ class Warehouse(AuditLogMixin, TenantOwnedModel):
     )
     vat_number = models.CharField(max_length=100, null=True, blank=True)
 
+    # ── Tax engine override (Phase 2) ──
+    TAX_POLICY_MODES = (
+        ('INHERIT', 'Inherit from Organization'),
+        ('CUSTOM', 'Custom Tax Policy'),
+    )
+    tax_policy_mode = models.CharField(
+        max_length=20, choices=TAX_POLICY_MODES, default='INHERIT',
+        help_text='Whether this branch uses the org default tax policy or a custom one'
+    )
+    tax_policy = models.ForeignKey(
+        'finance.OrgTaxPolicy', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='branch_overrides',
+        help_text='Custom tax policy for this branch. Only used when tax_policy_mode=CUSTOM.'
+    )
+
+    # ── Product sharing rules (Phase 2) ──
+    SHARING_SCOPES = (
+        ('NONE', 'No Sharing'),
+        ('SAME_COUNTRY', 'Same Country Branches'),
+        ('SELECTED', 'Selected Branches Only'),
+        ('ALL', 'All Branches in Organization'),
+    )
+    product_sharing_scope = models.CharField(
+        max_length=20, choices=SHARING_SCOPES, default='NONE',
+        help_text='Controls which other branches can see/sell products from this location'
+    )
+    product_sharing_targets = models.ManyToManyField(
+        'self', blank=True, symmetrical=False,
+        related_name='shared_product_sources',
+        help_text='Specific branches that can access this location\'s products (for SELECTED scope)'
+    )
+
     # ── Operational flags ──
     can_sell = models.BooleanField(default=True,
         help_text='Can products be sold directly from this location?')

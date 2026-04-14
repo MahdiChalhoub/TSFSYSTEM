@@ -8,10 +8,12 @@ import { useRouter } from 'next/navigation'
 import {
     X, Building2, Store, Warehouse, Cloud,
     Check, MapPin, Globe, Shield, Phone,
-    ArrowRight, Sparkles, Loader2
+    ArrowRight, Sparkles, Loader2, GitBranch
 } from 'lucide-react'
 
-/* ── Type Config ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  TYPE CONFIG
+ * ═══════════════════════════════════════════════════════════ */
 
 const LOCATION_TYPES = [
     {
@@ -19,32 +21,34 @@ const LOCATION_TYPES = [
         label: 'Branch',
         icon: Building2,
         color: 'var(--app-success)',
-        bullets: ['Top-level location', 'Groups stores &\nwarehouses'],
+        desc: 'Top-level location',
     },
     {
         value: 'STORE',
         label: 'Store',
         icon: Store,
         color: 'var(--app-info)',
-        bullets: ['Retail POS', 'Customer-facing\ntransactions'],
+        desc: 'Retail POS point',
     },
     {
         value: 'WAREHOUSE',
-        label: 'inventory.warehouse',
+        label: 'Warehouse',
         icon: Warehouse,
         color: 'var(--app-warning)',
-        bullets: ['Storage hub', 'Fulfillment center'],
+        desc: 'Storage / fulfillment',
     },
     {
         value: 'VIRTUAL',
         label: 'Virtual',
         icon: Cloud,
         color: 'var(--app-primary)',
-        bullets: ['Transit stock', 'Virtual inventory pool'],
+        desc: 'Transit / virtual pool',
     },
 ]
 
-/* ── Props ────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  PROPS
+ * ═══════════════════════════════════════════════════════════ */
 
 interface WarehouseModalProps {
     warehouse?: any
@@ -56,7 +60,9 @@ interface WarehouseModalProps {
     onSaved?: () => void | Promise<void>
 }
 
-/* ── Component ───────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  COMPONENT
+ * ═══════════════════════════════════════════════════════════ */
 
 export default function WarehouseModal({
     warehouse,
@@ -94,17 +100,32 @@ export default function WarehouseModal({
     useEffect(() => {
         if (!isEditing) {
             setCanSell(locationType === 'STORE')
-            // Branches don't need a parent
             if (locationType === 'BRANCH') setParentId('')
         }
     }, [locationType, isEditing])
 
     const typeCfg = LOCATION_TYPES.find(t => t.value === locationType) || LOCATION_TYPES[0]
 
+    /* ─── Phone validation: only digits, +, -, (, ), spaces ─── */
+    const handlePhoneChange = (val: string) => {
+        const cleaned = val.replace(/[^0-9+\-() ]/g, '')
+        setPhone(cleaned)
+    }
+
+    /* ─── VAT: uppercase alphanumeric + dashes only ─── */
+    const handleVatChange = (val: string) => {
+        const cleaned = val.replace(/[^A-Za-z0-9\-]/g, '').toUpperCase()
+        setVatNumber(cleaned)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!name.trim()) {
             setError('Location name is required')
+            return
+        }
+        if (locationType !== 'BRANCH' && !parentId) {
+            setError(`${typeCfg.label} must belong to a Branch`)
             return
         }
 
@@ -125,7 +146,6 @@ export default function WarehouseModal({
             parent: parentId || null,
         }
 
-        // For new branches with auto-create enabled
         if (!isEditing && locationType === 'BRANCH') {
             payload.auto_create_store = autoStore
             payload.auto_create_warehouse = autoWarehouse
@@ -162,318 +182,388 @@ export default function WarehouseModal({
         }
     }
 
+    /* ═══════════════════════════════════════════════════════════
+     *  RENDER
+     * ═══════════════════════════════════════════════════════════ */
+
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
+            onClick={e => { if (e.target === e.currentTarget) onClose() }}
+        >
             <div
-                className="bg-app-surface rounded-2xl shadow-2xl w-full max-w-[1100px] overflow-hidden animate-in fade-in zoom-in-95 duration-300"
-                onClick={e => e.stopPropagation()}
+                className="w-full max-w-2xl sm:mx-4 sm:rounded-2xl rounded-none overflow-hidden animate-in zoom-in-95 duration-200 sm:max-h-[90vh] max-h-screen flex flex-col"
+                style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
             >
                 {/* ── Header ──────────────────────────────────────────── */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-app-border">
-                    <div className="flex items-center gap-3">
+                <div
+                    className="px-4 sm:px-5 py-3 flex items-center justify-between flex-shrink-0"
+                    style={{ background: `color-mix(in srgb, ${typeCfg.color} 6%, var(--app-surface))`, borderBottom: '1px solid var(--app-border)' }}
+                >
+                    <div className="flex items-center gap-2.5">
                         <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
-                            style={{
-                                background: `linear-gradient(135deg, ${typeCfg.color}, color-mix(in srgb, ${typeCfg.color} 70%, transparent))`,
-                            }}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            style={{ background: typeCfg.color, boxShadow: `0 4px 12px color-mix(in srgb, ${typeCfg.color} 30%, transparent)` }}
                         >
-                            <typeCfg.icon size={20} className="text-white" />
+                            <typeCfg.icon size={15} className="text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-app-foreground">
+                            <h3 className="text-sm font-black text-app-foreground">
                                 {isEditing ? 'Edit Location' : 'New Location'}
-                            </h2>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: typeCfg.color }} />
-                                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: typeCfg.color }}>
-                                    {typeCfg.value}
-                                </span>
-                            </div>
+                            </h3>
+                            <p className="text-[10px] font-bold text-app-muted-foreground">
+                                {isEditing ? `Editing "${warehouse?.name}"` : 'Configure a new location in your hierarchy'}
+                            </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-app-surface-2 text-app-muted-foreground hover:text-app-foreground transition-colors">
-                        <X size={20} />
+                    <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all">
+                        <X size={16} />
                     </button>
                 </div>
 
                 {/* ── Body ─────────────────────────────────────────────── */}
-                <form onSubmit={handleSubmit}>
-                    {/* Type Selector — Horizontal Row */}
-                    <div className="px-6 py-4 border-b border-app-border bg-app-surface-2/20">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-3">
-                            Location Type
-                        </p>
-                        <div className="grid grid-cols-4 gap-2">
-                            {LOCATION_TYPES.map(lt => {
-                                const Icon = lt.icon
-                                const selected = locationType === lt.value
-                                return (
-                                    <button
-                                        key={lt.value}
-                                        type="button"
-                                        onClick={() => setLocationType(lt.value)}
-                                        className={`relative flex items-center gap-2.5 px-3.5 py-3 rounded-xl border-2 transition-all duration-200 ${
-                                            selected
-                                                ? 'shadow-md'
-                                                : 'border-transparent hover:bg-app-surface'
-                                        }`}
-                                        style={selected ? {
-                                            borderColor: `color-mix(in srgb, ${lt.color} 50%, transparent)`,
-                                            background: `color-mix(in srgb, ${lt.color} 8%, var(--app-surface))`,
-                                        } : {}}
-                                    >
-                                        <div
-                                            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-                                            style={{
-                                                background: selected
-                                                    ? `linear-gradient(135deg, ${lt.color}, color-mix(in srgb, ${lt.color} 70%, transparent))`
-                                                    : `color-mix(in srgb, ${lt.color} 12%, transparent)`,
-                                                color: selected ? 'white' : lt.color,
-                                            }}
-                                        >
-                                            <Icon size={18} />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className={`text-[12px] font-black truncate ${selected ? 'text-app-foreground' : 'text-app-foreground/60'}`}>{lt.label}</p>
-                                            <p className="text-[9px] text-app-muted-foreground truncate">{lt.bullets[0]}</p>
-                                        </div>
-                                        {selected && (
-                                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: lt.color }}>
-                                                <Check size={10} className="text-white" />
-                                            </div>
-                                        )}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    </div>
+                <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-4">
 
-                    {/* Form Fields */}
-                    <div className="p-6 space-y-4 overflow-y-auto max-h-[55vh]">
-                        {/* Name + Code */}
-                        <div className="grid grid-cols-[1fr_180px] gap-3">
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 block">
-                                    Location Name <span className="text-app-error">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="e.g., Central Warehouse, Downtown Store..."
-                                    className="w-full bg-app-surface border-2 border-app-primary/30 rounded-xl px-4 py-2.5 text-[13px] font-medium text-app-foreground outline-none focus:border-app-primary/60 focus:shadow-lg transition-all placeholder:text-app-muted-foreground/50"
-                                    autoFocus
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 block">
-                                    Code
-                                </label>
-                                <input
-                                    type="text"
-                                    value={code}
-                                    onChange={e => setCode(e.target.value.toUpperCase())}
-                                    placeholder="Auto-generated"
-                                    className="w-full bg-app-surface-2/50 border border-app-border rounded-xl px-4 py-2.5 text-[13px] font-medium text-app-foreground outline-none focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground/40"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Parent (for non-branch types) */}
-                        {locationType !== 'BRANCH' && parentOptions.length > 0 && (
-                            <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground mb-1.5 block">
-                                    <Building2 size={10} className="inline mr-1" /> Parent Branch
-                                </label>
-                                <select
-                                    value={parentId}
-                                    onChange={e => setParentId(e.target.value ? Number(e.target.value) : '')}
-                                    className="w-full bg-app-surface border border-app-border rounded-xl px-4 py-2.5 text-[13px] font-medium text-app-foreground outline-none focus:border-app-primary/30 transition-all"
-                                >
-                                    <option value="">— Select Parent Branch —</option>
-                                    {parentOptions.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {/* Physical Address Section */}
-                        <div className="bg-app-surface-2/30 rounded-xl p-4 space-y-3">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
-                                <MapPin size={11} /> Physical Address
+                        {/* ── Section: Location Type ── */}
+                        <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">
+                                Location Type
                             </p>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                {LOCATION_TYPES.map(lt => {
+                                    const Icon = lt.icon
+                                    const selected = locationType === lt.value
+                                    return (
+                                        <button
+                                            key={lt.value}
+                                            type="button"
+                                            onClick={() => setLocationType(lt.value)}
+                                            className={`relative flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                                                selected ? 'shadow-md' : 'border-transparent hover:bg-app-surface'
+                                            }`}
+                                            style={selected ? {
+                                                borderColor: `color-mix(in srgb, ${lt.color} 50%, transparent)`,
+                                                background: `color-mix(in srgb, ${lt.color} 8%, var(--app-surface))`,
+                                            } : { borderColor: 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                                        >
+                                            <div
+                                                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                                style={{
+                                                    background: selected
+                                                        ? lt.color
+                                                        : `color-mix(in srgb, ${lt.color} 12%, transparent)`,
+                                                    color: selected ? 'white' : lt.color,
+                                                }}
+                                            >
+                                                <Icon size={14} />
+                                            </div>
+                                            <div className="min-w-0 text-left">
+                                                <p className={`text-[11px] font-black truncate ${selected ? 'text-app-foreground' : 'text-app-foreground/60'}`}>{lt.label}</p>
+                                                <p className="text-[8px] text-app-muted-foreground truncate">{lt.desc}</p>
+                                            </div>
+                                            {selected && (
+                                                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: lt.color }}>
+                                                    <Check size={8} className="text-white" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* ── Section: Identity ── */}
+                        <div
+                            className="rounded-xl p-3 sm:p-4 space-y-3"
+                            style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                        >
+                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <GitBranch size={10} /> Identity
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        Name <span style={{ color: 'var(--app-error)' }}>*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={e => setName(e.target.value)}
+                                        placeholder="e.g., Central Warehouse, Downtown Store..."
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 focus:ring-2 focus:ring-app-primary/10 transition-all placeholder:text-app-muted-foreground/40"
+                                        autoFocus
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">Code</label>
+                                    <input
+                                        type="text"
+                                        value={code}
+                                        onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''))}
+                                        placeholder="Auto"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono font-bold text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Parent (non-branch) */}
+                            {locationType !== 'BRANCH' && parentOptions.length > 0 && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        <Building2 size={9} className="inline mr-1" /> Parent Branch <span style={{ color: 'var(--app-error)' }}>*</span>
+                                    </label>
+                                    <select
+                                        value={parentId}
+                                        onChange={e => setParentId(e.target.value ? Number(e.target.value) : '')}
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                        required
+                                    >
+                                        <option value="">— Select Parent Branch —</option>
+                                        {parentOptions.map(p => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name} {p.country_name ? `(${p.country_name})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Section: Address ── */}
+                        <div
+                            className="rounded-xl p-3 sm:p-4 space-y-3"
+                            style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                        >
+                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <MapPin size={10} /> Physical Address
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        <Globe size={9} className="inline mr-1" /> Country
+                                        {locationType === 'BRANCH' && <span style={{ color: 'var(--app-error)' }}> *</span>}
+                                    </label>
+                                    <select
+                                        value={countryId}
+                                        onChange={e => setCountryId(e.target.value ? Number(e.target.value) : '')}
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                    >
+                                        <option value="">— Select Country —</option>
+                                        {countries.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name} {c.iso2 ? `(${c.iso2})` : ''}</option>
+                                        ))}
+                                    </select>
+                                    {locationType === 'BRANCH' && (
+                                        <p className="text-[9px] font-bold mt-1 flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
+                                            ⚠ Children inherit this country
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">City</label>
+                                    <input
+                                        type="text"
+                                        value={city}
+                                        onChange={e => setCity(e.target.value)}
+                                        placeholder="City name"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">Street Address</label>
                                 <input
                                     type="text"
                                     value={address}
                                     onChange={e => setAddress(e.target.value)}
-                                    placeholder="Street address..."
-                                    className="col-span-1 bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground/40"
+                                    placeholder="Full street address..."
+                                    className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                 />
-                                <input
-                                    type="text"
-                                    value={city}
-                                    onChange={e => setCity(e.target.value)}
-                                    placeholder="inventory.city"
-                                    className="bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground/40"
-                                />
-                                <div className="relative">
-                                    <Phone size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground/40" />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        <Phone size={9} className="inline mr-1" /> Phone
+                                    </label>
                                     <input
-                                        type="text"
+                                        type="tel"
+                                        inputMode="tel"
                                         value={phone}
-                                        onChange={e => setPhone(e.target.value)}
-                                        placeholder="inventory.phone"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl pl-8 pr-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground/40"
+                                        onChange={e => handlePhoneChange(e.target.value)}
+                                        placeholder="+961 1 234 567"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                     />
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="relative">
-                                    <Globe size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground/40" />
-                                    <select
-                                        value={countryId}
-                                        onChange={e => setCountryId(e.target.value ? Number(e.target.value) : '')}
-                                        className="w-full bg-app-surface border border-app-border rounded-xl pl-8 pr-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/30 transition-all"
-                                    >
-                                        <option value="">— Country —</option>
-                                        {countries.map(c => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="relative">
-                                    <Shield size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground/40" />
+                                <div>
+                                    <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                        <Shield size={9} className="inline mr-1" /> VAT / Tax ID
+                                    </label>
                                     <input
                                         type="text"
                                         value={vatNumber}
-                                        onChange={e => setVatNumber(e.target.value)}
-                                        placeholder="VAT / Tax ID"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl pl-8 pr-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground/40"
+                                        onChange={e => handleVatChange(e.target.value)}
+                                        placeholder="e.g., LB12345678"
+                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-mono text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
                                     />
                                 </div>
                             </div>
-                            {locationType === 'BRANCH' && (
-                                <p className="text-[10px] font-bold text-app-warning flex items-center gap-1">
-                                    ⚠ Required — all child locations will inherit this country
-                                </p>
+                        </div>
+
+                        {/* ── Section: Settings ── */}
+                        <div
+                            className="rounded-xl p-3 sm:p-4 space-y-3"
+                            style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                        >
+                            <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                <Sparkles size={10} /> Settings
+                            </p>
+
+                            {/* Active toggle */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                        style={{ background: 'color-mix(in srgb, var(--app-success) 12%, transparent)', color: 'var(--app-success)' }}>
+                                        <Sparkles size={11} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-app-foreground">Active</p>
+                                        <p className="text-[9px] text-app-muted-foreground">Location is visible and operational</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsActive(!isActive)}
+                                    className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${isActive ? 'bg-app-success' : 'bg-app-border'}`}
+                                >
+                                    <div className={`absolute top-[2px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${isActive ? 'left-[22px]' : 'left-[2px]'}`} />
+                                </button>
+                            </div>
+
+                            {/* Can Sell toggle */}
+                            {locationType !== 'BRANCH' && (
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                            style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
+                                            <Store size={11} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-bold text-app-foreground">Can Sell (POS)</p>
+                                            <p className="text-[9px] text-app-muted-foreground">Products can be sold from this location</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCanSell(!canSell)}
+                                        className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${canSell ? 'bg-app-info' : 'bg-app-border'}`}
+                                    >
+                                        <div className={`absolute top-[2px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${canSell ? 'left-[22px]' : 'left-[2px]'}`} />
+                                    </button>
+                                </div>
                             )}
                         </div>
 
-                        {/* Active Toggle */}
-                        <div className="flex items-center justify-between px-1">
-                            <div className="flex items-center gap-2.5">
-                                <Sparkles size={14} className="text-app-success" />
-                                <div>
-                                    <p className="text-[12px] font-bold text-app-foreground">Active</p>
-                                    <p className="text-[10px] text-app-muted-foreground">Branch is visible and active</p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsActive(!isActive)}
-                                className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                                    isActive ? 'bg-app-success' : 'bg-app-surface-2'
-                                }`}
-                            >
-                                <div className={`absolute top-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                                    isActive ? 'left-[26px]' : 'left-[2px]'
-                                }`} />
-                            </button>
-                        </div>
-
-                        {/* Auto-Create Child Locations (Branch only, new only) */}
+                        {/* ── Section: Auto-Create (Branch only, new only) ── */}
                         {!isEditing && locationType === 'BRANCH' && (
-                            <div className="bg-app-surface-2/30 rounded-xl p-4 space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
-                                    <Building2 size={11} /> Auto-Create Child Locations
+                            <div
+                                className="rounded-xl p-3 sm:p-4 space-y-3"
+                                style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                            >
+                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                    <Building2 size={10} /> Auto-Create Child Locations
                                 </p>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {/* Main Store */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-info) 15%, transparent)', color: 'var(--app-info)' }}>
-                                                <Store size={14} />
+                                            <div className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                                style={{ background: 'color-mix(in srgb, var(--app-info) 12%, transparent)', color: 'var(--app-info)' }}>
+                                                <Store size={11} />
                                             </div>
                                             <div>
                                                 <p className="text-[11px] font-bold text-app-foreground">Main Store</p>
-                                                <p className="text-[9px] text-app-muted-foreground">Retail POS point (can sell)</p>
+                                                <p className="text-[8px] text-app-muted-foreground">POS point</p>
                                             </div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setAutoStore(!autoStore)}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-                                                autoStore ? 'bg-app-info' : 'bg-app-surface-2'
-                                            }`}
+                                            className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${autoStore ? 'bg-app-info' : 'bg-app-border'}`}
                                         >
-                                            <div className={`absolute top-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                                                autoStore ? 'left-[22px]' : 'left-[2px]'
-                                            }`} />
+                                            <div className={`absolute top-[2px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${autoStore ? 'left-[22px]' : 'left-[2px]'}`} />
                                         </button>
                                     </div>
-                                    {/* Main Warehouse */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--app-warning) 15%, transparent)', color: 'var(--app-warning)' }}>
-                                                <Warehouse size={14} />
+                                            <div className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning) 12%, transparent)', color: 'var(--app-warning)' }}>
+                                                <Warehouse size={11} />
                                             </div>
                                             <div>
                                                 <p className="text-[11px] font-bold text-app-foreground">Main Warehouse</p>
-                                                <p className="text-[9px] text-app-muted-foreground">Storage hub (no sales)</p>
+                                                <p className="text-[8px] text-app-muted-foreground">Storage hub</p>
                                             </div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setAutoWarehouse(!autoWarehouse)}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-                                                autoWarehouse ? 'bg-app-warning' : 'bg-app-surface-2'
-                                            }`}
+                                            className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${autoWarehouse ? 'bg-app-warning' : 'bg-app-border'}`}
                                         >
-                                            <div className={`absolute top-[2px] w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                                                autoWarehouse ? 'left-[22px]' : 'left-[2px]'
-                                            }`} />
+                                            <div className={`absolute top-[2px] w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${autoWarehouse ? 'left-[22px]' : 'left-[2px]'}`} />
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Error */}
+                        {/* ── Error ── */}
                         {error && (
-                            <div className="bg-app-error/10 border border-app-error/20 rounded-xl px-4 py-2.5 text-[12px] font-bold text-app-error">
+                            <div
+                                className="rounded-xl px-4 py-2.5 text-[11px] font-bold flex items-center gap-2"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-error) 8%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-error) 25%, transparent)',
+                                    color: 'var(--app-error)',
+                                }}
+                            >
+                                <X size={12} />
                                 {error}
                             </div>
                         )}
                     </div>
-                </form>
 
-                {/* ── Footer ──────────────────────────────────────────── */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-app-border bg-app-surface-2/20">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl text-[12px] font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface border border-app-border transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isPending}
-                        className="px-6 py-2.5 rounded-xl text-[12px] font-bold text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:scale-100 flex items-center gap-2"
-                        style={{
-                            background: `linear-gradient(135deg, ${typeCfg.color}, color-mix(in srgb, ${typeCfg.color} 80%, black))`,
-                        }}
-                    >
-                        {isPending ? (
-                            <><Loader2 size={14} className="animate-spin" /> Saving...</>
-                        ) : (
-                            <>{isEditing ? 'Update Location' : 'Create Location'} <ArrowRight size={14} /></>
-                        )}
-                    </button>
-                </div>
+                    {/* ── Footer (INSIDE form) ──────────────────────────── */}
+                    <div className="flex items-center justify-end gap-2 px-4 sm:px-5 py-3 flex-shrink-0"
+                        style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 90%, var(--app-background))' }}>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 rounded-xl text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="px-5 py-2 rounded-xl text-[11px] font-bold text-white hover:brightness-110 transition-all duration-200 disabled:opacity-50 flex items-center gap-1.5"
+                            style={{
+                                background: typeCfg.color,
+                                boxShadow: `0 2px 8px color-mix(in srgb, ${typeCfg.color} 25%, transparent)`,
+                            }}
+                        >
+                            {isPending ? (
+                                <><Loader2 size={13} className="animate-spin" /> Saving...</>
+                            ) : (
+                                <>{isEditing ? 'Update Location' : 'Create Location'} <ArrowRight size={13} /></>
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )

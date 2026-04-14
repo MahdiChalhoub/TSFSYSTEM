@@ -46,14 +46,8 @@ class LedgerCOAMixin:
         if not accounts_data:
             raise ValidationError(f"Template {template_key} has no accounts")
 
-        # ── Temporarily unlock structure for template import ─────────
-        # The ChartOfAccount.save() and .delete() overrides block changes
-        # when organization.finance_setup_completed is True.
-        # We must lift the lock during import, then re-lock afterward.
+        # ── Check if structure is locked (will unlock inside transaction) ──
         was_locked = getattr(organization, 'finance_setup_completed', False)
-        if was_locked:
-            organization.finance_setup_completed = False
-            organization.save(update_fields=['finance_setup_completed'])
 
         # ── Smart Registry: Enterprise Role & Section Detection ──────────
         ROLE_MAP = {
@@ -130,12 +124,28 @@ class LedgerCOAMixin:
         parent_codes = {item.get('parent_code') for item in accounts_data if item.get('parent_code')}
 
         with transaction.atomic():
+            # ── Temporarily unlock structure for template import ─────
+            # ChartOfAccount.save() blocks parent changes when locked.
+            # Unlock inside the transaction so it rolls back on failure.
+            if was_locked:
+                organization.finance_setup_completed = False
+                organization.save(update_fields=['finance_setup_completed'])
+
             has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()
 
             if reset:
                 if has_journal_entries:
                     ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
                 else:
+                    # Must clear FK references with on_delete=PROTECT before deleting accounts
+                    from apps.finance.models import PostingRule
+                    PostingRule.objects.filter(organization=organization).delete()
+                    try:
+                        from django.apps import apps
+                        PRH = apps.get_model('finance', 'PostingRuleHistory')
+                        PRH.objects.filter(organization=organization).delete()
+                    except Exception:
+                        pass
                     ChartOfAccount.objects.filter(organization=organization).delete()
 
             # ── High Performance First Pass (using update_or_create logic but collecting for bulk if possible) ──
@@ -279,6 +289,11 @@ class LedgerCOAMixin:
                 })
             except Exception: pass
 
+            # ── Re-lock structure if it was locked before import ──
+            if was_locked:
+                organization.finance_setup_completed = True
+                organization.save(update_fields=['finance_setup_completed'])
+
             return True
 
     @staticmethod
@@ -334,7 +349,14 @@ class LedgerCOAMixin:
         if not target_template_key:
             raise ValidationError("target_template_key is required for V2 migration")
 
+        was_locked = getattr(organization, 'finance_setup_completed', False)
+
         with transaction.atomic():
+            # ── Temporarily unlock structure for migration ───────────
+            if was_locked:
+                organization.finance_setup_completed = False
+                organization.save(update_fields=['finance_setup_completed'])
+
             # ── Load target template accounts into a lookup ──
             target_lookup = {}  # code → {name, type, sub_type, parent_code, ...}
             if target_template_accounts:
@@ -504,11 +526,16 @@ class LedgerCOAMixin:
             except Exception:
                 pass
 
+            # ── Re-lock structure if it was locked before migration ──
+            if was_locked:
+                organization.finance_setup_completed = True
+                organization.save(update_fields=['finance_setup_completed'])
+
             logger.info(
                 f"Migration complete: {len(mapped_source_ids)} renamed, "
                 f"{deleted_count} deleted, {created_count} created"
             )
-            
+
             return {
                 'renamed': len(mapped_source_ids),
                 'deleted': deleted_count,

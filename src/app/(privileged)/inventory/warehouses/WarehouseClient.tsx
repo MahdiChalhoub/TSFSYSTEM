@@ -4,12 +4,13 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
+import { erpFetch } from '@/lib/erp-api'
 import WarehouseModal from './form'
 import {
     Building2, Store, Warehouse, Cloud, MapPin, Layers, BarChart3,
     Plus, Trash2, Edit3, Phone, ChevronDown, ChevronRight,
     Package, GitBranch, Search, X, Globe, Maximize2, Minimize2,
-    ChevronsUpDown, ChevronsDownUp, Settings
+    ChevronsUpDown, ChevronsDownUp, Settings, Loader2, Box
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -66,8 +67,8 @@ function buildTree(flat: WarehouseNode[]): { branches: WarehouseNode[]; orphans:
  *  CHILD ROW (leaf node — indented under branch)
  * ═══════════════════════════════════════════════════════════ */
 
-function ChildRow({ node, onEdit, onDelete }: {
-    node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
+function ChildRow({ node, onEdit, onDelete, onSkuClick }: {
+    node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void; onSkuClick?: (w: WarehouseNode) => void;
 }) {
     const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
     const Icon = cfg.icon
@@ -155,12 +156,28 @@ function ChildRow({ node, onEdit, onDelete }: {
                 {node.city && <><MapPin size={9} />{node.city}</>}
             </div>
 
+            {/* Country Column */}
+            <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
+                {node.country_name ? (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ color: 'var(--app-info)', background: 'color-mix(in srgb, var(--app-info) 8%, transparent)' }}>
+                        {node.country_iso2 || node.country_name}
+                    </span>
+                ) : (
+                    <span className="text-[9px] font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
+                )}
+            </div>
+
             {/* SKUs Column */}
-            <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
-                <span className="flex items-center gap-1 justify-end">
+            <div className="hidden sm:block w-16 text-right flex-shrink-0">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onSkuClick?.(node) }}
+                    className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                    title="View inventory"
+                >
                     <Settings size={10} className="text-app-muted-foreground" />
                     {node.inventory_count || 0}
-                </span>
+                </button>
             </div>
 
             {/* Actions */}
@@ -180,9 +197,9 @@ function ChildRow({ node, onEdit, onDelete }: {
  *  BRANCH ROW (parent — expandable tree-style)
  * ═══════════════════════════════════════════════════════════ */
 
-function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle }: {
+function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle, onSkuClick }: {
     branch: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
-    onAddChild: (parent: WarehouseNode) => void; isExpanded: boolean; onToggle: () => void;
+    onAddChild: (parent: WarehouseNode) => void; isExpanded: boolean; onToggle: () => void; onSkuClick?: (w: WarehouseNode) => void;
 }) {
     const children = branch.children || []
     const hasChildren = children.length > 0
@@ -245,16 +262,6 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle 
                             border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)',
                         }}
                     >BASE</span>
-                    {branch.country_name && (
-                        <span className="hidden lg:inline text-[9px] font-bold text-app-muted-foreground flex items-center gap-1">
-                            <Globe size={9} />{branch.country_name}
-                        </span>
-                    )}
-                    {!branch.country_name && (
-                        <span className="hidden sm:inline text-[9px] font-bold flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
-                            <Globe size={9} />⚠ No Country
-                        </span>
-                    )}
                 </div>
 
                 {/* Code Column */}
@@ -278,12 +285,30 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle 
                     {branch.city && <><MapPin size={9} />{branch.city}</>}
                 </div>
 
+                {/* Country Column */}
+                <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
+                    {branch.country_name ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 8%, transparent)' }}>
+                            {branch.country_iso2 || branch.country_name}
+                        </span>
+                    ) : (
+                        <span className="text-[9px] font-bold flex items-center gap-0.5" style={{ color: 'var(--app-warning)' }}>
+                            ⚠
+                        </span>
+                    )}
+                </div>
+
                 {/* Stats: Children + SKUs */}
-                <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
-                    <span className="flex items-center gap-1 justify-end">
+                <div className="hidden sm:block w-16 text-right flex-shrink-0">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onSkuClick?.(branch) }}
+                        className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                        title="View inventory"
+                    >
                         <Settings size={10} className="text-app-muted-foreground" />
                         {totalSKUs}
-                    </span>
+                    </button>
                 </div>
 
                 {/* Actions */}
@@ -301,7 +326,7 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle 
             {isExpanded && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-150">
                     {children.map(c => (
-                        <ChildRow key={c.id} node={c} onEdit={onEdit} onDelete={onDelete} />
+                        <ChildRow key={c.id} node={c} onEdit={onEdit} onDelete={onDelete} onSkuClick={onSkuClick} />
                     ))}
                 </div>
             )}
@@ -313,8 +338,8 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle 
  *  ORPHAN ROW (unassigned — root-level, no parent)
  * ═══════════════════════════════════════════════════════════ */
 
-function OrphanRow({ node, onEdit, onDelete }: {
-    node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
+function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
+    node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void; onSkuClick?: (w: WarehouseNode) => void;
 }) {
     const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
     const Icon = cfg.icon
@@ -377,12 +402,28 @@ function OrphanRow({ node, onEdit, onDelete }: {
                 {node.city && <><MapPin size={9} />{node.city}</>}
             </div>
 
+            {/* Country */}
+            <div className="hidden lg:flex w-16 flex-shrink-0 items-center">
+                {node.country_name ? (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)` }}>
+                        {node.country_iso2 || node.country_name}
+                    </span>
+                ) : (
+                    <span className="text-[9px] font-bold" style={{ color: 'var(--app-warning)' }}>—</span>
+                )}
+            </div>
+
             {/* SKUs */}
-            <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
-                <span className="flex items-center gap-1 justify-end">
+            <div className="hidden sm:block w-16 text-right flex-shrink-0">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onSkuClick?.(node) }}
+                    className="inline-flex items-center gap-1 justify-end text-[12px] font-bold text-app-foreground tabular-nums hover:text-app-primary transition-colors cursor-pointer"
+                    title="View inventory"
+                >
                     <Settings size={10} className="text-app-muted-foreground" />
                     {node.inventory_count || 0}
-                </span>
+                </button>
             </div>
 
             {/* Actions */}
@@ -414,6 +455,22 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set(data.filter(w => w.location_type === 'BRANCH').map(w => w.id)))
     const [focusMode, setFocusMode] = useState(false)
     const [activeFilter, setActiveFilter] = useState<string | null>(null)
+
+    /* ─── SKU Side Panel state ─── */
+    const [skuPanel, setSkuPanel] = useState<{ open: boolean; location: WarehouseNode | null; items: any[]; loading: boolean }>({
+        open: false, location: null, items: [], loading: false
+    })
+
+    const openSkuPanel = useCallback(async (loc: WarehouseNode) => {
+        setSkuPanel({ open: true, location: loc, items: [], loading: true })
+        try {
+            const res = await erpFetch(`inventory/stock-balances/?warehouse=${loc.id}&page_size=50`)
+            const items = Array.isArray(res) ? res : (res?.results ?? [])
+            setSkuPanel(prev => ({ ...prev, items, loading: false }))
+        } catch {
+            setSkuPanel(prev => ({ ...prev, items: [], loading: false }))
+        }
+    }, [])
 
     const { branches, orphans } = useMemo(() => buildTree(data), [data])
 
@@ -534,7 +591,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     ]
 
     return (
-        <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`} style={{ height: '100%' }}>
+        <div className={`flex flex-col p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`} style={{ height: '100%' }}>
 
             {/* ═══════════════ HEADER ═══════════════ */}
             <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
@@ -716,6 +773,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                     <div className="hidden sm:block w-16 flex-shrink-0">Code</div>
                     <div className="hidden sm:block w-20 flex-shrink-0">Type</div>
                     <div className="hidden md:block w-24 flex-shrink-0">City</div>
+                    <div className="hidden lg:block w-16 flex-shrink-0">Country</div>
                     <div className="hidden sm:block w-16 flex-shrink-0 text-right">SKUs</div>
                     <div className="w-16 flex-shrink-0" />
                 </div>
@@ -765,6 +823,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                     onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
                                     onDelete={(w) => setDeleteTarget(w)}
                                     onAddChild={handleAddChild}
+                                    onSkuClick={openSkuPanel}
                                 />
                             ))}
 
@@ -775,12 +834,101 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                                     node={node}
                                     onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
                                     onDelete={(w) => setDeleteTarget(w)}
+                                    onSkuClick={openSkuPanel}
                                 />
                             ))}
                         </>
                     )}
                 </div>
             </div>
+
+            {/* ═══════════════ SKU SIDE PANEL ═══════════════ */}
+            {skuPanel.open && (
+                <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setSkuPanel(p => ({ ...p, open: false }))}>
+                    <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)' }} />
+                    <div
+                        className="relative w-full max-w-sm h-full flex flex-col animate-in slide-in-from-right duration-200"
+                        style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Panel Header */}
+                        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                    <Box size={13} className="text-white" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-[12px] font-black text-app-foreground truncate">
+                                        {skuPanel.location?.name}
+                                    </h3>
+                                    <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                                        Inventory · {skuPanel.items.length} items
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSkuPanel(p => ({ ...p, open: false }))}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all flex-shrink-0"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Panel Body */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            {skuPanel.loading ? (
+                                <div className="flex flex-col items-center justify-center py-16">
+                                    <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
+                                    <p className="text-[11px] font-bold text-app-muted-foreground">Loading inventory...</p>
+                                </div>
+                            ) : skuPanel.items.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
+                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
+                                        <Package size={20} style={{ color: 'var(--app-primary)', opacity: 0.5 }} />
+                                    </div>
+                                    <p className="text-[12px] font-bold text-app-muted-foreground">No inventory found</p>
+                                    <p className="text-[10px] text-app-muted-foreground mt-1">This location has no stock records yet</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    {skuPanel.items.map((item: any, idx: number) => (
+                                        <div
+                                            key={item.id || idx}
+                                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-app-surface/60 transition-colors"
+                                            style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}
+                                        >
+                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
+                                                <Package size={12} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[12px] font-bold text-app-foreground truncate">
+                                                    {item.product_name || item.product?.name || `Product #${item.product_id || item.product}`}
+                                                </p>
+                                                <p className="text-[9px] font-mono text-app-muted-foreground">
+                                                    {item.sku || item.product?.sku || ''}
+                                                    {item.unit_name && ` · ${item.unit_name}`}
+                                                </p>
+                                            </div>
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="text-[13px] font-black text-app-foreground tabular-nums">
+                                                    {typeof item.quantity === 'number' ? item.quantity.toLocaleString() : (item.available_qty ?? item.on_hand_qty ?? 0)}
+                                                </p>
+                                                <p className="text-[8px] font-bold text-app-muted-foreground uppercase">
+                                                    {item.unit_name || item.unit?.short_name || 'units'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ═══════════════ MODALS ═══════════════ */}
             {isFormOpen && (
