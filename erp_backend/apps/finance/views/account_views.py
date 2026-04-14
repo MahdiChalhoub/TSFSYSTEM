@@ -942,9 +942,8 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
             account_balances.append({
                 "code": acc.code,
                 "name": acc.name,
-                "type": acc.account_type,
-                "balance": float(acc.balance),
-                "balance_official": float(acc.balance_official) if hasattr(acc, 'balance_official') else 0,
+                "type": acc.type,
+                "balance": float(acc.balance) if acc.balance else 0,
                 "template_origin": acc.template_origin,
             })
 
