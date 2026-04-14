@@ -914,6 +914,50 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
             })
         return Response(data)
 
+    @action(detail=False, methods=['get'])
+    def coa_status(self, request):
+        """Return current COA state: active template, journal count, etc."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        from apps.finance.models import ChartOfAccount, JournalEntry
+        from django.db.models import Count
+
+        org_accounts = ChartOfAccount.objects.filter(organization_id=organization_id, is_active=True)
+        journal_count = JournalEntry.objects.filter(organization_id=organization_id).count()
+
+        # Get the dominant template (most active accounts)
+        template_stats = (
+            org_accounts.values('template_origin')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        templates = {r['template_origin']: r['count'] for r in template_stats if r['template_origin']}
+        current_template = max(templates, key=templates.get) if templates else None
+
+        # Per-account balances for migration display
+        account_balances = []
+        for acc in org_accounts.order_by('code'):
+            account_balances.append({
+                "code": acc.code,
+                "name": acc.name,
+                "type": acc.account_type,
+                "balance": float(acc.balance),
+                "balance_official": float(acc.balance_official) if hasattr(acc, 'balance_official') else 0,
+                "template_origin": acc.template_origin,
+            })
+
+        return Response({
+            "current_template": current_template,
+            "templates": templates,
+            "account_count": org_accounts.count(),
+            "journal_entry_count": journal_count,
+            "has_data": journal_count > 0,
+            "needs_migration": journal_count > 0 and current_template is not None,
+            "accounts": account_balances,
+        })
+
     @action(detail=False, methods=['post'])
     def apply_template(self, request):
         organization_id = get_current_tenant_id()

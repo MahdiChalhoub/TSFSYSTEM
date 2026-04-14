@@ -113,6 +113,35 @@ export type MigrationBlocker = {
     [key: string]: any
 }
 
+// ─── COA Status Check ────────────────────────────────────────────────────────
+
+export type COAStatus = {
+    current_template: string | null
+    templates: Record<string, number>
+    account_count: number
+    journal_entry_count: number
+    has_data: boolean
+    needs_migration: boolean
+    accounts: { code: string; name: string; type: string; balance: number; balance_official: number; template_origin: string }[]
+}
+
+export async function getCOAStatus(): Promise<COAStatus> {
+    try {
+        const { erpFetch } = await import('@/lib/erp-api')
+        return await erpFetch('coa/coa_status/')
+    } catch {
+        return {
+            current_template: null,
+            templates: {},
+            account_count: 0,
+            journal_entry_count: 0,
+            has_data: false,
+            needs_migration: false,
+            accounts: [],
+        }
+    }
+}
+
 // ─── Existing: Template import & preview ────────────────────────────────────
 
 export async function importChartOfAccountsTemplate(templateKey: string, options?: { reset?: boolean }) {

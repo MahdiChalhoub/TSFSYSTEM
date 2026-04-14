@@ -196,64 +196,62 @@ class LedgerCOAMixin:
             
             rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
-            # ── Cleanup: Delete orphan inactive accounts ──
-            # After a reset+import, remove orphan accounts. This is best-effort:
-            # a failure here should NEVER crash the import itself.
+            # ── Post-Import Cleanup ──────────────────────────────────────
+            # After a reset+import, ensure ONLY the new template's accounts are active.
+            # Accounts from other templates must be deactivated or deleted.
             if reset:
                 try:
+                    new_template_codes = set(item['code'] for item in accounts_data)
+                    
+                    # 1) Deactivate ALL accounts NOT in the new template
+                    stale_qs = ChartOfAccount.objects.filter(
+                        organization=organization,
+                        is_active=True,
+                    ).exclude(code__in=new_template_codes)
+                    stale_deactivated = stale_qs.update(is_active=False)
+                    if stale_deactivated:
+                        logging.getLogger(__name__).info(
+                            f"Deactivated {stale_deactivated} accounts not in template {template_key}"
+                        )
+
+                    # 2) Delete inactive accounts that have NO journal references
                     used_ids_subq = JournalEntryLine.objects.filter(
                         organization=organization
                     ).values_list('account_id', flat=True)
-
-                    # 1) Deactivate null-origin seed accounts that ARE journal-referenced
-                    ChartOfAccount.objects.filter(
+                    
+                    deletable_qs = ChartOfAccount.objects.filter(
                         organization=organization,
-                        template_origin__isnull=True,
-                        balance=0,
-                        id__in=used_ids_subq,
-                    ).update(is_active=False)
-
-                    # 2) Build orphan set: inactive + null-origin with no journal refs
-                    orphan_qs = ChartOfAccount.objects.filter(
-                        organization=organization,
-                    ).filter(
-                        models.Q(is_active=False) | models.Q(template_origin__isnull=True, balance=0)
+                        is_active=False,
                     ).exclude(id__in=used_ids_subq)
-                    orphan_ids = list(orphan_qs.values_list('id', flat=True))
-
-                    if orphan_ids:
-                        # Null parent_id references to orphan accounts
+                    
+                    deletable_ids = list(deletable_qs.values_list('id', flat=True))
+                    if deletable_ids:
+                        # Unlink parent references
                         ChartOfAccount.objects.filter(
-                            parent_id__in=orphan_ids
+                            parent_id__in=deletable_ids
                         ).update(parent=None)
-
-                        # Clear FK references safely
+                        # Clear FK references
                         try:
                             from apps.finance.models import PostingRule
-                            from django.db.models import Q
-                            try:
-                                from django.apps import apps
-                                PRHistory = apps.get_model('finance', 'PostingRuleHistory')
-                                PRHistory.objects.filter(
-                                    Q(old_account_id__in=orphan_ids) | Q(new_account_id__in=orphan_ids)
-                                ).delete()
-                            except Exception:
-                                pass
-                            try:
-                                CtxPR = apps.get_model('finance', 'ContextualPostingRule')
-                                CtxPR.objects.filter(account_id__in=orphan_ids).delete()
-                            except Exception:
-                                pass
-                            PostingRule.objects.filter(account_id__in=orphan_ids).delete()
+                            PostingRule.objects.filter(account_id__in=deletable_ids).delete()
                         except Exception:
                             pass
-                        orphan_count = ChartOfAccount.objects.filter(id__in=orphan_ids).delete()[0]
+                        try:
+                            from django.apps import apps
+                            from django.db.models import Q
+                            PRH = apps.get_model('finance', 'PostingRuleHistory')
+                            PRH.objects.filter(
+                                Q(old_account_id__in=deletable_ids) | Q(new_account_id__in=deletable_ids)
+                            ).delete()
+                        except Exception:
+                            pass
+                        deleted_count = ChartOfAccount.objects.filter(id__in=deletable_ids).delete()[0]
                         logging.getLogger(__name__).info(
-                            f"Cleaned up {orphan_count} orphan accounts after template reset"
+                            f"Deleted {deleted_count} orphan accounts (no journal refs)"
                         )
                 except Exception as cleanup_err:
                     logging.getLogger(__name__).warning(
-                        f"Orphan cleanup failed (non-fatal): {cleanup_err}"
+                        f"Post-import cleanup warning (non-fatal): {cleanup_err}"
                     )
 
             # Apply Smart Posting Rules

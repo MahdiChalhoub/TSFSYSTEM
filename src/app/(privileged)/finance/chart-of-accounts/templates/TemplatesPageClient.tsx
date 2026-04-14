@@ -80,7 +80,31 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     const totalAccounts = templates.reduce((sum, t) => sum + (t.account_count || 0), 0)
     const totalRules = templates.reduce((sum, t) => sum + (t.posting_rule_count || 0), 0)
 
-    const handleImport = async (key: string) => setImportTarget(key)
+    const [migrationTarget, setMigrationTarget] = useState<{ from: string; to: string } | null>(null)
+    const [coaStatus, setCoaStatus] = useState<any>(null)
+
+    const handleImport = async (key: string) => {
+        // Check if there's existing data that needs migration
+        try {
+            const { getCOAStatus } = await import('@/app/actions/finance/coa-templates')
+            const status = await getCOAStatus()
+            setCoaStatus(status)
+
+            if (status.has_data && status.current_template && status.current_template !== key) {
+                // Different template with journal data → redirect to migration
+                setMigrationTarget({ from: status.current_template, to: key })
+                setActiveView('migration')
+                toast.info(`Migration required: ${status.current_template.replace(/_/g, ' ')} → ${key.replace(/_/g, ' ')}`, {
+                    description: `${status.journal_entry_count} journal entries need account remapping`,
+                })
+                return
+            }
+            // Same template re-import, or no data → direct import
+            setImportTarget(key)
+        } catch {
+            setImportTarget(key)
+        }
+    }
     const handleConfirmImport = async () => {
         if (!importTarget) return
         const key = importTarget
@@ -257,7 +281,23 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 )}
                 {activeView === 'migration' && (
                     <MigrationView templates={templates} templatesMap={templatesMap}
-                        migrationMaps={migrationMaps} />
+                        migrationMaps={migrationMaps}
+                        autoMigration={migrationTarget}
+                        accountBalances={coaStatus?.accounts || []}
+                        onApplyImport={async (key) => {
+                            setIsPending(true)
+                            try {
+                                await importChartOfAccountsTemplate(key as any, { reset: true })
+                                toast.success(`Migration complete → ${key.replace(/_/g, ' ')}`)
+                                router.push('/finance/chart-of-accounts')
+                            } catch (e: unknown) {
+                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+                            } finally {
+                                setIsPending(false)
+                            }
+                        }}
+                        isPending={isPending}
+                    />
                 )}
             </div>
 
@@ -853,20 +893,41 @@ type MappingEntry = {
 }
 
 function MigrationView({
-    templates, templatesMap, migrationMaps,
+    templates, templatesMap, migrationMaps, autoMigration, onApplyImport, isPending, accountBalances,
 }: {
     templates: TemplateInfo[]; templatesMap: Record<string, any>
     migrationMaps: Record<string, Record<string, string>>
+    autoMigration?: { from: string; to: string } | null
+    onApplyImport?: (targetKey: string) => Promise<void>
+    isPending?: boolean
+    accountBalances?: { code: string; name: string; type: string; balance: number }[]
 }) {
-    const [sourceKey, setSourceKey] = useState<string>('')
-    const [targetKey, setTargetKey] = useState<string>('')
+    const [sourceKey, setSourceKey] = useState<string>(autoMigration?.from || '')
+    const [targetKey, setTargetKey] = useState<string>(autoMigration?.to || '')
     const [migSearch, setMigSearch] = useState('')
     const [filterLevel, setFilterLevel] = useState<string>('ALL')
+
+    // Auto-select when autoMigration prop changes
+    useEffect(() => {
+        if (autoMigration) {
+            setSourceKey(autoMigration.from)
+            setTargetKey(autoMigration.to)
+        }
+    }, [autoMigration])
 
     const availableTargets = useMemo(() => {
         if (!sourceKey) return []
         return templates.filter(t => t.key !== sourceKey)
     }, [sourceKey, templates])
+
+    // Build balance lookup from real DB data
+    const balanceMap = useMemo(() => {
+        const map: Record<string, number> = {}
+        for (const acc of accountBalances || []) {
+            map[acc.code] = acc.balance
+        }
+        return map
+    }, [accountBalances])
 
     // ── Build full auto-mapping with ZERO unmapped ──
     const fullMapping = useMemo((): MappingEntry[] => {
@@ -1149,6 +1210,7 @@ function MigrationView({
                             style={{ background: 'var(--app-surface)', borderBottom: '1px solid var(--app-border)' }}>
                             <div className="w-16 flex-shrink-0">Source</div>
                             <div className="flex-1 min-w-0">Source Account</div>
+                            <div className="w-20 flex-shrink-0 text-right">Balance</div>
                             <div className="w-16 flex-shrink-0 text-center">Strategy</div>
                             <div className="w-16 flex-shrink-0">Target</div>
                             <div className="flex-1 min-w-0">Target Account</div>
@@ -1367,6 +1429,13 @@ function MigrationView({
                                             <div className="flex-1 min-w-0">
                                                 <span className="text-[11px] font-medium text-app-foreground truncate block">{entry.srcName}</span>
                                             </div>
+                                            <div className="w-20 flex-shrink-0 text-right">
+                                                {(() => { const bal = balanceMap[entry.srcCode]; return bal !== undefined && bal !== 0 ? (
+                                                    <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : bal < 0 ? 'var(--app-danger, #ef4444)' : 'var(--app-muted-foreground)' }}>
+                                                        {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                    </span>
+                                                ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                            </div>
                                             <div className="w-16 flex-shrink-0 text-center">
                                                 <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                     style={{
@@ -1401,8 +1470,8 @@ function MigrationView({
                             })()}
                         </div>
 
-                        {/* Footer */}
-                        <div className="px-4 py-2 flex items-center justify-between"
+                        {/* Footer with Apply */}
+                        <div className="px-4 py-3 flex items-center justify-between"
                             style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
                             <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">
@@ -1421,12 +1490,30 @@ function MigrationView({
                                         {stats['SPLIT']} splits
                                     </span>
                                 )}
+                                <span className="text-[11px] font-black tabular-nums px-2 py-0.5 rounded"
+                                    style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
+                                        color: 'var(--app-success, #22c55e)' }}>
+                                    100% mapped
+                                </span>
                             </div>
-                            <span className="text-[11px] font-black tabular-nums px-2 py-0.5 rounded"
-                                style={{ background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                    color: 'var(--app-success, #22c55e)' }}>
-                                100% mapped
-                            </span>
+                            {onApplyImport && targetKey && (
+                                <button
+                                    onClick={() => onApplyImport(targetKey)}
+                                    disabled={isPending || fullMapping.length === 0}
+                                    className="flex items-center gap-2 px-5 py-2 rounded-xl text-[12px] font-black uppercase tracking-wider transition-all"
+                                    style={{
+                                        background: isPending ? 'var(--app-muted)' : 'var(--app-success, #22c55e)',
+                                        color: 'white',
+                                        opacity: isPending || fullMapping.length === 0 ? 0.5 : 1,
+                                        cursor: isPending ? 'wait' : 'pointer',
+                                    }}>
+                                    {isPending ? (
+                                        <><Loader2 size={14} className="animate-spin" /> Migrating...</>
+                                    ) : (
+                                        <><Zap size={14} /> Apply Migration &amp; Import</>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
