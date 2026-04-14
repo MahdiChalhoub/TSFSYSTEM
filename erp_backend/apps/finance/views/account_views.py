@@ -916,15 +916,26 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
     @action(detail=False, methods=['get'])
     def coa_status(self, request):
-        """Return current COA state: active template, journal count, etc."""
+        """Return current COA state with import_case detection.
+
+        import_case values:
+          EMPTY       — no active accounts at all → direct import
+          UNTOUCHED   — accounts exist but zero transactions, zero balances,
+                        and no custom/extra sub-accounts beyond the template
+                        → safe to delete & replace without migration
+          NEEDS_MIGRATION — accounts have transactions, balances, or custom
+                        sub-accounts → full migration required
+        """
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
 
-        from apps.finance.models import ChartOfAccount, JournalEntry
-        from django.db.models import Count
+        from apps.finance.models import ChartOfAccount, JournalEntry, JournalEntryLine
+        from django.db.models import Count, Q, Sum
+        from decimal import Decimal
 
         org_accounts = ChartOfAccount.objects.filter(organization_id=organization_id, is_active=True)
+        account_count = org_accounts.count()
         journal_count = JournalEntry.objects.filter(organization_id=organization_id).count()
 
         # Get the dominant template (most active accounts)
@@ -935,6 +946,31 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         )
         templates = {r['template_origin']: r['count'] for r in template_stats if r['template_origin']}
         current_template = max(templates, key=templates.get) if templates else None
+
+        # ── Detect import_case ──────────────────────────────────────────
+        if account_count == 0:
+            import_case = 'EMPTY'
+        else:
+            # Check for any journal entry lines referencing org accounts
+            has_journal_lines = JournalEntryLine.objects.filter(
+                organization_id=organization_id
+            ).exists()
+
+            # Check for any non-zero balances
+            has_balances = org_accounts.filter(
+                Q(balance__gt=Decimal('0')) | Q(balance__lt=Decimal('0')) |
+                Q(balance_official__gt=Decimal('0')) | Q(balance_official__lt=Decimal('0'))
+            ).exists()
+
+            # Check for custom/extra accounts (accounts not from the template)
+            has_custom_accounts = org_accounts.filter(
+                Q(template_origin__isnull=True) | Q(template_origin='')
+            ).exists()
+
+            if not has_journal_lines and not has_balances and not has_custom_accounts:
+                import_case = 'UNTOUCHED'
+            else:
+                import_case = 'NEEDS_MIGRATION'
 
         # Per-account balances for migration display
         account_balances = []
@@ -950,10 +986,11 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         return Response({
             "current_template": current_template,
             "templates": templates,
-            "account_count": org_accounts.count(),
+            "account_count": account_count,
             "journal_entry_count": journal_count,
             "has_data": journal_count > 0,
-            "needs_migration": journal_count > 0 and current_template is not None,
+            "needs_migration": import_case == 'NEEDS_MIGRATION',
+            "import_case": import_case,
             "accounts": account_balances,
         })
 

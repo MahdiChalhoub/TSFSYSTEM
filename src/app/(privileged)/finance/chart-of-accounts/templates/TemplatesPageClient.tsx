@@ -84,36 +84,68 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
 
     const [migrationTarget, setMigrationTarget] = useState<{ from: string; to: string } | null>(null)
     const [coaStatus, setCoaStatus] = useState<any>(null)
+    const [replaceTarget, setReplaceTarget] = useState<string | null>(null)
 
     const handleImport = async (key: string) => {
-        // Check if there's existing data that needs migration
+        /**
+         * 3 import cases:
+         *   EMPTY          — no COA exists → direct import (confirm dialog)
+         *   UNTOUCHED      — COA exists but no txns/balances/custom accounts
+         *                    → safe to delete & replace (confirm dialog)
+         *   NEEDS_MIGRATION — COA has txns/balances/custom accounts
+         *                    → full migration flow required
+         */
         try {
             const { getCOAStatus, getMigrationPreview } = await import('@/app/actions/finance/coa-templates')
             const status = await getCOAStatus()
             setCoaStatus(status)
 
-            if (status.has_data && status.current_template && status.current_template !== key) {
-                // Different template with journal data → open EXECUTION screen
-                setMigrationTarget({ from: status.current_template, to: key })
-                setIsPending(true)
-                toast.info(`Loading migration data...`)
-                const preview = await getMigrationPreview(key)
-                setMigrationPreview(preview)
-                setActiveView('execution')
-                setIsPending(false)
-                if (preview) {
-                    toast.info(`Migration: ${preview.summary.with_balance} accounts with balance, ${preview.summary.custom_accounts} custom accounts`, {
-                        description: `${status.journal_entry_count} journal entries need remapping`,
-                    })
+            const importCase = status.import_case || (status.account_count === 0 ? 'EMPTY' : status.has_data ? 'NEEDS_MIGRATION' : 'UNTOUCHED')
+
+            if (importCase === 'EMPTY') {
+                // Case 1: No COA → direct import
+                setImportTarget(key)
+                return
+            }
+
+            if (importCase === 'UNTOUCHED') {
+                // Case 2: COA exists but untouched → replace confirmation
+                if (status.current_template === key) {
+                    // Re-importing same template → simple confirm
+                    setImportTarget(key)
+                } else {
+                    // Different template, but safe to replace
+                    setReplaceTarget(key)
                 }
                 return
             }
-            // Same template re-import, or no data → direct import
-            setImportTarget(key)
+
+            // Case 3: NEEDS_MIGRATION
+            if (status.current_template === key) {
+                // Re-importing same template with data → simple reset
+                setImportTarget(key)
+                return
+            }
+
+            // Different template with real data → open migration execution screen
+            setMigrationTarget({ from: status.current_template!, to: key })
+            setIsPending(true)
+            toast.info(`Loading migration data...`)
+            const preview = await getMigrationPreview(key)
+            setMigrationPreview(preview)
+            setActiveView('execution')
+            setIsPending(false)
+            if (preview) {
+                toast.info(`Migration: ${preview.summary.with_balance} accounts with balance, ${preview.summary.custom_accounts} custom accounts`, {
+                    description: `${status.journal_entry_count} journal entries need remapping`,
+                })
+            }
         } catch {
             setImportTarget(key)
         }
     }
+
+    /** Case 1 & same-template re-import: direct import with reset */
     const handleConfirmImport = async () => {
         if (!importTarget) return
         const key = importTarget
@@ -122,6 +154,23 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         try {
             await importChartOfAccountsTemplate(key as any, { reset: true })
             toast.success(`Successfully imported ${key.replace(/_/g, ' ')}`)
+            router.push('/finance/chart-of-accounts')
+        } catch (e: unknown) {
+            toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+        } finally {
+            setIsPending(false)
+        }
+    }
+
+    /** Case 2: Replace untouched COA with new template */
+    const handleConfirmReplace = async () => {
+        if (!replaceTarget) return
+        const key = replaceTarget
+        setReplaceTarget(null)
+        setIsPending(true)
+        try {
+            await importChartOfAccountsTemplate(key as any, { reset: true })
+            toast.success(`Replaced chart of accounts with ${key.replace(/_/g, ' ')}`)
             router.push('/finance/chart-of-accounts')
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
@@ -368,12 +417,20 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                 </div>
             </div>
 
-            {/* ── Import Dialog ── */}
+            {/* ── Import Dialog (Case 1: empty COA or same-template re-import) ── */}
             <ConfirmDialog open={importTarget !== null}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
                 onConfirm={handleConfirmImport}
                 title={`Import ${importTarget?.replace(/_/g, ' ') ?? ''}?`}
-                description="This will replace your current Chart of Accounts with this template. Existing accounts will be removed (or deactivated if journal entries exist). Posting rules will be auto-synced."
+                description="This will set up your Chart of Accounts using this template. Posting rules will be auto-synced."
+                confirmText="Import" variant="info" />
+
+            {/* ── Replace Dialog (Case 2: untouched COA, safe to replace) ── */}
+            <ConfirmDialog open={replaceTarget !== null}
+                onOpenChange={(open) => { if (!open) setReplaceTarget(null) }}
+                onConfirm={handleConfirmReplace}
+                title={`Replace with ${replaceTarget?.replace(/_/g, ' ') ?? ''}?`}
+                description={`Your current chart of accounts (${coaStatus?.current_template?.replace(/_/g, ' ') ?? 'unknown'}) has no transactions, balances, or custom accounts. It will be deleted and replaced with the new template. No migration is needed.`}
                 confirmText="Replace & Import" variant="danger" />
         </div>
     )

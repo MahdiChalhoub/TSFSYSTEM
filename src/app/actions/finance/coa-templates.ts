@@ -115,6 +115,8 @@ export type MigrationBlocker = {
 
 // ─── COA Status Check ────────────────────────────────────────────────────────
 
+export type COAImportCase = 'EMPTY' | 'UNTOUCHED' | 'NEEDS_MIGRATION'
+
 export type COAStatus = {
     current_template: string | null
     templates: Record<string, number>
@@ -122,6 +124,7 @@ export type COAStatus = {
     journal_entry_count: number
     has_data: boolean
     needs_migration: boolean
+    import_case: COAImportCase
     accounts: { code: string; name: string; type: string; balance: number; balance_official: number; template_origin: string }[]
 }
 
@@ -137,6 +140,7 @@ export async function getCOAStatus(): Promise<COAStatus> {
             journal_entry_count: 0,
             has_data: false,
             needs_migration: false,
+            import_case: 'EMPTY',
             accounts: [],
         }
     }
