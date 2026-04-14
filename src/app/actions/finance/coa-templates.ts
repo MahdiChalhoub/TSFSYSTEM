@@ -189,18 +189,28 @@ export async function getMigrationPreview(targetTemplateKey: string): Promise<Mi
 
 // ─── Existing: Template import & preview ────────────────────────────────────
 
-export async function importChartOfAccountsTemplate(templateKey: string, options?: { reset?: boolean }) {
+export async function importChartOfAccountsTemplate(
+    templateKey: string,
+    options?: { reset?: boolean; account_mapping?: Record<string, string> }
+) {
     try {
         const { erpFetch } = await import('@/lib/erp-api')
-        await erpFetch('coa/apply_template/', {
+        const result = await erpFetch('coa/apply_template/', {
             method: 'POST',
             body: JSON.stringify({
                 template_key: templateKey,
                 reset: options?.reset || false,
+                account_mapping: options?.account_mapping || {},
             }),
         })
         try { revalidatePath('/finance/chart-of-accounts') } catch { /* ignore */ }
-        return { success: true }
+        return {
+            success: true,
+            journal_lines_remapped: result?.journal_lines_remapped || 0,
+            posting_rules_synced: result?.posting_rules_synced || 0,
+            remap_errors: result?.remap_errors || [],
+            message: result?.message || 'Template applied successfully',
+        }
     } catch (error) {
         console.error(`[COA_TEMPLATE] Import failed:`, error)
         throw error

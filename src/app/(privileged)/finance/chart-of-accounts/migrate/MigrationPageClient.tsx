@@ -68,15 +68,51 @@ export default function MigrationPageClient({
         if (!targetKey || !preview) return
         setExecuting(true)
         try {
-            await importChartOfAccountsTemplate(targetKey as any, { reset: true })
-            toast.success(`Migration complete → ${targetKey.replace(/_/g, ' ')}`)
+            // Build account_mapping: source_code → target_code
+            // Uses user overrides first, then suggested targets from preview
+            const accountMapping: Record<string, string> = {}
+            for (const acc of preview.accounts) {
+                // Skip clean accounts that exist in both templates (same code)
+                if (acc.category === 'CLEAN' && !acc.is_custom) continue
+
+                // User override takes priority
+                const targetCode = overrides[acc.code]
+                    || acc.suggested_target?.code
+                    || ''
+
+                if (targetCode && targetCode !== acc.code) {
+                    accountMapping[acc.code] = targetCode
+                }
+            }
+
+            const result = await importChartOfAccountsTemplate(targetKey, {
+                reset: true,
+                account_mapping: accountMapping,
+            })
+
+            // Show detailed result
+            const parts = [`Migration complete → ${targetKey.replace(/_/g, ' ')}`]
+            if (result.journal_lines_remapped > 0) {
+                parts.push(`${result.journal_lines_remapped} journal lines remapped`)
+            }
+            if (result.posting_rules_synced > 0) {
+                parts.push(`${result.posting_rules_synced} posting rules synced`)
+            }
+            toast.success(parts.join(' • '))
+
+            if (result.remap_errors?.length > 0) {
+                toast.warning(`${result.remap_errors.length} remap warnings`, {
+                    description: result.remap_errors.slice(0, 3).join('\n'),
+                })
+            }
+
             router.push('/finance/chart-of-accounts')
         } catch (e: unknown) {
-            toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+            toast.error('Migration failed: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
             setExecuting(false)
         }
-    }, [targetKey, preview, router])
+    }, [targetKey, preview, overrides, router])
 
     // ── Filter accounts ───────────────────────────────────────────
     const filteredAccounts = useMemo(() => {
