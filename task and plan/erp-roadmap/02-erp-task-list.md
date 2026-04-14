@@ -1,16 +1,16 @@
 # TSFSYSTEM ERP — Master Task List
 
 > Derived from: `01-erp-roadmap.md`
-> **Last Updated**: 2026-04-13
+> **Last Updated**: 2026-04-14
 
 ---
 
-## Phase 0: Finish Finance Core ✅ (18/19 verified — one integration test pending)
+## Phase 0: Finish Finance Core ✅ (19/19 verified — all complete)
 
 ### 0.1 — Posting Rules → Ledger Integration
 - [x] 0.1.1 — Verify PostingRule engine resolves correct debit/credit accounts for each event type ✅
 - [x] 0.1.2 — Test: Create manual journal entry → verify it appears in ledger ✅
-- [ ] 0.1.3 — Test: Trigger auto-posting (e.g. "goods received") → verify journal entry auto-created
+- [x] 0.1.3 — Test: Trigger auto-posting (e.g. "goods received") → verify journal entry auto-created ✅ (integration test at `tests/test_auto_posting_integration.py`, 3 test cases: resolver, JE auto-creation, snapshot audit)
 - [x] 0.1.4 — Verify PostingEvent catalog covers all transaction types (PO, Invoice, Payment, Stock, etc.) ✅
 
 ### 0.2 — Tax Calculation → Invoice Lines
@@ -65,7 +65,7 @@
 - [x] 1B.5 — `require_any_permission` + `require_all_permissions` ✅
 - [x] 1B.6 — PolicyEngine for policy evaluation ✅
 - [x] 1B.7 — Models: Role, Permission, UserRole ✅ (kernel_role, kernel_permission, kernel_user_role tables)
-- [ ] 1B.8 — Role management UI page (create/edit roles, assign permissions) — pending frontend
+- [x] 1B.8 — Role management UI page (create/edit roles, assign permissions) ✅ (already exists at `/settings/roles/` — RoleManager.tsx 320 lines, server actions, permission matrix)
 
 ### 1C — Auto Task Engine ✅
 - [x] 1C.1 — Task model with full lifecycle (start/complete/cancel, subtasks, hierarchy) ✅
@@ -77,11 +77,11 @@
 - [x] 1C.7 — EmployeePerformance with tier calculation (BRONZE→PLATINUM) ✅
 - [x] 1C.8 — WorkspaceConfig auto-seeds defaults (statuses, priorities, triggers) ✅
 - [x] 1C.9 — EmployeeRequest model (approve/reject flow) ✅
-- [ ] 1C.10 — Seed default AutoTaskRules (PO approved → "Receive goods", etc.) — needs business rules
+- [x] 1C.10 — Seed default AutoTaskRules ✅ (80+ rules in `seed_auto_tasks.py`, management command `seed_auto_tasks --all`, model extended with code/module/rule_type/priority/chain_parent/recurrence_interval/stale_threshold_days/is_system_default)
 
 ---
 
-## Phase 2: Master Data ✅ (34/36 — Product COA links pending)
+## Phase 2: Master Data ✅ (36/36 — all complete)
 
 ### 2A — Product Catalogue Verification ✅
 - [x] 2A.1 — Verify Category CRUD (create, edit, delete, tree structure) ✅ (6 categories, parent FK exists)
@@ -90,7 +90,7 @@
 - [x] 2A.4 — Verify Product CRUD ✅ (114 products, 62 fields: selling_price_ht/ttc, cost_price_ht/ttc, SKU, category, brand)
 - [x] 2A.5 — Verify Product Variants: attribute system (15 attributes, ProductAttributeValue, ProductVariant models) ✅
 - [x] 2A.6 — Verify Packaging Levels: ProductPackaging model exists ✅
-- [ ] 2A.7 — Add Product → COA links: `revenue_account`, `cogs_account`, `inventory_account` (for auto-posting) — **pending**
+- [x] 2A.7 — Add Product → COA links ✅ (`revenue_account`, `cogs_account`, `inventory_account` FKs added to Product model, migration 0051, serializers updated)
 
 ### 2B — CRM Contacts ↔ Accounting Bridge ✅
 - [x] 2B.1 — Verify Contact CRUD (12 Customers + 11 Suppliers) ✅
