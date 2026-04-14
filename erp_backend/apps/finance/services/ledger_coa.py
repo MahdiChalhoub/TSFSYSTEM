@@ -210,17 +210,28 @@ class LedgerCOAMixin:
                 )
                 orphan_ids = list(orphan_qs.values_list('id', flat=True))
                 if orphan_ids:
-                    # Clear FK references first
+                    # Null parent_id references to orphan accounts
+                    ChartOfAccount.objects.filter(
+                        parent_id__in=orphan_ids
+                    ).update(parent=None)
+
+                    # Clear FK references
                     try:
                         from apps.finance.models import PostingRule
                         from django.db.models import Q
-                        # Delete posting rule history entries (uses old_account_id / new_account_id)
+                        # Posting rule history (old_account_id / new_account_id)
                         try:
                             from django.apps import apps
                             PRHistory = apps.get_model('finance', 'PostingRuleHistory')
                             PRHistory.objects.filter(
                                 Q(old_account_id__in=orphan_ids) | Q(new_account_id__in=orphan_ids)
                             ).delete()
+                        except Exception:
+                            pass
+                        # Contextual posting rules
+                        try:
+                            CtxPR = apps.get_model('finance', 'ContextualPostingRule')
+                            CtxPR.objects.filter(account_id__in=orphan_ids).delete()
                         except Exception:
                             pass
                         PostingRule.objects.filter(account_id__in=orphan_ids).delete()
