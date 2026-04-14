@@ -4,7 +4,7 @@ Reference Module Serializers
 Read/write serializers for global reference data and org activation tables.
 """
 from rest_framework import serializers
-from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry
+from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry, City
 
 
 # =============================================================================
@@ -163,4 +163,28 @@ class SourcingCountryWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = SourcingCountry
         fields = ['country', 'is_enabled', 'notes', 'display_order']
+
+
+# =============================================================================
+# CITY SERIALIZERS (Global reference, filterable by country)
+# =============================================================================
+
+class CitySerializer(serializers.ModelSerializer):
+    country_name = serializers.CharField(source='country.name', read_only=True, default=None)
+    country_iso2 = serializers.CharField(source='country.iso2', read_only=True, default=None)
+
+    class Meta:
+        model = City
+        fields = [
+            'id', 'country', 'name', 'state_province',
+            'is_capital', 'is_active',
+            'country_name', 'country_iso2',
+        ]
+
+
+class CityListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for dropdowns."""
+    class Meta:
+        model = City
+        fields = ['id', 'name', 'state_province', 'is_capital']
 

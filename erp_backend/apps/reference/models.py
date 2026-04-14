@@ -289,3 +289,45 @@ class SourcingCountry(AuditLogMixin, TenantOwnedModel):
     def __str__(self):
         return f"{self.country.iso2} (Sourcing)"
 
+
+class City(models.Model):
+    """
+    Global reference table of cities/states/regions, linked to Country.
+    Owned by the SaaS platform — organizations filter by their enabled countries.
+
+    Tenant Isolation: N/A (global reference data, filtered by org countries at query time)
+    Audit Logging: N/A (platform-managed reference data)
+    """
+    country = models.ForeignKey(
+        Country, on_delete=models.CASCADE,
+        related_name='cities',
+        help_text='The country this city belongs to'
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text='City name (e.g., Beirut, Abidjan, Paris)'
+    )
+    state_province = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='State/Province/Region (e.g., Mount Lebanon, Île-de-France)'
+    )
+    is_capital = models.BooleanField(
+        default=False,
+        help_text='Whether this is the country capital'
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'ref_cities'
+        ordering = ['-is_capital', 'name']
+        unique_together = ('country', 'name')
+        verbose_name = 'City'
+        verbose_name_plural = 'Cities'
+        indexes = [
+            models.Index(fields=['country', 'is_active']),
+        ]
+
+    def __str__(self):
+        state = f', {self.state_province}' if self.state_province else ''
+        return f"{self.name}{state} ({self.country.iso2})"
+

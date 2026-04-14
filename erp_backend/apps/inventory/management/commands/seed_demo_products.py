@@ -597,9 +597,165 @@ class Command(BaseCommand):
             self.stdout.write(f'  ✓ {svc_count} service products created')
 
             # ═══════════════════════════════════════
+            # 13. WAREHOUSES (Branch → Store → Warehouse hierarchy)
+            # ═══════════════════════════════════════
+            from apps.inventory.models.warehouse_models import Warehouse, Inventory
+
+            # Resolve default country for branches
+            default_country = None
+            try:
+                from apps.reference.models import OrgCountry
+                oc = OrgCountry.objects.filter(
+                    organization=org, is_default=True, is_enabled=True
+                ).select_related('country').first()
+                if oc:
+                    default_country = oc.country
+            except Exception:
+                pass
+            if not default_country:
+                default_country = RefCountry.objects.filter(iso2='CI').first()
+                if not default_country:
+                    default_country = RefCountry.objects.first()
+
+            warehouses = {}
+
+            # ── Branch 1: Main Branch ──
+            branch1, _ = Warehouse.objects.get_or_create(
+                code='BR-MAIN', organization=org,
+                defaults={
+                    'name': 'Siège Principal',
+                    'location_type': 'BRANCH',
+                    'address': '12 Avenue Chardy, Plateau',
+                    'city': 'Abidjan',
+                    'phone': '+225 27 20 33 44 55',
+                    'country': default_country,
+                    'can_sell': False,
+                }
+            )
+            warehouses['Branch-Main'] = branch1
+
+            store1, _ = Warehouse.objects.get_or_create(
+                code='ST-CENTRAL', organization=org,
+                defaults={
+                    'name': 'Magasin Central',
+                    'location_type': 'STORE',
+                    'parent': branch1,
+                    'address': '12 Avenue Chardy, RDC',
+                    'city': 'Abidjan',
+                    'can_sell': True,
+                }
+            )
+            warehouses['Store-Central'] = store1
+
+            wh1, _ = Warehouse.objects.get_or_create(
+                code='WH-CENTRAL', organization=org,
+                defaults={
+                    'name': 'Entrepôt Central',
+                    'location_type': 'WAREHOUSE',
+                    'parent': branch1,
+                    'address': 'Zone Industrielle, Yopougon',
+                    'city': 'Abidjan',
+                    'can_sell': False,
+                }
+            )
+            warehouses['Warehouse-Central'] = wh1
+
+            # ── Branch 2: Secondary Branch ──
+            branch2, _ = Warehouse.objects.get_or_create(
+                code='BR-SOUTH', organization=org,
+                defaults={
+                    'name': 'Succursale Sud',
+                    'location_type': 'BRANCH',
+                    'address': '45 Boulevard de la Paix',
+                    'city': 'San-Pédro',
+                    'phone': '+225 27 34 71 00 00',
+                    'country': default_country,
+                    'can_sell': False,
+                }
+            )
+            warehouses['Branch-South'] = branch2
+
+            store2, _ = Warehouse.objects.get_or_create(
+                code='ST-SOUTH', organization=org,
+                defaults={
+                    'name': 'Point de Vente Sud',
+                    'location_type': 'STORE',
+                    'parent': branch2,
+                    'address': '45 Boulevard de la Paix, RDC',
+                    'city': 'San-Pédro',
+                    'can_sell': True,
+                }
+            )
+            warehouses['Store-South'] = store2
+
+            wh2, _ = Warehouse.objects.get_or_create(
+                code='WH-SOUTH', organization=org,
+                defaults={
+                    'name': 'Dépôt Sud',
+                    'location_type': 'WAREHOUSE',
+                    'parent': branch2,
+                    'address': 'Zone Portuaire, San-Pédro',
+                    'city': 'San-Pédro',
+                    'can_sell': False,
+                }
+            )
+            warehouses['Warehouse-South'] = wh2
+
+            # ── Virtual Transit Warehouse ──
+            wh_transit, _ = Warehouse.objects.get_or_create(
+                code='VW-TRANSIT', organization=org,
+                defaults={
+                    'name': 'Transit Inter-Sites',
+                    'location_type': 'VIRTUAL',
+                    'parent': branch1,
+                    'can_sell': False,
+                }
+            )
+            warehouses['Virtual-Transit'] = wh_transit
+
+            self.stdout.write(f'  ✓ {len(warehouses)} warehouses/locations ready')
+
+            # ═══════════════════════════════════════
+            # 14. INVENTORY STOCK (distribute products across warehouses)
+            # ═══════════════════════════════════════
+            stock_locations = [store1, wh1, store2, wh2]  # 4 physical locations
+            inv_count = 0
+
+            for prod_name, product in created_products.items():
+                # Skip parent-only variant groups (no stock on parents)
+                if product.is_parent:
+                    continue
+                # Skip SERVICE products (no physical stock)
+                if product.product_type == 'SERVICE':
+                    continue
+
+                for loc in stock_locations:
+                    # Realistic random quantities — main locations get more
+                    if loc in [store1, wh1]:  # Main branch gets 60-300
+                        qty = Decimal(str(random.randint(60, 300)))
+                    else:  # South branch gets 20-150
+                        qty = Decimal(str(random.randint(20, 150)))
+
+                    # Stores get less stock than warehouses
+                    if loc.location_type == 'STORE':
+                        qty = (qty * Decimal('0.3')).quantize(Decimal('1'))
+
+                    Inventory.objects.get_or_create(
+                        warehouse=loc, product=product,
+                        variant=None, organization=org,
+                        defaults={
+                            'quantity': qty,
+                        }
+                    )
+                    inv_count += 1
+
+            self.stdout.write(f'  ✓ {inv_count} inventory records created')
+
+            # ═══════════════════════════════════════
             # SUMMARY
             # ═══════════════════════════════════════
             total = Product.original_objects.filter(organization=org).count()
+            total_stock = Inventory.objects.filter(organization=org).count()
             self.stdout.write(self.style.SUCCESS(
                 f'\n🎉 Demo seeding complete!\n'
                 f'   Total products: {total}\n'
@@ -612,4 +768,6 @@ class Command(BaseCommand):
                 f'   Attribute values: {len(attr_values)}\n'
                 f'   Brands: {len(brands)}\n'
                 f'   Categories: {len(cats)}\n'
+                f'   Warehouses: {len(warehouses)}\n'
+                f'   Inventory records: {total_stock}\n'
             ))

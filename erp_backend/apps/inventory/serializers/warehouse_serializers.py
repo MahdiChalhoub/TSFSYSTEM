@@ -6,6 +6,7 @@ class WarehouseSerializer(serializers.ModelSerializer):
     parent_name = serializers.CharField(source='parent.name', read_only=True, default=None)
     country_name = serializers.CharField(source='country.name', read_only=True, default=None)
     country_iso2 = serializers.CharField(source='country.iso2', read_only=True, default=None)
+    tax_policy_name = serializers.CharField(source='tax_policy.name', read_only=True, default=None)
     inventory_count = serializers.SerializerMethodField()
     children_count = serializers.SerializerMethodField()
 
@@ -14,6 +15,8 @@ class WarehouseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'parent', 'name', 'code', 'location_type',
             'address', 'city', 'phone', 'country', 'country_name', 'country_iso2', 'vat_number',
+            'tax_policy_mode', 'tax_policy', 'tax_policy_name',
+            'product_sharing_scope', 'product_sharing_targets',
             'can_sell', 'is_active',
             'site_name', 'parent_name', 'inventory_count', 'children_count',
             'organization', 'created_at', 'updated_at',

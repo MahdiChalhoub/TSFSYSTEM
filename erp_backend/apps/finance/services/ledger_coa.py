@@ -34,7 +34,7 @@ class LedgerCOAMixin:
         Enterprise-grade COA implementation.
         Populates system roles, financial sections, and performs validation.
         """
-        from apps.finance.models import ChartOfAccount, JournalEntry
+        from apps.finance.models import ChartOfAccount
         from erp.coa_templates import TEMPLATES
         from erp.services import ConfigurationService
 
@@ -131,24 +131,11 @@ class LedgerCOAMixin:
                 organization.finance_setup_completed = False
                 organization.save(update_fields=['finance_setup_completed'])
 
-            has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()
-
             if reset:
-                if has_journal_entries:
-                    ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
-                else:
-                    # Must clear FK references with on_delete=PROTECT before deleting accounts
-                    from apps.finance.models import PostingRule
-                    PostingRule.objects.filter(organization=organization).delete()
-                    try:
-                        from django.apps import apps
-                        PRH = apps.get_model('finance', 'PostingRuleHistory')
-                        PRH.objects.filter(organization=organization).delete()
-                    except Exception:
-                        pass
-                    ChartOfAccount.objects.filter(organization=organization).delete()
+                deactivated = ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
+                logging.getLogger(__name__).info(f"[COA_IMPORT] Reset: deactivated {deactivated} accounts")
 
-            # ── High Performance First Pass (using update_or_create logic but collecting for bulk if possible) ──
+            # ── High Performance First Pass ──
             # For simplicity in multi-tenancy we still use update_or_create to handle re-runs gracefully
             code_to_account = {}
             for item in accounts_data:
@@ -193,10 +180,13 @@ class LedgerCOAMixin:
                     "currency": item.get('currency'),
                 }
 
-                acc, _ = ChartOfAccount.objects.update_or_create(
+                acc, created = ChartOfAccount.objects.update_or_create(
                     organization=organization, code=item['code'], defaults=defaults
                 )
                 code_to_account[item['code']] = acc
+
+            _imp_active = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
+            logging.getLogger(__name__).info(f"[COA_IMPORT] After update_or_create: {len(code_to_account)} processed, {_imp_active} active in DB")
 
             # ── Link Parents ──
             for item in accounts_data:
@@ -215,63 +205,28 @@ class LedgerCOAMixin:
             
             rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
+            _post_path = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
+            logging.getLogger(__name__).info(f"[COA_IMPORT] After paths rebuild: {_post_path} active")
+
             # ── Post-Import Cleanup ──────────────────────────────────────
             # After a reset+import, ensure ONLY the new template's accounts are active.
-            # Accounts from other templates must be deactivated or deleted.
+            # Accounts from other templates must be deactivated.
+            # Never delete — PROTECT constraints on dozens of FK references
+            # will poison the PostgreSQL transaction and roll back everything.
             if reset:
-                try:
-                    new_template_codes = set(item['code'] for item in accounts_data)
-                    
-                    # 1) Deactivate ALL accounts NOT in the new template
-                    stale_qs = ChartOfAccount.objects.filter(
-                        organization=organization,
-                        is_active=True,
-                    ).exclude(code__in=new_template_codes)
-                    stale_deactivated = stale_qs.update(is_active=False)
-                    if stale_deactivated:
-                        logging.getLogger(__name__).info(
-                            f"Deactivated {stale_deactivated} accounts not in template {template_key}"
-                        )
-
-                    # 2) Delete inactive accounts that have NO journal references
-                    used_ids_subq = JournalEntryLine.objects.filter(
-                        organization=organization
-                    ).values_list('account_id', flat=True)
-                    
-                    deletable_qs = ChartOfAccount.objects.filter(
-                        organization=organization,
-                        is_active=False,
-                    ).exclude(id__in=used_ids_subq)
-                    
-                    deletable_ids = list(deletable_qs.values_list('id', flat=True))
-                    if deletable_ids:
-                        # Unlink parent references
-                        ChartOfAccount.objects.filter(
-                            parent_id__in=deletable_ids
-                        ).update(parent=None)
-                        # Clear FK references
-                        try:
-                            from apps.finance.models import PostingRule
-                            PostingRule.objects.filter(account_id__in=deletable_ids).delete()
-                        except Exception:
-                            pass
-                        try:
-                            from django.apps import apps
-                            from django.db.models import Q
-                            PRH = apps.get_model('finance', 'PostingRuleHistory')
-                            PRH.objects.filter(
-                                Q(old_account_id__in=deletable_ids) | Q(new_account_id__in=deletable_ids)
-                            ).delete()
-                        except Exception:
-                            pass
-                        deleted_count = ChartOfAccount.objects.filter(id__in=deletable_ids).delete()[0]
-                        logging.getLogger(__name__).info(
-                            f"Deleted {deleted_count} orphan accounts (no journal refs)"
-                        )
-                except Exception as cleanup_err:
-                    logging.getLogger(__name__).warning(
-                        f"Post-import cleanup warning (non-fatal): {cleanup_err}"
+                new_template_codes = set(item['code'] for item in accounts_data)
+                stale_qs = ChartOfAccount.objects.filter(
+                    organization=organization,
+                    is_active=True,
+                ).exclude(code__in=new_template_codes)
+                stale_deactivated = stale_qs.update(is_active=False)
+                if stale_deactivated:
+                    logging.getLogger(__name__).info(
+                        f"[COA_IMPORT] Cleanup: deactivated {stale_deactivated} stale accounts"
                     )
+
+                _post_cleanup = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
+                logging.getLogger(__name__).info(f"[COA_IMPORT] After cleanup: {_post_cleanup} active")
 
             # Apply Smart Posting Rules
             try:

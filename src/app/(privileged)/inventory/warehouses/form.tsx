@@ -5,10 +5,12 @@ import { useState, useEffect } from 'react'
 import { createWarehouse, updateWarehouse } from '@/app/actions/inventory/warehouses'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { erpFetch } from '@/lib/erp-api'
 import {
     X, Building2, Store, Warehouse, Cloud,
     Check, MapPin, Globe, Shield, Phone,
-    ArrowRight, Sparkles, Loader2, GitBranch
+    ArrowRight, Sparkles, Loader2, GitBranch,
+    FileText, Share2
 } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════════
@@ -57,6 +59,8 @@ interface WarehouseModalProps {
     defaultParent?: number | null
     countries?: { id: number; name: string; iso2?: string }[]
     defaultCountryId?: number | null
+    taxPolicies?: { id: number; name: string }[]
+    allBranches?: { id: number; name: string }[]
     onSaved?: () => void | Promise<void>
 }
 
@@ -71,6 +75,8 @@ export default function WarehouseModal({
     defaultParent = null,
     countries = [],
     defaultCountryId = null,
+    taxPolicies = [],
+    allBranches = [],
     onSaved,
 }: WarehouseModalProps) {
     const router = useRouter()
@@ -93,8 +99,42 @@ export default function WarehouseModal({
     const [autoStore, setAutoStore] = useState(true)
     const [autoWarehouse, setAutoWarehouse] = useState(true)
 
+    // Phase 2: Tax Engine & Product Sharing (Branch only)
+    const [taxPolicyMode, setTaxPolicyMode] = useState(warehouse?.tax_policy_mode || 'INHERIT')
+    const [taxPolicyId, setTaxPolicyId] = useState<number | string>(warehouse?.tax_policy || '')
+    const [sharingScope, setSharingScope] = useState(warehouse?.product_sharing_scope || 'NONE')
+    const [sharingTargets, setSharingTargets] = useState<number[]>(warehouse?.product_sharing_targets || [])
+
     const [isPending, setIsPending] = useState(false)
     const [error, setError] = useState('')
+
+    // City dropdown state (cascading from country)
+    const [cityOptions, setCityOptions] = useState<{ id: number; name: string; state_province?: string; is_capital?: boolean }[]>([])
+    const [loadingCities, setLoadingCities] = useState(false)
+
+    // Fetch cities when country changes
+    useEffect(() => {
+        if (!countryId) {
+            setCityOptions([])
+            return
+        }
+        let cancelled = false
+        setLoadingCities(true)
+        erpFetch(`reference/cities/?country=${countryId}`)
+            .then(data => {
+                if (cancelled) return
+                const items = Array.isArray(data) ? data : (data?.results ?? [])
+                setCityOptions(items)
+                setLoadingCities(false)
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setCityOptions([])
+                    setLoadingCities(false)
+                }
+            })
+        return () => { cancelled = true }
+    }, [countryId])
 
     // When locationType changes, auto-set canSell
     useEffect(() => {
@@ -144,6 +184,16 @@ export default function WarehouseModal({
             is_active: isActive,
             can_sell: canSell,
             parent: parentId || null,
+        }
+
+        // Phase 2 fields (Branch only)
+        if (locationType === 'BRANCH') {
+            payload.tax_policy_mode = taxPolicyMode
+            payload.tax_policy = taxPolicyMode === 'CUSTOM' ? (taxPolicyId || null) : null
+            payload.product_sharing_scope = sharingScope
+            if (sharingScope === 'SELECTED') {
+                payload.product_sharing_targets = sharingTargets
+            }
         }
 
         if (!isEditing && locationType === 'BRANCH') {
@@ -365,13 +415,29 @@ export default function WarehouseModal({
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">City</label>
-                                    <input
-                                        type="text"
-                                        value={city}
-                                        onChange={e => setCity(e.target.value)}
-                                        placeholder="City name"
-                                        className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40"
-                                    />
+                                    {cityOptions.length > 0 ? (
+                                        <select
+                                            value={city}
+                                            onChange={e => setCity(e.target.value)}
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                        >
+                                            <option value="">— Select City —</option>
+                                            {cityOptions.map(c => (
+                                                <option key={c.id} value={c.name}>
+                                                    {c.name}{c.state_province ? ` (${c.state_province})` : ''}{c.is_capital ? ' ★' : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={city}
+                                            onChange={e => setCity(e.target.value)}
+                                            placeholder={loadingCities ? 'Loading...' : (countryId ? 'Type city name' : 'Select country first')}
+                                            disabled={loadingCities}
+                                            className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] text-app-foreground outline-none focus:border-app-primary/50 transition-all placeholder:text-app-muted-foreground/40 disabled:opacity-50"
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -468,6 +534,163 @@ export default function WarehouseModal({
                                 </div>
                             )}
                         </div>
+
+                        {/* ── Section: Tax Engine (Branch only) ── */}
+                        {locationType === 'BRANCH' && (
+                            <div
+                                className="rounded-xl p-3 sm:p-4 space-y-3"
+                                style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                            >
+                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                    <FileText size={10} /> Tax Engine
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {(['INHERIT', 'CUSTOM'] as const).map(mode => {
+                                        const selected = taxPolicyMode === mode
+                                        const cfg = mode === 'INHERIT'
+                                            ? { label: 'Inherit from Org', desc: 'Uses organization default', color: 'var(--app-success)' }
+                                            : { label: 'Custom Policy', desc: 'Select a specific tax policy', color: 'var(--app-warning)' }
+                                        return (
+                                            <button
+                                                key={mode}
+                                                type="button"
+                                                onClick={() => setTaxPolicyMode(mode)}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                                                    selected ? 'shadow-sm' : 'border-transparent'
+                                                }`}
+                                                style={selected ? {
+                                                    borderColor: `color-mix(in srgb, ${cfg.color} 40%, transparent)`,
+                                                    background: `color-mix(in srgb, ${cfg.color} 6%, var(--app-surface))`,
+                                                } : { borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                                            >
+                                                <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: selected ? cfg.color : `color-mix(in srgb, ${cfg.color} 12%, transparent)`, color: selected ? 'white' : cfg.color }}>
+                                                    {selected ? <Check size={10} /> : <FileText size={10} />}
+                                                </div>
+                                                <div className="text-left min-w-0">
+                                                    <p className={`text-[10px] font-bold ${selected ? 'text-app-foreground' : 'text-app-foreground/50'}`}>{cfg.label}</p>
+                                                    <p className="text-[8px] text-app-muted-foreground truncate">{cfg.desc}</p>
+                                                </div>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+
+                                {taxPolicyMode === 'CUSTOM' && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                                        <label className="text-[10px] font-bold text-app-muted-foreground mb-1 block">
+                                            Select Tax Policy
+                                        </label>
+                                        {taxPolicies.length > 0 ? (
+                                            <select
+                                                value={taxPolicyId}
+                                                onChange={e => setTaxPolicyId(e.target.value ? Number(e.target.value) : '')}
+                                                className="w-full bg-app-surface border border-app-border rounded-xl px-3 py-2 text-[12px] font-medium text-app-foreground outline-none focus:border-app-primary/50 transition-all"
+                                            >
+                                                <option value="">— Select Policy —</option>
+                                                {taxPolicies.map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <p className="text-[10px] text-app-muted-foreground italic">
+                                                No tax policies available. Configure them in Settings → Tax Engine.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── Section: Product Sharing (Branch only) ── */}
+                        {locationType === 'BRANCH' && (
+                            <div
+                                className="rounded-xl p-3 sm:p-4 space-y-3"
+                                style={{ background: 'color-mix(in srgb, var(--app-surface) 80%, var(--app-background))', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}
+                            >
+                                <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground flex items-center gap-1.5">
+                                    <Share2 size={10} /> Product Sharing
+                                </p>
+                                <p className="text-[9px] text-app-muted-foreground -mt-1">
+                                    Control which branches can see and sell products from this location
+                                </p>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                    {([
+                                        { value: 'NONE', label: 'No Sharing', color: 'var(--app-muted-foreground)' },
+                                        { value: 'SAME_COUNTRY', label: 'Same Country', color: 'var(--app-info)' },
+                                        { value: 'SELECTED', label: 'Selected', color: 'var(--app-warning)' },
+                                        { value: 'ALL', label: 'All Branches', color: 'var(--app-success)' },
+                                    ] as const).map(opt => {
+                                        const selected = sharingScope === opt.value
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => setSharingScope(opt.value)}
+                                                className={`px-2.5 py-2 rounded-xl border text-center transition-all ${
+                                                    selected ? 'shadow-sm' : ''
+                                                }`}
+                                                style={selected ? {
+                                                    borderColor: `color-mix(in srgb, ${opt.color} 50%, transparent)`,
+                                                    background: `color-mix(in srgb, ${opt.color} 8%, var(--app-surface))`,
+                                                    color: opt.color,
+                                                } : { borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)', color: 'var(--app-muted-foreground)' }}
+                                            >
+                                                <p className={`text-[10px] font-bold ${selected ? '' : 'opacity-60'}`}>{opt.label}</p>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+
+                                {sharingScope === 'SELECTED' && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
+                                        <label className="text-[10px] font-bold text-app-muted-foreground block">
+                                            Select Target Branches
+                                        </label>
+                                        {allBranches.filter(b => b.id !== warehouse?.id).length > 0 ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-32 overflow-y-auto custom-scrollbar">
+                                                {allBranches.filter(b => b.id !== warehouse?.id).map(b => {
+                                                    const checked = sharingTargets.includes(b.id)
+                                                    return (
+                                                        <button
+                                                            key={b.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSharingTargets(prev =>
+                                                                    checked ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                                                                )
+                                                            }}
+                                                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                                                                checked ? 'shadow-sm' : ''
+                                                            }`}
+                                                            style={checked ? {
+                                                                borderColor: 'color-mix(in srgb, var(--app-warning) 50%, transparent)',
+                                                                background: 'color-mix(in srgb, var(--app-warning) 6%, var(--app-surface))',
+                                                            } : { borderColor: 'color-mix(in srgb, var(--app-border) 40%, transparent)' }}
+                                                        >
+                                                            <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
+                                                                checked ? 'bg-app-warning text-white' : 'border border-app-border'
+                                                            }`}>
+                                                                {checked && <Check size={9} />}
+                                                            </div>
+                                                            <span className={`text-[11px] font-bold truncate ${checked ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
+                                                                {b.name}
+                                                            </span>
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] text-app-muted-foreground italic">
+                                                No other branches available to share with.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* ── Section: Auto-Create (Branch only, new only) ── */}
                         {!isEditing && locationType === 'BRANCH' && (

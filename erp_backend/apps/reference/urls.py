@@ -16,6 +16,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     RefCountryViewSet, RefCurrencyViewSet, RefCountryCurrencyMapViewSet,
     OrgCountryViewSet, OrgCurrencyViewSet, SourcingCountryViewSet,
+    RefCityViewSet,
 )
 
 router = DefaultRouter()
@@ -25,6 +26,7 @@ router.register(r'country-currency-map', RefCountryCurrencyMapViewSet, basename=
 router.register(r'org-countries', OrgCountryViewSet, basename='org-countries')
 router.register(r'org-currencies', OrgCurrencyViewSet, basename='org-currencies')
 router.register(r'sourcing-countries', SourcingCountryViewSet, basename='sourcing-countries')
+router.register(r'cities', RefCityViewSet, basename='ref-cities')
 
 urlpatterns = router.urls
 

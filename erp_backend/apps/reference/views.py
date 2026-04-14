@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 
-from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry
+from .models import Country, Currency, CountryCurrencyMap, OrgCountry, OrgCurrency, SourcingCountry, City
 from .serializers import (
     CountrySerializer, CountryListSerializer,
     CurrencySerializer, CurrencyListSerializer,
@@ -23,6 +23,7 @@ from .serializers import (
     OrgCountrySerializer, OrgCountryWriteSerializer,
     OrgCurrencySerializer, OrgCurrencyWriteSerializer,
     SourcingCountrySerializer, SourcingCountryWriteSerializer,
+    CitySerializer, CityListSerializer,
 )
 
 
@@ -453,4 +454,59 @@ class SourcingCountryViewSet(viewsets.ModelViewSet):
         ).delete()
 
         return Response({'message': f'{deleted} sourcing countries removed'})
+
+
+class RefCityViewSet(viewsets.ModelViewSet):
+    """
+    Global city reference list.
+    All authenticated users can read. Staff/Superuser can write.
+
+    Supports:
+      - ?country= (filter by country ID — required for dropdown usage)
+      - ?search= (filter by city name)
+      - ?active_only= (default true)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = City.objects.select_related('country').all()
+
+        country_id = self.request.query_params.get('country')
+        if country_id:
+            qs = qs.filter(country_id=country_id)
+
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(name__icontains=search) |
+                Q(state_province__icontains=search)
+            )
+
+        active_only = self.request.query_params.get('active_only', 'true')
+        if active_only.lower() in ('true', '1'):
+            qs = qs.filter(is_active=True)
+
+        return qs
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return CityListSerializer
+        return CitySerializer
+
+    def create(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 

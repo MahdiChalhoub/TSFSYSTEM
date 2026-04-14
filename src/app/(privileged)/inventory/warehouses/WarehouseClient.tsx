@@ -591,7 +591,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     ]
 
     return (
-        <div className={`flex flex-col p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`} style={{ height: '100%' }}>
+        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ═══════════════ HEADER ═══════════════ */}
             <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
