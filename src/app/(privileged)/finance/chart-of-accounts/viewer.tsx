@@ -469,8 +469,35 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                 })}
             </div>}
 
-            {/* ── Toolbar Row ────────────────────────────────── */}
+            {/* ── Unified Toolbar ────────────────────────────── */}
             <div className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
+                {/* Focus mode: title label on the left */}
+                {focusMode && (
+                    <div className="flex items-center gap-2 flex-shrink-0 mr-1">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                color: 'var(--app-primary)',
+                            }}>
+                            <BookOpen size={12} />
+                            <span>{accounts.filter(a => a.isActive).length}</span>
+                        </div>
+                        {typeFilter && (
+                            <button
+                                onClick={() => setTypeFilter(null)}
+                                className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-bold transition-all"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                    color: 'var(--app-primary)',
+                                }}>
+                                {typeFilter} <X size={10} />
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* Search */}
                 <div className="flex-1 relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
@@ -490,6 +517,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         onBlur={e => { (e.target as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--app-border) 50%, transparent)' }}
                     />
                 </div>
+
                 {/* Show Inactive Toggle */}
                 {accounts.some(a => !a.isActive) && (
                     <button
@@ -505,32 +533,23 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         <span className="hidden sm:inline">{showInactive ? 'Showing Inactive' : 'Show Inactive'}</span>
                     </button>
                 )}
-            </div>
 
-            {/* Focus mode toolbar — compact minimize button */}
-            {focusMode && (
-                <div className="flex items-center gap-2 mb-2 flex-shrink-0 px-4 md:px-6">
-                    <div className="flex items-center gap-2 text-[11px] font-bold" style={{ color: 'var(--app-primary)' }}>
-                        <BookOpen size={13} />
-                        <span>Chart of Accounts · {accounts.filter(a => a.isActive).length} accounts</span>
-                        {typeFilter && (
-                            <span className="px-2 py-0.5 rounded-lg text-[10px]" style={{
-                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
-                            }}>Filtered: {typeFilter}</span>
-                        )}
-                    </div>
-                    <div className="flex-1" />
+                {/* Focus mode: exit button */}
+                {focusMode && (
                     <button
                         onClick={() => setFocusMode(false)}
                         title="Exit Focus Mode (Ctrl+Q)"
-                        className="p-1.5 rounded-xl border transition-all"
-                        style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)', background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)' }}
+                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl border transition-all flex-shrink-0 text-[11px] font-bold"
+                        style={{
+                            color: 'var(--app-primary)',
+                            borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)',
+                        }}
                     >
-                        <Minimize2 size={13} />
+                        <Minimize2 size={13} /> Exit
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* ── Inline Add Form ────────────────────────────── */}
             {isAdding && (

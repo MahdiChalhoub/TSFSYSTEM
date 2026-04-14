@@ -197,18 +197,37 @@ class LedgerCOAMixin:
             rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
             # ── Cleanup: Delete orphan inactive accounts ──
-            # After a reset+import, remove any deactivated accounts that have
-            # zero journal entry line references (safe to delete).
+            # After a reset+import, remove any deactivated accounts AND
+            # null-origin seed accounts that have zero journal references.
             if reset:
-                orphan_qs = ChartOfAccount.objects.filter(
-                    organization=organization,
-                    is_active=False,
-                ).exclude(
-                    id__in=JournalEntryLine.objects.filter(
+                used_account_ids = set(
+                    JournalEntryLine.objects.filter(
                         organization=organization
                     ).values_list('account_id', flat=True).distinct()
                 )
-                orphan_ids = list(orphan_qs.values_list('id', flat=True))
+                # 1) Inactive accounts with no journal refs → DELETE
+                orphan_qs = ChartOfAccount.objects.filter(
+                    organization=organization,
+                    is_active=False,
+                ).exclude(id__in=used_account_ids)
+                # 2) Also target null-template-origin seed accounts with zero balance
+                null_origin_qs = ChartOfAccount.objects.filter(
+                    organization=organization,
+                    template_origin__isnull=True,
+                    balance=0,
+                ).exclude(id__in=used_account_ids)
+                # 3) Deactivate null-origin accounts that ARE journal-referenced
+                ChartOfAccount.objects.filter(
+                    organization=organization,
+                    template_origin__isnull=True,
+                    balance=0,
+                    id__in=used_account_ids,
+                ).update(is_active=False)
+                # Combine both sets for deletion
+                orphan_ids = list(set(
+                    list(orphan_qs.values_list('id', flat=True)) +
+                    list(null_origin_qs.values_list('id', flat=True))
+                ))
                 if orphan_ids:
                     # Null parent_id references to orphan accounts
                     ChartOfAccount.objects.filter(
