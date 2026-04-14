@@ -8,6 +8,7 @@ import {
     Layers, Hash, Tag, TreePine, ArrowRight, Loader2,
     MapPin, Flag, BarChart3, GitBranch, ArrowRightLeft,
     BookMarked, Scale, Building2, Workflow,
+    DollarSign, UserPlus, X,
 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
@@ -48,7 +49,8 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     const router = useRouter()
     const searchParams = useSearchParams()
     const cameFromCOA = searchParams.get('from') === 'coa'
-    const [activeView, setActiveView] = useState<'gallery' | 'compare' | 'migration'>('gallery')
+    const [activeView, setActiveView] = useState<'gallery' | 'compare' | 'migration' | 'execution'>('gallery')
+    const [migrationPreview, setMigrationPreview] = useState<import('@/app/actions/finance/coa-templates').MigrationPreview | null>(null)
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
     const [compareTemplates, setCompareTemplates] = useState<string[]>([])
     const [focusMode, setFocusMode] = useState(false)
@@ -86,17 +88,24 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
     const handleImport = async (key: string) => {
         // Check if there's existing data that needs migration
         try {
-            const { getCOAStatus } = await import('@/app/actions/finance/coa-templates')
+            const { getCOAStatus, getMigrationPreview } = await import('@/app/actions/finance/coa-templates')
             const status = await getCOAStatus()
             setCoaStatus(status)
 
             if (status.has_data && status.current_template && status.current_template !== key) {
-                // Different template with journal data → redirect to migration
+                // Different template with journal data → open EXECUTION screen
                 setMigrationTarget({ from: status.current_template, to: key })
-                setActiveView('migration')
-                toast.info(`Migration required: ${status.current_template.replace(/_/g, ' ')} → ${key.replace(/_/g, ' ')}`, {
-                    description: `${status.journal_entry_count} journal entries need account remapping`,
-                })
+                setIsPending(true)
+                toast.info(`Loading migration data...`)
+                const preview = await getMigrationPreview(key)
+                setMigrationPreview(preview)
+                setActiveView('execution')
+                setIsPending(false)
+                if (preview) {
+                    toast.info(`Migration: ${preview.summary.with_balance} accounts with balance, ${preview.summary.custom_accounts} custom accounts`, {
+                        description: `${status.journal_entry_count} journal entries need remapping`,
+                    })
+                }
                 return
             }
             // Same template re-import, or no data → direct import
@@ -296,6 +305,27 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                 setIsPending(false)
                             }
                         }}
+                        isPending={isPending}
+                    />
+                )}
+                {activeView === 'execution' && migrationPreview && migrationTarget && (
+                    <MigrationExecutionView
+                        preview={migrationPreview}
+                        targetTemplateKey={migrationTarget.to}
+                        sourceTemplateKey={migrationTarget.from}
+                        onApply={async () => {
+                            setIsPending(true)
+                            try {
+                                await importChartOfAccountsTemplate(migrationTarget.to as any, { reset: true })
+                                toast.success(`Migration complete → ${migrationTarget.to.replace(/_/g, ' ')}`)
+                                router.push('/finance/chart-of-accounts')
+                            } catch (e: unknown) {
+                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
+                            } finally {
+                                setIsPending(false)
+                            }
+                        }}
+                        onCancel={() => setActiveView('gallery')}
                         isPending={isPending}
                     />
                 )}
@@ -1534,6 +1564,313 @@ function MigrationView({
                     </div>
                 </div>
             )}
+        </div>
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Migration Execution View — Dedicated screen for executing COA migration
+// Shows: accounts with balance, accounts with transactions, custom sub-accounts
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function MigrationExecutionView({
+    preview,
+    targetTemplateKey,
+    sourceTemplateKey,
+    onApply,
+    onCancel,
+    isPending,
+}: {
+    preview: import('@/app/actions/finance/coa-templates').MigrationPreview
+    targetTemplateKey: string
+    sourceTemplateKey: string
+    onApply: () => void
+    onCancel: () => void
+    isPending: boolean
+}) {
+    const [overrides, setOverrides] = useState<Record<string, string>>({})
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+        HAS_BALANCE: true,
+        HAS_TRANSACTIONS: true,
+        CUSTOM: true,
+    })
+
+    const withBalance = preview.accounts.filter(a => a.category === 'HAS_BALANCE')
+    const withTxns = preview.accounts.filter(a => a.category === 'HAS_TRANSACTIONS')
+    const customAccounts = preview.accounts.filter(a => a.is_custom)
+    const cleanAccounts = preview.accounts.filter(a => a.category === 'CLEAN' && !a.is_custom)
+
+    const getTargetCode = (code: string, suggested: any) => {
+        return overrides[code] || (suggested?.code ?? '')
+    }
+
+    const sections = [
+        {
+            key: 'HAS_BALANCE',
+            label: 'Accounts with Balance',
+            icon: <DollarSign size={15} />,
+            color: 'var(--app-danger, #ef4444)',
+            bgColor: 'color-mix(in srgb, var(--app-danger, #ef4444) 8%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--app-danger, #ef4444) 25%, transparent)',
+            accounts: withBalance,
+            description: 'These accounts have non-zero balances. Journal entries referencing them will be remapped.',
+        },
+        {
+            key: 'HAS_TRANSACTIONS',
+            label: 'Accounts with Transactions',
+            icon: <FileText size={15} />,
+            color: 'var(--app-warning, #f59e0b)',
+            bgColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 8%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--app-warning, #f59e0b) 25%, transparent)',
+            accounts: withTxns,
+            description: 'Zero balance but have journal entries. Transactions will be migrated to the target account.',
+        },
+        {
+            key: 'CUSTOM',
+            label: 'Custom Sub-Accounts',
+            icon: <UserPlus size={15} />,
+            color: 'var(--app-info, #3b82f6)',
+            bgColor: 'color-mix(in srgb, var(--app-info, #3b82f6) 8%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--app-info, #3b82f6) 25%, transparent)',
+            accounts: customAccounts,
+            description: 'User-added accounts not in the target template (clients, suppliers, manual). Suggested target based on parent.',
+        },
+    ]
+
+    return (
+        <div className="flex flex-col h-full">
+            {/* ── Header ── */}
+            <div className="flex-shrink-0 px-5 py-4" style={{
+                background: 'var(--app-surface)',
+                borderBottom: '1px solid var(--app-border)',
+            }}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-9 h-9 rounded-xl"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 15%, transparent)' }}>
+                            <ArrowRightLeft size={18} style={{ color: 'var(--app-primary)' }} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                Migration Execution
+                            </h2>
+                            <p className="text-[11px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                {sourceTemplateKey.replace(/_/g, ' ')} → {targetTemplateKey.replace(/_/g, ' ')}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={onCancel}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-xl border transition-all"
+                            style={{ color: 'var(--app-muted-foreground)', borderColor: 'var(--app-border)' }}>
+                            <X size={13} /> Cancel
+                        </button>
+                        <button onClick={onApply} disabled={isPending}
+                            className="flex items-center gap-1.5 px-4 py-1.5 text-[11px] font-bold rounded-xl transition-all"
+                            style={{
+                                background: isPending ? 'var(--app-muted)' : 'var(--app-primary)',
+                                color: 'white',
+                                opacity: isPending ? 0.6 : 1,
+                                cursor: isPending ? 'wait' : 'pointer',
+                            }}>
+                            {isPending ? (
+                                <><Loader2 size={13} className="animate-spin" /> Migrating...</>
+                            ) : (
+                                <><Zap size={13} /> Apply Migration &amp; Import</>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Summary Stats ── */}
+                <div className="flex items-center gap-3 mt-3">
+                    {[
+                        { label: 'Total Accounts', value: preview.summary.total_accounts, color: 'var(--app-foreground)' },
+                        { label: 'With Balance', value: preview.summary.with_balance, color: 'var(--app-danger, #ef4444)' },
+                        { label: 'With Transactions', value: preview.summary.with_transactions, color: 'var(--app-warning, #f59e0b)' },
+                        { label: 'Custom', value: preview.summary.custom_accounts, color: 'var(--app-info, #3b82f6)' },
+                        { label: 'Clean', value: cleanAccounts.length, color: 'var(--app-success, #22c55e)' },
+                    ].map(stat => (
+                        <div key={stat.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]"
+                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                            <span className="font-bold" style={{ color: stat.color }}>{stat.value}</span>
+                            <span style={{ color: 'var(--app-muted-foreground)' }}>{stat.label}</span>
+                        </div>
+                    ))}
+                    {preview.summary.total_balance !== 0 && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]"
+                            style={{ background: 'var(--app-background)', border: '1px solid var(--app-border)' }}>
+                            <span className="font-bold" style={{
+                                color: preview.summary.total_balance > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)',
+                            }}>
+                                {preview.summary.total_balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </span>
+                            <span style={{ color: 'var(--app-muted-foreground)' }}>Net Balance</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Sections ── */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                {sections.map(section => (
+                    section.accounts.length > 0 && (
+                        <div key={section.key} className="rounded-xl overflow-hidden"
+                            style={{ border: `1px solid ${section.borderColor}` }}>
+                            {/* Section Header */}
+                            <button
+                                onClick={() => setExpandedSections(p => ({ ...p, [section.key]: !p[section.key] }))}
+                                className="w-full flex items-center justify-between px-4 py-2.5 transition-all"
+                                style={{ background: section.bgColor }}>
+                                <div className="flex items-center gap-2">
+                                    <span style={{ color: section.color }}>{section.icon}</span>
+                                    <span className="text-[12px] font-bold" style={{ color: section.color }}>
+                                        {section.label}
+                                    </span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                                        style={{ background: section.color, color: 'white' }}>
+                                        {section.accounts.length}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                        {section.description}
+                                    </span>
+                                    <ChevronDown size={14}
+                                        className="transition-transform"
+                                        style={{
+                                            color: section.color,
+                                            transform: expandedSections[section.key] ? 'rotate(0)' : 'rotate(-90deg)',
+                                        }} />
+                                </div>
+                            </button>
+
+                            {/* Section Table */}
+                            {expandedSections[section.key] && (
+                                <div style={{ background: 'var(--app-background)' }}>
+                                    {/* Table Header */}
+                                    <div className="grid gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider"
+                                        style={{
+                                            gridTemplateColumns: '80px 1fr 100px 80px 1fr 100px',
+                                            color: 'var(--app-muted-foreground)',
+                                            borderBottom: '1px solid var(--app-border)',
+                                        }}>
+                                        <span>Code</span>
+                                        <span>Source Account</span>
+                                        <span className="text-right">Balance</span>
+                                        <span className="text-center">Txns</span>
+                                        <span>→ Target Account</span>
+                                        <span className="text-center">Match</span>
+                                    </div>
+                                    {/* Rows */}
+                                    {section.accounts.map(acc => (
+                                        <div key={acc.code}
+                                            className="grid gap-2 px-4 py-2 text-[11px] items-center transition-colors hover:bg-[var(--app-surface)]"
+                                            style={{
+                                                gridTemplateColumns: '80px 1fr 100px 80px 1fr 100px',
+                                                borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                            }}>
+                                            {/* Source Code */}
+                                            <span className="font-mono font-bold" style={{ color: 'var(--app-foreground)' }}>
+                                                {acc.code}
+                                            </span>
+                                            {/* Source Name + Parent */}
+                                            <div className="truncate">
+                                                <span style={{ color: 'var(--app-foreground)' }}>{acc.name}</span>
+                                                {acc.parent_code && (
+                                                    <span className="text-[9px] ml-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                        ← {acc.parent_code} {acc.parent_name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {/* Balance */}
+                                            <span className="text-right font-mono font-bold" style={{
+                                                color: acc.balance > 0 ? 'var(--app-success, #22c55e)'
+                                                    : acc.balance < 0 ? 'var(--app-danger, #ef4444)'
+                                                        : 'var(--app-muted-foreground)',
+                                            }}>
+                                                {acc.balance !== 0 ? acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '—'}
+                                            </span>
+                                            {/* Transaction Count */}
+                                            <span className="text-center font-mono" style={{
+                                                color: acc.txn_count > 0 ? 'var(--app-warning, #f59e0b)' : 'var(--app-muted-foreground)',
+                                            }}>
+                                                {acc.txn_count > 0 ? acc.txn_count : '—'}
+                                            </span>
+                                            {/* Target Account (Dropdown) */}
+                                            <div className="flex items-center gap-1">
+                                                <select
+                                                    value={getTargetCode(acc.code, acc.suggested_target)}
+                                                    onChange={(e) => setOverrides(p => ({ ...p, [acc.code]: e.target.value }))}
+                                                    className="flex-1 text-[11px] px-2 py-1 rounded-lg border bg-transparent truncate"
+                                                    style={{
+                                                        color: 'var(--app-foreground)',
+                                                        borderColor: 'var(--app-border)',
+                                                        background: 'var(--app-surface)',
+                                                    }}>
+                                                    <option value="">— Unmapped —</option>
+                                                    {preview.target_template_accounts.map(ta => (
+                                                        <option key={ta.code} value={ta.code}>
+                                                            {ta.code} — {ta.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            {/* Match Badge */}
+                                            <div className="flex justify-center">
+                                                {acc.suggestion_reason ? (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{
+                                                        background: acc.suggestion_reason === 'EXACT_MATCH'
+                                                            ? 'color-mix(in srgb, var(--app-success, #22c55e) 15%, transparent)'
+                                                            : acc.suggestion_reason === 'PARENT_MATCH'
+                                                                ? 'color-mix(in srgb, var(--app-info, #3b82f6) 15%, transparent)'
+                                                                : 'color-mix(in srgb, var(--app-warning, #f59e0b) 15%, transparent)',
+                                                        color: acc.suggestion_reason === 'EXACT_MATCH'
+                                                            ? 'var(--app-success, #22c55e)'
+                                                            : acc.suggestion_reason === 'PARENT_MATCH'
+                                                                ? 'var(--app-info, #3b82f6)'
+                                                                : 'var(--app-warning, #f59e0b)',
+                                                    }}>
+                                                        {acc.suggestion_reason === 'EXACT_MATCH' ? '✓ Exact'
+                                                            : acc.suggestion_reason === 'PARENT_MATCH' ? '↑ Parent'
+                                                                : '~ Type'}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                                                        style={{
+                                                            background: 'color-mix(in srgb, var(--app-danger, #ef4444) 12%, transparent)',
+                                                            color: 'var(--app-danger, #ef4444)',
+                                                        }}>
+                                                        ✗ Manual
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )
+                ))}
+
+                {/* ── Clean Accounts Summary ── */}
+                {cleanAccounts.length > 0 && (
+                    <div className="rounded-xl px-4 py-3" style={{
+                        background: 'color-mix(in srgb, var(--app-success, #22c55e) 5%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 20%, transparent)',
+                    }}>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 size={15} style={{ color: 'var(--app-success, #22c55e)' }} />
+                            <span className="text-[12px] font-bold" style={{ color: 'var(--app-success, #22c55e)' }}>
+                                {cleanAccounts.length} Clean Accounts
+                            </span>
+                            <span className="text-[10px]" style={{ color: 'var(--app-muted-foreground)' }}>
+                                — No data, exist in both templates. Will be migrated automatically.
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

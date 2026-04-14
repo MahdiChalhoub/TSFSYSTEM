@@ -142,6 +142,51 @@ export async function getCOAStatus(): Promise<COAStatus> {
     }
 }
 
+// ─── Migration Execution Preview ─────────────────────────────────────────────
+
+export type MigrationPreviewAccount = {
+    code: string
+    name: string
+    type: string
+    balance: number
+    txn_count: number
+    parent_code: string | null
+    parent_name: string | null
+    template_origin: string | null
+    is_custom: boolean
+    category: 'HAS_BALANCE' | 'HAS_TRANSACTIONS' | 'CUSTOM' | 'CLEAN'
+    suggested_target: { code: string; name: string; type: string; parent_code: string | null } | null
+    suggestion_reason: 'EXACT_MATCH' | 'PARENT_MATCH' | 'TYPE_MATCH' | null
+    allow_posting: boolean
+}
+
+export type MigrationPreview = {
+    target_template: string
+    target_codes_count: number
+    summary: {
+        total_accounts: number
+        with_balance: number
+        with_transactions: number
+        custom_accounts: number
+        total_balance: number
+    }
+    accounts: MigrationPreviewAccount[]
+    target_template_accounts: { code: string; name: string; type: string; parent_code: string | null }[]
+}
+
+export async function getMigrationPreview(targetTemplateKey: string): Promise<MigrationPreview | null> {
+    try {
+        const { erpFetch } = await import('@/lib/erp-api')
+        return await erpFetch('coa/migration_preview/', {
+            method: 'POST',
+            body: JSON.stringify({ target_template_key: targetTemplateKey }),
+        })
+    } catch (error) {
+        console.error('[COA_TEMPLATE] Migration preview failed:', error)
+        return null
+    }
+}
+
 // ─── Existing: Template import & preview ────────────────────────────────────
 
 export async function importChartOfAccountsTemplate(templateKey: string, options?: { reset?: boolean }) {

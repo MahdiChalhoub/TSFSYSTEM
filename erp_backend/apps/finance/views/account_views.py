@@ -959,6 +959,142 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         })
 
     @action(detail=False, methods=['post'])
+    def migration_preview(self, request):
+        """Return enriched account data for the Migration Execution Screen.
+        
+        Groups accounts into 3 categories:
+        1. Accounts with non-zero balance
+        2. Accounts with transactions but zero balance
+        3. Custom sub-accounts (not in the target template)
+        
+        For custom sub-accounts, suggests target based on parent account mapping.
+        """
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        target_template_key = request.data.get('target_template_key', '')
+        if not target_template_key:
+            return Response({"error": "target_template_key is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
+        from apps.finance.models.coa_template import COATemplateAccount
+        from django.db.models import Count, Q
+
+        # Get all active org accounts with transaction counts
+        org_accounts = (
+            ChartOfAccount.objects
+            .filter(organization_id=organization_id, is_active=True)
+            .annotate(txn_count=Count('journalentryline', filter=Q(journalentryline__isnull=False)))
+            .select_related('parent')
+            .order_by('code')
+        )
+
+        # Get all codes in the target template
+        target_template_codes = set(
+            COATemplateAccount.objects
+            .filter(template__key=target_template_key)
+            .values_list('code', flat=True)
+        )
+
+        # Get migration hints from target template if available
+        target_hints = {}
+        try:
+            target_template_accounts = (
+                COATemplateAccount.objects
+                .filter(template__key=target_template_key)
+                .values('code', 'name', 'account_type', 'parent_code')
+            )
+            for ta in target_template_accounts:
+                target_hints[ta['code']] = {
+                    'code': ta['code'],
+                    'name': ta['name'],
+                    'type': ta['account_type'],
+                    'parent_code': ta['parent_code'],
+                }
+        except Exception:
+            pass
+
+        # Build parent-code to target-code map (for suggesting targets for custom accounts)
+        # If a source parent "1200" maps to target "512", 
+        # then child "1201" (custom) should also suggest "512" as parent
+        source_to_target_parent = {}
+        for code in target_hints:
+            source_to_target_parent[code] = code  # exact match
+
+        accounts_data = []
+        for acc in org_accounts:
+            is_custom = acc.code not in target_template_codes and acc.template_origin is not None
+            
+            # Suggest target: exact match first, then parent-based
+            suggested_target = None
+            suggestion_reason = None
+            
+            if acc.code in target_hints:
+                suggested_target = target_hints[acc.code]
+                suggestion_reason = 'EXACT_MATCH'
+            elif acc.parent and acc.parent.code in target_hints:
+                suggested_target = target_hints[acc.parent.code]
+                suggestion_reason = 'PARENT_MATCH'
+            else:
+                # Try by account type - find first matching type in target
+                for tc, td in target_hints.items():
+                    if td.get('type') == acc.type:
+                        # Find a parent-level account if possible
+                        if td.get('parent_code') is None or td.get('parent_code') == '':
+                            suggested_target = td
+                            suggestion_reason = 'TYPE_MATCH'
+                            break
+
+            balance = float(acc.balance) if acc.balance else 0
+            txn_count = acc.txn_count or 0
+
+            # Determine category
+            if balance != 0:
+                category = 'HAS_BALANCE'
+            elif txn_count > 0:
+                category = 'HAS_TRANSACTIONS'
+            elif is_custom:
+                category = 'CUSTOM'
+            else:
+                category = 'CLEAN'  # no data, exists in template — safe to migrate
+
+            accounts_data.append({
+                'code': acc.code,
+                'name': acc.name,
+                'type': acc.type or acc.account_type if hasattr(acc, 'account_type') else (acc.type or ''),
+                'balance': balance,
+                'txn_count': txn_count,
+                'parent_code': acc.parent.code if acc.parent else None,
+                'parent_name': acc.parent.name if acc.parent else None,
+                'template_origin': acc.template_origin,
+                'is_custom': is_custom,
+                'category': category,
+                'suggested_target': suggested_target,
+                'suggestion_reason': suggestion_reason,
+                'allow_posting': acc.allow_posting,
+            })
+
+        # Summary stats
+        has_balance = [a for a in accounts_data if a['category'] == 'HAS_BALANCE']
+        has_txns = [a for a in accounts_data if a['category'] == 'HAS_TRANSACTIONS']
+        custom = [a for a in accounts_data if a['is_custom']]
+
+        return Response({
+            'target_template': target_template_key,
+            'target_codes_count': len(target_template_codes),
+            'summary': {
+                'total_accounts': len(accounts_data),
+                'with_balance': len(has_balance),
+                'with_transactions': len(has_txns),
+                'custom_accounts': len(custom),
+                'total_balance': sum(a['balance'] for a in has_balance),
+            },
+            'accounts': accounts_data,
+            'target_template_accounts': list(target_hints.values()),
+        })
+
+    @action(detail=False, methods=['post'])
     def apply_template(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id:

@@ -1,7 +1,5 @@
-// @ts-nocheck
-import { getChartOfAccounts } from '@/app/actions/finance/accounts'
-import MigrationPageClient from './MigrationPageClient'
 import { erpFetch } from '@/lib/erp-api'
+import MigrationPageClient from './MigrationPageClient'
 
 async function getTemplatesWithNames(): Promise<{ key: string; name: string }[]> {
     try {
@@ -12,48 +10,27 @@ async function getTemplatesWithNames(): Promise<{ key: string; name: string }[]>
     }
 }
 
-async function getAllTemplatesMap(): Promise<Record<string, any>> {
+async function getCOAStatusData() {
     try {
-        const data = await erpFetch('coa/templates/')
-        const result: Record<string, any> = {}
-        if (Array.isArray(data)) {
-            for (const t of data) { result[t.key] = t.accounts }
-        }
-        return result
+        return await erpFetch('coa/coa_status/')
     } catch {
-        return {}
+        return null
     }
 }
 
 export default async function CoaMigrationPage() {
-    const [accounts, templateList, templatesMap] = await Promise.all([
-        getChartOfAccounts(true).catch(() => []),
+    const [templateList, coaStatus] = await Promise.all([
         getTemplatesWithNames(),
-        getAllTemplatesMap(),
+        getCOAStatusData(),
     ])
 
-    // Determine the current org's template origin (most common template_origin across accounts)
-    const originCounts: Record<string, number> = {}
-    for (const acc of accounts as any[]) {
-        const o = acc.template_origin
-        if (o) originCounts[o] = (originCounts[o] || 0) + 1
-    }
-    const currentTemplateKey = Object.entries(originCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
-
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="mb-8 text-center">
-                <h1 className="text-3xl font-bold text-app-foreground mb-1">Account Migration</h1>
-                <p className="text-app-muted-foreground text-sm tracking-widest uppercase">
-                    Transform your chart of accounts without losing history
-                </p>
-            </div>
-            <MigrationPageClient
-                accounts={accounts}
-                templatesMap={templatesMap}
-                templateList={templateList}
-                currentTemplateKey={currentTemplateKey || ''}
-            />
-        </div>
+        <MigrationPageClient
+            templateList={templateList}
+            currentTemplateKey={coaStatus?.current_template || ''}
+            accountCount={coaStatus?.account_count || 0}
+            journalEntryCount={coaStatus?.journal_entry_count || 0}
+            hasData={coaStatus?.has_data || false}
+        />
     )
 }
