@@ -7,6 +7,7 @@ import {
     Search, Menu, Settings, LogOut, HelpCircle,
     Palette, Sun, Moon, ChevronDown,
     Globe, ChevronRight, Eye, EyeOff, Zap,
+    PanelLeft, PanelTop,
 } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
@@ -72,36 +73,48 @@ function MegaMenuDropdown({ item, onClose }: { item: MenuItem; onClose: () => vo
 
 // ── Top-nav item ──────────────────────────────────────────────────────────────
 
-const TopNavItem = memo(function TopNavItem({ item }: { item: MenuItem }) {
-    const [open, setOpen] = useState(false);
+const TopNavItem = memo(function TopNavItem({ item, activeMenu, setActiveMenu }: {
+    item: MenuItem;
+    activeMenu: string | null;
+    setActiveMenu: (title: string | null) => void;
+}) {
     const ref = useRef<HTMLDivElement>(null);
     const { openTab } = useAdmin();
+    const isOpen = activeMenu === item.title;
+
     useEffect(() => {
-        const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        const h = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node) && isOpen) {
+                setActiveMenu(null);
+            }
+        };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
-    }, []);
+    }, [isOpen, setActiveMenu]);
+
     const hasChildren = !!item.children?.length;
     if (!hasChildren && item.path) {
         return (
-            <button onClick={() => openTab(item.title, item.path!)}
+            <button onClick={() => { openTab(item.title, item.path!); setActiveMenu(null); }}
+                onMouseEnter={() => setActiveMenu(null)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
                 style={{ color: 'var(--app-text-muted)' }}
-                onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface-2)'; el.style.color = 'var(--app-text)'; }}
                 onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-muted)'; }}>
                 {item.icon && <item.icon size={13} />}{item.title}
             </button>
         );
     }
     return (
-        <div ref={ref} className="relative">
-            <button onClick={() => setOpen(v => !v)} onMouseEnter={() => setOpen(true)}
+        <div ref={ref} className="relative"
+            onMouseLeave={() => setActiveMenu(null)}>
+            <button onClick={() => setActiveMenu(isOpen ? null : item.title)}
+                onMouseEnter={() => setActiveMenu(item.title)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors duration-150"
-                style={{ background: open ? 'var(--app-surface-2)' : 'transparent', color: open ? 'var(--app-text)' : 'var(--app-text-muted)' }}>
+                style={{ background: isOpen ? 'var(--app-surface-2)' : 'transparent', color: isOpen ? 'var(--app-text)' : 'var(--app-text-muted)' }}>
                 {item.icon && <item.icon size={13} />}{item.title}
-                {hasChildren && <ChevronDown size={10} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform var(--app-transition-fast)' }} />}
+                {hasChildren && <ChevronDown size={10} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--app-transition-fast)' }} />}
             </button>
-            {open && hasChildren && <MegaMenuDropdown item={item} onClose={() => setOpen(false)} />}
+            {isOpen && hasChildren && <MegaMenuDropdown item={item} onClose={() => setActiveMenu(null)} />}
         </div>
     );
 });
@@ -280,9 +293,10 @@ function UserPanel({ user, viewScope, canToggleScope, onClose }: {
 // ── Main TopHeader ─────────────────────────────────────────────────────────────
 
 export function TopHeader({ sites, organizations = [], currentSlug, user }: TopHeaderProps) {
-    const { toggleSidebar, sidebarOpen, viewScope, canToggleScope, navLayout } = useAdmin();
+    const { toggleSidebar, sidebarOpen, viewScope, canToggleScope, navLayout, setNavLayout } = useAdmin();
     const [profileOpen, setProfileOpen] = useState(false);
     const [themeOpen, setThemeOpen] = useState(false);
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const themeRef = useRef<HTMLDivElement>(null);
@@ -349,14 +363,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                     <div className="h-5 w-px" style={{ background: 'var(--app-border)' }} />
                 </div>
 
-                {/* ── TOP-NAV ITEMS  (topnav mode only) ────────────── */}
-                {isTopnav && (
-                    <nav className="hidden lg:flex items-center gap-0.5 flex-shrink-0">
-                        {MENU_ITEMS.map((item) => (
-                            <TopNavItem key={item.title} item={item as MenuItem} />
-                        ))}
-                    </nav>
-                )}
+                {/* ── TOP-NAV ITEMS  (topnav mode only) — MOVED TO ROW 2 ── */}
 
                 {/* ── CONTEXT  (sidebar mode: org / site / branch / location) ── */}
                 {!isTopnav && (
@@ -398,8 +405,19 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
                 {/* Push right zone to the end */}
                 <div className="flex-1" />
 
-                {/* ── ACTION BUTTONS  [bell · sun/moon · theme] ─────── */}
+                {/* ── ACTION BUTTONS  [layout · bell · sun/moon · theme] ─────── */}
                 <div className="flex items-center gap-0.5 flex-shrink-0">
+
+                    {/* Layout toggle: sidebar ↔ topnav */}
+                    <button onClick={() => setNavLayout(navLayout === 'sidebar' ? 'topnav' : 'sidebar')}
+                        title={navLayout === 'sidebar' ? 'Switch to Top Navigation' : 'Switch to Sidebar'}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150"
+                        style={{ color: 'var(--app-text-faint)' }}
+                        onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'var(--app-surface)'; el.style.color = 'var(--app-text)'; }}
+                        onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.background = 'transparent'; el.style.color = 'var(--app-text-faint)'; }}
+                    >
+                        {navLayout === 'sidebar' ? <PanelTop size={15} /> : <PanelLeft size={15} />}
+                    </button>
 
                     {/* Notifications */}
                     <div className="flex items-center justify-center w-8 h-8">
@@ -487,23 +505,34 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: TopH
             </div>
 
             {/* ════════════════════════════════════════════════════════
-                TOPNAV CONTEXT ROW  (topnav mode only)
+                TOPNAV ROW 2  ·  Navigation + Context
             ════════════════════════════════════════════════════════ */}
             {isTopnav && (
-                <div className="flex items-center gap-2 h-9 px-4 overflow-x-auto"
+                <div className="flex items-center gap-2 px-4 py-1"
                     style={{ borderTop: '1px solid var(--app-border)', background: 'var(--app-surface)' }}>
-                    <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
-                    <SiteSwitcher sites={sites} />
-                    <BranchLocationSwitcher />
-                    {currentSlug !== 'saas' && activeOrg?.currency_code && (
-                        <div className="flex items-center gap-1.5 px-2 h-6 rounded-lg flex-shrink-0 text-[10px] font-bold"
-                            style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}>
-                            <Globe size={9} />{activeOrg.currency_code}
-                        </div>
-                    )}
-                    {currentSlug !== 'saas' && activeOrg?.business_type_name && (
-                        <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>{activeOrg.business_type_name}</span>
-                    )}
+                    {/* Nav items — wraps to 2 rows if needed */}
+                    <nav className="flex items-center gap-0.5 flex-wrap flex-1 min-w-0">
+                        {MENU_ITEMS.map((item) => (
+                            <TopNavItem key={item.title} item={item as MenuItem}
+                                activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+                        ))}
+                    </nav>
+                    {/* Org context — right side */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="h-4 w-px" style={{ background: 'var(--app-border)' }} />
+                        <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
+                        <SiteSwitcher sites={sites} />
+                        <BranchLocationSwitcher />
+                        {currentSlug !== 'saas' && activeOrg?.currency_code && (
+                            <div className="flex items-center gap-1.5 px-2 h-6 rounded-lg flex-shrink-0 text-[10px] font-bold"
+                                style={{ background: 'var(--app-primary-light)', color: 'var(--app-primary)', border: '1px solid var(--app-border)' }}>
+                                <Globe size={9} />{activeOrg.currency_code}
+                            </div>
+                        )}
+                        {currentSlug !== 'saas' && activeOrg?.business_type_name && (
+                            <span className="text-[10px] font-medium flex-shrink-0" style={{ color: 'var(--app-text-faint)' }}>{activeOrg.business_type_name}</span>
+                        )}
+                    </div>
                 </div>
             )}
         </header>

@@ -222,6 +222,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
     const [searchQuery, setSearchQuery] = useState('')
     const [showInactive, setShowInactive] = useState(false)
     const [focusMode, setFocusMode] = useState(false)
+    const [typeFilter, setTypeFilter] = useState<string | null>(null)
     const [isAdding, setIsAdding] = useState(false)
     const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
     const [editingAccount, setEditingAccount] = useState<Record<string, any> | null>(null)
@@ -244,18 +245,21 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
         const byType = (t: string) => active.filter(a => a.type === t)
         const sum = (arr: Record<string, any>[]) => arr.reduce((s, a) => s + (Number(a.balance) || 0), 0)
         return [
-            { label: 'Total Accounts', value: accounts.length, color: 'var(--app-primary)', icon: <BookOpen size={14} /> },
-            { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info, #3B82F6)', icon: <Wallet size={14} /> },
-            { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error, #EF4444)', icon: <TrendingDown size={14} /> },
-            { label: 'Equity', value: byType('EQUITY').length, color: '#8b5cf6', icon: <Scale size={14} /> },
-            { label: 'Income', value: byType('INCOME').length, color: 'var(--app-success, #10B981)', icon: <TrendingUp size={14} /> },
-            { label: 'Expenses', value: byType('EXPENSE').length, color: 'var(--app-warning, #F59E0B)', icon: <BarChart3 size={14} /> },
+            { label: 'Total Accounts', value: accounts.length, color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
+            { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info, #3B82F6)', icon: <Wallet size={14} />, filterKey: 'ASSET' },
+            { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error, #EF4444)', icon: <TrendingDown size={14} />, filterKey: 'LIABILITY' },
+            { label: 'Equity', value: byType('EQUITY').length, color: '#8b5cf6', icon: <Scale size={14} />, filterKey: 'EQUITY' },
+            { label: 'Income', value: byType('INCOME').length, color: 'var(--app-success, #10B981)', icon: <TrendingUp size={14} />, filterKey: 'INCOME' },
+            { label: 'Expenses', value: byType('EXPENSE').length, color: 'var(--app-warning, #F59E0B)', icon: <BarChart3 size={14} />, filterKey: 'EXPENSE' },
         ]
     }, [accounts])
 
     // Filter + build tree
     const tree = useMemo(() => {
         let filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
+        if (typeFilter) {
+            filtered = filtered.filter(a => a.type === typeFilter)
+        }
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase()
             filtered = filtered.filter(a =>
@@ -272,7 +276,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
             else if (!a.parentId) roots.push(map[a.id])
         })
         return roots
-    }, [accounts, showInactive, searchQuery])
+    }, [accounts, showInactive, searchQuery, typeFilter])
 
     // Handlers
     async function handleCreate(formData: FormData) {
@@ -344,11 +348,19 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
     const openAddModal = (parentId?: number) => { setPreselectedParentId(parentId); setIsAdding(true) }
 
+    // Computed totals for footer
+    const footerStats = useMemo(() => {
+        const active = accounts.filter(a => a.isActive)
+        const totalBalance = active.reduce((s, a) => s + (Number(a.balance) || 0), 0)
+        const withBalance = active.filter(a => Number(a.balance) !== 0).length
+        return { totalBalance, withBalance, totalActive: active.length }
+    }, [accounts])
+
     return (
-        <div className={`flex flex-col h-full p-4 md:p-6 animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}>
+        <div className="flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ── Page Header ───────────────────────────────── */}
-            <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0">
+            {!focusMode && <div className="flex items-start justify-between gap-4 mb-4 flex-shrink-0 px-4 md:px-6 pt-4 md:pt-6">
                 <div className="flex items-center gap-3">
                     <div
                         className="page-header-icon bg-app-primary"
@@ -420,35 +432,45 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                         {focusMode ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                     </button>
                 </div>
-            </div>
+            </div>}
 
             {/* ── KPI Strip ─────────────────────────────────── */}
-            <div className="flex-shrink-0 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
-                {stats.map(s => (
-                    <div
-                        key={s.label}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
-                        style={{
-                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                        }}
-                    >
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                            {s.icon}
-                        </div>
-                        <div className="min-w-0">
-                            <div className="text-[9px] font-bold uppercase tracking-wider truncate"
-                                style={{ color: 'var(--app-muted-foreground, #94A3B8)' }}>{s.label}</div>
-                            <div className="text-sm font-black tabular-nums"
-                                style={{ color: 'var(--app-foreground, var(--app-text))' }}>{s.value}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {!focusMode && <div className="flex-shrink-0 mb-4 px-4 md:px-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                {stats.map(s => {
+                    const isActive = typeFilter === s.filterKey || (s.filterKey === null && typeFilter === null)
+                    return (
+                        <button
+                            key={s.label}
+                            onClick={() => setTypeFilter(typeFilter === s.filterKey ? null : s.filterKey)}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                            style={{
+                                background: isActive
+                                    ? `color-mix(in srgb, ${s.color} 8%, var(--app-surface))`
+                                    : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                border: isActive
+                                    ? `2px solid color-mix(in srgb, ${s.color} 40%, transparent)`
+                                    : '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                cursor: 'pointer',
+                                transform: isActive ? 'scale(1.02)' : 'scale(1)',
+                            }}
+                        >
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: `color-mix(in srgb, ${s.color} ${isActive ? '18' : '10'}%, transparent)`, color: s.color }}>
+                                {s.icon}
+                            </div>
+                            <div className="min-w-0">
+                                <div className="text-[9px] font-bold uppercase tracking-wider truncate"
+                                    style={{ color: isActive ? s.color : 'var(--app-muted-foreground, #94A3B8)' }}>{s.label}</div>
+                                <div className="text-sm font-black tabular-nums"
+                                    style={{ color: 'var(--app-foreground, var(--app-text))' }}>{s.value}</div>
+                            </div>
+                        </button>
+                    )
+                })}
+            </div>}
 
             {/* ── Toolbar Row ────────────────────────────────── */}
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+            <div className="flex items-center gap-2 mb-3 flex-shrink-0 px-4 md:px-6">
                 {/* Search */}
                 <div className="flex-1 relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--app-muted-foreground)' }} />
@@ -485,10 +507,35 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                 )}
             </div>
 
+            {/* Focus mode toolbar — compact minimize button */}
+            {focusMode && (
+                <div className="flex items-center gap-2 mb-2 flex-shrink-0 px-4 md:px-6">
+                    <div className="flex items-center gap-2 text-[11px] font-bold" style={{ color: 'var(--app-primary)' }}>
+                        <BookOpen size={13} />
+                        <span>Chart of Accounts · {accounts.filter(a => a.isActive).length} accounts</span>
+                        {typeFilter && (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px]" style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                            }}>Filtered: {typeFilter}</span>
+                        )}
+                    </div>
+                    <div className="flex-1" />
+                    <button
+                        onClick={() => setFocusMode(false)}
+                        title="Exit Focus Mode (Ctrl+Q)"
+                        className="p-1.5 rounded-xl border transition-all"
+                        style={{ color: 'var(--app-primary)', borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)', background: 'color-mix(in srgb, var(--app-primary) 6%, transparent)' }}
+                    >
+                        <Minimize2 size={13} />
+                    </button>
+                </div>
+            )}
+
             {/* ── Inline Add Form ────────────────────────────── */}
             {isAdding && (
                 <div
-                    className="flex-shrink-0 mb-3 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
+                    className="flex-shrink-0 mb-3 mx-4 md:mx-6 p-4 border rounded-2xl animate-in slide-in-from-top-2 duration-200"
                     style={{
                         background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
                         borderColor: 'var(--app-border)',
@@ -566,7 +613,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
             {/* ── Tree Table ─────────────────────────────────── */}
             <div
-                className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col"
+                className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col mx-4 md:mx-6"
                 style={{
                     background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)',
                     border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
@@ -625,6 +672,35 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                             </p>
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* ── Footer ──────────────────────────────────────── */}
+            <div
+                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold mx-4 md:mx-6 rounded-b-2xl"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    borderTop: 'none',
+                    marginTop: '-1px',
+                    marginBottom: '8px',
+                    color: 'var(--app-muted-foreground)',
+                }}
+            >
+                <div className="flex items-center gap-3 flex-wrap">
+                    <span>{footerStats.totalActive} active accounts</span>
+                    <span style={{ color: 'var(--app-border)' }}>·</span>
+                    <span>{footerStats.withBalance} with balance</span>
+                    {typeFilter && (
+                        <>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span style={{ color: 'var(--app-primary)' }}>Filtered: {typeFilter}</span>
+                            <button onClick={() => setTypeFilter(null)} className="underline" style={{ color: 'var(--app-primary)' }}>Clear</button>
+                        </>
+                    )}
+                </div>
+                <div className="tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                    Net: {footerStats.totalBalance.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
             </div>
 
