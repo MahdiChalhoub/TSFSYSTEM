@@ -207,6 +207,8 @@ class LedgerService:
                     "is_system_only": item.get('isSystemOnly', False) or item.get('is_system_only', False),
                     "is_hidden": item.get('isHidden', False) or item.get('is_hidden', False),
                     "requires_zero_balance": item.get('requiresZeroBalance', False) or item.get('requires_zero_balance', False),
+                    "template_origin": template_key,
+                    "system_role": item.get('system_role'),
                 }
 
                 acc, created = ChartOfAccount.objects.update_or_create(

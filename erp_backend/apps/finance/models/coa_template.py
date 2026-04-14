@@ -290,6 +290,38 @@ class COATemplate(models.Model):
     def __str__(self):
         return f"{self.name} ({self.key} v{self.version})"
 
+    def flatten(self):
+        """Flatten the nested JSON account tree to a list of dicts with parent_code references.
+
+        Tries the normalized ``COATemplateAccount`` rows first (source-of-truth).
+        Falls back to the legacy ``accounts`` JSON field when no rows exist.
+        """
+        # ── Try normalized rows first ──
+        rows = list(self.template_accounts.all().values(
+            'code', 'name', 'type', 'sub_type', 'parent_code',
+            'system_role', 'posting_purpose', 'is_control_account',
+            'is_reconcilable', 'is_bank_account',
+        ))
+        if rows:
+            result = []
+            for r in rows:
+                item = {k: v for k, v in r.items() if v is not None and v != ''}
+                result.append(item)
+            return result
+
+        # ── Fallback: walk the legacy JSON tree ──
+        result = []
+        def _walk(items, parent_code=None):
+            for item in items:
+                flat = {k: v for k, v in item.items() if k != 'children'}
+                if parent_code:
+                    flat['parent_code'] = parent_code
+                result.append(flat)
+                if 'children' in item:
+                    _walk(item['children'], item['code'])
+        _walk(self.accounts or [])
+        return result
+
     @property
     def account_count(self):
         """Count accounts from normalized model, fallback to JSON."""

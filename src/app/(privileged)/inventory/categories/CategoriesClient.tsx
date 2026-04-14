@@ -3,10 +3,11 @@
 import { useState, useMemo, useCallback, useRef, useEffect, useTransition } from 'react'
 import {
     ChevronRight, ChevronDown, Plus, Folder, FolderOpen,
-    RefreshCcw, Eye, EyeOff, Pencil, X, Search, FolderTree,
-    Trash2, BarChart3, Layers, Box, GitBranch,
-    Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp, Bookmark, Tag, AlertCircle, Wrench,
-    Package, Paintbrush, Link2, Unlink, Loader2, ExternalLink
+    Pencil, X, Search, FolderTree,
+    Trash2, Layers, Box, GitBranch,
+    Maximize2, Minimize2, ChevronsUpDown, ChevronsDownUp, Bookmark, AlertCircle, Wrench,
+    Package, Paintbrush, Link2, Unlink, Loader2, ExternalLink, LayoutPanelLeft, PanelLeftClose,
+    Hash, Tag, ChevronUp, Info
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -535,12 +536,136 @@ const CategoryRow = ({
 /* ═══════════════════════════════════════════════════════════
  *  MAIN VIEWER (COA-style)
  * ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+ *  CATEGORY DETAIL PANEL (split-panel right side)
+ * ═══════════════════════════════════════════════════════════ */
+function CategoryDetailPanel({ node, onEdit, onAdd, onDelete }: {
+    node: CategoryNode
+    onEdit: (n: CategoryNode) => void
+    onAdd: (parentId?: number) => void
+    onDelete: (n: CategoryNode) => void
+}) {
+    const isParent = (node.children?.length ?? 0) > 0
+    const productCount = node.product_count ?? 0
+    const brandCount = node.brand_count ?? 0
+    const childCount = node.children?.length ?? 0
+    return (
+        <div className="flex flex-col h-full overflow-y-auto custom-scrollbar" style={{ background: 'var(--app-surface)' }}>
+            {/* Panel Header */}
+            <div className="flex-shrink-0 px-5 py-4" style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                            {isParent ? <FolderOpen size={18} /> : <Folder size={18} />}
+                        </div>
+                        <div>
+                            <h2 className="text-[15px] font-black text-app-foreground tracking-tight leading-tight">{node.name}</h2>
+                            {node.short_name && <p className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest mt-0.5">{node.short_name}</p>}
+                        </div>
+                    </div>
+                </div>
+                {node.code && (
+                    <div className="mt-3 flex items-center gap-1.5">
+                        <Hash size={10} className="text-app-muted-foreground" />
+                        <span className="font-mono text-[12px] font-bold px-2 py-0.5 rounded-lg"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)' }}>
+                            {node.code}
+                        </span>
+                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ml-1"
+                            style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)', color: 'var(--app-primary)', border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)' }}>
+                            {node.parent === null ? 'Root' : 'Child'}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Stats Row */}
+            <div className="flex-shrink-0 px-5 py-3" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '8px' }}>
+                    {[
+                        { label: 'Sub-categories', value: childCount, icon: <GitBranch size={12} />, color: 'var(--app-primary)' },
+                        { label: 'Products', value: productCount, icon: <Package size={12} />, color: 'var(--app-success, #22c55e)' },
+                        { label: 'Brands', value: brandCount, icon: <Paintbrush size={12} />, color: '#8b5cf6' },
+                    ].map(s => (
+                        <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                            style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
+                            <div>
+                                <div className="text-[9px] font-black uppercase tracking-widest" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex-shrink-0 px-5 py-3 flex items-center gap-2 flex-wrap" style={{ borderBottom: '1px solid var(--app-border)' }}>
+                <button onClick={() => onEdit(node)}
+                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all"
+                    style={{ color: 'var(--app-foreground)', borderColor: 'var(--app-border)', background: 'var(--app-surface)' }}>
+                    <Pencil size={12} /> Edit
+                </button>
+                <button onClick={() => onAdd(node.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all"
+                    style={{ background: 'var(--app-primary)', color: '#fff', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                    <Plus size={12} /> Add Child
+                </button>
+                {!isParent && (
+                    <button onClick={() => onDelete(node)}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-all"
+                        style={{ color: 'var(--app-error, #ef4444)', borderColor: 'color-mix(in srgb, var(--app-error, #ef4444) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error, #ef4444) 5%, transparent)' }}>
+                        <Trash2 size={12} /> Delete
+                    </button>
+                )}
+            </div>
+
+            {/* Children List */}
+            {childCount > 0 && (
+                <div className="flex-1 px-5 py-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-app-muted-foreground mb-2">Sub-categories ({childCount})</p>
+                    <div className="flex flex-col gap-1">
+                        {node.children!.map(child => (
+                            <div key={child.id} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
+                                style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)' }}>
+                                <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                                    style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
+                                    <Folder size={11} />
+                                </div>
+                                <span className="flex-1 text-[12px] font-medium text-app-foreground truncate">{child.name}</span>
+                                {child.product_count != null && child.product_count > 0 && (
+                                    <span className="text-[10px] font-bold flex items-center gap-0.5"
+                                        style={{ color: 'var(--app-success, #22c55e)' }}>
+                                        <Box size={9} /> {child.product_count}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {childCount === 0 && (
+                <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 text-center">
+                    <Info size={28} className="text-app-muted-foreground mb-2 opacity-30" />
+                    <p className="text-[11px] font-bold text-app-muted-foreground">Leaf category</p>
+                    <p className="text-[10px] text-app-muted-foreground mt-1">No sub-categories. Products can be assigned directly.</p>
+                </div>
+            )}
+        </div>
+    )
+}
+
 export function CategoriesClient({ initialCategories }: { initialCategories: any[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [modalState, setModalState] = useState<{ open: boolean; category?: CategoryNode; parentId?: number }>({ open: false })
     const [searchQuery, setSearchQuery] = useState('')
     const [focusMode, setFocusMode] = useState(false)
+    const [splitPanel, setSplitPanel] = useState(false)
+    const [selectedCategory, setSelectedCategory] = useState<CategoryNode | null>(null)
     const [expandAll, setExpandAll] = useState<boolean | undefined>(undefined)
     const [expandKey, setExpandKey] = useState(0)
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null)
@@ -549,10 +674,11 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const searchRef = useRef<HTMLInputElement>(null)
     const data = initialCategories
 
-    // Keyboard shortcut: Cmd+K
+    // Keyboard shortcuts: Cmd+K (search), Ctrl+Q (focus mode)
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev) }
         }
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
@@ -667,6 +793,23 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                     <Wrench size={13} />
                                     <span className="hidden md:inline">Cleanup</span>
                                 </Link>
+                                {/* Split Panel toggle */}
+                                <button
+                                    onClick={() => { setSplitPanel(p => !p); setSelectedCategory(null) }}
+                                    title={splitPanel ? 'Exit split panel' : 'Split panel view'}
+                                    className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition-all"
+                                    style={splitPanel ? {
+                                        background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                        color: 'var(--app-primary)',
+                                        borderColor: 'color-mix(in srgb, var(--app-primary) 30%, transparent)',
+                                    } : {
+                                        color: 'var(--app-muted-foreground)',
+                                        borderColor: 'var(--app-border)',
+                                    }}
+                                >
+                                    {splitPanel ? <PanelLeftClose size={13} /> : <LayoutPanelLeft size={13} />}
+                                    <span className="hidden md:inline">{splitPanel ? 'Tree Only' : 'Split Panel'}</span>
+                                </button>
                                 <button
                                     onClick={() => openAddModal()}
                                     className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
@@ -675,20 +818,20 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                                     <Plus size={14} />
                                     <span className="hidden sm:inline">New Category</span>
                                 </button>
-                                <button onClick={() => setFocusMode(true)} title="Focus mode — maximize tree"
+                                <button onClick={() => setFocusMode(true)} title="Focus mode (Ctrl+Q)"
                                     className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                                     <Maximize2 size={13} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* KPI Strip */}
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        {/* KPI Strip — adaptive auto-fit grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
                             {[
                                 { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-primary)' },
                                 { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6' },
-                                { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-info)' },
-                                { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-success)' },
+                                { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-info, #3b82f6)' },
+                                { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-success, #22c55e)' },
                                 { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: '#8b5cf6' },
                             ].map(s => (
                                 <div key={s.label}
@@ -766,67 +909,84 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                 <BrandsPopup category={brandsTarget} onClose={() => setBrandsTarget(null)} />
             )}
 
-            {/* ═══════════════ TREE TABLE ═══════════════ */}
-            <div className="flex-1 min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col">
-                {/* Column Headers */}
-                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
-                    <div className="w-5 flex-shrink-0" />
-                    <div className="w-7 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">Category</div>
-                    <div className="hidden sm:block w-16 flex-shrink-0">Children</div>
-                    <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>
-                    <div className="hidden sm:block w-20 flex-shrink-0">Products</div>
-                    <div className="w-16 flex-shrink-0" />
+            {/* ═══════════════ TREE TABLE (with optional split panel) ═══════════════ */}
+            <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
+
+                {/* Left: Tree */}
+                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col`}>
+                    {/* Column Headers */}
+                    <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
+                        <div className="w-5 flex-shrink-0" />
+                        <div className="w-7 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">Category</div>
+                        <div className="hidden sm:block w-16 flex-shrink-0">Children</div>
+                        {!splitPanel && <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>}
+                        {!splitPanel && <div className="hidden sm:block w-20 flex-shrink-0">Products</div>}
+                        <div className="w-16 flex-shrink-0" />
+                    </div>
+
+                    {/* Scrollable Body */}
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                        {tree.length > 0 ? (
+                            tree.map((node) => (
+                                <div key={`${node.id}-${expandKey}`}
+                                    onClick={splitPanel ? () => setSelectedCategory(node) : undefined}
+                                    className={splitPanel && selectedCategory?.id === node.id ? 'ring-1 ring-inset ring-app-primary/30' : ''}
+                                >
+                                    <CategoryRow
+                                        node={node}
+                                        level={0}
+                                        onEdit={openEditModal}
+                                        onAdd={openAddModal}
+                                        onDelete={requestDelete}
+                                        onViewProducts={setProductsTarget}
+                                        onViewBrands={setBrandsTarget}
+                                        searchQuery={searchQuery}
+                                        forceExpanded={expandAll}
+                                    />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                                <FolderTree size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                                <p className="text-sm font-bold text-app-muted-foreground mb-1">
+                                    {searchQuery ? 'No matching categories' : 'No categories defined yet'}
+                                </p>
+                                <p className="text-[11px] text-app-muted-foreground mb-5 max-w-xs">
+                                    {searchQuery ? 'Try a different search term or clear filters.' : 'Create a root category to start organizing your product catalog.'}
+                                </p>
+                                {!searchQuery && (
+                                    <button onClick={() => openAddModal()}
+                                        className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold hover:brightness-110 transition-all"
+                                        style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                                        <Plus size={16} className="inline mr-1.5" />Create First Category
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-                    {tree.length > 0 ? (
-                        tree.map((node) => (
-                            <CategoryRow
-                                key={`${node.id}-${expandKey}`}
-                                node={node}
-                                level={0}
+                {/* Right: Detail Panel (split mode only) */}
+                {splitPanel && (
+                    <div className="flex-[6] min-w-0 min-h-0 border border-app-border/50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-2 duration-200">
+                        {selectedCategory ? (
+                            <CategoryDetailPanel
+                                node={selectedCategory}
                                 onEdit={openEditModal}
                                 onAdd={openAddModal}
                                 onDelete={requestDelete}
-                                onViewProducts={setProductsTarget}
-                                onViewBrands={setBrandsTarget}
-                                searchQuery={searchQuery}
-                                forceExpanded={expandAll}
                             />
-                        ))
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                            <div
-                                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-                                style={{
-                                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 15%, transparent), color-mix(in srgb, var(--app-primary) 5%, transparent))',
-                                    border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
-                                }}
-                            >
-                                <FolderTree size={28} style={{ color: 'var(--app-primary)', opacity: 0.7 }} />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full py-20 px-4 text-center"
+                                style={{ background: 'var(--app-surface)' }}>
+                                <LayoutPanelLeft size={36} className="text-app-muted-foreground mb-3 opacity-30" />
+                                <p className="text-sm font-bold text-app-muted-foreground">Select a category</p>
+                                <p className="text-[11px] text-app-muted-foreground mt-1">Click any row in the tree to view its details here.</p>
                             </div>
-                            <p className="text-base font-bold text-app-muted-foreground mb-1">
-                                {searchQuery ? 'No matching categories' : 'No categories defined yet'}
-                            </p>
-                            <p className="text-xs text-app-muted-foreground mb-6 max-w-xs">
-                                {searchQuery
-                                    ? 'Try a different search term or clear filters.'
-                                    : 'Create a root category to start organizing your product catalog.'}
-                            </p>
-                            {!searchQuery && (
-                                <button
-                                    onClick={() => openAddModal()}
-                                    className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold hover:brightness-110 transition-all"
-                                    style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
-                                >
-                                    <Plus size={16} className="inline mr-1.5" />Create First Category
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* ── Delete Confirm ── */}

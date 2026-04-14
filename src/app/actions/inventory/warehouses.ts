@@ -94,7 +94,10 @@ export async function createWarehouse(prevState: WarehouseState, formData: FormD
         revalidatePath('/inventory/warehouses')
         return { message: 'success' }
     } catch (e: unknown) {
-        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) }
+        const msg = e instanceof Error ? e.message : String(e)
+        // Strip 'ERP Error:' prefix if erpFetch already added it
+        const clean = msg.replace(/^(ERP Error:\s*|Database Error:\s*)/i, '').trim()
+        return { message: clean || 'Failed to create location' }
     }
 }
 
@@ -124,16 +127,30 @@ export async function updateWarehouse(id: number, prevState: WarehouseState, for
         revalidatePath('/inventory/warehouses')
         return { message: 'success' }
     } catch (e: unknown) {
-        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) }
+        const msg = e instanceof Error ? e.message : String(e)
+        const clean = msg.replace(/^(ERP Error:\s*|Database Error:\s*)/i, '').trim()
+        return { message: clean || 'Failed to update location' }
     }
 }
 
 export async function deleteWarehouse(id: number) {
     try {
-        await erpFetch(`warehouses/${id}/`, {
+        const result = await erpFetch(`warehouses/${id}/`, {
             method: 'DELETE'
         })
         revalidatePath('/inventory/warehouses')
+
+        // Backend returns JSON body on soft-deactivation (HTTP 200)
+        // and null on hard delete (HTTP 204)
+        if (result && result.status === 'deactivated') {
+            return {
+                success: true,
+                deactivated: true,
+                message: result.message || 'Location deactivated — has active data',
+                blockers: result.blockers || [],
+            }
+        }
+
         return { success: true }
     } catch (e: unknown) {
         return { success: false, message: (e instanceof Error ? e.message : String(e)) }

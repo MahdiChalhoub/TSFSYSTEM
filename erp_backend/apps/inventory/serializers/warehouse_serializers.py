@@ -20,6 +20,45 @@ class WarehouseSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['organization', 'created_at', 'updated_at']
 
+    def validate(self, attrs):
+        """Mirror model.clean() rules so DRF returns 400 instead of model.save() throwing 500."""
+        location_type = attrs.get('location_type', getattr(self.instance, 'location_type', 'WAREHOUSE'))
+        parent = attrs.get('parent', getattr(self.instance, 'parent', None))
+        country = attrs.get('country', getattr(self.instance, 'country', None))
+        pk = self.instance.pk if self.instance else None
+
+        errors = {}
+
+        # STORE / WAREHOUSE / VIRTUAL must have a parent branch
+        if location_type in ('STORE', 'WAREHOUSE', 'VIRTUAL') and not parent:
+            errors['parent'] = f'{location_type.title()} must belong to a Branch.'
+
+        # Parent of non-BRANCH must be a BRANCH (strict 2-level tree)
+        if parent and location_type != 'BRANCH':
+            if parent.location_type != 'BRANCH':
+                errors['parent'] = 'Locations can only be placed directly under a Branch.'
+
+        # BRANCH cannot be nested under another BRANCH
+        if location_type == 'BRANCH' and parent:
+            errors['parent'] = 'Branches are top-level and cannot be nested under another location.'
+
+        # No self-referencing
+        if parent and pk and parent.pk == pk:
+            errors['parent'] = 'A location cannot be its own parent.'
+
+        # BRANCH must have a country (but save() auto-defaults from OrgCountry, so only warn if truly missing)
+        # Note: we allow this through here since save() auto-resolves from OrgCountry default.
+        # The model.clean() will catch it if auto-resolution also fails.
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        # Silently fix: BRANCH cannot have can_sell=True
+        if location_type == 'BRANCH' and attrs.get('can_sell', False):
+            attrs['can_sell'] = False
+
+        return attrs
+
     def get_inventory_count(self, obj):
         return obj.inventory_set.count()
 

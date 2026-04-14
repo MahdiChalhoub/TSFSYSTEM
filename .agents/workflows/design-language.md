@@ -144,6 +144,47 @@ description: TSFSYSTEM V2 Design Language Reference — use this document when r
 - Value: `text-sm font-black tabular-nums`
 - Standard colors: `var(--app-primary)`, `var(--app-info)`, `var(--app-success)`, `#8b5cf6`, `var(--app-warning)`
 
+### ⚡ KPI Strip — Optional Filter Mode
+
+> KPI cards **may optionally act as toggle filters** when the page benefits from quick type-based narrowing.
+> This is a **per-page decision** — not all pages need it.
+
+#### When to use KPI Filters
+| ✅ Use KPI Filters | ❌ Keep KPIs Display-Only |
+|---|---|
+| List pages with distinct entity types (warehouses, accounts) | Dashboard summary pages |
+| Hierarchical views where type filtering aids navigation | Pages with < 10 items |
+| Pages with 4+ filterable categories | Pages where KPIs show unrelated metrics |
+
+#### Implementation Pattern
+```tsx
+// 1. Add filterKey to each KPI (null = display-only, not clickable)
+const kpis = [
+    { label: 'Stores', value: 12, color: 'var(--app-info)', icon: Store, filterKey: 'STORE' },
+    { label: 'Total',  value: 30, color: '#8b5cf6',         icon: Layers, filterKey: null },
+]
+
+// 2. Toggle state
+const [activeFilter, setActiveFilter] = useState<string | null>(null)
+
+// 3. Active KPI styling: stronger border, elevated icon, colored label
+className={isActive ? 'ring-2 shadow-md scale-[1.02]' : ''}
+style={{
+    background: isActive ? `color-mix(in srgb, ${c} 15%, ...)` : `color-mix(in srgb, ${c} 8%, ...)`,
+    border: `1px solid color-mix(in srgb, ${c} ${isActive ? '50' : '20'}%, transparent)`,
+}}
+
+// 4. Show a dismissible filter indicator pill below the KPI strip
+{activeFilter && <FilterPill label={...} onClear={() => setActiveFilter(null)} />}
+```
+
+#### Rules
+1. **Toggle semantics** — click to activate, click again to deactivate (never radio-only)
+2. **Non-filterable KPIs** get `filterKey: null` — no `cursor-pointer`, no active state
+3. **Filter composes with search** — both can be active simultaneously
+4. **Always show a filter indicator** pill below the strip when active (dismissible with ✕)
+5. **KPI values always show global counts** — they do NOT update when filtered
+
 ---
 
 ## 5. Search Bar

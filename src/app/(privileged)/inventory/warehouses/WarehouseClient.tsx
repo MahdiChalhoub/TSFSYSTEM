@@ -1,58 +1,35 @@
 // @ts-nocheck
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
 import WarehouseModal from './form'
 import {
     Building2, Store, Warehouse, Cloud, MapPin, Layers, BarChart3,
     Plus, Trash2, Edit3, Phone, ChevronDown, ChevronRight,
-    Package, GitBranch, Search, Sparkles, ArrowRight, Settings2,
-    Eye, EyeOff, X, Globe
+    Package, GitBranch, Search, X, Globe, Maximize2, Minimize2,
+    ChevronsUpDown, ChevronsDownUp, Settings
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-/* ─── TYPE CONFIG (all theme-dynamic via app-* variables) ──────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  TYPE CONFIG
+ * ═══════════════════════════════════════════════════════════ */
 
 const TYPE_CONFIG: Record<string, {
-    icon: any; label: string;
-    cssVar: string; // primary CSS variable for this type
+    icon: any; label: string; color: string;
 }> = {
-    BRANCH: { icon: Building2, label: 'Branch', cssVar: '--app-success' },
-    STORE: { icon: Store, label: 'Store', cssVar: '--app-info' },
-    WAREHOUSE: { icon: Warehouse, label: 'Warehouse', cssVar: '--app-warning' },
-    VIRTUAL: { icon: Cloud, label: 'Virtual', cssVar: '--app-primary' },
+    BRANCH:    { icon: Building2,  label: 'Branch',    color: 'var(--app-success)' },
+    STORE:     { icon: Store,      label: 'Store',     color: 'var(--app-info)' },
+    WAREHOUSE: { icon: Warehouse,  label: 'Warehouse', color: 'var(--app-warning)' },
+    VIRTUAL:   { icon: Cloud,      label: 'Virtual',   color: 'var(--app-primary)' },
 }
 
-/* ─── HELPER: inline gradient from a CSS variable ──────────────────────── */
-
-function gradientBg(cssVar: string, opacity = 1) {
-    return { background: `linear-gradient(135deg, color-mix(in srgb, var(${cssVar}) ${Math.round(opacity * 100)}%, transparent), color-mix(in srgb, var(${cssVar}) ${Math.round(opacity * 60)}%, transparent))` }
-}
-
-function solidBg(cssVar: string, opacity = 1) {
-    return { backgroundColor: `color-mix(in srgb, var(${cssVar}) ${Math.round(opacity * 100)}%, transparent)` }
-}
-
-function textColor(cssVar: string) {
-    return { color: `var(${cssVar})` }
-}
-
-function dotStyle(cssVar: string) {
-    return { backgroundColor: `var(${cssVar})` }
-}
-
-function borderColor(cssVar: string, opacity = 0.3) {
-    return { borderColor: `color-mix(in srgb, var(${cssVar}) ${Math.round(opacity * 100)}%, transparent)` }
-}
-
-function shadowColor(cssVar: string) {
-    return { boxShadow: `0 8px 24px -4px color-mix(in srgb, var(${cssVar}) 25%, transparent)` }
-}
-
-/* ─── TYPES ───────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  TYPES
+ * ═══════════════════════════════════════════════════════════ */
 
 interface WarehouseNode {
     id: number; name: string; code: string; location_type: string;
@@ -63,7 +40,9 @@ interface WarehouseNode {
     inventory_count?: number; children?: WarehouseNode[];
 }
 
-/* ─── TREE BUILDER ────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  TREE BUILDER
+ * ═══════════════════════════════════════════════════════════ */
 
 function buildTree(flat: WarehouseNode[]): { branches: WarehouseNode[]; orphans: WarehouseNode[] } {
     const map = new Map<number, WarehouseNode>()
@@ -83,159 +62,349 @@ function buildTree(flat: WarehouseNode[]): { branches: WarehouseNode[]; orphans:
     return { branches, orphans }
 }
 
-/* ─── CHILD ROW ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  CHILD ROW (leaf node — indented under branch)
+ * ═══════════════════════════════════════════════════════════ */
 
 function ChildRow({ node, onEdit, onDelete }: {
     node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
 }) {
     const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
     const Icon = cfg.icon
-    const cv = cfg.cssVar
 
     return (
         <div
-            className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border group hover:shadow-md hover:scale-[1.005] transition-all duration-200 cursor-pointer"
-            style={{ ...solidBg(cv, 0.08), ...borderColor(cv, 0.2) }}
+            className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b border-app-border/30 hover:bg-app-surface/40 py-1.5 md:py-2"
+            style={{
+                paddingLeft: '44px',
+                paddingRight: '12px',
+                borderLeft: `1px solid color-mix(in srgb, var(--app-border) 40%, transparent)`,
+                marginLeft: '22px',
+            }}
             onClick={() => onEdit(node)}
         >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={gradientBg(cv)}>
-                <Icon size={14} className="text-white sm:hidden" />
-                <Icon size={16} className="text-white hidden sm:block" />
+            {/* Dot */}
+            <div className="w-5 flex-shrink-0 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />
             </div>
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <p className="font-bold text-app-foreground text-[12px] sm:text-[13px] truncate">{node.name}</p>
-                    <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full hidden sm:inline" style={{ ...textColor(cv), ...solidBg(cv, 0.12) }}>{cfg.label}</span>
-                    {node.can_sell && (
-                        <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-app-success bg-app-success/10 px-1.5 py-0.5 rounded-full">POS</span>
-                    )}
-                    {!node.is_active && (
-                        <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-app-error bg-app-error/10 px-1.5 py-0.5 rounded-full">Inactive</span>
-                    )}
-                </div>
-                <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-[10px] text-app-muted-foreground font-mono">{node.code || `LOC-${node.id}`}</span>
-                    {node.city && <span className="text-[10px] text-app-muted-foreground flex items-center gap-1"><MapPin size={9} />{node.city}</span>}
-                    {!node.country_name && (
-                        <span className="text-[10px] text-app-warning font-bold flex items-center gap-1"><Globe size={9} />⚠ No Country</span>
-                    )}
-                </div>
+
+            {/* Icon */}
+            <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                    background: `color-mix(in srgb, ${cfg.color} 10%, transparent)`,
+                    color: cfg.color,
+                }}
+            >
+                <Icon size={13} />
             </div>
-            <div className="text-right shrink-0 hidden sm:block">
-                <p className="text-[15px] font-black text-app-foreground">{node.inventory_count || 0}</p>
-                <p className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-widest">SKUs</p>
+
+            {/* Name + Badges */}
+            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
+                <span className="text-[13px] font-medium text-app-foreground truncate">{node.name}</span>
+                {node.code && (
+                    <span
+                        className="hidden md:inline font-mono text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-background) 60%, transparent)',
+                            color: 'var(--app-foreground)',
+                        }}
+                    >
+                        {node.code}
+                    </span>
+                )}
+                {node.can_sell && (
+                    <span
+                        className="hidden sm:inline text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                            color: 'var(--app-success)',
+                            border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)',
+                        }}
+                    >POS</span>
+                )}
+                {!node.is_active && (
+                    <span
+                        className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                            color: 'var(--app-error)',
+                        }}
+                    >Inactive</span>
+                )}
             </div>
-            <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-                <button onClick={(e) => { e.stopPropagation(); onEdit(node) }} className="p-1.5 rounded-lg hover:bg-app-surface transition-colors text-app-muted-foreground hover:text-app-foreground">
-                    <Edit3 size={13} />
+
+            {/* Code Column */}
+            <div className="hidden sm:flex w-16 flex-shrink-0">
+                <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{
+                        color: cfg.color,
+                        background: `color-mix(in srgb, ${cfg.color} 8%, transparent)`,
+                    }}
+                >{node.code || `—`}</span>
+            </div>
+
+            {/* Type Column */}
+            <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">
+                {cfg.label}
+            </div>
+
+            {/* City Column */}
+            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+                {node.city && <><MapPin size={9} />{node.city}</>}
+            </div>
+
+            {/* SKUs Column */}
+            <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
+                <span className="flex items-center gap-1 justify-end">
+                    <Settings size={10} className="text-app-muted-foreground" />
+                    {node.inventory_count || 0}
+                </span>
+            </div>
+
+            {/* Actions */}
+            <div className="w-16 flex-shrink-0 flex items-center gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); onEdit(node) }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors">
+                    <Edit3 size={12} />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); onDelete(node) }} className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors text-app-muted-foreground hover:text-app-error">
-                    <Trash2 size={13} />
+                <button onClick={(e) => { e.stopPropagation(); onDelete(node) }} className="p-1.5 hover:bg-app-error/10 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors">
+                    <Trash2 size={12} />
                 </button>
             </div>
         </div>
     )
 }
 
-/* ─── BRANCH CARD ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  BRANCH ROW (parent — expandable tree-style)
+ * ═══════════════════════════════════════════════════════════ */
 
-function BranchCard({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle }: {
+function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle }: {
     branch: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
     onAddChild: (parent: WarehouseNode) => void; isExpanded: boolean; onToggle: () => void;
 }) {
     const children = branch.children || []
+    const hasChildren = children.length > 0
     const totalSKUs = children.reduce((sum, c) => sum + (c.inventory_count || 0), 0) + (branch.inventory_count || 0)
-    const branchCv = TYPE_CONFIG.BRANCH.cssVar
 
     return (
-        <div className="bg-app-surface border border-app-border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-            {/* Branch Header */}
-            <div className="p-3 sm:p-5 cursor-pointer select-none" onClick={onToggle}>
-                <div className="flex items-center gap-2 sm:gap-4">
-                    <button
-                        className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200"
-                        style={{ ...solidBg(branchCv, 0.1), ...textColor(branchCv), transform: isExpanded ? 'rotate(0)' : 'rotate(-90deg)' }}
-                    >
-                        <ChevronDown size={12} className="sm:hidden" />
-                        <ChevronDown size={14} className="hidden sm:block" />
-                    </button>
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300" style={{ ...gradientBg(branchCv), ...shadowColor(branchCv) }}>
-                        <Building2 size={18} className="text-white sm:hidden" />
-                        <Building2 size={22} className="text-white hidden sm:block" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
-                            <h3 className="text-[14px] sm:text-[17px] font-black text-app-foreground truncate">{branch.name}</h3>
-                            <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full hidden sm:inline" style={{ ...textColor(branchCv), ...solidBg(branchCv, 0.12) }}>Branch</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-[11px] text-app-muted-foreground flex-wrap">
-                            <span className="font-mono">{branch.code || `BR-${branch.id}`}</span>
-                            {branch.country_name && <span className="flex items-center gap-1"><Globe size={10} />{branch.country_name}</span>}
-                            {!branch.country_name && (
-                                <span className="flex items-center gap-1 text-app-warning font-bold"><Globe size={10} />⚠ No Country</span>
-                            )}
-                            {branch.city && <span className="flex items-center gap-1"><MapPin size={10} />{branch.city}</span>}
-                            {branch.phone && <span className="flex items-center gap-1"><Phone size={10} />{branch.phone}</span>}
-                        </div>
-                    </div>
+        <div>
+            {/* ── BRANCH ROW ── */}
+            <div
+                className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b border-app-border/30 hover:bg-app-surface py-2.5 md:py-3"
+                style={{
+                    paddingLeft: '12px',
+                    paddingRight: '12px',
+                    background: 'color-mix(in srgb, var(--app-success) 4%, var(--app-surface))',
+                    borderLeft: '3px solid var(--app-success)',
+                }}
+                onClick={onToggle}
+            >
+                {/* Toggle */}
+                <button
+                    className={`w-5 h-5 flex items-center justify-center rounded-md transition-all flex-shrink-0 ${hasChildren ? 'hover:bg-app-border/50 text-app-muted-foreground' : 'text-app-border'}`}
+                >
+                    {hasChildren ? (
+                        isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />
+                    ) : (
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-success)' }} />
+                    )}
+                </button>
 
-                    {/* Stats */}
-                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                        <div className="text-center hidden sm:block">
-                            <p className="text-xl font-black text-app-foreground">{children.length}</p>
-                            <p className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-widest">Locations</p>
-                        </div>
-                        <div className="w-px h-8 bg-app-border hidden sm:block" />
-                        <div className="text-center hidden sm:block">
-                            <p className="text-xl font-black text-app-foreground">{totalSKUs}</p>
-                            <p className="text-[8px] font-bold text-app-muted-foreground uppercase tracking-widest">SKUs</p>
-                        </div>
-                        {/* Mobile: compact stats */}
-                        <span className="text-[10px] font-bold text-app-muted-foreground sm:hidden">{children.length} loc</span>
-                        <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); onEdit(branch) }} className="p-1.5 rounded-lg hover:bg-app-primary/10 transition-colors text-app-muted-foreground hover:text-app-primary">
-                                <Edit3 size={14} />
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); onDelete(branch) }} className="p-1.5 rounded-lg hover:bg-app-error/10 transition-colors text-app-muted-foreground hover:text-app-error">
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    </div>
+                {/* Icon */}
+                <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: 'color-mix(in srgb, var(--app-success) 12%, transparent)',
+                        color: 'var(--app-success)',
+                    }}
+                >
+                    <Building2 size={14} />
+                </div>
+
+                {/* Name + Badges */}
+                <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
+                    <span className="truncate text-[13px] font-bold text-app-foreground">{branch.name}</span>
+                    {branch.code && (
+                        <span
+                            className="hidden md:inline font-mono text-[11px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-background) 60%, transparent)',
+                                color: 'var(--app-foreground)',
+                            }}
+                        >
+                            {branch.code}
+                        </span>
+                    )}
+                    <span
+                        className="hidden md:inline text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-success) 10%, transparent)',
+                            color: 'var(--app-success)',
+                            border: '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)',
+                        }}
+                    >BASE</span>
+                    {branch.country_name && (
+                        <span className="hidden lg:inline text-[9px] font-bold text-app-muted-foreground flex items-center gap-1">
+                            <Globe size={9} />{branch.country_name}
+                        </span>
+                    )}
+                    {!branch.country_name && (
+                        <span className="hidden sm:inline text-[9px] font-bold flex items-center gap-1" style={{ color: 'var(--app-warning)' }}>
+                            <Globe size={9} />⚠ No Country
+                        </span>
+                    )}
+                </div>
+
+                {/* Code Column */}
+                <div className="hidden sm:flex w-16 flex-shrink-0">
+                    <span
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        style={{
+                            color: 'var(--app-success)',
+                            background: 'color-mix(in srgb, var(--app-success) 8%, transparent)',
+                        }}
+                    >{branch.code || `BR`}</span>
+                </div>
+
+                {/* Type Column */}
+                <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">
+                    Branch
+                </div>
+
+                {/* City Column */}
+                <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+                    {branch.city && <><MapPin size={9} />{branch.city}</>}
+                </div>
+
+                {/* Stats: Children + SKUs */}
+                <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
+                    <span className="flex items-center gap-1 justify-end">
+                        <Settings size={10} className="text-app-muted-foreground" />
+                        {totalSKUs}
+                    </span>
+                </div>
+
+                {/* Actions */}
+                <div className="w-16 flex-shrink-0 flex items-center gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={(e) => { e.stopPropagation(); onEdit(branch) }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-primary transition-colors">
+                        <Edit3 size={12} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(branch) }} className="p-1.5 hover:bg-app-error/10 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors">
+                        <Trash2 size={12} />
+                    </button>
                 </div>
             </div>
 
-            {/* Children */}
+            {/* ── CHILDREN ROWS ── */}
             {isExpanded && (
-                <div className="px-5 pb-4 space-y-1.5">
-                    <div className="border-t border-app-border/50 pt-3 ml-2 sm:ml-11 space-y-1.5">
-                        {children.map(c => <ChildRow key={c.id} node={c} onEdit={onEdit} onDelete={onDelete} />)}
-
-                        {children.length === 0 && (
-                            <div className="text-center py-8">
-                                <Package size={24} className="mx-auto mb-2 text-app-muted-foreground/30" />
-                                <p className="text-[12px] font-bold text-app-muted-foreground">No locations yet</p>
-                                <p className="text-[10px] text-app-muted-foreground/70">Add a store or warehouse under this branch</p>
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => onAddChild(branch)}
-                            className="w-full py-2.5 rounded-xl border-2 border-dashed border-app-border hover:border-app-primary/40 text-app-muted-foreground hover:text-app-primary bg-transparent hover:bg-app-primary/5 transition-all duration-200 flex items-center justify-center gap-2 text-[11px] font-bold"
-                        >
-                            <Plus size={13} />
-                            Add Location
-                        </button>
-                    </div>
+                <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    {children.map(c => (
+                        <ChildRow key={c.id} node={c} onEdit={onEdit} onDelete={onDelete} />
+                    ))}
                 </div>
             )}
         </div>
     )
 }
 
-/* ─── MAIN COMPONENT ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+ *  ORPHAN ROW (unassigned — root-level, no parent)
+ * ═══════════════════════════════════════════════════════════ */
+
+function OrphanRow({ node, onEdit, onDelete }: {
+    node: WarehouseNode; onEdit: (w: WarehouseNode) => void; onDelete: (w: WarehouseNode) => void;
+}) {
+    const cfg = TYPE_CONFIG[node.location_type] || TYPE_CONFIG.WAREHOUSE
+    const Icon = cfg.icon
+
+    return (
+        <div
+            className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer border-b border-app-border/30 hover:bg-app-surface/40 py-2 md:py-2.5"
+            style={{
+                paddingLeft: '12px',
+                paddingRight: '12px',
+                borderLeft: '3px solid color-mix(in srgb, var(--app-warning) 50%, transparent)',
+                background: 'color-mix(in srgb, var(--app-warning) 2%, var(--app-surface))',
+            }}
+            onClick={() => onEdit(node)}
+        >
+            {/* Dot */}
+            <div className="w-5 flex-shrink-0 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--app-warning)' }} />
+            </div>
+
+            {/* Icon */}
+            <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                    background: `color-mix(in srgb, ${cfg.color} 10%, transparent)`,
+                    color: cfg.color,
+                }}
+            >
+                <Icon size={13} />
+            </div>
+
+            {/* Name */}
+            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
+                <span className="text-[13px] font-medium text-app-foreground truncate">{node.name}</span>
+                {node.code && (
+                    <span className="hidden md:inline font-mono text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{ background: 'color-mix(in srgb, var(--app-background) 60%, transparent)', color: 'var(--app-foreground)' }}>
+                        {node.code}
+                    </span>
+                )}
+                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--app-warning) 10%, transparent)', color: 'var(--app-warning)', border: '1px solid color-mix(in srgb, var(--app-warning) 20%, transparent)' }}>
+                    Unassigned
+                </span>
+            </div>
+
+            {/* Code */}
+            <div className="hidden sm:flex w-16 flex-shrink-0">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 8%, transparent)` }}>
+                    {node.code || '—'}
+                </span>
+            </div>
+
+            {/* Type */}
+            <div className="hidden sm:block w-20 flex-shrink-0 text-[11px] font-bold text-app-muted-foreground">{cfg.label}</div>
+
+            {/* City */}
+            <div className="hidden md:flex w-24 flex-shrink-0 items-center gap-1 text-[10px] text-app-muted-foreground font-bold truncate">
+                {node.city && <><MapPin size={9} />{node.city}</>}
+            </div>
+
+            {/* SKUs */}
+            <div className="hidden sm:block w-16 text-right flex-shrink-0 text-[12px] font-bold text-app-foreground tabular-nums">
+                <span className="flex items-center gap-1 justify-end">
+                    <Settings size={10} className="text-app-muted-foreground" />
+                    {node.inventory_count || 0}
+                </span>
+            </div>
+
+            {/* Actions */}
+            <div className="w-16 flex-shrink-0 flex items-center gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={(e) => { e.stopPropagation(); onEdit(node) }} className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-muted-foreground hover:text-app-foreground transition-colors">
+                    <Edit3 size={12} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete(node) }} className="p-1.5 hover:bg-app-error/10 rounded-lg text-app-muted-foreground hover:text-app-error transition-colors">
+                    <Trash2 size={12} />
+                </button>
+            </div>
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  MAIN COMPONENT
+ * ═══════════════════════════════════════════════════════════ */
 
 export function WarehouseClient({ initialWarehouses, countries = [], defaultCountryId = null }: { initialWarehouses: any[]; countries?: { id: number; name: string; iso2: string }[]; defaultCountryId?: number | null }) {
     const router = useRouter()
+    const searchRef = useRef<HTMLInputElement>(null)
     const [data, setData] = useState<WarehouseNode[]>(initialWarehouses)
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingWarehouse, setEditingWarehouse] = useState<any>(null)
@@ -244,8 +413,19 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const [searchQuery, setSearchQuery] = useState('')
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set(data.filter(w => w.location_type === 'BRANCH').map(w => w.id)))
     const [focusMode, setFocusMode] = useState(false)
+    const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
     const { branches, orphans } = useMemo(() => buildTree(data), [data])
+
+    /* ─── Keyboard shortcuts (Ctrl+K search, Ctrl+Q focus mode) ─── */
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'q') { e.preventDefault(); setFocusMode(prev => !prev) }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
 
     // Stats
     const totalNodes = data.length
@@ -255,22 +435,37 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const retailActive = data.filter(w => w.can_sell).length
     const globalSKUCount = data.reduce((sum, w) => sum + (w.inventory_count || 0), 0)
 
-    // Filter
+    // Filter — composes search + KPI type filter
     const filteredBranches = useMemo(() => {
-        if (!searchQuery.trim()) return branches
-        const q = searchQuery.toLowerCase()
-        return branches.filter(b => {
-            const branchMatch = b.name.toLowerCase().includes(q) || b.code?.toLowerCase().includes(q) || b.city?.toLowerCase().includes(q)
-            const childMatch = b.children?.some(c => c.name.toLowerCase().includes(q) || c.code?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
-            return branchMatch || childMatch
-        })
-    }, [branches, searchQuery])
+        let result = branches
+        if (activeFilter === 'BRANCH') { /* pass through */ }
+        else if (activeFilter === 'STORE' || activeFilter === 'WAREHOUSE' || activeFilter === 'VIRTUAL') {
+            result = result.map(b => ({ ...b, children: b.children?.filter(c => c.location_type === activeFilter) || [] })).filter(b => (b.children?.length || 0) > 0)
+        } else if (activeFilter === 'RETAIL') {
+            result = result.map(b => ({ ...b, children: b.children?.filter(c => c.can_sell) || [] })).filter(b => b.can_sell || (b.children?.length || 0) > 0)
+        }
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase()
+            result = result.filter(b => {
+                const branchMatch = b.name.toLowerCase().includes(q) || b.code?.toLowerCase().includes(q) || b.city?.toLowerCase().includes(q)
+                const childMatch = b.children?.some(c => c.name.toLowerCase().includes(q) || c.code?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))
+                return branchMatch || childMatch
+            })
+        }
+        return result
+    }, [branches, searchQuery, activeFilter])
 
     const filteredOrphans = useMemo(() => {
-        if (!searchQuery.trim()) return orphans
-        const q = searchQuery.toLowerCase()
-        return orphans.filter(o => o.name.toLowerCase().includes(q) || o.code?.toLowerCase().includes(q) || o.city?.toLowerCase().includes(q))
-    }, [orphans, searchQuery])
+        let result = orphans
+        if (activeFilter === 'BRANCH') { result = [] }
+        else if (activeFilter === 'STORE' || activeFilter === 'WAREHOUSE' || activeFilter === 'VIRTUAL') { result = result.filter(o => o.location_type === activeFilter) }
+        else if (activeFilter === 'RETAIL') { result = result.filter(o => o.can_sell) }
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase()
+            result = result.filter(o => o.name.toLowerCase().includes(q) || o.code?.toLowerCase().includes(q) || o.city?.toLowerCase().includes(q))
+        }
+        return result
+    }, [orphans, searchQuery, activeFilter])
 
     const parentOptions = data.filter(w => w.location_type === 'BRANCH').map(w => ({ id: w.id, name: w.name, country: w.country, country_name: w.country_name }))
 
@@ -282,14 +477,12 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
             if (!result.success) {
                 toast.error(result.message || 'Failed to remove location')
             } else if (result.deactivated) {
-                // Soft-deactivated — update data in-place
                 setData(prev => prev.map(w => w.id === target.id ? { ...w, is_active: false } : w))
                 toast.warning(result.message || `"${target.name}" deactivated — has active data`, {
                     description: result.blockers?.join(', '),
                     duration: 6000,
                 })
             } else {
-                // Hard deleted — remove from local state immediately
                 setData(prev => prev.filter(w => w.id !== target.id))
                 toast.success('Location permanently removed')
             }
@@ -320,196 +513,276 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
         })
     }, [])
 
-    /* ─── KPI config (theme-dynamic) ──────────────────────────── */
+    const allExpanded = branches.length > 0 && branches.every(b => expandedIds.has(b.id))
+
+    const toggleExpandAll = useCallback(() => {
+        if (allExpanded) {
+            setExpandedIds(new Set())
+        } else {
+            setExpandedIds(new Set(branches.map(b => b.id)))
+        }
+    }, [allExpanded, branches])
+
+    /* ─── KPI config ──────────────────────────── */
     const kpis = [
-        { label: 'Branches', value: branchCount, color: 'var(--app-success)', icon: Building2 },
-        { label: 'Stores', value: storeCount, color: 'var(--app-info)', icon: Store },
-        { label: 'Warehouses', value: warehouseCount, color: 'var(--app-warning)', icon: Warehouse },
-        { label: 'Retail Points', value: retailActive, color: 'var(--app-primary)', icon: Package },
-        { label: 'Total', value: totalNodes, color: '#8b5cf6', icon: Layers },
-        { label: 'SKUs', value: globalSKUCount, color: 'var(--app-error)', icon: BarChart3 },
+        { label: 'Total', value: totalNodes, color: 'var(--app-primary)', icon: Layers, filterKey: 'ALL' },
+        { label: 'Branches', value: branchCount, color: 'var(--app-success)', icon: Building2, filterKey: 'BRANCH' },
+        { label: 'Stores', value: storeCount, color: 'var(--app-info)', icon: Store, filterKey: 'STORE' },
+        { label: 'Warehouses', value: warehouseCount, color: 'var(--app-warning)', icon: Warehouse, filterKey: 'WAREHOUSE' },
+        { label: 'Retail', value: retailActive, color: '#8b5cf6', icon: Package, filterKey: 'RETAIL' },
+        { label: 'Showing', value: filteredBranches.length + filteredOrphans.length, color: 'var(--app-muted-foreground)', icon: Search, filterKey: null },
     ]
 
     return (
         <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`} style={{ height: '100%' }}>
 
-            {/* ─── Header ──────────────────────────────────────────────── */}
-            <div className={`flex-shrink-0 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-5'}`}>
+            {/* ═══════════════ HEADER ═══════════════ */}
+            <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
+
                 {focusMode ? (
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm" style={gradientBg('--app-primary')}>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--app-primary)' }}>
                                 <GitBranch size={14} className="text-white" />
                             </div>
-                            <span className="text-[13px] font-black text-app-foreground">Location Hierarchy</span>
-                            <span className="text-[10px] font-bold text-app-muted-foreground ml-1">{data.length} locations</span>
+                            <span className="text-[12px] font-black text-app-foreground hidden sm:inline">Locations</span>
+                            <span className="text-[10px] font-bold text-app-muted-foreground">{filteredBranches.length + filteredOrphans.length}/{totalNodes}</span>
                         </div>
-                        <button onClick={() => setFocusMode(false)} className="p-1.5 rounded-lg hover:bg-app-surface text-app-muted-foreground hover:text-app-foreground transition-colors">
-                            <Eye size={14} />
+
+                        <div className="flex-1 relative">
+                            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                            <input
+                                ref={searchRef}
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Search..."
+                                className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-app-surface/50 border border-app-border/50 rounded-lg text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border outline-none transition-all"
+                            />
+                        </div>
+
+                        <button onClick={handleAdd}
+                            className="flex items-center gap-1 text-[10px] font-bold bg-app-primary text-white px-2 py-1.5 rounded-lg transition-all flex-shrink-0">
+                            <Plus size={12} /><span className="hidden sm:inline">New</span>
+                        </button>
+
+                        <button onClick={() => setFocusMode(false)} title="Exit focus mode"
+                            className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                            <Minimize2 size={13} />
                         </button>
                     </div>
                 ) : (
                     <>
-                        {/* Title row */}
-                        <div className="flex items-center justify-between mb-3">
+                        {/* Title Row */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0" style={gradientBg('--app-primary')}>
-                                    <GitBranch size={16} className="text-white" />
+                                <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
+                                    <GitBranch size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg sm:text-xl font-black tracking-tight text-app-foreground leading-none">
-                                        Branch <span className="text-app-primary">Hierarchy</span>
+                                    <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
+                                        Branch <span style={{ color: 'var(--app-primary)' }}>Hierarchy</span>
                                     </h1>
-                                    <p className="text-[10px] text-app-muted-foreground mt-0.5 hidden sm:block">
-                                        Branches, stores, warehouses & virtual stock points
+                                    <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
+                                        {totalNodes} Locations · {branchCount} Branches · {retailActive} Retail Points
                                     </p>
                                 </div>
                             </div>
-                            <button onClick={() => setFocusMode(true)} className="p-1.5 rounded-lg border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all hidden sm:flex" title="Focus Mode">
-                                <EyeOff size={12} />
-                            </button>
+
+                            <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                                <button
+                                    onClick={handleAdd}
+                                    className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
+                                    style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                                >
+                                    <Plus size={14} />
+                                    <span className="hidden sm:inline">New Location</span>
+                                </button>
+                                <button onClick={() => setFocusMode(true)} title="Focus mode — maximize tree"
+                                    className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
+                                    <Maximize2 size={13} />
+                                </button>
+                            </div>
                         </div>
 
-                        {/* KPI Grid — equal-width cards, same pattern as chart-of-accounts */}
-                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
+                        {/* KPI Strip */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                             {kpis.map(kpi => {
                                 const KIcon = kpi.icon
                                 const c = kpi.color
+                                const isActive = kpi.filterKey === 'ALL' ? !activeFilter : (kpi.filterKey && activeFilter === kpi.filterKey)
+                                const isClickable = !!kpi.filterKey
                                 return (
                                     <div
                                         key={kpi.label}
-                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all hover:shadow-sm"
+                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left ${isClickable ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : ''} ${isActive ? 'ring-2 shadow-md scale-[1.02]' : ''}`}
                                         style={{
-                                            background: `color-mix(in srgb, ${c} 8%, var(--app-surface))`,
-                                            border: `1px solid color-mix(in srgb, ${c} 20%, transparent)`,
+                                            background: isActive
+                                                ? `color-mix(in srgb, ${c} 15%, var(--app-surface))`
+                                                : 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
+                                            border: `1px solid color-mix(in srgb, ${isActive ? c : 'var(--app-border)'} ${isActive ? '50' : '50'}%, transparent)`,
+                                            ...(isActive ? { '--tw-ring-color': `color-mix(in srgb, ${c} 30%, transparent)` } as any : {}),
                                         }}
+                                        onClick={isClickable ? () => setActiveFilter(prev => kpi.filterKey === 'ALL' ? null : (prev === kpi.filterKey ? null : kpi.filterKey)) : undefined}
                                     >
-                                        <div
-                                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                                             style={{
-                                                background: `color-mix(in srgb, ${c} 15%, transparent)`,
-                                                color: c,
-                                            }}
-                                        >
-                                            <KIcon size={13} />
+                                                background: isActive ? c : `color-mix(in srgb, ${c} 10%, transparent)`,
+                                                color: isActive ? 'white' : c,
+                                            }}>
+                                            <KIcon size={11} />
                                         </div>
                                         <div className="min-w-0">
-                                            <div
-                                                className="text-[10px] font-bold uppercase tracking-wider"
-                                                style={{ color: c }}
-                                            >
-                                                {kpi.label}
-                                            </div>
+                                            <div className="text-[9px] font-bold uppercase tracking-wider"
+                                                style={{ color: isActive ? c : 'var(--app-muted-foreground)' }}>{kpi.label}</div>
                                             <div className="text-sm font-black text-app-foreground tabular-nums">{kpi.value}</div>
                                         </div>
                                     </div>
                                 )
                             })}
                         </div>
+
+                        {/* Search Bar */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 relative">
+                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input
+                                    ref={searchRef}
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    placeholder="Search by name, code, or city... (Ctrl+K)"
+                                    className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
+                                />
+                            </div>
+
+                            <button
+                                onClick={toggleExpandAll}
+                                className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-2 rounded-xl border transition-all flex-shrink-0"
+                                style={{
+                                    background: 'color-mix(in srgb, var(--app-primary) 5%, transparent)',
+                                    color: 'var(--app-primary)',
+                                    borderColor: 'color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                }}
+                            >
+                                {allExpanded ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+                                <span className="hidden sm:inline">{allExpanded ? 'Collapse' : 'Expand'}</span>
+                            </button>
+
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')}
+                                    className="text-[11px] font-bold px-2 py-2 rounded-xl border transition-all flex-shrink-0"
+                                    style={{ color: 'var(--app-error)', borderColor: 'color-mix(in srgb, var(--app-error) 20%, transparent)', background: 'color-mix(in srgb, var(--app-error) 5%, transparent)' }}>
+                                    <X size={13} />
+                                </button>
+                            )}
+                        </div>
                     </>
                 )}
+            </div>
 
-                {/* Search + Actions Bar */}
-                <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="relative flex-1">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search locations..."
-                            className="w-full bg-app-surface border border-app-border rounded-xl pl-9 pr-8 py-2 text-[12px] font-medium text-app-foreground outline-none focus:ring-2 focus:ring-app-primary/20 focus:border-app-primary/30 transition-all placeholder:text-app-muted-foreground"
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground transition-colors">
-                                <X size={13} />
-                            </button>
-                        )}
-                    </div>
-                    <button
-                        onClick={handleAdd}
-                        className="flex items-center gap-2 px-3 sm:px-5 py-2 rounded-xl bg-app-primary text-white text-[12px] font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 shrink-0"
+            {/* ═══════════════ ACTIVE FILTER INDICATOR ═══════════════ */}
+            {activeFilter && (
+                <div className="flex-shrink-0 flex items-center gap-2 mb-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <span className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-wider">Filtering:</span>
+                    <span
+                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                        style={{
+                            color: kpis.find(k => k.filterKey === activeFilter)?.color || 'var(--app-primary)',
+                            background: `color-mix(in srgb, ${kpis.find(k => k.filterKey === activeFilter)?.color || 'var(--app-primary)'} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${kpis.find(k => k.filterKey === activeFilter)?.color || 'var(--app-primary)'} 25%, transparent)`,
+                        }}
+                        onClick={() => setActiveFilter(null)}
                     >
-                        <Plus size={14} />
-                        <span className="hidden sm:inline">Create Branch</span>
-                    </button>
+                        {kpis.find(k => k.filterKey === activeFilter)?.label || activeFilter}
+                        <X size={10} />
+                    </span>
+                    <span className="text-[10px] font-bold text-app-muted-foreground">
+                        {filteredBranches.length + filteredOrphans.length} result{filteredBranches.length + filteredOrphans.length !== 1 ? 's' : ''}
+                    </span>
+                </div>
+            )}
+
+            {/* ═══════════════ TREE TABLE ═══════════════ */}
+            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col"
+                style={{ background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+
+                {/* Column Headers */}
+                <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider"
+                    style={{ background: 'color-mix(in srgb, var(--app-surface) 60%, transparent)', borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                    <div className="w-5 flex-shrink-0" />
+                    <div className="w-7 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">Location</div>
+                    <div className="hidden sm:block w-16 flex-shrink-0">Code</div>
+                    <div className="hidden sm:block w-20 flex-shrink-0">Type</div>
+                    <div className="hidden md:block w-24 flex-shrink-0">City</div>
+                    <div className="hidden sm:block w-16 flex-shrink-0 text-right">SKUs</div>
+                    <div className="w-16 flex-shrink-0" />
+                </div>
+
+                {/* Scrollable Body */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
+                    {filteredBranches.length === 0 && filteredOrphans.length === 0 && !searchQuery && !activeFilter ? (
+                        /* Empty State */
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                                style={{
+                                    background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 15%, transparent), color-mix(in srgb, var(--app-primary) 5%, transparent))',
+                                    border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                                }}
+                            >
+                                <GitBranch size={28} style={{ color: 'var(--app-primary)', opacity: 0.7 }} />
+                            </div>
+                            <p className="text-base font-bold text-app-muted-foreground mb-1">No Locations Yet</p>
+                            <p className="text-xs text-app-muted-foreground mb-6 max-w-xs">
+                                Create your first branch to start organizing your stores, warehouses, and virtual stock points.
+                            </p>
+                            <button
+                                onClick={handleAdd}
+                                className="px-4 py-2 rounded-xl bg-app-primary text-white text-sm font-bold hover:brightness-110 transition-all"
+                                style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}
+                            >
+                                <Plus size={16} className="inline mr-1.5" />Create First Branch
+                            </button>
+                        </div>
+                    ) : filteredBranches.length === 0 && filteredOrphans.length === 0 ? (
+                        /* Search / Filter empty */
+                        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+                            <Search size={36} className="text-app-muted-foreground mb-3 opacity-40" />
+                            <p className="text-sm font-bold text-app-muted-foreground">No matching locations</p>
+                            <p className="text-[11px] text-app-muted-foreground mt-1">Try a different search term or clear filters</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Branches (tree rows) */}
+                            {filteredBranches.map(branch => (
+                                <BranchRow
+                                    key={branch.id}
+                                    branch={branch}
+                                    isExpanded={expandedIds.has(branch.id)}
+                                    onToggle={() => toggleExpand(branch.id)}
+                                    onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
+                                    onDelete={(w) => setDeleteTarget(w)}
+                                    onAddChild={handleAddChild}
+                                />
+                            ))}
+
+                            {/* Orphans */}
+                            {filteredOrphans.map(node => (
+                                <OrphanRow
+                                    key={node.id}
+                                    node={node}
+                                    onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
+                                    onDelete={(w) => setDeleteTarget(w)}
+                                />
+                            ))}
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* ─── Content (Scrollable) ─────────────────────────────── */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-3 pr-1">
-                {filteredBranches.length === 0 && filteredOrphans.length === 0 && !searchQuery ? (
-                    /* Empty State */
-                    <div className="text-center py-16">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-app-primary/10">
-                            <Building2 size={28} className="text-app-primary/40" />
-                        </div>
-                        <h3 className="text-xl font-black text-app-foreground mb-2">No Locations Yet</h3>
-                        <p className="text-[12px] text-app-muted-foreground mb-6 max-w-sm mx-auto">
-                            Create your first branch to start organizing your stores, warehouses, and virtual stock points.
-                        </p>
-                        <button
-                            onClick={handleAdd}
-                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-app-primary text-white text-[13px] font-bold shadow-lg hover:shadow-xl transition-all"
-                        >
-                            <Plus size={15} />
-                            Create First Branch
-                        </button>
-                    </div>
-                ) : filteredBranches.length === 0 && filteredOrphans.length === 0 && searchQuery ? (
-                    /* Search empty */
-                    <div className="text-center py-16">
-                        <Search size={28} className="mx-auto mb-3 text-app-muted-foreground/30" />
-                        <h3 className="text-[15px] font-black text-app-foreground mb-1">No results for &ldquo;{searchQuery}&rdquo;</h3>
-                        <p className="text-[11px] text-app-muted-foreground">Try a different search term</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* Branches */}
-                        {filteredBranches.map(branch => (
-                            <BranchCard
-                                key={branch.id}
-                                branch={branch}
-                                isExpanded={expandedIds.has(branch.id)}
-                                onToggle={() => toggleExpand(branch.id)}
-                                onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
-                                onDelete={(w) => setDeleteTarget(w)}
-                                onAddChild={handleAddChild}
-                            />
-                        ))}
-
-                        {/* Orphans */}
-                        {filteredOrphans.length > 0 && (
-                            <div className="bg-app-surface border-2 border-dashed rounded-2xl p-5" style={borderColor('--app-warning', 0.5)}>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm" style={gradientBg('--app-warning')}>
-                                        <MapPin size={16} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-[14px] font-black text-app-foreground">Unassigned Locations</h3>
-                                        <p className="text-[10px] text-app-muted-foreground">Not under any branch — assign them to organize your hierarchy</p>
-                                    </div>
-                                    <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ ...textColor('--app-warning'), ...solidBg('--app-warning', 0.15) }}>
-                                        {filteredOrphans.length}
-                                    </span>
-                                </div>
-                                <div className="space-y-1.5 ml-3">
-                                    {filteredOrphans.map(node => (
-                                        <ChildRow
-                                            key={node.id}
-                                            node={node}
-                                            onEdit={(w) => { setEditingWarehouse(w); setDefaultParent(null); setIsFormOpen(true) }}
-                                            onDelete={(w) => setDeleteTarget(w)}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* ─── Modals ──────────────────────────────────────────── */}
+            {/* ═══════════════ MODALS ═══════════════ */}
             {isFormOpen && (
                 <WarehouseModal
                     warehouse={editingWarehouse}

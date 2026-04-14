@@ -46,6 +46,15 @@ class LedgerCOAMixin:
         if not accounts_data:
             raise ValidationError(f"Template {template_key} has no accounts")
 
+        # ── Temporarily unlock structure for template import ─────────
+        # The ChartOfAccount.save() and .delete() overrides block changes
+        # when organization.finance_setup_completed is True.
+        # We must lift the lock during import, then re-lock afterward.
+        was_locked = getattr(organization, 'finance_setup_completed', False)
+        if was_locked:
+            organization.finance_setup_completed = False
+            organization.save(update_fields=['finance_setup_completed'])
+
         # ── Smart Registry: Enterprise Role & Section Detection ──────────
         ROLE_MAP = {
             'RECEIVABLE': 'RECEIVABLE',
