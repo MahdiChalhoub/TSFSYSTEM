@@ -1287,6 +1287,7 @@ function MigrationView({
                                                             {sources.length} accounts merge into ↓
                                                         </span>
                                                     </div>
+                                                    <div className="w-20 flex-shrink-0" />
                                                     <div className="w-16 flex-shrink-0 text-center">
                                                         <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                             style={{ background: `color-mix(in srgb, ${mergeColor} 12%, transparent)`, color: mergeColor,
@@ -1327,6 +1328,13 @@ function MigrationView({
                                                         <div className="flex-1 min-w-0">
                                                             <span className="text-[11px] font-medium text-app-foreground truncate block">{src.srcName}</span>
                                                         </div>
+                                                        <div className="w-20 flex-shrink-0 text-right">
+                                                            {(() => { const bal = balanceMap[src.srcCode]; return bal !== undefined && bal !== 0 ? (
+                                                                <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
+                                                                    {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                                </span>
+                                                            ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                                        </div>
                                                         <div className="w-16 flex-shrink-0 text-center">
                                                             <span className="text-[9px] font-bold" style={{ color: mergeColor }}>├─</span>
                                                         </div>
@@ -1364,6 +1372,13 @@ function MigrationView({
                                                     <div className="flex-1 min-w-0">
                                                         <span className="text-[11px] font-bold text-app-foreground truncate block">{entry.srcName}</span>
                                                     </div>
+                                                    <div className="w-20 flex-shrink-0 text-right">
+                                                        {(() => { const bal = balanceMap[entry.srcCode]; return bal !== undefined && bal !== 0 ? (
+                                                            <span className="text-[10px] font-black tabular-nums" style={{ color: bal > 0 ? 'var(--app-success, #22c55e)' : 'var(--app-danger, #ef4444)' }}>
+                                                                {bal.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                            </span>
+                                                        ) : <span className="text-[10px] text-app-muted-foreground">—</span> })()}
+                                                    </div>
                                                     <div className="w-16 flex-shrink-0 text-center">
                                                         <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                                                             style={{ background: 'color-mix(in srgb, #ec4899 10%, transparent)', color: '#ec4899',
@@ -1389,6 +1404,7 @@ function MigrationView({
                                                         }}>
                                                         <div className="w-16 flex-shrink-0" />
                                                         <div className="flex-1 min-w-0" />
+                                                        <div className="w-20 flex-shrink-0" />
                                                         <div className="w-16 flex-shrink-0 text-center">
                                                             <span className="text-[9px] font-bold" style={{ color: '#ec4899' }}>├─</span>
                                                         </div>
