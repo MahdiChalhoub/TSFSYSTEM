@@ -110,6 +110,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'on_hand_qty', 'reserved_qty', 'available_qty',
             # Gap 6 transfer fields
             'incoming_transfer_qty', 'outgoing_transfer_qty',
+            # COA Link Fields (Gap 2A.7)
+            'revenue_account', 'cogs_account', 'inventory_account',
         ]
         read_only_fields = ['organization', 'data_completeness_level', 'completeness_status']
 
@@ -200,6 +202,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'is_expiry_tracked',
+            # COA Link Fields (Gap 2A.7)
+            'revenue_account', 'cogs_account', 'inventory_account',
         ]
         read_only_fields = ['organization']
 

@@ -21,6 +21,7 @@ const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: React.React
     EQUITY:    { color: '#8b5cf6',                     bg: 'color-mix(in srgb, #8b5cf6 10%, transparent)',                    icon: <Scale size={13} />,        label: 'Equity' },
     INCOME:    { color: 'var(--app-success, #10B981)', bg: 'color-mix(in srgb, var(--app-success, #10B981) 10%, transparent)', icon: <TrendingUp size={13} />,   label: 'Income' },
     EXPENSE:   { color: 'var(--app-warning, #F59E0B)', bg: 'color-mix(in srgb, var(--app-warning, #F59E0B) 10%, transparent)', icon: <BarChart3 size={13} />,     label: 'Expense' },
+    REVENUE:   { color: 'var(--app-success, #10B981)', bg: 'color-mix(in srgb, var(--app-success, #10B981) 10%, transparent)', icon: <TrendingUp size={13} />,   label: 'Revenue' },
 }
 
 // ─── Account Tree Node ─────────────────────────────────────────

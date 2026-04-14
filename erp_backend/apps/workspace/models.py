@@ -165,20 +165,84 @@ class AutoTaskRule(TenantModel):
     """
     Rules for automatic task generation from system events.
     Example: price change → 'Update shelf label for Product X'
+
+    Extended fields (v2) support the 80+ rule seed catalog:
+    - code: unique identifier per org (e.g. 'INV-01', 'PUR-07')
+    - module: originating module (inventory, purchasing, finance, crm, sales, hr, system)
+    - rule_type: EVENT (one-shot) or RECURRING (scheduled)
+    - priority: default priority for generated tasks
+    - chain_parent: for chained tasks (e.g. INV-02 runs after INV-01 completes)
+    - recurrence_interval: DAILY, WEEKLY, MONTHLY, QUARTERLY for recurring rules
+    - stale_threshold_days: how many days before an item is considered "stale"
+    - is_system_default: True for rules seeded by the platform (not user-created)
     """
     TRIGGER_CHOICES = (
         ('PRICE_CHANGE', 'Product Price Changed'),
         ('LOW_STOCK', 'Low Stock Alert'),
+        ('NEGATIVE_STOCK', 'Negative Stock Detected'),
         ('NEW_INVOICE', 'New Invoice Received'),
         ('EXPIRY_APPROACHING', 'Product Expiry Approaching'),
+        ('PRODUCT_EXPIRED', 'Product Expired'),
+        ('PRODUCT_CREATED', 'New Product Created'),
         ('PO_APPROVED', 'Purchase Order Approved'),
         ('CLIENT_COMPLAINT', 'Client Complaint Filed'),
         ('NEW_SUPPLIER', 'New Supplier Onboarded'),
+        ('NEW_CLIENT', 'New Client Registered'),
         ('DELIVERY_COMPLETED', 'Delivery Completed'),
         ('ORDER_COMPLETED', 'Order Completed'),
         ('INVENTORY_COUNT', 'Inventory Count Needed'),
+        ('STOCK_ADJUSTMENT', 'Stock Adjustment Made'),
+        ('BARCODE_MISSING_PURCHASE', 'Barcode Missing on Purchase'),
+        ('BARCODE_MISSING_TRANSFER', 'Barcode Missing on Transfer'),
+        ('BARCODE_DAILY_CHECK', 'Daily Barcode Check'),
+        ('PURCHASE_ENTERED', 'Purchase Entered'),
+        ('PURCHASE_NO_ATTACHMENT', 'Purchase Without Attachment'),
+        ('RECEIPT_VOUCHER', 'Receipt Voucher Arrived'),
+        ('PROFORMA_RECEIVED', 'Proforma Received'),
+        ('TRANSFER_CREATED', 'Transfer Order Created'),
+        ('ORDER_STALE', 'Order Stale / Untreated'),
+        ('CREDIT_SALE', 'Credit Sale Made'),
+        ('HIGH_VALUE_SALE', 'High-Value Sale'),
+        ('OVERDUE_INVOICE', 'Invoice Overdue'),
+        ('PAYMENT_DUE_SUPPLIER', 'Supplier Payment Due'),
+        ('POS_RETURN', 'POS Return Processed'),
+        ('CASHIER_DISCOUNT', 'Cashier Applied Discount'),
+        ('DAILY_SUMMARY', 'End-of-Day Summary'),
+        ('BANK_STATEMENT', 'Bank Statement Received'),
+        ('MONTH_END', 'Month-End Close'),
+        ('LATE_PAYMENT', 'Late Payment Detected'),
+        ('CLIENT_FOLLOWUP_DUE', 'Client Follow-Up Due'),
+        ('SUPPLIER_FOLLOWUP_DUE', 'Supplier Follow-Up Due'),
+        ('CLIENT_INACTIVE', 'Client Inactive'),
+        ('ADDRESS_BOOK_VERIFY', 'Address Book Verification'),
+        ('USER_REGISTRATION', 'New User Registration'),
+        ('REPORT_NEEDS_REVIEW', 'Report Needs Review'),
+        ('APPROVAL_PENDING', 'Approval Pending'),
+        ('EMPLOYEE_ONBOARD', 'Employee Onboarding'),
+        ('LEAVE_REQUEST', 'Leave Request'),
+        ('ATTENDANCE_ANOMALY', 'Attendance Anomaly'),
         ('CUSTOM', 'Custom Event'),
     )
+
+    RULE_TYPE_CHOICES = (
+        ('EVENT', 'Event-triggered (one-shot)'),
+        ('RECURRING', 'Recurring (scheduled)'),
+    )
+
+    PRIORITY_CHOICES = (
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+        ('URGENT', 'Urgent'),
+    )
+
+    RECURRENCE_CHOICES = (
+        ('DAILY', 'Daily'),
+        ('WEEKLY', 'Weekly'),
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+    )
+
     name = models.CharField(max_length=200)
     trigger_event = models.CharField(max_length=30, choices=TRIGGER_CHOICES)
     custom_event_code = models.CharField(
@@ -194,8 +258,50 @@ class AutoTaskRule(TenantModel):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    # ── Extended fields (v2) — required by seed catalog ─────────────────
+    code = models.CharField(
+        max_length=20, null=True, blank=True,
+        help_text='Unique rule identifier per org, e.g. INV-01, PUR-07'
+    )
+    module = models.CharField(
+        max_length=30, null=True, blank=True,
+        help_text='Originating module: inventory, purchasing, finance, crm, sales, hr, system'
+    )
+    rule_type = models.CharField(
+        max_length=15, choices=RULE_TYPE_CHOICES, default='EVENT',
+        help_text='EVENT = one-shot on trigger, RECURRING = scheduled'
+    )
+    priority = models.CharField(
+        max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM',
+        help_text='Default priority for generated tasks'
+    )
+    chain_parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='chain_children',
+        help_text='Parent rule in a chain — this rule runs after parent completes'
+    )
+    recurrence_interval = models.CharField(
+        max_length=15, choices=RECURRENCE_CHOICES, null=True, blank=True,
+        help_text='Recurrence schedule for RECURRING rules'
+    )
+    stale_threshold_days = models.IntegerField(
+        default=0,
+        help_text='Days before an item is considered stale (for stale-order rules)'
+    )
+    is_system_default = models.BooleanField(
+        default=False,
+        help_text='True for platform-seeded rules (not user-created)'
+    )
+
     class Meta:
         db_table = 'workspace_auto_task_rule'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['organization', 'code'],
+                name='unique_auto_task_rule_code_per_org',
+                condition=models.Q(code__isnull=False),
+            )
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.get_trigger_event_display()})"

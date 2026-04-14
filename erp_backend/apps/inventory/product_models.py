@@ -175,6 +175,25 @@ class Product(AuditLogMixin, TenantOwnedModel):
         help_text='Physical capacity of the display shelf for this product'
     )
 
+    # ── COA Link Fields (Gap 2A.7) — for auto-posting resolution ───────
+    # When set, these override the organization-level posting rules for this product.
+    # Uses string reference to avoid hard cross-module imports (isolation rule).
+    revenue_account = models.ForeignKey(
+        'finance.ChartOfAccount', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='revenue_products',
+        help_text='Default revenue GL account for sales of this product'
+    )
+    cogs_account = models.ForeignKey(
+        'finance.ChartOfAccount', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='cogs_products',
+        help_text='Default COGS GL account for cost of goods sold'
+    )
+    inventory_account = models.ForeignKey(
+        'finance.ChartOfAccount', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='inventory_products',
+        help_text='Default inventory GL account for stock valuation'
+    )
+
     @property
     def effective_cost(self):
         """Standard property access (honors Org policy & Valuation method)."""

@@ -122,6 +122,8 @@ class ProductSerializer(serializers.ModelSerializer):
             # Product Grouping — governance
             'product_group_name', 'pricing_source',
             'group_sync_status', 'group_broken_since', 'group_expected_price',
+            # COA Link Fields (Gap 2A.7)
+            'revenue_account', 'cogs_account', 'inventory_account',
         ]
         read_only_fields = ['organization', 'data_completeness_level',
                             'completeness_label', 'is_sellable', 'is_complete']
@@ -228,6 +230,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'is_expiry_tracked',
             'attribute_value_ids',
+            # COA Link Fields (Gap 2A.7)
+            'revenue_account', 'cogs_account', 'inventory_account',
         ]
         read_only_fields = ['organization']
 
