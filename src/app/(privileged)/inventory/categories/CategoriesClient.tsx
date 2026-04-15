@@ -770,6 +770,13 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     // Filters
     const [filterBrand, setFilterBrand] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string | null>(null)
+    const [filterType, setFilterType] = useState<string | null>(null)
+    const [filterUnit, setFilterUnit] = useState<string | null>(null)
+    const [filterTva, setFilterTva] = useState<string | null>(null)
+    const [filterMarginMin, setFilterMarginMin] = useState('')
+    const [filterMarginMax, setFilterMarginMax] = useState('')
+    const [filterPriceMin, setFilterPriceMin] = useState('')
+    const [filterPriceMax, setFilterPriceMax] = useState('')
     const [showFilterPopup, setShowFilterPopup] = useState(false)
     const filterRef = useRef<HTMLDivElement>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -844,7 +851,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         return () => observer.disconnect()
     }, [hasMore, loadingMore, nextOffset, loadProducts])
 
-    // Unique brands & statuses for filter chips (from loaded products)
+    // Unique values for filter chips (from loaded products)
     const uniqueBrands = useMemo(() => {
         const set = new Set<string>()
         products.forEach(p => { if (p.brand_name) set.add(p.brand_name) })
@@ -855,14 +862,47 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         products.forEach(p => { if (p.status) set.add(p.status) })
         return Array.from(set).sort()
     }, [products])
+    const uniqueTypes = useMemo(() => {
+        const set = new Set<string>()
+        products.forEach(p => { if (p.product_type) set.add(p.product_type) })
+        return Array.from(set).sort()
+    }, [products])
+    const uniqueUnits = useMemo(() => {
+        const set = new Set<string>()
+        products.forEach(p => { if (p.unit_code) set.add(p.unit_code) })
+        return Array.from(set).sort()
+    }, [products])
+    const uniqueTvaRates = useMemo(() => {
+        const set = new Set<string>()
+        products.forEach(p => { if (p.tva_rate !== undefined) set.add(String(p.tva_rate)) })
+        return Array.from(set).sort((a, b) => Number(a) - Number(b))
+    }, [products])
+
+    const activeFilterCount = (filterBrand ? 1 : 0) + (filterStatus ? 1 : 0) + (filterType ? 1 : 0) +
+        (filterUnit ? 1 : 0) + (filterTva ? 1 : 0) +
+        (filterMarginMin || filterMarginMax ? 1 : 0) + (filterPriceMin || filterPriceMax ? 1 : 0)
+
+    const clearAllFilters = () => {
+        setFilterBrand(null); setFilterStatus(null); setFilterType(null)
+        setFilterUnit(null); setFilterTva(null)
+        setFilterMarginMin(''); setFilterMarginMax('')
+        setFilterPriceMin(''); setFilterPriceMax('')
+    }
 
     // Client-side filters on loaded data (search is server-side)
     const filtered = useMemo(() => {
         let list = products
         if (filterBrand) list = list.filter(p => p.brand_name === filterBrand)
         if (filterStatus) list = list.filter(p => p.status === filterStatus)
+        if (filterType) list = list.filter(p => p.product_type === filterType)
+        if (filterUnit) list = list.filter(p => p.unit_code === filterUnit)
+        if (filterTva) list = list.filter(p => String(p.tva_rate) === filterTva)
+        if (filterMarginMin) list = list.filter(p => p.margin_pct !== null && p.margin_pct >= Number(filterMarginMin))
+        if (filterMarginMax) list = list.filter(p => p.margin_pct !== null && p.margin_pct <= Number(filterMarginMax))
+        if (filterPriceMin) list = list.filter(p => p.selling_price_ttc >= Number(filterPriceMin))
+        if (filterPriceMax) list = list.filter(p => p.selling_price_ttc <= Number(filterPriceMax))
         return list
-    }, [products, filterBrand, filterStatus])
+    }, [products, filterBrand, filterStatus, filterType, filterUnit, filterTva, filterMarginMin, filterMarginMax, filterPriceMin, filterPriceMax])
 
     const toggleSelect = (id: number) => {
         const next = new Set(selected)
@@ -940,9 +980,6 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
             setMoveStep('preview')
         }
     }
-
-    const activeFilterCount = (filterBrand ? 1 : 0) + (filterStatus ? 1 : 0)
-
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-200">
             {/* Search + Select All + Filter Button */}

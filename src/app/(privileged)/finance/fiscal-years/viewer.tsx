@@ -455,6 +455,36 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                                 <X size={12} className="flex-shrink-0 mt-0.5" /> {b}
                                             </div>
                                         ))}
+
+                                        {/* Quick fix buttons */}
+                                        {closePreview.periods.open > 0 && (
+                                            <button disabled={isPending} onClick={() => {
+                                                if (!closingYearId) return
+                                                startTransition(async () => {
+                                                    try {
+                                                        // Close all open periods for this year
+                                                        const fy = years.find(y => y.id === closingYearId)
+                                                        const periods = fy?.periods || []
+                                                        for (const p of periods) {
+                                                            if (p.status === 'OPEN' || p.status === 'FUTURE') {
+                                                                await updatePeriodStatus(p.id, 'CLOSED')
+                                                            }
+                                                        }
+                                                        toast.success(`Closed ${closePreview.periods.open + closePreview.periods.future} periods`)
+                                                        // Reload preview
+                                                        const preview = await getClosePreview(closingYearId)
+                                                        if (preview) setClosePreview(preview)
+                                                    } catch (err: unknown) {
+                                                        toast.error(err instanceof Error ? err.message : String(err))
+                                                    }
+                                                })
+                                            }}
+                                                className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold py-1.5 rounded-lg transition-all mt-1"
+                                                style={{ background: 'color-mix(in srgb, var(--app-warning, #f59e0b) 10%, transparent)', color: 'var(--app-warning, #f59e0b)', border: '1px solid color-mix(in srgb, var(--app-warning, #f59e0b) 30%, transparent)' }}>
+                                                {isPending ? <Loader2 size={11} className="animate-spin" /> : <Lock size={11} />}
+                                                Close All {closePreview.periods.open + closePreview.periods.future} Open Periods Now
+                                            </button>
+                                        )}
                                     </div>
                                 )}
 
@@ -562,6 +592,35 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Opening Balances Preview */}
+                                {closePreview.opening_preview && closePreview.opening_preview.length > 0 && (
+                                    <div className="rounded-xl p-3" style={{ background: 'var(--app-bg)', border: '1px solid var(--app-border)' }}>
+                                        <div className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--app-muted-foreground)' }}>
+                                            Opening Balances Preview ({closePreview.opening_balances_count} accounts)
+                                        </div>
+                                        <div className="max-h-[120px] overflow-y-auto custom-scrollbar space-y-0.5">
+                                            {closePreview.opening_preview.map(ob => (
+                                                <div key={ob.code} className="flex items-center justify-between text-[10px] py-0.5"
+                                                    style={{ borderBottom: '1px solid var(--app-border)' }}>
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="font-mono font-bold flex-shrink-0" style={{ color: 'var(--app-primary)', minWidth: '40px' }}>{ob.code}</span>
+                                                        <span className="font-medium truncate" style={{ color: 'var(--app-foreground)' }}>{ob.name}</span>
+                                                    </div>
+                                                    <span className="font-black tabular-nums flex-shrink-0 ml-2"
+                                                        style={{ color: ob.balance >= 0 ? 'var(--app-foreground)' : 'var(--app-error, #ef4444)' }}>
+                                                        {ob.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {closePreview.opening_balances_count > 30 && (
+                                            <div className="text-[9px] font-bold mt-1" style={{ color: 'var(--app-muted-foreground)' }}>
+                                                ... and {closePreview.opening_balances_count - 30} more accounts
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Actions */}
                                 <div className="flex gap-2 pt-1">

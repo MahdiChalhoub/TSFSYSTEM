@@ -195,6 +195,7 @@ export type ClosePreview = {
     retained_earnings: { code: string; name: string; id: number } | null
     next_year: { id: number; name: string } | null
     opening_balances_count: number
+    opening_preview: { code: string; name: string; type: string; balance: number }[]
     blockers: string[]
     can_close: boolean
 }

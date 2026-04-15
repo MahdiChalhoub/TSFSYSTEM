@@ -283,18 +283,26 @@ class CategoryViewSet(TenantModelViewSet):
 
         product_data = []
         for p in products_page:
+            sell_ht = float(p.selling_price_ht) if p.selling_price_ht else 0
+            cost = float(p.cost_price) if p.cost_price else 0
+            margin_pct = round(((sell_ht - cost) / cost * 100), 1) if cost > 0 else None
             product_data.append({
                 "id": p.id,
                 "sku": p.sku,
                 "name": p.name,
+                "product_type": p.product_type,
                 "brand_id": p.brand_id,
                 "brand_name": p.brand.name if p.brand else None,
                 "parfum_id": p.parfum_id,
                 "parfum_name": p.parfum.name if p.parfum else None,
                 "unit_code": p.unit.code if p.unit else None,
                 "selling_price_ttc": float(p.selling_price_ttc),
+                "selling_price_ht": sell_ht,
+                "cost_price": cost,
+                "tva_rate": float(p.tva_rate) if p.tva_rate else 0,
+                "margin_pct": margin_pct,
                 "image_url": p.image_url if hasattr(p, 'image_url') else None,
-                "status": p.status
+                "status": p.status,
             })
 
         return Response({

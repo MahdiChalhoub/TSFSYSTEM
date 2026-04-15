@@ -92,11 +92,19 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             organization=organization, start_date__gt=fiscal_year.end_date
         ).order_by('start_date').first()
 
-        # Balance sheet totals for opening balances
-        bs_accounts_count = ChartOfAccount.objects.filter(
+        # Balance sheet accounts for opening balances preview
+        bs_accounts = ChartOfAccount.objects.filter(
             organization=organization, type__in=['ASSET', 'LIABILITY', 'EQUITY'],
             is_active=True
-        ).exclude(balance_official=Decimal(0)).count()
+        ).exclude(balance_official=Decimal(0)).order_by('type', 'code')
+        bs_accounts_count = bs_accounts.count()
+
+        opening_preview = []
+        for acc in bs_accounts[:30]:  # Limit to 30 for performance
+            opening_preview.append({
+                'code': acc.code, 'name': acc.name, 'type': acc.type,
+                'balance': float(acc.balance_official),
+            })
 
         # Blockers
         blockers = []
@@ -117,6 +125,7 @@ class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'retained_earnings': {'code': re_account.code, 'name': re_account.name, 'id': re_account.id} if re_account else None,
             'next_year': {'id': next_year.id, 'name': next_year.name} if next_year else None,
             'opening_balances_count': bs_accounts_count,
+            'opening_preview': opening_preview,
             'blockers': blockers,
             'can_close': len(blockers) == 0,
         })
