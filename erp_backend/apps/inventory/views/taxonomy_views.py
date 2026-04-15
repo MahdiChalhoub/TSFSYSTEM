@@ -223,7 +223,8 @@ class CategoryViewSet(TenantModelViewSet):
         ).annotate(
             annotated_product_count=Count('products', distinct=True),
             annotated_brand_count=Count('brands', distinct=True),
-            annotated_parfum_count=Count('parfums', distinct=True)
+            annotated_parfum_count=Count('parfums', distinct=True),
+            annotated_attribute_count=Count('attributes', distinct=True)
         )
 
         data = []
@@ -232,6 +233,7 @@ class CategoryViewSet(TenantModelViewSet):
             cat_data["product_count"] = cat.annotated_product_count
             cat_data["brand_count"] = cat.annotated_brand_count
             cat_data["parfum_count"] = cat.annotated_parfum_count
+            cat_data["attribute_count"] = cat.annotated_attribute_count
             data.append(cat_data)
 
         return Response(data)
@@ -346,6 +348,30 @@ class CategoryViewSet(TenantModelViewSet):
                 "status": p.status,
             })
 
+        # Build filter options from ALL products in this category (not just the page)
+        all_prods = Product.objects.filter(category=category, organization=organization, is_active=True)
+        filter_options = {
+            "brands": sorted(
+                [{"value": n, "label": n} for n in all_prods.exclude(brand__isnull=True).values_list('brand__name', flat=True).distinct() if n],
+                key=lambda x: x["label"]
+            ),
+            "statuses": sorted(
+                [{"value": s, "label": s.capitalize()} for s in all_prods.values_list('status', flat=True).distinct() if s]
+            ),
+            "types": sorted(
+                [{"value": t, "label": t} for t in all_prods.values_list('product_type', flat=True).distinct() if t],
+                key=lambda x: x["label"]
+            ),
+            "units": sorted(
+                [{"value": u, "label": u} for u in all_prods.exclude(unit__isnull=True).values_list('unit__code', flat=True).distinct() if u],
+                key=lambda x: x["label"]
+            ),
+            "tva_rates": sorted(
+                [{"value": str(r), "label": f"{r}%"} for r in all_prods.values_list('tva_rate', flat=True).distinct() if r is not None],
+                key=lambda x: float(x["value"])
+            ),
+        }
+
         return Response({
             "brands": brands_data,
             "parfums": parfums_data,
@@ -353,6 +379,7 @@ class CategoryViewSet(TenantModelViewSet):
             "total_count": total_count,
             "has_more": (offset + PAGE_SIZE) < total_count,
             "next_offset": offset + PAGE_SIZE if (offset + PAGE_SIZE) < total_count else None,
+            "filter_options": filter_options,
         })
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny], authentication_classes=[], throttle_classes=[AnonRateThrottle])
@@ -461,12 +488,15 @@ class CategoryViewSet(TenantModelViewSet):
                 "conflict_attributes": conflict_attrs,
                 "target_brands": list(target_category.brands.values('id', 'name')),
                 "target_attributes": list(target_category.attributes.filter(parent__isnull=True).values('id', 'name')),
+                "all_brands": list(Brand.objects.filter(organization=organization).values('id', 'name').order_by('name')),
+                "all_attributes": list(ProductAttribute.objects.filter(organization=organization, parent__isnull=True).values('id', 'name').order_by('name')),
             })
 
         # ── Execute Move with Reconciliation ──
         auto_link_brands = reconciliation.get('auto_link_brands', [])
         reassign_brands = reconciliation.get('reassign_brands', {})  # {old_brand_id: new_brand_id}
         auto_link_attrs = reconciliation.get('auto_link_attributes', [])
+        reassign_attrs = reconciliation.get('reassign_attributes', {})  # {old_attr_id: new_attr_id}
 
         # Validate: every conflicting brand must be either auto-linked or reassigned
         if brand_conflicts:
@@ -481,15 +511,15 @@ class CategoryViewSet(TenantModelViewSet):
                                           zip(unresolved, unresolved_names)],
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate: every conflicting attribute must be auto-linked
+        # Validate: every conflicting attribute must be auto-linked or reassigned
         if attr_conflicts:
-            resolved_attrs = set(int(a) for a in auto_link_attrs)
+            resolved_attrs = set(int(a) for a in auto_link_attrs) | set(int(a) for a in reassign_attrs.keys())
             unresolved_attrs = attr_conflicts - resolved_attrs
             if unresolved_attrs:
                 unresolved_names = list(ProductAttribute.objects.filter(id__in=unresolved_attrs).values_list('name', flat=True))
                 return Response({
                     "error": f"Unresolved attribute conflicts: {', '.join(unresolved_names)}. "
-                             f"Each attribute group must be linked to the target category.",
+                             f"Each attribute group must be linked or reassigned.",
                     "unresolved_attributes": [{"id": aid, "name": n} for aid, n in
                                                zip(unresolved_attrs, unresolved_names)],
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -516,7 +546,17 @@ class CategoryViewSet(TenantModelViewSet):
                 )
                 target_category.attributes.add(*attrs_to_link)
 
-            # 4. Move the products
+            # 4. Reassign product attributes (swap old attribute group for new one)
+            for old_id_str, new_id in reassign_attrs.items():
+                old_id = int(old_id_str)
+                new_attr = ProductAttribute.objects.filter(id=int(new_id), organization=organization, parent__isnull=True).first()
+                if new_attr:
+                    # For products that had the old attribute, swap it
+                    for p in Product.objects.filter(id__in=product_ids, organization=organization):
+                        p.attributes.remove(old_id)
+                        p.attributes.add(new_attr.id)
+
+            # 5. Move the products
             products.update(category_id=target_category_id)
 
         return Response({

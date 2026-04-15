@@ -25,7 +25,7 @@ import { erpFetch } from '@/lib/erp-api'
  * ═══════════════════════════════════════════════════════════ */
 interface CategoryNode {
     id: number; name: string; parent: number | null; code?: string; short_name?: string;
-    children?: CategoryNode[]; product_count?: number; brand_count?: number; parfum_count?: number; level?: number;
+    children?: CategoryNode[]; product_count?: number; brand_count?: number; parfum_count?: number; attribute_count?: number; level?: number;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -355,6 +355,7 @@ const CategoryRow = ({
     const isRoot = level === 0
     const productCount = node.product_count ?? 0
     const brandCount = node.brand_count ?? 0
+    const attributeCount = node.attribute_count ?? 0
 
     return (
         <div>
@@ -472,6 +473,24 @@ const CategoryRow = ({
                         <Paintbrush size={10} />
                         {brandCount}
                     </button>
+                </div>
+
+                {/* Attributes — badge */}
+                <div className="hidden sm:flex w-16 flex-shrink-0">
+                    <span
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"
+                        style={attributeCount > 0 ? {
+                            color: 'var(--app-warning)',
+                            background: 'color-mix(in srgb, var(--app-warning) 8%, transparent)',
+                        } : {
+                            color: 'var(--app-muted-foreground)',
+                            opacity: 0.5,
+                        }}
+                        title={`${attributeCount} attribute${attributeCount !== 1 ? 's' : ''} linked`}
+                    >
+                        <Tag size={10} />
+                        {attributeCount}
+                    </span>
                 </div>
 
                 {/* Products — clickable badge */}
@@ -775,6 +794,8 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
     // Product preview popup
     const [previewProduct, setPreviewProduct] = useState<any>(null)
+    // Database-driven filter options
+    const [filterOptions, setFilterOptions] = useState<any>({})
     // Filters
     const [filterBrand, setFilterBrand] = useState('')
     const [filterStatus, setFilterStatus] = useState('')
@@ -796,6 +817,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const [autoLinkBrands, setAutoLinkBrands] = useState<Set<number>>(new Set())
     const [autoLinkAttrs, setAutoLinkAttrs] = useState<Set<number>>(new Set())
     const [reassignBrands, setReassignBrands] = useState<Record<number, number>>({})
+    const [reassignAttrs, setReassignAttrs] = useState<Record<number, number>>({})
     const router = useRouter()
 
     // Debounce search — 300ms
@@ -827,6 +849,10 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                 setTotalCount(data?.total_count ?? 0)
                 setHasMore(data?.has_more ?? false)
                 setNextOffset(data?.next_offset ?? null)
+                // On first load (not append), capture filter options from DB
+                if (!append && data?.filter_options) {
+                    setFilterOptions(data.filter_options)
+                }
                 setLoading(false)
                 setLoadingMore(false)
             })
@@ -859,32 +885,12 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         return () => observer.disconnect()
     }, [hasMore, loadingMore, nextOffset, loadProducts])
 
-    // Unique values for filter chips (from loaded products)
-    const uniqueBrands = useMemo(() => {
-        const set = new Set<string>()
-        products.forEach(p => { if (p.brand_name) set.add(p.brand_name) })
-        return Array.from(set).sort()
-    }, [products])
-    const uniqueStatuses = useMemo(() => {
-        const set = new Set<string>()
-        products.forEach(p => { if (p.status) set.add(p.status) })
-        return Array.from(set).sort()
-    }, [products])
-    const uniqueTypes = useMemo(() => {
-        const set = new Set<string>()
-        products.forEach(p => { if (p.product_type) set.add(p.product_type) })
-        return Array.from(set).sort()
-    }, [products])
-    const uniqueUnits = useMemo(() => {
-        const set = new Set<string>()
-        products.forEach(p => { if (p.unit_code) set.add(p.unit_code) })
-        return Array.from(set).sort()
-    }, [products])
-    const uniqueTvaRates = useMemo(() => {
-        const set = new Set<string>()
-        products.forEach(p => { if (p.tva_rate !== undefined) set.add(String(p.tva_rate)) })
-        return Array.from(set).sort((a, b) => Number(a) - Number(b))
-    }, [products])
+    // DB-driven filter option lists (from explore API)
+    const uniqueBrands = useMemo(() => (filterOptions.brands || []).map((o: any) => o.value), [filterOptions])
+    const uniqueStatuses = useMemo(() => (filterOptions.statuses || []).map((o: any) => o.value), [filterOptions])
+    const uniqueTypes = useMemo(() => (filterOptions.types || []).map((o: any) => o.value), [filterOptions])
+    const uniqueUnits = useMemo(() => (filterOptions.units || []).map((o: any) => o.value), [filterOptions])
+    const uniqueTvaRates = useMemo(() => (filterOptions.tva_rates || []).map((o: any) => o.value), [filterOptions])
 
     const activeFilterCount = (filterBrand ? 1 : 0) + (filterStatus ? 1 : 0) + (filterType ? 1 : 0) +
         (filterUnit ? 1 : 0) + (filterTva ? 1 : 0) +
@@ -957,6 +963,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         setMovePreview(null)
         setCatSearch('')
         setReassignBrands({})
+        setReassignAttrs({})
     }
 
     const moveTargets = allCategories.filter((c: any) => c.id !== categoryId)
@@ -976,6 +983,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
             setAutoLinkBrands(new Set((preview.conflict_brands || []).map((b: any) => b.id)))
             setAutoLinkAttrs(new Set((preview.conflict_attributes || []).map((a: any) => a.id)))
             setReassignBrands({})
+            setReassignAttrs({})
         } catch (e: any) {
             toast.error(e?.message || 'Failed to analyze move')
             setMoveStep('picking')
@@ -995,6 +1003,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                         auto_link_brands: Array.from(autoLinkBrands),
                         auto_link_attributes: Array.from(autoLinkAttrs),
                         reassign_brands: reassignBrands,
+                        reassign_attributes: reassignAttrs,
                     },
                 }),
             })
@@ -1480,7 +1489,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                             <Link2 size={10} /> Link to category
                                                                         </button>
                                                                         {!isLinked && (
-                                                                            movePreview.target_brands?.length > 0 ? (
+                                                                            movePreview.all_brands?.length > 0 ? (
                                                                                 <select
                                                                                     value={isReassigned ? String(reassignBrands[b.id]) : ''}
                                                                                     onChange={e => {
@@ -1504,15 +1513,17 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                                                         color: isReassigned ? 'var(--app-primary)' : undefined,
                                                                                         animation: !isReassigned ? 'pulse 2s ease-in-out infinite' : 'none',
                                                                                     }}>
-                                                                                    <option value="">⚠ Select a brand...</option>
-                                                                                    {movePreview.target_brands.map((tb: any) => (
-                                                                                        <option key={tb.id} value={String(tb.id)}>{tb.name}</option>
-                                                                                    ))}
+                                                                                    <option value="">⚠ Reassign to brand...</option>
+                                                                                    {movePreview.all_brands
+                                                                                        .filter((tb: any) => tb.id !== b.id)
+                                                                                        .map((tb: any) => (
+                                                                                            <option key={tb.id} value={String(tb.id)}>{tb.name}</option>
+                                                                                        ))}
                                                                                 </select>
                                                                             ) : (
                                                                                 <span className="text-[9px] font-bold px-2 py-1 rounded-lg"
                                                                                     style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
-                                                                                    No brands in target — must link
+                                                                                    No brands available — must link
                                                                                 </span>
                                                                             )
                                                                         )}
@@ -1524,7 +1535,6 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                 </div>
                                             )}
 
-                                            {/* Attribute conflicts */}
                                             {movePreview.conflict_attributes?.length > 0 && (
                                                 <div className="rounded-xl overflow-hidden"
                                                     style={{ border: '1px solid var(--app-border)' }}>
@@ -1542,32 +1552,88 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                                                     </div>
                                                     <div className="divide-y divide-app-border/30">
                                                         {movePreview.conflict_attributes.map((a: any) => {
-                                                            const linked = autoLinkAttrs.has(a.id)
+                                                            const isLinked = autoLinkAttrs.has(a.id)
+                                                            const isReassigned = a.id in reassignAttrs
+                                                            const resolved = isLinked || isReassigned
+                                                            const reassignedTo = isReassigned
+                                                                ? movePreview.all_attributes?.find((ta: any) => ta.id === reassignAttrs[a.id])?.name
+                                                                : null
+
                                                             return (
-                                                                <div key={a.id}
-                                                                    className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer transition-all hover:bg-app-border/10"
-                                                                    onClick={() => {
-                                                                        const next = new Set(autoLinkAttrs)
-                                                                        next.has(a.id) ? next.delete(a.id) : next.add(a.id)
-                                                                        setAutoLinkAttrs(next)
-                                                                    }}>
-                                                                    <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all"
-                                                                        style={{
-                                                                            background: linked ? 'var(--app-success)' : 'transparent',
-                                                                            border: linked ? '1px solid var(--app-success)' : '1px solid var(--app-border)',
+                                                                <div key={a.id} className="px-3 py-2.5">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-[12px] font-bold text-app-foreground">{a.name}</span>
+                                                                            {a.code && <span className="text-[10px] font-mono text-app-muted-foreground">{a.code}</span>}
+                                                                        </div>
+                                                                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded" style={{
+                                                                            background: resolved
+                                                                                ? 'color-mix(in srgb, var(--app-success) 10%, transparent)'
+                                                                                : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
+                                                                            color: resolved ? 'var(--app-success)' : 'var(--app-error)',
                                                                         }}>
-                                                                        {linked && <Check size={10} className="text-white" />}
+                                                                            {isLinked ? '✓ Will link' : isReassigned ? `→ ${reassignedTo}` : '⚠ Unresolved'}
+                                                                        </span>
                                                                     </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <span className="text-[12px] font-bold text-app-foreground">{a.name}</span>
-                                                                        {a.code && <span className="text-[10px] font-mono text-app-muted-foreground ml-2">{a.code}</span>}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button onClick={() => {
+                                                                            const next = new Set(autoLinkAttrs)
+                                                                            if (isLinked) { next.delete(a.id) } else { next.add(a.id) }
+                                                                            setAutoLinkAttrs(next)
+                                                                            if (!isLinked) {
+                                                                                const r = { ...reassignAttrs }
+                                                                                delete r[a.id]
+                                                                                setReassignAttrs(r)
+                                                                            }
+                                                                        }}
+                                                                            className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                                                                            style={{
+                                                                                background: isLinked ? 'color-mix(in srgb, var(--app-success) 12%, transparent)' : 'color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                                                                color: isLinked ? 'var(--app-success)' : 'var(--app-muted-foreground)',
+                                                                                border: isLinked ? '1px solid color-mix(in srgb, var(--app-success) 20%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                                                                            }}>
+                                                                            <Link2 size={10} /> Link to category
+                                                                        </button>
+                                                                        {!isLinked && (
+                                                                            movePreview.all_attributes?.length > 0 ? (
+                                                                                <select
+                                                                                    value={isReassigned ? String(reassignAttrs[a.id]) : ''}
+                                                                                    onChange={e => {
+                                                                                        const val = e.target.value
+                                                                                        if (val) {
+                                                                                            setReassignAttrs({ ...reassignAttrs, [a.id]: Number(val) })
+                                                                                            const next = new Set(autoLinkAttrs)
+                                                                                            next.delete(a.id)
+                                                                                            setAutoLinkAttrs(next)
+                                                                                        } else {
+                                                                                            const r = { ...reassignAttrs }
+                                                                                            delete r[a.id]
+                                                                                            setReassignAttrs(r)
+                                                                                        }
+                                                                                    }}
+                                                                                    className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-app-background text-app-foreground outline-none flex-1 min-w-0 transition-all"
+                                                                                    style={{
+                                                                                        border: isReassigned
+                                                                                            ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)'
+                                                                                            : '1px solid color-mix(in srgb, var(--app-error) 40%, transparent)',
+                                                                                        color: isReassigned ? 'var(--app-primary)' : undefined,
+                                                                                        animation: !isReassigned ? 'pulse 2s ease-in-out infinite' : 'none',
+                                                                                    }}>
+                                                                                    <option value="">⚠ Reassign to attribute...</option>
+                                                                                    {movePreview.all_attributes
+                                                                                        .filter((ta: any) => ta.id !== a.id)
+                                                                                        .map((ta: any) => (
+                                                                                            <option key={ta.id} value={String(ta.id)}>{ta.name}</option>
+                                                                                        ))}
+                                                                                </select>
+                                                                            ) : (
+                                                                                <span className="text-[9px] font-bold px-2 py-1 rounded-lg"
+                                                                                    style={{ background: 'color-mix(in srgb, var(--app-error) 8%, transparent)', color: 'var(--app-error)' }}>
+                                                                                    No attributes available — must link
+                                                                                </span>
+                                                                            )
+                                                                        )}
                                                                     </div>
-                                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0" style={{
-                                                                        background: linked ? 'color-mix(in srgb, var(--app-success) 10%, transparent)' : 'color-mix(in srgb, var(--app-error) 10%, transparent)',
-                                                                        color: linked ? 'var(--app-success)' : 'var(--app-error)',
-                                                                    }}>
-                                                                        {linked ? '✓ Will link' : '⚠ Unresolved'}
-                                                                    </span>
                                                                 </div>
                                                             )
                                                         })}
@@ -1595,7 +1661,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                             )
                             // Enforce: every conflict attribute must be linked
                             const unresolvedAttrs = (movePreview.conflict_attributes || []).filter((a: any) =>
-                                !autoLinkAttrs.has(a.id)
+                                !autoLinkAttrs.has(a.id) && !(a.id in reassignAttrs)
                             )
                             const hasUnresolved = unresolvedBrands.length > 0 || unresolvedAttrs.length > 0
                             const canMove = !hasUnresolved && moveStep !== 'executing'
@@ -2127,6 +2193,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         <div className="flex-1 min-w-0">Category</div>
                         <div className="hidden sm:block w-16 flex-shrink-0">Children</div>
                         <div className="hidden sm:block w-20 flex-shrink-0">Brands</div>
+                        <div className="hidden sm:block w-16 flex-shrink-0">Attrs</div>
                         <div className="hidden sm:block w-20 flex-shrink-0">Products</div>
                         <div className="w-16 flex-shrink-0" />
                     </div>

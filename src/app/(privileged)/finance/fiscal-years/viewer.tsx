@@ -302,16 +302,27 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                             const pLabel = p.name || `P${String(pidx + 1).padStart(2, '0')}`
                                             const monthLabel = p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short', year: '2-digit' }) : ''
                                             return (
-                                                <div key={p.id} className="relative group rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
+                                                <div key={p.id} className="rounded-xl p-2.5 text-center transition-all" style={{ background: ps.bg, border: `1px solid ${ps.color}20` }}>
                                                     <div className="text-[9px] font-black uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{pLabel}</div>
                                                     <div className="text-[11px] font-bold mt-0.5" style={{ color: 'var(--app-foreground)' }}>{monthLabel}</div>
                                                     <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block" style={{ background: ps.bg, color: ps.color, border: `1px solid ${ps.color}30` }}>{pStatus}</span>
                                                     {!year.isHardLocked && (
-                                                        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10"
-                                                            style={{ background: 'color-mix(in srgb, var(--app-surface) 95%, transparent)' }}>
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" className="p-1 rounded-lg transition-all" style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}><PlayCircle size={14} /></button>
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'CLOSED')} title="Close" className="p-1 rounded-lg transition-all" style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}><Lock size={14} /></button>
-                                                            <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" className="p-1 rounded-lg transition-all" style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}><Clock size={14} /></button>
+                                                        <div className="flex items-center justify-center gap-1 mt-1.5">
+                                                            <button onClick={() => handlePeriodStatus(p.id, 'OPEN')} title="Open" disabled={isPending || pStatus === 'OPEN'}
+                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
+                                                                style={{ color: pStatus === 'OPEN' ? 'var(--app-success, #22c55e)' : 'var(--app-muted-foreground)' }}>
+                                                                <PlayCircle size={13} />
+                                                            </button>
+                                                            <button onClick={() => handlePeriodStatus(p.id, 'CLOSED')} title="Close" disabled={isPending || pStatus === 'CLOSED'}
+                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
+                                                                style={{ color: pStatus === 'CLOSED' ? 'var(--app-foreground)' : 'var(--app-muted-foreground)' }}>
+                                                                <Lock size={13} />
+                                                            </button>
+                                                            <button onClick={() => handlePeriodStatus(p.id, 'FUTURE')} title="Future" disabled={isPending || pStatus === 'FUTURE'}
+                                                                className="p-1 rounded-lg transition-all disabled:opacity-30"
+                                                                style={{ color: pStatus === 'FUTURE' ? 'var(--app-info, #3b82f6)' : 'var(--app-muted-foreground)' }}>
+                                                                <Clock size={13} />
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
