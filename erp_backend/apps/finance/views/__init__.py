@@ -8,7 +8,7 @@ from .expense_views import DeferredExpenseViewSet, DirectExpenseViewSet, AssetVi
 from .voucher_views import VoucherViewSet, ProfitDistributionViewSet
 from .payment_views import PaymentViewSet, CustomerBalanceViewSet, SupplierBalanceViewSet
 from .tax_views import TaxGroupViewSet, VATSettlementViewSet
-from .tax_policy_views import OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet, CustomTaxRuleViewSet, TaxJurisdictionRuleViewSet, CountryTaxTemplateViewSet, EInvoiceStandardViewSet
+from .tax_policy_views import OrgTaxPolicyViewSet, CounterpartyTaxProfileViewSet, CustomTaxRuleViewSet, TaxJurisdictionRuleViewSet, CountryTaxTemplateViewSet, EInvoiceStandardViewSet, TaxRateCategoryViewSet
 from .posting_rule_views import PostingRuleViewSet
 from .periodic_tax_views import PeriodicTaxViewSet
 from .vat_return_views import VATReturnReportViewSet
@@ -60,4 +60,5 @@ __all__ = [
     'MarginSchemeTransactionViewSet', 'IntraBranchVATTransferViewSet',
     'ReverseChargeSelfAssessmentViewSet', 'VATRateChangeHistoryViewSet',
     'FormDefinitionViewSet', 'FormResponseViewSet',
+    'TaxRateCategoryViewSet',
 ]

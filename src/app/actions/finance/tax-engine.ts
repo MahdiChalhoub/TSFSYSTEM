@@ -212,3 +212,55 @@ export async function importCustomTaxRuleFromTemplate(countryCode: string, prese
         }),
     })
 }
+
+// ── Tax Health Dashboard ───────────────────────────────────────
+export async function getTaxHealth() {
+    return await erpFetch('finance/org-tax-policies/tax-health/')
+}
+
+// ── Apply Full Country Template (one-click onboarding) ─────────
+export async function applyCountryTemplate(countryCode?: string) {
+    return await erpFetch('finance/org-tax-policies/apply-country-template/', {
+        method: 'POST',
+        body: JSON.stringify(countryCode ? { country_code: countryCode } : {}),
+    })
+}
+
+// ── Tax Rate Categories (per-product VAT rate overrides) ────────
+export async function getTaxRateCategories(filters?: { is_active?: boolean }) {
+    const params = new URLSearchParams()
+    if (filters?.is_active !== undefined) params.set('is_active', String(filters.is_active))
+    const qs = params.toString()
+    return await erpFetch(`finance/tax-rate-categories/${qs ? `?${qs}` : ''}`)
+}
+
+export async function saveTaxRateCategory(id: number | null, data: {
+    name: string
+    rate: number            // decimal fraction: 0.18 = 18%
+    country_code?: string
+    is_default?: boolean
+    description?: string
+    is_active?: boolean
+}) {
+    if (id) {
+        return await erpFetch(`finance/tax-rate-categories/${id}/`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        })
+    }
+    return await erpFetch('finance/tax-rate-categories/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+}
+
+export async function deleteTaxRateCategory(id: number) {
+    return await erpFetch(`finance/tax-rate-categories/${id}/`, { method: 'DELETE' })
+}
+
+export async function seedTaxRateCategoriesFromTemplate(countryCode?: string) {
+    return await erpFetch('finance/tax-rate-categories/seed-from-template/', {
+        method: 'POST',
+        body: JSON.stringify(countryCode ? { country_code: countryCode } : {}),
+    })
+}

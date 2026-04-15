@@ -30,6 +30,8 @@ from apps.finance.views import (
     CreditNoteVATReversalViewSet, GiftSampleVATViewSet,
     MarginSchemeTransactionViewSet, IntraBranchVATTransferViewSet,
     ReverseChargeSelfAssessmentViewSet, VATRateChangeHistoryViewSet,
+    # --- Tax Rate Categories (per-product VAT rate overrides) ---
+    TaxRateCategoryViewSet,
 )
 
 router = SimpleRouter()
@@ -90,6 +92,8 @@ router.register(r'margin-scheme-transactions', MarginSchemeTransactionViewSet, b
 router.register(r'intra-branch-vat-transfers', IntraBranchVATTransferViewSet, basename='intra-branch-vat-transfer')
 router.register(r'reverse-charge-self-assessments', ReverseChargeSelfAssessmentViewSet, basename='reverse-charge-self-assessment')
 router.register(r'vat-rate-change-history', VATRateChangeHistoryViewSet, basename='vat-rate-change-history')
+# --- Tax Rate Categories (multi-rate VAT per product) ---
+router.register(r'tax-rate-categories', TaxRateCategoryViewSet, basename='tax-rate-category')
 
 urlpatterns = [
     path('', include(router.urls)),

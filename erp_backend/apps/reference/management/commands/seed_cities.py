@@ -35,10 +35,10 @@ CITY_DATA = {
     ],
     'FR': [
         ('Paris', 'Île-de-France', True),
-        ('Marseille', 'Provence-Alpes-Côte d\\'Azur', False),
+        ('Marseille', "Provence-Alpes-Côte d'Azur", False),
         ('Lyon', 'Auvergne-Rhône-Alpes', False),
         ('Toulouse', 'Occitanie', False),
-        ('Nice', 'Provence-Alpes-Côte d\\'Azur', False),
+        ('Nice', "Provence-Alpes-Côte d'Azur", False),
         ('Nantes', 'Pays de la Loire', False),
         ('Strasbourg', 'Grand Est', False),
         ('Bordeaux', 'Nouvelle-Aquitaine', False),

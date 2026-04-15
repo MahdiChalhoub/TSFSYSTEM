@@ -218,13 +218,18 @@ class LedgerCOAMixin:
                         f"Deactivated {stale_deactivated} accounts not in template {template_key}"
                     )
 
-            # Apply Smart Posting Rules
+            # Apply Smart Posting Rules (savepoint-protected so a DB error
+            # inside doesn't poison the outer transaction)
             try:
+                sid = transaction.savepoint()
                 ConfigurationService.apply_smart_posting_rules(organization)
-            except Exception: pass
+                transaction.savepoint_commit(sid)
+            except Exception:
+                transaction.savepoint_rollback(sid)
 
             # Mark COA setup as COMPLETED
             try:
+                sid2 = transaction.savepoint()
                 from django.utils import timezone as tz
                 ConfigurationService.save_setting(organization, 'coa_setup', {
                     'status': 'COMPLETED',
@@ -232,7 +237,9 @@ class LedgerCOAMixin:
                     'postingRulesConfigured': True,
                     'completedAt': tz.now().isoformat(),
                 })
-            except Exception: pass
+                transaction.savepoint_commit(sid2)
+            except Exception:
+                transaction.savepoint_rollback(sid2)
 
             # ── Re-lock structure if it was locked before import ──
             if was_locked:

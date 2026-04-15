@@ -279,7 +279,17 @@ class Product(AuditLogMixin, TenantOwnedModel):
     cost_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    tva_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    tva_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'),
+        help_text='VAT rate as a percentage (e.g. 18.00 = 18%). Legacy field — prefer tax_rate_category for multi-rate regimes.')
+    tax_rate_category = models.ForeignKey(
+        'finance.TaxRateCategory',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='products',
+        help_text='Per-product VAT rate override. When set, TaxCalculator.resolve_product_rate() uses '
+                  'this category\'s rate instead of tva_rate. Enables multi-rate VAT regimes per product '
+                  '(UK 20%/5%/0%, Indian GST 5%/12%/18%/28%, Moroccan TVA 7%/10%/14%/20%).',
+    )
     min_stock_level = models.IntegerField(default=10)
     max_stock_level = models.IntegerField(null=True, blank=True)
     reorder_point = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)

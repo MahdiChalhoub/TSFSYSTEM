@@ -10,7 +10,8 @@ import {
     Building2, Store, Warehouse, Cloud, MapPin, Layers, BarChart3,
     Plus, Trash2, Edit3, Phone, ChevronDown, ChevronRight,
     Package, GitBranch, Search, X, Globe, Maximize2, Minimize2,
-    ChevronsUpDown, ChevronsDownUp, Settings, Loader2, Box
+    ChevronsUpDown, ChevronsDownUp, Settings, Loader2, Box,
+    Filter, ArrowRightLeft, Minus, PackagePlus, PackageMinus
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -440,6 +441,412 @@ function OrphanRow({ node, onEdit, onDelete, onSkuClick }: {
 }
 
 /* ═══════════════════════════════════════════════════════════
+ *  SKU SIDE PANEL — Enhanced with search, filters, add/remove
+ * ═══════════════════════════════════════════════════════════ */
+
+type SkuPanelState = { open: boolean; location: WarehouseNode | null; items: any[]; loading: boolean }
+type FilterMode = 'IN_LOCATION' | 'NOT_IN_OTHER' | 'IN_ALL'
+
+function SkuSidePanel({ skuPanel, setSkuPanel, allLocations, onRefresh }: {
+    skuPanel: SkuPanelState;
+    setSkuPanel: React.Dispatch<React.SetStateAction<SkuPanelState>>;
+    allLocations: WarehouseNode[];
+    onRefresh: () => void;
+}) {
+    const [searchQuery, setSearchQuery] = useState('')
+    const [filterMode, setFilterMode] = useState<FilterMode>('IN_LOCATION')
+    const [compareLocationId, setCompareLocationId] = useState<number | null>(null)
+    const [showAddPicker, setShowAddPicker] = useState(false)
+    const [pickerSearch, setPickerSearch] = useState('')
+    const [allProducts, setAllProducts] = useState<any[]>([])
+    const [loadingProducts, setLoadingProducts] = useState(false)
+    const [removingId, setRemovingId] = useState<number | null>(null)
+    const [addingProductId, setAddingProductId] = useState<number | null>(null)
+    const [compareItems, setCompareItems] = useState<any[]>([])
+    const [loadingCompare, setLoadingCompare] = useState(false)
+    const searchRef = useRef<HTMLInputElement>(null)
+
+    // Product IDs in the current location (for cross-reference)
+    const currentProductIds = useMemo(
+        () => new Set(skuPanel.items.map((i: any) => i.product ?? i.product_id)),
+        [skuPanel.items]
+    )
+
+    // Filtered items based on search
+    const filteredItems = useMemo(() => {
+        let items = skuPanel.items
+        if (filterMode === 'NOT_IN_OTHER' && compareLocationId) {
+            const compareProductIds = new Set(compareItems.map((i: any) => i.product ?? i.product_id))
+            items = items.filter((item: any) => {
+                const pid = item.product ?? item.product_id
+                return !compareProductIds.has(pid)
+            })
+        }
+        if (!searchQuery.trim()) return items
+        const q = searchQuery.toLowerCase()
+        return items.filter((item: any) =>
+            (item.product_name || '').toLowerCase().includes(q) ||
+            (item.sku || '').toLowerCase().includes(q) ||
+            String(item.product ?? item.product_id).includes(q)
+        )
+    }, [skuPanel.items, searchQuery, filterMode, compareLocationId, compareItems])
+
+    // Fetch compare location inventory when filter changes
+    useEffect(() => {
+        if (filterMode === 'NOT_IN_OTHER' && compareLocationId) {
+            setLoadingCompare(true)
+            erpFetch(`inventory/?warehouse=${compareLocationId}&page_size=200`)
+                .then(res => {
+                    const items = Array.isArray(res) ? res : (res?.results ?? [])
+                    setCompareItems(items)
+                })
+                .catch(() => setCompareItems([]))
+                .finally(() => setLoadingCompare(false))
+        } else {
+            setCompareItems([])
+        }
+    }, [filterMode, compareLocationId])
+
+    // Fetch all products for the Add picker
+    const openProductPicker = async () => {
+        setShowAddPicker(true)
+        if (allProducts.length > 0) return // cached
+        setLoadingProducts(true)
+        try {
+            const res = await erpFetch('products/?page_size=200&is_active=true')
+            const list = Array.isArray(res) ? res : (res?.results ?? [])
+            setAllProducts(list)
+        } catch { setAllProducts([]) }
+        setLoadingProducts(false)
+    }
+
+    // Add product to this location
+    const handleAddProduct = async (productId: number) => {
+        if (!skuPanel.location) return
+        setAddingProductId(productId)
+        try {
+            await erpFetch('inventory/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    product: productId,
+                    warehouse: skuPanel.location.id,
+                    quantity: 0,
+                })
+            })
+            toast.success('Product added to location')
+            setShowAddPicker(false)
+            onRefresh()
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to add product')
+        }
+        setAddingProductId(null)
+    }
+
+    // Remove product from location
+    const handleRemove = async (inventoryId: number) => {
+        setRemovingId(inventoryId)
+        try {
+            await erpFetch(`inventory/${inventoryId}/`, { method: 'DELETE' })
+            toast.success('Product removed from location')
+            onRefresh()
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to remove')
+        }
+        setRemovingId(null)
+    }
+
+    // Other locations (for the compare dropdown)
+    const otherLocations = allLocations.filter(l => l.id !== skuPanel.location?.id)
+
+    // Products available to add (not already in this location)
+    const addableProducts = useMemo(() => {
+        const list = allProducts.filter(p => !currentProductIds.has(p.id))
+        if (!pickerSearch.trim()) return list.slice(0, 50)
+        const q = pickerSearch.toLowerCase()
+        return list.filter(p =>
+            (p.name || '').toLowerCase().includes(q) ||
+            (p.sku || '').toLowerCase().includes(q) ||
+            (p.barcode || '').toLowerCase().includes(q)
+        ).slice(0, 50)
+    }, [allProducts, currentProductIds, pickerSearch])
+
+    return (
+        <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setSkuPanel(p => ({ ...p, open: false }))}>
+            <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)' }} />
+            <div
+                className="relative w-full max-w-md h-full flex flex-col animate-in slide-in-from-right duration-200"
+                style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)' }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* ── Header ── */}
+                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                    style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
+                            <Box size={13} className="text-white" />
+                        </div>
+                        <div className="min-w-0">
+                            <h3 className="text-[12px] font-black text-app-foreground truncate">{skuPanel.location?.name}</h3>
+                            <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                                {filteredItems.length} of {skuPanel.items.length} products
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                            onClick={openProductPicker}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                            style={{ color: 'var(--app-success)', background: 'color-mix(in srgb, var(--app-success) 10%, transparent)' }}
+                            title="Add product to location"
+                        >
+                            <PackagePlus size={13} />
+                        </button>
+                        <button
+                            onClick={() => setSkuPanel(p => ({ ...p, open: false }))}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Search + Filter Bar ── */}
+                <div className="flex-shrink-0 px-3 py-2 space-y-2" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                    {/* Search */}
+                    <div className="relative">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search products..."
+                            className="w-full pl-8 pr-7 py-1.5 text-[11px] rounded-lg outline-none transition-all"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
+                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                color: 'var(--app-foreground)',
+                            }}
+                        />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-app-muted-foreground hover:text-app-foreground">
+                                <X size={11} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Chips */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                            { key: 'IN_LOCATION' as FilterMode, label: 'This Location', icon: <MapPin size={10} /> },
+                            { key: 'NOT_IN_OTHER' as FilterMode, label: 'Not In...', icon: <ArrowRightLeft size={10} /> },
+                            { key: 'IN_ALL' as FilterMode, label: 'All Locations', icon: <Layers size={10} /> },
+                        ].map(f => {
+                            const active = filterMode === f.key
+                            return (
+                                <button
+                                    key={f.key}
+                                    onClick={() => setFilterMode(f.key)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all"
+                                    style={{
+                                        background: active ? 'color-mix(in srgb, var(--app-primary) 12%, transparent)' : 'transparent',
+                                        color: active ? 'var(--app-primary)' : 'var(--app-muted-foreground)',
+                                        border: active ? '1px solid color-mix(in srgb, var(--app-primary) 30%, transparent)' : '1px solid color-mix(in srgb, var(--app-border) 40%, transparent)',
+                                    }}
+                                >
+                                    {f.icon} {f.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {/* Compare location selector (when "Not In..." filter active) */}
+                    {filterMode === 'NOT_IN_OTHER' && (
+                        <select
+                            value={compareLocationId || ''}
+                            onChange={e => setCompareLocationId(e.target.value ? Number(e.target.value) : null)}
+                            className="w-full text-[11px] px-2.5 py-1.5 rounded-lg outline-none"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
+                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                color: 'var(--app-foreground)',
+                            }}
+                        >
+                            <option value="">Select location to compare...</option>
+                            {otherLocations.map(loc => (
+                                <option key={loc.id} value={loc.id}>{loc.name} ({loc.location_type})</option>
+                            ))}
+                        </select>
+                    )}
+                </div>
+
+                {/* ── Panel Body ── */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                    {(skuPanel.loading || loadingCompare) ? (
+                        <div className="flex flex-col items-center justify-center py-16">
+                            <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
+                            <p className="text-[11px] font-bold text-app-muted-foreground">Loading inventory...</p>
+                        </div>
+                    ) : filteredItems.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
+                                style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
+                                <Package size={20} style={{ color: 'var(--app-primary)', opacity: 0.5 }} />
+                            </div>
+                            <p className="text-[12px] font-bold text-app-muted-foreground">
+                                {searchQuery ? 'No matches' : filterMode === 'NOT_IN_OTHER' ? 'All products are shared' : 'No inventory found'}
+                            </p>
+                            <p className="text-[10px] text-app-muted-foreground mt-1">
+                                {searchQuery ? 'Try a different search term' : filterMode === 'NOT_IN_OTHER' ? 'Every product in this location also exists in the selected location' : 'Click + to add products to this location'}
+                            </p>
+                        </div>
+                    ) : (
+                        <div>
+                            {filteredItems.map((item: any, idx: number) => (
+                                <div
+                                    key={item.id || idx}
+                                    className="group flex items-center gap-2 px-3 py-2 hover:bg-app-surface/60 transition-colors"
+                                    style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 25%, transparent)' }}
+                                >
+                                    <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                        style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
+                                        <Package size={11} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[11px] font-bold text-app-foreground truncate">
+                                            {item.product_name || item.product?.name || `Product #${item.product ?? item.product_id}`}
+                                        </p>
+                                        <p className="text-[8px] font-mono text-app-muted-foreground">
+                                            {item.sku || item.product?.sku || ''}
+                                            {item.batch_number && ` · Batch: ${item.batch_number}`}
+                                        </p>
+                                    </div>
+                                    <div className="text-right flex-shrink-0 mr-1">
+                                        <p className="text-[12px] font-black text-app-foreground tabular-nums">
+                                            {typeof item.quantity === 'number' ? Number(item.quantity).toLocaleString() : 0}
+                                        </p>
+                                    </div>
+                                    {/* Remove button */}
+                                    <button
+                                        onClick={() => handleRemove(item.id)}
+                                        disabled={removingId === item.id}
+                                        className="w-5 h-5 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                                        style={{ color: 'var(--app-error)', background: 'color-mix(in srgb, var(--app-error) 8%, transparent)' }}
+                                        title="Remove from location"
+                                    >
+                                        {removingId === item.id ? <Loader2 size={10} className="animate-spin" /> : <Minus size={10} />}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Footer Stats ── */}
+                <div className="flex-shrink-0 px-3 py-2 flex items-center justify-between text-[9px] font-bold text-app-muted-foreground"
+                    style={{ borderTop: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)' }}>
+                    <span>{filteredItems.length} product{filteredItems.length !== 1 ? 's' : ''}</span>
+                    <span className="tabular-nums">
+                        Total qty: {filteredItems.reduce((s: number, i: any) => s + (Number(i.quantity) || 0), 0).toLocaleString()}
+                    </span>
+                </div>
+
+                {/* ── Product Picker Overlay ── */}
+                {showAddPicker && (
+                    <div className="absolute inset-0 flex flex-col" style={{ background: 'var(--app-surface)', zIndex: 10 }}>
+                        {/* Picker Header */}
+                        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-success) 4%, var(--app-surface))' }}>
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                    style={{ background: 'var(--app-success)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-success) 25%, transparent)' }}>
+                                    <PackagePlus size={13} className="text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-[12px] font-black text-app-foreground">Add Product</h3>
+                                    <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
+                                        to {skuPanel.location?.name}
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowAddPicker(false)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all">
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Picker Search */}
+                        <div className="px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
+                            <div className="relative">
+                                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
+                                <input
+                                    type="text"
+                                    value={pickerSearch}
+                                    onChange={e => setPickerSearch(e.target.value)}
+                                    placeholder="Search by name, SKU, barcode..."
+                                    autoFocus
+                                    className="w-full pl-8 pr-3 py-1.5 text-[11px] rounded-lg outline-none"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--app-bg) 50%, var(--app-surface))',
+                                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                                        color: 'var(--app-foreground)',
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Picker Body */}
+                        <div className="flex-1 overflow-y-auto min-h-0">
+                            {loadingProducts ? (
+                                <div className="flex flex-col items-center justify-center py-16">
+                                    <Loader2 size={24} className="animate-spin text-app-success mb-3" />
+                                    <p className="text-[11px] font-bold text-app-muted-foreground">Loading products...</p>
+                                </div>
+                            ) : addableProducts.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                                    <p className="text-[12px] font-bold text-app-muted-foreground">
+                                        {pickerSearch ? 'No matching products' : 'All products already assigned'}
+                                    </p>
+                                </div>
+                            ) : (
+                                addableProducts.map(p => (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => handleAddProduct(p.id)}
+                                        disabled={addingProductId === p.id}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-app-surface/60 transition-colors disabled:opacity-50"
+                                        style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 20%, transparent)' }}
+                                    >
+                                        <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                            {addingProductId === p.id ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[11px] font-bold text-app-foreground truncate">{p.name}</p>
+                                            <p className="text-[8px] font-mono text-app-muted-foreground">
+                                                {p.sku || p.barcode || ''}
+                                                {p.category_name && ` · ${p.category_name}`}
+                                            </p>
+                                        </div>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                                            style={{ background: 'color-mix(in srgb, var(--app-success) 8%, transparent)', color: 'var(--app-success)' }}>
+                                            Add
+                                        </span>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+/* ═══════════════════════════════════════════════════════════
  *  MAIN COMPONENT
  * ═══════════════════════════════════════════════════════════ */
 
@@ -844,90 +1251,12 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
 
             {/* ═══════════════ SKU SIDE PANEL ═══════════════ */}
             {skuPanel.open && (
-                <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setSkuPanel(p => ({ ...p, open: false }))}>
-                    <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)' }} />
-                    <div
-                        className="relative w-full max-w-sm h-full flex flex-col animate-in slide-in-from-right duration-200"
-                        style={{ background: 'var(--app-surface)', borderLeft: '1px solid var(--app-border)', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)' }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Panel Header */}
-                        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-                            style={{ borderBottom: '1px solid var(--app-border)', background: 'color-mix(in srgb, var(--app-primary) 4%, var(--app-surface))' }}>
-                            <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{ background: 'var(--app-primary)', boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                                    <Box size={13} className="text-white" />
-                                </div>
-                                <div className="min-w-0">
-                                    <h3 className="text-[12px] font-black text-app-foreground truncate">
-                                        {skuPanel.location?.name}
-                                    </h3>
-                                    <p className="text-[9px] font-bold text-app-muted-foreground uppercase tracking-wider">
-                                        Inventory · {skuPanel.items.length} items
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSkuPanel(p => ({ ...p, open: false }))}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-app-muted-foreground hover:text-app-foreground hover:bg-app-border/50 transition-all flex-shrink-0"
-                            >
-                                <X size={14} />
-                            </button>
-                        </div>
-
-                        {/* Panel Body */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            {skuPanel.loading ? (
-                                <div className="flex flex-col items-center justify-center py-16">
-                                    <Loader2 size={24} className="animate-spin text-app-primary mb-3" />
-                                    <p className="text-[11px] font-bold text-app-muted-foreground">Loading inventory...</p>
-                                </div>
-                            ) : skuPanel.items.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
-                                        style={{ background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)' }}>
-                                        <Package size={20} style={{ color: 'var(--app-primary)', opacity: 0.5 }} />
-                                    </div>
-                                    <p className="text-[12px] font-bold text-app-muted-foreground">No inventory found</p>
-                                    <p className="text-[10px] text-app-muted-foreground mt-1">This location has no stock records yet</p>
-                                </div>
-                            ) : (
-                                <div>
-                                    {skuPanel.items.map((item: any, idx: number) => (
-                                        <div
-                                            key={item.id || idx}
-                                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-app-surface/60 transition-colors"
-                                            style={{ borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)' }}
-                                        >
-                                            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                                style={{ background: 'color-mix(in srgb, var(--app-info) 10%, transparent)', color: 'var(--app-info)' }}>
-                                                <Package size={12} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[12px] font-bold text-app-foreground truncate">
-                                                    {item.product_name || item.product?.name || `Product #${item.product_id || item.product}`}
-                                                </p>
-                                                <p className="text-[9px] font-mono text-app-muted-foreground">
-                                                    {item.sku || item.product?.sku || ''}
-                                                    {item.unit_name && ` · ${item.unit_name}`}
-                                                </p>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <p className="text-[13px] font-black text-app-foreground tabular-nums">
-                                                    {typeof item.quantity === 'number' ? item.quantity.toLocaleString() : (item.available_qty ?? item.on_hand_qty ?? 0)}
-                                                </p>
-                                                <p className="text-[8px] font-bold text-app-muted-foreground uppercase">
-                                                    {item.unit_name || item.unit?.short_name || 'units'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <SkuSidePanel
+                    skuPanel={skuPanel}
+                    setSkuPanel={setSkuPanel}
+                    allLocations={data}
+                    onRefresh={() => openSkuPanel(skuPanel.location!)}
+                />
             )}
 
             {/* ═══════════════ MODALS ═══════════════ */}

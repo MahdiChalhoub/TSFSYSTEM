@@ -7,7 +7,7 @@ import {
     ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText,
     RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X,
     Search, BarChart3, TrendingUp, TrendingDown, Scale, Wallet,
-    Maximize2, Minimize2, Loader2, BookOpen
+    Maximize2, Minimize2, Loader2, BookOpen, Settings2
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'

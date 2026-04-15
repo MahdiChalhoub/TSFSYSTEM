@@ -3,14 +3,18 @@
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getOrgTaxPolicy, getCounterpartyTaxProfiles } from '@/app/actions/finance/tax-engine'
+import {
+    getOrgTaxPolicy, getCounterpartyTaxProfiles,
+    getTaxHealth, applyCountryTemplate,
+} from '@/app/actions/finance/tax-engine'
 import { toast } from 'sonner'
 import {
     Shield, Users, TrendingUp, TrendingDown,
     DollarSign, Calculator, Settings, ArrowRight,
     CheckCircle2, Percent, Building2, BarChart3, FileCheck,
     Maximize2, Minimize2, Search, Loader2,
-    FileText, Clock, Landmark, ChevronRight, Zap
+    FileText, Clock, Landmark, ChevronRight, Zap,
+    AlertTriangle, XCircle, Info, Wand2, RefreshCw, Globe,
 } from 'lucide-react'
 
 // ── KPI helpers ──
@@ -33,18 +37,30 @@ function buildKPIs(policy: any, profiles: any[]) {
 
 // ── Tax type config ──
 const TAX_TYPES = [
-    { key: 'vat', label: 'VAT (TVA)', icon: CheckCircle2, color: 'var(--app-success, #22c55e)',
-      getValue: (p: any) => `Output: ${p.vat_output_enabled ? 'YES' : 'NO'} · Input: ${(parseFloat(p.vat_input_recoverability || 0) * 100).toFixed(0)}%` },
-    { key: 'airsi', label: 'AIRSI', icon: Shield, color: '#8b5cf6',
-      getValue: (p: any) => p.airsi_treatment || '—' },
-    { key: 'purchase', label: 'Purchase Tax', icon: TrendingDown, color: 'var(--app-info, #3b82f6)',
-      getValue: (p: any) => `${(parseFloat(p.purchase_tax_rate || 0) * 100).toFixed(2)}% · ${p.purchase_tax_mode || '—'}` },
-    { key: 'sales', label: 'Sales/Turnover', icon: TrendingUp, color: 'var(--app-warning, #f59e0b)',
-      getValue: (p: any) => `${(parseFloat(p.sales_tax_rate || 0) * 100).toFixed(2)}% · ${p.sales_tax_trigger || '—'}` },
-    { key: 'periodic', label: 'Periodic/Forfait', icon: Calculator, color: 'var(--app-error, #ef4444)',
-      getValue: (p: any) => `${p.periodic_amount || '0'} ${p.periodic_interval || ''}`.trim() || '—' },
-    { key: 'profit', label: 'Profit Tax', icon: DollarSign, color: 'var(--app-primary)',
-      getValue: (p: any) => p.profit_tax_mode || '—' },
+    {
+        key: 'vat', label: 'VAT (TVA)', icon: CheckCircle2, color: 'var(--app-success, #22c55e)',
+        getValue: (p: any) => `Output: ${p.vat_output_enabled ? 'YES' : 'NO'} · Input: ${(parseFloat(p.vat_input_recoverability || 0) * 100).toFixed(0)}%`
+    },
+    {
+        key: 'airsi', label: 'AIRSI', icon: Shield, color: '#8b5cf6',
+        getValue: (p: any) => p.airsi_treatment || '—'
+    },
+    {
+        key: 'purchase', label: 'Purchase Tax', icon: TrendingDown, color: 'var(--app-info, #3b82f6)',
+        getValue: (p: any) => `${(parseFloat(p.purchase_tax_rate || 0) * 100).toFixed(2)}% · ${p.purchase_tax_mode || '—'}`
+    },
+    {
+        key: 'sales', label: 'Sales/Turnover', icon: TrendingUp, color: 'var(--app-warning, #f59e0b)',
+        getValue: (p: any) => `${(parseFloat(p.sales_tax_rate || 0) * 100).toFixed(2)}% · ${p.sales_tax_trigger || '—'}`
+    },
+    {
+        key: 'periodic', label: 'Periodic/Forfait', icon: Calculator, color: 'var(--app-error, #ef4444)',
+        getValue: (p: any) => `${p.periodic_amount || '0'} ${p.periodic_interval || ''}`.trim() || '—'
+    },
+    {
+        key: 'profit', label: 'Profit Tax', icon: DollarSign, color: 'var(--app-primary)',
+        getValue: (p: any) => p.profit_tax_mode || '—'
+    },
 ]
 
 // ── Module navigation cards ──
@@ -85,6 +101,96 @@ const MODULE_CARDS = [
     },
 ]
 
+// ── Tax Health Indicator ──
+const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; border: string }> = {
+    ok: { icon: CheckCircle2, color: 'var(--app-success, #22c55e)', bg: 'color-mix(in srgb, #22c55e 8%, transparent)', border: 'color-mix(in srgb, #22c55e 18%, transparent)' },
+    warning: { icon: AlertTriangle, color: 'var(--app-warning, #f59e0b)', bg: 'color-mix(in srgb, #f59e0b 8%, transparent)', border: 'color-mix(in srgb, #f59e0b 18%, transparent)' },
+    error: { icon: XCircle, color: 'var(--app-error, #ef4444)', bg: 'color-mix(in srgb, #ef4444 8%, transparent)', border: 'color-mix(in srgb, #ef4444 18%, transparent)' },
+    info: { icon: Info, color: 'var(--app-info, #3b82f6)', bg: 'color-mix(in srgb, #3b82f6 8%, transparent)', border: 'color-mix(in srgb, #3b82f6 18%, transparent)' },
+}
+
+function HealthBanner({ health, onApplyTemplate, applying }: {
+    health: any
+    onApplyTemplate: () => void
+    applying: boolean
+}) {
+    if (!health) return null
+    const { overall_ok, country_code, indicators } = health
+    const hasIssues = !overall_ok
+    const errCount = indicators?.filter((i: any) => i.status === 'error').length || 0
+    const warnCount = indicators?.filter((i: any) => i.status === 'warning').length || 0
+
+    return (
+        <div className="flex-shrink-0 mb-4 rounded-2xl overflow-hidden animate-in fade-in duration-300"
+            style={{
+                border: `1px solid ${hasIssues ? 'color-mix(in srgb, #f59e0b 25%, transparent)' : 'color-mix(in srgb, #22c55e 25%, transparent)'}`,
+                background: hasIssues
+                    ? 'color-mix(in srgb, #f59e0b 4%, var(--app-surface))'
+                    : 'color-mix(in srgb, #22c55e 4%, var(--app-surface))',
+            }}>
+
+            {/* Header row */}
+            <div className="flex items-center gap-3 px-4 py-3"
+                style={{
+                    borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
+                    borderLeft: `3px solid ${hasIssues ? '#f59e0b' : '#22c55e'}`,
+                }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                        background: hasIssues ? 'color-mix(in srgb, #f59e0b 12%, transparent)' : 'color-mix(in srgb, #22c55e 12%, transparent)',
+                        color: hasIssues ? '#f59e0b' : '#22c55e',
+                    }}>
+                    {hasIssues ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-bold text-app-foreground">
+                        {overall_ok ? 'Tax Engine Healthy' : `${errCount > 0 ? `${errCount} error${errCount > 1 ? 's' : ''}` : ''}${errCount > 0 && warnCount > 0 ? ', ' : ''}${warnCount > 0 ? `${warnCount} warning${warnCount > 1 ? 's' : ''}` : ''}`}
+                    </div>
+                    <div className="text-[10px] font-bold text-app-muted-foreground">
+                        {country_code ? `Country: ${country_code}` : 'Country not configured'} · Tax Health Check
+                    </div>
+                </div>
+                {hasIssues && (
+                    <button
+                        onClick={onApplyTemplate}
+                        disabled={applying}
+                        className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex-shrink-0 disabled:opacity-60"
+                        style={{
+                            background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                            color: 'var(--app-primary)',
+                            border: '1px solid color-mix(in srgb, var(--app-primary) 25%, transparent)',
+                        }}>
+                        {applying ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
+                        {applying ? 'Applying...' : 'Apply Template'}
+                    </button>
+                )}
+            </div>
+
+            {/* Indicators grid */}
+            <div className="px-4 py-3"
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '6px' }}>
+                {(indicators || []).map((ind: any) => {
+                    const cfg = STATUS_CONFIG[ind.status] || STATUS_CONFIG.info
+                    const Ico = cfg.icon
+                    return (
+                        <div key={ind.key}
+                            className="flex items-center gap-2 px-2.5 py-2 rounded-xl"
+                            style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                            <Ico size={12} style={{ color: cfg.color, flexShrink: 0 }} />
+                            <div className="min-w-0">
+                                <div className="text-[9px] font-black uppercase tracking-widest"
+                                    style={{ color: 'var(--app-muted-foreground)' }}>{ind.label}</div>
+                                <div className="text-[11px] font-bold text-app-foreground truncate"
+                                    title={ind.description}>{ind.description}</div>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    )
+}
+
 export default function TaxPolicyDashboard() {
     const { fmt } = useCurrency()
     const router = useRouter()
@@ -94,7 +200,9 @@ export default function TaxPolicyDashboard() {
 
     const [policy, setPolicy] = useState<any>(null)
     const [profiles, setProfiles] = useState<any[]>([])
+    const [health, setHealth] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [applying, setApplying] = useState(false)
 
     // ── Keyboard shortcuts ──
     useEffect(() => {
@@ -111,18 +219,37 @@ export default function TaxPolicyDashboard() {
     async function loadData() {
         setLoading(true)
         try {
-            const [pol, profs] = await Promise.all([
+            const [pol, profs, h] = await Promise.all([
                 getOrgTaxPolicy(),
                 getCounterpartyTaxProfiles(),
+                getTaxHealth(),
             ])
             const p = Array.isArray(pol) ? pol[0] : pol?.results?.[0]
             setPolicy(p || null)
             setProfiles(Array.isArray(profs) ? profs : profs?.results || [])
+            setHealth(h?.indicators ? h : null)
         } catch (error) {
             toast.error('Failed to load tax policy')
             console.error(error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function handleApplyTemplate() {
+        setApplying(true)
+        try {
+            const result = await applyCountryTemplate()
+            if (result?.success === false) {
+                toast.error(result.errors?.[0] || 'Failed to apply template')
+            } else {
+                toast.success(result?.message || 'Country template applied successfully')
+                await loadData()
+            }
+        } catch {
+            toast.error('Failed to apply country template')
+        } finally {
+            setApplying(false)
         }
     }
 
@@ -174,6 +301,18 @@ export default function TaxPolicyDashboard() {
                                 <Zap size={11} /> Active
                             </div>
                         )}
+                        <button
+                            onClick={handleApplyTemplate}
+                            disabled={applying}
+                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-60"
+                            style={{
+                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
+                                color: 'var(--app-primary)',
+                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
+                            }}>
+                            {applying ? <Loader2 size={13} className="animate-spin" /> : <Globe size={13} />}
+                            <span className="hidden sm:inline">{applying ? 'Applying...' : 'Apply Template'}</span>
+                        </button>
                         <button onClick={() => router.push('/finance/org-tax-policies')}
                             className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
                             style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
@@ -200,6 +339,11 @@ export default function TaxPolicyDashboard() {
                         <Minimize2 size={13} />
                     </button>
                 </div>
+            )}
+
+            {/* ── Tax Health Banner ── */}
+            {!focusMode && health && (
+                <HealthBanner health={health} onApplyTemplate={handleApplyTemplate} applying={applying} />
             )}
 
             {/* ── KPI Strip ── */}
@@ -279,6 +423,12 @@ export default function TaxPolicyDashboard() {
                         className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
                     />
                 </div>
+                <button
+                    onClick={loadData}
+                    title="Refresh"
+                    className="p-2 rounded-xl border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
+                    <RefreshCw size={13} />
+                </button>
             </div>
 
             {/* ── Module Cards ── */}

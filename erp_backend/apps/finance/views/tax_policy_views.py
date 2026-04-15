@@ -882,3 +882,106 @@ class FNETestConnectionView(APIView):
                 'authenticated': False,
                 'message': f'Connection test failed: {str(e)}',
             })
+
+
+# ══════════════════════════════════════════════════════════════════
+# TaxRateCategory ViewSet
+# ══════════════════════════════════════════════════════════════════
+
+class TaxRateCategoryViewSet(TenantModelViewSet):
+    """
+    CRUD for per-product VAT rate categories.
+
+    GET  /api/finance/tax-rate-categories/                 → list
+    POST /api/finance/tax-rate-categories/                 → create
+    GET  /api/finance/tax-rate-categories/{id}/            → retrieve
+    PUT  /api/finance/tax-rate-categories/{id}/            → update
+    DEL  /api/finance/tax-rate-categories/{id}/            → delete
+    POST /api/finance/tax-rate-categories/seed-from-template/ → seed from CountryTaxTemplate
+    """
+    from apps.finance.models.tax_engine_ext import TaxRateCategory as _TaxRateCategory
+    queryset = _TaxRateCategory.objects.all()
+    filterset_fields = ['is_active', 'is_default', 'country_code']
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'rate', 'is_default']
+    ordering = ['-is_default', 'name']
+
+    def get_serializer_class(self):
+        # Inline serializer — simple enough to not need a dedicated file
+        from rest_framework import serializers
+        from apps.finance.models.tax_engine_ext import TaxRateCategory
+
+        class TaxRateCategorySerializer(serializers.ModelSerializer):
+            products_count = serializers.SerializerMethodField()
+
+            class Meta:
+                model = TaxRateCategory
+                fields = [
+                    'id', 'name', 'rate', 'country_code',
+                    'is_default', 'description', 'is_active',
+                    'created_at', 'updated_at', 'products_count',
+                ]
+                read_only_fields = ['id', 'created_at', 'updated_at', 'products_count']
+
+            def get_products_count(self, obj):
+                return obj.products.count() if hasattr(obj, 'products') else 0
+
+        return TaxRateCategorySerializer
+
+    @action(detail=False, methods=['post'], url_path='seed-from-template')
+    def seed_from_template(self, request):
+        """
+        POST /api/finance/tax-rate-categories/seed-from-template/
+        Body: {"country_code": "CI"}  — optional, auto-resolved from org if omitted
+
+        Seeds TaxRateCategory records from the CountryTaxTemplate's tax_group_presets
+        for the current tenant. Idempotent — skips categories that already exist.
+        """
+        from apps.finance.models import CountryTaxTemplate
+        from apps.finance.models.tax_engine_ext import TaxRateCategory
+        from erp.models import Organization
+
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'Tenant context missing'}, status=400)
+
+        org = Organization.objects.filter(id=org_id).first()
+        country_code = request.data.get('country_code') or _resolve_org_country_code(org)
+        if not country_code:
+            return Response({'error': 'Country code required'}, status=400)
+
+        template = CountryTaxTemplate.objects.filter(
+            country_code__iexact=country_code, is_active=True
+        ).first()
+        if not template:
+            return Response({'error': f'No template found for country: {country_code}'}, status=404)
+
+        created = []
+        skipped = []
+
+        for preset in template.tax_group_presets or []:
+            name = preset.get('name', '')
+            rate_pct = preset.get('rate', 0)
+            # tax_group_presets rates are stored as percentages (e.g. 18 = 18%)
+            # TaxRateCategory.rate is a decimal fraction (e.g. 0.18 = 18%)
+            rate_fraction = round(float(rate_pct) / 100, 6)
+
+            obj, is_new = TaxRateCategory.objects.get_or_create(
+                organization=org,
+                name=name,
+                defaults={
+                    'rate': rate_fraction,
+                    'country_code': country_code.upper(),
+                    'description': preset.get('description', ''),
+                    'is_default': preset.get('is_default', False),
+                    'is_active': True,
+                }
+            )
+            (created if is_new else skipped).append({'id': obj.id, 'name': name, 'rate': str(rate_fraction)})
+
+        return Response({
+            'country_code': country_code.upper(),
+            'created': created,
+            'skipped': skipped,
+            'message': f'{len(created)} rate categories created, {len(skipped)} already existed.',
+        })
