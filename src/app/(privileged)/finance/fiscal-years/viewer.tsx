@@ -226,10 +226,38 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
     }
 
     const openWizard = () => {
-        if (lastYear) {
-            const ns = new Date(new Date(lastYear.endDate)); ns.setDate(ns.getDate() + 1)
-            const ne = new Date(ns); ne.setFullYear(ne.getFullYear() + 1); ne.setDate(ne.getDate() - 1)
-            setWizardData(p => ({ ...p, name: `FY ${ns.getFullYear()}`, startDate: ns.toISOString().split('T')[0], endDate: ne.toISOString().split('T')[0] }))
+        // Find the latest year by end_date to suggest next start
+        const sorted = [...years].sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''))
+        const latest = sorted[0]
+
+        if (latest) {
+            const lastEnd = new Date(latest.endDate)
+            const ns = new Date(lastEnd); ns.setDate(ns.getDate() + 1)
+
+            // Detect partial year: if the closed year ends mid-calendar-year,
+            // suggest remainder of that calendar year
+            const calYearEnd = new Date(ns.getFullYear(), 11, 31) // Dec 31
+            const isPartialRemainder = latest.isHardLocked && ns.getFullYear() === lastEnd.getFullYear() && lastEnd.getMonth() < 11
+
+            let ne: Date
+            let name: string
+            if (isPartialRemainder) {
+                // Suggest remainder: e.g., "FY 2026-B (Jul-Dec)"
+                ne = calYearEnd
+                const startMonth = ns.toLocaleDateString('en', { month: 'short' })
+                name = `FY ${ns.getFullYear()}-B (${startMonth}-Dec)`
+            } else {
+                // Normal: next full year
+                ne = new Date(ns); ne.setFullYear(ne.getFullYear() + 1); ne.setDate(ne.getDate() - 1)
+                name = `FY ${ns.getFullYear()}`
+            }
+
+            setWizardData(p => ({
+                ...p,
+                name,
+                startDate: ns.toISOString().split('T')[0],
+                endDate: ne.toISOString().split('T')[0],
+            }))
         }
         setShowWizard(true)
     }
@@ -992,6 +1020,38 @@ export default function FiscalYearsViewer({ initialYears }: { initialYears: Reco
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Partial year: suggest creating remainder */}
+                                {!closeResult?.startsWith('Error') && (() => {
+                                    const endDate = new Date(closePreview.year.end_date)
+                                    const isPartial = endDate.getMonth() < 11 // Not December
+                                    if (!isPartial || closePreview.next_year) return null
+                                    const nextStart = new Date(endDate); nextStart.setDate(nextStart.getDate() + 1)
+                                    const calEnd = new Date(nextStart.getFullYear(), 11, 31)
+                                    const startLabel = nextStart.toLocaleDateString('en', { month: 'short' })
+                                    return (
+                                        <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--app-info) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--app-info) 20%, transparent)' }}>
+                                            <div className="text-[11px] font-bold mb-2" style={{ color: 'var(--app-foreground)' }}>
+                                                This was a partial year ({closePreview.year.start_date} — {closePreview.year.end_date}).
+                                                Create a remainder year for {startLabel} — Dec {calEnd.getFullYear()}?
+                                            </div>
+                                            <button onClick={() => {
+                                                setCloseStep(null); setClosePreview(null); setCloseResult(null)
+                                                setWizardData(prev => ({
+                                                    ...prev,
+                                                    name: `FY ${nextStart.getFullYear()}-B (${startLabel}-Dec)`,
+                                                    startDate: nextStart.toISOString().split('T')[0],
+                                                    endDate: calEnd.toISOString().split('T')[0],
+                                                }))
+                                                setShowWizard(true)
+                                            }}
+                                                className="flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                                                style={{ background: 'var(--app-primary)', color: 'white' }}>
+                                                <Plus size={11} /> Create Remainder Year
+                                            </button>
+                                        </div>
+                                    )
+                                })()}
 
                                 <button onClick={() => { setCloseStep(null); setClosePreview(null); setCloseResult(null); refreshData() }}
                                     className="w-full py-2.5 text-[11px] font-bold rounded-xl transition-all"
