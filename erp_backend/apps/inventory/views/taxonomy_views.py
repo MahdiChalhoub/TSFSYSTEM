@@ -241,28 +241,48 @@ class CategoryViewSet(TenantModelViewSet):
         category = self.get_object()
         organization = category.organization
 
-        brands = Brand.objects.filter(
-            categories=category,
-            organization=organization
-        ).annotate(
-            cat_product_count=Count('products', filter=Q(products__category=category))
-        ).values('id', 'name', 'logo', 'cat_product_count')
+        # Pagination params
+        PAGE_SIZE = 50
+        offset = int(request.query_params.get('offset', 0))
+        search = request.query_params.get('search', '').strip()
 
-        parfums = Parfum.objects.filter(
-            categories=category,
-            organization=organization
-        ).annotate(
-            cat_product_count=Count('products', filter=Q(products__category=category))
-        ).values('id', 'name', 'cat_product_count')
+        # Brands & parfums (only on first page to avoid redundant data)
+        brands_data = []
+        parfums_data = []
+        if offset == 0:
+            brands_data = list(Brand.objects.filter(
+                categories=category,
+                organization=organization
+            ).annotate(
+                cat_product_count=Count('products', filter=Q(products__category=category))
+            ).values('id', 'name', 'logo', 'cat_product_count'))
 
-        products = Product.objects.filter(
+            parfums_data = list(Parfum.objects.filter(
+                categories=category,
+                organization=organization
+            ).annotate(
+                cat_product_count=Count('products', filter=Q(products__category=category))
+            ).values('id', 'name', 'cat_product_count'))
+
+        # Products queryset
+        products_qs = Product.objects.filter(
             category=category,
             organization=organization,
             is_active=True
         ).select_related('brand', 'parfum', 'unit')
 
+        # Server-side search
+        if search:
+            from django.db.models import Q as Qf
+            products_qs = products_qs.filter(
+                Qf(name__icontains=search) | Qf(sku__icontains=search)
+            )
+
+        total_count = products_qs.count()
+        products_page = products_qs.order_by('name')[offset:offset + PAGE_SIZE]
+
         product_data = []
-        for p in products:
+        for p in products_page:
             product_data.append({
                 "id": p.id,
                 "sku": p.sku,
@@ -278,9 +298,12 @@ class CategoryViewSet(TenantModelViewSet):
             })
 
         return Response({
-            "brands": list(brands),
-            "parfums": list(parfums),
-            "products": product_data
+            "brands": brands_data,
+            "parfums": parfums_data,
+            "products": product_data,
+            "total_count": total_count,
+            "has_more": (offset + PAGE_SIZE) < total_count,
+            "next_offset": offset + PAGE_SIZE if (offset + PAGE_SIZE) < total_count else None,
         })
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny], authentication_classes=[], throttle_classes=[AnonRateThrottle])

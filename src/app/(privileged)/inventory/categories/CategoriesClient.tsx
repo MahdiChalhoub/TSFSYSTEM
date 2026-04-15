@@ -751,13 +751,20 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
 }) {
     const [products, setProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [hasMore, setHasMore] = useState(false)
+    const [nextOffset, setNextOffset] = useState<number | null>(null)
+    const [totalCount, setTotalCount] = useState(0)
     const [search, setSearch] = useState('')
+    const [debouncedSearch, setDebouncedSearch] = useState('')
     const [selected, setSelected] = useState<Set<number>>(new Set())
     // Filters
     const [filterBrand, setFilterBrand] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string | null>(null)
     const [showFilterPopup, setShowFilterPopup] = useState(false)
     const filterRef = useRef<HTMLDivElement>(null)
+    const scrollRef = useRef<HTMLDivElement>(null)
+    const sentinelRef = useRef<HTMLDivElement>(null)
     // Move modal
     const [showMoveModal, setShowMoveModal] = useState(false)
     const [moveTarget, setMoveTarget] = useState<number | null>(null)
@@ -769,18 +776,66 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
     const [reassignBrands, setReassignBrands] = useState<Record<number, number>>({})
     const router = useRouter()
 
-    const loadProducts = useCallback(() => {
-        setLoading(true)
-        setSearch('')
+    // Debounce search — 300ms
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 300)
+        return () => clearTimeout(timer)
+    }, [search])
+
+    // Load products (paginated)
+    const loadProducts = useCallback((offset = 0, append = false) => {
+        if (!append) setLoading(true)
+        else setLoadingMore(true)
+
+        const params = new URLSearchParams()
+        if (offset > 0) params.set('offset', String(offset))
+        if (debouncedSearch) params.set('search', debouncedSearch)
+        const qs = params.toString() ? `?${params.toString()}` : ''
+
+        erpFetch(`inventory/categories/${categoryId}/explore/${qs}`)
+            .then((data: any) => {
+                const newProducts = data?.products ?? []
+                if (append) {
+                    setProducts(prev => [...prev, ...newProducts])
+                } else {
+                    setProducts(newProducts)
+                }
+                setTotalCount(data?.total_count ?? 0)
+                setHasMore(data?.has_more ?? false)
+                setNextOffset(data?.next_offset ?? null)
+                setLoading(false)
+                setLoadingMore(false)
+            })
+            .catch(() => {
+                if (!append) setProducts([])
+                setLoading(false)
+                setLoadingMore(false)
+            })
+    }, [categoryId, debouncedSearch])
+
+    // Reset and load on category/search change
+    useEffect(() => {
         setSelected(new Set())
-        erpFetch(`inventory/categories/${categoryId}/explore/`)
-            .then((data: any) => { setProducts(data?.products ?? []); setLoading(false) })
-            .catch(() => { setProducts([]); setLoading(false) })
-    }, [categoryId])
+        loadProducts(0, false)
+    }, [loadProducts])
 
-    useEffect(() => { loadProducts() }, [loadProducts])
+    // Infinite scroll — IntersectionObserver on sentinel
+    useEffect(() => {
+        const sentinel = sentinelRef.current
+        if (!sentinel) return
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore && nextOffset !== null) {
+                    loadProducts(nextOffset, true)
+                }
+            },
+            { root: scrollRef.current, threshold: 0.1 }
+        )
+        observer.observe(sentinel)
+        return () => observer.disconnect()
+    }, [hasMore, loadingMore, nextOffset, loadProducts])
 
-    // Unique brands & statuses for filter chips
+    // Unique brands & statuses for filter chips (from loaded products)
     const uniqueBrands = useMemo(() => {
         const set = new Set<string>()
         products.forEach(p => { if (p.brand_name) set.add(p.brand_name) })
@@ -792,16 +847,13 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
         return Array.from(set).sort()
     }, [products])
 
+    // Client-side filters on loaded data (search is server-side)
     const filtered = useMemo(() => {
         let list = products
-        if (search.trim()) {
-            const q = search.toLowerCase()
-            list = list.filter(p => p.name?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q))
-        }
         if (filterBrand) list = list.filter(p => p.brand_name === filterBrand)
         if (filterStatus) list = list.filter(p => p.status === filterStatus)
         return list
-    }, [products, search, filterBrand, filterStatus])
+    }, [products, filterBrand, filterStatus])
 
     const toggleSelect = (id: number) => {
         const next = new Set(selected)
@@ -872,7 +924,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
             toast.success(`Moved ${selected.size} product${selected.size > 1 ? 's' : ''} to "${movePreview?.target_category?.name}"`)
             closeMoveModal()
             setSelected(new Set())
-            loadProducts()
+            loadProducts(0, false)
             router.refresh()
         } catch (e: any) {
             toast.error(e?.message || 'Move failed')
@@ -998,8 +1050,8 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                     {loading ? 'Loading...' : selected.size > 0
                         ? `${selected.size} of ${filtered.length} selected`
                         : activeFilterCount > 0
-                            ? `${filtered.length} of ${products.length} (filtered)`
-                            : `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`}
+                            ? `${filtered.length} of ${totalCount} (filtered)`
+                            : `${products.length} of ${totalCount} product${totalCount !== 1 ? 's' : ''}`}
                 </p>
             </div>
 
@@ -1017,7 +1069,7 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
             )}
 
             {/* Product List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-y-auto custom-scrollbar" ref={scrollRef}>
                 {loading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin text-app-primary" /></div>
                 ) : filtered.length === 0 ? (
@@ -1027,47 +1079,62 @@ function PanelProductsTab({ categoryId, categoryName, allCategories }: {
                         <p className="text-[11px] text-app-muted-foreground mt-1">Assign products from the Products page.</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-app-border/30">
-                        {filtered.map((p: any) => {
-                            const isSelected = selected.has(p.id)
-                            return (
-                                <div key={p.id}
-                                    className="flex items-center gap-2 px-4 py-2 group transition-all cursor-pointer"
-                                    style={{ background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent' }}
-                                    onClick={() => toggleSelect(p.id)}>
-                                    <button
-                                        className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"
-                                        style={{
-                                            borderColor: isSelected ? 'var(--app-primary)' : 'var(--app-border)',
-                                            background: isSelected ? 'var(--app-primary)' : 'transparent',
-                                        }}>
-                                        {isSelected && <Check size={10} className="text-white" />}
-                                    </button>
-                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
-                                        <Package size={12} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
-                                        <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
-                                            {p.sku && <span className="font-mono font-bold">{p.sku}</span>}
-                                            {p.brand_name && <span>· {p.brand_name}</span>}
+                    <>
+                        <div className="divide-y divide-app-border/30">
+                            {filtered.map((p: any) => {
+                                const isSelected = selected.has(p.id)
+                                return (
+                                    <div key={p.id}
+                                        className="flex items-center gap-2 px-4 py-2 group transition-all cursor-pointer"
+                                        style={{ background: isSelected ? 'color-mix(in srgb, var(--app-primary) 6%, transparent)' : 'transparent' }}
+                                        onClick={() => toggleSelect(p.id)}>
+                                        <button
+                                            className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all"
+                                            style={{
+                                                borderColor: isSelected ? 'var(--app-primary)' : 'var(--app-border)',
+                                                background: isSelected ? 'var(--app-primary)' : 'transparent',
+                                            }}>
+                                            {isSelected && <Check size={10} className="text-white" />}
+                                        </button>
+                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--app-success) 10%, transparent)', color: 'var(--app-success)' }}>
+                                            <Package size={12} />
                                         </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[12px] font-bold text-app-foreground truncate">{p.name}</p>
+                                            <div className="flex items-center gap-2 text-[10px] text-app-muted-foreground">
+                                                {p.sku && <span className="font-mono font-bold">{p.sku}</span>}
+                                                {p.brand_name && <span>· {p.brand_name}</span>}
+                                            </div>
+                                        </div>
+                                        {p.selling_price_ttc != null && (
+                                            <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
+                                                {Number(p.selling_price_ttc).toLocaleString()}
+                                            </span>
+                                        )}
+                                        <Link href={`/inventory/products/${p.id}`}
+                                            onClick={e => e.stopPropagation()}
+                                            className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
+                                            <ExternalLink size={11} />
+                                        </Link>
                                     </div>
-                                    {p.selling_price_ttc != null && (
-                                        <span className="text-[11px] font-bold text-app-foreground tabular-nums flex-shrink-0">
-                                            {Number(p.selling_price_ttc).toLocaleString()}
-                                        </span>
-                                    )}
-                                    <Link href={`/inventory/products/${p.id}`}
-                                        onClick={e => e.stopPropagation()}
-                                        className="p-1 rounded-lg text-app-muted-foreground hover:text-app-primary opacity-0 group-hover:opacity-100 transition-all">
-                                        <ExternalLink size={11} />
-                                    </Link>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                )
+                            })}
+                        </div>
+                        {/* Infinite scroll sentinel */}
+                        <div ref={sentinelRef} className="h-1" />
+                        {loadingMore && (
+                            <div className="flex items-center justify-center py-3 gap-2">
+                                <Loader2 size={14} className="animate-spin text-app-primary" />
+                                <span className="text-[10px] text-app-muted-foreground">Loading more...</span>
+                            </div>
+                        )}
+                        {!hasMore && products.length > 0 && products.length >= 50 && (
+                            <p className="text-[10px] text-app-muted-foreground text-center py-2 opacity-50">
+                                All {totalCount} products loaded
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
 
