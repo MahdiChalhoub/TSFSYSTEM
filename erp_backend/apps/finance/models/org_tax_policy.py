@@ -206,3 +206,49 @@ class OrgTaxPolicy(TenantModel):
     def allows_scope(self, scope: str) -> bool:
         scopes = self.allowed_scopes or ['OFFICIAL']
         return scope in scopes
+
+    def auto_link_accounts(self) -> list:
+        """
+        Auto-fill GL account FKs using system_role lookups on ChartOfAccount.
+        Only fills fields that are currently blank (null). Idempotent.
+
+        system_role → policy field mapping:
+            VAT_COLLECTED_OUTPUT  → vat_collected_account
+            VAT_RECOVERABLE_INPUT → vat_recoverable_account
+            VAT_PAYABLE_NET       → vat_payable_account
+            AIRSI_WITHHELD        → airsi_account
+            REVERSE_CHARGE        → reverse_charge_account
+
+        Returns list of field names that were updated.
+        """
+        try:
+            from apps.finance.models import ChartOfAccount
+        except ImportError:
+            return []
+
+        ROLE_MAP = {
+            'VAT_COLLECTED_OUTPUT':  'vat_collected_account_id',
+            'VAT_RECOVERABLE_INPUT': 'vat_recoverable_account_id',
+            'VAT_PAYABLE_NET':       'vat_payable_account_id',
+            'AIRSI_WITHHELD':        'airsi_account_id',
+            'REVERSE_CHARGE':        'reverse_charge_account_id',
+        }
+
+        accounts_by_role = {
+            row['system_role']: row['id']
+            for row in ChartOfAccount.objects.filter(
+                organization=self.organization,
+                system_role__in=list(ROLE_MAP.keys()),
+            ).values('system_role', 'id')
+        }
+
+        updated = []
+        for role, field in ROLE_MAP.items():
+            if role in accounts_by_role and getattr(self, field) is None:
+                setattr(self, field, accounts_by_role[role])
+                updated.append(field)
+
+        if updated:
+            self.save(update_fields=updated)
+
+        return updated

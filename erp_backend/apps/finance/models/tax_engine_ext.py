@@ -34,7 +34,61 @@ from apps.pos.models.import_declaration_models import ImportDeclaration  # noqa:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 1. Withholding Tax Rule
+# 0. Tax Rate Category — per-product VAT rate override
+# ═══════════════════════════════════════════════════════════════════════
+class TaxRateCategory(TenantModel):
+    """
+    A named VAT rate that can be attached to individual products.
+    When a product has a TaxRateCategory, TaxCalculator.resolve_product_rate()
+    uses that rate instead of product.tva_rate.
+
+    Examples:
+      - Standard Rate (18%)
+      - Zero Rate (0%)
+      - Reduced Rate — Food (5%)
+      - Exempt
+
+    This replaces the need to hard-code tva_rate on each product for multi-rate
+    regimes (UK VAT 5%/20%, Indian GST 5%/12%/18%/28%, Moroccan TVA 7%/10%/14%/20%).
+    """
+
+    name = models.CharField(max_length=100, help_text='e.g. "Standard Rate 18%", "Zero Rate"')
+    rate = models.DecimalField(
+        max_digits=7, decimal_places=4,
+        help_text='VAT rate as decimal fraction (e.g. 0.18 for 18%)'
+    )
+    country_code = models.CharField(
+        max_length=3, blank=True, default='',
+        help_text='ISO 3166-1 alpha-2 code — informational, not enforced'
+    )
+    is_default = models.BooleanField(
+        default=False,
+        help_text='If True, this rate is used when no category is assigned to a product'
+    )
+    description = models.CharField(max_length=300, blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'tax_rate_category'
+        ordering = ['-is_default', 'name']
+        unique_together = ('organization', 'name')
+        verbose_name = 'Tax Rate Category'
+        verbose_name_plural = 'Tax Rate Categories'
+
+    def __str__(self):
+        return f"{self.name} ({float(self.rate * 100):.2f}%)"
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            TaxRateCategory.objects.filter(
+                organization=self.organization, is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+
 # ═══════════════════════════════════════════════════════════════════════
 class WithholdingTaxRule(TenantModel):
     """

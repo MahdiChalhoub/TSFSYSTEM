@@ -250,7 +250,7 @@ class POSService:
                     user=user
                 )
 
-                tax_rate = Decimal(str(product.tva_rate)) / Decimal('100')
+                tax_rate = TaxCalculator.resolve_product_rate(product, _ctx)
                 item_total = qty * effective_price
                 item_tax = (item_total * tax_rate).quantize(Decimal('0.01'))
                 item_cogs = qty * amc

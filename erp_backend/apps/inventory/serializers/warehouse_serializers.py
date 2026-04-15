@@ -63,7 +63,23 @@ class WarehouseSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_inventory_count(self, obj):
-        return obj.inventory_set.count()
+        """Count unique products in this location (and children for branches)."""
+        from apps.inventory.models import Inventory
+        if obj.location_type == 'BRANCH':
+            # For branches: count unique products across the branch + all child locations
+            child_ids = list(obj.children.values_list('id', flat=True))
+            warehouse_ids = [obj.id] + child_ids
+            return Inventory.objects.filter(
+                warehouse_id__in=warehouse_ids,
+                organization_id=obj.organization_id,
+                quantity__gt=0,
+            ).values('product').distinct().count()
+        else:
+            return Inventory.objects.filter(
+                warehouse=obj,
+                organization_id=obj.organization_id,
+                quantity__gt=0,
+            ).values('product').distinct().count()
 
     def get_children_count(self, obj):
         return obj.children.count()

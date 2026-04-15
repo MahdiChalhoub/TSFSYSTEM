@@ -203,7 +203,7 @@ function BranchRow({ branch, onEdit, onDelete, onAddChild, isExpanded, onToggle,
 }) {
     const children = branch.children || []
     const hasChildren = children.length > 0
-    const totalSKUs = children.reduce((sum, c) => sum + (c.inventory_count || 0), 0) + (branch.inventory_count || 0)
+    const totalSKUs = branch.inventory_count || 0
 
     return (
         <div>
@@ -464,7 +464,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     const openSkuPanel = useCallback(async (loc: WarehouseNode) => {
         setSkuPanel({ open: true, location: loc, items: [], loading: true })
         try {
-            const res = await erpFetch(`inventory/stock-balances/?warehouse=${loc.id}&page_size=50`)
+            const res = await erpFetch(`inventory/?warehouse=${loc.id}&page_size=50`)
             const items = Array.isArray(res) ? res : (res?.results ?? [])
             setSkuPanel(prev => ({ ...prev, items, loading: false }))
         } catch {

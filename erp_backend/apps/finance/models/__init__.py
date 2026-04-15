@@ -31,6 +31,7 @@ from apps.finance.gateway_models import GatewayConfig
 from .opening_balance import OpeningBalance
 # ── Tax Engine Models (pure tax rules + compliance) ─────────────
 from .tax_engine_ext import (
+    TaxRateCategory,
     WithholdingTaxRule, BadDebtVATClaim,
     AdvancePaymentVAT, CreditNoteVATReversal,
     MarginSchemeTransaction, ReverseChargeSelfAssessment, VATRateChangeHistory,
@@ -82,6 +83,7 @@ __all__ = [
     'ConsolidationGroup', 'ConsolidationEntity', 'IntercompanyRule',
     'ConsolidationRun', 'ConsolidationLine',
     # Phase 1: Tax Engine (pure tax rules + compliance)
+    'TaxRateCategory',
     'WithholdingTaxRule', 'BadDebtVATClaim', 'ImportDeclaration',
     'AdvancePaymentVAT', 'CreditNoteVATReversal',
     'MarginSchemeTransaction', 'ReverseChargeSelfAssessment', 'VATRateChangeHistory',

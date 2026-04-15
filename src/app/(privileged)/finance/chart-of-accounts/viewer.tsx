@@ -246,7 +246,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
         const byType = (t: string) => active.filter(a => a.type === t)
         const sum = (arr: Record<string, any>[]) => arr.reduce((s, a) => s + (Number(a.balance) || 0), 0)
         return [
-            { label: 'Total Accounts', value: accounts.length, color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
+            { label: 'Total Accounts', value: active.length, color: 'var(--app-primary)', icon: <BookOpen size={14} />, filterKey: null },
             { label: 'Assets', value: byType('ASSET').length, color: 'var(--app-info, #3B82F6)', icon: <Wallet size={14} />, filterKey: 'ASSET' },
             { label: 'Liabilities', value: byType('LIABILITY').length, color: 'var(--app-error, #EF4444)', icon: <TrendingDown size={14} />, filterKey: 'LIABILITY' },
             { label: 'Equity', value: byType('EQUITY').length, color: '#8b5cf6', icon: <Scale size={14} />, filterKey: 'EQUITY' },

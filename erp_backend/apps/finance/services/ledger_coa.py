@@ -132,8 +132,7 @@ class LedgerCOAMixin:
                 organization.save(update_fields=['finance_setup_completed'])
 
             if reset:
-                deactivated = ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
-                logging.getLogger(__name__).info(f"[COA_IMPORT] Reset: deactivated {deactivated} accounts")
+                ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
 
             # ── High Performance First Pass ──
             # For simplicity in multi-tenancy we still use update_or_create to handle re-runs gracefully
@@ -185,9 +184,6 @@ class LedgerCOAMixin:
                 )
                 code_to_account[item['code']] = acc
 
-            _imp_active = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
-            logging.getLogger(__name__).info(f"[COA_IMPORT] After update_or_create: {len(code_to_account)} processed, {_imp_active} active in DB")
-
             # ── Link Parents ──
             for item in accounts_data:
                 if item.get('parent_code') and item['parent_code'] in code_to_account:
@@ -205,9 +201,6 @@ class LedgerCOAMixin:
             
             rebuild_paths_recursive([a for a in code_to_account.values() if not a.parent_id])
 
-            _post_path = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
-            logging.getLogger(__name__).info(f"[COA_IMPORT] After paths rebuild: {_post_path} active")
-
             # ── Post-Import Cleanup ──────────────────────────────────────
             # After a reset+import, ensure ONLY the new template's accounts are active.
             # Accounts from other templates must be deactivated.
@@ -222,11 +215,8 @@ class LedgerCOAMixin:
                 stale_deactivated = stale_qs.update(is_active=False)
                 if stale_deactivated:
                     logging.getLogger(__name__).info(
-                        f"[COA_IMPORT] Cleanup: deactivated {stale_deactivated} stale accounts"
+                        f"Deactivated {stale_deactivated} accounts not in template {template_key}"
                     )
-
-                _post_cleanup = ChartOfAccount.objects.filter(organization=organization, is_active=True).count()
-                logging.getLogger(__name__).info(f"[COA_IMPORT] After cleanup: {_post_cleanup} active")
 
             # Apply Smart Posting Rules
             try:

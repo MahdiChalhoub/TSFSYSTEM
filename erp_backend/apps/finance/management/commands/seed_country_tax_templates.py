@@ -82,6 +82,10 @@ def _custom_tax(name, rate, **overrides):
     base.update(overrides)
     return base
 
+def _tax_group(name, rate, is_default=False, description=''):
+    """Build a TaxGroup preset entry."""
+    return {'name': name, 'rate': str(rate), 'is_default': is_default, 'description': description}
+
 
 TEMPLATES = [
     # ═══════════════════════════════════════════════════════════════════
@@ -451,6 +455,316 @@ TEMPLATES = [
                         calculation_order=200,
                         purchase_cost_treatment='EXPENSE'),
         ],
+        'tax_group_presets': [
+            _tax_group('VAT 5% (GCC)', '0.0500', is_default=True, description='Standard GCC VAT rate'),
+            _tax_group('VAT 0% (Zero-Rated)', '0.0000', description='Exports and zero-rated supplies'),
+            _tax_group('VAT Exempt', '0.0000', description='Exempt from VAT'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Morocco (OHADA+ / PCG Marocain)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'MA',
+        'country_name': 'Morocco',
+        'currency_code': 'MAD',
+        'document_requirements': [
+            _doc('TAX_ID', 'ICE — Identifiant Commun de l\'Entreprise'),
+            _doc('BIZ_REG', 'RC — Registre du Commerce'),
+            _doc('TAX_DECLARATION', 'Attestation du Régime Fiscal'),
+        ],
+        'org_policy_defaults': [
+            _policy('Assujetti TVA — Régime Normal',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', internal_cost_mode='SAME_AS_OFFICIAL',
+                    profit_tax_mode='STANDARD'),
+            _policy('Exonéré de TVA',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    airsi_treatment='CAPITALIZE', internal_cost_mode='TTC_ALWAYS',
+                    profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Assujetti TVA', vat_registered=True),
+            _profile('Non Assujetti TVA', vat_registered=False),
+            _profile('Fournisseur Étranger', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('TVA 20%', '0.2000', is_default=True, description='Taux normal TVA Maroc'),
+            _tax_group('TVA 14%', '0.1400', description='Taux réduit — eau, électricité, transport'),
+            _tax_group('TVA 10%', '0.1000', description='Taux réduit — restauration, opérations bancaires'),
+            _tax_group('TVA 7%', '0.0700', description='Taux réduit — eau potable, médicaments'),
+            _tax_group('TVA 0%', '0.0000', description='Exonéré ou taux zéro'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Senegal (OHADA / SYSCOHADA — similar to Côte d'Ivoire)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'SN',
+        'country_name': 'Senegal',
+        'currency_code': 'XOF',
+        'document_requirements': [
+            _doc('TAX_ID', 'NINEA — Numéro d\'Identification National des Entreprises et Associations'),
+            _doc('BIZ_REG', 'RCCM — Registre du Commerce et du Crédit Mobilier'),
+        ],
+        'org_policy_defaults': [
+            _policy('Assujetti TVA — Réel Normal',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', internal_cost_mode='SAME_AS_OFFICIAL',
+                    profit_tax_mode='STANDARD'),
+            _policy('Régime du Réel Simplifié',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='CAPITALIZE', profit_tax_mode='STANDARD'),
+            _policy('Non Assujetti / Exonéré',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    airsi_treatment='CAPITALIZE', profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('Assujetti TVA', vat_registered=True),
+            _profile('Non Assujetti', vat_registered=False),
+            _profile('Fournisseur Étranger', reverse_charge=True),
+            _profile('Client Export', vat_registered=False),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('COSEC — Accise Importation', '0.010',
+                        transaction_type='BOTH', calculation_order=150),
+        ],
+        'tax_group_presets': [
+            _tax_group('TVA 18%', '0.1800', is_default=True, description='Taux standard TVA Sénégal'),
+            _tax_group('TVA 0%', '0.0000', description='Exportations et opérations exonérées'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Nigeria (FIRS — Federal Inland Revenue Service)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'NG',
+        'country_name': 'Nigeria',
+        'currency_code': 'NGN',
+        'document_requirements': [
+            _doc('TAX_ID', 'TIN — Tax Identification Number'),
+            _doc('BIZ_REG', 'CAC — Corporate Affairs Commission Registration'),
+            _doc('COMPLIANCE', 'FIRS VAT Registration Certificate'),
+        ],
+        'org_policy_defaults': [
+            _policy('VAT Registered — Standard',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('VAT Exempt / Small Business',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('VAT Registered Business', vat_registered=True),
+            _profile('Individual / Non-VAT Business', vat_registered=False),
+            _profile('Foreign Vendor (Reverse Charge)', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('WHT — Withholding Tax (5% Goods)', '0.050',
+                        transaction_type='BOTH', calculation_order=200,
+                        math_behavior='DEDUCTED_FROM_PAYMENT'),
+            _custom_tax('WHT — Withholding Tax (10% Services)', '0.100',
+                        transaction_type='BOTH', calculation_order=210,
+                        math_behavior='DEDUCTED_FROM_PAYMENT'),
+        ],
+        'tax_group_presets': [
+            _tax_group('VAT 7.5%', '0.0750', is_default=True, description='Standard Nigeria VAT rate (VATA 2019)'),
+            _tax_group('VAT 0% (Zero-Rated)', '0.0000', description='Exported goods and services'),
+            _tax_group('VAT Exempt', '0.0000', description='Basic food, education, healthcare'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Egypt (Egyptian Tax Authority — ETA)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'EG',
+        'country_name': 'Egypt',
+        'currency_code': 'EGP',
+        'document_requirements': [
+            _doc('TAX_ID', 'Tax Registration Number (TRN)'),
+            _doc('BIZ_REG', 'Commercial Registration — Ministry of Trade'),
+            _doc('COMPLIANCE', 'ETA E-Invoice Registration'),
+        ],
+        'org_policy_defaults': [
+            _policy('VAT Registered — Standard',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('Special Rate / Exempt',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    profit_tax_mode='STANDARD'),
+        ],
+        'counterparty_presets': [
+            _profile('VAT Registered', vat_registered=True),
+            _profile('Individual Consumer', vat_registered=False),
+            _profile('Foreign Supplier', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('WHT — Withholding on Services (10%)', '0.100',
+                        transaction_type='BOTH', calculation_order=200),
+        ],
+        'tax_group_presets': [
+            _tax_group('VAT 14%', '0.1400', is_default=True, description='Standard Egypt VAT rate'),
+            _tax_group('VAT 5%', '0.0500', description='Reduced rate — selected goods'),
+            _tax_group('VAT 0%', '0.0000', description='Exports and zero-rated'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Germany (EU / UStG)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'DE',
+        'country_name': 'Germany',
+        'currency_code': 'EUR',
+        'document_requirements': [
+            _doc('TAX_ID', 'Steuernummer / USt-IdNr (VAT ID)'),
+            _doc('BIZ_REG', 'Handelsregister (Commercial Register)'),
+        ],
+        'org_policy_defaults': [
+            _policy('Regelbesteuerung (Full VAT)',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('Kleinunternehmer (§ 19 UStG)',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    profit_tax_mode='EXEMPT',
+                    sales_tax_rate='0.0000', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('VAT-Registered Business (EU)', vat_registered=True),
+            _profile('Private Consumer', vat_registered=False),
+            _profile('EU B2B (Reverse Charge)', vat_registered=True, reverse_charge=True),
+            _profile('Non-EU Supplier (Reverse Charge)', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('MwSt 19%', '0.1900', is_default=True, description='Regelsteuersatz — standard VAT rate'),
+            _tax_group('MwSt 7%', '0.0700', description='Ermäßigter Steuersatz — food, books, culture'),
+            _tax_group('MwSt 0%', '0.0000', description='Steuerfreie Umsätze / exports'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # United Kingdom (HMRC / Making Tax Digital)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'GB',
+        'country_name': 'United Kingdom',
+        'currency_code': 'GBP',
+        'document_requirements': [
+            _doc('TAX_ID', 'VAT Registration Number (VRN)'),
+            _doc('BIZ_REG', 'Companies House Registration Number'),
+            _doc('COMPLIANCE', 'HMRC MTD Enrolment'),
+        ],
+        'org_policy_defaults': [
+            _policy('VAT Registered — Standard Rate',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('VAT Registered — Flat Rate Scheme',
+                    vat_output_enabled=True, vat_input_recoverability='0.000',
+                    profit_tax_mode='STANDARD',
+                    sales_tax_rate='0.1250', sales_tax_trigger='ON_TURNOVER'),
+            _policy('VAT Exempt / Below Threshold',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    profit_tax_mode='EXEMPT'),
+        ],
+        'counterparty_presets': [
+            _profile('VAT-Registered Business', vat_registered=True),
+            _profile('Consumer / Non-VAT Business', vat_registered=False),
+            _profile('EU Business (Post-Brexit Reverse Charge)', reverse_charge=True),
+            _profile('Non-UK Supplier', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [],
+        'tax_group_presets': [
+            _tax_group('VAT 20%', '0.2000', is_default=True, description='Standard UK VAT rate'),
+            _tax_group('VAT 5%', '0.0500', description='Reduced rate — energy, children car seats, etc.'),
+            _tax_group('VAT 0%', '0.0000', description='Zero-rated — food, books, children clothing, exports'),
+            _tax_group('VAT Exempt', '0.0000', description='Exempt — insurance, finance, education, healthcare'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # India (GST — Goods & Services Tax)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'IN',
+        'country_name': 'India',
+        'currency_code': 'INR',
+        'document_requirements': [
+            _doc('TAX_ID', 'GSTIN — GST Identification Number'),
+            _doc('BIZ_REG', 'Certificate of Incorporation (MCA)'),
+            _doc('COMPLIANCE', 'GST Registration Certificate'),
+        ],
+        'org_policy_defaults': [
+            _policy('Regular GST — Full ITC',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('Composition Scheme (Turnover-Based)',
+                    vat_output_enabled=True, vat_input_recoverability='0.000',
+                    profit_tax_mode='FORFAIT',
+                    sales_tax_rate='0.0100', sales_tax_trigger='ON_TURNOVER'),
+        ],
+        'counterparty_presets': [
+            _profile('GSTIN Registered Business', vat_registered=True),
+            _profile('Unregistered Consumer (B2C)', vat_registered=False),
+            _profile('Foreign Vendor (RCM)', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('CGST (Split 50%)', '0.0000',
+                        description='CGST component — set rate as half of applicable GST slab',
+                        is_active=False),
+            _custom_tax('SGST (Split 50%)', '0.0000',
+                        description='SGST component — set rate as half of applicable GST slab',
+                        is_active=False),
+        ],
+        'tax_group_presets': [
+            _tax_group('GST 18%', '0.1800', is_default=True, description='Standard slab — most goods & services'),
+            _tax_group('GST 12%', '0.1200', description='Reduced — processed food, computers, textiles'),
+            _tax_group('GST 5%', '0.0500', description='Essential goods — common man items'),
+            _tax_group('GST 0%', '0.0000', description='Exempt — unprocessed food, education, health'),
+            _tax_group('GST 28%', '0.2800', description='Luxury goods, tobacco, automobiles'),
+        ],
+    },
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Canada (CRA — Canada Revenue Agency)
+    # ═══════════════════════════════════════════════════════════════════
+    {
+        'country_code': 'CA',
+        'country_name': 'Canada',
+        'currency_code': 'CAD',
+        'document_requirements': [
+            _doc('TAX_ID', 'Business Number (BN) — CRA'),
+            _doc('COMPLIANCE', 'GST/HST Registration Number'),
+        ],
+        'org_policy_defaults': [
+            _policy('GST/HST Registrant — Full ITC',
+                    vat_output_enabled=True, vat_input_recoverability='1.000',
+                    airsi_treatment='RECOVER', profit_tax_mode='STANDARD'),
+            _policy('Small Supplier (No GST/HST)',
+                    vat_output_enabled=False, vat_input_recoverability='0.000',
+                    profit_tax_mode='STANDARD'),
+        ],
+        'counterparty_presets': [
+            _profile('GST/HST Registered Business', vat_registered=True),
+            _profile('Consumer / Non-Registrant', vat_registered=False),
+            _profile('Foreign Vendor', reverse_charge=True),
+        ],
+        'custom_tax_rule_presets': [
+            _custom_tax('PST — Provincial Sales Tax (note: varies by province)', '0.0000',
+                        is_active=False,
+                        description='Manually configure PST rate per province: QC=9.975%, ON=0% HST combined, BC=7%, SK=6%, MB=7%'),
+        ],
+        'tax_group_presets': [
+            _tax_group('GST 5%', '0.0500', is_default=True, description='Federal Goods & Services Tax'),
+            _tax_group('HST 13% (Ontario)', '0.1300', description='Harmonized HST — Ontario'),
+            _tax_group('HST 15% (Atlantic)', '0.1500', description='Harmonized HST — NS, NB, NL, PEI'),
+            _tax_group('GST 0% (Zero-Rated)', '0.0000', description='Basic groceries, prescription drugs, exports'),
+        ],
     },
 ]
 
@@ -470,24 +784,24 @@ class Command(BaseCommand):
                     'document_requirements': tpl['document_requirements'],
                     'counterparty_presets': tpl['counterparty_presets'],
                     'custom_tax_rule_presets': tpl.get('custom_tax_rule_presets', []),
+                    'tax_group_presets': tpl.get('tax_group_presets', []),
                     'is_active': True,
                 }
             )
             pol_count = len(tpl['org_policy_defaults'])
             profile_count = len(tpl['counterparty_presets'])
-            pol_docs = sum(len(p.get('required_documents', [])) for p in tpl['org_policy_defaults'])
-            profile_docs = sum(len(p.get('required_documents', [])) for p in tpl['counterparty_presets'])
+            tg_count = len(tpl.get('tax_group_presets', []))
             if is_new:
                 created += 1
                 self.stdout.write(self.style.SUCCESS(
-                    f'  ✅ Created: {obj} ({pol_count} policies/{pol_docs} docs, {profile_count} profiles/{profile_docs} docs)'
+                    f'  ✅ Created: {obj} ({pol_count} policies, {profile_count} profiles, {tg_count} tax groups)'
                 ))
             else:
                 updated += 1
                 self.stdout.write(
-                    f'  ♻️  Updated: {obj} ({pol_count} policies/{pol_docs} docs, {profile_count} profiles/{profile_docs} docs)'
+                    f'  ♻️  Updated: {obj} ({pol_count} policies, {profile_count} profiles, {tg_count} tax groups)'
                 )
 
         self.stdout.write(self.style.SUCCESS(
-            f'\\n🌍 Country Tax Templates: {created} created, {updated} updated ({len(TEMPLATES)} total)'
+            f'\n🌍 Country Tax Templates: {created} created, {updated} updated ({len(TEMPLATES)} total)'
         ))

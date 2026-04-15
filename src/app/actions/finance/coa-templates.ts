@@ -207,7 +207,11 @@ export async function importChartOfAccountsTemplate(
                 account_mapping: options?.account_mapping || {},
             }),
         })
-        try { revalidatePath('/finance/chart-of-accounts') } catch { /* ignore */ }
+        try {
+            revalidatePath('/finance/chart-of-accounts')
+            revalidatePath('/finance')
+            revalidatePath('/', 'layout')
+        } catch { /* ignore */ }
         return {
             success: true,
             journal_lines_remapped: result?.journal_lines_remapped || 0,

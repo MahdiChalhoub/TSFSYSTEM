@@ -141,10 +141,10 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         }
     }
 
-    /** Navigate to COA page with full cache bust */
+    /** Navigate to COA page — hard reload to bypass all caches
+     *  (Next.js router cache + erpFetch revalidate:30 GET cache) */
     const goToCOA = () => {
-        router.push('/finance/chart-of-accounts')
-        router.refresh()
+        window.location.href = '/finance/chart-of-accounts'
     }
 
     /** Case 1 & same-template re-import: direct import with reset */

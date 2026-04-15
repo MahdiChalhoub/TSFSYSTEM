@@ -6,10 +6,17 @@ export const dynamic = 'force-dynamic';
 
 async function getWarehouses() {
     try {
+        console.log('[WAREHOUSE PAGE] Fetching warehouses...');
         const data = await erpFetch('warehouses/');
-        return Array.isArray(data) ? data : (data?.results ?? []);
+        console.log('[WAREHOUSE PAGE] Raw response type:', typeof data);
+        console.log('[WAREHOUSE PAGE] Is array:', Array.isArray(data));
+        console.log('[WAREHOUSE PAGE] Keys:', data ? Object.keys(data).slice(0, 10) : 'null/undefined');
+        console.log('[WAREHOUSE PAGE] Count:', Array.isArray(data) ? data.length : (data?.results?.length ?? 'no results key'));
+        const list = Array.isArray(data) ? data : (data?.results ?? []);
+        console.log('[WAREHOUSE PAGE] Final list length:', list.length);
+        return list;
     } catch (error) {
-        console.error("Failed to fetch warehouses:", error);
+        console.error("[WAREHOUSE PAGE] FAILED:", error);
         return [];
     }
 }

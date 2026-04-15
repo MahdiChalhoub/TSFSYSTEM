@@ -216,6 +216,72 @@ class OrgTaxPolicyViewSet(TenantModelViewSet):
         return Response({'created': created, 'skipped': skipped,
                          'message': f'{len(created)} policies imported, {len(skipped)} already existed.'})
 
+    @action(detail=False, methods=['post'], url_path='apply-country-template')
+    def apply_country_template(self, request):
+        """
+        POST /api/finance/org-tax-policies/apply-country-template/
+        Body: {"country_code": "CI"}  (optional — auto-resolved from org if omitted)
+
+        Idempotent operation that applies an entire CountryTaxTemplate to the tenant:
+        - Creates OrgTaxPolicy presets
+        - Creates CounterpartyTaxProfile presets
+        - Creates TaxGroup entries from tax_group_presets
+        - Auto-links GL accounts to the default policy
+
+        Used by: Setup Wizard, Tax Health Dashboard "Fix" button.
+        """
+        from apps.finance.services.tax_template_service import TaxTemplateService
+        from erp.models import Organization
+
+        org, auto_code = _get_org_and_country()
+        if not org:
+            return Response({'error': 'Tenant context missing'}, status=400)
+
+        country_code = request.data.get('country_code') or auto_code
+        if not country_code:
+            return Response({'error': 'Country code required. Pass country_code in body or configure your country in Settings.'}, status=400)
+
+        result = TaxTemplateService.apply_country_template(org, country_code)
+
+        if result.get('errors'):
+            return Response({'success': False, 'errors': result['errors']}, status=404)
+
+        return Response({
+            'success': True,
+            'template_name': result['template_name'],
+            'country_code': result['country_code'],
+            'policies_created': result['policies_created'],
+            'profiles_created': result['profiles_created'],
+            'rules_created': result['rules_created'],
+            'tax_groups_created': result['tax_groups_created'],
+            'message': (
+                f"Template '{result['template_name']}' applied: "
+                f"{len(result['policies_created'])} policies, "
+                f"{len(result['profiles_created'])} profiles, "
+                f"{len(result['tax_groups_created'])} tax groups created."
+            ),
+        })
+
+    @action(detail=False, methods=['get'], url_path='tax-health')
+    def tax_health(self, request):
+        """
+        GET /api/finance/org-tax-policies/tax-health/
+        Returns a tax configuration health check for the current tenant.
+
+        Used by: Tax Health Dashboard in /finance/tax-policy.
+        """
+        from apps.finance.services.tax_template_service import TaxTemplateService
+        from erp.models import Organization
+
+        org_id = get_current_tenant_id()
+        if not org_id:
+            return Response({'error': 'Tenant context missing'}, status=400)
+
+        org = Organization.objects.select_related('base_country').get(id=org_id)
+        health = TaxTemplateService.get_tax_health(org)
+        return Response(health)
+
+
 
 # ══════════════════════════════════════════════════════════════════
 # CounterpartyTaxProfile ViewSet
