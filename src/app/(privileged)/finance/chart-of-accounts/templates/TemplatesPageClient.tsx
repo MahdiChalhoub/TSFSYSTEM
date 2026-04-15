@@ -141,13 +141,13 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         }
     }
 
-    /** Navigate to COA page — hard reload to bypass all caches
-     *  (Next.js router cache + erpFetch revalidate:30 GET cache) */
-    const goToCOA = () => {
-        window.location.href = '/finance/chart-of-accounts'
+    /** After import — always go to posting rules to confirm/configure */
+    const afterImport = (templateName: string) => {
+        toast.success(`Imported ${templateName} — configure posting rules`)
+        window.location.href = '/finance/settings/posting-rules?from=coa-import'
     }
 
-    /** Case 1 & same-template re-import: direct import with reset */
+    /** Case 1: empty COA (new user) — direct import */
     const handleConfirmImport = async () => {
         if (!importTarget) return
         const key = importTarget
@@ -155,8 +155,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         setIsPending(true)
         try {
             await importChartOfAccountsTemplate(key as any, { reset: true })
-            toast.success(`Successfully imported ${key.replace(/_/g, ' ')}`)
-            goToCOA()
+            afterImport(key.replace(/_/g, ' '))
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
@@ -172,8 +171,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
         setIsPending(true)
         try {
             await importChartOfAccountsTemplate(key as any, { reset: true })
-            toast.success(`Replaced chart of accounts with ${key.replace(/_/g, ' ')}`)
-            goToCOA()
+            afterImport(key.replace(/_/g, ' '))
         } catch (e: unknown) {
             toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
@@ -351,8 +349,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                     reset: true,
                                     account_mapping: accountMapping,
                                 })
-                                toast.success(`Migration complete → ${key.replace(/_/g, ' ')}`)
-                                goToCOA()
+                                afterImport(key.replace(/_/g, ' '))
                             } catch (e: unknown) {
                                 toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                             } finally {
@@ -374,8 +371,7 @@ export default function TemplatesPageClient({ templates, templatesMap, migration
                                     reset: true,
                                     account_mapping: accountMapping,
                                 })
-                                toast.success(`Migration complete → ${migrationTarget.to.replace(/_/g, ' ')}`)
-                                goToCOA()
+                                afterImport(migrationTarget.to.replace(/_/g, ' '))
                             } catch (e: unknown) {
                                 toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                             } finally {

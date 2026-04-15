@@ -253,6 +253,16 @@ export default function TaxPolicyDashboard() {
         }
     }
 
+    // ── Tabs ──
+    const [activeTab, setActiveTab] = useState('setup')
+    const TABS = [
+        { id: 'setup', label: 'Setup Wizard', icon: Wand2 },
+        { id: 'health', label: 'Tax Health', icon: Shield },
+        { id: 'policies', label: 'Org Policies', icon: Building2 },
+        { id: 'profiles', label: 'Counterparty Profiles', icon: Users },
+        { id: 'categories', label: 'Rate Categories', icon: Percent },
+    ]
+
     const kpis = buildKPIs(policy, profiles)
 
     const filteredModules = MODULE_CARDS.filter(m =>
@@ -283,42 +293,38 @@ export default function TaxPolicyDashboard() {
                         </div>
                         <div>
                             <h1 className="text-lg md:text-xl font-black text-app-foreground tracking-tight">
-                                Tax Policy Engine
+                                Universal Tax Engine
                             </h1>
                             <p className="text-[10px] md:text-[11px] font-bold text-app-muted-foreground uppercase tracking-widest">
                                 {policy ? `${policy.name} · ${policy.country_code}` : 'No Active Policy'} · {profiles.length} Profiles
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {policy && (
-                            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl"
-                                style={{
-                                    background: 'color-mix(in srgb, var(--app-success, #22c55e) 10%, transparent)',
-                                    color: 'var(--app-success, #22c55e)',
-                                    border: '1px solid color-mix(in srgb, var(--app-success, #22c55e) 20%, transparent)',
-                                }}>
-                                <Zap size={11} /> Active
-                            </div>
-                        )}
-                        <button
-                            onClick={handleApplyTemplate}
-                            disabled={applying}
-                            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-60"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-primary) 10%, transparent)',
-                                color: 'var(--app-primary)',
-                                border: '1px solid color-mix(in srgb, var(--app-primary) 20%, transparent)',
-                            }}>
-                            {applying ? <Loader2 size={13} className="animate-spin" /> : <Globe size={13} />}
-                            <span className="hidden sm:inline">{applying ? 'Applying...' : 'Apply Template'}</span>
-                        </button>
-                        <button onClick={() => router.push('/finance/org-tax-policies')}
-                            className="flex items-center gap-1.5 text-[11px] font-bold bg-app-primary hover:brightness-110 text-white px-3 py-1.5 rounded-xl transition-all"
-                            style={{ boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 25%, transparent)' }}>
-                            <Settings size={14} />
-                            <span className="hidden sm:inline">Configure Policy</span>
-                        </button>
+                    <div className="flex items-center gap-4 flex-wrap">
+                        {/* Tab Switcher */}
+                        <div className="flex items-center p-1 bg-app-surface/50 border border-app-border/40 rounded-2xl">
+                            {TABS.map(tab => {
+                                const Icon = tab.icon
+                                const isActive = activeTab === tab.id
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${isActive
+                                                ? 'bg-app-primary text-white shadow-lg'
+                                                : 'text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface'
+                                            }`}
+                                        style={isActive ? { boxShadow: '0 2px 8px color-mix(in srgb, var(--app-primary) 30%, transparent)' } : {}}
+                                    >
+                                        <Icon size={13} />
+                                        <span className="hidden lg:inline">{tab.label}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <div className="h-6 w-[1px] bg-app-border mx-1 hidden md:block" />
+
                         <button onClick={() => setFocusMode(true)}
                             className="flex items-center gap-1 text-[11px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                             <Maximize2 size={13} />
@@ -341,198 +347,209 @@ export default function TaxPolicyDashboard() {
                 </div>
             )}
 
-            {/* ── Tax Health Banner ── */}
-            {!focusMode && health && (
-                <HealthBanner health={health} onApplyTemplate={handleApplyTemplate} applying={applying} />
-            )}
+            {/* ── Content Area ── */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
 
-            {/* ── KPI Strip ── */}
-            {!focusMode && kpis.length > 0 && (
-                <div className="flex-shrink-0 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
-                    {kpis.map(s => (
-                        <div key={s.label}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                            }}>
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                                style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
-                                {s.icon}
+                {/* ── TAB: Setup Wizard ── */}
+                {activeTab === 'setup' && (
+                    <div className="animate-in slide-in-from-bottom-2 duration-300">
+                        <div className="max-w-4xl mx-auto py-8">
+                            <div className="flex flex-col items-center text-center mb-10">
+                                <div className="w-16 h-16 rounded-[2rem] bg-app-primary flex items-center justify-center text-white mb-6 shadow-2xl">
+                                    <Wand2 size={32} />
+                                </div>
+                                <h2 className="text-2xl font-black text-app-foreground tracking-tight mb-2">Automated Tax Setup</h2>
+                                <p className="text-app-muted-foreground max-w-lg">
+                                    Apply an official country template to automatically configure your tax policies,
+                                    counterparty profiles, and GL account links.
+                                </p>
                             </div>
-                            <div className="min-w-0">
-                                <div className="text-[10px] font-bold uppercase tracking-wider"
-                                    style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
-                                <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
+
+                            <div className="grid md:grid-rows-1 md:grid-cols-2 gap-8 items-stretch">
+                                {/* Wizard Card */}
+                                <div className="p-8 rounded-[2rem] border border-app-border bg-app-surface shadow-sm flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-app-primary font-black uppercase tracking-widest text-[10px] mb-4">
+                                            <Globe size={12} /> Regional Standards
+                                        </div>
+                                        <h3 className="text-xl font-bold text-app-foreground mb-4">Template Application</h3>
+                                        <p className="text-sm text-app-muted-foreground mb-6 leading-relaxed">
+                                            This will seed standard VAT rates (18%, 9%, 0%), configure AIRSI treatments,
+                                            and link mandatory tax accounts for <b>{health?.country_code || 'your country'}</b>.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleApplyTemplate}
+                                        disabled={applying}
+                                        className="w-full h-14 rounded-2xl bg-app-primary hover:brightness-110 text-white font-black text-sm flex items-center justify-center gap-2 transition-all shadow-xl disabled:opacity-50"
+                                    >
+                                        {applying ? <Loader2 size={18} className="animate-spin" /> : <Zap size={18} />}
+                                        {applying ? 'Applying Template...' : 'Initialize Tax Engine'}
+                                    </button>
+                                </div>
+
+                                {/* Checklist Card */}
+                                <div className="p-8 rounded-[2rem] border border-app-border bg-app-surface/30 flex flex-col gap-4">
+                                    <h4 className="font-black text-app-foreground uppercase tracking-widest text-[10px]">Setup Checklist</h4>
+                                    {(health?.indicators || []).map((ind: any) => {
+                                        const isOk = ind.status === 'ok'
+                                        return (
+                                            <div key={ind.key} className="flex items-center gap-3">
+                                                <div className={`w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 ${isOk ? 'bg-app-success/10 text-app-success' : 'bg-app-muted-background text-app-muted-foreground'}`}>
+                                                    {isOk ? <CheckCircle2 size={12} /> : <div className="w-1 h-1 rounded-full bg-current" />}
+                                                </div>
+                                                <span className={`text-[12px] font-bold ${isOk ? 'text-app-foreground' : 'text-app-muted-foreground'}`}>
+                                                    {ind.label}
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
-
-            {/* ── 6 Tax Types Strip ── */}
-            {!focusMode && policy && (
-                <div className="flex-shrink-0 mb-4 p-4 rounded-2xl"
-                    style={{
-                        background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
-                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                        borderLeft: '3px solid var(--app-primary)',
-                    }}>
-                    <div className="flex items-center gap-2 mb-3">
-                        <Landmark size={13} style={{ color: 'var(--app-primary)' }} />
-                        <span className="text-[11px] font-black text-app-foreground uppercase tracking-wider">6 Tax Components</span>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px' }}>
-                        {TAX_TYPES.map(tax => {
-                            const Icon = tax.icon
-                            return (
-                                <div key={tax.key}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all"
-                                    style={{
-                                        background: `color-mix(in srgb, ${tax.color} 6%, transparent)`,
-                                        border: `1px solid color-mix(in srgb, ${tax.color} 15%, transparent)`,
-                                    }}>
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                        style={{ background: `color-mix(in srgb, ${tax.color} 12%, transparent)`, color: tax.color }}>
-                                        <Icon size={14} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-[9px] font-black uppercase tracking-widest"
-                                            style={{ color: 'var(--app-muted-foreground)' }}>{tax.label}</div>
-                                        <div className="text-[12px] font-bold text-app-foreground truncate">
-                                            {tax.getValue(policy)}
+                )}
+
+                {/* ── TAB: Tax Health ── */}
+                {activeTab === 'health' && (
+                    <div className="animate-in slide-in-from-bottom-2 duration-300">
+                        {health && <HealthBanner health={health} onApplyTemplate={handleApplyTemplate} applying={applying} />}
+
+                        <div className="mt-6 mb-4">
+                            <h3 className="text-sm font-black text-app-foreground uppercase tracking-widest mb-4">Policy Snapshot</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+                                {TAX_TYPES.map(tax => {
+                                    const Icon = tax.icon
+                                    return (
+                                        <div key={tax.key}
+                                            className="flex flex-col gap-4 p-5 rounded-2xl bg-app-surface border border-app-border/40"
+                                            style={{ borderTop: `4px solid ${tax.color}` }}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                                    style={{ background: `color-mix(in srgb, ${tax.color} 12%, transparent)`, color: tax.color }}>
+                                                    <Icon size={20} />
+                                                </div>
+                                                <div className="text-[10px] font-black text-app-muted-foreground uppercase tracking-widest">{tax.key} module</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[11px] font-bold text-app-muted-foreground uppercase mb-1">{tax.label} Status</div>
+                                                <div className="text-lg font-black text-app-foreground">{tax.getValue(policy)}</div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── TAB: Lists (Org Policies, Profiles, Categories) ── */}
+                {['policies', 'profiles', 'categories'].includes(activeTab) && (
+                    <div className="animate-in slide-in-from-bottom-2 duration-300">
+                        {/* KPI Strip if not in categories */}
+                        {activeTab !== 'categories' && kpis.length > 0 && (
+                            <div className="mb-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                                {kpis.map(s => (
+                                    <div key={s.label} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-app-surface border border-app-border/30">
+                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>{s.icon}</div>
+                                        <div className="min-w-0">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-app-muted-foreground">{s.label}</div>
+                                            <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
+                                ))}
+                            </div>
+                        )}
 
-            {/* ── Search Bar ── */}
-            <div className="flex-shrink-0 mb-3 flex items-center gap-2">
-                <div className="flex-1 relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-muted-foreground" />
-                    <input
-                        ref={searchRef}
-                        type="text"
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search modules... (Ctrl+K)"
-                        className="w-full pl-9 pr-3 py-2 text-[12px] md:text-[13px] bg-app-surface/50 border border-app-border/50 rounded-xl text-app-foreground placeholder:text-app-muted-foreground focus:bg-app-surface focus:border-app-border focus:ring-2 focus:ring-app-primary/10 outline-none transition-all"
-                    />
-                </div>
-                <button
-                    onClick={loadData}
-                    title="Refresh"
-                    className="p-2 rounded-xl border border-app-border text-app-muted-foreground hover:text-app-foreground hover:bg-app-surface transition-all flex-shrink-0">
-                    <RefreshCw size={13} />
-                </button>
-            </div>
+                        {/* Module filtering logic */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                            {MODULE_CARDS
+                                .filter(m => {
+                                    if (activeTab === 'policies') return m.url.includes('org-tax-policies')
+                                    if (activeTab === 'profiles') return m.url.includes('counterparty-tax-profiles')
+                                    if (activeTab === 'categories') return m.url.includes('tax-groups') || m.url.includes('custom-tax-rules') || m.url.includes('tax-rate-categories')
+                                    return true
+                                })
+                                .map(card => {
+                                    const Icon = card.icon
+                                    const stats = card.stats(policy, profiles)
+                                    return (
+                                        <div key={card.title}
+                                            className="group rounded-3xl overflow-hidden transition-all cursor-pointer bg-app-surface border border-app-border hover:border-app-primary hover:shadow-xl hover:-translate-y-0.5"
+                                            onClick={() => router.push(card.url)}>
+                                            <div className="flex items-center gap-4 px-6 py-5 border-b border-app-border/40">
+                                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                                    style={{ background: `color-mix(in srgb, ${card.color} 12%, transparent)`, color: card.color }}>
+                                                    <Icon size={24} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-base font-black text-app-foreground">{card.title}</div>
+                                                    <div className="text-[11px] font-bold text-app-muted-foreground">{card.subtitle}</div>
+                                                </div>
+                                                <ChevronRight size={16} className="text-app-muted-foreground group-hover:text-app-primary group-hover:translate-x-1 transition-all" />
+                                            </div>
+                                            <div className="px-6 py-4 bg-app-surface/30">
+                                                <div className="flex items-center gap-6">
+                                                    {stats.map(stat => (
+                                                        <div key={stat.label}>
+                                                            <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">{stat.label}</div>
+                                                            <div className="text-sm font-black text-app-foreground tabular-nums">{stat.value}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
 
-            {/* ── Module Cards ── */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain custom-scrollbar">
-                {filteredModules.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-                        <Shield size={36} className="text-app-muted-foreground mb-3 opacity-40" />
-                        <p className="text-sm font-bold text-app-muted-foreground">
-                            {searchQuery ? 'No matching modules' : 'No tax modules available'}
-                        </p>
-                    </div>
-                ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
-                        {filteredModules.map(card => {
-                            const Icon = card.icon
-                            const stats = card.stats(policy, profiles)
-                            return (
-                                <div key={card.title}
-                                    className="group rounded-2xl overflow-hidden transition-all cursor-pointer hover:brightness-[1.02] animate-in fade-in duration-200"
-                                    style={{
-                                        background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                                        border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                                    }}
-                                    onClick={() => router.push(card.url)}>
-
-                                    {/* Card Header */}
-                                    <div className="flex items-center gap-3 px-4 py-3"
-                                        style={{
-                                            background: `color-mix(in srgb, ${card.color} 3%, var(--app-surface))`,
-                                            borderBottom: '1px solid color-mix(in srgb, var(--app-border) 30%, transparent)',
-                                            borderLeft: `3px solid ${card.color}`,
-                                        }}>
-                                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                            style={{ background: `color-mix(in srgb, ${card.color} 12%, transparent)`, color: card.color }}>
-                                            <Icon size={17} />
+                            {/* NEW: Tax Rate Categories specifically in Categories tab */}
+                            {activeTab === 'categories' && (
+                                <div className="group rounded-3xl overflow-hidden transition-all cursor-pointer bg-app-surface border border-app-border hover:border-app-primary hover:shadow-xl hover:-translate-y-0.5"
+                                    onClick={() => router.push('/finance/tax-rate-categories')}>
+                                    <div className="flex items-center gap-4 px-6 py-5 border-b border-app-border/40">
+                                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--app-primary) 12%, transparent)', color: 'var(--app-primary)' }}>
+                                            <Percent size={24} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[13px] font-bold text-app-foreground truncate">{card.title}</div>
-                                            <div className="text-[10px] font-bold text-app-muted-foreground truncate">{card.subtitle}</div>
+                                            <div className="text-base font-black text-app-foreground">VAT Rate Overrides</div>
+                                            <div className="text-[11px] font-bold text-app-muted-foreground">Per-product tax category overrides</div>
                                         </div>
-                                        <ChevronRight size={14} className="text-app-muted-foreground group-hover:text-app-foreground transition-colors flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                                        <ChevronRight size={16} className="text-app-muted-foreground group-hover:text-app-primary group-hover:translate-x-1 transition-all" />
                                     </div>
-
-                                    {/* Card Stats */}
-                                    <div className="px-4 py-3">
-                                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(stats.length, 3)}, 1fr)`, gap: '8px' }}>
-                                            {stats.map(stat => (
-                                                <div key={stat.label}
-                                                    className="px-2.5 py-2 rounded-xl text-center"
-                                                    style={{
-                                                        background: `color-mix(in srgb, ${card.color} 5%, transparent)`,
-                                                        border: `1px solid color-mix(in srgb, ${card.color} 10%, transparent)`,
-                                                    }}>
-                                                    <div className="text-[13px] font-black text-app-foreground tabular-nums">{stat.value}</div>
-                                                    <div className="text-[9px] font-black uppercase tracking-widest"
-                                                        style={{ color: 'var(--app-muted-foreground)' }}>{stat.label}</div>
-                                                </div>
-                                            ))}
+                                    <div className="px-6 py-4 bg-app-surface/30">
+                                        <div className="flex items-center gap-6">
+                                            <div>
+                                                <div className="text-[10px] font-bold text-app-muted-foreground uppercase tracking-widest">Type</div>
+                                                <div className="text-sm font-black text-app-foreground">Product Override</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            )
-                        })}
-                    </div>
-                )}
-
-                {/* ── Tax Reports Quick Link ── */}
-                {!searchQuery && (
-                    <div className="mt-4 rounded-2xl overflow-hidden cursor-pointer group transition-all hover:brightness-[1.02]"
-                        style={{
-                            background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
-                            border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
-                        }}
-                        onClick={() => router.push('/finance/tax-reports')}>
-                        <div className="flex items-center gap-3 px-4 py-3"
-                            style={{
-                                background: 'color-mix(in srgb, var(--app-primary) 3%, var(--app-surface))',
-                                borderLeft: '3px solid var(--app-muted-foreground)',
-                            }}>
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{ background: 'color-mix(in srgb, var(--app-border) 30%, transparent)', color: 'var(--app-muted-foreground)' }}>
-                                <BarChart3 size={17} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[13px] font-bold text-app-foreground">Tax Reports & Analytics</div>
-                                <div className="text-[10px] font-bold text-app-muted-foreground">
-                                    Comprehensive tax reports, VAT settlement, and analytics dashboard
-                                </div>
-                            </div>
-                            <div className="flex gap-2 flex-shrink-0">
-                                <button onClick={(e) => { e.stopPropagation(); router.push('/finance/vat-return') }}
-                                    className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-lg hover:bg-app-surface transition-all">
-                                    <FileText size={11} /> VAT Return
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); router.push('/finance/vat-settlement') }}
-                                    className="flex items-center gap-1 text-[10px] font-bold text-app-muted-foreground hover:text-app-foreground border border-app-border px-2 py-1 rounded-lg hover:bg-app-surface transition-all">
-                                    <DollarSign size={11} /> Settlement
-                                </button>
-                            </div>
-                            <ChevronRight size={14} className="text-app-muted-foreground group-hover:text-app-foreground transition-colors flex-shrink-0" />
+                            )}
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* ── Footer / Quick Links ── */}
+            {!focusMode && !searchQuery && (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-4 py-3 border-t border-app-border/40 flex-shrink-0 animate-in fade-in slide-in-from-bottom-1 delay-150">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-app-muted-foreground uppercase tracking-widest cursor-pointer hover:text-app-foreground" onClick={() => router.push('/finance/vat-return')}>
+                            <FileText size={12} /> VAT Return
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black text-app-muted-foreground uppercase tracking-widest cursor-pointer hover:text-app-foreground" onClick={() => router.push('/finance/vat-settlement')}>
+                            <DollarSign size={12} /> Settlement
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="text-[10px] font-bold text-app-muted-foreground">
+                            Engine Version 2.4.0 · Universal Tax Compliance
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

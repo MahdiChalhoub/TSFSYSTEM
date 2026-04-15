@@ -998,7 +998,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
     ]
 
     return (
-        <div className="flex flex-col p-4 md:p-6 animate-in fade-in duration-300 overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
+        <div className="flex flex-col p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 overflow-hidden" style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ═══════════════ HEADER ═══════════════ */}
             <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
@@ -1168,7 +1168,7 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
             )}
 
             {/* ═══════════════ TREE TABLE ═══════════════ */}
-            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden flex flex-col"
+            <div className="flex-1 min-h-0 rounded-t-2xl overflow-hidden flex flex-col"
                 style={{ background: 'color-mix(in srgb, var(--app-surface) 30%, transparent)', border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)' }}>
 
                 {/* Column Headers */}
@@ -1246,6 +1246,54 @@ export function WarehouseClient({ initialWarehouses, countries = [], defaultCoun
                             ))}
                         </>
                     )}
+                </div>
+            </div>
+
+            {/* ── Footer ──────────────────────────────────────── */}
+            <div
+                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold rounded-b-2xl"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    borderTop: 'none',
+                    marginTop: '-1px',
+                    color: 'var(--app-muted-foreground)',
+                    backdropFilter: 'blur(10px)',
+                }}
+            >
+                <div className="flex items-center gap-3 flex-wrap">
+                    <span>{data.filter(w => w.is_active).length} active locations</span>
+                    <span style={{ color: 'var(--app-border)' }}>·</span>
+                    <span>{globalSKUCount.toLocaleString()} unique SKUs</span>
+                    {activeFilter && (
+                        <>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span style={{ color: 'var(--app-primary)' }}>Filtered: {activeFilter}</span>
+                            <button
+                                onClick={() => setActiveFilter(null)}
+                                className="underline hover:opacity-80 transition-opacity"
+                                style={{ color: 'var(--app-primary)' }}
+                            >
+                                Clear
+                            </button>
+                        </>
+                    )}
+                    {searchQuery && (
+                        <>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span style={{ color: 'var(--app-info)' }}>Search active</span>
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="underline hover:opacity-80 transition-opacity"
+                                style={{ color: 'var(--app-info)' }}
+                            >
+                                Clear
+                            </button>
+                        </>
+                    )}
+                </div>
+                <div className="tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                    System Status: <span style={{ color: 'var(--app-success)' }}>Operational</span>
                 </div>
             </div>
 

@@ -1035,9 +1035,9 @@ export function Sidebar({
                             </div>
                             {favOpen && (
                                 <div className="space-y-0.5 mb-3">
-                                    {favorites.map((fav) => (
+                                    {favorites.map((fav, idx) => (
                                         <div
-                                            key={fav.path}
+                                            key={`${fav.path}-${idx}`}
                                             className="group flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-colors"
                                             onClick={() => openTab(fav.title, fav.path)}
                                             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--app-sidebar-active)'; }}
@@ -1195,6 +1195,8 @@ function MenuItem({
     installedModules: Set<string> | null,
     level?: number
 }) {
+    const { toggleFavorite, isFavorite } = useFavorites();
+
     // 1. Module & Visibility Filter (null = not loaded yet, show everything)
     if (installedModules !== null && item.module && item.module !== 'core' && !installedModules.has(item.module)) {
         return null;
@@ -1202,6 +1204,7 @@ function MenuItem({
 
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
+    const isLeaf = !!item.path;
 
     // 2. Recursive Active State Detection
     const checkActive = (it: SidebarDynamicItem): boolean => {
@@ -1212,6 +1215,7 @@ function MenuItem({
 
     const isChildActive = hasChildren && item.children.some((child: SidebarDynamicItem) => checkActive(child));
     const isActive = activeTab === item.path;
+    const isFav = isLeaf ? isFavorite(item.path) : false;
 
     // 3. Expansion Logic
     const [expanded, setExpanded] = useState(isChildActive);
@@ -1273,6 +1277,29 @@ function MenuItem({
                     {item.title}
                 </span>
 
+                {/* Favorite Toggle (Leaf nodes only) */}
+                {isLeaf && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(item.title, item.path);
+                        }}
+                        className={clsx(
+                            "opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-[var(--app-sidebar-muted)]/10 rounded-md",
+                            isFav && "opacity-100"
+                        )}
+                        title={isFav ? "Remove from favorites" : "Add to favorites"}
+                    >
+                        <Star 
+                            size={12} 
+                            style={{ 
+                                fill: isFav ? '#f59e0b' : 'none', 
+                                color: isFav ? '#f59e0b' : 'var(--app-sidebar-muted)' 
+                            }} 
+                        />
+                    </button>
+                )}
+
                 {hasChildren && (
                     <div className={clsx("transition-transform duration-200", expanded ? "rotate-90" : "")}
                         style={{ color: expanded ? 'var(--app-primary)' : 'inherit', opacity: 0.5 }}>
@@ -1300,3 +1327,4 @@ function MenuItem({
         </div>
     );
 }
+

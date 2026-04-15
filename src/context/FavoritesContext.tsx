@@ -73,7 +73,13 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         let localFavs: FavoriteEntry[] = [];
         try {
             const raw = localStorage.getItem(LS_KEY);
-            if (raw) localFavs = JSON.parse(raw);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                // Sanitize: only keep entries with string title and string path
+                localFavs = (Array.isArray(parsed) ? parsed : [])
+                    .filter((f: any) => typeof f?.title === 'string' && typeof f?.path === 'string')
+                    .map((f: any) => ({ title: f.title, path: f.path }));
+            }
         } catch { /* ignore parse errors */ }
 
         if (localFavs.length > 0) setFavorites(localFavs);
@@ -81,9 +87,12 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         // 2. Reconcile with backend — single call, no race condition
         //    setFavorites called once after await, not twice
         let cancelled = false;
-        getFavorites().then(serverFavs => {
+        getFavorites().then(rawServerFavs => {
             if (cancelled) return;
-            // Backend is source of truth — override regardless of local state
+            // Sanitize server response to clean shape
+            const serverFavs = rawServerFavs
+                .filter(f => typeof f?.title === 'string' && typeof f?.path === 'string')
+                .map(f => ({ title: f.title, path: f.path }));
             setFavorites(serverFavs);
             try {
                 localStorage.setItem(LS_KEY, JSON.stringify(serverFavs));
@@ -97,7 +106,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
             if (e.key !== LS_KEY) return;
             try {
                 const raw = localStorage.getItem(LS_KEY);
-                setFavorites(raw ? JSON.parse(raw) : []);
+                const parsed = raw ? JSON.parse(raw) : [];
+                const clean = (Array.isArray(parsed) ? parsed : [])
+                    .filter((f: any) => typeof f?.title === 'string' && typeof f?.path === 'string')
+                    .map((f: any) => ({ title: f.title, path: f.path }));
+                setFavorites(clean);
             } catch { /* ignore */ }
         };
         window.addEventListener('storage', onStorage);

@@ -84,18 +84,17 @@
 
 ---
 
-<!-- 
-TEMPLATE for new sessions — copy below this line:
-
-### Session: YYYY-MM-DD (vX.X.X series)
-- **Agent**: [name]
-- **Status**: 🔄 IN_PROGRESS | ✅ DONE | 🚫 BLOCKED
-- **Worked On**: [brief description]
+### Session: 2026-04-15 (v2.9.0 series)
+- **Agent**: Antigravity
+- **Status**: ✅ DONE
+- **Worked On**: Warehouse Hierarchy stabilization (API fix) + Stats Footer UI implementation
 - **Files Modified**:
-  - `path/to/file` — [what changed]
-- **Git Versions**: vX.X.X-bNNN through vX.X.X-bNNN
+  - `src/app/(privileged)/inventory/warehouses/WarehouseClient.tsx` — Implemented COA-style glassmorphism stats footer (active locations, unique SKUs, active filters)
+  - `erp_backend/apps/inventory/migrations/0053_product_tax_rate_category.py` — Applied migration (fix for 500 error in SKU panel)
+- **Git Versions**: v2.9.0-b001 through v2.9.0-b002
 - **Discoveries**:
-  - [unexpected findings]
+  - `GET /api/inventory/` endpoint was throwing a `ProgrammingError` due to missing `tax_rate_category` column in `Product` model after tax engine overhaul.
+  - COA footer design pattern uses `color-mix` for glassmorphism and `backdrop-filter: blur(10px)`.
 - **Warnings for Next Agent**:
-  - ⚠️ [critical context]
--->
+  - ⚠️ All inventory migrations are now up-to-date.
+  - ⚠️ Tax policy configuration in warehouses is live but requires products to have a `tax_rate_category` assigned to work correctly with calculations.

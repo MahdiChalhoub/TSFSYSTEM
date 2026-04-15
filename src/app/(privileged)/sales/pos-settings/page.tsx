@@ -1,14 +1,24 @@
 'use client'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { toast } from 'sonner'
-import { erpFetch } from '@/lib/erp-api'
 import {
   Plus, Monitor, Settings2, Loader2, RefreshCcw, Search, Key, X,
   ChevronDown, ChevronRight, AlertTriangle, CheckCircle2,
   Maximize2, Minimize2, Banknote, Warehouse, MapPin,
 } from 'lucide-react'
-import { RegisterConfigPanel, GlobalSettingsPanel, UsersPinsPanel } from './components'
-import type { Reg, FA, UD, Site } from './components'
+
+/* Fragmented Component Imports */
+import { RegisterDrawer } from './_components/RegisterDrawer'
+import { GlobalSettingsPanel } from './_components/GlobalSettingsPanel'
+import { UsersPinsPanel } from './_components/UsersPinsPanel'
+
+/* Server Actions */
+import { loadPOSSettingsData } from '@/app/actions/pos/settings-actions'
+import { erpFetch } from '@/lib/erp-api' // Keep for creation
+
+/* Types */
+import type { Reg, FA, UD, Site } from './types'
+
 import { useKeyboardShortcuts } from '@/lib/settings-framework/hooks/useKeyboardShortcuts'
 import { useAutoSaveDraft } from '@/lib/settings-framework/hooks/useAutoSaveDraft'
 import { KeyboardShortcutsModal } from '@/lib/settings-framework/components/KeyboardShortcutsModal'
@@ -25,9 +35,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   SITES: { label: 'Sites', color: 'var(--app-info)', bg: 'color-mix(in srgb, var(--app-info) 10%, transparent)', border: 'color-mix(in srgb, var(--app-info) 20%, transparent)' },
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN PAGE
-   ═══════════════════════════════════════════════════════════════ */
 export default function POSSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [sites, setSites] = useState<Site[]>([])
@@ -49,7 +56,6 @@ export default function POSSettingsPage() {
   const [createForm, setCreateForm] = useState({ name: '', siteId: 0, warehouseId: 0, cashAccountId: 0, enableAccountBook: true })
   const [creating, setCreating] = useState(false)
 
-  // Filtered warehouses for create form — only ACTIVE children with can_sell under selected branch
   const filteredCreateWarehouses = useMemo(() => {
     if (!createForm.siteId) return []
     return warehouses.filter((w: any) =>
@@ -62,23 +68,19 @@ export default function POSSettingsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [lobby, usersR, acctR, whR] = await Promise.all([
-        erpFetch('pos-registers/lobby/').catch(() => []),
-        erpFetch('erp/users/').catch(() => []),
-        erpFetch('accounts/').catch(() => []),
-        erpFetch('inventory/warehouses/').catch(() => []),
-      ])
-      const lobbyArr = Array.isArray(lobby) ? lobby : []
-      const mapped = lobbyArr.map((s: any) => ({
+      const data = await loadPOSSettingsData();
+      
+      const mapped = data.sites.map((s: any) => ({
         ...s,
         registers: (s.registers || []).map((r: any) => ({ ...r, siteId: s.id, siteName: s.name })),
       }))
+      
       setSites(mapped)
-      setExpandedSites(new Set(mapped.map((s: any) => s.id)))
-      setUsers(Array.isArray(usersR) ? usersR : usersR?.results || [])
-      setAccounts(Array.isArray(acctR) ? acctR : acctR?.results || [])
-      setWarehouses(Array.isArray(whR) ? whR : whR?.results || [])
-    } catch { toast.error('Failed to load') }
+      setExpandedSites(prev => prev.size > 0 ? prev : new Set(mapped.map((s: any) => s.id)))
+      setUsers(data.users)
+      setAccounts(data.accounts)
+      setWarehouses(data.warehouses)
+    } catch { toast.error('Failed to load settings data') }
     setLoading(false)
   }, [])
 
@@ -125,9 +127,7 @@ export default function POSSettingsPage() {
     return { filteredSites: filtered, stats }
   }, [sites, searchQuery, activeFilter])
 
-  // Branch options for create form — only active branches with at least one active POS-commercial child
   const branchOptions = useMemo(() => {
-    // Identify active branches that have at least one active child with can_sell
     const branchesWithPOS = new Set(
       warehouses
         .filter((w: any) => w.is_active !== false && w.can_sell === true && (w.parent || w.parent_id))
@@ -177,7 +177,6 @@ export default function POSSettingsPage() {
       {/* ═══ HEADER ═══ */}
       <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
         {focusMode ? (
-          /* Focus mode: compact bar */
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 flex-shrink-0">
               <div className="w-7 h-7 rounded-lg bg-app-primary flex items-center justify-center">
@@ -202,9 +201,7 @@ export default function POSSettingsPage() {
             </button>
           </div>
         ) : (
-          /* Normal mode: full header */
           <>
-            {/* Title Row */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="page-header-icon bg-app-primary" style={{ boxShadow: '0 4px 14px color-mix(in srgb, var(--app-primary) 30%, transparent)' }}>
@@ -224,19 +221,11 @@ export default function POSSettingsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
-                <button onClick={(e) => {
-                  const regId = (e.currentTarget as HTMLButtonElement).dataset.returnReg
-                  if (regId) { setReturnToRegisterId(parseInt(regId)); delete (e.currentTarget as HTMLButtonElement).dataset.returnReg }
-                  setShowUsers(true)
-                }} data-open-users
+                <button onClick={() => setShowUsers(true)} 
                   className="flex items-center gap-1.5 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <Key size={13} /><span className="hidden md:inline">Users & PINs</span>
                 </button>
-                <button onClick={(e) => {
-                  const regId = (e.currentTarget as HTMLButtonElement).dataset.returnReg
-                  if (regId) { setReturnToRegisterId(parseInt(regId)); delete (e.currentTarget as HTMLButtonElement).dataset.returnReg }
-                  setShowSettings(true)
-                }} data-open-settings
+                <button onClick={() => setShowSettings(true)}
                   className="flex items-center gap-1.5 text-[11px] font-bold text-app-text-muted hover:text-app-text border border-app-border px-2.5 py-1.5 rounded-xl hover:bg-app-surface transition-all">
                   <Settings2 size={13} /><span className="hidden md:inline">Global Rules</span>
                 </button>
@@ -386,7 +375,6 @@ export default function POSSettingsPage() {
               const isExpanded = expandedSites.has(site.id)
               return (
                 <div key={site.id}>
-                  {/* Site/Branch header row */}
                   <div className="group flex items-center gap-2 md:gap-3 transition-all duration-150 cursor-pointer hover:bg-app-surface py-2.5 md:py-3"
                     onClick={() => setExpandedSites(prev => {
                       const next = new Set(prev)
@@ -414,7 +402,6 @@ export default function POSSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Register rows */}
                   {isExpanded && (
                     <div className="animate-in fade-in slide-in-from-top-1 duration-150">
                       {site.registers.map(reg => (
@@ -426,12 +413,10 @@ export default function POSSettingsPage() {
                               borderLeft: `1px solid color-mix(in srgb, var(--app-border) 40%, transparent)`,
                               marginLeft: '22px',
                             }}>
-                            {/* Toggle */}
                             <button className="w-5 h-5 flex items-center justify-center rounded-md text-app-text-muted">
                               {expandedId === reg.id ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
                             </button>
 
-                            {/* Icon */}
                             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                               style={{
                                 background: reg.isOpen
@@ -442,7 +427,6 @@ export default function POSSettingsPage() {
                               <Monitor size={13} />
                             </div>
 
-                            {/* Name */}
                             <div className="flex-1 min-w-0 flex items-center gap-2">
                               <span className="font-medium text-[13px] text-app-text truncate">{reg.name}</span>
                               {reg.isOpen && (
@@ -453,7 +437,6 @@ export default function POSSettingsPage() {
                               )}
                             </div>
 
-                            {/* Cash Account */}
                             <div className="hidden md:flex w-28 items-center gap-1 flex-shrink-0">
                               {reg.cashAccountName ? (
                                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded truncate"
@@ -465,14 +448,12 @@ export default function POSSettingsPage() {
                               )}
                             </div>
 
-                            {/* Warehouse */}
                             <div className="hidden lg:flex w-24 items-center flex-shrink-0">
                               <span className="text-[10px] text-app-text-muted truncate">
                                 {reg.warehouseId ? '✓ Set' : '—'}
                               </span>
                             </div>
 
-                            {/* Status */}
                             <div className="w-20 flex-shrink-0">
                               <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full`}
                                 style={reg.isConfigComplete
@@ -482,19 +463,16 @@ export default function POSSettingsPage() {
                               </span>
                             </div>
 
-                            {/* Actions */}
                             <div className="w-16 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-right">
                               <button onClick={e => { e.stopPropagation(); setExpandedId(reg.id) }}
-                                className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted hover:text-app-text transition-colors"
-                                title="Configure">
+                                className="p-1.5 hover:bg-app-border/50 rounded-lg text-app-text-muted hover:text-app-text transition-colors">
                                 <Settings2 size={12} />
                               </button>
                             </div>
                           </div>
 
-                          {/* Expanded config panel */}
                           {expandedId === reg.id && (
-                            <RegisterConfigPanel reg={reg} accounts={accounts} warehouses={warehouses} users={users}
+                            <RegisterDrawer reg={reg} accounts={accounts} warehouses={warehouses} users={users}
                               onRefresh={() => { setExpandedId(null); load() }} onClose={() => setExpandedId(null)}
                               onOpenUsers={(regId) => { setExpandedId(null); setReturnToRegisterId(regId); setShowUsers(true) }}
                               onOpenSettings={(regId) => { setExpandedId(null); setReturnToRegisterId(regId); setShowSettings(true) }} />

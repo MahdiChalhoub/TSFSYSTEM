@@ -217,6 +217,61 @@ class ReturnsService:
             sales_return.processed_by = user
             sales_return.save()
 
+            # ── FNE Auto-Certification (API #2 /refund) ───────────────────
+            try:
+                # Use context-aware tax engine to get config
+                TaxEngineContext = connector.require('finance.tax.get_engine_context_class', org_id=0, source='pos.returns')
+                TaxCalculator = connector.require('finance.tax.get_calculator_class', org_id=0, source='pos.returns')
+                _ctx = TaxEngineContext.from_org(organization)
+                fne_config = getattr(_ctx, 'einvoice_config', None)
+                
+                if fne_config and sales_return.status == 'APPROVED':
+                    from apps.finance.services.fne_service import (
+                        FNEService, FNELineItem, FNEInvoiceRequest
+                    )
+                    
+                    # 1. Map items
+                    fne_items = []
+                    for line in sales_return.lines.select_related('product', 'original_line').all():
+                        t_code = TaxCalculator.resolve_fne_tax_code(line.tax_rate or Decimal('0'), line.product)
+                        fne_items.append(FNELineItem(
+                            description=line.product.name if line.product else f'Return {line.id}',
+                            quantity=float(line.quantity_returned),
+                            amount=float(line.unit_price or 0),
+                            taxes=[t_code],
+                            reference=line.product.sku if line.product else str(line.product_id or ''),
+                        ))
+
+                    # 2. Build Request
+                    fne_req = FNEInvoiceRequest(
+                        invoice_type='refund',
+                        original_invoice_reference=order.fne_reference or '',
+                        payment_method='cash',
+                        template='B2C' if not order.contact_id else 'B2B',
+                        items=fne_items,
+                        client_ncc=getattr(order.contact, 'tax_id', '') if order.contact else '',
+                        client_company_name=getattr(order.contact, 'company_name', '') or getattr(order.contact, 'name', '') if order.contact else '',
+                        point_of_sale=fne_config.point_of_sale or '',
+                        establishment=fne_config.establishment or '',
+                        reason=sales_return.reason or 'Sales Return'
+                    )
+
+                    # 3. Sign
+                    service = FNEService(fne_config)
+                    result = service.sign_refund(fne_req)
+
+                    if result.success:
+                        sales_return.fne_reference = result.reference or ''
+                        sales_return.fne_status = 'CERTIFIED'
+                        sales_return.save(update_fields=['fne_reference', 'fne_status'])
+                    else:
+                        sales_return.fne_status = 'FAILED'
+                        sales_return.save(update_fields=['fne_status'])
+                        logger.warning("[FNE] Refund certification failed: %s", result.error_message)
+
+            except Exception as fne_exc:
+                logger.warning("[FNE] Refund auto-certification error: %s", fne_exc)
+
             return sales_return
 
     @staticmethod

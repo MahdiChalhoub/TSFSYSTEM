@@ -569,6 +569,55 @@ class PurchaseService:
                     lines=pay_lines
                 )
 
+            # ── FNE Auto-Certification (API #3 /sign purchase) ─────────────
+            try:
+                fne_config = getattr(_ctx, 'einvoice_config', None)
+                if fne_config and order.scope == 'OFFICIAL' and not _supplier_profile.vat_registered:
+                    from apps.finance.services.fne_service import (
+                        FNEService, FNELineItem, FNEInvoiceRequest
+                    )
+                    
+                    # 1. Map items
+                    fne_items = []
+                    for line in order.lines.select_related('product').all():
+                        t_code = TaxCalculator.resolve_fne_tax_code(line.tax_rate or Decimal('0'), line.product)
+                        fne_items.append(FNELineItem(
+                            description=line.product.name if line.product else f'Purchase {line.id}',
+                            quantity=float(line.quantity),
+                            amount=float(line.unit_cost_ht or 0),
+                            taxes=[t_code],
+                            reference=line.product.sku if line.product else str(line.product_id or ''),
+                        ))
+
+                    # 2. Build Request
+                    fne_req = FNEInvoiceRequest(
+                        invoice_type='purchase',
+                        payment_method='cash' if not initial_payment else 'transfer',
+                        template='B2C', # Bordereaus are usually to individuals
+                        items=fne_items,
+                        client_ncc=getattr(order.contact, 'tax_id', '') if order.contact else '',
+                        client_company_name=getattr(order.contact, 'company_name', '') or getattr(order.contact, 'name', '') if order.contact else '',
+                        point_of_sale=fne_config.point_of_sale or '',
+                        establishment=fne_config.establishment or '',
+                        notes=notes or ''
+                    )
+
+                    # 3. Sign
+                    service = FNEService(fne_config)
+                    result = service.sign_purchase(fne_req)
+
+                    if result.success:
+                        order.fne_reference = result.reference or ''
+                        order.fne_status = 'CERTIFIED'
+                        order.save(update_fields=['fne_reference', 'fne_status'])
+                    else:
+                        order.fne_status = 'FAILED'
+                        order.save(update_fields=['fne_status'])
+                        logger.warning("[FNE] Purchase certification failed: %s", result.error_message)
+
+            except Exception as fne_exc:
+                logger.warning("[FNE] Purchase auto-certification error: %s", fne_exc)
+
             return order
 
     @staticmethod

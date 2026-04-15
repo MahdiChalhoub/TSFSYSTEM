@@ -381,6 +381,17 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
 
                 <div className="flex items-center gap-2 flex-wrap justify-end">
                     <button
+                        onClick={() => router.push('/finance/settings/posting-rules?from=coa')}
+                        className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
+                        style={{
+                            color: 'var(--app-success, #22c55e)',
+                            borderColor: 'color-mix(in srgb, var(--app-success, #22c55e) 30%, transparent)',
+                            background: 'color-mix(in srgb, var(--app-success, #22c55e) 8%, transparent)',
+                        }}
+                    >
+                        <Settings2 size={13} /> Posting Rules
+                    </button>
+                    <button
                         onClick={() => router.push('/finance/chart-of-accounts/migrate')}
                         className="flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-1.5 rounded-xl transition-all"
                         style={{

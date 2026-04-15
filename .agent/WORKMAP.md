@@ -99,6 +99,11 @@
 ### [DONE 2026-02-09] Subscription Plan Badge on Org Cards (v2.7.0-b005)
 - Purple badge showing current plan name on org list cards
 
+### [DONE 2026-04-15] Warehouse Stability & Stats Footer (v2.9.0-b002)
+- Resolved `ProgrammingError` in `/api/inventory/` by applying migration `0053_product_tax_rate_category`.
+- Implemented COA-style glassmorphism footer in `WarehouseClient.tsx` with location and SKU stats.
+- Added dynamic filter/search clear actions to the hierarchy footer.
+
 ### [DONE 2026-02-09] Hydration Mismatch Fixes (v2.7.0-b004, b008)
 - CRM contacts: `toLocaleString` → `toFixed`
 - Organizations filter bar: removed `mounted` conditional

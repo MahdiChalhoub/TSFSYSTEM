@@ -690,57 +690,64 @@ class POSService:
 
             # ── FNE Auto-Certification (Côte d'Ivoire e-invoicing) ──────────
             try:
-                from apps.finance.services.fne_service import (
-                    FNEService, FNEConfig, FNELineItem, FNEInvoiceRequest,
-                    FNECustomTax, get_fne_config
-                )
-                fne_config = get_fne_config(organization)
+                # Use context-aware einvoice config
+                fne_config = getattr(_ctx, 'einvoice_config', None)
                 if fne_config:
-                    # Build FNE line items from order lines
+                    from apps.finance.services.fne_service import (
+                        FNEService, FNELineItem, FNEInvoiceRequest
+                    )
+                    
+                    # 1. Resolve Template (B2C/B2B/B2G/B2F)
+                    fne_template = 'B2C'
+                    if contact_id:
+                        # Improved template detection via profile metadata
+                        if _ctx and hasattr(_ctx, '_policy'):
+                            # Try to get profile if available
+                            _prof = getattr(_ctx, 'client_profile', None) 
+                            if not _prof and contact:
+                                _ClientProfile = connector.require('finance.tax.get_supplier_profile_class', org_id=0, source='pos')
+                                if _ClientProfile:
+                                    _prof = _ClientProfile.from_contact(contact)
+                            
+                            if _prof:
+                                if getattr(_prof._profile_obj, 'is_government', False):
+                                    fne_template = 'B2G'
+                                elif getattr(_prof._profile_obj, 'is_foreign', False):
+                                    fne_template = 'B2F'
+                                elif _prof.vat_registered:
+                                    fne_template = 'B2B'
+                        else:
+                            fne_template = 'B2B' # simple backward compat
+
+                    # 2. Map items using TaxCalculator.resolve_fne_tax_code
                     fne_items = []
                     for line in order.lines.select_related('product').all():
-                        fne_taxes = []
-                        # Map local tax rate → FNE tax code
-                        rate_pct = float(line.tax_rate or 0) * 100
-                        if rate_pct >= 18:
-                            fne_taxes.append('TVA')
-                        elif rate_pct >= 9:
-                            fne_taxes.append('TVAB')
-                        elif line.is_tax_exempt:
-                            fne_taxes.append('TVAD')  # Exempt droit commun
-                        else:
-                            fne_taxes.append('TVA')
-
                         fne_items.append(FNELineItem(
-                            description=line.product.name if line.product else f'Line {line.id}',
-                            quantity=int(line.quantity),
+                            description=line.product.name if line.product else (line.description or f'Item {line.id}'),
+                            quantity=float(line.quantity),
                             amount=float(line.unit_price or 0),
-                            taxes=fne_taxes,
-                            reference=str(line.product_id or ''),
+                            taxes=[TaxCalculator.resolve_fne_tax_code(line.tax_rate, line.product)],
+                            reference=line.product.sku if line.product else str(line.product_id or ''),
                             discount=float(line.discount_rate or 0),
                         ))
 
-                    # Determine template
-                    fne_template = 'B2C'
-                    if contact_id:
-                        fne_template = 'B2B'
-
-                    # Map payment method
+                    # 3. Map payment method
                     pm_map = {
                         'CASH': 'cash', 'CARD': 'credit-card', 'CREDIT_CARD': 'credit-card',
                         'WAVE': 'mobile-money', 'OM': 'mobile-money', 'MOBILE': 'mobile-money',
                         'TRANSFER': 'transfer', 'CHEQUE': 'cheque', 'CHECK': 'cheque',
+                        'CREDIT': 'deferred', 'DEFERRED': 'deferred',
                     }
                     fne_pay = pm_map.get((payment_method or '').upper(), 'cash')
 
-                    # Build FNE request
+                    # 4. Build FNE request
                     fne_req = FNEInvoiceRequest(
                         invoice_type='sale',
                         payment_method=fne_pay,
                         template=fne_template,
                         items=fne_items,
                         client_ncc=getattr(contact, 'tax_id', '') if contact else '',
-                        client_company_name=contact.company_name if contact and hasattr(contact, 'company_name') else '',
+                        client_company_name=getattr(contact, 'company_name', '') or getattr(contact, 'name', '') if contact else '',
                         client_phone=getattr(contact, 'phone', '') if contact else '',
                         client_email=getattr(contact, 'email', '') if contact else '',
                         point_of_sale=fne_config.point_of_sale or '',
@@ -750,7 +757,13 @@ class POSService:
                         discount=float(global_discount or 0),
                     )
 
-                    # Sign (non-blocking)
+                    # Multi-currency support (B2F)
+                    if fne_template == 'B2F':
+                        # We use XOF as base, if order was in other currency, we should have the rate
+                        fne_req.foreign_currency = getattr(order, 'currency_code', '') or ''
+                        fne_req.foreign_currency_rate = float(getattr(order, 'exchange_rate', 1.0) or 1.0)
+
+                    # 5. Sign (non-blocking)
                     service = FNEService(fne_config)
                     result = service.sign_invoice(fne_req)
 
@@ -768,15 +781,13 @@ class POSService:
                         order.fne_status = 'FAILED'
                         order.fne_error = (result.error_message or '')[:500]
                         order.save(update_fields=['fne_status', 'fne_error'])
-                        import logging
-                        logging.getLogger(__name__).warning(
+                        logger.warning(
                             "[FNE] Certification failed for order %s: %s",
                             order.id, result.error_message
                         )
             except Exception as fne_exc:
                 # NEVER block a POS sale for FNE failures
-                import logging
-                logging.getLogger(__name__).warning(
+                logger.warning(
                     "[FNE] Auto-certification error for order %s: %s",
                     order.id, fne_exc, exc_info=True
                 )

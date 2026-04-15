@@ -67,6 +67,7 @@ class TaxEngineContext:
         default_rate=None,
         is_export=False,
         custom_rules=None,
+        einvoice_config=None,
         policy=None,
     ):
         self.scope = scope
@@ -76,6 +77,7 @@ class TaxEngineContext:
         self.default_rate = default_rate
         self.is_export = is_export
         self.custom_rules = custom_rules or []
+        self.einvoice_config = einvoice_config
         self._policy = policy
 
     # ── Scope mode helpers ───────────────────────────────────────────
@@ -137,6 +139,14 @@ class TaxEngineContext:
                     ).order_by('calculation_order')
                 )
 
+                # Load e-invoice config (FNE CI)
+                einvoice_config = None
+                try:
+                    from apps.finance.services.fne_service import get_fne_config
+                    einvoice_config = get_fne_config(organization)
+                except ImportError:
+                    pass
+
                 return cls(
                     scope=scope,
                     vat_active=vat_active,
@@ -146,6 +156,7 @@ class TaxEngineContext:
                     is_export=is_export,
                     custom_rules=custom_rules,
                     policy=policy,
+                    einvoice_config=einvoice_config
                 )
 
         except Exception as exc:
@@ -472,6 +483,29 @@ class TaxCalculator:
 
         return Decimal('0')
 
+    # ── FNE Tax Code Resolution ───────────────────────────────────────
+    
+    @staticmethod
+    def resolve_fne_tax_code(rate: Decimal, product=None) -> str:
+        """
+        Map a decimal rate to Côte d'Ivoire FNE specific tax codes.
+        
+        Codes:
+        - TVA  = 18% standard
+        - TVAB = 9% reduced
+        - TVAC = 0% exempt (conventionnelle)
+        - TVAD = 0% exempt (droit commun)
+        """
+        rate = Decimal(str(rate))
+        if rate >= Decimal('0.15'):
+            return 'TVA'
+        elif Decimal('0.05') <= rate < Decimal('0.15'):
+            return 'TVAB'
+        elif rate == 0:
+            # Usually TVAD for standard exemptions; TVAC requires specialized setup
+            return 'TVAD'
+        return 'TVA'
+
     # ── Core Tax Math ────────────────────────────────────────────────
 
     @staticmethod
@@ -588,6 +622,105 @@ class TaxCalculator:
         }
 
     # ── Effective Cost Resolution ────────────────────────────────────
+
+    @staticmethod
+    def resolve_purchase_costs(
+        base_ht: Decimal,
+        vat_rate: Decimal,
+        airsi_rate: Decimal,
+        ctx,
+        supplier_vat_registered: bool = True,
+        supplier_reverse_charge: bool = False,
+        supplier_airsi_subject: bool = False,
+    ) -> dict:
+        """
+        High-level resolution for Purchase costs (effective cost, taxes).
+        
+        Logic:
+        1. VAT: 0 if ctx.vat_active=False or supplier not registered.
+           Else (base * rate). Mark as recoverable if ctx.vat_input_recoverability > 0.
+        2. AIRSI: 0 if ctx.airsi_treatment=OFF or supplier not subject.
+           Else (base * airsi_rate). 
+           - Capitalization → Add to cost (non-withheld).
+           - Withholding → Subtract from AP (withheld).
+        3. Custom Taxes: Apply from ctx.custom_rules (Type=PURCHASE).
+        4. AP Amount: base + tax (if charging) - airsi (if withholding).
+        5. Cost Official: base + non-recoverable VAT + capitalized airsi + custom taxes.
+        """
+        base = Decimal(str(base_ht))
+        vat_rate = Decimal(str(vat_rate))
+        airsi_rate = Decimal(str(airsi_rate))
+
+        tax_lines = []
+        
+        # ── 1. VAT Resolution ─────────────────
+        vat_amount = Decimal('0')
+        is_recoverable = False
+
+        if ctx.vat_active and supplier_vat_registered and not supplier_reverse_charge:
+            vat_amount = (base * vat_rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+            is_recoverable = Decimal(str(ctx.vat_input_recoverability)) > 0
+            tax_lines.append({
+                'name': 'VAT',
+                'rate': vat_rate,
+                'amount': vat_amount,
+                'type': 'VAT',
+                'is_recoverable': is_recoverable
+            })
+
+        # ── 2. AIRSI Resolution ───────────────
+        airsi_amount = Decimal('0')
+        withholding_amount = Decimal('0')
+        capitalized_airsi = Decimal('0')
+        
+        airsi_treatment = getattr(ctx, 'airsi_treatment', 'NONE')
+        if airsi_treatment != 'NONE' and supplier_airsi_subject:
+            airsi_amount = (base * airsi_rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+            if airsi_treatment == 'WITHHOLDING':
+                withholding_amount = airsi_amount
+            else: # CAPITALIZATION
+                capitalized_airsi = airsi_amount
+            
+            tax_lines.append({
+                'name': 'AIRSI',
+                'rate': airsi_rate,
+                'amount': airsi_amount,
+                'type': 'AIRSI',
+                'treatment': airsi_treatment
+            })
+
+        # ── 3. Custom Taxes ───────────────────
+        custom_total = Decimal('0')
+        for rule in getattr(ctx, 'custom_rules', []):
+            if rule.transaction_type in ['PURCHASE', 'BOTH']:
+                c_amt = (base * rule.rate).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+                custom_total += c_amt
+                tax_lines.append({
+                    'name': rule.name,
+                    'rate': rule.rate,
+                    'amount': c_amt,
+                    'type': 'CUSTOM',
+                    'custom_tax_rule_id': rule.id
+                })
+
+        # ── 4. Final Aggregation ──────────────
+        non_recoverable_vat = Decimal('0') if is_recoverable else vat_amount
+        
+        ttc = base + vat_amount + custom_total
+        ap_amount = ttc - withholding_amount
+        cost_official = base + non_recoverable_vat + capitalized_airsi + custom_total
+
+        return {
+            'ht': base,
+            'vat_amount': vat_amount,
+            'airsi_amount': airsi_amount,
+            'custom_tax_total': custom_total,
+            'ttc': ttc,
+            'ap_amount': ap_amount,
+            'cost_official': cost_official,
+            'tax_lines': tax_lines,
+            'is_recoverable': is_recoverable
+        }
 
     @staticmethod
     def resolve_effective_cost(

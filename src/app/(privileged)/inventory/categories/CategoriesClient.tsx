@@ -731,8 +731,8 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
     const closeModal = useCallback(() => { setModalState({ open: false }) }, [])
 
     return (
-        <div className={`flex flex-col animate-in fade-in duration-300 transition-all ${focusMode ? 'max-h-[calc(100vh-4rem)]' : 'max-h-[calc(100vh-8rem)]'}`}
-            style={{ height: '100%' }}>
+        <div className="flex flex-col p-4 md:px-6 md:pt-6 md:pb-2 animate-in fade-in duration-300 transition-all overflow-hidden"
+            style={{ height: 'calc(100dvh - 6rem)' }}>
 
             {/* ═══════════════ HEADER ═══════════════ */}
             <div className={`flex-shrink-0 space-y-4 transition-all duration-300 ${focusMode ? 'pb-2' : 'pb-4'}`}>
@@ -826,27 +826,28 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         </div>
 
                         {/* KPI Strip — adaptive auto-fit grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
                             {[
-                                { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-primary)' },
+                                { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-primary)' },
+                                { label: 'Root', value: stats.roots, icon: <FolderTree size={11} />, color: 'var(--app-success)' },
                                 { label: 'Leaf', value: stats.leafCount, icon: <GitBranch size={11} />, color: '#8b5cf6' },
-                                { label: 'Total', value: stats.total, icon: <Layers size={11} />, color: 'var(--app-info, #3b82f6)' },
-                                { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-success, #22c55e)' },
-                                { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: '#8b5cf6' },
+                                { label: 'Products', value: stats.totalProducts, icon: <Box size={11} />, color: 'var(--app-info)' },
+                                { label: 'Brands', value: stats.totalBrands, icon: <Paintbrush size={11} />, color: 'var(--app-warning)' },
+                                { label: 'Showing', value: stats.filtered, icon: <Search size={11} />, color: 'var(--app-muted-foreground)' },
                             ].map(s => (
                                 <div key={s.label}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all text-left"
+                                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl transition-all text-left"
                                     style={{
                                         background: 'color-mix(in srgb, var(--app-surface) 50%, transparent)',
                                         border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
                                     }}
                                 >
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style={{ background: `color-mix(in srgb, ${s.color} 10%, transparent)`, color: s.color }}>
                                         {s.icon}
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
+                                        <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--app-muted-foreground)' }}>{s.label}</div>
                                         <div className="text-sm font-black text-app-foreground tabular-nums">{s.value}</div>
                                     </div>
                                 </div>
@@ -913,7 +914,7 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
             <div className={`flex-1 min-h-0 flex gap-3 ${splitPanel ? 'flex-row' : 'flex-col'} animate-in fade-in duration-200`}>
 
                 {/* Left: Tree */}
-                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-2xl overflow-hidden flex flex-col`}>
+                <div className={`${splitPanel ? 'flex-[4] min-w-0' : 'flex-1'} min-h-0 bg-app-surface/30 border border-app-border/50 rounded-t-2xl overflow-hidden flex flex-col`}>
                     {/* Column Headers */}
                     <div className="flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 py-2 bg-app-surface/60 border-b border-app-border/50 text-[10px] font-black text-app-muted-foreground uppercase tracking-wider">
                         <div className="w-5 flex-shrink-0" />
@@ -987,6 +988,41 @@ export function CategoriesClient({ initialCategories }: { initialCategories: any
                         )}
                     </div>
                 )}
+            </div>
+
+            {/* ── Footer ──────────────────────────────────────── */}
+            <div
+                className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-2 text-[11px] font-bold rounded-b-2xl animate-in slide-in-from-bottom-2 duration-300"
+                style={{
+                    background: 'color-mix(in srgb, var(--app-surface) 70%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--app-border) 50%, transparent)',
+                    borderTop: 'none',
+                    marginTop: '-1px',
+                    color: 'var(--app-muted-foreground)',
+                    backdropFilter: 'blur(10px)',
+                }}
+            >
+                <div className="flex items-center gap-3 flex-wrap">
+                    <span>{stats.total} total categories</span>
+                    <span style={{ color: 'var(--app-border)' }}>·</span>
+                    <span>{stats.totalProducts.toLocaleString()} linked products</span>
+                    {searchQuery && (
+                        <>
+                            <span style={{ color: 'var(--app-border)' }}>·</span>
+                            <span style={{ color: 'var(--app-info)' }}>Search active</span>
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="underline hover:opacity-80 transition-opacity"
+                                style={{ color: 'var(--app-info)' }}
+                            >
+                                Clear
+                            </button>
+                        </>
+                    )}
+                </div>
+                <div className="tabular-nums font-black" style={{ color: 'var(--app-foreground)' }}>
+                    System Status: <span style={{ color: 'var(--app-success)' }}>Operational</span>
+                </div>
             </div>
 
             {/* ── Delete Confirm ── */}
